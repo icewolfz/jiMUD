@@ -3,7 +3,7 @@ import { Splitter, Orientation } from './../splitter';
 import { PropertyGrid } from './../propertygrid';
 import { EditorType, ValueEditor } from './../value.editors';
 import { DataGrid } from './../datagrid';
-import { formatString, existsSync, capitalize, wordwrap, leadingZeros, Cardinal, resetCursor, enumToString } from './../library';
+import { copy, formatString, existsSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString } from './../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
@@ -37,7 +37,7 @@ export enum shiftType {
     down = 64
 }
 
-export enum UpdateType { none = 0, drawMap = 1, buildRooms = 2, buildMap = 4, resize = 8 }
+export enum UpdateType { none = 0, drawMap = 1, buildRooms = 2, buildMap = 4, resize = 8, status = 16, refreshItems = 32, refreshDescriptions = 64, refreshExits = 128 }
 
 export enum DescriptionOnDelete { leave = 0, end = 1, endPlusOne = 2, start = 3 }
 export enum ItemOnDelete { leave = 0, end = 1 }
@@ -186,8 +186,9 @@ export interface MousePosition {
 
 const Timer = new DebugTimer();
 
-enum undoType { room, description, item, resize }
+enum undoType { room, description, item, resize, reduce, raw, rawText, exits, revert, maxTerrain }
 enum undoAction { add, delete, edit }
+enum undoReduce { items = 1, descriptions = 2, all = items | descriptions }
 
 export class VirtualEditor extends EditorBase {
     private $files;
@@ -239,6 +240,8 @@ export class VirtualEditor extends EditorBase {
     private $resizer;
     private $resizerCache;
     private $observer: MutationObserver;
+    private $allowResize: boolean = false;
+    private $allowExitWalk: boolean = true;
 
     private $mapSize;
 
@@ -364,6 +367,40 @@ export class VirtualEditor extends EditorBase {
         return this.$selectedRooms;
     }
 
+    public get AllowResize(): boolean {
+        return this.$allowResize;
+    }
+
+    public set AllowResize(value) {
+        if (value === this.$allowResize) return;
+        this.$allowResize = value;
+        this.emit('menu-update', 'edit|allow resize walk', { checked: value });
+        if (document.getElementById('btn-allow-resize-walk')) {
+            if (value)
+                document.getElementById('btn-allow-resize-walk').classList.add('active');
+            else
+                document.getElementById('btn-allow-resize-walk').classList.remove('active');
+        }
+        this.emit('option-changed', 'allowResize', value);
+    }
+
+    public get AllowExitWalk(): boolean {
+        return this.$allowExitWalk;
+    }
+
+    public set AllowExitWalk(value) {
+        if (value === this.$allowExitWalk) return;
+        this.$allowExitWalk = value;
+        this.emit('menu-update', 'edit|allow exit walk', { checked: value });
+        if (document.getElementById('btn-allow-exit-walk')) {
+            if (value)
+                document.getElementById('btn-allow-exit-walk').classList.add('active');
+            else
+                document.getElementById('btn-allow-exit-walk').classList.remove('active');
+        }
+        this.emit('option-changed', 'allowExitWalk', value);
+    }
+
     public descriptionOnDelete: DescriptionOnDelete = DescriptionOnDelete.endPlusOne;
     public itemOnDelete: ItemOnDelete = ItemOnDelete.end;
 
@@ -431,6 +468,8 @@ export class VirtualEditor extends EditorBase {
             this.options = options.options;
         else
             this.options = {
+                allowResize: false,
+                allowExitWalk: true,
                 showColors: false,
                 showTerrain: false,
                 rawFontSize: 16,
@@ -741,26 +780,36 @@ export class VirtualEditor extends EditorBase {
                     if (a.data.idx < b.data.idx) return -1;
                     return 0;
                 });
+                this.startUndoGroup();
                 while (l--) {
                     const idx = e.data[l].data.idx;
                     const eIdx = this.$descriptions.length - 1;
+                    this.pushUndo(undoAction.delete, undoType.description, { index: idx, data: copy(this.$descriptions[idx]) });
                     //update the raw data
                     this.removeRaw(this.$descriptionRaw, idx * 3, 3, false, true);
                     this.removeRaw(this.$itemRaw, idx * 2, 2, false, true);
+                    this.pushUndo(undoAction.delete, undoType.item, { index: idx, data: copy(this.$items[idx]) });
                     this.$items.splice(idx, 1);
+                    this.pushUndo(undoAction.edit, undoType.reduce, { option: this.descriptionOnDelete, index: idx, what: undoReduce.all });
                     this.reduceIdx(this.$descriptions, idx);
                     this.reduceIdx(this.$items, idx);
                     //store room lengths
                     const zl = this.$mapSize.depth;
                     const xl = this.$mapSize.width;
                     const yl = this.$mapSize.height;
+                    this.pushUndo(undoAction.edit, undoType.maxTerrain, { value: this.$maxTerrain });
                     //update rooms terrain/item indexes
                     this.$maxTerrain = 0;
+                    const t = [];
+                    const i = [];
+                    const rs = [];
                     for (let z = 0; z < zl; z++) {
                         for (let y = 0; y < yl; y++) {
                             for (let x = 0; x < xl; x++) {
                                 const r = this.$rooms[z][y][x];
                                 if (r.terrain === idx) {
+                                    t.push(r.terrain);
+                                    i.push(r.item);
                                     switch (this.descriptionOnDelete) {
                                         case DescriptionOnDelete.end:
                                             if (r.terrain === r.item)
@@ -780,6 +829,8 @@ export class VirtualEditor extends EditorBase {
                                     }
                                 }
                                 else if (r.terrain && r.terrain > idx) {
+                                    t.push(r.terrain);
+                                    i.push(r.item);
                                     if (r.terrain === r.item)
                                         r.item--;
                                     r.terrain--;
@@ -789,11 +840,15 @@ export class VirtualEditor extends EditorBase {
                             }
                         }
                     }
+                    if (t.length > 0)
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'terrain', values: t, rooms: rs });
+                    if (i.length > 0)
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'item', values: i, rooms: rs });
                 }
                 this.roomsChanged();
+                this.stopUndoGroup();
                 //redraw map to update terrain changes
-                this.doUpdate(UpdateType.drawMap);
-                this.$itemGrid.refresh();
+                this.doUpdate(UpdateType.drawMap | UpdateType.refreshItems);
             }
         });
 
@@ -804,14 +859,17 @@ export class VirtualEditor extends EditorBase {
                 if (a.data.idx < b.data.idx) return -1;
                 return 0;
             });
+            this.startUndoGroup();
             while (l--) {
                 const idx = e.data[l].data.idx;
+                this.pushUndo(undoAction.delete, undoType.description, { index: idx, data: copy(this.$descriptions[idx]) });
                 //update the raw data
                 this.removeRaw(this.$descriptionRaw, idx * 3, 3, false, true);
                 this.removeRaw(this.$itemRaw, idx * 2, 2, false, true);
                 //add items to cut data so items travel
                 e.data[l].items = this.$items[idx];
                 this.$items.splice(idx, 1);
+                this.pushUndo(undoAction.edit, undoType.reduce, { index: idx, what: undoReduce.all });
                 this.reduceIdx(this.$descriptions, idx);
                 this.reduceIdx(this.$items, idx);
                 //store room lengths
@@ -836,9 +894,9 @@ export class VirtualEditor extends EditorBase {
                 }
             }
             this.roomsChanged();
+            this.stopUndoGroup();
             //redraw map to update terrain changes
-            this.doUpdate(UpdateType.drawMap);
-            this.$itemGrid.refresh();
+            this.doUpdate(UpdateType.drawMap | UpdateType.refreshItems);
             this.emit('supports-changed');
         });
         this.$descriptionGrid.on('copy', (e) => {
@@ -855,7 +913,9 @@ export class VirtualEditor extends EditorBase {
             let all = false;
             let choice;
             const l = e.data.length;
+            this.startUndoGroup();
             for (let d = 0; d < l; d++) {
+                this.pushUndo(undoAction.add, undoType.description, { index: l });
                 e.data[d].data.idx = idx;
                 e.data[d].items.idx = idx;
                 if (!all && idx < this.$items.length) {
@@ -871,6 +931,7 @@ export class VirtualEditor extends EditorBase {
                     if (choice === 2)
                         all = true;
                     if (choice !== 1) {
+                        this.pushUndo(undoAction.edit, undoType.item, { index: idx, items: this.$items[idx] });
                         this.$items[idx] = e.data[d].items;
                         this.updateRaw(this.$itemRaw, idx * 2, [
                             this.$items[idx].children.map(i => i.item).join(':'),
@@ -879,6 +940,7 @@ export class VirtualEditor extends EditorBase {
                     }
                 }
                 else {
+                    this.pushUndo(undoAction.add, undoType.item, { index: idx, items: e.data[d].items });
                     this.$items[idx] = e.data[d].items;
                     this.updateRaw(this.$itemRaw, idx * 2, [
                         this.$items[idx].children.map(i => i.item).join(':'),
@@ -887,8 +949,8 @@ export class VirtualEditor extends EditorBase {
                 }
                 idx++;
             }
-            this.$itemGrid.refresh();
-            this.doUpdate(UpdateType.drawMap);
+            this.stopUndoGroup();
+            this.doUpdate(UpdateType.drawMap | UpdateType.refreshItems);
         });
         this.$descriptionGrid.on('add', e => {
             const idx = this.$descriptions.length;
@@ -901,6 +963,9 @@ export class VirtualEditor extends EditorBase {
                 sound: '',
                 smell: ''
             };
+            this.startUndoGroup();
+            this.pushUndo(undoAction.add, undoType.description, { index: idx });
+            this.pushUndo(undoAction.add, undoType.item, { index: this.$items.length });
             this.updateRaw(this.$descriptionRaw, idx * 3, [':0:', '', '0:0'], false, true);
             if (idx >= this.$items.length) {
                 let c = 0;
@@ -917,7 +982,8 @@ export class VirtualEditor extends EditorBase {
                     c++;
                 }
             }
-            this.$itemGrid.refresh();
+            this.stopUndoGroup();
+            this.doUpdate(UpdateType.refreshItems);
             resetCursor(this.$terrainRaw);
         });
         this.$descriptionGrid.sort(0);
@@ -1038,6 +1104,7 @@ export class VirtualEditor extends EditorBase {
                 === 1)
                 e.preventDefault = true;
             else {
+                this.startUndoGroup();
                 const rows = e.data.filter(r => r.parent === -1).map(r => this.$items.indexOf(r.data));
                 rows.sort();
                 const children = e.data.filter(r => r.parent !== -1 && rows.indexOf(r.parent) === -1)
@@ -1047,6 +1114,7 @@ export class VirtualEditor extends EditorBase {
                 if (children.length > 0) {
                     let cl = children.length;
                     while (cl--) {
+                        this.pushUndo(undoAction.delete, undoType.item, { index: children[cl], items: this.$items[children[cl]] });
                         this.updateRaw(this.$itemRaw, children[cl] * 2, [
                             this.$items[children[cl]].children.map(i => i.item).join(':'),
                             this.$items[children[cl]].children.map(i => i.description).join(':')
@@ -1062,19 +1130,25 @@ export class VirtualEditor extends EditorBase {
                           - `End` Shift the terrain description to the end of the descriptions
                         */
                     }
+                    this.pushUndo(undoAction.edit, undoType.reduce, { index: rows[rl], what: undoReduce.items });
                     this.reduceIdx(this.$items, rows[rl]);
                     this.removeRaw(this.$itemRaw, rows[rl] * 2, 2, false, true);
                 }
+                this.stopUndoGroup();
             }
         });
         this.$itemGrid.on('cut', (e) => {
             const rows = e.data.filter(r => r.parent === -1).map(r => this.$items.indexOf(r.data));
             rows.sort();
             let rl = rows.length;
+            this.startUndoGroup();
             while (rl--) {
+                this.pushUndo(undoAction.delete, undoType.item, { index: rows[rl], items: this.$items[rows[rl]] });
+                this.pushUndo(undoAction.edit, undoType.reduce, { index: rows[rl], what: undoReduce.items });
                 this.reduceIdx(this.$items, rows[rl]);
                 this.removeRaw(this.$itemRaw, rows[rl] * 2, 2, false, true);
             }
+            this.stopUndoGroup();
             this.emit('supports-changed');
         });
         this.$itemGrid.on('copy', () => {
@@ -1083,6 +1157,8 @@ export class VirtualEditor extends EditorBase {
         this.$itemGrid.on('paste', (e) => {
             let idx = this.$items.length;
             const l = e.data.length;
+            this.startUndoGroup();
+            this.pushUndo(undoAction.add, undoType.item, { index: l });
             for (let d = 0; d < l; d++) {
                 if (e.data[d].parent !== -1) continue;
                 e.data[d].data.idx = idx;
@@ -1092,6 +1168,7 @@ export class VirtualEditor extends EditorBase {
                 ], false, true);
                 idx++;
             }
+            this.stopUndoGroup();
         });
         this.$itemGrid.on('contextmenu', e => {
             if (e.srcElement && e.editor) {
@@ -1139,7 +1216,7 @@ export class VirtualEditor extends EditorBase {
                             tag: (parent.idx + 1) + '-' + parent.children.length,
                             parentId: parent.idx
                         });
-                        this.$itemGrid.refresh();
+                        this.doUpdate(UpdateType.refreshItems);
                         this.$itemGrid.expandRows(selected[0].index).then(() => {
                             this.$itemGrid.focus();
                             this.$itemGrid.beginEditChild(selected[0].dataIndex, parent.children.length - 1);
@@ -1226,6 +1303,7 @@ export class VirtualEditor extends EditorBase {
                     this.$items[e.dataIndex].children = [];
                 if (this.$items[e.dataIndex].children.length === 0) {
                     if (this.$itemGrid.enterMoveNew) {
+                        this.pushUndo(undoAction.add, undoType.item, { index: e.dataIndex });
                         this.$items[e.dataIndex].children.push({
                             idx: '',
                             item: '',
@@ -1233,7 +1311,7 @@ export class VirtualEditor extends EditorBase {
                             tag: (e.dataIndex + 1) + '-' + this.$items[e.dataIndex].children.length,
                             parentId: e.dataIndex
                         });
-                        this.$itemGrid.refresh();
+                        this.doUpdate(UpdateType.refreshItems);
                         this.$itemGrid.expandRows(e.row).then(() => {
                             this.$itemGrid.focus();
                             this.$itemGrid.beginEditChild(e.dataIndex, this.$items[e.dataIndex].children.length - 1);
@@ -1285,6 +1363,7 @@ export class VirtualEditor extends EditorBase {
             this.emit('selection-changed');
         });
         this.$itemGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
+            this.pushUndo(undoAction.edit, undoType.item, { index: newValue.parentId, items: oldValue });
             const item = this.$items[newValue.parentId];
             this.updateRaw(this.$itemRaw, item.idx * 2, [
                 item.children.map(i => i.item).join(':'),
@@ -1376,15 +1455,23 @@ export class VirtualEditor extends EditorBase {
             const mx = this.$mouse.rx;
             const my = this.$mouse.ry;
             let sr = false;
+            const v = [];
+            const rs = [];
+            this.startUndoGroup();
             while (dl--) {
+                this.pushUndo(undoAction.delete, undoType.exits, { index: [d[dl]], exits: [this.$exits[d[dl]]], room: [this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z] });
                 this.removeRaw(this.$externalRaw, d[dl], 1);
                 if (!this.$exits[d[dl]].enabled) continue;
                 r = this.getRoom(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z);
+                v.push(r.ee);
+                rs.push([r.x, r.y, r.z]);
                 r.ee &= ~RoomExits[this.$exits[d[dl]].exit];
                 this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
                 if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z))
                     sr = true;
             }
+            this.pushUndo(undoAction.edit, undoType.room, { property: 'ee', values: v, rooms: rs });
+            this.stopUndoGroup();
             if (sr) {
                 this.UpdateEditor(this.$selectedRooms);
                 this.UpdatePreview(this.selectedFocusedRoom);
@@ -1401,6 +1488,8 @@ export class VirtualEditor extends EditorBase {
                 nExternal = e.data.map(d => (d.data.enabled ? '' : '#') + d.data.x + ',' + d.data.y + ',' + d.data.z + ':' + d.data.exit + ':' + d.data.dest);
             else
                 nExternal = e.data.map(d => (d.data.enabled ? '' : '#') + d.data.x + ',' + d.data.y + ':' + d.data.exit + ':' + d.data.dest);
+            this.startUndoGroup();
+            this.pushUndo(undoAction.add, undoType.exits, { oldLength: this.$exits.length, exits: nExternal });
             this.updateRaw(this.$externalRaw, this.$exits.length, nExternal);
             resetCursor(this.$externalRaw);
             //store mouse coords for performance
@@ -1411,16 +1500,22 @@ export class VirtualEditor extends EditorBase {
             let ex = 0;
             const elen = e.data.length;
             let sr = false;
+            const v = [];
+            const rs = [];
             for (; ex < elen; ex++) {
                 //Add new exits
                 const exit = e.data[ex].data;
                 if (!exit.enabled) continue;
                 r = this.getRoom(exit.x, exit.y, exit.z);
+                v.push(r.ee);
+                rs.push([r.x, r.y, r.z]);
                 r.ee |= RoomExits[exit.exit];
                 this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
                 if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(exit.x, exit.y, exit.z))
                     sr = true;
             }
+            this.pushUndo(undoAction.edit, undoType.room, { property: 'ee', values: v, rooms: rs });
+            this.stopUndoGroup();
             if (sr) {
                 this.UpdateEditor(this.$selectedRooms);
                 this.UpdatePreview(this.selectedFocusedRoom);
@@ -1450,7 +1545,11 @@ export class VirtualEditor extends EditorBase {
                 //store mouse coords for performance
                 const mx = this.$mouse.rx;
                 const my = this.$mouse.ry;
+                const v = [];
+                const rs = [];
+                this.startUndoGroup();
                 while (dl--) {
+                    this.pushUndo(undoAction.delete, undoType.exits, { index: [d[dl]], exits: [this.$exits[d[dl]]], room: [this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z] });
                     this.removeRaw(this.$externalRaw, d[dl], 1);
                     if (!this.$exits[d[dl]].enabled) continue;
                     r = this.getRoom(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z);
@@ -1459,6 +1558,8 @@ export class VirtualEditor extends EditorBase {
                     if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(this.$exits[d[dl]].x, this.$exits[d[dl]].y, this.$exits[d[dl]].z))
                         sr = true;
                 }
+                this.pushUndo(undoAction.edit, undoType.room, { property: 'ee', values: v, rooms: rs });
+                this.stopUndoGroup();
                 if (sr) {
                     this.UpdateEditor(this.$selectedRooms);
                     this.UpdatePreview(this.selectedFocusedRoom);
@@ -1475,12 +1576,15 @@ export class VirtualEditor extends EditorBase {
                 exit: '',
                 dest: ''
             };
+            this.startUndoGroup();
+            this.pushUndo(undoAction.add, undoType.exits, { oldLength: this.$exits.length, exits: e.data, room: [0, 0, 0] });
             let idx = this.$exits.length - 1;
             if (idx < 0) idx = 0;
             if (this.$mapSize.depth > 1)
                 this.updateRaw(this.$externalRaw, idx, ['0,0,0::']);
             else
                 this.updateRaw(this.$externalRaw, idx, ['0,0::']);
+            this.stopUndoGroup();
             resetCursor(this.$externalRaw);
         });
         this.$exitGrid.on('selection-changed', () => {
@@ -1501,6 +1605,8 @@ export class VirtualEditor extends EditorBase {
             this.emit('selection-changed');
         });
         this.$exitGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
+            this.startUndoGroup();
+            this.pushUndo(undoAction.edit, undoType.exits, { index: dataIndex, value: oldValue });
             if (this.$mapSize.depth > 1)
                 this.updateRaw(this.$externalRaw, dataIndex, [(newValue.enabled ? '' : '#') + newValue.x + ',' + newValue.y + ',' + newValue.z + ':' + newValue.exit + ':' + newValue.dest]);
             else
@@ -1514,6 +1620,7 @@ export class VirtualEditor extends EditorBase {
             if (oldValue.enabled) {
                 r = this.getRoom(oldValue.x, oldValue.y, oldValue.z);
                 if (!r.ef) {
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'ee', values: [r.ee], rooms: [r.x, r.y, r.z] });
                     r.ee &= ~RoomExits[oldValue.exit];
                     this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
                     if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(oldValue.x, oldValue.y, oldValue.z)) {
@@ -1526,6 +1633,7 @@ export class VirtualEditor extends EditorBase {
             if (newValue.enabled) {
                 r = this.getRoom(oldValue.x, oldValue.y, oldValue.z);
                 if (!r.ef) {
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'ee', values: [r.ee], rooms: [r.x, r.y, r.z] });
                     r.ee |= RoomExits[newValue.exit];
                     this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
                     if (this.selectedFocusedRoom && this.selectedFocusedRoom.at(newValue.x, newValue.y, newValue.z)) {
@@ -1534,6 +1642,7 @@ export class VirtualEditor extends EditorBase {
                     }
                 }
             }
+            this.stopUndoGroup();
         });
         this.$exitGrid.sort(1);
         //#endregion
@@ -1844,7 +1953,6 @@ export class VirtualEditor extends EditorBase {
             const ec = { room: o, preventDefault: false, size: this.$mapSize };
             this.emit('map-context-menu', ec);
             this.setFocusedRoom(this.$mouse.rx, this.$mouse.ry);
-            //if (e.preventDefault) return;
         });
         this.$map.addEventListener('dblclick', (e) => {
             const m = this.getMousePos(e);
@@ -1912,6 +2020,8 @@ export class VirtualEditor extends EditorBase {
             let sl;
             let width;
             let height;
+            let t;
+            let rs;
             if (!p) {
                 x = (32 - this.$mapContainer.scrollLeft) / 32;
                 y = (32 - this.$mapContainer.scrollTop) / 32;
@@ -1936,6 +2046,7 @@ export class VirtualEditor extends EditorBase {
                         this.paste();
                     break;
                 case 38: //up
+                    //#region
                     if (e.shiftKey) {
                         let sf = this.$shiftRoom;
                         let ef = this.$focusedRoom;
@@ -1976,8 +2087,10 @@ export class VirtualEditor extends EditorBase {
                         this.setFocusedRoom(this.selectedRoom);
                     }
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 40: //down
+                    //#region
                     if (e.shiftKey) {
                         let sf = this.$shiftRoom;
                         let ef = this.$focusedRoom;
@@ -2018,8 +2131,10 @@ export class VirtualEditor extends EditorBase {
                         this.setFocusedRoom(this.selectedRoom);
                     }
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 37: //left
+                    //#region
                     if (e.shiftKey) {
                         let sf = this.$shiftRoom;
                         let ef = this.$focusedRoom;
@@ -2060,8 +2175,10 @@ export class VirtualEditor extends EditorBase {
                         this.setFocusedRoom(this.selectedRoom);
                     }
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 39: //right
+                    //#region
                     if (e.shiftKey) {
                         let sf = this.$shiftRoom;
                         let ef = this.$focusedRoom;
@@ -2102,12 +2219,16 @@ export class VirtualEditor extends EditorBase {
                         this.setFocusedRoom(this.selectedRoom);
                     }
                     event.preventDefault();
+                    //#endregion
                     break;
                 case 110:
                 case 46: //delete
+                    //#region
                     if (this.$selectedRooms.length === 0)
                         return;
                     sl = this.$selectedRooms.length;
+                    this.startUndoGroup();
+                    this.pushUndo(undoAction.delete, undoType.room, this.$selectedRooms.map(r => r.clone()));
                     while (sl--) {
                         const sR = this.$selectedRooms[sl];
                         if (sR.ef) continue;
@@ -2141,9 +2262,11 @@ export class VirtualEditor extends EditorBase {
                             sR.exits = 0;
                             sR.terrain = 0;
                             sR.item = 0;
-                            this.$descriptionGrid.refresh();
+                            this.doUpdate(UpdateType.refreshDescriptions);
                         }
                         if (!e.ctrlKey && sR.ee !== RoomExit.None) {
+                            const exits = this.$exits.filter(ex => ex.x === or.x && ex.y === or.y && ex.z === or.z);
+                            this.pushUndo(undoAction.delete, undoType.exits, { index: exits.map(r => this.$exits.indexOf(r)), exits: exits, room: [or.x, or.y, or.z] });
                             let nExternal = this.$exits.filter(ex => ex.x !== or.x || ex.y !== or.y || ex.z !== or.z);
                             this.$exits = nExternal;
                             this.$exitGrid.rows = this.$exits;
@@ -2169,7 +2292,10 @@ export class VirtualEditor extends EditorBase {
                                 else
                                     p.exits &= ~RoomExit.South;
                                 this.DrawRoom(this.$mapContext, p, true, false);
-                                this.RoomChanged(p, po);
+                                if (p.exits !== po.exits) {
+                                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                                    this.RoomChanged(p, po);
+                                }
                             }
                         }
                         if (y > 0 && x > 0 && (e.ctrlKey || (o & RoomExit.NorthWest) === RoomExit.NorthWest)) {
@@ -2183,7 +2309,10 @@ export class VirtualEditor extends EditorBase {
                                 else
                                     p.exits &= ~RoomExit.SouthEast;
                                 this.DrawRoom(this.$mapContext, p, true, false);
-                                this.RoomChanged(p, po);
+                                if (p.exits !== po.exits) {
+                                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                                    this.RoomChanged(p, po);
+                                }
                             }
                         }
                         if (y > 0 && x < this.$mapSize.width - 1 && (e.ctrlKey || (o & RoomExit.NorthEast) === RoomExit.NorthEast)) {
@@ -2197,7 +2326,10 @@ export class VirtualEditor extends EditorBase {
                                 else
                                     p.exits &= ~RoomExit.SouthWest;
                                 this.DrawRoom(this.$mapContext, p, true, false);
-                                this.RoomChanged(p, po);
+                                if (p.exits !== po.exits) {
+                                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                                    this.RoomChanged(p, po);
+                                }
                             }
                         }
                         if (x < this.$mapSize.width - 1 && (e.ctrlKey || (o & RoomExit.East) === RoomExit.East)) {
@@ -2211,7 +2343,10 @@ export class VirtualEditor extends EditorBase {
                                 else
                                     p.exits &= ~RoomExit.West;
                                 this.DrawRoom(this.$mapContext, p, true, false);
-                                this.RoomChanged(p, po);
+                                if (p.exits !== po.exits) {
+                                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                                    this.RoomChanged(p, po);
+                                }
                             }
                         }
                         if (x > 0 && (e.ctrlKey || (o & RoomExit.West) === RoomExit.West)) {
@@ -2225,7 +2360,10 @@ export class VirtualEditor extends EditorBase {
                                 else
                                     p.exits &= ~RoomExit.East;
                                 this.DrawRoom(this.$mapContext, p, true, false);
-                                this.RoomChanged(p, po);
+                                if (p.exits !== po.exits) {
+                                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                                    this.RoomChanged(p, po);
+                                }
                             }
                         }
                         if (y < this.$mapSize.height - 1 && (e.ctrlKey || (o & RoomExit.South) === RoomExit.South)) {
@@ -2239,7 +2377,10 @@ export class VirtualEditor extends EditorBase {
                                 else
                                     p.exits &= ~RoomExit.North;
                                 this.DrawRoom(this.$mapContext, p, true, false);
-                                this.RoomChanged(p, po);
+                                if (p.exits !== po.exits) {
+                                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                                    this.RoomChanged(p, po);
+                                }
                             }
                         }
                         if (y < this.$mapSize.height - 1 && x < this.$mapSize.width - 1 && (e.ctrlKey || (o & RoomExit.SouthEast) === RoomExit.SouthEast)) {
@@ -2253,7 +2394,10 @@ export class VirtualEditor extends EditorBase {
                                 else
                                     p.exits &= ~RoomExit.NorthWest;
                                 this.DrawRoom(this.$mapContext, p, true, false);
-                                this.RoomChanged(p, po);
+                                if (p.exits !== po.exits) {
+                                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                                    this.RoomChanged(p, po);
+                                }
                             }
                         }
                         if (x > 0 && y < this.$mapSize.height - 1 && (e.ctrlKey || (o & RoomExit.SouthWest) === RoomExit.SouthWest)) {
@@ -2267,7 +2411,10 @@ export class VirtualEditor extends EditorBase {
                                 else
                                     p.exits &= ~RoomExit.NorthEast;
                                 this.DrawRoom(this.$mapContext, p, true, false);
-                                this.RoomChanged(p, po);
+                                if (p.exits !== po.exits) {
+                                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                                    this.RoomChanged(p, po);
+                                }
                             }
                         }
                         if (this.$depth + 1 < this.$mapSize.depth && (e.ctrlKey || (o & RoomExit.Up) === RoomExit.Up)) {
@@ -2278,7 +2425,10 @@ export class VirtualEditor extends EditorBase {
                                     p.exits |= RoomExit.Down;
                                 else
                                     p.exits &= ~RoomExit.Down;
-                                this.RoomChanged(p, po);
+                                if (p.exits !== po.exits) {
+                                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                                    this.RoomChanged(p, po);
+                                }
                             }
                         }
                         if (this.$depth - 1 >= 0 && (e.ctrlKey || (o & RoomExit.Down) === RoomExit.Down)) {
@@ -2289,13 +2439,67 @@ export class VirtualEditor extends EditorBase {
                                     p.exits |= RoomExit.Up;
                                 else
                                     p.exits &= ~RoomExit.Up;
-                                this.RoomChanged(p, po);
+                                if (p.exits !== po.exits) {
+                                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                                    this.RoomChanged(p, po);
+                                }
                             }
                         }
                     }
                     event.preventDefault();
+                    this.stopUndoGroup();
+                    //#endregion
                     break;
                 case 97: //num1
+                    //#region southwest
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (y < this.$mapSize.height - 1 && x > 0) {
+                                y++;
+                                x--;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y - 1][u], true);
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y][u], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (y < this.$mapSize.height - 1 && x > 0) {
+                            y++;
+                            x--;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
+                    this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -2308,7 +2512,10 @@ export class VirtualEditor extends EditorBase {
                         else
                             p.exits |= RoomExit.SouthWest;
 
-                        if (o !== p.exits) this.RoomChanged(p, or);
+                        if (o !== p.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(p, or);
+                        }
                         this.setSelectedRooms(this.getRoom(x, y));
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
@@ -2317,7 +2524,10 @@ export class VirtualEditor extends EditorBase {
                                 this.selectedFocusedRoom.exits &= ~RoomExit.NorthEast;
                             else
                                 this.selectedFocusedRoom.exits |= RoomExit.NorthEast;
-                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
 
                         }
@@ -2325,10 +2535,86 @@ export class VirtualEditor extends EditorBase {
                         this.ensureVisible(x, y);
                         this.$map.focus();
                     }
+                    else if (!e.ctrlKey && this.$allowResize) {
+                        if (x === 0 && y === this.$mapSize.height - 1)
+                            this.resizeMap(1, 1, 0, shiftType.top | shiftType.right);
+                        else if (x === 0)
+                            this.resizeMap(1, 0, 0, shiftType.top | shiftType.right);
+                        else
+                            this.resizeMap(0, 1, 0, shiftType.top | shiftType.right);
+                        p = this.selectedFocusedRoom;
+                        y = p.y + 1;
+                        x = p.x - 1;
+                        p.exits |= RoomExit.SouthWest;
+                        if (o !== p.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(p, or);
+                        }
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.NorthEast;
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
+                        }
+                    }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    this.stopUndoGroup();
+                    //#endregion
                     break;
                 case 98: //num2
+                    //#region south
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (y < this.$mapSize.height - 1) {
+                                y++;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y - 1][u], true);
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y][u], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (y < this.$mapSize.height - 1) {
+                            y++;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
+                    this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -2339,7 +2625,10 @@ export class VirtualEditor extends EditorBase {
                             this.selectedFocusedRoom.exits &= ~RoomExit.South;
                         else
                             this.selectedFocusedRoom.exits |= RoomExit.South;
-                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
                         this.setSelectedRooms(this.getRoom(x, y));
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
@@ -2348,7 +2637,34 @@ export class VirtualEditor extends EditorBase {
                                 this.selectedFocusedRoom.exits &= ~RoomExit.North;
                             else
                                 this.selectedFocusedRoom.exits |= RoomExit.North;
-                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
+                        }
+                        this.DrawRoom(this.$mapContext, p, true, false);
+                        this.ensureVisible(x, y);
+                        this.$map.focus();
+                    }
+                    else if (!e.ctrlKey && this.$allowResize) {
+                        this.resizeMap(0, 1, 0, shiftType.top | shiftType.left);
+                        p = this.selectedFocusedRoom;
+                        y = p.y + 1;
+                        this.selectedFocusedRoom.exits |= RoomExit.South;
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.North;
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
@@ -2357,8 +2673,59 @@ export class VirtualEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    this.stopUndoGroup();
+                    //#endregion
                     break;
                 case 99: //num3
+                    //#region southeast
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (y < this.$mapSize.height - 1 && x < this.$mapSize.width - 1) {
+                                y++;
+                                x++;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y - 1][u], true);
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y][u], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (y < this.$mapSize.height - 1 && x < this.$mapSize.width - 1) {
+                            y++;
+                            x++;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
+                    this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -2370,7 +2737,10 @@ export class VirtualEditor extends EditorBase {
                             this.selectedFocusedRoom.exits &= ~RoomExit.SouthEast;
                         else
                             this.selectedFocusedRoom.exits |= RoomExit.SouthEast;
-                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
                         this.setSelectedRooms(this.getRoom(x, y));
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
@@ -2379,7 +2749,40 @@ export class VirtualEditor extends EditorBase {
                                 this.selectedFocusedRoom.exits &= ~RoomExit.NorthWest;
                             else
                                 this.selectedFocusedRoom.exits |= RoomExit.NorthWest;
-                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
+                        }
+                        this.DrawRoom(this.$mapContext, p, true, false);
+                        this.ensureVisible(x, y);
+                        this.$map.focus();
+                    }
+                    else if (!e.ctrlKey && this.$allowResize) {
+                        if (y === this.$mapSize.height - 1 && x === this.$mapSize.width - 1)
+                            this.resizeMap(1, 1, 0, shiftType.top | shiftType.left);
+                        else if (y === this.$mapSize.height - 1)
+                            this.resizeMap(0, 1, 0, shiftType.top | shiftType.left);
+                        else
+                            this.resizeMap(1, 0, 0, shiftType.top | shiftType.left);
+                        p = this.selectedFocusedRoom;
+                        y = p.y + 1;
+                        x = p.x + 1;
+                        this.selectedFocusedRoom.exits |= RoomExit.SouthEast;
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.NorthWest;
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
@@ -2388,8 +2791,57 @@ export class VirtualEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    this.stopUndoGroup();
+                    //#endregion
                     break;
                 case 100: //num4
+                    //#region west
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (x > 0) {
+                                x--;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = y; u < height; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][u][sf.x + 1], true);
+                                for (let u = y; u < height; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][u][sf.x], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (x > 0) {
+                            x--;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
+                    this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -2400,7 +2852,10 @@ export class VirtualEditor extends EditorBase {
                             this.selectedFocusedRoom.exits &= ~RoomExit.West;
                         else
                             this.selectedFocusedRoom.exits |= RoomExit.West;
-                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
                         this.setSelectedRooms(this.getRoom(x, y));
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
@@ -2409,7 +2864,34 @@ export class VirtualEditor extends EditorBase {
                                 this.selectedFocusedRoom.exits &= ~RoomExit.East;
                             else
                                 this.selectedFocusedRoom.exits |= RoomExit.East;
-                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
+                        }
+                        this.DrawRoom(this.$mapContext, p, true, false);
+                        this.ensureVisible(x, y);
+                        this.$map.focus();
+                    }
+                    else if (!e.ctrlKey && this.$allowResize) {
+                        this.resizeMap(1, 0, 0, shiftType.top | shiftType.right);
+                        p = this.selectedFocusedRoom;
+                        x = p.x - 1;
+                        this.selectedFocusedRoom.exits |= RoomExit.West;
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.East;
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
@@ -2418,10 +2900,59 @@ export class VirtualEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    this.stopUndoGroup();
+                    //#endregion
                     break;
                 case 101: //num5
                     break;
                 case 102: //num6
+                    //#region east
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (x < this.$mapSize.width - 1) {
+                                x++;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = y; u < height; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][u][sf.x - 1], true);
+                                for (let u = y; u < height; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][u][sf.x], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (x < this.$mapSize.width - 1) {
+                            x++;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
+                    this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -2432,7 +2963,10 @@ export class VirtualEditor extends EditorBase {
                             this.selectedFocusedRoom.exits &= ~RoomExit.East;
                         else
                             this.selectedFocusedRoom.exits |= RoomExit.East;
-                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
                         this.setSelectedRooms(this.getRoom(x, y));
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
@@ -2441,7 +2975,34 @@ export class VirtualEditor extends EditorBase {
                                 this.selectedFocusedRoom.exits &= ~RoomExit.West;
                             else
                                 this.selectedFocusedRoom.exits |= RoomExit.West;
-                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
+                        }
+                        this.DrawRoom(this.$mapContext, p, true, false);
+                        this.ensureVisible(x, y);
+                        this.$map.focus();
+                    }
+                    else if (!e.ctrlKey && this.$allowResize) {
+                        this.resizeMap(1, 0, 0, shiftType.top | shiftType.left);
+                        p = this.selectedFocusedRoom;
+                        x = p.x + 1;
+                        this.selectedFocusedRoom.exits |= RoomExit.East;
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.West;
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
@@ -2450,8 +3011,59 @@ export class VirtualEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    this.stopUndoGroup();
+                    //#endregion
                     break;
                 case 103: //num7
+                    //#region northwest
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (y > 0 && x > 0) {
+                                y--;
+                                x--;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y + 1][u], true);
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y][u], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (y > 0 && x > 0) {
+                            y--;
+                            x--;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
+                    this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -2463,7 +3075,10 @@ export class VirtualEditor extends EditorBase {
                             this.selectedFocusedRoom.exits &= ~RoomExit.NorthWest;
                         else
                             this.selectedFocusedRoom.exits |= RoomExit.NorthWest;
-                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
                         this.setSelectedRooms(this.getRoom(x, y));
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
@@ -2472,7 +3087,40 @@ export class VirtualEditor extends EditorBase {
                                 this.selectedFocusedRoom.exits &= ~RoomExit.SouthEast;
                             else
                                 this.selectedFocusedRoom.exits |= RoomExit.SouthEast;
-                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
+                        }
+                        this.DrawRoom(this.$mapContext, p, true, false);
+                        this.ensureVisible(x, y);
+                        this.$map.focus();
+                    }
+                    else if (!e.ctrlKey && this.$allowResize) {
+                        if (x === 0 && y === 0)
+                            this.resizeMap(1, 1, 0, shiftType.bottom | shiftType.right);
+                        else if (y === 0)
+                            this.resizeMap(0, 1, 0, shiftType.bottom | shiftType.right);
+                        else
+                            this.resizeMap(1, 0, 0, shiftType.bottom | shiftType.right);
+                        p = this.selectedFocusedRoom;
+                        x = p.x - 1;
+                        y = p.y - 1;
+                        this.selectedFocusedRoom.exits |= RoomExit.NorthWest;
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.SouthEast;
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
@@ -2481,8 +3129,56 @@ export class VirtualEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    this.stopUndoGroup();
+                    //#endregion
                     break;
                 case 104: //num8
+                    //#region north
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (y > 0) {
+                                y--;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y + 1][u], true);
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y][u], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (y > 0) {
+                            y--;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion                        return;
+                    }
+                    this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -2493,7 +3189,10 @@ export class VirtualEditor extends EditorBase {
                             this.selectedFocusedRoom.exits &= ~RoomExit.North;
                         else
                             this.selectedFocusedRoom.exits |= RoomExit.North;
-                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
                         this.setSelectedRooms(this.getRoom(x, y));
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
@@ -2502,7 +3201,34 @@ export class VirtualEditor extends EditorBase {
                                 this.selectedFocusedRoom.exits &= ~RoomExit.South;
                             else
                                 this.selectedFocusedRoom.exits |= RoomExit.South;
-                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
+                        }
+                        this.DrawRoom(this.$mapContext, p, true, false);
+                        this.ensureVisible(x, y);
+                        this.$map.focus();
+                    }
+                    else if (!e.ctrlKey && this.$allowResize) {
+                        this.resizeMap(0, 1, 0, shiftType.bottom | shiftType.left);
+                        p = this.selectedFocusedRoom;
+                        y = p.y - 1;
+                        this.selectedFocusedRoom.exits |= RoomExit.North;
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.South;
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
@@ -2510,8 +3236,59 @@ export class VirtualEditor extends EditorBase {
                         this.$map.focus();
                     }
                     event.preventDefault();
+                    this.stopUndoGroup();
+                    //#endregion
                     break;
                 case 105: //num9
+                    //#region northeast
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (x < this.$mapSize.width - 1 && y > 0) {
+                                y--;
+                                x++;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y + 1][u], true);
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$rooms[this.$depth][sf.y][u], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (x < this.$mapSize.width - 1 && y > 0) {
+                            y--;
+                            x++;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
+                    this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
                         this.ChangeSelection();
@@ -2523,7 +3300,10 @@ export class VirtualEditor extends EditorBase {
                             this.selectedFocusedRoom.exits &= ~RoomExit.NorthEast;
                         else
                             this.selectedFocusedRoom.exits |= RoomExit.NorthEast;
-                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
                         this.setSelectedRooms(this.getRoom(x, y));
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
@@ -2532,7 +3312,40 @@ export class VirtualEditor extends EditorBase {
                                 this.selectedFocusedRoom.exits &= ~RoomExit.SouthWest;
                             else
                                 this.selectedFocusedRoom.exits |= RoomExit.SouthWest;
-                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
+                        }
+                        this.DrawRoom(this.$mapContext, p, true, false);
+                        this.ensureVisible(x, y);
+                        this.$map.focus();
+                    }
+                    else if (!e.ctrlKey && this.$allowResize) {
+                        if (x === this.$mapSize.width - 1 && y === 0)
+                            this.resizeMap(1, 1, 0, shiftType.bottom | shiftType.left);
+                        else if (y === 0)
+                            this.resizeMap(0, 1, 0, shiftType.bottom | shiftType.left);
+                        else
+                            this.resizeMap(1, 0, 0, shiftType.bottom | shiftType.left);
+                        p = this.selectedFocusedRoom;
+                        x = p.x + 1;
+                        y = p.y - 1;
+                        this.selectedFocusedRoom.exits |= RoomExit.NorthEast;
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
+                        this.setSelectedRooms(this.getRoom(x, y));
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.SouthWest;
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
                             this.DrawRoom(this.$mapContext, this.selectedFocusedRoom, true, false);
                         }
                         this.DrawRoom(this.$mapContext, p, true, false);
@@ -2541,30 +3354,47 @@ export class VirtualEditor extends EditorBase {
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    this.stopUndoGroup();
+                    //#endregion
                     break;
                 case 107: //+
+                    //#region
                     if (this.$selectedRooms.length === 0)
                         return;
                     sl = this.$selectedRooms.length;
+                    t = [];
+                    rs = [];
                     while (sl--) {
                         or = this.$selectedRooms[sl].clone();
+                        t[sl] = this.$selectedRooms[sl].terrain;
+                        rs[sl] = [this.$selectedRooms[sl].x, this.$selectedRooms[sl].y, this.$selectedRooms[sl].z];
                         if (this.$selectedRooms[sl].item === this.$selectedRooms[sl].terrain)
                             this.$selectedRooms[sl].item++;
                         this.$selectedRooms[sl].terrain++;
-                        this.$descriptionGrid.refresh();
                         if (this.$selectedRooms[sl].terrain > this.$maxTerrain)
                             this.updateMaxTerrain(this.$selectedRooms[sl].terrain);
                         else
                             this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, false);
                         this.RoomChanged(this.$selectedRooms[sl], or);
                     }
+                    this.doUpdate(UpdateType.refreshDescriptions);
+                    this.startUndoGroup();
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'terrain', values: t, rooms: rs });
+                    this.stopUndoGroup();
+                    //#endregion
                     break;
                 case 109: //-
+                    //#region
                     if (this.$selectedRooms.length === 0)
                         return;
+                    t = [];
+                    rs = [];
                     sl = this.$selectedRooms.length;
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'terrain', values: this.$selectedRooms.map(r => r.terrain), rooms: this.$selectedRooms.map(r => [r.x, r.y, r.z]) });
                     while (sl--) {
                         or = this.$selectedRooms[sl].clone();
+                        t[sl] = this.$selectedRooms[sl].terrain;
+                        rs[sl] = [this.$selectedRooms[sl].x, this.$selectedRooms[sl].y, this.$selectedRooms[sl].z];
                         if (this.$selectedRooms[sl].item === this.$selectedRooms[sl].terrain) {
                             this.$selectedRooms[sl].item--;
                             if (this.$selectedRooms[sl].item < 0)
@@ -2573,21 +3403,30 @@ export class VirtualEditor extends EditorBase {
                         this.$selectedRooms[sl].terrain--;
                         if (this.$selectedRooms[sl].terrain < 0)
                             this.$selectedRooms[sl].terrain = 0;
-                        this.$descriptionGrid.refresh();
                         this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, false);
                         this.RoomChanged(this.$selectedRooms[sl], or);
                     }
+                    this.doUpdate(UpdateType.refreshDescriptions);
+                    this.startUndoGroup();
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'terrain', values: t, rooms: rs });
+                    this.stopUndoGroup();
+                    //#endregion
                     break;
                 case 111: // / up
+                    //#region
                     if (this.$selectedRooms.length === 0 || this.selectedFocusedRoom.ef)
                         return;
+                    this.startUndoGroup();
                     if (this.$depth + 1 < this.$mapSize.depth) {
                         this.$depth++;
                         if (e.ctrlKey)
                             this.selectedFocusedRoom.exits &= ~RoomExit.Up;
                         else
                             this.selectedFocusedRoom.exits |= RoomExit.Up;
-                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
                         this.setSelectedRooms(this.getRoom(x, y, this.$depth), true);
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
@@ -2596,25 +3435,59 @@ export class VirtualEditor extends EditorBase {
                                 this.selectedFocusedRoom.exits &= ~RoomExit.Down;
                             else
                                 this.selectedFocusedRoom.exits |= RoomExit.Down;
-                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
                         }
                         this.setFocusedRoom(null);
                         this.doUpdate(UpdateType.drawMap);
                         this.$map.focus();
+                        this.emit('rebuild-buttons');
+                    }
+                    else if (!e.ctrlKey && this.$allowResize) {
+                        this.resizeMap(0, 0, 1, shiftType.down);
+                        this.$depth = this.selectedFocusedRoom.z + 1;
+                        this.selectedFocusedRoom.exits |= RoomExit.Up;
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
+                        this.setSelectedRooms(this.getRoom(x, y, this.$depth), true);
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.Down;
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                        }
+                        this.setFocusedRoom(null);
+                        this.doUpdate(UpdateType.drawMap);
+                        this.$map.focus();
+                        this.emit('rebuild-buttons');
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    this.stopUndoGroup();
+                    //#endregion
                     break;
                 case 106: // * down
+                    //#region
                     if (this.$selectedRooms.length === 0 || this.selectedFocusedRoom.ef)
                         return;
+                    this.startUndoGroup();
                     if (this.$depth - 1 >= 0) {
                         this.$depth--;
                         if (e.ctrlKey)
                             this.selectedFocusedRoom.exits &= ~RoomExit.Down;
                         else
                             this.selectedFocusedRoom.exits |= RoomExit.Down;
-                        if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
                         this.setSelectedRooms(this.getRoom(x, y, this.$depth), true);
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
@@ -2623,14 +3496,43 @@ export class VirtualEditor extends EditorBase {
                                 this.selectedFocusedRoom.exits &= ~RoomExit.Up;
                             else
                                 this.selectedFocusedRoom.exits |= RoomExit.Up;
-                            if (o !== this.selectedFocusedRoom.exits) this.RoomChanged(this.selectedFocusedRoom, or);
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
                         }
                         this.setFocusedRoom(null);
                         this.doUpdate(UpdateType.drawMap);
                         this.$map.focus();
+                        this.emit('rebuild-buttons');
+                    }
+                    else if (!e.ctrlKey && this.$allowResize) {
+                        this.resizeMap(0, 0, 1, shiftType.up);
+                        this.$depth = this.selectedFocusedRoom.z - 1;
+                        this.selectedFocusedRoom.exits |= RoomExit.Down;
+                        if (o !== this.selectedFocusedRoom.exits) {
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                            this.RoomChanged(this.selectedFocusedRoom, or);
+                        }
+                        this.setSelectedRooms(this.getRoom(x, y, this.$depth), true);
+                        if (this.selectedFocusedRoom) {
+                            or = this.selectedFocusedRoom.clone();
+                            o = this.selectedFocusedRoom.exits;
+                            this.selectedFocusedRoom.exits |= RoomExit.Up;
+                            if (o !== this.selectedFocusedRoom.exits) {
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                        }
+                        this.setFocusedRoom(null);
+                        this.doUpdate(UpdateType.drawMap);
+                        this.$map.focus();
+                        this.emit('rebuild-buttons');
                     }
                     this.setFocusedRoom(this.selectedRoom);
                     event.preventDefault();
+                    this.stopUndoGroup();
+                    //#endregion
                     break;
             }
         });
@@ -2664,6 +3566,10 @@ export class VirtualEditor extends EditorBase {
             const selected = this.$roomEditor.objects;
             let sl = selected.length;
             const first = selected[0];
+            let oldValues = [];
+            const mx = this.$mouse.rx;
+            const my = this.$mouse.ry;
+            this.startUndoGroup();
             items:
             while (sl--) {
                 const curr = selected[sl];
@@ -2671,6 +3577,7 @@ export class VirtualEditor extends EditorBase {
                 let data;
                 switch (prop) {
                     case 'external':
+                        this.pushUndo(undoAction.edit, undoType.exits, { exits: this.$exits.filter(e => e.x === old.x && e.y === old.y && e.z === old.z), room: [old.x, old.y, old.z] });
                         let nExternal = this.$exits.filter(e => e.x !== old.x || e.y !== old.y || e.z !== old.z);
                         let ex = newValue.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0);
                         if (ex.length > 0)
@@ -2686,17 +3593,16 @@ export class VirtualEditor extends EditorBase {
                             nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
                         this.$externalRaw.value = '';
                         this.updateRaw(this.$externalRaw, 0, nExternal);
-                        selected.forEach(r => {
-                            const o = this.getRoom(r.x, r.y, r.z);
-                            o.ee = ex;
-                            this.DrawRoom(this.$mapContext, o, true, o.at(this.$mouse.rx, this.$mouse.ry));
-                        });
+                        oldValues[sl] = old.ee;
+                        old.ee = ex;
+                        this.DrawRoom(this.$mapContext, old, true, old.at(mx, my));
                         resetCursor(this.$externalRaw);
-                        break items;
+                        break;
                     case 'ee':
                     case 'ef':
                         break;
                     case 'items':
+                        this.pushUndo(undoAction.edit, undoType.item, { index: first.item, items: this.$items[first.item].children });
                         this.$items[first.item].children = newValue;
                         this.$itemGrid.rows = this.$items;
                         this.updateRaw(this.$itemRaw, first.item * 2, [
@@ -2704,7 +3610,8 @@ export class VirtualEditor extends EditorBase {
                             newValue.map(i => i.description).join(':')
                         ]);
                         resetCursor(this.$itemRaw);
-                        selected.forEach(r => {
+                        selected.forEach((r, i) => {
+                            oldValues[i] = r.terrain;
                             const o = this.getRoom(r.x, r.y, r.z);
                             if (first.terrain === first.item)
                                 r.item = first.item;
@@ -2714,6 +3621,8 @@ export class VirtualEditor extends EditorBase {
                                 o.item = first.item;
                             o.terrain = first.terrain;
                         });
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'terrain', values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
+                        oldValues = [];
                         break items;
                     case 'terrainType':
                     case 'short':
@@ -2723,7 +3632,8 @@ export class VirtualEditor extends EditorBase {
                     case 'smell':
                         if (prop === 'terrainType')
                             prop = 'terrain';
-                        selected.forEach(r => {
+                        selected.forEach((r, i) => {
+                            oldValues.push(r.terrain);
                             const o = this.getRoom(r.x, r.y, r.z);
                             if (first.terrain === first.item)
                                 r.item = first.item;
@@ -2733,6 +3643,8 @@ export class VirtualEditor extends EditorBase {
                                 o.item = first.item;
                             o.terrain = first.terrain;
                         });
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'terrain', values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
+                        oldValues = [];
                         //invalid index
                         if (first.terrain < 0) break items;
                         //get current data and if none set defaults and assign to the index
@@ -2748,6 +3660,7 @@ export class VirtualEditor extends EditorBase {
                                 smell: ''
                             };
                         }
+                        this.pushUndo(undoAction.edit, undoType.description, { index: first.terrain, property: prop, value: data[prop] });
                         data[prop] = newValue;
                         //update the object data
                         this.$descriptions[first.terrain] = data;
@@ -2767,20 +3680,25 @@ export class VirtualEditor extends EditorBase {
                         if (newValue > this.$maxTerrain)
                             this.updateMaxTerrain(newValue);
                         else //else just redraw the current room
-                            this.DrawRoom(this.$mapContext, curr, true, curr.at(this.$mouse.rx, this.$mouse.ry));
+                            this.DrawRoom(this.$mapContext, curr, true, curr.at(mx, my));
                         this.RoomChanged(curr, old, true);
                         if (curr.item === newValue)
                             old.item = newValue;
+                        oldValues[sl] = old[prop];
                         old[prop] = newValue;
                         break;
                     default:
+                        oldValues[sl] = old[prop];
                         curr[prop] = newValue;
-                        this.DrawRoom(this.$mapContext, curr, true, curr.at(this.$mouse.rx, this.$mouse.ry));
+                        this.DrawRoom(this.$mapContext, curr, true, curr.at(mx, my));
                         this.RoomChanged(curr, old, true);
                         old[prop] = newValue;
                         break;
                 }
             }
+            if (oldValues.length > 0)
+                this.pushUndo(undoAction.edit, undoType.room, { property: prop === 'external' ? 'ee' : prop, values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
+            this.stopUndoGroup();
             setTimeout(() => this.UpdateEditor(this.$selectedRooms));
             this.UpdatePreview(this.selectedFocusedRoom);
         });
@@ -3021,7 +3939,6 @@ export class VirtualEditor extends EditorBase {
             }
         });
         this.$observer.observe(this.$mapContainer, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
-
         //#endregion
     }
 
@@ -3079,6 +3996,7 @@ export class VirtualEditor extends EditorBase {
                 this.emit('selection-changed');
         });
         el.addEventListener('change', (e) => {
+            this.pushUndo(undoAction.edit, undoType.rawText, { el: el, value: el.value });
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
@@ -3086,6 +4004,7 @@ export class VirtualEditor extends EditorBase {
                 this.emit('changed', el.value.length);
         });
         el.addEventListener('input', (e) => {
+            this.pushUndo(undoAction.edit, undoType.rawText, { el: el, value: el.value });
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
@@ -3093,6 +4012,7 @@ export class VirtualEditor extends EditorBase {
                 this.emit('changed', el.value.length);
         });
         el.addEventListener('paste', (e) => {
+            this.pushUndo(undoAction.edit, undoType.rawText, { el: el, value: el.value });
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
@@ -3100,6 +4020,7 @@ export class VirtualEditor extends EditorBase {
                 this.emit('changed', el.value.length);
         });
         el.addEventListener('cut', (e) => {
+            this.pushUndo(undoAction.edit, undoType.rawText, { el: el, value: el.value });
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
@@ -3339,6 +4260,19 @@ export class VirtualEditor extends EditorBase {
     }
 
     public revert(file?) {
+        const uData = {};
+        uData['map'] = this.$mapRaw.value;
+        if (this.$files['virtual.terrain'])
+            uData['virtual.terrain'] = this.$terrainRaw.value;
+        if (this.$files['virtual.state'])
+            uData['virtual.state'] = this.$stateRaw.value;
+        if (this.$files['terrain.desc'])
+            uData['terrain.desc'] = this.$descriptionRaw.value;
+        if (this.$files['terrain.item'])
+            uData['terrain.item'] = this.$itemRaw.value;
+        if (this.$files['virtual.exits'])
+            uData['virtual.exits'] = this.$externalRaw.value;
+        this.pushUndo(undoAction.delete, undoType.revert, uData);
         if (!this.new)
             this.open(file);
         else {
@@ -3381,12 +4315,14 @@ export class VirtualEditor extends EditorBase {
         return raw.value.substring(raw.selectionStart, raw.selectionEnd);
     }
 
-    private deleteRawSelected(raw, noChanged?, noDirty?) {
+    private deleteRawSelected(raw, noChanged?, noDirty?, noUndo?) {
         if (!raw) return;
         const start = raw.selectionStart;
         const end = raw.selectionEnd;
         //nothing selected
         if (start === end) return;
+        if (!noChanged && !noUndo)
+            this.pushUndo(undoAction.delete, undoType.rawText, { el: raw, start: start, end: end, value: raw.value.substring(start, end) });
         raw.value = raw.value.substring(0, start) + raw.value.substring(end);
         raw.selectionStart = start;
         raw.selectionEnd = start;
@@ -3397,7 +4333,7 @@ export class VirtualEditor extends EditorBase {
         }
     }
 
-    private deleteRoom(room) {
+    private deleteRoom(room, noUndo?) {
         const o = room.exits;
         let nx;
         let ny;
@@ -3411,7 +4347,11 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits &= ~RoomExit.South;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    if (!noUndo)
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
         }
         if (room.y > 0 && room.x > 0 && (o & RoomExit.NorthWest) === RoomExit.NorthWest) {
@@ -3422,7 +4362,11 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits &= ~RoomExit.SouthEast;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    if (!noUndo)
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
         }
         if (room.y > 0 && room.x < this.$mapSize.width - 1 && (o & RoomExit.NorthEast) === RoomExit.NorthEast) {
@@ -3433,7 +4377,11 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits &= ~RoomExit.SouthWest;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    if (!noUndo)
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
         }
         if (room.x < this.$mapSize.width - 1 && (o & RoomExit.East) === RoomExit.East) {
@@ -3444,7 +4392,11 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits &= ~RoomExit.West;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    if (!noUndo)
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
         }
         if (room.x > 0 && (o & RoomExit.West) === RoomExit.West) {
@@ -3455,7 +4407,11 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits &= ~RoomExit.East;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    if (!noUndo)
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
         }
         if (room.y < this.$mapSize.height - 1 && (o & RoomExit.South) === RoomExit.South) {
@@ -3466,7 +4422,11 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits &= ~RoomExit.North;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    if (!noUndo)
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
         }
         if (room.y < this.$mapSize.height - 1 && room.x < this.$mapSize.width - 1 && (o & RoomExit.SouthEast) === RoomExit.SouthEast) {
@@ -3477,7 +4437,11 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits &= ~RoomExit.NorthWest;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    if (!noUndo)
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
         }
         if (room.x > 0 && room.y < this.$mapSize.height - 1 && (o & RoomExit.SouthWest) === RoomExit.SouthWest) {
@@ -3488,7 +4452,11 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits &= ~RoomExit.NorthEast;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    if (!noUndo)
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
         }
         if (this.$depth + 1 < this.$mapSize.depth && (o & RoomExit.Up) === RoomExit.Up) {
@@ -3496,7 +4464,11 @@ export class VirtualEditor extends EditorBase {
             if (p) {
                 po = p.clone();
                 p.exits &= ~RoomExit.Down;
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    if (!noUndo)
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
         }
         if (this.$depth - 1 >= 0 && (o & RoomExit.Down) === RoomExit.Down) {
@@ -3504,12 +4476,17 @@ export class VirtualEditor extends EditorBase {
             if (p) {
                 po = p.clone();
                 p.exits &= ~RoomExit.Up;
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    if (!noUndo)
+                        this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
         }
     }
 
     private addRoom(room) {
+        this.pushUndo(undoAction.add, undoType.room, this.getRoom(room.x, room.y, room.z));
         this.setRoom(room);
         const o = room.exits;
         let nx;
@@ -3546,7 +4523,10 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits |= RoomExit.South;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
             else
                 room.exits &= ~RoomExit.North;
@@ -3559,7 +4539,10 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits |= RoomExit.SouthEast;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             } else
                 room.exits &= ~RoomExit.NorthWest;
         }
@@ -3571,7 +4554,10 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits |= RoomExit.SouthWest;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             } else
                 room.exits &= ~RoomExit.NorthEast;
         }
@@ -3583,7 +4569,10 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits |= RoomExit.West;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             } else
                 room.exits &= ~RoomExit.East;
         }
@@ -3595,7 +4584,10 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits |= RoomExit.East;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             } else
                 room.exits &= ~RoomExit.West;
         }
@@ -3607,7 +4599,10 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits |= RoomExit.North;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             } else
                 room.exits &= ~RoomExit.South;
         }
@@ -3619,7 +4614,10 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits |= RoomExit.NorthWest;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
             else
                 room.exits &= ~RoomExit.SouthEast;
@@ -3632,7 +4630,10 @@ export class VirtualEditor extends EditorBase {
                 po = p.clone();
                 p.exits |= RoomExit.NorthEast;
                 this.DrawRoom(this.$mapContext, p, true, false);
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
             else
                 room.exits &= ~RoomExit.SouthWest;
@@ -3642,7 +4643,10 @@ export class VirtualEditor extends EditorBase {
             if (p) {
                 po = p.clone();
                 p.exits |= RoomExit.Down;
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
             else
                 room.exits &= ~RoomExit.Up;
@@ -3652,7 +4656,10 @@ export class VirtualEditor extends EditorBase {
             if (p) {
                 po = p.clone();
                 p.exits |= RoomExit.Up;
-                this.RoomChanged(p, po);
+                if (p.exits !== po.exits) {
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [po.exits], rooms: [[po.x, po.y, po.z]] });
+                    this.RoomChanged(p, po);
+                }
             }
             else
                 room.exits &= ~RoomExit.Down;
@@ -3724,12 +4731,15 @@ export class VirtualEditor extends EditorBase {
         switch (this.$view) {
             case View.map:
                 if (this.$selectedRooms.length === 0) return;
+                this.startUndoGroup();
                 const rooms = this.$selectedRooms.filter(r => !r.ef).map(r => {
                     const n = r.clone();
                     n.external = this.$exits.filter(e => e.x === n.x && e.y === n.y && e.z === n.z);
+                    if (n.external.length > 0)
+                        this.pushUndo(undoAction.delete, undoType.exits, { index: n.external.map(x => this.$exits.indexOf(x)), exits: n.external, room: [n.x, n.y, n.z] });
                     return n;
                 });
-                if (rooms.length === 0) return;
+                this.pushUndo(undoAction.delete, undoType.room, rooms);
                 const details = {};
                 rooms.forEach(r =>
                     details[r.item] = {
@@ -3766,6 +4776,7 @@ export class VirtualEditor extends EditorBase {
                     this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, this.$selectedRooms[sl].at(this.$mouse.rx, this.$mouse.ry));
                     this.deleteRoom(or);
                 }
+                this.stopUndoGroup();
                 this.emit('supports-changed');
                 break;
             case View.terrains:
@@ -3796,7 +4807,7 @@ export class VirtualEditor extends EditorBase {
                     n.external = this.$exits.filter(e => e.x === n.x && e.y === n.y && e.z === n.z);
                     return n;
                 });
-                if (rooms.length === 0) return;
+
                 const details = {};
                 rooms.forEach(r =>
                     details[r.item] = {
@@ -3844,6 +4855,7 @@ export class VirtualEditor extends EditorBase {
                 const osY = data.rooms[0].y - or.y;
                 let dl = data.rooms.length;
                 const rooms = [];
+                this.startUndoGroup();
                 while (dl--) {
                     const dRoom = data.rooms[dl];
                     const room = new Room(dRoom.x - osX, dRoom.y - osY, dRoom.z, dRoom.exits, dRoom.terrain, dRoom.item, dRoom.state);
@@ -3852,6 +4864,7 @@ export class VirtualEditor extends EditorBase {
                     room.ee = dRoom.ee;
                     //has external rooms paste them in
                     if (dRoom.external && dRoom.external.length > 0) {
+                        this.pushUndo(undoAction.add, undoType.exits, { oldLength: this.$exits.length, exits: dRoom.external, room: [dRoom.x, dRoom.y, dRoom.z] });
                         //change the coords to match the new room
                         dRoom.external.map(r => {
                             r.x = or.x;
@@ -3867,13 +4880,13 @@ export class VirtualEditor extends EditorBase {
                         //append changed exits
                         this.$exits.push(...dRoom.external);
                         //refresh the grid to make sure it has all the new data
-                        this.$exitGrid.refresh();
+                        this.doUpdate(UpdateType.refreshExits);
                     }
-                    this.deleteRoom(or);
                     this.addRoom(room);
                     this.RoomChanged(room, or);
                     rooms.unshift(room);
                 }
+                this.stopUndoGroup();
                 if (this.$focusedRoom)
                     this.setFocusedRoom(this.$focusedRoom.x, this.$focusedRoom.y, this.$focusedRoom.z);
                 this.setSelectedRooms(rooms);
@@ -3901,12 +4914,15 @@ export class VirtualEditor extends EditorBase {
         switch (this.$view) {
             case View.map:
                 if (this.$selectedRooms.length === 0) return;
+                this.startUndoGroup();
                 const rooms = this.$selectedRooms.filter(r => !r.ef).map(r => {
                     const n = r.clone();
                     n.external = this.$exits.filter(e => e.x === n.x && e.y === n.y && e.z === n.z);
+                    if (n.external.length > 0)
+                        this.pushUndo(undoAction.delete, undoType.exits, { index: n.external.map(x => this.$exits.indexOf(x)), exits: n.external, room: [n.x, n.y, n.z] });
                     return n;
                 });
-                if (rooms.length === 0) return;
+                this.pushUndo(undoAction.delete, undoType.room, rooms);
                 let sl = this.$selectedRooms.length;
                 while (sl--) {
                     const or = this.$selectedRooms[sl];
@@ -3931,6 +4947,7 @@ export class VirtualEditor extends EditorBase {
                     this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, this.$selectedRooms[sl].at(this.$mouse.rx, this.$mouse.ry));
                     this.deleteRoom(or);
                 }
+                this.stopUndoGroup();
                 this.emit('supports-changed');
                 break;
             case View.terrains:
@@ -3964,75 +4981,516 @@ export class VirtualEditor extends EditorBase {
     }
 
     public undo() {
-        switch (this.$view) {
-            case View.map:
-                if (this.$undo.length) {
-                    const u = this.$undo.pop();
-                    if (Array.isArray(u)) {
-                        this.startRedoGroup();
-                        let ul = u.length;
-                        while (ul--)
-                            this.undoAction(u[ul]);
-                        this.stopRedoGroup();
-                    }
-                    else
-                        this.undoAction(u);
-                    this.emit('supports-changed');
-                }
-                break;
-            case View.terrains:
-            case View.items:
-            case View.exits:
-                break;
-            case View.mapRaw:
-            case View.terrainsRaw:
-            case View.descriptionsRaw:
-            case View.itemsRaw:
-            case View.stateRaw:
-            case View.exitsRaw:
-                document.execCommand('undo');
-                break;
+
+        if (this.$undo.length) {
+            const u = this.$undo.pop();
+            if (Array.isArray(u)) {
+                this.startRedoGroup();
+                let ul = u.length;
+                while (ul--)
+                    this.undoAction(u[ul]);
+                this.stopRedoGroup();
+            }
+            else
+                this.undoAction(u);
+            this.emit('supports-changed');
         }
     }
 
     private undoAction(undo) {
         if (!undo) return;
+        let l;
+        let room;
+        let value;
+        let values;
+        if (undo.view !== this.$view)
+            this.switchView(undo.view);
+        switch (undo.action) {
+            case undoAction.add:
+                switch (undo.type) {
+                    case undoType.room:
+                        room = this.getRoom(undo.data.x, undo.data.y, undo.data.z);
+                        this.setRoom(undo.data);
+                        this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
+                        undo.data = room;
+                        this.pushRedo(undo);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.exits:
+                        //this.pushUndo(undoAction.add, undoType.exits, { oldLength: this.$exits.length, exits: dRoom.external, room: [dRoom.x, dRoom.y, dRoom.z] });
+                        this.$exits.splice(undo.data.oldLength, undo.data.exits.length);
+                        this.pushRedo(undo);
+                        this.doUpdate(UpdateType.refreshExits);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.raw:
+                        //this.pushUndo(undoAction.add, undoType.raw, { el: raw, originalLine: lines.length, line: line, str: str });
+                        this.removeRaw(undo.data.el, undo.data.line, undo.data.str.length, false, false, true);
+                        this.pushRedo(undo);
+                        break;
+                    case undoType.description:
+                        //this.pushUndo(undoAction.add, undoType.description, { index: idx });
+                        undo.data.value = this.$descriptions[undo.data.index];
+                        this.$descriptions.splice(undo.data.index, 1);
+                        this.pushRedo(undo);
+                        this.doUpdate(UpdateType.refreshDescriptions);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.item:
+                        //this.pushUndo(undoAction.add, undoType.item, { index: this.$items.length, items });
+                        //this.pushUndo(undoAction.add, undoType.description, { index: idx });
+                        undo.data.value = this.$items[undo.data.index];
+                        this.$items.splice(undo.data.index, 1);
+                        this.pushRedo(undo);
+                        this.doUpdate(UpdateType.refreshItems);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                }
+                break;
+            case undoAction.delete:
+                switch (undo.type) {
+                    case undoType.rawText:
+                        //this.pushUndo(undoAction.delete, undoType.rawText, { el: raw, start: start, end: end, value: raw.value.substring(start, end) });
+                        undo.data.el.value = undo.data.el.value.substring(0, undo.data.start) + undo.data.value + undo.data.el.value.substring(undo.data.end);
+                        undo.data.el.selectionStart = undo.data.el.start;
+                        undo.data.el.selectionEnd = undo.data.el.end;
+                        this.changed = true;
+                        undo.data.el.dataset.dirty = 'true';
+                        undo.data.el.dataset.changed = 'true';
+                        this.pushRedo(undo);
+                        break;
+                    case undoType.room:
+                        l = undo.data.length;
+                        values = [];
+                        const mx = this.$mouse.rx;
+                        const my = this.$mouse.ry;
+                        while (l--) {
+                            values[l] = this.getRoom(undo.data[l].x, undo.data[l].y, undo.data[l].z).clone();
+                            this.setRoom(undo.data[l]);
+                            this.RoomChanged(undo.data[l]);
+                            if (values[l].exits) this.$rcount--;
+                            if (undo.data[l].exits) this.$rcount++;
+                            this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
+                        }
+                        this.doUpdate(UpdateType.status);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        undo.data = values;
+                        this.pushRedo(undo);
+                        break;
+                    case undoType.exits:
+                        //this.pushUndo(undoAction.delete, undoType.exits, { index: [d[dl]], exits: n.external, room: [n.x, n.y, n.z] });
+                        l = undo.data.index.length;
+                        while (l--)
+                            this.$exits.splice(undo.data.index[l], 0, undo.data.exits[l]);
+                        this.doUpdate(UpdateType.refreshExits);
+                        this.pushRedo(undo);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.raw:
+                        //this.pushUndo(undoAction.delete, undoType.raw, { el: raw, line: line, count: count, lines: lines.slice(line, line + count) });
+                        this.insertRaw(undo.data.el, undo.data.line, undo.data.lines, false, false, true);
+                        this.pushRedo(undo);
+                        break;
+                    case undoType.revert:
+                        //this.pushUndo(undoAction.delete, undoType.revert, uData);
+                        value = {};
+                        value['map'] = this.$mapRaw.value;
+                        this.$mapRaw.value = undo.data['map'];
+                        if (this.$files['virtual.terrain']) {
+                            value['virtual.terrain'] = this.$terrainRaw.value;
+                            this.$terrainRaw.value = undo.data['virtual.terrain'];
+                        }
+                        if (this.$files['virtual.state']) {
+                            value['virtual.state'] = this.$stateRaw.value;
+                            this.$stateRaw.value = undo.data['virtual.state'];
+                        }
+                        if (this.$files['terrain.desc']) {
+                            value['terrain.desc'] = this.$descriptionRaw.value;
+                            this.$descriptionRaw.value = undo.data['terrain.desc'];
+                        }
+                        if (this.$files['terrain.item']) {
+                            value['terrain.item'] = this.$itemRaw.value;
+                            this.$itemRaw.value = undo.data['terrain.item'];
+                        }
+                        if (this.$files['virtual.exits']) {
+                            value['virtual.exits'] = this.$externalRaw.value;
+                            this.$externalRaw.value = undo.data['virtual.exits'];
+                        }
+                        this.resetRawCursors();
+                        this.doUpdate(UpdateType.buildRooms | UpdateType.buildMap);
+                        this.loadDescriptions();
+                        this.loadItems();
+                        this.loadExits();
+                        undo.data = value;
+                        this.pushRedo(undo);
+                        break;
+                    case undoType.description:
+                        //this.pushUndo(undoAction.delete, undoType.description, {index, idx, data: this.$descriptions[idx]});
+                        this.$descriptions.splice(undo.data.index, 0, undo.data.data);
+                        this.pushRedo(undo);
+                        this.doUpdate(UpdateType.refreshDescriptions);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.item:
+                        //this.pushUndo(undoAction.delete, undoType.item, { index: children[cl], items: this.$items[children[cl]] });
+                        this.$items.splice(undo.data.index, 0, undo.data.items);
+                        this.pushRedo(undo);
+                        this.doUpdate(UpdateType.refreshItems);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                }
+                break;
+            case undoAction.edit:
+                switch (undo.type) {
+                    case undoType.raw:
+                        //this.pushUndo(undoAction.edit, undoType.rawText, {el: el, value: el.value });
+                        value = undo.data.el.value;
+                        undo.data.el.value = undo.data.value;
+                        undo.data.value = value;
+                        this.pushRedo(undo);
+                        break;
+                    case undoType.resize:
+                        this.resizeMap(-undo.data.width, -undo.data.height, -undo.data.depth, undo.data.shift, true);
+                        this.pushRedo(undo);
+                        break;
+                    case undoType.room:
+                        l = undo.data.values.length;
+                        values = [];
+                        const mx = this.$mouse.rx;
+                        const my = this.$mouse.ry;
+                        while (l--) {
+                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[2]);
+                            values[l] = room[undo.data.property];
+                            room[undo.data.property] = undo.data.values[l];
+                            this.RoomChanged(room);
+                            if (undo.data.property === 'exits') {
+                                if (values[l].exits) this.$rcount--;
+                                if (room.exits) this.$rcount++;
+                            }
+                            this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
+                        }
+                        this.doUpdate(UpdateType.status);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        undo.data.values = values;
+                        this.pushRedo(undo);
+                        break;
+                    case undoType.exits:
+                        //this.pushUndo(undoAction.edit, undoType.exits, { index: dataIndex, value: oldValue });
+                        value = this.$exits[undo.data.index];
+                        this.$exits[undo.data.index] = undo.data.value;
+                        undo.data.value = value;
+                        this.pushRedo(undo);
+                        this.doUpdate(UpdateType.refreshExits);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.raw:
+                        //this.pushUndo(undoAction.edit, undoType.raw, { el: raw, line: line, str: str, lines: lines.slice(line, line + str.length) });
+                        this.updateRaw(undo.data.el, undo.data.line, undo.data.lines, false, false, true);
+                        this.pushRedo(undo);
+                        break;
+                    case undoType.reduce:
+                        //this.pushUndo(undoAction.edit, undoType.reduce, { index: idx, what: undoReduce.all });
+                        if ((undo.data.what & undoReduce.items) === undoReduce.items)
+                            this.increaseIdx(this.$items, undo.data.index);
+                        if ((undo.data.what & undoReduce.descriptions) === undoReduce.descriptions)
+                            this.increaseIdx(this.$descriptions, undo.data.index);
+                        this.pushRedo(undo);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.maxTerrain:
+                        value = this.$maxTerrain;
+                        this.$maxTerrain = undo.data.value;
+                        undo.data.value = value;
+                        this.pushRedo(undo);
+                        break;
+                    case undoType.description:
+                        //this.pushUndo(undoAction.edit, undoType.description, { index: first.terrain, property: prop, value: data[prop] });
+                        value = this.$descriptions[undo.data.index][undo.data.property];
+                        this.$descriptions[undo.data.index][undo.data.property] = undo.data.value;
+                        undo.data.value = value;
+                        this.pushRedo(undo);
+                        this.doUpdate(UpdateType.refreshDescriptions);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.item:
+                        //this.pushUndo(undoAction.edit, undoType.item, { index: idx, items: this.$items[idx] });
+                        value = this.$items[undo.data.index];
+                        this.$items[undo.data.index] = undo.data.items;
+                        undo.data.items = value;
+                        this.pushRedo(undo);
+                        this.doUpdate(UpdateType.refreshItems);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                }
+                break;
+        }
     }
 
     public redo() {
-        switch (this.$view) {
-            case View.map:
-                if (this.$redo.length) {
-                    const u = this.$redo.pop();
-                    if (Array.isArray(u)) {
-                        this.startUndoGroup(true);
-                        let ul = u.length;
-                        while (ul--)
-                            this.redoAction(u[ul]);
-                        this.stopUndoGroup(true);
-                    }
-                    else
-                        this.redoAction(u);
-                    this.emit('supports-changed');
-                }
-                break;
-            case View.terrains:
-            case View.items:
-            case View.exits:
-                break;
-            case View.mapRaw:
-            case View.terrainsRaw:
-            case View.descriptionsRaw:
-            case View.itemsRaw:
-            case View.stateRaw:
-            case View.exitsRaw:
-                document.execCommand('redo');
-                break;
+        if (this.$redo.length) {
+            const u = this.$redo.pop();
+            if (Array.isArray(u)) {
+                this.startUndoGroup(true);
+                let ul = u.length;
+                while (ul--)
+                    this.redoAction(u[ul]);
+                this.stopUndoGroup(true);
+            }
+            else
+                this.redoAction(u);
+            this.emit('supports-changed');
         }
     }
 
     private redoAction(undo) {
         if (!undo) return;
+        let l;
+        let room;
+        let value;
+        if (undo.view !== this.$view)
+            this.switchView(undo.view);
+        switch (undo.action) {
+            case undoAction.add:
+                switch (undo.type) {
+                    case undoType.room:
+                        room = this.getRoom(undo.data.x, undo.data.y, undo.data.z);
+                        this.setRoom(undo.data);
+                        this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
+                        undo.data = room;
+                        this.pushUndoObject(undo);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.exits:
+                        //this.pushUndo(undoAction.add, undoType.exits, { oldLength: this.$exits.length, exits: dRoom.external, room: [dRoom.x, dRoom.y, dRoom.z] });
+                        this.$exits.push(...undo.data.exits);
+                        this.pushUndoObject(undo);
+                        this.doUpdate(UpdateType.refreshExits);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.raw:
+                        //this.pushUndo(undoAction.add, undoType.raw, { el: raw, originalLine: lines.length, line: line, str: str });
+                        this.updateRaw(undo.data.el, undo.data.line, undo.data.str, false, false, true);
+                        this.pushUndoObject(undo);
+                        break;
+                    case undoType.description:
+                        //this.pushUndo(undoAction.add, undoType.description, { index: idx });
+                        this.$descriptions.splice(undo.data.index, 0, undo.data.value);
+                        this.pushUndoObject(undo);
+                        this.doUpdate(UpdateType.refreshDescriptions);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.item:
+                        //this.pushUndo(undoAction.add, undoType.item, { index: this.$items.length, items });
+                        this.$items.splice(undo.data.index, 0, this.$items[undo.data.index]);
+                        this.pushUndoObject(undo);
+                        this.doUpdate(UpdateType.refreshItems);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                }
+                break;
+            case undoAction.delete:
+                switch (undo.type) {
+                    case undoType.rawText:
+                        //this.pushUndo(undoAction.delete, undoType.rawText, { el: raw, start: start, end: end, value: raw.value.substring(start, end) });
+                        undo.data.el.selectionStart = undo.data.el.start;
+                        undo.data.el.selectionEnd = undo.data.el.end;
+                        this.deleteRawSelected(undo.data.el, false, false, true);
+                        this.changed = true;
+                        undo.data.el.dataset.dirty = 'true';
+                        undo.data.el.dataset.changed = 'true';
+                        this.pushRedo(undo);
+                        break;
+                    case undoType.room:
+                        l = undo.data.length;
+                        const values = [];
+                        const mx = this.$mouse.rx;
+                        const my = this.$mouse.ry;
+                        while (l--) {
+                            values[l] = this.getRoom(undo.data[l].x, undo.data[l].y, undo.data[l].z).clone();
+                            this.setRoom(undo.data[l]);
+                            this.RoomChanged(undo.data[l]);
+                            if (values[l].exits) this.$rcount--;
+                            if (undo.data[l].exits) this.$rcount++;
+                            this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
+                        }
+                        this.doUpdate(UpdateType.status);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        undo.data = values;
+                        this.pushUndoObject(undo);
+                        break;
+                    case undoType.exits:
+                        //this.pushUndo(undoAction.delete, undoType.exits, { index: [d[dl]], exits: n.external, room: [n.x, n.y, n.z] });
+                        l = undo.data.index.length;
+                        while (l--)
+                            this.$exits.splice(undo.data.index[l], 1);
+                        this.doUpdate(UpdateType.refreshExits);
+                        this.pushUndoObject(undo);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.raw:
+                        //this.pushUndo(undoAction.delete, undoType.raw, { el: raw, line: line, count: count, lines: lines.slice(line, line + count) });
+                        this.removeRaw(undo.data.el, undo.data.line, undo.data.count, false, false, true);
+                        this.pushUndoObject(undo);
+                        break;
+                    case undoType.revert:
+                        //this.pushUndo(undoAction.delete, undoType.revert, uData);
+                        value = {};
+                        value['map'] = this.$mapRaw.value;
+                        this.$mapRaw.value = undo.data['map'];
+                        if (this.$files['virtual.terrain']) {
+                            value['virtual.terrain'] = this.$terrainRaw.value;
+                            this.$terrainRaw.value = undo.data['virtual.terrain'];
+                        }
+                        if (this.$files['virtual.state']) {
+                            value['virtual.state'] = this.$stateRaw.value;
+                            this.$stateRaw.value = undo.data['virtual.state'];
+                        }
+                        if (this.$files['terrain.desc']) {
+                            value['terrain.desc'] = this.$descriptionRaw.value;
+                            this.$descriptionRaw.value = undo.data['terrain.desc'];
+                        }
+                        if (this.$files['terrain.item']) {
+                            value['terrain.item'] = this.$itemRaw.value;
+                            this.$itemRaw.value = undo.data['terrain.item'];
+                        }
+                        if (this.$files['virtual.exits']) {
+                            value['virtual.exits'] = this.$externalRaw.value;
+                            this.$externalRaw.value = undo.data['virtual.exits'];
+                        }
+                        this.resetRawCursors();
+                        this.doUpdate(UpdateType.buildRooms | UpdateType.buildMap);
+                        this.loadDescriptions();
+                        this.loadItems();
+                        this.loadExits();
+                        undo.data = value;
+                        this.pushUndoObject(undo);
+                        break;
+                    case undoType.description:
+                        //this.pushUndo(undoAction.delete, undoType.description, {index, idx, data: this.$descriptions[idx]});
+                        this.$descriptions.splice(undo.data.index, 1);
+                        this.pushRedo(undo);
+                        this.doUpdate(UpdateType.refreshDescriptions);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.item:
+                        //this.pushUndo(undoAction.delete, undoType.item, { index: children[cl], items: this.$items[children[cl]] });
+                        this.$items.splice(undo.data.index, 1);
+                        this.pushRedo(undo);
+                        this.doUpdate(UpdateType.refreshItems);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                }
+                break;
+            case undoAction.edit:
+                switch (undo.type) {
+                    case undoType.raw:
+                        //this.pushUndo(undoAction.edit, undoType.rawText, {el: el, value: el.value });
+                        value = undo.data.el.value;
+                        undo.data.el.value = undo.data.value;
+                        undo.data.value = value;
+                        this.pushUndoObject(undo);
+                        break;
+                    case undoType.resize:
+                        this.resizeMap(undo.data.width, undo.data.height, undo.data.depth, undo.data.shift, true);
+                        this.pushUndoObject(undo);
+                        break;
+                    case undoType.room:
+                        l = undo.data.values.length;
+                        const values = [];
+                        const mx = this.$mouse.rx;
+                        const my = this.$mouse.ry;
+                        while (l--) {
+                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[2]);
+                            values[l] = room[undo.data.property];
+                            room[undo.data.property] = undo.data.values[l];
+                            this.RoomChanged(room);
+                            if (undo.data.property === 'exits') {
+                                if (values[l].exits) this.$rcount--;
+                                if (room.exits) this.$rcount++;
+                            }
+                            this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
+                        }
+                        this.doUpdate(UpdateType.status);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        undo.data.values = values;
+                        this.pushUndoObject(undo);
+                        break;
+                    case undoType.exits:
+                        //this.pushUndo(undoAction.edit, undoType.exits, { index: dataIndex, value: oldValue });
+                        value = this.$exits[undo.data.index];
+                        this.$exits[undo.data.index] = undo.data.value;
+                        undo.data.value = value;
+                        this.pushUndoObject(undo);
+                        this.doUpdate(UpdateType.refreshExits);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.raw:
+                        //this.pushUndo(undoAction.edit, undoType.raw, { el: raw, line: line, str: str, lines: lines.slice(line, line + str.length) });
+                        this.updateRaw(undo.data.el, undo.data.line, undo.data.str, false, false, true);
+                        this.pushUndoObject(undo);
+                        break;
+                    case undoType.reduce:
+                        //this.pushUndo(undoAction.edit, undoType.reduce, { index: idx, what: undoReduce.all });
+                        if ((undo.data.what & undoReduce.items) === undoReduce.items)
+                            this.reduceIdx(this.$items, undo.data.index);
+                        if ((undo.data.what & undoReduce.descriptions) === undoReduce.descriptions)
+                            this.reduceIdx(this.$descriptions, undo.data.index);
+                        this.pushUndoObject(undo);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.maxTerrain:
+                        value = this.$maxTerrain;
+                        this.$maxTerrain = undo.data.value;
+                        undo.data.value = value;
+                        this.pushUndoObject(undo);
+                        break;
+                    case undoType.description:
+                        //this.pushUndo(undoAction.edit, undoType.description, { index: first.terrain, property: prop, value: data[prop] });
+                        value = this.$descriptions[undo.data.index][undo.data.property];
+                        this.$descriptions[undo.data.index][undo.data.property] = undo.data.value;
+                        undo.data.value = value;
+                        this.pushUndoObject(undo);
+                        this.doUpdate(UpdateType.refreshDescriptions);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.item:
+                        //this.pushUndo(undoAction.edit, undoType.item, { index: idx, items: this.$items[idx] });
+                        value = this.$items[undo.data.index];
+                        this.$items[undo.data.index] = undo.data.items;
+                        undo.data.items = value;
+                        this.pushUndoObject(undo);
+                        this.doUpdate(UpdateType.refreshItems);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                }
+                break;
+        }
     }
 
     public close() {
@@ -4171,8 +5629,9 @@ export class VirtualEditor extends EditorBase {
                 }
                 return false;
             case 'undo':
+                return this.$undo.length > 0;
             case 'redo':
-                return this.$view === View.mapRaw || this.$view === View.terrainsRaw || this.$view === View.descriptionsRaw || this.$view === View.itemsRaw || this.$view === View.stateRaw || this.$view === View.exitsRaw;
+                return this.$redo.length > 0;
 
         }
         return false;
@@ -4186,26 +5645,26 @@ export class VirtualEditor extends EditorBase {
         group.setAttribute('role', 'group');
         group.appendChild(this.createButton('room editor', 'columns', () => {
             this.$splitterEditor.panel2Collapsed = !this.$splitterEditor.panel2Collapsed;
-        }, !this.$splitterEditor.panel2Collapsed, this.$view !== View.map));
+        }, !this.$splitterEditor.panel2Collapsed, this.$view !== View.map), 'Show room editor');
         group.appendChild(this.createButton('room preview', 'columns fa-rotate-90', () => {
             this.$splitterPreview.panel2Collapsed = !this.$splitterPreview.panel2Collapsed;
-        }, !this.$splitterPreview.panel2Collapsed, this.$view !== View.map));
+        }, !this.$splitterPreview.panel2Collapsed, this.$view !== View.map), 'Show room preview');
         frag.appendChild(group);
         group = document.createElement('div');
         group.classList.add('btn-group');
         group.setAttribute('role', 'group');
         group.appendChild(this.createButton('map', 'map-o', () => {
             this.switchView(View.map);
-        }, this.$view === View.map));
+        }, this.$view === View.map, false, 'Show map'));
         group.appendChild(this.createButton('terrains', 'picture-o', () => {
             this.switchView(View.terrains);
-        }, this.$view === View.terrains));
+        }, this.$view === View.terrains, false, 'Show terrains'));
         group.appendChild(this.createButton('items', 'list', () => {
             this.switchView(View.items);
-        }, this.$view === View.items));
+        }, this.$view === View.items, false, 'Show items'));
         group.appendChild(this.createButton('external exits', 'sign-out', () => {
             this.switchView(View.exits);
-        }, this.$view === View.exits));
+        }, this.$view === View.exits, false, 'Show external exits'));
         el = document.createElement('button');
         el.id = 'btn-raw';
         el.type = 'button';
@@ -4291,11 +5750,26 @@ export class VirtualEditor extends EditorBase {
         group.setAttribute('role', 'group');
         group.appendChild(this.createButton('colors', 'paint-brush', () => {
             this.ShowColors = !this.$showColors;
-        }, this.$showColors, this.$view !== View.map));
+        }, this.$showColors, this.$view !== View.map, 'Show colors'));
         group.appendChild(this.createButton('terrain', 'globe', () => {
             this.ShowTerrain = !this.$showTerrain;
-        }, this.$showTerrain, this.$view !== View.map));
+        }, this.$showTerrain, this.$view !== View.map, 'Show terrain'));
         frag.appendChild(group);
+
+        group = document.createElement('div');
+        group.classList.add('btn-group');
+        group.setAttribute('role', 'group');
+        group.appendChild(this.createButton('Allow exit walk', 'blind', () => {
+            this.AllowExitWalk = !this.$allowExitWalk;
+        }, this.$allowExitWalk, this.$view !== View.map));
+        group.appendChild(this.createButton('Allow resize walk', 'expand', () => {
+            this.AllowResize = !this.$allowResize;
+        }, this.$allowResize, this.$view !== View.map));
+        frag.appendChild(group);
+
+        frag.appendChild(this.createButton('Resize map', 'arrows', () => {
+            this.emit('show-resize', this.$mapSize);
+        }, false, this.$view !== View.map));
         if (this.$mapSize.depth > 1) {
             el = document.createElement('label');
             el.setAttribute('for', this.parent.id + '-level');
@@ -4307,23 +5781,23 @@ export class VirtualEditor extends EditorBase {
         return [frag];
     }
 
-    private createButton(id, icon, fun, active, disabled?) {
+    private createButton(id, icon, fun, active, disabled?, title?: string) {
         const el = document.createElement('button');
-        el.id = 'btn-' + id.replace(/\s+/g, '-');
+        el.id = 'btn-' + id.replace(/\s+/g, '-').toLowerCase();
         el.type = 'button';
         el.classList.add('btn', 'btn-default', 'btn-xs');
         if (active)
             el.classList.add('active');
         if (disabled)
             el.setAttribute('disabled', 'true');
-        el.title = 'Show ' + id;
+        el.title = title || id;
         el.onclick = fun;
         el.innerHTML = '<i class="fa fa-' + icon + '"></i>';
         return el;
     }
 
     private setButtonState(id, state) {
-        const button = document.getElementById('btn-' + id.replace(/\s+/g, '-'));
+        const button = document.getElementById('btn-' + id.replace(/\s+/g, '-').toLowerCase());
         if (!button) return;
         if (state)
             button.classList.add('active');
@@ -4332,7 +5806,7 @@ export class VirtualEditor extends EditorBase {
     }
 
     private setButtonDisabled(id, state) {
-        const button = document.getElementById('btn-' + id.replace(/\s+/g, '-'));
+        const button = document.getElementById('btn-' + id.replace(/\s+/g, '-').toLowerCase());
         if (!button) return;
         if (state)
             button.setAttribute('disabled', 'true');
@@ -4464,6 +5938,33 @@ export class VirtualEditor extends EditorBase {
                 }
             });
         }
+        else if (menu === 'edit') {
+            m = [
+                { type: 'separator' },
+                {
+                    label: 'Allow exit walk',
+                    type: 'checkbox',
+                    checked: this.$allowExitWalk,
+                    click: () => {
+                        this.AllowExitWalk = !this.$allowExitWalk;
+                    }
+                },
+                {
+                    label: 'Allow resize walk',
+                    type: 'checkbox',
+                    checked: this.$allowResize,
+                    click: () => {
+                        this.AllowResize = !this.$allowResize;
+                    }
+                },
+                {
+                    label: 'Resize map',
+                    click: () => {
+                        this.emit('show-resize', this.$mapSize);
+                    }
+                }
+            ];
+        }
         return m;
     }
 
@@ -4579,6 +6080,8 @@ export class VirtualEditor extends EditorBase {
             ]);
         }
 
+        this.AllowResize = value.allowResize;
+        this.AllowExitWalk = value.allowExitWalk;
         this.ShowColors = value.showColors;
         this.ShowTerrain = value.showTerrain;
         this.$mapRaw.style.fontFamily = value.rawFontFamily;
@@ -4624,6 +6127,8 @@ export class VirtualEditor extends EditorBase {
     }
     public get options() {
         return {
+            allowResize: this.$allowResize,
+            allowExitWalk: this.$allowExitWalk,
             showColors: this.$showColors,
             showTerrain: this.$showTerrain,
             live: this.$splitterEditor.live,
@@ -4862,7 +6367,7 @@ export class VirtualEditor extends EditorBase {
                         tag: (parent.idx + 1) + '-' + parent.children.length,
                         parentId: parent.idx
                     });
-                    this.$itemGrid.refresh();
+                    this.doUpdate(UpdateType.refreshItems);
                     this.$itemGrid.expandRows(selected[0].index).then(() => {
                         this.$itemGrid.focus();
                         this.$itemGrid.beginEditChild(selected[0].dataIndex, parent.children.length - 1);
@@ -5020,6 +6525,10 @@ export class VirtualEditor extends EditorBase {
         this.emit('menu-update', 'view|room preview', { enabled: view === View.map });
         this.emit('menu-update', 'view|show terrain', { enabled: view === View.map });
         this.emit('menu-update', 'view|show colors', { enabled: view === View.map });
+        this.emit('menu-update', 'edit|allow resize walk', { enabled: view === View.map });
+        this.emit('menu-update', 'edit|resize map', { enabled: view === View.map });
+        this.setButtonDisabled('allow resize walk', view !== View.map);
+        this.setButtonDisabled('resize map', view !== View.map);
         this.setButtonDisabled('room editor', view !== View.map);
         this.setButtonDisabled('room preview', view !== View.map);
         this.setButtonDisabled('terrain', view !== View.map);
@@ -5077,7 +6586,7 @@ export class VirtualEditor extends EditorBase {
                 this.emit('changed', this.$externalRaw.value.length);
                 break;
         }
-        this.updateStatus();
+        this.doUpdate(UpdateType.status);
     }
 
     private updateStatus() {
@@ -5542,6 +7051,22 @@ export class VirtualEditor extends EditorBase {
             if ((this._updating & UpdateType.resize) === UpdateType.resize) {
                 this.resize();
                 this._updating &= ~UpdateType.resize;
+            }
+            if ((this._updating & UpdateType.status) === UpdateType.status) {
+                this.updateStatus();
+                this._updating &= ~UpdateType.status;
+            }
+            if ((this._updating & UpdateType.refreshItems) === UpdateType.refreshItems) {
+                this.$itemGrid.refresh();
+                this._updating &= ~UpdateType.refreshItems;
+            }
+            if ((this._updating & UpdateType.refreshDescriptions) === UpdateType.refreshDescriptions) {
+                this.$descriptionGrid.refresh();
+                this._updating &= ~UpdateType.refreshDescriptions;
+            }
+            if ((this._updating & UpdateType.refreshExits) === UpdateType.refreshExits) {
+                this.$exitGrid.refresh();
+                this._updating &= ~UpdateType.refreshExits;
             }
             this.doUpdate(this._updating);
         });
@@ -6316,7 +7841,7 @@ export class VirtualEditor extends EditorBase {
                 return;
             if (old.exits) this.$rcount--;
             if (room.exits) this.$rcount++;
-            this.updateStatus();
+            this.doUpdate(UpdateType.status);
         }
         const y = room.y + 1 + room.z * (this.$mapSize.height + 1);
         const x = room.x;
@@ -6408,7 +7933,7 @@ export class VirtualEditor extends EditorBase {
             this.UpdatePreview(room);
     }
 
-    private roomsChanged() {
+    private roomsChanged(width?, height?, depth?) {
         //store room lengths
         const zl = this.$mapSize.depth;
         const xl = this.$mapSize.width;
@@ -6434,7 +7959,13 @@ export class VirtualEditor extends EditorBase {
             while (tLines.length < maxLines)
                 tLines.push('');
         }
-        mLines = this.$mapRaw.value.split('\n');
+        mLines = [];
+        if (width > 0 && height > 0) {
+            if (depth > 1)
+                mLines[0] = `${width} ${height} ${depth}`;
+            else
+                mLines[0] = `${width} ${height}`;
+        }
         while (mLines.length < maxLines)
             mLines.push('');
 
@@ -6505,7 +8036,7 @@ export class VirtualEditor extends EditorBase {
         this.$mapRaw.value = mLines.join('\n');
         this.$mapRaw.dataset.changed = 'true';
         this.changed = true;
-        this.updateStatus();
+        this.doUpdate(UpdateType.status);
     }
 
     private UpdateEditor(rooms) {
@@ -6758,10 +8289,12 @@ export class VirtualEditor extends EditorBase {
         }
     }
 
-    private removeRaw(raw, line, count, noChanged?, noDirty?) {
+    private removeRaw(raw, line, count, noChanged?, noDirty?, noUndo?) {
         if (typeof (count) === 'undefined') count = 1;
         const lines = raw.value.split('\n');
         if (line < 0 || line >= lines.length) return;
+        if (!noUndo)
+            this.pushUndo(undoAction.delete, undoType.raw, { el: raw, line: line, count: count, lines: lines.slice(line, line + count) });
         lines.splice(line, count);
         raw.value = lines.join('\n');
         if (!noChanged) {
@@ -6771,11 +8304,33 @@ export class VirtualEditor extends EditorBase {
         }
     }
 
-    private updateRaw(raw, line, str, noChanged?, noDirty?) {
-        const lines = raw.value.split('\n');
+    private insertRaw(raw, line, str, noChanged?, noDirty?, noUndo?) {
         if (line < 0) return;
+        let lines = raw.value.split('\n');
+        if (!noUndo)
+            this.pushUndo(undoAction.add, undoType.raw, { el: raw, originalLine: lines.length, line: line, str: str });
+        if (line >= lines.length)
+            lines = lines.concat(...(new Array(line - lines.length).fill('')));
+        lines.splice(line, 0, ...str);
+        raw.value = lines.join('\n');
+        if (!noChanged) {
+            this.changed = true;
+            raw.dataset.dirty = !noDirty ? 'true' : null;
+            raw.dataset.changed = 'true';
+        }
+    }
+
+    private updateRaw(raw, line, str, noChanged?, noDirty?, noUndo?) {
+        if (line < 0) return;
+        const lines = raw.value.split('\n');
         let s;
         const sl = str.length;
+        if (!noUndo) {
+            if (line >= lines.length)
+                this.pushUndo(undoAction.add, undoType.raw, { el: raw, originalLine: lines.length, line: line, str: str });
+            else
+                this.pushUndo(undoAction.edit, undoType.raw, { el: raw, line: line, str: str, lines: lines.slice(line, line + str.length) });
+        }
         for (s = 0; s < sl; s++)
             lines[line + s] = str[s];
         raw.value = lines.join('\n');
@@ -6793,6 +8348,17 @@ export class VirtualEditor extends EditorBase {
                 arr[d2].idx--;
                 if (arr[d2].hasOwnProperty('tag'))
                     arr[d2].tag--;
+            }
+        }
+    }
+
+    private increaseIdx(arr, idx) {
+        const dl = arr.length;
+        for (let d2 = 0; d2 < dl; d2++) {
+            if (arr[d2].idx >= idx) {
+                arr[d2].idx++;
+                if (arr[d2].hasOwnProperty('tag'))
+                    arr[d2].tag++;
             }
         }
     }
@@ -6948,8 +8514,7 @@ export class VirtualEditor extends EditorBase {
             };
         }
         Timer.end('BuildRooms time');
-        this.updateStatus();
-        this.$descriptionGrid.refresh();
+        this.doUpdate(UpdateType.status | UpdateType.refreshDescriptions);
     }
 
     private BuildMap() {
@@ -7376,6 +8941,133 @@ export class VirtualEditor extends EditorBase {
             this.$maxTerrain = t;
             this.$colorCache = null;
             this.doUpdate(UpdateType.drawMap);
+        }
+    }
+
+    public resizeMap(width, height, depth, shift: shiftType, noUndo?) {
+        Timer.start();
+        width = width || 0;
+        height = height || 0;
+        depth = depth || 0;
+        const zl = this.$mapSize.depth;
+        const xl = this.$mapSize.width;
+        const yl = this.$mapSize.height;
+        const exits = [];
+        let nExits = this.$exits;
+        const exl = nExits.length;
+        this.$mapSize.width += width;
+        this.$mapSize.height += height;
+        this.$mapSize.depth += depth;
+        this.$mapSize.right = this.$mapSize.width * 32;
+        this.$mapSize.bottom = this.$mapSize.height * 32;
+        const zl2 = this.$mapSize.depth;
+        const xl2 = this.$mapSize.width;
+        const yl2 = this.$mapSize.height;
+        const rooms = Array.from(Array(this.$mapSize.depth),
+            (v, z) => Array.from(Array(this.$mapSize.height),
+                (v2, y) => Array.from(Array(this.$mapSize.width),
+                    (v3, x) => new Room(x, y, z, 0, 0, 0))
+            ));
+
+        this.$rcount = 0;
+        for (let z = 0; z < zl; z++) {
+            for (let y = 0; y < yl; y++) {
+                for (let x = 0; x < xl; x++) {
+                    const room = this.$rooms[z][y][x];
+                    let idx;
+                    if (!room) continue;
+                    if ((shift & shiftType.right) === shiftType.right)
+                        room.x += width;
+                    else if ((shift & shiftType.left) !== shiftType.left)
+                        room.x += Math.floor(width / 2);
+                    if ((shift & shiftType.bottom) === shiftType.bottom)
+                        room.y += height;
+                    else if ((shift & shiftType.top) !== shiftType.top)
+                        room.y += Math.floor(height / 2);
+                    if ((shift & shiftType.up) === shiftType.up)
+                        room.z += depth;
+                    else if ((shift & shiftType.down) !== shiftType.down)
+                        room.z += Math.floor(depth / 2);
+                    if (room.z >= 0 && room.z < zl2 && room.x >= 0 && room.x < xl2 && room.y >= 0 && room.y < yl2) {
+                        rooms[room.z][room.y][room.x] = room;
+                        idx = this.$selectedRooms.indexOf(this.$rooms[z][y][x]);
+                        if (idx !== -1)
+                            this.$selectedRooms[idx] = rooms[room.z][room.y][room.x];
+                        if (this.$focusedRoom && this.$focusedRoom.at(x, y, z))
+                            this.$focusedRoom = rooms[room.z][room.y][room.x];
+                        if (room.exits) this.$rcount++;
+                    }
+                    else {
+                        if (room.exits) {
+                            room.x = x;
+                            room.y = y;
+                            room.z = z;
+                            this.deleteRoom(room, true);
+                        }
+                        if (room.ee) {
+                            exits.push(...this.$exits.filter(ex => ex.x === room.x && ex.y === room.y && ex.z === room.z));
+                            nExits = nExits.filter(ex => ex.x !== room.x || ex.y !== room.y || ex.z !== room.z);
+                        }
+                        idx = this.$selectedRooms.indexOf(this.$rooms[z][y][x]);
+                        if (idx !== -1)
+                            this.$selectedRooms.splice(idx, 1);
+                        if (this.$focusedRoom && this.$focusedRoom.at(x, y, z))
+                            this.$focusedRoom = null;
+                    }
+                }
+            }
+        }
+
+        this.$rooms = rooms;
+        this.UpdateEditor(this.$selectedRooms);
+        this.UpdatePreview(this.selectedFocusedRoom);
+        if (this.$depth >= this.$mapSize.depth)
+            this.$depth = this.$mapSize.depth - 1;
+        this.$map.width = this.$mapSize.right;
+        this.$map.height = this.$mapSize.bottom;
+        this.BuildAxises();
+        const cols = this.$exitGrid.columns;
+        if (this.$mapSize.depth < 2) {
+            this.$depth = 0;
+            cols[3].visible = false;
+            this.$roomEditor.setPropertyOptions({
+                property: 'z',
+                group: 'Location',
+                readonly: true,
+                visible: false
+            });
+        }
+        else {
+            this.$depthToolbar.value = '' + this.$depth;
+            this.$depthToolbar.max = '' + (this.$mapSize.depth - 1);
+            this.$depthToolbar.min = '' + 0;
+            cols[3].visible = true;
+            this.$roomEditor.setPropertyOptions({
+                property: 'z',
+                group: 'Location',
+                readonly: true,
+                visible: true
+            });
+        }
+        this.emit('rebuild-buttons');
+        this.emit('resize-map');
+        Timer.end('Resize time');
+        this.roomsChanged(this.$mapSize.width, this.$mapSize.height, this.$mapSize.depth);
+        this.doUpdate(UpdateType.drawMap);
+        if (!noUndo) {
+            this.pushUndo(undoAction.edit, undoType.resize, { width: width, height: height, depth: depth, shift: shift });
+            if (nExits.length !== exl) {
+                this.pushUndo(undoAction.delete, undoType.exits, { index: exits.map(x => this.$exits.indexOf(x)), exits: exits });
+                this.$exits = nExits;
+                this.$exitGrid = this.$exits;
+                if (this.$mapSize.depth > 1)
+                    nExits = nExits.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+                else
+                    nExits = nExits.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+                this.$externalRaw.value = '';
+                this.updateRaw(this.$externalRaw, 0, nExits);
+                resetCursor(this.$externalRaw);
+            }
         }
     }
 }

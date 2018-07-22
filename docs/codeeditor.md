@@ -168,6 +168,11 @@ Allows you to edit a virtual map easily with out having to know all file formats
 - View all items in a list editor easily remove, add, or copy items
 - View all external exits in a list editor to easily remove, add, or copy external exits
 - View all raw data files that exist and are related to the current map.
+- Resize map allowing you to ancher top or bottom / left or right / up or down to determine how the rooms will be shifted when resized **Warning** when resized smaller, old rooms are lost and any dangling exits are removed
+- Show colors, create a color scale map based on terrain indexes
+- Show terrains, show terrain numbers for each room
+- Allow walk exits, allows you to create exits by walking the map using num pad
+- Allow walk resize, allows you to resize the map by walking off the edge of the map
 
 ### Room editor
 

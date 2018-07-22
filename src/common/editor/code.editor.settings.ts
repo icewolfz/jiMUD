@@ -66,6 +66,8 @@ export class EditorSettings {
     };
 
     public virtualOptions = {
+        allowResize: false,
+        allowExitWalk: true,
         showColors: true,
         showTerrain: true,
         rawFontSize: 16,
@@ -88,6 +90,7 @@ export class EditorSettings {
 
     public areaOptions = {
         allowResize: true,
+        allowExitWalk: true,
         previewFontSize: 15,
         previewFontFamily: 'Consolas, \'Courier New\', monospace',
         editorWidth: 200,
