@@ -3292,7 +3292,7 @@ export class AreaEditor extends EditorBase {
             this.AllowResize = !this.$allowResize;
         }, this.$allowResize, this.$view !== View.map));
         frag.appendChild(this.createButton('Resize map', 'arrows', () => {
-            this.emit('showResize');
+            this.emit('show-resize', this.$area.size);
         }, false, this.$view !== View.map));
         if (this.$area.size.depth > 1) {
             el = document.createElement('label');
@@ -3400,7 +3400,7 @@ export class AreaEditor extends EditorBase {
                 {
                     label: 'Resize map',
                     click: () => {
-                        this.emit('showResize');
+                        this.emit('show-resize', this.$area.size);
                     }
                 }
             ];
