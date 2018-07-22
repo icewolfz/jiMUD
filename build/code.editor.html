@@ -3431,6 +3431,10 @@
         }
     }
 
+    function showResizeDialog(size) {
+        //TODO setup dialog with default size data and show it
+    }
+
     // eslint-disable-next-line no-unused-vars
     function gotoLine(id, line) {
         if (!id) return;
@@ -6799,6 +6803,9 @@
             if (enableAreas && path.extname(data.file) === '.area') {
                 data.options = options.areaOptions;
                 p.editor = new AreaEditor(data);
+                p.editor.on('show-resize', size=> {
+                    showResizeDialog(size);
+                });                
                 p.editor.on('dialog-close', () => menubar.enabled = true);
                 p.editor.on('dialog-cancel', () => menubar.enabled = true);
                 p.editor.on('dialog-open', () => menubar.enabled = false);
@@ -6866,6 +6873,9 @@
             else if (path.extname(data.file) === '.map' && data.source !== 1) {
                 data.options = options.virtualOptions;
                 p.editor = new VirtualEditor(data);
+                p.editor.on('show-resize', size=> {
+                    showResizeDialog(size);
+                });
                 p.editor.on('dialog-close', () => menubar.enabled = true);
                 p.editor.on('dialog-cancel', () => menubar.enabled = true);
                 p.editor.on('dialog-open', () => menubar.enabled = false);
