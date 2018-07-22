@@ -421,6 +421,7 @@ export class AreaEditor extends EditorBase {
     private $resizerCache;
     private $observer: MutationObserver;
     private $allowResize: boolean = true;
+    private $allowExitWalk: boolean = true;
 
     private $mousePrevious: MousePosition = {
         x: 0,
@@ -556,6 +557,23 @@ export class AreaEditor extends EditorBase {
         this.emit('option-changed', 'allowResize', value);
     }
 
+    public get AllowExitWalk(): boolean {
+        return this.$allowExitWalk;
+    }
+
+    public set AllowExitWalk(value) {
+        if (value === this.$allowExitWalk) return;
+        this.$allowExitWalk = value;
+        this.emit('menu-update', 'edit|allow exit walk', { checked: value });
+        if (document.getElementById('btn-allow-exit-walk')) {
+            if (value)
+                document.getElementById('btn-allow-exit-walk').classList.add('active');
+            else
+                document.getElementById('btn-allow-exit-walk').classList.remove('active');
+        }
+        this.emit('option-changed', 'allowExitWalk', value);
+    }
+
     public get maxLevel() {
         if (!this.$area) return 0;
         return this.$area.size.depth;
@@ -585,6 +603,7 @@ export class AreaEditor extends EditorBase {
         else
             this.options = {
                 allowResize: true,
+                allowExitWalk: true,
                 previewFontSize: 16,
                 previewFontFamily: 'Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace',
                 editorWidth: 200,
@@ -1411,6 +1430,53 @@ export class AreaEditor extends EditorBase {
                     break;
                 case 97: //num1
                     //#region southwest
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (y < this.$area.size.height - 1 && x > 0) {
+                                y++;
+                                x--;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][sf.y - 1][u], true);
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][sf.y][u], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (y < this.$area.size.height - 1 && x > 0) {
+                            y++;
+                            x--;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
                     this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
@@ -1484,6 +1550,51 @@ export class AreaEditor extends EditorBase {
                     break;
                 case 98: //num2
                     //#region south
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (y < this.$area.size.height - 1) {
+                                y++;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][sf.y - 1][u], true);
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][sf.y][u], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (y < this.$area.size.height - 1) {
+                            y++;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
                     this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
@@ -1548,6 +1659,53 @@ export class AreaEditor extends EditorBase {
                     break;
                 case 99: //num3
                     //#region southeast
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (y < this.$area.size.height - 1 && x < this.$area.size.width - 1) {
+                                y++;
+                                x++;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][sf.y - 1][u], true);
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][sf.y][u], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (y < this.$area.size.height - 1 && x < this.$area.size.width - 1) {
+                            y++;
+                            x++;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
                     this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
@@ -1619,6 +1777,51 @@ export class AreaEditor extends EditorBase {
                     break;
                 case 100: //num4
                     //#region west
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (x > 0) {
+                                x--;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = y; u < height; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][u][sf.x + 1], true);
+                                for (let u = y; u < height; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][u][sf.x], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (x > 0) {
+                            x--;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
                     this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
@@ -1685,6 +1888,51 @@ export class AreaEditor extends EditorBase {
                     break;
                 case 102: //num6
                     //#region east
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (x < this.$area.size.width - 1) {
+                                x++;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = y; u < height; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][u][sf.x - 1], true);
+                                for (let u = y; u < height; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][u][sf.x], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (x < this.$area.size.width - 1) {
+                            x++;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
                     this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
@@ -1749,6 +1997,53 @@ export class AreaEditor extends EditorBase {
                     break;
                 case 103: //num7
                     //#region northwest
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (y > 0 && x > 0) {
+                                y--;
+                                x--;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][sf.y + 1][u], true);
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][sf.y][u], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (y > 0 && x > 0) {
+                            y--;
+                            x--;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
                     this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
@@ -1820,6 +2115,50 @@ export class AreaEditor extends EditorBase {
                     break;
                 case 104: //num8
                     //#region north
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (y > 0) {
+                                y--;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][sf.y + 1][u], true);
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][sf.y][u], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (y > 0) {
+                            y--;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion                        return;
+                    }
                     this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
@@ -1883,6 +2222,53 @@ export class AreaEditor extends EditorBase {
                     break;
                 case 105: //num9
                     //#region northeast
+                    if (!this.$allowExitWalk) {
+                        //#region
+                        if (e.shiftKey) {
+                            let sf = this.$shiftRoom;
+                            let ef = this.$focusedRoom;
+                            if (!ef) {
+                                ef = this.getRoom(0, 0);
+                                this.setFocusedRoom(this.selectedRoom);
+                            }
+                            if (!sf) sf = ef;
+                            x = sf.x;
+                            y = sf.y;
+                            if (x < this.$area.size.width - 1 && y > 0) {
+                                y--;
+                                x++;
+                                this.ensureVisible(x, y);
+                                sf = this.getRoom(x, y);
+                                x = Math.min(ef.x, sf.x);
+                                y = Math.min(ef.y, sf.y);
+                                width = Math.ceil(Math.max(((ef.x * 32) + 17) / 32, ((sf.x * 32) + 17) / 32));
+                                height = Math.ceil(Math.max(((ef.y * 32) + 17) / 32, ((sf.y * 32) + 17) / 32));
+                                this.setSelection(x, y, width, height);
+                                this.$map.focus();
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][sf.y + 1][u], true);
+                                for (let u = x; u < width; u++)
+                                    this.DrawRoom(this.$mapContext, this.$area.rooms[this.$depth][sf.y][u], true);
+                            }
+                            this.$shiftRoom = sf;
+                        }
+                        else if (this.$selectedRooms.length === 0) {
+                            this.$selectedRooms.push(this.getRoom(0, 0));
+                            this.ChangeSelection();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        else if (x < this.$area.size.width - 1 && y > 0) {
+                            y--;
+                            x++;
+                            this.setSelectedRooms(this.getRoom(x, y));
+                            this.ensureVisible(x, y);
+                            this.$map.focus();
+                            this.setFocusedRoom(this.selectedRoom);
+                        }
+                        event.preventDefault();
+                        //#endregion
+                        return;
+                    }
                     this.startUndoGroup();
                     if (this.$selectedRooms.length === 0) {
                         this.$selectedRooms.push(this.getRoom(0, 0));
@@ -3288,9 +3674,18 @@ export class AreaEditor extends EditorBase {
             this.switchView(View.objects);
         }, this.$view === View.objects));
         frag.appendChild(group);
-        frag.appendChild(this.createButton('Allow resize walk', 'expand', () => {
+
+        group = document.createElement('div');
+        group.classList.add('btn-group');
+        group.setAttribute('role', 'group');
+        group.appendChild(this.createButton('Allow exit walk', 'blind', () => {
+            this.AllowExitWalk = !this.$allowExitWalk;
+        }, this.$allowExitWalk, this.$view !== View.map));
+        group.appendChild(this.createButton('Allow resize walk', 'expand', () => {
             this.AllowResize = !this.$allowResize;
         }, this.$allowResize, this.$view !== View.map));
+        frag.appendChild(group);
+
         frag.appendChild(this.createButton('Resize map', 'arrows', () => {
             this.emit('show-resize', this.$area.size);
         }, false, this.$view !== View.map));
@@ -3389,6 +3784,14 @@ export class AreaEditor extends EditorBase {
         else if (menu === 'edit') {
             m = [
                 { type: 'separator' },
+                {
+                    label: 'Allow exit walk',
+                    type: 'checkbox',
+                    checked: this.$allowExitWalk,
+                    click: () => {
+                        this.AllowExitWalk = !this.$allowExitWalk;
+                    }
+                },
                 {
                     label: 'Allow resize walk',
                     type: 'checkbox',
@@ -3513,6 +3916,7 @@ export class AreaEditor extends EditorBase {
         }
 
         this.AllowResize = value.allowResize;
+        this.AllowExitWalk = value.allowExitWalk;
         this.$roomPreview.container.style.fontSize = value.previewFontSize + 'px';
         this.$roomPreview.container.style.fontFamily = value.previewFontFamily;
         this.$splitterEditor.SplitterDistance = value.editorWidth;
@@ -3526,6 +3930,7 @@ export class AreaEditor extends EditorBase {
     public get options() {
         return {
             allowResize: this.$allowResize,
+            allowExitWalk: this.$allowExitWalk,
             live: this.$splitterEditor.live,
             showRoomEditor: !this.$splitterEditor.panel2Collapsed,
             showRoomPreview: !this.$splitterPreview.panel2Collapsed
