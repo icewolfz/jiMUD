@@ -548,11 +548,11 @@ export class AreaEditor extends EditorBase {
         if (value === this.$allowResize) return;
         this.$allowResize = value;
         this.emit('menu-update', 'edit|allow resize walk', { checked: value });
-        if (document.getElementById('btn-allow-resize')) {
+        if (document.getElementById('btn-allow-resize-walk')) {
             if (value)
-                document.getElementById('btn-allow-resize').classList.add('active');
+                document.getElementById('btn-allow-resize-walk').classList.add('active');
             else
-                document.getElementById('btn-allow-resize').classList.remove('active');
+                document.getElementById('btn-allow-resize-walk').classList.remove('active');
         }
         this.emit('option-changed', 'allowResize', value);
     }
