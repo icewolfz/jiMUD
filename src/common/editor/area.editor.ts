@@ -3016,7 +3016,7 @@ export class AreaEditor extends EditorBase {
                         const mx = this.$mouse.rx;
                         const my = this.$mouse.ry;
                         while (l--) {
-                            values[l] = this.getRoom(undo.data[l].x, undo.data[l].y, undo.data[l].z);
+                            values[l] = this.getRoom(undo.data[l].x, undo.data[l].y, undo.data[l].z).clone();
                             this.setRoom(undo.data[l]);
                             this.RoomChanged(undo.data[l]);
                             if (values[l].exits) this.$rcount--;
@@ -3026,6 +3026,8 @@ export class AreaEditor extends EditorBase {
                         this.doUpdate(UpdateType.status);
                         this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
                         this.setFocusedRoom(undo.focused);
+                        undo.data = values;
+                        this.pushRedo(undo);
                         break;
                     case undoType.area:
                         room = this.$area;
@@ -3124,7 +3126,7 @@ export class AreaEditor extends EditorBase {
                         const mx = this.$mouse.rx;
                         const my = this.$mouse.ry;
                         while (l--) {
-                            values[l] = this.getRoom(undo.data[l].x, undo.data[l].y, undo.data[l].z);
+                            values[l] = this.getRoom(undo.data[l].x, undo.data[l].y, undo.data[l].z).clone();
                             this.setRoom(undo.data[l]);
                             this.RoomChanged(undo.data[l]);
                             if (values[l].exits) this.$rcount--;
@@ -3134,6 +3136,8 @@ export class AreaEditor extends EditorBase {
                         this.doUpdate(UpdateType.status);
                         this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
                         this.setFocusedRoom(undo.focused);
+                        undo.data = values;
+                        this.pushUndoObject(undo);
                         break;
                     case undoType.area:
                         room = this.$area;
