@@ -943,7 +943,7 @@ export class VirtualEditor extends EditorBase {
                     if (choice === 2)
                         all = true;
                     if (choice !== 1) {
-                        this.pushUndo(undoAction.edit, undoType.item, { index: idx, items: this.$items[idx] });
+                        this.pushUndo(undoAction.edit, undoType.item, { index: idx, items: this.$items[idx].children });
                         this.$items[idx] = e.data[d].items;
                         this.updateRaw(this.$itemRaw, idx * 2, [
                             this.$items[idx].children.map(i => i.item).join(':'),
@@ -3614,7 +3614,7 @@ export class VirtualEditor extends EditorBase {
                     case 'ef':
                         break;
                     case 'items':
-                        this.pushUndo(undoAction.edit, undoType.item, { index: first.item, items: this.$items[first.item].children });
+                        this.pushUndo(undoAction.edit, undoType.item, { index: first.item, items: oldValue });
                         this.$items[first.item].children = newValue;
                         this.$itemGrid.rows = this.$items;
                         this.updateRaw(this.$itemRaw, first.item * 2, [
@@ -4028,11 +4028,11 @@ export class VirtualEditor extends EditorBase {
             clearTimeout(this.$rawUndo.id);
             this.$rawUndo.el = el;
             this.$rawUndo.id = setTimeout(() => {
-                    this.pushUndo(undoAction.edit, undoType.rawText, { el: this.$rawUndo.el, value: this.$rawUndo.value });
-                    this.$rawUndo.el = null;
-                    this.$rawUndo.id = -1;
-                    this.$rawUndo.value = null;
-                }, 250);
+                this.pushUndo(undoAction.edit, undoType.rawText, { el: this.$rawUndo.el, value: this.$rawUndo.value });
+                this.$rawUndo.el = null;
+                this.$rawUndo.id = -1;
+                this.$rawUndo.value = null;
+            }, 250);
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
@@ -5310,9 +5310,11 @@ export class VirtualEditor extends EditorBase {
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
-                        //this.pushUndo(undoAction.edit, undoType.item, { index: idx, items: this.$items[idx] });
-                        value = this.$items[undo.data.index];
-                        this.$items[undo.data.index] = undo.data.items;
+                        //this.pushUndo(undoAction.edit, undoType.item, { index: idx, items: this.$items[idx].children });
+                        value = this.$items[undo.data.index].children;
+                        this.$items[undo.data.index].children = undo.data.items;
+                        this.$items[undo.data.index].items = this.$items[undo.data.index].children.map(i => i.item).join(':');
+                        this.$items[undo.data.index].description = this.$items[undo.data.index].children.map(i => i.description).join(':');
                         undo.data.items = value;
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshItems);
@@ -5564,9 +5566,11 @@ export class VirtualEditor extends EditorBase {
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
-                        //this.pushUndo(undoAction.edit, undoType.item, { index: idx, items: this.$items[idx] });
-                        value = this.$items[undo.data.index];
-                        this.$items[undo.data.index] = undo.data.items;
+                        //this.pushUndo(undoAction.edit, undoType.item, { index: idx, items: this.$items[idx].children });
+                        value = this.$items[undo.data.index].children;
+                        this.$items[undo.data.index].children = undo.data.items;
+                        this.$items[undo.data.index].items = this.$items[undo.data.index].children.map(i => i.item).join(':');
+                        this.$items[undo.data.index].description = this.$items[undo.data.index].children.map(i => i.description).join(':');
                         undo.data.items = value;
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshItems);
@@ -8206,7 +8210,7 @@ export class VirtualEditor extends EditorBase {
                     items = room.items.slice().sort((a, b) => { return b.item.length - a.item.length; });
                     cl = items.length;
                     for (c = 0; c < cl; c++)
-                        str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'g'), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
+                        str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'gi'), m => '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + m + '</span>');
                 }
                 e = room.climbs;
                 if (e !== RoomExit.None) {
@@ -8310,7 +8314,7 @@ export class VirtualEditor extends EditorBase {
                 if (items.length > 0 && room.item >= 0 && room.item < items.length && items[room.item] && items[room.item].children && items[room.item].children.length > 0) {
                     items = items[room.item].children.slice().sort((a, b) => { return b.item.length - a.item.length; });
                     for (c = 0, cl = items.length; c < cl; c++)
-                        str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b'), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
+                        str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'gi'), (m) => '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + m + '</span>');
                 }
                 else
                     items = null;

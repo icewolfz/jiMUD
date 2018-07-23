@@ -21,6 +21,7 @@
     - Room editor/Data grids:
       - Advanced text editing now break by word not by letter when wrapping text
       - Exit/state editing text box was hidden behind drop down button
+    - Room preview now correctly handles mixed cased items in matching to items
   - Menu bars did not always re-enable correctly
 
 ## 0.4.59 2018-07-16
