@@ -575,8 +575,13 @@ export class AreaEditor extends EditorBase {
     }
 
     public get maxLevel() {
-        if (!this.$area) return 0;
+        if (!this.$area || !this.$area.size) return 0;
         return this.$area.size.depth;
+    }
+
+    public get size() {
+        if (!this.$area || !this.$area.size) return { height: 0, width: 0, depth: 0 };
+        return this.$area.size;
     }
 
     public ensureVisible(x, y) {
