@@ -11,6 +11,7 @@
       - Undo/redo system
       - Allow exit walk - lets you disable/enable exit generation from the num pad
       - Allow resize walk - disable/enble resizing of map using num pad by walking off the edges of the map
+      - Resize map, set new width, height, and depth then pick how you want to position the current rooms
 - **Fixed:**
   - When loading the same character over ensure auto connect is reran even if settings are the same and not reloaded
   - Code editor:
