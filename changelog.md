@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.60
+## 0.4.60 2018-07-23
 
 - **New:**
   - Auto update:
