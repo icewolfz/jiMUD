@@ -199,6 +199,7 @@ export class VirtualEditor extends EditorBase {
     private $redo = [];
     private $undoGroup;
     private $redoGroup;
+    private $rawUndo = { id: null, el: null };
 
     private $label: HTMLElement;
     private $mapRaw: HTMLTextAreaElement;
@@ -4001,7 +4002,7 @@ export class VirtualEditor extends EditorBase {
                 this.emit('selection-changed');
         });
         el.addEventListener('change', (e) => {
-            this.pushUndo(undoAction.edit, undoType.rawText, { el: el, value: el.value });
+            //this.pushUndo(undoAction.edit, undoType.rawText, { el: el, value: el.value });
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
@@ -4009,7 +4010,19 @@ export class VirtualEditor extends EditorBase {
                 this.emit('changed', el.value.length);
         });
         el.addEventListener('input', (e) => {
-            this.pushUndo(undoAction.edit, undoType.rawText, { el: el, value: el.value });
+            if (this.$rawUndo.el && this.$rawUndo.el !== el) {
+                this.pushUndo(undoAction.edit, undoType.rawText, { el: this.$rawUndo.el, value: this.$rawUndo.el.value });
+                this.$rawUndo.el = null;
+            }
+            clearTimeout(this.$rawUndo.id);
+            this.$rawUndo = {
+                el: el,
+                id: setTimeout(() => {
+                    this.pushUndo(undoAction.edit, undoType.rawText, { el: this.$rawUndo.el, value: this.$rawUndo.el.value });
+                    this.$rawUndo.el = null;
+                    this.$rawUndo.id = -1;
+                }, 250)
+            };
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
@@ -5155,7 +5168,7 @@ export class VirtualEditor extends EditorBase {
                 break;
             case undoAction.edit:
                 switch (undo.type) {
-                    case undoType.raw:
+                    case undoType.rawText:
                         //this.pushUndo(undoAction.edit, undoType.rawText, {el: el, value: el.value });
                         value = undo.data.el.value;
                         undo.data.el.value = undo.data.value;
@@ -5409,7 +5422,7 @@ export class VirtualEditor extends EditorBase {
                 break;
             case undoAction.edit:
                 switch (undo.type) {
-                    case undoType.raw:
+                    case undoType.rawText:
                         //this.pushUndo(undoAction.edit, undoType.rawText, {el: el, value: el.value });
                         value = undo.data.el.value;
                         undo.data.el.value = undo.data.value;
