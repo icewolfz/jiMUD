@@ -3403,13 +3403,13 @@
 
     function resizeMap() {
         if(manager.active.editor && manager.active.editor.resizeMap) {
-            var w = (+$('#map-resize-horizontal-anchor').val()) || 0;
-            var h = (+$('#map-resize-horizontal-anchor').val()) || 0;
-            var d = (+$('#map-resize-horizontal-anchor').val()) || 0;
+            var w = (+$('#map-resize-width').val()) || 0;
+            var h = (+$('#map-resize-height').val()) || 0;
+            var d = (+$('#map-resize-depth').val()) || 0;
             var s = manager.active.editor.size;
             w -= s.width;
             h -= s.height;
-            d -= d.depth;
+            d -= s.depth;
             var sf = (+$('#map-resize-horizontal-anchor').val()) || 0;
             sf |= (+$('#map-resize-vertical-anchor').val()) || 0;
             sf |= (+$('#map-resize-depth-anchor').val()) || 0;
