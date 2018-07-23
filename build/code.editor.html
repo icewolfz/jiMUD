@@ -331,103 +331,61 @@
         <span id="statusbar-location" class="right"></span>
         <span id="statusbar-size" class="right"></span>
     </div>
-    <dialog id="resize" class="resize-dialog" data-title="Resize map" style="width:250px;height:313px;padding:5px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
+    <dialog id="map-resize" class="resize-dialog" data-title="Resize map" style="width:250px;height:353px;padding:5px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
         <div class="dialog-header" style="font-weight: bold">
-            <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('new-area').close();">&times;</button>
+            <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('map-resize').close();">&times;</button>
             <div style="padding-top: 2px;">Create new area...</div>
         </div>
-        <div class="dialog-body" style="padding-top:28px">
-            <table style="width:100%;height:100%">
-                <colgroup>
-                    <col>
-                    <col>
-                    <col>
-                    <col style="width:20px">
-                    <col>
-                </colgroup>
-                <tr>
-                    <td colspan="5">
-                        <div class="form-group col-sm-4">
-                            <label class="control-label">
-                                Width
-                                <input type="number" id="new-virtual-area-width" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
-                            </label>
-                        </div>
-                        <div class="form-group col-sm-4">
-                            <label class="control-label">
-                                Height
-                                <input type="number" id="new-virtual-area-height" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
-                            </label>
-                        </div>
-                        <div class="form-group col-sm-4">
-                            <label class="control-label">
-                                Depth
-                                <input type="number" id="new-virtual-area-depth" class="input-sm form-control" value="1" min="1" max="100" style="width: 100%" />
-                            </label>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
-                            &#8598; </button>
-                    </td>
-                    <td>
-                        <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
-                            &#8593; </button>
-                    </td>
-                    <td>
-                        <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
-                            &#8599; </button>
-                    </td>
-                    <td class="col-sm-4 form-group"></td>
-                    <td>
-                        <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
-                            &#8593;</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
-                            &#8592; </button>
-                    </td>
-                    <td>
-                        <button id="btn-add-dropdown" type="button" class="active btn btn-default" title="New...">
-                        </button>
-                    </td>
-                    <td>
-                        <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
-                            &#8594; </button>
-                    </td>
-                    <td></td>
-                    <td>
-                        <button id="btn-add-dropdown" type="button" class="active btn btn-default" title="New...">
-                        </button>
-                    </td>
-                </tr>
-                <td>
-                    <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
-                        &#8601; </button>
-                </td>
-                <td>
-                    <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
-                        &#8595; </button>
-                </td>
-                <td>
-                    <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
-                        &#8600; </button>
-                </td>
-                <td></td>
-                <td>
-                    <button id="btn-add-dropdown" type="button" class="btn btn-default" title="New...">
-                        &#8595; </button>
-                </td>
-                </tr>
-            </table>
+        <div class="dialog-body" style="padding-top:38px">
+            <div class="form-group col-sm-4">
+                <label class="control-label">
+                    Width
+                    <input type="number" id="map-resize-width" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
+                </label>
+            </div>
+            <div class="form-group col-sm-4">
+                <label class="control-label">
+                    Height
+                    <input type="number" id="map-resize-height" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
+                </label>
+            </div>
+            <div class="form-group col-sm-4">
+                <label class="control-label">
+                    Depth
+                    <input type="number" id="map-resize-depth" class="input-sm form-control" value="1" min="1" max="100" style="width: 100%" />
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%;">Horizontal anchor
+                    <select id="map-resize-horizontal-anchor" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                        <option value='1'>Top</option>
+                        <option value='0'>Center</option>
+                        <option value='16'>Bottom</option>
+                    </select>
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%;">Vertial anchor
+                    <select id="map-resize-vertical-anchor" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                        <option value='2'>Left</option>
+                        <option value='0'>Center</option>
+                        <option value='8'>Right</option>
+                    </select>
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%;">Depth anchor
+                    <select id="map-resize-depth-anchor" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                        <option value='32'>Up</option>
+                        <option value='0'>Center</option>
+                        <option value='64'>Down</option>
+                    </select>
+                </label>
+            </div>
         </div>
         <div class="dialog-footer">
-            <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('new-area').close();">Cancel</button>
-            <button style="float: right" type="button" class="btn btn-primary" onclick="createArea()">Ok</button>
+            <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('map-resize').close();">Cancel</button>
+            <button style="float: right" type="button" class="btn btn-primary" onclick="resizeMap()">Ok</button>
         </div>
     </dialog>
 
@@ -3432,7 +3390,32 @@
     }
 
     function showResizeDialog(size) {
-        //TODO setup dialog with default size data and show it
+        var dialog = document.getElementById('map-resize');
+        document.getElementById('map-resize-width').value = size ? size.width || 0 : 0;
+        document.getElementById('map-resize-height').value = size ? size.height || 0 : 0;
+        document.getElementById('map-resize-depth').value = size ? size.depth || 0 : 0;
+        $('#map-resize-horizontal-anchor').val(0).selectpicker('render');
+        $('#map-resize-vertical-anchor').val(0).selectpicker('render');
+        $('#map-resize-depth-anchor').val(0).selectpicker('render');
+        if(!dialog.open)
+            dialog.showModal();
+    }
+
+    function resizeMap() {
+        if(manager.active.editor && manager.active.editor.resizeMap) {
+            var w = (+$('#map-resize-horizontal-anchor').val()) || 0;
+            var h = (+$('#map-resize-horizontal-anchor').val()) || 0;
+            var d = (+$('#map-resize-horizontal-anchor').val()) || 0;
+            var s = manager.active.editor.size;
+            w -= s.width;
+            h -= s.height;
+            d -= d.depth;
+            var sf = (+$('#map-resize-horizontal-anchor').val()) || 0;
+            sf |= (+$('#map-resize-vertical-anchor').val()) || 0;
+            sf |= (+$('#map-resize-depth-anchor').val()) || 0;
+            manager.active.editor.resizeMap(w, h, d, sf);
+        }
+        document.getElementById('map-resize').close();
     }
 
     // eslint-disable-next-line no-unused-vars
@@ -6816,6 +6799,20 @@
                 */
                 p.editor.on('map-context-menu', (e) => {
                     let temp = [];
+                    if (p.editor.supports('undo'))
+                        temp.push({
+                            label: 'Undo',
+                            click: doUndo,
+                            accelerator: "CmdOrCtrl+Z"
+                        });
+                    if (p.editor.supports('redo'))
+                        temp.push({
+                            label: 'Redo',
+                            click: doRedo,
+                            accelerator: "CmdOrCtrl+Y"
+                        });
+                    if (p.editor.supports('undo') || p.editor.supports('redo'))
+                        temp.push({ type: 'separator' });
                     temp.push({
                         label: 'Cut',
                         click: doCut,
@@ -6905,6 +6902,20 @@
                 });
                 p.editor.on('map-context-menu', (e) => {
                     let temp = [];
+                    if (p.editor.supports('undo'))
+                        temp.push({
+                            label: 'Undo',
+                            click: doUndo,
+                            accelerator: "CmdOrCtrl+Z"
+                        });
+                    if (p.editor.supports('redo'))
+                        temp.push({
+                            label: 'Redo',
+                            click: doRedo,
+                            accelerator: "CmdOrCtrl+Y"
+                        });
+                    if (p.editor.supports('undo') || p.editor.supports('redo'))
+                        temp.push({ type: 'separator' });                    
                     temp.push({
                         label: 'Cut',
                         click: doCut,

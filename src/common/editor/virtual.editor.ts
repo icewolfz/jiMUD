@@ -445,6 +445,11 @@ export class VirtualEditor extends EditorBase {
         return this.$mapSize.depth;
     }
 
+    public get size() {
+        if (!this.$mapSize) return { width: 0, height: 0, depth: 0 };
+        return this.$mapSize;
+    }
+
     public ensureVisible(x, y) {
         let s = 32 + (y - 1) * 32;
         if (s < this.$mapContainer.scrollTop)
@@ -2537,11 +2542,11 @@ export class VirtualEditor extends EditorBase {
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
                         if (x === 0 && y === this.$mapSize.height - 1)
-                            this.resizeMap(1, 1, 0, shiftType.top | shiftType.right);
+                            this._resizeMap(1, 1, 0, shiftType.top | shiftType.right);
                         else if (x === 0)
-                            this.resizeMap(1, 0, 0, shiftType.top | shiftType.right);
+                            this._resizeMap(1, 0, 0, shiftType.top | shiftType.right);
                         else
-                            this.resizeMap(0, 1, 0, shiftType.top | shiftType.right);
+                            this._resizeMap(0, 1, 0, shiftType.top | shiftType.right);
                         p = this.selectedFocusedRoom;
                         y = p.y + 1;
                         x = p.x - 1;
@@ -2648,7 +2653,7 @@ export class VirtualEditor extends EditorBase {
                         this.$map.focus();
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
-                        this.resizeMap(0, 1, 0, shiftType.top | shiftType.left);
+                        this._resizeMap(0, 1, 0, shiftType.top | shiftType.left);
                         p = this.selectedFocusedRoom;
                         y = p.y + 1;
                         this.selectedFocusedRoom.exits |= RoomExit.South;
@@ -2761,11 +2766,11 @@ export class VirtualEditor extends EditorBase {
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
                         if (y === this.$mapSize.height - 1 && x === this.$mapSize.width - 1)
-                            this.resizeMap(1, 1, 0, shiftType.top | shiftType.left);
+                            this._resizeMap(1, 1, 0, shiftType.top | shiftType.left);
                         else if (y === this.$mapSize.height - 1)
-                            this.resizeMap(0, 1, 0, shiftType.top | shiftType.left);
+                            this._resizeMap(0, 1, 0, shiftType.top | shiftType.left);
                         else
-                            this.resizeMap(1, 0, 0, shiftType.top | shiftType.left);
+                            this._resizeMap(1, 0, 0, shiftType.top | shiftType.left);
                         p = this.selectedFocusedRoom;
                         y = p.y + 1;
                         x = p.x + 1;
@@ -2875,7 +2880,7 @@ export class VirtualEditor extends EditorBase {
                         this.$map.focus();
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
-                        this.resizeMap(1, 0, 0, shiftType.top | shiftType.right);
+                        this._resizeMap(1, 0, 0, shiftType.top | shiftType.right);
                         p = this.selectedFocusedRoom;
                         x = p.x - 1;
                         this.selectedFocusedRoom.exits |= RoomExit.West;
@@ -2986,7 +2991,7 @@ export class VirtualEditor extends EditorBase {
                         this.$map.focus();
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
-                        this.resizeMap(1, 0, 0, shiftType.top | shiftType.left);
+                        this._resizeMap(1, 0, 0, shiftType.top | shiftType.left);
                         p = this.selectedFocusedRoom;
                         x = p.x + 1;
                         this.selectedFocusedRoom.exits |= RoomExit.East;
@@ -3099,11 +3104,11 @@ export class VirtualEditor extends EditorBase {
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
                         if (x === 0 && y === 0)
-                            this.resizeMap(1, 1, 0, shiftType.bottom | shiftType.right);
+                            this._resizeMap(1, 1, 0, shiftType.bottom | shiftType.right);
                         else if (y === 0)
-                            this.resizeMap(0, 1, 0, shiftType.bottom | shiftType.right);
+                            this._resizeMap(0, 1, 0, shiftType.bottom | shiftType.right);
                         else
-                            this.resizeMap(1, 0, 0, shiftType.bottom | shiftType.right);
+                            this._resizeMap(1, 0, 0, shiftType.bottom | shiftType.right);
                         p = this.selectedFocusedRoom;
                         x = p.x - 1;
                         y = p.y - 1;
@@ -3212,7 +3217,7 @@ export class VirtualEditor extends EditorBase {
                         this.$map.focus();
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
-                        this.resizeMap(0, 1, 0, shiftType.bottom | shiftType.left);
+                        this._resizeMap(0, 1, 0, shiftType.bottom | shiftType.left);
                         p = this.selectedFocusedRoom;
                         y = p.y - 1;
                         this.selectedFocusedRoom.exits |= RoomExit.North;
@@ -3324,11 +3329,11 @@ export class VirtualEditor extends EditorBase {
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
                         if (x === this.$mapSize.width - 1 && y === 0)
-                            this.resizeMap(1, 1, 0, shiftType.bottom | shiftType.left);
+                            this._resizeMap(1, 1, 0, shiftType.bottom | shiftType.left);
                         else if (y === 0)
-                            this.resizeMap(0, 1, 0, shiftType.bottom | shiftType.left);
+                            this._resizeMap(0, 1, 0, shiftType.bottom | shiftType.left);
                         else
-                            this.resizeMap(1, 0, 0, shiftType.bottom | shiftType.left);
+                            this._resizeMap(1, 0, 0, shiftType.bottom | shiftType.left);
                         p = this.selectedFocusedRoom;
                         x = p.x + 1;
                         y = p.y - 1;
@@ -3446,7 +3451,7 @@ export class VirtualEditor extends EditorBase {
                         this.emit('rebuild-buttons');
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
-                        this.resizeMap(0, 0, 1, shiftType.down);
+                        this._resizeMap(0, 0, 1, shiftType.down);
                         this.$depth = this.selectedFocusedRoom.z + 1;
                         this.selectedFocusedRoom.exits |= RoomExit.Up;
                         if (o !== this.selectedFocusedRoom.exits) {
@@ -3507,7 +3512,7 @@ export class VirtualEditor extends EditorBase {
                         this.emit('rebuild-buttons');
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
-                        this.resizeMap(0, 0, 1, shiftType.up);
+                        this._resizeMap(0, 0, 1, shiftType.up);
                         this.$depth = this.selectedFocusedRoom.z - 1;
                         this.selectedFocusedRoom.exits |= RoomExit.Down;
                         if (o !== this.selectedFocusedRoom.exits) {
@@ -5158,7 +5163,7 @@ export class VirtualEditor extends EditorBase {
                         this.pushRedo(undo);
                         break;
                     case undoType.resize:
-                        this.resizeMap(-undo.data.width, -undo.data.height, -undo.data.depth, undo.data.shift, true);
+                        this._resizeMap(-undo.data.width, -undo.data.height, -undo.data.depth, undo.data.shift, true);
                         this.pushRedo(undo);
                         break;
                     case undoType.room:
@@ -5412,7 +5417,7 @@ export class VirtualEditor extends EditorBase {
                         this.pushUndoObject(undo);
                         break;
                     case undoType.resize:
-                        this.resizeMap(undo.data.width, undo.data.height, undo.data.depth, undo.data.shift, true);
+                        this._resizeMap(undo.data.width, undo.data.height, undo.data.depth, undo.data.shift, true);
                         this.pushUndoObject(undo);
                         break;
                     case undoType.room:
@@ -8944,7 +8949,13 @@ export class VirtualEditor extends EditorBase {
         }
     }
 
-    public resizeMap(width, height, depth, shift: shiftType, noUndo?) {
+    public resizeMap(width, height, depth, shift: shiftType) {
+        this.startUndoGroup();
+        this._resizeMap(width, height, depth, shift);
+        this.stopUndoGroup();
+    }
+
+    private _resizeMap(width, height, depth, shift: shiftType, noUndo?) {
         Timer.start();
         width = width || 0;
         height = height || 0;
