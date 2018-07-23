@@ -190,6 +190,12 @@ enum undoType { room, description, item, resize, reduce, raw, rawText, exits, re
 enum undoAction { add, delete, edit }
 enum undoReduce { items = 1, descriptions = 2, all = items | descriptions }
 
+interface RawUndo {
+    id;
+    el;
+    value?: string;
+}
+
 export class VirtualEditor extends EditorBase {
     private $files;
     private $saving = {};
@@ -199,7 +205,7 @@ export class VirtualEditor extends EditorBase {
     private $redo = [];
     private $undoGroup;
     private $redoGroup;
-    private $rawUndo = { id: null, el: null };
+    private $rawUndo: RawUndo = { id: null, el: null };
 
     private $label: HTMLElement;
     private $mapRaw: HTMLTextAreaElement;
@@ -4002,7 +4008,11 @@ export class VirtualEditor extends EditorBase {
                 this.emit('selection-changed');
         });
         el.addEventListener('change', (e) => {
-            //this.pushUndo(undoAction.edit, undoType.rawText, { el: el, value: el.value });
+            if (this.$rawUndo.el && this.$rawUndo.el !== el) {
+                this.pushUndo(undoAction.edit, undoType.rawText, { el: this.$rawUndo.el, value: this.$rawUndo.value });
+                this.$rawUndo.el = null;
+                this.$rawUndo.value = null;
+            }
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
@@ -4011,18 +4021,18 @@ export class VirtualEditor extends EditorBase {
         });
         el.addEventListener('input', (e) => {
             if (this.$rawUndo.el && this.$rawUndo.el !== el) {
-                this.pushUndo(undoAction.edit, undoType.rawText, { el: this.$rawUndo.el, value: this.$rawUndo.el.value });
+                this.pushUndo(undoAction.edit, undoType.rawText, { el: this.$rawUndo.el, value: this.$rawUndo.value });
                 this.$rawUndo.el = null;
+                this.$rawUndo.value = null;
             }
             clearTimeout(this.$rawUndo.id);
-            this.$rawUndo = {
-                el: el,
-                id: setTimeout(() => {
-                    this.pushUndo(undoAction.edit, undoType.rawText, { el: this.$rawUndo.el, value: this.$rawUndo.el.value });
+            this.$rawUndo.el = el;
+            this.$rawUndo.id = setTimeout(() => {
+                    this.pushUndo(undoAction.edit, undoType.rawText, { el: this.$rawUndo.el, value: this.$rawUndo.value });
                     this.$rawUndo.el = null;
                     this.$rawUndo.id = -1;
-                }, 250)
-            };
+                    this.$rawUndo.value = null;
+                }, 250);
             this.changed = true;
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
@@ -4044,6 +4054,63 @@ export class VirtualEditor extends EditorBase {
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
             if (this.$view === view)
                 this.emit('changed', el.value.length);
+        });
+
+        el.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.keyCode === 90) {
+                e.preventDefault();
+                this.undo();
+                return false;
+            }
+            if (e.ctrlKey && e.keyCode === 89) {
+                e.preventDefault();
+                this.redo();
+                return false;
+            }
+
+            if (!this.$rawUndo.value)
+                this.$rawUndo.value = el.value;
+        });
+
+        el.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            let inputMenu;
+            let tmp = [];
+            if (el.selectionStart !== el.selectionEnd) {
+                tmp = [
+                    { role: 'cut' },
+                    { role: 'copy' },
+                    { role: 'paste' },
+                    { type: 'separator' },
+                    { role: 'selectall' }
+                ];
+            }
+            else
+                tmp = [
+                    { role: 'paste' },
+                    { type: 'separator' },
+                    { role: 'selectall' }
+                ];
+            if (this.$undo.length > 0 || this.$redo.length > 0)
+                tmp.unshift({ type: 'separator' });
+            if (this.$redo.length > 0)
+                tmp.unshift({
+                    label: 'Redo',
+                    accelerator: 'CmdOrCtrl+Y',
+                    click: () => {
+                        this.redo();
+                    }
+                });
+            if (this.$undo.length > 0)
+                tmp.unshift({
+                    label: 'Undo',
+                    accelerator: 'CmdOrCtrl+Z',
+                    click: () => {
+                        this.undo();
+                    }
+                });
+            inputMenu = Menu.buildFromTemplate(tmp);
+            inputMenu.popup({ window: remote.getCurrentWindow() });
         });
         return el;
     }
