@@ -64,10 +64,7 @@ export class Room {
         let prop;
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
-            if (prop === 'external' || prop === 'objects' || prop === 'monsters' || prop === 'items')
-                r[prop] = copy(this[prop]);
-            else
-                r[prop] = this[prop];
+            r[prop] = copy(this[prop]);
         }
         return r;
     }
@@ -182,10 +179,7 @@ class Monster {
         let prop;
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
-            if (prop === 'objects')
-                r.objects = copy(this.objects);
-            else
-                r[prop] = this[prop];
+            r[prop] = copy(this[prop]);
         }
         return r;
     }
@@ -218,7 +212,7 @@ class StdObject {
         let prop;
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
-            r[prop] = this[prop];
+            r[prop] = copy(this[prop]);
         }
         return r;
     }
@@ -239,13 +233,14 @@ class Settings {
     public light: number;
     public terrain: string;
     public states: RoomStates;
+    public properties = {};
 
     public clone() {
         const r = new Settings();
         let prop;
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
-            r[prop] = this[prop];
+            r[prop] = copy(this.properties);
         }
         return r;
     }
@@ -257,9 +252,9 @@ class Size {
     public depth: number;
 
     constructor(width, height, depth) {
-        this.width = width;
-        this.height = height;
-        this.depth = depth;
+        this.width = width || 0;
+        this.height = height || 0;
+        this.depth = depth || 0;
     }
 
     get right() {
@@ -273,6 +268,7 @@ class Size {
 
 class Area {
     public name: string;
+    public virtual: boolean;
     public rooms: Room[][][];
     public monsters;
     public objects;
@@ -280,8 +276,23 @@ class Area {
     public size: Size;
 
     constructor(width, height?, depth?, rooms?) {
-        if (width instanceof Size)
+        if (Array.isArray(width)) {
+            if (width.length === 3)
+                this.size = new Size(width[0], width[1], width[3]);
+            else
+                this.size = new Size(0, 0, 0);
+            if (Array.isArray(height))
+                rooms = height;
+        }
+        else if (width instanceof Size) {
             this.size = new Size(width.width, width.height, width.depth);
+            if (Array.isArray(height))
+                rooms = height;
+        }
+        else if (typeof width === 'object') {
+            this.size = new Size(width.width, width.height, width.depth);
+            rooms = width.rooms || height;
+        }
         else
             this.size = new Size(width, height, depth);
         if (rooms)
@@ -372,10 +383,14 @@ class Area {
                     (v2, y) => Array.from(Array(this.size.width),
                         (v3, x) => this.rooms[z][y][x].clone())
                 )));
-        a.name = this.name;
         a.monsters = Object.keys(this.monsters).map(k => this.monsters[k].clone());
         a.objects = Object.keys(this.objects).map(k => this.objects[k].clone());
         a.settings = this.settings.clone();
+        let prop;
+        for (prop in this) {
+            if (prop === 'rooms' || prop === 'settings' || prop === 'objects' || prop === 'monsters' || !this.hasOwnProperty(prop)) continue;
+            a[prop] = this[prop];
+        }
         return a;
     }
 }
