@@ -517,6 +517,7 @@ export const language = <ILanguage>{
         'consolidate',
         'comma_number',
         'comma_list',
+        'explode_list',
         'consolidate_list',
         'combinations',
         'clone_unique',
