@@ -28,6 +28,16 @@ declare global {
 
 export enum UpdateType { none = 0, drawMap = 1, buildMap = 2, resize = 4, status = 8 }
 
+interface ObjectInfo {
+    id: number;
+    amount?: number;
+}
+
+interface RoomItem {
+    item: string;
+    description: string;
+}
+
 export class Room {
     public exits = 0;
     public x = 0;
@@ -42,9 +52,9 @@ export class Room {
     public light = 0;
     public sound = '';
     public smell = '';
-    public items = [];
-    public objects = [];
-    public monsters = [];
+    public items: RoomItem[] = [];
+    public objects: ObjectInfo[] = [];
+    public monsters: ObjectInfo[] = [];
     public subArea = '';
 
     constructor(x, y, z, e?, s?) {
@@ -160,14 +170,16 @@ enum undoAction { add, delete, edit }
 const Timer = new DebugTimer();
 
 class Monster {
-    public id;
-    public name;
-    public long;
-    public short;
-    public class;
-    public level;
-    public race;
-    public objects = [];
+    public id: number;
+    public name: string;
+    public long: string;
+    public short: string;
+    public class: string;
+    public level: number;
+    public race: string;
+    public maxAmount: number;
+    public unique: boolean;
+    public objects: ObjectInfo[] = [];
 
     constructor(id?) {
         if (!id)
@@ -196,11 +208,17 @@ class Monster {
     }
 }
 
+enum StdObjectType {
+    default, chest
+}
+
 class StdObject {
-    public id;
-    public name;
-    public long;
-    public short;
+    public id: number;
+    public name: string;
+    public long: string;
+    public short: string;
+    public type;
+    public keyid;
 
     constructor(id?) {
         if (!id)
@@ -1023,6 +1041,12 @@ export class AreaEditor extends EditorBase {
         this.$roomPreview.exits = document.createElement('div');
         this.$roomPreview.exits.classList.add('room-exits');
         this.$roomPreview.container.appendChild(this.$roomPreview.exits);
+        this.$roomPreview.living = document.createElement('div');
+        this.$roomPreview.living.classList.add('room-living');
+        this.$roomPreview.container.appendChild(this.$roomPreview.living);
+        this.$roomPreview.objects = document.createElement('div');
+        this.$roomPreview.objects.classList.add('room-objects');
+        this.$roomPreview.container.appendChild(this.$roomPreview.objects);
 
         this.$splitterPreview.panel1.appendChild(this.$mapParent);
         this.$splitterPreview.panel2.appendChild(this.$roomPreview.container);
@@ -5495,6 +5519,8 @@ export class AreaEditor extends EditorBase {
             this.$roomPreview.smell.textContent = '';
             this.$roomPreview.sound.textContent = '';
             this.$roomPreview.exits.textContent = '';
+            this.$roomPreview.living.textContent = '';
+            this.$roomPreview.objects.textContent = '';
         }
         else {
             this.$roomPreview.short.textContent = room.short;
@@ -5565,6 +5591,16 @@ export class AreaEditor extends EditorBase {
                     this.$roomPreview.exits.textContent = str;
                 }
             }
+            if (this.$area.monsters.length > 0) {
+                //
+            }
+            else
+                this.$roomPreview.living.style.display = 'none';
+            if (this.$area.objects.length > 0) {
+                //
+            }
+            else
+                this.$roomPreview.objects.style.display = 'none';
         }
     }
 
