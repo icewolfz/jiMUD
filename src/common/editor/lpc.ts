@@ -1332,7 +1332,7 @@ export class LPCIndenter extends EventEmitter {
             this.$stack = sp;
             this.$ind = ip;
 
-            this.$after_keyword_t = (token >= TokenType.IF);
+            this.$after_keyword_t = (token >= TokenType.IF && token !== TokenType.CASE);
         }
         if (p >= pl && this.$quote)
             throw { message: `Unterminated string, line: ${lineNo}, Column: ${p - 1}`, line: lineNo, col: p - 1 };

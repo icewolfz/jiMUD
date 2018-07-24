@@ -2,6 +2,10 @@
 
 ## 0.4.61
 
+- **Fixed:**
+  - Code editor:
+    - Fix formating of case statements when they use pararenthases  
+
 ## 0.4.60 2018-07-23
 
 - **New:**
