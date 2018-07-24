@@ -9,7 +9,7 @@
   "main": "build/main.js",
   "description": "MUD client coded in javascript.",
   "author": "Icewolfz",
-  "electronVersion": "2.0.4",
+  "electronVersion": "2.0.5",
   "email": "icewolfz@users.noreply.github.com",
   "license": "UNLICENSED",
   "repository": {
@@ -20,7 +20,7 @@
   "scripts": {
     "start": "electron .",
     "debug": "electron . -d",
-    "build:dev": "node_modules/.bin/build --dir",
+    "build:debug": "node_modules/.bin/build --dir",
     "clean": "npm run clean:code && npm run clean:css",
     "compile": "npm run compile:css && npm run compile:themes && npm run compile:worker && npm run compile:common && npm run min && echo Compile Done",
     "compile:debug": "npm run compile:css && npm run compile:themes && npm run compile:worker && npm run compile:common && copy out\\*.js build\\js\\ && xcopy /Y /E /I out\\editor build\\js\\editor && echo Compile Done",
@@ -39,12 +39,6 @@
     "min": "./node_modules/.bin/babili --minified out -d build/js",
     "min:common": "./node_modules/.bin/babili --minified out/common -d build/js",
     "min:worker": "./node_modules/.bin/babili --minified out/worker -d build/js",
-    "rebuild:win64": "./node_modules/.bin/electron-rebuild -f -p",
-    "rebuild:win32": "./node_modules/.bin/electron-rebuild -a=ia32 -f -p",
-    "rebuild:linux32": "./node_modules/.bin/electron-rebuild -a=ia32 -f -p",
-    "rebuild:linux64": "./node_modules/.bin/electron-rebuild -a=x64 -f -p",
-    "rebuild:linuxarm": "./node_modules/.bin/electron-rebuild -a=arm -f -p",
-    "rebuild:osx": "./node_modules/.bin/electron-rebuild -a=x64 -f -p",
     "release:win": "npm run compile && npm run package:win",
     "release:linux": "npm run compile && npm run package:linux",
     "release:osx": "npm run compile && npm run package:osx",
@@ -55,23 +49,24 @@
   "devDependencies": {
     "@types/bootstrap": "^3.3.39",
     "@types/jquery": "^2.0.49",
-    "@types/node": "^7.0.61",
+    "@types/node": "^7.0.67",
     "babel-cli": "^6.26.0",
     "babili": "^0.1.4",
     "devtron": "^1.4.0",
-    "electron": "^2.0.4",
-    "electron-builder": "^20.19.2",
+    "electron": "^2.0.5",
+    "electron-builder": "^20.25.0",
     "electron-installer-dmg": "^0.2.1",
     "electron-local-crash-reporter": "^1.0.2",
     "electron-packager": "^12.1.0",
-    "electron-rebuild": "^1.8.1",
     "eslint": "^4.19.1",
-    "eslint-plugin-html": "^4.0.3",
-    "node-abi": "^2.4.0"
+    "eslint-plugin-html": "^4.0.5",
+    "node-abi": "^2.4.3"
   },
   "build": {
     "appId": "jiMUD",
-    "publish":["github"],
+    "publish": [
+      "github"
+    ],
     "files": [
       "./assets/**/*",
       "./build/**/*",
@@ -110,20 +105,20 @@
   "dependencies": {
     "buzz": "^1.2.1",
     "chokidar": "^2.0.4",
-    "drivelist": "^6.2.2",
+    "drivelist": "^6.3.0",
     "electron-updater": "^2.23.3",
     "font-manager": "^0.3.0",
     "fs-extra": "^6.0.1",
     "jquery": "^3.3.1",
     "lz-string": "^1.4.4",
     "mathjs-expression-parser": "^1.0.0",
-    "moment": "^2.22.1",
+    "moment": "^2.22.2",
     "monaco-editor": "^0.13.1",
     "resize-observer-polyfill": "^1.5.0",
     "rgbcolor": "^1.0.1",
     "spellchecker": "^3.4.4",
-    "sqlite3": "^4.0.1",
+    "sqlite3": "^4.0.2",
     "tmp": "0.0.33",
-    "yargs-parser": "^10.0.0"
+    "yargs-parser": "^10.1.0"
   }
 }

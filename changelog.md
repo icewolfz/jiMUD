@@ -2,6 +2,10 @@
 
 ## 0.4.61
 
+- **Changed:**
+  - Update electron from 2.0.4 to 2.0.5
+  - Update node-sqlite3 from 4.0.1 to 4.0.2
+  - Several minor 3rd party libraries have been updated
 - **Fixed:**
   - Code editor:
     - Fix formating of case statements when they use parentheses
@@ -17,7 +21,7 @@
     - Virtual area editor:
       - Undo/redo system
       - Allow exit walk - lets you disable/enable exit generation from the num pad
-      - Allow resize walk - disable/enble resizing of map using num pad by walking off the edges of the map
+      - Allow resize walk - disable/enable resizing of map using num pad by walking off the edges of the map
       - Resize map, set new width, height, and depth then pick how you want to position the current rooms
 - **Fixed:**
   - When loading the same character over ensure auto connect is reran even if settings are the same and not reloaded
