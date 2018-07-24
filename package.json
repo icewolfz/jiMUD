@@ -106,7 +106,7 @@
     "buzz": "^1.2.1",
     "chokidar": "^2.0.4",
     "drivelist": "^6.3.0",
-    "electron-updater": "^2.23.3",
+    "electron-updater": "^3.0.3",
     "font-manager": "^0.3.0",
     "fs-extra": "^6.0.1",
     "jquery": "^3.3.1",
