@@ -6460,6 +6460,7 @@
         if (!panel.editor.canSaveAs())
             return false;
         panel.editor.file = file;
+        panel.editor.remote = '';
         manager.setPanelTooltip(panel.editor.file, panel);
         manager.setPanelTitle(panel.editor.filename, panel);
         try {
