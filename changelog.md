@@ -12,12 +12,14 @@
   - Several minor 3rd party libraries have been updated
 - **Fixed:**
   - Code editor:
-    - Fix formating of case statements when they use parentheses
+    - Fixed formating of case statements when they use parentheses
     - Clear remote file name for save as... as new file has unknown remote linkage
-    - Fix bug with test button when trying to test unsaved or new files
-    - Fix indenting errors to report correct line #s
+    - Fixed bug with test button when trying to test unsaved or new files
+    - Fixed indenting errors to report correct line #s
     - Clear test / formatting errors when changed text as errors are probably no longer valid
   - Auto update: fix progress dialog not showing correct percent
+  - Fixed -c command line argument
+  - Fixed error logging in low level systems
 
 ## 0.4.60 2018-07-23
 

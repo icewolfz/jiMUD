@@ -1529,11 +1529,11 @@ app.on('ready', () => {
   }
 
   if (Array.isArray(argv.c)) {
-    global.character = argv.eo[0];
+    global.character = argv.c;
     loadCharacter(global.character);
   }
   else if (argv.c) {
-    global.character = argv.eo[0];
+    global.character = argv.c;
     loadCharacter(global.character);
   }
   if (Array.isArray(argv.s))
@@ -3122,6 +3122,8 @@ function logError(err, skipClient) {
   var msg = '';
   if (global.debug)
     console.error(err);
+  if (!set)
+    set = settings.Settings.load(global.settingsFile);
   if (err.stack && set.showErrorsExtended)
     msg = err.stack;
   else if (err instanceof TypeError)
@@ -3136,7 +3138,7 @@ function logError(err, skipClient) {
 
   if (win && win.webContents && !skipClient)
     win.webContents.send('error', msg);
-  else if (set && set.logErrors) {
+  else if (set.logErrors) {
     if (err.stack && !set.showErrorsExtended)
       msg = err.stack;
     fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), new Date().toLocaleString() + '\n', { flag: 'a' });
