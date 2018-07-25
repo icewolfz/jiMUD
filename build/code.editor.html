@@ -4141,7 +4141,7 @@
             $("#update-progress-title").html("Downloading update&hellip;");
             $("#update-progress")[0].show();
         }
-        $("#update-progressbar").val(value);
+        $("#update-progressbar").val(progressObj.percent);
     });
 
     ipcRenderer.on('update-downloaded', () => {

@@ -10,6 +10,7 @@
   - Code editor:
     - Fix formating of case statements when they use parentheses
     - Clear remote file name for save as... as new file has unknown remote linkage
+  - Auto update: fix progress dialog not showing correct percent
 
 ## 0.4.60 2018-07-23
 
