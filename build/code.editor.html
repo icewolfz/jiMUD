@@ -188,7 +188,7 @@
                 rulers: [80],
                 contextmenu: false,
                 theme: 'lpcTheme',
-                model: null
+                model: null,
             })];
             initEditor(window.$editors[0]);
             el = document.createElement('div');
@@ -200,7 +200,7 @@
                 rulers: [80],
                 contextmenu: false,
                 theme: 'lpcTheme',
-                model: null
+                model: null,
             })];
             window.$dNavs = [
                 monaco.editor.createDiffNavigator(window.$dEditors[0], {
@@ -3397,12 +3397,12 @@
         $('#map-resize-horizontal-anchor').val(0).selectpicker('render');
         $('#map-resize-vertical-anchor').val(0).selectpicker('render');
         $('#map-resize-depth-anchor').val(0).selectpicker('render');
-        if(!dialog.open)
+        if (!dialog.open)
             dialog.showModal();
     }
 
     function resizeMap() {
-        if(manager.active.editor && manager.active.editor.resizeMap) {
+        if (manager.active.editor && manager.active.editor.resizeMap) {
             var w = (+$('#map-resize-width').val()) || 0;
             var h = (+$('#map-resize-height').val()) || 0;
             var d = (+$('#map-resize-depth').val()) || 0;
@@ -3704,7 +3704,13 @@
                 var errors = obj.data.trim().split('\n');
                 var el = errors.length;
                 var markers = [];
-                var model = window.$editors[dock].getModel();
+                var delta = [];
+                var editor;
+                if (panel.editor.diff)
+                    editor = window.$dEditors[dock].getModifiedEditor();
+                else
+                    editor = window.$editors[dock];
+                var model = editor.getModel();
                 for (var e = 0; e < el; e++) {
                     let m;
                     let line;
@@ -3718,6 +3724,32 @@
                             message: 'Warning: ' + m[2],
                             severity: 4 //waring
                         });
+                        if (delta.filter(f => f.range.startLineNumber === line && f.options.marginClassName === 'line-error-margin').length === 0)
+                            delta.push({
+                                range: new monaco.Range(line, 1, line, model.getLineContent(line).length),
+                                options: {
+                                    stickiness: 1,
+                                    isWholeLine: true,
+                                    //className: 'line-warning-content',
+                                    //glyphMarginHoverMessage: { value: 'Warning: ' + m[2] },
+                                    //glyphMarginClassName: 'line-warning-glyph',
+                                    marginClassName: 'line-warning-margin',
+                                    zIndex: 0
+                                }
+                            });
+                        else
+                            delta.push({
+                                range: new monaco.Range(line, 1, line, model.getLineContent(line).length),
+                                options: {
+                                    stickiness: 1,
+                                    isWholeLine: true,
+                                    //className: 'line-warning-content',
+                                    //glyphMarginHoverMessage: { value: 'Warning: ' + m[2] },
+                                    //glyphMarginClassName: 'line-warning-glyph',
+                                    marginClassName: 'line-error-margin',
+                                    zIndex: 0
+                                }
+                            });
                         logOutput(`<a class="warning" href="#" onclick="gotoLine(${id}, ${line})">${panel.editor.file}: ${errors[e]}</a>`);
                     }
                     else if (m = /^line (\d+): (.*)/.exec(errors[e])) {
@@ -3730,12 +3762,32 @@
                             message: m[2],
                             severity: 8, //error
                         });
+                        delta.forEach(f => {
+                            if (f.range.startLineNumber === line && f.options.marginClassName === 'line-warning-margin')
+                                f.options.marginClassName = 'line-error-margin';
+                        });
+                        delta.push({
+                            range: new monaco.Range(line, 1, line, model.getLineContent(line).length),
+                            options: {
+                                stickiness: 1,
+                                isWholeLine: true,
+                                //className: 'line-error-content',
+                                //glyphMarginHoverMessage: { value: m[2] },
+                                //glyphMarginClassName: 'line-error-glyph',
+                                marginClassName: 'line-error-margin',
+                                zIndex: 1
+                            }
+                        });
                         logOutput(`<a class="error href="#" onclick="gotoLine(${id}, ${line})">${panel.editor.file}: ${errors[e]}</a>`);
                     }
                     else
                         logOutput(errors[e]);
                 }
                 monaco.editor.setModelMarkers(model, '', markers);
+                panel.editor.decorations = model.deltaDecorations(panel.editor.decorations || [], delta);
+                panel.editor.rawDecorations = delta;
+                //if (panel.editor.decorations && panel.editor.decorations.length)
+                //editor.updateOptions({ glyphMargin: true });
                 _ied.deleteFile(obj.path + '/' + obj.file);
                 closeProgressDialog(obj.tag);
             }
@@ -6787,9 +6839,9 @@
             if (enableAreas && path.extname(data.file) === '.area') {
                 data.options = options.areaOptions;
                 p.editor = new AreaEditor(data);
-                p.editor.on('show-resize', size=> {
+                p.editor.on('show-resize', size => {
                     showResizeDialog(size);
-                });                
+                });
                 p.editor.on('dialog-close', () => menubar.enabled = true);
                 p.editor.on('dialog-cancel', () => menubar.enabled = true);
                 p.editor.on('dialog-open', () => menubar.enabled = false);
@@ -6871,7 +6923,7 @@
             else if (path.extname(data.file) === '.map' && data.source !== 1) {
                 data.options = options.virtualOptions;
                 p.editor = new VirtualEditor(data);
-                p.editor.on('show-resize', size=> {
+                p.editor.on('show-resize', size => {
                     showResizeDialog(size);
                 });
                 p.editor.on('dialog-close', () => menubar.enabled = true);
@@ -6916,7 +6968,7 @@
                             accelerator: "CmdOrCtrl+Y"
                         });
                     if (p.editor.supports('undo') || p.editor.supports('redo'))
-                        temp.push({ type: 'separator' });                    
+                        temp.push({ type: 'separator' });
                     temp.push({
                         label: 'Cut',
                         click: doCut,
@@ -7258,7 +7310,7 @@
                         if (p.editor.new || p.editor.changed) {
                             var t = tmp.tmpNameSync(tmpOptions);
                             p.editor.write(p.editor.value, t);
-                            _ied.uploadTo(t.name, remoteFile, false, 'editor-upload:debug:' + (manager.active ? manager.active.id : 0), false);
+                            _ied.uploadTo(t, remoteFile, false, 'editor-upload:debug:' + (manager.active ? manager.active.id : 0), false);
                             showProgressDialog({
                                 file: remoteFile,
                                 tag: 'editor-upload:debug:' + (manager.active ? manager.active.id : 0),
@@ -7281,7 +7333,7 @@
                     if (p.editor.new || p.editor.changed) {
                         var t = tmp.tmpNameSync(tmpOptions);
                         p.editor.write(p.editor.value, t);
-                        _ied.uploadTo(t.name, remoteFile, false, 'editor-upload:debug:' + (manager.active ? manager.active.id : 0), false);
+                        _ied.uploadTo(t, remoteFile, false, 'editor-upload:debug:' + (manager.active ? manager.active.id : 0), false);
                         showProgressDialog({
                             file: remoteFile,
                             tag: 'editor-upload:debug:' + (manager.active ? manager.active.id : 0),
@@ -7672,33 +7724,6 @@
             doUpdate(_updating);
         });
     }
-    /*
-
-.myGlyphMarginClass {
-	background: red;
-}
-.myContentClass {
-	background: lightblue;
-}
-
-
-var editor = monaco.editor.create(document.getElementById("container"), {
-	value: jsCode,
-	language: "javascript",
-	glyphMargin: true
-});
-
-var decorations = editor.deltaDecorations([], [
-	{
-		range: new monaco.Range(3,1,3,1),
-		options: {
-			isWholeLine: true,
-			className: 'myContentClass',
-			glyphMarginClassName: 'myGlyphMarginClass'
-		}
-	}
-]);
-    */
 </script>
 
 </html>

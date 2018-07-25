@@ -1111,3 +1111,56 @@ input[type=checkbox].property-grid-editor {
     margin: 0px;
 }
 */
+/*
+.line-error-content {
+	background: rgb(255, 174, 173) !important;
+}
+
+.line-error-decoration {
+	background: #A94442;
+    width: 3px !important;
+    margin-left:3px;
+}
+
+.line-error-decoration:hover {
+	background: #A94442;
+	width: 8px !important;
+    margin-left:0px;
+}
+
+.line-warning-content {
+	background: #DDDD00;
+}
+
+.line-warning-decoration {
+	background: #DDDD00;
+    width: 3px !important;
+    margin-left:3px;
+}
+
+.line-warning-decoration:hover {
+	background: #DDDD00;
+	width: 8px !important;
+    margin-left:0px;
+}
+
+.line-error-glyph:before {
+    content: '\26D2' !important;
+    color:red !important;
+}
+
+.line-warning-glyph:before {
+    content: '\26A0';
+    color:#DDDD00;
+}
+*/
+
+.line-error-margin {
+    background: url('./../../assets/editor/error.png') no-repeat !important;
+    z-index: 1;
+}
+
+.line-warning-margin {
+    background: url('./../../assets/editor/warning.png') no-repeat;
+    z-index: 0;
+}

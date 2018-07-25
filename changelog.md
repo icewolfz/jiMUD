@@ -5,6 +5,7 @@
 - **New:**
   - Code editor:
     - Add go to line for code editing, edit > goto to line or ctrl+g
+    - Add warning and error icons for debug/formatting errors to make it easier to see errors/warnings
 - **Changed:**
   - Update electron from 2.0.4 to 2.0.5
   - Update node-sqlite3 from 4.0.1 to 4.0.2
@@ -13,6 +14,9 @@
   - Code editor:
     - Fix formating of case statements when they use parentheses
     - Clear remote file name for save as... as new file has unknown remote linkage
+    - Fix bug with test button when trying to test unsaved or new files
+    - Fix indenting errors to report correct line #s
+    - Clear test / formatting errors when changed text as errors are probably no longer valid
   - Auto update: fix progress dialog not showing correct percent
 
 ## 0.4.60 2018-07-23

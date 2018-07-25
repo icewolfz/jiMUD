@@ -106,11 +106,29 @@ export function SetupEditor() {
                         const $indenter = $lpcIndenter || ($lpcIndenter = new LPCIndenter());
                         $indenter.on('error', (e) => {
                             //reject2(e);
+                            model.pushStackElement();
+                            model.pushEditOperations([], [{
+                                range: new monaco.Range(1, 1, model.getLineCount(), model.getLineMaxColumn(model.getLineCount())),
+                                text: code
+                            }], () => []);
+                            model.pushStackElement();
+                            model.deltaDecorations(model.getAllDecorations(null, true).filter(f => f.options.marginClassName === 'line-error-margin' || f.options.marginClassName === 'line-warning-margin').map(f => f.id), [{
+                                range: new monaco.Range(e.line + 1, e.col + 1, e.line + 1, e.col + 1),
+                                options: {
+                                    stickiness: 1,
+                                    isWholeLine: true,
+                                    //className: 'line-error-content',
+                                    //glyphMarginHoverMessage: { value: e.message },
+                                    //glyphMarginClassName: 'line-error-glyph',
+                                    marginClassName: 'line-error-margin',
+                                    zIndex: 1
+                                }
+                            }]);
                             monaco.editor.setModelMarkers(model, '', [
                                 {
                                     startColumn: e.col + 1,
                                     startLineNumber: e.line + 1,
-                                    endColumn: e.col,
+                                    endColumn: e.col + 1,
                                     endLineNumber: e.line + 1,
                                     message: e.message,
                                     severity: 8
@@ -203,6 +221,9 @@ export class MonacoCodeEditor extends EditorBase {
     private $diffModel: monaco.editor.ITextModel;
     private $pSelectedLength;
 
+    public decorations;
+    public rawDecorations;
+
     constructor(options?: EditorOptions) {
         super(options);
         if (options.value) {
@@ -226,6 +247,16 @@ export class MonacoCodeEditor extends EditorBase {
         this.$model.onDidChangeContent((e) => {
             this.changed = true;
             this.emit('changed', this.$model.getValueLength());
+            if (this.decorations && this.decorations.length) {
+                this.$model.deltaDecorations(this.decorations, []);
+                this.decorations = null;
+            }
+            monaco.editor.setModelMarkers(this.$model, '', []);
+        });
+        this.$model.onDidChangeDecorations(e => {
+            this.decorations = this.$model.getAllDecorations(null, true).filter(f => f.options.marginClassName === 'line-error-margin' || f.options.marginClassName === 'line-warning-margin').map(f => f.id);
+            if (this.decorations.length === 0)
+                this.decorations = null;
         });
 
         setTimeout(() => {
@@ -556,6 +587,9 @@ export class MonacoCodeEditor extends EditorBase {
                     label: 'T&est Clear',
                     click: () => {
                         monaco.editor.setModelMarkers(this.$model, '', []);
+                        this.$model.deltaDecorations(this.decorations || [], []);
+                        this.decorations = null;
+                        this.rawDecorations = null;
                     }
                 },
                 { type: 'separator' },
@@ -742,6 +776,9 @@ export class MonacoCodeEditor extends EditorBase {
         el.title = 'Test clear';
         el.addEventListener('click', () => {
             monaco.editor.setModelMarkers(this.$model, '', []);
+            this.$model.deltaDecorations(this.decorations || [], []);
+            this.decorations = null;
+            this.rawDecorations = null;
         });
         el.innerHTML = '<i class="fa fa-times"></i>';
         group.appendChild(el);
