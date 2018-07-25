@@ -557,6 +557,14 @@ export class MonacoCodeEditor extends EditorBase {
                     click: () => {
                         monaco.editor.setModelMarkers(this.$model, '', []);
                     }
+                },
+                { type: 'separator' },
+                {
+                    label: '&Go to line...',
+                    accelerator: 'CmdOrCtrl+G',
+                    click: () => {
+                        this.$editor.getAction('editor.action.gotoLine').run();
+                    }
                 }
             ];
         }

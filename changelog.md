@@ -2,6 +2,9 @@
 
 ## 0.4.61
 
+- **New:**
+  - Code editor:
+    - Add go to line for code editing, edit > goto to line or ctrl+g
 - **Changed:**
   - Update electron from 2.0.4 to 2.0.5
   - Update node-sqlite3 from 4.0.1 to 4.0.2
