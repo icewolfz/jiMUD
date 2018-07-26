@@ -1,9 +1,9 @@
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
-import { Splitter, Orientation } from './../splitter';
-import { PropertyGrid } from './../propertygrid';
-import { EditorType, ValueEditor } from './../value.editors';
-import { DataGrid } from './../datagrid';
-import { copy, formatString, existsSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString } from './../library';
+import { Splitter, Orientation } from '../splitter';
+import { PropertyGrid } from '../propertygrid';
+import { EditorType, ValueEditor } from '../value.editors';
+import { DataGrid } from '../datagrid';
+import { copy, formatString, existsSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString } from '../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;

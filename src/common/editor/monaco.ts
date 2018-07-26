@@ -1,7 +1,7 @@
 /// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import { EditorBase, EditorOptions, FileState } from './editor.base';
 import { conf, language, loadCompletion, LPCIndenter, LPCFormatter } from './lpc';
-import { existsSync } from './../library';
+import { existsSync } from '../library';
 const { ipcRenderer } = require('electron');
 const path = require('path');
 

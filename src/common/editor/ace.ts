@@ -1,6 +1,6 @@
 import { EditorBase, EditorOptions, FileState } from './editor.base';
 import { LPCIndenter, LPCFormatter } from './lpc';
-import { existsSync, formatSize, capitalize } from './../library';
+import { existsSync, formatSize, capitalize } from '../library';
 const { clipboard, ipcRenderer } = require('electron');
 const path = require('path');
 

@@ -11,8 +11,8 @@ import EventEmitter = require('events');
 import { Parser } from './parser';
 import { AnsiColorCode } from './ansi';
 import { htmlEncode } from './library';
-import { Finder } from './finder.js';
-import { DisplayOptions, OverlayRange } from './types.js';
+import { Finder } from './finder';
+import { DisplayOptions, OverlayRange } from './types';
 
 interface Overlays {
     selection: any[];

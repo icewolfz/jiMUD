@@ -1,5 +1,5 @@
 import EventEmitter = require('events');
-import { parseTemplate, walkSync } from './../library';
+import { parseTemplate, walkSync } from '../library';
 const fs = require('fs-extra');
 const path = require('path');
 

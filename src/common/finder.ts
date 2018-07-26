@@ -1,7 +1,7 @@
 //cSpell:words keycode
 import EventEmitter = require('events');
-import { Display } from './display.js';
-import { OverlayRange } from './types.js';
+import { Display } from './display';
+import { OverlayRange } from './types';
 
 export class Finder extends EventEmitter {
     private _display: Display;
