@@ -5286,15 +5286,27 @@
                 if (data['room-wiz-short'].startsWith('(:')) {
                     tmpl['short'] = formatFunctionPointer(data['room-wiz-short']);
                     tmpl['create pre'] += createFunction(data['room-wiz-short'], 'string');
+                    tmpl['name'] = data['room-wiz-short'].substr(2);
+                    if (tmpl['name'].endsWith(':)'))
+                        tmpl['name'] = tmpl['name'].substr(0, tmpl['name'].length - 2);
+                    tmpl['name'] = tmpl['name'].trim();
                 }
-                else if (data['room-wiz-short'].startsWith('"') && data['room-wiz-short'].endsWith('"'))
-                    tmpl['short'] = `${data['room-wiz-short']}`;
-                else
+                else if (data['room-wiz-short'].startsWith('"') && data['room-wiz-short'].endsWith('"')) {
+                    tmpl['short'] = data['room-wiz-short'];
+                    tmpl['name'] = data['room-wiz-short'].substr(1, data['room-wiz-short'].length - 2);
+                }
+                else {
                     tmpl['short'] = `"${data['room-wiz-short'].replace(/"/g, '\\"')}"`;
+                    tmpl['name'] = data['room-wiz-short'];
+                }
                 data['room-wiz-long'] = data['room-wiz-long'].trim();
                 if (data['room-wiz-long'].startsWith('(:')) {
                     tmpl['long'] = formatFunctionPointer(data['room-wiz-long']);
                     tmpl['create pre'] += createFunction(data['room-wiz-long'], 'string');
+                    tmpl['description'] = data['room-wiz-long'].substr(2);
+                    if (tmpl['description'].endsWith(':)'))
+                        tmpl['description'] = tmpl['description'].substr(0, tmpl['description'].length - 2);
+                    tmpl['description'] = tmpl['description'].trim();
                 }
                 else {
                     if (!data['room-wiz-long'].startsWith('"') && !data['room-wiz-long'].endsWith('"'))
@@ -5304,6 +5316,7 @@
                     if (data['room-wiz-long'].endsWith('"'))
                         data['room-wiz-long'] = data['room-wiz-long'].substr(0, data['room-wiz-long'].length - 1);
                     if (data['room-wiz-long'].length > 70) {
+                        tmpl['description'] = formatString(data['room-wiz-long'], 0, 80, ' * ', '');
                         tmp = data['room-wiz-long'].substr(0, 66);
                         let tl = tmp.length;
                         while (tl--) {
@@ -5316,8 +5329,10 @@
                         data['room-wiz-long'] = data['room-wiz-long'].substr(tmp.length);
                         tmpl['long'] += `${formatString(data['room-wiz-long'], 5, 73)}`;
                     }
-                    else
+                    else {
+                        tmpl['description'] = ' * ' + data['room-wiz-long'];
                         tmpl['long'] = `"${data['room-wiz-long']}"`;
+                    }
                 }
                 tmp = [];
                 if (data['room-wiz-light'] !== 0)
@@ -5939,7 +5954,11 @@
                         break;
                 }
 
-                tmpl['name'] = data['mon-wiz-name'].replace(/"/g, '\\"');
+                if (data['mon-wiz-name'].startsWith('"') && data['mon-wiz-name'].endsWith('"')) {
+                    tmpl['name'] = data['mon-wiz-name'].substr(1, data['mon-wiz-name'].length - 2).replace(/"/g, '\\"');
+                }                
+                else
+                    tmpl['name'] = data['mon-wiz-name'].replace(/"/g, '\\"');
                 data['mon-wiz-short'] = data['mon-wiz-short'].trim();
                 if (data['mon-wiz-short'].startsWith('(:')) {
                     tmpl['short'] = formatFunctionPointer(data['mon-wiz-short']);
@@ -5953,6 +5972,10 @@
                 if (data['mon-wiz-long'].startsWith('(:')) {
                     tmpl['long'] = formatFunctionPointer(data['mon-wiz-long']);
                     tmpl['create pre'] += createFunction(data['mon-wiz-long'], 'string');
+                    tmpl['description'] = data['mon-wiz-long'].substr(2);
+                    if (tmpl['description'].endsWith(':)'))
+                        tmpl['description'] = tmpl['description'].substr(0, tmpl['description'].length - 2);
+                    tmpl['description'] = tmpl['description'].trim();
                 }
                 else {
                     if (!data['mon-wiz-long'].startsWith('"') && !data['mon-wiz-long'].endsWith('"'))
@@ -5962,6 +5985,7 @@
                     if (data['mon-wiz-long'].endsWith('"'))
                         data['mon-wiz-long'] = data['mon-wiz-long'].substr(0, data['mon-wiz-long'].length - 1);
                     if (data['mon-wiz-long'].length > 70) {
+                        tmpl['description'] = formatString(data['mon-wiz-long'], 0, 80, ' * ', '');
                         tmp = data['mon-wiz-long'].substr(0, 66);
                         let tl = tmp.length;
                         while (tl--) {
@@ -5974,8 +5998,10 @@
                         data['mon-wiz-long'] = data['mon-wiz-long'].substr(tmp.length);
                         tmpl['long'] += `${formatString(data['mon-wiz-long'], 5, 73)}`;
                     }
-                    else
+                    else {
                         tmpl['long'] = `"${data['mon-wiz-long']}"`;
+                        tmpl['description'] = ' * ' + data['mon-wiz-long'];
+                    }
                 }
                 tmpl['height'] = data['mon-wiz-height'];
 

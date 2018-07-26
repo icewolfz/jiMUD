@@ -1357,7 +1357,7 @@ export function wordBreak(str, start, length) {
     return wBreak;
 }
 
-export function formatString(str, indent, width?) {
+export function formatString(str, indent, width?, prefix?, postFix?, preIdent?) {
     if (!str || str.length === 0) return '';
     width = width || 66;
     if (width < 40) width = 40;
@@ -1376,6 +1376,8 @@ export function formatString(str, indent, width?) {
     }
     if (len > 0) // left over
         list.push(str.substr(tmp, len));
-
-    return '"' + list.join('"\n' + ' '.repeat(indent) + '"') + '"';
+    prefix = prefix || '"';
+    postFix = postFix || '"';
+    preIdent = preIdent || '';
+    return prefix + list.join(postFix + '\n' + preIdent + ' '.repeat(indent) + prefix) + postFix;
 }
