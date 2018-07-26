@@ -1609,7 +1609,7 @@
     const { shell, remote, ipcRenderer, webFrame, clipboard } = require('electron');
     const { DockManager } = require('./js/dockmanager');
     const { DataGrid, EditorType } = require('./js/datagrid');
-    const { MonacoCodeEditor, VirtualEditor, AreaEditor, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
+    const { MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
 
     const { dialog, Menu, MenuItem, app } = remote;
@@ -6838,7 +6838,7 @@
             };
             if (enableAreas && path.extname(data.file) === '.area') {
                 data.options = options.areaOptions;
-                p.editor = new AreaEditor(data);
+                p.editor = new AreaDesigner(data);
                 p.editor.on('show-resize', size => {
                     showResizeDialog(size);
                 });

@@ -1,9 +1,9 @@
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
-import { Splitter, Orientation } from './../splitter';
-import { PropertyGrid } from './../propertygrid';
-import { EditorType, ValueEditor } from './../value.editors';
-import { DataGrid } from './../datagrid';
-import { copy, formatString, existsSync, capitalize, wordwrap, Cardinal, enumToString } from './../library';
+import { Splitter, Orientation } from '../splitter';
+import { PropertyGrid } from '../propertygrid';
+import { EditorType, ValueEditor } from '../value.editors';
+import { DataGrid } from '../datagrid';
+import { copy, formatString, existsSync, capitalize, wordwrap, Cardinal, enumToString } from '../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
@@ -13,7 +13,7 @@ import { MousePosition, RoomExits, shiftType, FileOpenValueEditor, FileBrowseVal
 
 import RGBColor = require('rgbcolor');
 
-interface AreaEditorOptions extends EditorOptions {
+interface AreaDesignerOptions extends EditorOptions {
     width?: number;
     height?: number;
     depth?: number;
@@ -413,7 +413,7 @@ class Area {
     }
 }
 
-export class AreaEditor extends EditorBase {
+export class AreaDesigner extends EditorBase {
     private $saving = false;
     private $view: View = View.map;
     private $undo = [];
@@ -634,7 +634,7 @@ export class AreaEditor extends EditorBase {
             this.$mapContainer.scrollLeft = x * 32 - this.$mapContainer.clientWidth + 32;
     }
 
-    constructor(options?: AreaEditorOptions) {
+    constructor(options?: AreaDesignerOptions) {
         super(options);
         if (options && options.options)
             this.options = options.options;
