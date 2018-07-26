@@ -5841,6 +5841,21 @@ export class AreaDesigner extends EditorBase {
         if (!p) return;
     }
 
+    public generateRoomCode(room) {
+        if (!room) return '';
+        return '';
+    }
+
+    public generateMonsterCode(monster) {
+        if (!monster) return '';
+        return '';
+    }
+
+    public generateObjectCode(obj) {
+        if (!obj) return '';
+        return '';
+    }
+
     public resizeMap(width, height, depth, shift: shiftType, noUndo?) {
         Timer.start();
         width = width || 0;
