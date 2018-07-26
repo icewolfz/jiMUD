@@ -617,7 +617,11 @@ export class AreaDesigner extends EditorBase {
         return this.$area.size;
     }
 
-    public ensureVisible(x, y) {
+    public ensureVisible(x, y?) {
+        if (x instanceof Room || typeof x === 'object') {
+            y = x.y || 0;
+            x = x.x || 0;
+        }
         let s = 32 + (y - 1) * 32;
         if (s < this.$mapContainer.scrollTop)
             this.$mapContainer.scrollTop = 32 + (y - 1) * 32;
@@ -5831,6 +5835,10 @@ export class AreaDesigner extends EditorBase {
             d += `   set_down(VIR+"${r.x},${r.y},${r.z - 1}");\n`;
         d += '}';
         return d;
+    }
+
+    public generateCode(p) {
+        if (!p) return;
     }
 
     public resizeMap(width, height, depth, shift: shiftType, noUndo?) {
