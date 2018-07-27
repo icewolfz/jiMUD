@@ -56,11 +56,9 @@
     "electron": "^2.0.5",
     "electron-builder": "^20.25.0",
     "electron-installer-dmg": "^0.2.1",
-    "electron-local-crash-reporter": "^1.0.2",
     "electron-packager": "^12.1.0",
     "eslint": "^4.19.1",
-    "eslint-plugin-html": "^4.0.5",
-    "node-abi": "^2.4.3"
+    "eslint-plugin-html": "^4.0.5"
   },
   "build": {
     "appId": "jiMUD",
