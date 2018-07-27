@@ -21,6 +21,7 @@
   - Auto update: fix progress dialog not showing correct percent
   - Fixed -c command line argument
   - Fixed error logging in low level systems
+  - Fixed disconnect dialog count down timer when it is disconnects more then 3 times
 
 ## 0.4.60 2018-07-23
 

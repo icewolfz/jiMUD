@@ -1027,7 +1027,7 @@
                         else if (_disconnectCounter === 10)
                             _disconnectTimer = 30;
                         else
-                            _disconnectTimer *= 2;
+                            _disconnectTimer = _disconnectCounter * 2;
                         _disconnectCounter = _disconnectTimer;
                         _disconnectTimerID = setInterval(() => {
                             _disconnectTimer--;
@@ -1941,7 +1941,7 @@
             if ($("#update-progress")[0].open)
                 $("#update-progress")[0].close();
         });
- 
+
         ipcRenderer.on('flush-end', (event, sender) => {
             client.debug('Finished map');
             client.debug(sender);
