@@ -4756,22 +4756,22 @@
                             options: {
                                 container: '#room-wizard',
                                 data: [
-                                    'surface',
-                                    'dive',
-                                    'swim',
-                                    'portal',
-                                    'down',
-                                    'up',
-                                    'enter',
-                                    'out',
-                                    'northwest',
-                                    'west',
-                                    'southwest',
-                                    'south',
-                                    'southeast',
-                                    'east',
+                                    'north',
                                     'northeast',
-                                    'north'
+                                    'east',
+                                    'southeast',
+                                    'south',
+                                    'southwest',
+                                    'west',
+                                    'northwest',
+                                    'out',
+                                    'enter',
+                                    'up',
+                                    'down',
+                                    'portal',
+                                    'swim',
+                                    'dive',
+                                    'surface'
                                 ]
                             }
                         }
@@ -4798,10 +4798,10 @@
                             options: {
                                 container: '#room-wizard',
                                 data: [
-                                    'gates',
-                                    'gate',
+                                    'door',
                                     'doors',
-                                    'door'
+                                    'gate',
+                                    'gates'
                                 ]
                             }
                         }
@@ -4851,9 +4851,15 @@
                         field: 'destDoor',
                         width: 200,
                         editor: {
+                            type: EditorType.dropdown,
                             options: {
                                 container: '#room-wizard',
-                                singleLine: true
+                                data: [
+                                    'door',
+                                    'doors',
+                                    'gate',
+                                    'gates'
+                                ]
                             }
                         }
                     },
@@ -5956,7 +5962,7 @@
 
                 if (data['mon-wiz-name'].startsWith('"') && data['mon-wiz-name'].endsWith('"')) {
                     tmpl['name'] = data['mon-wiz-name'].substr(1, data['mon-wiz-name'].length - 2).replace(/"/g, '\\"');
-                }                
+                }
                 else
                     tmpl['name'] = data['mon-wiz-name'].replace(/"/g, '\\"');
                 data['mon-wiz-short'] = data['mon-wiz-short'].trim();
