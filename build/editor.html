@@ -248,8 +248,8 @@
                         break;
                     case 'RESET':
                     case 'DEFAULT':
-                        for (t = 0, tl = codes.length; t < tl; t++)
-                            stack.push(codes[t]);
+                        for (var c = 0, cl = codes.length; c < cl; c++)
+                            stack.push(codes[c]);
                         codes = [];
                         classes = [];
                         break;
@@ -291,7 +291,7 @@
                         if (classes.length) {
                             stack.push('<span class="' + classes.join(' ') + '">');
                             codes.push('</span>');
-                            classes = '';
+                            classes = [];
                         }
                         stack.push(text[t]);
                         bold = false;
