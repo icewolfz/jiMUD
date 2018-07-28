@@ -1211,8 +1211,10 @@ export class CollectionValueEditor extends ValueEditor {
                     this.$paste.setAttribute('disabled', 'true');
             });
             dg.on('add', e2 => {
+                if (this.options.add)
+                    this.options.add(e2);
                 if (this.options.onAdd)
-                    e2.data = this.options.onAdd();
+                    this.options.onAdd(e2);
             });
             header = document.createElement('div');
             header.classList.add('dialog-footer');
