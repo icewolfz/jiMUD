@@ -170,6 +170,10 @@ export class PropertyGrid extends EventEmitter {
             this.createEditor(this.$editor.el);
     }
 
+    public get properties() {
+        return Object.keys(this.$options);
+    }
+
     private createControl() {
         this.$el = document.createElement('ul');
         this.$el.id = this.id;
