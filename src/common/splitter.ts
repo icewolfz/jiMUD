@@ -104,6 +104,34 @@ export class Splitter extends EventEmitter {
     }
     get SplitterDistance() { return this.$splitterDistance; }
 
+    set Panel1MinSize(value) {
+        if (this.$panel1MinSize === value)
+            return;
+        this.$panel1MinSize = value;
+        if (this.$orientation === Orientation.horizontal) {
+            if (this.$panel1.clientWidth < value)
+                this.$splitterDistance = this.parent.clientWidth - this.$panel1MinSize;
+        }
+        else if (this.$panel1.clientHeight < value)
+            this.$splitterDistance = this.parent.clientHeight - this.$panel1MinSize;
+        this.updatePanels();
+    }
+    get Panel1MinSize() { return this.$panel1MinSize; }
+
+    set Panel2MinSize(value) {
+        if (this.$panel2MinSize === value)
+            return;
+        this.$panel2MinSize = value;
+        if (this.$orientation === Orientation.horizontal) {
+            if (this.$panel2.clientWidth < value)
+                this.$splitterDistance = value;
+        }
+        else if (this.$panel2.clientHeight < value)
+            this.$splitterDistance = value;
+        this.updatePanels();
+    }
+    get Panel2MinSize() { return this.$panel2MinSize; }
+
     get orientation(): Orientation { return this.$orientation; }
     set orientation(value: Orientation) {
         if (value === this.$orientation) return;
