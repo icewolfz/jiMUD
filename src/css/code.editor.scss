@@ -718,7 +718,7 @@ cause test to be brighter but more bold looking
     background-color: rgb(255, 255, 255);
     border-right: 1px solid rgb(244, 247, 252);
     display: inline-block;
-    width: 100px;
+    width: 125px;
     padding-left: 2px;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -730,7 +730,7 @@ cause test to be brighter but more bold looking
     padding-left: 2px;
     position: absolute;
     right: 0;
-    left: 100px;
+    left: 125px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -770,6 +770,12 @@ cause test to be brighter but more bold looking
     width: 100%;
     background-color: white;
     color: black;
+}
+
+select.property-grid-editor {
+    -webkit-appearance: none;
+    background: url(./../../assets/editor/select.png) no-repeat 100% 50%;
+    background-color: white;
 }
 
 .datagrid .property-grid-editor,

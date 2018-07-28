@@ -1,5 +1,8 @@
 import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
+import { DataGrid } from './datagrid';
+const { remote } = require('electron');
+const { dialog } = remote;
 
 export enum EditorType {
     default,
@@ -9,7 +12,8 @@ export enum EditorType {
     check,
     custom,
     readonly,
-    dropdown
+    dropdown,
+    collection
 }
 
 export abstract class ValueEditor extends EventEmitter {
@@ -23,8 +27,8 @@ export abstract class ValueEditor extends EventEmitter {
 
     constructor(control, parent, property?, options?) {
         super();
-        this.parent = parent;
         this.options = options;
+        this.parent = parent;
         this.control = control;
         this.property = property;
     }
@@ -398,12 +402,14 @@ export class TextValueEditor extends ValueEditor {
             this.$wrap = ops.wrap;
         }
         if (this.$noEnter) {
-            this.$editor.classList.add('single');
+            if (this.$editor)
+                this.$editor.classList.add('single');
             if (this.$dropdown)
                 this.$dropdown.classList.add('single');
         }
         else {
-            this.$editor.classList.remove('single');
+            if (this.$editor)
+                this.$editor.classList.remove('single');
             if (this.$dropdown)
                 this.$dropdown.classList.remove('single');
         }
@@ -698,7 +704,7 @@ export class FlagValueEditor extends ValueEditor {
                         this.$dropdown.focus();
                     });
                     l.appendChild(i);
-                    l.appendChild(document.createTextNode(values[val]));
+                    l.appendChild(document.createTextNode(capitalize(values[val].replace(/_/g, ' ').toLowerCase())));
                     if (this.$value !== 0 && en[values[val]] === 0)
                         i.checked = false;
                     else
@@ -1033,5 +1039,387 @@ export class DropDownEditValueEditor extends ValueEditor {
     set value(value: any) {
         this.$editor.value = value;
         resetCursor(this.$editor);
+    }
+}
+
+export class CollectionValueEditor extends ValueEditor {
+    private $el: HTMLElement;
+    private $editor: HTMLInputElement;
+    private $value;
+    private $edit;
+    private $del;
+    private $copy;
+    private $cut;
+    private $paste;
+    private $dButton;
+    private $dialog;
+
+    public create() {
+        this.$el = document.createElement('div');
+        this.$el.dataset.editor = 'true';
+        this.$el.classList.add('property-grid-editor-dropdown');
+        this.$editor = document.createElement('input');
+        this.$editor.type = 'text';
+        this.$editor.readOnly = true;
+        this.$editor.classList.add('property-grid-editor');
+        this.$editor.addEventListener('blur', (e) => {
+            if ((this.$dialog && this.$dialog.contains(e.relatedTarget)) || (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown')) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                return;
+            }
+            if (this.control.parent === e.relatedTarget)
+                return;
+            setTimeout(() => this.control.clearEditor(e));
+        });
+        this.$editor.addEventListener('keyup', (e) => {
+            if (e.keyCode === 13) {
+                setTimeout(() => this.control.clearEditor(e, this));
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                return false;
+            }
+            else if (e.keyCode === 27) {
+                setTimeout(() => this.control.clearEditor(e, null, true));
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                return false;
+            }
+        });
+        this.$editor.addEventListener('keydown', (e2) => {
+            if (e2.keyCode === 27) {
+                e2.preventDefault();
+                e2.stopPropagation();
+                return false;
+            }
+        });
+        this.$el.appendChild(this.$editor);
+
+        this.$dButton = document.createElement('button');
+        this.$dButton.title = 'Edit' + (this.options ? ' ' + this.options.type + 's' : '') + '...';
+        this.$dButton.innerHTML = '&hellip;';
+        this.$dButton.dataset.editor = 'dropdown';
+        this.$dButton.addEventListener('click', (e) => {
+            this.$dialog = <HTMLDialogElement>document.createElement('dialog');
+            this.$dialog.style.width = '500px';
+            this.$dialog.style.height = '300px';
+            this.$dialog.style.padding = '5px';
+            this.$dialog.addEventListener('close', () => {
+                this.control.emit('dialog-close');
+                this.$dialog.remove();
+                this.focus();
+            });
+            this.$dialog.addEventListener('cancel', () => {
+                this.control.emit('dialog-cancel');
+                this.$dialog.remove();
+                this.focus();
+            });
+            let header = document.createElement('div');
+            header.classList.add('dialog-header');
+            header.style.fontWeight = 'bold';
+            let button = document.createElement('button');
+            button.classList.add('close');
+            button.type = 'button';
+            button.dataset.dismiss = 'modal';
+            button.addEventListener('click', () => {
+                this.$dialog.close();
+                this.$dialog.remove();
+                this.focus();
+            });
+            button.innerHTML = '&times;';
+            header.appendChild(button);
+            let el = document.createElement('div');
+            el.style.paddingTop = '2px';
+            el.innerHTML = capitalize(this.control.getPropertyOptions(this.property, 'label') || this.property) + '&hellip;';
+            header.appendChild(el);
+            this.$dialog.appendChild(header);
+            header = document.createElement('div');
+            header.classList.add('dialog-body');
+            header.style.paddingTop = '40px';
+            this.$dialog.appendChild(header);
+            el = document.createElement('div');
+            el.classList.add('form-group', 'datagrid-standard');
+            el.style.margin = '0';
+            el.style.position = 'absolute';
+            el.style.left = '5px';
+            el.style.right = '5px';
+            el.style.bottom = '60px';
+            el.style.top = '38px';
+            header.appendChild(el);
+            const dg = new DataGrid(el);
+            dg.enterMoveFirst = this.options ? this.options.enterMoveFirst : true;
+            dg.enterMoveNext = this.options ? this.options.enterMoveNext : true;
+            dg.enterMoveNew = this.options ? this.options.enterMoveNew : true;
+            dg.clipboardPrefix = 'jiMUD/';
+            if (this.options && this.options.columns) {
+                dg.columns = this.options.columns.map(c => {
+                    if (!c.editor)
+                        c.editor = { options: { container: this.$dialog } };
+                    else if (!c.editor.options)
+                        c.editor.options = { container: this.$dialog };
+                    else if (!c.editor.options.container)
+                        c.editor.options.container = this.$dialog;
+                    return c;
+                });
+            }
+            dg.addRows(this.$value.map(a => ({ ...a })));
+            dg.on('selection-changed', () => {
+                if (dg.selectedCount) {
+                    this.$edit.removeAttribute('disabled');
+                    this.$del.removeAttribute('disabled');
+                    if (dg.selectedCount > 1)
+                        this.$del.title = 'Delete' + (this.options ? ' ' + this.options.type + 's' : '');
+                    else
+                        this.$del.title = 'Delete' + (this.options ? ' ' + this.options.type : '');
+                    this.$cut.removeAttribute('disabled');
+                    this.$copy.removeAttribute('disabled');
+                }
+                else {
+                    this.$edit.setAttribute('disabled', 'true');
+                    this.$del.setAttribute('disabled', 'true');
+                    this.$del.title = 'Delete' + (this.options ? ' ' + this.options.type + '(s)' : '');
+                    this.$cut.setAttribute('disabled', 'true');
+                    this.$copy.setAttribute('disabled', 'true');
+                }
+            });
+            dg.on('delete', (e2) => {
+                if (dialog.showMessageBox(
+                    remote.getCurrentWindow(),
+                    {
+                        type: 'warning',
+                        title: 'Delete',
+                        message: 'Delete selected ' + (this.options ? this.options.type + (dg.selectedCount > 1 ? 's' : '') : '') + '?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    })
+                    === 1)
+                    e2.preventDefault = true;
+            });
+            dg.on('cut', () => {
+                if (dg.canPaste)
+                    this.$paste.removeAttribute('disabled');
+                else
+                    this.$paste.setAttribute('disabled', 'true');
+            });
+            dg.on('copy', () => {
+                if (dg.canPaste)
+                    this.$paste.removeAttribute('disabled');
+                else
+                    this.$paste.setAttribute('disabled', 'true');
+            });
+            dg.on('add', e2 => {
+                if (this.options.onAdd)
+                    e2.data = this.options.onAdd();
+            });
+            header = document.createElement('div');
+            header.classList.add('dialog-footer');
+            this.$dialog.appendChild(header);
+            button = document.createElement('button');
+            button.style.cssFloat = 'right';
+            button.type = 'button';
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                this.$dialog.close();
+                this.$dialog.remove();
+                this.focus();
+            });
+            button.textContent = 'Cancel';
+            header.appendChild(button);
+            button = document.createElement('button');
+            button.style.cssFloat = 'right';
+            button.type = 'button';
+            button.classList.add('btn', 'btn-primary');
+            button.addEventListener('click', () => {
+                this.value = dg.rows;
+                this.$dialog.close();
+                this.$dialog.remove();
+                this.focus();
+            });
+            button.textContent = 'Ok';
+            header.appendChild(button);
+
+            el = document.createElement('div');
+            el.classList.add('btn-group');
+            el.style.cssFloat = 'left';
+            button = document.createElement('button');
+            button.type = 'button';
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                dg.addNewRow();
+            });
+            button.title = 'Add' + (this.options ? ' ' + this.options.type : '');
+            button.innerHTML = '<i class="fa fa-plus"></i>';
+            el.appendChild(button);
+            button = document.createElement('button');
+            button.type = 'button';
+            button.disabled = true;
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                dg.beginEdit(dg.selected[0].row);
+            });
+            button.title = 'Edit' + (this.options ? ' ' + this.options.type : '');
+            button.innerHTML = '<i class="fa fa-edit"></i>';
+            this.$edit = button;
+            el.appendChild(button);
+            button = document.createElement('button');
+            button.disabled = true;
+            button.type = 'button';
+            button.title = 'Delete' + (this.options ? ' ' + this.options.type + '(s)' : '');
+            button.classList.add('btn', 'btn-danger');
+            button.addEventListener('click', () => {
+                dg.delete();
+            });
+            button.innerHTML = '<i class="fa fa-trash"></i>';
+            this.$del = button;
+            el.appendChild(button);
+            header.appendChild(el);
+
+            //CUT COPY PASTE
+            el = document.createElement('div');
+            el.classList.add('btn-group');
+            el.style.cssFloat = 'left';
+            button = document.createElement('button');
+            button.type = 'button';
+            button.disabled = true;
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                dg.cut();
+            });
+            button.title = 'Cut';
+            button.innerHTML = '<i class="fa fa-cut"></i>';
+            this.$cut = button;
+            el.appendChild(button);
+            button = document.createElement('button');
+            button.type = 'button';
+            button.disabled = true;
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                dg.copy();
+            });
+            button.title = 'Copy';
+            button.innerHTML = '<i class="fa fa-copy"></i>';
+            this.$copy = button;
+            el.appendChild(button);
+            button = document.createElement('button');
+            button.type = 'button';
+            button.title = 'Paste';
+            button.disabled = !dg.canPaste;
+            button.classList.add('btn', 'btn-default');
+            button.addEventListener('click', () => {
+                dg.paste();
+            });
+            button.innerHTML = '<i class="fa fa-paste"></i>';
+            this.$paste = button;
+            el.appendChild(button);
+            header.appendChild(el);
+            document.body.appendChild(this.$dialog);
+            this.control.emit('dialog-open');
+            this.$dialog.showModal();
+        });
+        this.$el.appendChild(this.$dButton);
+        this.parent.appendChild(this.$el);
+    }
+    public focus() {
+        this.$editor.focus();
+    }
+    public destroy() {
+        if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
+            this.$el.remove();
+    }
+
+    public scroll() { /**/ }
+
+    public openAdvanced() {
+        this.$dButton.click();
+    }
+
+    private formatValue(value?) {
+        if (!value) value = this.$value;
+        if (!value)
+            return 'None';
+        const ops = this.control.getPropertyOptions(this.property, 'formatter');
+        if (ops)
+            return ops(this.property, value, this.data);
+        if (this.options && this.options.enum)
+            return enumToString(value, this.options.enum);
+        if (typeof value === 'boolean')
+            return capitalize('' + value);
+        return value;
+    }
+
+    get value() {
+        return this.$value;
+    }
+    set value(value: any) {
+        this.$value = value;
+        this.$editor.value = this.formatValue(value);
+        resetCursor(this.$editor);
+    }
+}
+
+export class SelectValueEditor extends ValueEditor {
+    private $el: HTMLSelectElement;
+
+    public create() {
+        this.$el = document.createElement('select');
+        this.$el.dataset.editor = 'true';
+        this.$el.classList.add('property-grid-editor');
+        if (this.options && typeof this.options.data === 'object') {
+            const en = this.options.data;
+            const values = Object.keys(en).filter(key => !isNaN(Number(en[key])));
+            const dl = values.length;
+            for (let d = 0; d < dl; d++) {
+                if (this.options.exclude && this.options.exclude.includes(values[d]))
+                    continue;
+                const i = document.createElement('option');
+                i.value = en[values[d]];
+                i.textContent = capitalize(values[d].replace(/_/g, ' ').toLowerCase());
+                this.$el.appendChild(i);
+            }
+        }
+        else if (this.options && Array.isArray(this.options.data)) {
+            const dl = this.options.data.length;
+            const values = this.options.data;
+            for (let d = 0; d < dl; d++) {
+                if (this.options.exclude && this.options.exclude.includes(values[d]))
+                    continue;
+                const i = document.createElement('option');
+                i.value = values[d];
+                i.textContent = capitalize(values[d].replace(/_/g, ' ').toLowerCase());
+                this.$el.appendChild(i);
+            }
+        }
+        this.$el.addEventListener('keyup', (e) => {
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                setTimeout(() => this.control.clearEditor(e, this));
+            }
+            return;
+        });
+        this.$el.addEventListener('blur', (e) => {
+            setTimeout(() => this.control.clearEditor(e));
+        });
+        this.parent.appendChild(this.$el);
+    }
+    public focus() {
+        this.$el.focus();
+    }
+    public destroy() {
+        if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
+            this.$el.remove();
+    }
+
+    public scroll() { /**/ }
+
+    public openAdvanced() { /**/ }
+
+    get value() {
+        return this.$el.value;
+    }
+    set value(value: any) {
+        this.$el.value = value;
     }
 }

@@ -1,6 +1,6 @@
 import EventEmitter = require('events');
 import { capitalize, enumToString } from './library';
-import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor } from './value.editors';
+import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, CollectionValueEditor, SelectValueEditor } from './value.editors';
 
 export interface PropertyGridOptions {
     container?: any;
@@ -100,7 +100,7 @@ export class PropertyGrid extends EventEmitter {
         this.$objects = value;
         this.$objects.forEach(o => o['$propertyGrid'] = true);
         this.buildProperties();
-        if (eProp){
+        if (eProp) {
             const el = <HTMLElement>document.querySelector('[data-prop="' + eProp + '"]');
             if (!el) return;
             if (el.dataset.readonly !== 'true')
@@ -430,6 +430,10 @@ export class PropertyGrid extends EventEmitter {
                 this.$editor.editor = new DropDownEditValueEditor(this, el, prop, editorOptions);
                 break;
             case EditorType.select:
+                this.$editor.editor = new SelectValueEditor(this, el, prop, editorOptions);
+                break;
+            case EditorType.collection:
+                this.$editor.editor = new CollectionValueEditor(this, el, prop, editorOptions);
                 break;
             case EditorType.custom:
                 if (this.$options[prop] && this.$options[prop].editor && this.$options[prop].editor.editor)
@@ -464,8 +468,7 @@ export class PropertyGrid extends EventEmitter {
         if (!e) return;
         e.focus();
         e.click();
-        if (openAdvanced)
-        {
+        if (openAdvanced) {
             this.$editor.editor.focus();
             this.$editor.editor.openAdvanced();
         }
