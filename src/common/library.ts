@@ -520,6 +520,8 @@ export function copy(o) {
     let output;
     let v;
     let key;
+    if (typeof o !== 'object' && !Array.isArray(o))
+        return o;
     output = Array.isArray(o) ? [] : {};
     for (key in o) {
         if (!o.hasOwnProperty(key)) continue;
