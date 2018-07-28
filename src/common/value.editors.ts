@@ -1373,29 +1373,24 @@ export class SelectValueEditor extends ValueEditor {
         this.$el = document.createElement('select');
         this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor');
-        if (this.options && typeof this.options.data === 'object') {
-            const en = this.options.data;
-            const values = Object.keys(en).filter(key => !isNaN(Number(en[key])));
-            const dl = values.length;
-            for (let d = 0; d < dl; d++) {
-                if (this.options.exclude && this.options.exclude.includes(values[d]))
-                    continue;
-                const i = document.createElement('option');
-                i.value = en[values[d]];
-                i.textContent = capitalize(values[d].replace(/_/g, ' ').toLowerCase());
-                this.$el.appendChild(i);
-            }
-        }
-        else if (this.options && Array.isArray(this.options.data)) {
+        if (this.options && Array.isArray(this.options.data)) {
             const dl = this.options.data.length;
             const values = this.options.data;
             const dField = this.options.display || 'display';
             const vField = this.options.value || 'value';
+            let group;
+            let elGroup;
             let i;
             for (let d = 0; d < dl; d++) {
                 if (typeof values[d] === 'object') {
                     if (this.options.exclude && this.options.exclude.includes(values[d][vField]))
                         continue;
+                    if (values[d].group !== group) {
+                        group = values[d].group;
+                        elGroup = document.createElement('optgroup');
+                        elGroup.label = group;
+                        this.$el.appendChild(elGroup);
+                    }
                     i = document.createElement('option');
                     i.value = values[d][vField];
                     i.textContent = values[d][dField];
@@ -1407,6 +1402,22 @@ export class SelectValueEditor extends ValueEditor {
                     i.value = values[d];
                     i.textContent = capitalize(values[d].replace(/_/g, ' ').toLowerCase());
                 }
+                if (elGroup)
+                    elGroup.appendChild(i);
+                else
+                    this.$el.appendChild(i);
+            }
+        }
+        else if (this.options && typeof this.options.data === 'object') {
+            const en = this.options.data;
+            const values = Object.keys(en).filter(key => !isNaN(Number(en[key])));
+            const dl = values.length;
+            for (let d = 0; d < dl; d++) {
+                if (this.options.exclude && this.options.exclude.includes(values[d]))
+                    continue;
+                const i = document.createElement('option');
+                i.value = en[values[d]];
+                i.textContent = capitalize(values[d].replace(/_/g, ' ').toLowerCase());
                 this.$el.appendChild(i);
             }
         }
