@@ -113,6 +113,8 @@ export class TextValueEditor extends ValueEditor {
         el.classList.add('property-grid-editor-dropdown-fill-container');
         this.$el.appendChild(el);
         this.$editor = document.createElement('textarea');
+        if (this.options && this.options.placeholder)
+            this.$editor.placeholder = this.options.placeholder;
         this.$editor.classList.add('property-grid-editor');
         if (this.$wrap)
             this.$editor.style.whiteSpace = 'normal';
