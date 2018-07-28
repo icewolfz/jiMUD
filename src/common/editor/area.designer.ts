@@ -49,9 +49,27 @@ export enum RoomFlags {
     None = 0
 }
 
-enum RoomType {
-    standard, base, advance_room, bank, class_join, climb, dock, guild_hall, inn, library, locker, mod_room, pier, sage, sink, sky, stable, train, vault, vendor_storage
-}
+const RoomTypes = [
+    { value: 'STD_ROOM', display: 'Standard', group: 'Standard' },
+    { value: 'ROOMTYPE_ADVANCE_ROOM', display: 'Advance room', group: 'Standard' },
+    { value: 'ROOMTYPE_BANK', display: 'Bank', group: 'Standard' },
+    { value: 'ROOMTYPE_CLASS_JOIN', display: 'Class join', group: 'Standard' },
+    { value: 'ROOMTYPE_CLIMB', display: 'Climb', group: 'Standard' },
+    { value: 'ROOMTYPE_DOCK', display: 'Dock', group: 'Standard' },
+    { value: 'ROOMTYPE_GUILD_HALL', display: 'Guild hall', group: 'Standard' },
+    { value: 'ROOMTYPE_INN', display: 'Inn', group: 'Standard' },
+    { value: 'ROOMTYPE_LIBRARY', display: 'Library', group: 'Standard' },
+    { value: 'ROOMTYPE_LOCKER', display: 'Locker', group: 'Standard' },
+    { value: 'ROOMTYPE_MODROOM', display: 'Mod room', group: 'Standard' },
+    { value: 'ROOMTYPE_PIER', display: 'Pier', group: 'Standard' },
+    { value: 'ROOMTYPE_SAGE', display: 'Sage', group: 'Standard' },
+    { value: 'ROOMTYPE_SINK_ROOM', display: 'Sink', group: 'Standard' },
+    { value: 'ROOMTYPE_SKY_ROOM', display: 'Sky', group: 'Standard' },
+    { value: 'ROOMTYPE_STABLE', display: 'Stable', group: 'Standard' },
+    { value: 'ROOMTYPE_TRAIN_ROOM', display: 'Train', group: 'Standard' },
+    { value: 'ROOMTYPE_VAULT', display: 'Vault', group: 'Standard' },
+    { value: 'ROOMTYPE_VENDOR_STORAGE', display: 'Vendor storage', group: 'Standard' }
+];
 
 export enum UpdateType { none = 0, drawMap = 1, buildMap = 2, resize = 4, status = 8 }
 
@@ -101,7 +119,7 @@ interface RoomSearch {
 }
 
 export class Room {
-    public type: RoomType = RoomType.base;
+    public type: string = 'base';
     public exits: RoomExit = 0;
     public external: RoomExit = 0;
     public climbs: RoomExit = 0;
@@ -130,26 +148,20 @@ export class Room {
     public dirtType: string = '';
     public preventPeer: string = '';
 
-    constructor(x, y, z, e?, f?) {
-        e = +e || 0;
-        f = +f || 0;
-        //this.exits = e !== e ? 0 : e;
+    constructor(x, y, z, data?, type?) {
+        if (data)
+            for (const prop in this) {
+                if (!this.hasOwnProperty(prop)) continue;
+                this[prop] = copy(data[prop]);
+            }
+        this.type = type;
         this.x = x;
         this.y = y;
         this.z = z;
-        this.exitsDetails = {};
-        this.flags = f !== f ? 0 : f;
-        this.climbs = 0;
     }
 
     public clone() {
-        const r = new Room(this.x, this.y, this.z, this.flags);
-        let prop;
-        for (prop in this) {
-            if (!this.hasOwnProperty(prop)) continue;
-            r[prop] = copy(this[prop]);
-        }
-        return r;
+        return new Room(this.x, this.y, this.z, this, this.type);
     }
 
     public equals(room) {
@@ -196,35 +208,42 @@ export class Room {
         return true;
     }
 
-    public clear() {
-        this.type = RoomType.base;
-        this.exits = 0;
-        this.exitsDetails = {};
-        this.x = 0;
-        this.y = 0;
-        this.z = 0;
-        this.terrain = '';
-        this.flags = RoomFlags.None;
-        this.climbs = 0;
-        this.short = '';
-        this.long = '';
-        this.light = 0;
-        this.nightAdjust = 0;
-        this.sound = '';
-        this.smell = '';
-        this.sounds = [];
-        this.smells = [];
-        this.searches = [];
-        this.items = [];
-        this.objects = [];
-        this.monsters = [];
-        this.subArea = '';
-        this.forage = -1;
-        this.maxForage = 0;
-        this.secretExit = '';
-        this.dirtType = '';
-        this.preventPeer = '';
-        this.external = 0;
+    public clear(data?) {
+        if (data)
+            for (const prop in this) {
+                if (!this.hasOwnProperty(prop)) continue;
+                this[prop] = copy(data[prop]);
+            }
+        else {
+            this.type = 'base';
+            this.exits = data.exits || 0;
+            this.exitsDetails = {};
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+            this.terrain = '';
+            this.flags = RoomFlags.None;
+            this.climbs = 0;
+            this.short = '';
+            this.long = '';
+            this.light = 0;
+            this.nightAdjust = 0;
+            this.sound = '';
+            this.smell = '';
+            this.sounds = [];
+            this.smells = [];
+            this.searches = [];
+            this.items = [];
+            this.objects = [];
+            this.monsters = [];
+            this.subArea = '';
+            this.forage = -1;
+            this.maxForage = 0;
+            this.secretExit = '';
+            this.dirtType = '';
+            this.preventPeer = '';
+            this.external = 0;
+        }
     }
 
     public at(x, y, z?) {
@@ -237,7 +256,7 @@ export class Room {
     }
 
     get empty() {
-        if (this.type !== RoomType.base) return false;
+        if (this.type !== 'base') return false;
         if (this.exits !== 0) return false;
         if (this.external !== 0) return false;
         if (this.x !== 0) return false;
@@ -283,10 +302,11 @@ export class Room {
 enum View {
     map,
     monsters,
-    objects
+    objects,
+    properties
 }
 
-enum undoType { room, monster, object, roomsAll, settings, resize, area }
+enum undoType { room, monster, object, roomsAll, settings, resize, area, properties }
 enum undoAction { add, delete, edit }
 
 const Timer = new DebugTimer();
@@ -302,20 +322,34 @@ class Monster {
     public maxAmount: number;
     public unique: boolean;
     public objects: ObjectInfo[] = [];
+    public type: string;
 
-    constructor(id?) {
-        if (!id)
-            this.id = new Date().getTime();
+    constructor(id?, data?, type?) {
+        if (typeof id === 'string') {
+            type = id;
+            id = 0;
+        }
+        else if (typeof id === 'object') {
+            type = data;
+            data = id;
+            id = 0;
+        }
+        if (data) {
+            for (const prop in this) {
+                if (!this.hasOwnProperty(prop)) continue;
+                this[prop] = copy(data[prop]);
+            }
+            this.type = type || data.type;
+            this.id = id || data.id || new Date().getTime();
+        }
+        else {
+            this.type = type;
+            this.id = id || new Date().getTime();
+        }
     }
 
     public clone() {
-        const r = new Monster();
-        let prop;
-        for (prop in this) {
-            if (!this.hasOwnProperty(prop)) continue;
-            r[prop] = copy(this[prop]);
-        }
-        return r;
+        return new Monster(this);
     }
 
     public equals(monster) {
@@ -342,9 +376,20 @@ class StdObject {
     public type;
     public keyid;
 
-    constructor(id?) {
-        if (!id)
-            this.id = new Date().getTime();
+    constructor(id?, data?) {
+        if (typeof id === 'object') {
+            data = id;
+            id = 0;
+        }
+        if (data) {
+            for (const prop in this) {
+                if (!this.hasOwnProperty(prop)) continue;
+                this[prop] = copy(data[prop]);
+            }
+            this.id = id || data.id || new Date().getTime();
+        }
+        else
+            this.id = id || new Date().getTime();
     }
 
     public clone() {
@@ -366,23 +411,6 @@ class StdObject {
                 return false;
         }
         return true;
-    }
-}
-
-class AreaSettings {
-    public light: number;
-    public terrain: string;
-    public flags: RoomFlags;
-    public properties = {};
-
-    public clone() {
-        const r = new AreaSettings();
-        let prop;
-        for (prop in this) {
-            if (!this.hasOwnProperty(prop)) continue;
-            r[prop] = copy(this.properties);
-        }
-        return r;
     }
 }
 
@@ -412,8 +440,11 @@ class Area {
     public rooms: Room[][][];
     public monsters;
     public objects;
-    public settings: AreaSettings;
     public size: Size;
+    public baseRooms;
+    public baseMonsters;
+    public defaultRoom = 'base';
+    public defaultMonster = 'base';
 
     constructor(width, height?, depth?, rooms?) {
         if (Array.isArray(width)) {
@@ -441,11 +472,16 @@ class Area {
             this.rooms = Array.from(Array(depth),
                 (v, z) => Array.from(Array(height),
                     (v2, y) => Array.from(Array(width),
-                        (v3, x) => new Room(x, y, z))
+                        (v3, x) => new Room(x, y, z, null, this.defaultRoom))
                 ));
         this.monsters = {};
         this.objects = {};
-        this.settings = new AreaSettings();
+        this.baseRooms = {
+            base: new Room(0, 0, 0, null, 'STD_ROOM')
+        };
+        this.baseMonsters = {
+            base: new Monster('STD_MONSTER')
+        };
     }
 
     public static load(file) {
@@ -468,28 +504,17 @@ class Area {
         const area = new Area(data.size.depth < 1 ? 25 : data.size.width, data.size.depth < 1 ? 25 : data.size.height, data.size.depth < 1 ? 1 : data.size.depth);
 
         let prop;
-        if (data.settings)
-            area.settings = data.settings;
-        if (data.monsters) {
-            const ks = Object.keys(data.monsters);
-            ks.forEach(k => {
-                area.monsters[k] = new Monster(k);
-                for (prop in data.monsters[k]) {
-                    if (!data.monsters[k].hasOwnProperty(prop)) continue;
-                    area.monsters[k][prop] = data.monsters[k][prop];
-                }
-            });
-        }
-        if (data.objects) {
-            const ks = Object.keys(data.objects);
-            ks.forEach(k => {
+
+        if (data.monsters)
+            Object.keys(data.monsters).forEach(k => area.monsters[k] = new Monster(data.monsters[k]));
+        if (data.objects)
+            Object.keys(data.objects).forEach(k => {
                 area.objects[k] = new StdObject(k);
                 for (prop in data.objects[k]) {
                     if (!data.objects[k].hasOwnProperty(prop)) continue;
                     area.objects[k][prop] = data.objects[k][prop];
                 }
             });
-        }
         if (data.rooms) {
             const zl = area.size.depth;
             const xl = area.size.width;
@@ -505,11 +530,21 @@ class Area {
                 }
             }
         }
+        if (data.baseRooms)
+            Object.keys(data.baseRooms).forEach(k => {
+                area.baseRooms[k] = new Room(0, 0, 0, data.baseRooms[k]);
+            });
+        if (data.baseMonsters)
+            Object.keys(data.baseMonsters).forEach(k => {
+                area.baseMonsters[k] = new Monster(data.baseMonsters[k]);
+            });
+        area.defaultRoom = data.defaultRoom || 'base';
+        area.defaultMonster = data.defaultMonster || 'base';
         return area;
     }
 
     public save(file) {
-        fs.writeFileSync(file, JSON.stringify(this));
+        fs.writeFileSync(file, this.raw);
     }
 
     public get raw() {
@@ -525,10 +560,11 @@ class Area {
                 )));
         a.monsters = Object.keys(this.monsters).map(k => this.monsters[k].clone());
         a.objects = Object.keys(this.objects).map(k => this.objects[k].clone());
-        a.settings = this.settings.clone();
+        a.baseRooms = Object.keys(this.baseRooms).map(k => this.baseRooms[k].clone());
+        a.baseMonsters = Object.keys(this.baseMonsters).map(k => this.baseMonsters[k].clone());
         let prop;
         for (prop in this) {
-            if (prop === 'rooms' || prop === 'settings' || prop === 'objects' || prop === 'monsters' || !this.hasOwnProperty(prop)) continue;
+            if (prop === 'rooms' || prop === 'baseMonsters' || prop === 'baseRooms' || prop === 'objects' || prop === 'monsters' || !this.hasOwnProperty(prop)) continue;
             a[prop] = this[prop];
         }
         return a;
@@ -1424,10 +1460,8 @@ export class AreaDesigner extends EditorBase {
                             if (x < this.$area.size.width - 1)
                                 sR.addExit(RoomExit.East);
                         }
-                        else {
-                            sR.clear();
-                            sR.light = this.$area.settings.light || 0;
-                        }
+                        else
+                            sR.clear(this.$area.baseRooms[this.$area.defaultRoom]);
                         this.RoomChanged(sR, or);
                         this.DrawRoom(this.$mapContext, sR, true, sR.at(this.$mouse.rx, this.$mouse.ry));
                         if (y > 0 && (e.ctrlKey || (o & RoomExit.North) === RoomExit.North)) {
@@ -2720,6 +2754,30 @@ export class AreaDesigner extends EditorBase {
                 this.stopUndoGroup();
 
             }
+            else if (prop === 'type') {
+                const nDefault = this.$area.baseRooms[newValue];
+                while (sl--) {
+                    const curr = selected[sl];
+                    const old = this.getRoom(curr.x, curr.y, curr.z);
+                    const oDefault = this.$area.baseRooms[old.type];
+                    oldValues[sl] = old.clone();
+                    for (prop in oDefault) {
+                        if (prop === 'type' || prop === 'x' || prop === 'y' || prop === 'z' || !oDefault.hasOwnProperty(prop)) continue;
+                        if (curr[prop] === oDefault[prop])
+                            curr[prop] = copy(nDefault[prop]);
+                    }
+                    curr.type = newValue;
+                    this.RoomChanged(curr, old, true);
+                    for (prop in oDefault) {
+                        if (prop === 'type' || prop === 'x' || prop === 'y' || prop === 'z' || !oDefault.hasOwnProperty(prop)) continue;
+                        if (old[prop] === oDefault[prop])
+                            old[prop] = copy(nDefault[prop]);
+                    }
+                    old.type = newValue;
+                    this.DrawRoom(this.$mapContext, old, true, old.at(mx, my));
+                }
+                this.pushUndo(undoAction.delete, undoType.room, oldValues);
+            }
             else {
                 while (sl--) {
                     const curr = selected[sl];
@@ -3108,7 +3166,7 @@ export class AreaDesigner extends EditorBase {
                 editor: {
                     type: EditorType.select,
                     options: {
-                        data: RoomType
+                        data: [{ value: 'base', display: 'Base', group: 'Area' }].concat(...RoomTypes)
                     }
                 },
                 sort: 0
@@ -3381,8 +3439,10 @@ export class AreaDesigner extends EditorBase {
     private formatType(prop, value) {
         if (value === 0)
             return 'None';
-        const states = Object.keys(RoomType).filter(key => !isNaN(Number(RoomType[key])));
-        return capitalize(states[value] || '');
+        const t = RoomTypes.filter(r => r.value === value);
+        if (t.length)
+            return t[0].display;
+        return capitalize(value);
     }
 
     private formatCollection(prop, value) {
@@ -3410,6 +3470,8 @@ export class AreaDesigner extends EditorBase {
         switch (this.$view) {
             case View.map:
                 this.doUpdate(UpdateType.drawMap);
+                break;
+            case View.properties:
                 break;
             case View.monsters:
                 break;
@@ -3808,6 +3870,8 @@ export class AreaDesigner extends EditorBase {
         switch (this.$view) {
             case View.map:
                 return '';
+            case View.properties:
+                return null;
             case View.monsters:
                 return null;
             case View.objects:
@@ -3842,7 +3906,7 @@ export class AreaDesigner extends EditorBase {
                 while (sl--) {
                     const or = this.$selectedRooms[sl];
                     //has external rooms so remove them as they are now tied to the room
-                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z);
+                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
                     if (this.$focusedRoom.at(or.x, or.y, or.z))
                         this.$focusedRoom = this.$selectedRooms[sl];
                     this.setRoom(this.$selectedRooms[sl]);
@@ -3897,7 +3961,7 @@ export class AreaDesigner extends EditorBase {
                 this.startUndoGroup();
                 while (dl--) {
                     const dRoom = data.rooms[dl];
-                    const room = new Room(dRoom.x - osX, dRoom.y - osY, dRoom.z);
+                    const room = new Room(dRoom.x - osX, dRoom.y - osY, dRoom.z, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
                     let prop;
                     for (prop in dRoom) {
                         if (prop === 'x' || prop === 'y' || prop === 'z' || !dRoom.hasOwnProperty(prop)) continue;
@@ -3928,7 +3992,7 @@ export class AreaDesigner extends EditorBase {
                 let sl = this.$selectedRooms.length;
                 while (sl--) {
                     const or = this.$selectedRooms[sl];
-                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z);
+                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
                     if (this.$focusedRoom.at(or.x, or.y, or.z))
                         this.$focusedRoom = this.$selectedRooms[sl];
                     this.setRoom(this.$selectedRooms[sl]);
@@ -3947,25 +4011,18 @@ export class AreaDesigner extends EditorBase {
     }
 
     public undo() {
-        switch (this.$view) {
-            case View.map:
-                if (this.$undo.length) {
-                    const u = this.$undo.pop();
-                    if (Array.isArray(u)) {
-                        this.startRedoGroup();
-                        let ul = u.length;
-                        while (ul--)
-                            this.undoAction(u[ul]);
-                        this.stopRedoGroup();
-                    }
-                    else
-                        this.undoAction(u);
-                    this.emit('supports-changed');
-                }
-                break;
-            case View.monsters:
-            case View.objects:
-                break;
+        if (this.$undo.length) {
+            const u = this.$undo.pop();
+            if (Array.isArray(u)) {
+                this.startRedoGroup();
+                let ul = u.length;
+                while (ul--)
+                    this.undoAction(u[ul]);
+                this.stopRedoGroup();
+            }
+            else
+                this.undoAction(u);
+            this.emit('supports-changed');
         }
     }
 
@@ -4057,25 +4114,18 @@ export class AreaDesigner extends EditorBase {
     }
 
     public redo() {
-        switch (this.$view) {
-            case View.map:
-                if (this.$redo.length) {
-                    const u = this.$redo.pop();
-                    if (Array.isArray(u)) {
-                        this.startUndoGroup(true);
-                        let ul = u.length;
-                        while (ul--)
-                            this.redoAction(u[ul]);
-                        this.stopUndoGroup(true);
-                    }
-                    else
-                        this.redoAction(u);
-                    this.emit('supports-changed');
-                }
-                break;
-            case View.monsters:
-            case View.objects:
-                break;
+        if (this.$redo.length) {
+            const u = this.$redo.pop();
+            if (Array.isArray(u)) {
+                this.startUndoGroup(true);
+                let ul = u.length;
+                while (ul--)
+                    this.redoAction(u[ul]);
+                this.stopUndoGroup(true);
+            }
+            else
+                this.redoAction(u);
+            this.emit('supports-changed');
         }
     }
 
@@ -4203,7 +4253,7 @@ export class AreaDesigner extends EditorBase {
     public supports(what) {
         switch (what) {
             case 'refresh':
-                return this.$view === View.map || this.$view === View.monsters || this.$view === View.objects;
+                return this.$view === View.map || this.$view === View.monsters || this.$view === View.objects || this.$view === View.properties;
             case 'buttons':
             case 'menu|view':
             case 'menu|edit':
@@ -4262,6 +4312,9 @@ export class AreaDesigner extends EditorBase {
         group.appendChild(this.createButton('Show map', 'map-o', () => {
             this.switchView(View.map);
         }, this.$view === View.map));
+        group.appendChild(this.createButton('Show properties', 'list-alt', () => {
+            this.switchView(View.properties);
+        }, this.$view === View.properties));
         group.appendChild(this.createButton('Show monsters', 'user', () => {
             this.switchView(View.monsters);
         }, this.$view === View.monsters));
@@ -4341,6 +4394,14 @@ export class AreaDesigner extends EditorBase {
                     }
                 },
                 {
+                    label: 'Properties',
+                    type: 'checkbox',
+                    checked: this.$view === View.properties,
+                    click: () => {
+                        this.switchView(View.properties);
+                    }
+                },
+                {
                     label: 'Monsters',
                     type: 'checkbox',
                     checked: this.$view === View.monsters,
@@ -4415,6 +4476,8 @@ export class AreaDesigner extends EditorBase {
                     this.$mapContainer.focus();
                     this.$map.focus();
                 }, 10);
+                break;
+            case View.properties:
                 break;
             case View.monsters:
                 break;
@@ -4502,6 +4565,8 @@ export class AreaDesigner extends EditorBase {
             case View.map:
                 this.$splitterEditor.hide();
                 break;
+            case View.properties:
+                break;
             case View.monsters:
                 break;
             case View.objects:
@@ -4515,6 +4580,9 @@ export class AreaDesigner extends EditorBase {
                 this.$label.style.display = 'none';
                 this.$splitterEditor.show();
                 this.emit('location-changed', -1, -1);
+                break;
+            case View.properties:
+                this.$label.textContent = 'Properties';
                 break;
             case View.monsters:
                 /*
@@ -4742,6 +4810,7 @@ export class AreaDesigner extends EditorBase {
         }
         this.emit('menu-update', 'view|map', { checked: view === View.map });
         this.emit('menu-update', 'view|monsters', { checked: view === View.monsters });
+        this.emit('menu-update', 'view|properties', { checked: view === View.properties });
         this.emit('menu-update', 'view|Items', { checked: view === View.objects });
         this.emit('menu-update', 'view|room editor', { enabled: view === View.map });
         this.emit('menu-update', 'view|room preview', { enabled: view === View.map });
@@ -4754,6 +4823,7 @@ export class AreaDesigner extends EditorBase {
         this.setButtonState('show-map', view === View.map);
         this.setButtonState('show-monsters', view === View.monsters);
         this.setButtonState('show-objects', view === View.objects);
+        this.setButtonState('show-properties', view === View.properties);
         this.updateUI();
         this.emit('supports-changed');
         this.focus();
@@ -4765,6 +4835,9 @@ export class AreaDesigner extends EditorBase {
             case View.map:
                 this.emit('location-changed', (this.$mouse.rx), this.$mouse.ry);
                 this.emit('changed', -1);
+                break;
+            case View.properties:
+                this.emit('location-changed', -1, -1);
                 break;
             case View.monsters:
                 this.emit('location-changed', -1, -1);
@@ -6131,6 +6204,7 @@ export class AreaDesigner extends EditorBase {
         }
         else
             this.doUpdate(UpdateType.drawMap);
+        this.loadRoomTypes();
         this.emit('rebuild-buttons');
         Timer.end('BuildMap time');
     }
@@ -6369,7 +6443,7 @@ export class AreaDesigner extends EditorBase {
         const rooms = Array.from(Array(this.$area.size.depth),
             (v, z) => Array.from(Array(this.$area.size.height),
                 (v2, y) => Array.from(Array(this.$area.size.width),
-                    (v3, x) => new Room(x, y, z))
+                    (v3, x) => new Room(x, y, z, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom))
             ));
 
         this.$rcount = 0;
@@ -6467,6 +6541,27 @@ export class AreaDesigner extends EditorBase {
         if ((shift & shiftType.down) === shiftType.down)
             nShift |= shiftType.up;
         return nShift;
+    }
+
+    private loadRoomTypes() {
+        this.$roomEditor.setPropertyOptions({
+            property: 'type',
+            formatter: this.formatType,
+            group: 'Advanced',
+            editor: {
+                type: EditorType.select,
+                options: {
+                    data: Object.keys(this.$area.baseRooms || { value: 'base', display: 'Base', group: 'Area' }).map(r => {
+                        return {
+                            value: r,
+                            display: capitalize(r),
+                            group: 'Area'
+                        };
+                    }).concat(...RoomTypes)
+                }
+            },
+            sort: 0
+        });
     }
 }
 
