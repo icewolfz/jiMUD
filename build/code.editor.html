@@ -13,6 +13,7 @@
     <link href="css/cm.css" rel="stylesheet" type="text/css" />
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
     <link href="css/datagrid.css" rel="stylesheet" type="text/css" />
+    <link href="css/editorcontent.css" rel="stylesheet" type="text/css" />
     <script>
         // eslint-disable-next-line no-unused-vars
         /* global _ready, doUpdate, manager, inverse, capitalize, options, monaco, initEditor */
@@ -6943,9 +6944,9 @@
                         }
                     });
                     temp.push({
-                        label: 'Edit external exits',
+                        label: 'Edit exits',
                         click: () => {
-                            p.editor.openExternalExits();
+                            p.editor.openExits();
                         }
                     });
                     let inputMenu = Menu.buildFromTemplate(temp);
