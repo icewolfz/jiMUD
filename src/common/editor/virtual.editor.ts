@@ -9271,6 +9271,8 @@ export class FileBrowseValueEditor extends ValueEditor {
         this.$el.classList.add('property-grid-editor-dropdown');
         this.$editor = document.createElement('input');
         this.$editor.type = 'text';
+        if (this.options && this.options.placeholder)
+            this.$editor.placeholder = this.options.placeholder;
         this.$editor.classList.add('property-grid-editor');
         this.$editor.addEventListener('blur', (e) => {
             if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {

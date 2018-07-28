@@ -2813,6 +2813,9 @@ export class AreaDesigner extends EditorBase {
                                 editor: {
                                     type: EditorType.custom,
                                     editor: FileBrowseValueEditor,
+                                    options: {
+                                        placeholder: 'Input file path to create external exit'
+                                    },
                                     show: (prop, value) => {
                                         return value;
                                     }
