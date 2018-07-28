@@ -461,6 +461,8 @@ export class PropertyGrid extends EventEmitter {
             this.$editor.editor.data = this.$objects[0];
             this.$editor.editor.value = this.sameValue(prop) ? this.$objects[0][prop] : null;
             this.$editor.editor.focus();
+            if (editorOptions && editorOptions.open)
+                this.$editor.editor.openAdvanced();
         }
         else
             this.$editor = null;

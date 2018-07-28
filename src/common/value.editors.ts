@@ -1097,7 +1097,9 @@ export class CollectionValueEditor extends ValueEditor {
             }
         });
         this.$el.appendChild(this.$editor);
-
+        this.$editor.addEventListener('click', e => {
+            this.openAdvanced();
+        });
         this.$dButton = document.createElement('button');
         this.$dButton.title = 'Edit' + (this.options ? ' ' + this.options.type + 's' : '') + '...';
         this.$dButton.innerHTML = '&hellip;';
