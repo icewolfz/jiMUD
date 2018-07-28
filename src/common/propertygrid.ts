@@ -218,6 +218,18 @@ export class PropertyGrid extends EventEmitter {
         return this.getValue(prop);
     }
 
+    private defaultFormattedValue(prop) {
+        if (!prop || this.defaults === 0)
+            return null;
+        if (!this.$options[prop])
+            return this.defaultValue(prop);
+        if (this.$options[prop].formatter)
+            return this.$options[prop].formatter(prop, this.defaultValue(prop), this.$objects.length !== 0 ? this.$objects : null);
+        if (this.$options[prop].editor && this.$options[prop].editor.options && this.$options[prop].editor.type === EditorType.flag)
+            return enumToString(this.defaultValue(prop), this.$options[prop].editor.options.enum);
+        return this.defaultValue(prop);
+    }
+
     private sameValue(prop) {
         const obs = this.$objects;
         const obj = this.$objects[0];
@@ -331,6 +343,8 @@ export class PropertyGrid extends EventEmitter {
                 lbl.classList.add('property-grid-item-value');
                 if (layout[group][c].readonly)
                     lbl.classList.add('readonly');
+                if (layout[group][c].value === this.defaultFormattedValue(layout[group][c].property))
+                    lbl.classList.add('default');
                 if (typeof layout[group][c].value === 'boolean')
                     lbl.title = capitalize('' + layout[group][c].value);
                 else
@@ -391,6 +405,10 @@ export class PropertyGrid extends EventEmitter {
         //do last in case the event changes the property editor
         if (!canceled && value !== oldValue)
             this.emit('value-changed', prop, value, oldValue);
+        if (value === this.defaultFormattedValue(prop))
+            this.$editor.el.classList.add('default');
+        else
+            this.$editor.el.classList.remove('default');
     }
 
     public createEditor(el: HTMLElement) {

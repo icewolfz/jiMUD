@@ -738,6 +738,10 @@ cause test to be brighter but more bold looking
     top: 0;
 }
 
+.property-grid-item-value.default {
+    font-weight: bold;
+}
+
 .property-grid-item-value.readonly {
     background-color: #fafafa;
     color: silver;
