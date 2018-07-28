@@ -1389,12 +1389,24 @@ export class SelectValueEditor extends ValueEditor {
         else if (this.options && Array.isArray(this.options.data)) {
             const dl = this.options.data.length;
             const values = this.options.data;
+            const dField = this.options.display || 'display';
+            const vField = this.options.value || 'value';
+            let i;
             for (let d = 0; d < dl; d++) {
-                if (this.options.exclude && this.options.exclude.includes(values[d]))
-                    continue;
-                const i = document.createElement('option');
-                i.value = values[d];
-                i.textContent = capitalize(values[d].replace(/_/g, ' ').toLowerCase());
+                if (typeof values[d] === 'object') {
+                    if (this.options.exclude && this.options.exclude.includes(values[d][vField]))
+                        continue;
+                    i = document.createElement('option');
+                    i.value = values[d][vField];
+                    i.textContent = values[d][dField];
+                }
+                else {
+                    if (this.options.exclude && this.options.exclude.includes(values[d]))
+                        continue;
+                    i = document.createElement('option');
+                    i.value = values[d];
+                    i.textContent = capitalize(values[d].replace(/_/g, ' ').toLowerCase());
+                }
                 this.$el.appendChild(i);
             }
         }
