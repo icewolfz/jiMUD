@@ -1312,7 +1312,7 @@ export function stringToEnum(str, en, ignoreCase?) {
         while (vl--) {
             //found value add it on
             if (test[vl] === str[sl]) {
-                value |= en[values[vl]];
+                value |= en[values[vl].replace(/ /g, '_')];
                 break;
             }
         }
@@ -1331,7 +1331,7 @@ export function enumToString(value, en) {
     while (state--) {
         if (en[states[state]] === 0) continue;
         if ((value & en[states[state]]) === en[states[state]])
-            f.push(capitalize(states[state]));
+            f.push(capitalize(states[state].replace(/_/g, ' ')));
     }
     return f.join(', ');
 }
