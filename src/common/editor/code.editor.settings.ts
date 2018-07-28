@@ -93,7 +93,7 @@ export class EditorSettings {
         allowExitWalk: true,
         previewFontSize: 15,
         previewFontFamily: 'Consolas, \'Courier New\', monospace',
-        editorWidth: 200,
+        editorWidth: 300,
         previewHeight: 200,
         live: true,
         showRoomEditor: true,

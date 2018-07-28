@@ -1302,8 +1302,8 @@
             <div class="col-sm-6 form-group">
                 <label class="control-label">Type
                     <select id="room-wiz-type" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
-                        <option value='STD_ROOM'>Standard</option>
-                        <option value='BASEROOM'>Base</option>
+                        <option value="STD_ROOM">Standard</option>
+                        <option value="BASEROOM">Base</option>
                         <option value="ROOMTYPE_ADVANCE_ROOM">Advance room</option>
                         <option value="ROOMTYPE_BANK">Bank</option>
                         <option value="ROOMTYPE_CLASS_JOIN">Class join</option>
@@ -1313,7 +1313,7 @@
                         <option value="ROOMTYPE_INN">Inn</option>
                         <option value="ROOMTYPE_LIBRARY">Library</option>
                         <option value="ROOMTYPE_LOCKER">Locker</option>
-                        <option value="ROOMTYPE_MODROOM">Modroom</option>
+                        <option value="ROOMTYPE_MODROOM">Mod room</option>
                         <option value="ROOMTYPE_PIER">Pier</option>
                         <option value="ROOMTYPE_SAGE">Sage</option>
                         <option value="ROOMTYPE_SINK_ROOM">Sink</option>
@@ -7661,6 +7661,10 @@
                 if (_loading) return;
                 if (p.editor.type === 2) {
                     options.virtualOptions[option] = value;
+                    saveOptions();
+                }
+                if (p.editor.type === 3) {
+                    options.areaOptions[option] = value;
                     saveOptions();
                 }
             });
