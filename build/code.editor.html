@@ -4742,7 +4742,7 @@
         return f;
     }
 
-    function roomWizard(dData) {
+    function roomWizard(dData, finish) {
         if (!$dialogs.room) {
             $dialogs.roomExitPage = new WizardDataGridPage({
                 title: 'Exits',
@@ -5176,6 +5176,10 @@
                 menubar.enabled = true;
             });
             $dialogs.room.on('finished', (e) => {
+                if ($dialogs.room.finish) {
+                    $dialogs.room.finish(e.data);
+                    return;
+                }
                 var value = fs.readFileSync(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'room.c')), 'utf8');
                 var data = e.data;
                 var tmpl = baseParseData();
@@ -5652,10 +5656,11 @@
             });
         }
         $dialogs.room.defaults = dData || {};
-        $dialogs.room.show();
+        $dialogs.room.finish = finish;
+        $dialogs.room.showModal();
     }
 
-    function monsterWizard() {
+    function monsterWizard(dData, finish) {
         if (!$dialogs.monster) {
             var colors = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'color.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
             var races = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'monster-race.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
@@ -5680,101 +5685,101 @@
                         title: 'General properties',
                         body: document.getElementById('mon-wizard-general'),
                         reset: (e) => {
-                            $('#mon-wiz-type', e.page).val('STD_MONSTER').selectpicker('render');
-                            e.page.querySelector('#mon-wiz-level').value = '1';
-                            e.page.querySelector('#mon-wiz-alignment').value = '';
-                            e.page.querySelector('#mon-wiz-race').value = '';
-                            e.page.querySelector('#mon-wiz-class').value = '';
-                            e.page.querySelector('#mon-wiz-language').value = '';
-                            e.page.querySelector('#mon-wiz-ridable').checked = false;
-                            e.page.querySelector('#mon-wiz-flying').checked = false;
-                            e.page.querySelector('#mon-wiz-getable').checked = false;
-                            e.page.querySelector('#mon-wiz-undead').checked = false;
-                            e.page.querySelector('#mon-wiz-waterbreathing').checked = false;
-                            e.page.querySelector('#mon-wiz-requires-water').checked = false;
-                            e.page.querySelector('#mon-wiz-no-bleed').checked = false;
+                            $('#mon-wiz-type', e.page).val(e.wizard.defaults['mon-wiz-type'] || 'STD_MONSTER').selectpicker('render');
+                            e.page.querySelector('#mon-wiz-level').value = e.wizard.defaults['mon-wiz-level'] || '1';
+                            e.page.querySelector('#mon-wiz-alignment').value = e.wizard.defaults['mon-wiz-alignment'] || '';
+                            e.page.querySelector('#mon-wiz-race').value = e.wizard.defaults['mon-wiz-race'] || '';
+                            e.page.querySelector('#mon-wiz-class').value = e.wizard.defaults['mon-wiz-class'] || '';
+                            e.page.querySelector('#mon-wiz-language').value = e.wizard.defaults['mon-wiz-language'] || '';
+                            e.page.querySelector('#mon-wiz-ridable').checked = e.wizard.defaults['mon-wiz-ridable'] || false;
+                            e.page.querySelector('#mon-wiz-flying').checked = e.wizard.defaults['mon-wiz-flying'] || false;
+                            e.page.querySelector('#mon-wiz-getable').checked = e.wizard.defaults['mon-wiz-getable'] || false;
+                            e.page.querySelector('#mon-wiz-undead').checked = e.wizard.defaults['mon-wiz-undead'] || false;
+                            e.page.querySelector('#mon-wiz-waterbreathing').checked = e.wizard.defaults['mon-wiz-waterbreathing'] || false;
+                            e.page.querySelector('#mon-wiz-requires-water').checked = e.wizard.defaults['mon-wiz-requires-water'] || false;
+                            e.page.querySelector('#mon-wiz-no-bleed').checked = e.wizard.defaults['mon-wiz-no-bleed'] || false;
                         }
                     }),
                     new WizardPage({
                         title: 'Description',
                         body: document.getElementById('mon-wizard-description'),
                         reset: (e) => {
-                            e.page.querySelector('#mon-wiz-name').value = '';
-                            e.page.querySelector('#mon-wiz-short').value = '';
-                            e.page.querySelector('#mon-wiz-nouns').value = '';
-                            e.page.querySelector('#mon-wiz-adjectives').value = '';
+                            e.page.querySelector('#mon-wiz-name').value = e.wizard.defaults['mon-wiz-name'] || '';
+                            e.page.querySelector('#mon-wiz-short').value = e.wizard.defaults['mon-wiz-short'] || '';
+                            e.page.querySelector('#mon-wiz-nouns').value = e.wizard.defaults['mon-wiz-nouns'] || '';
+                            e.page.querySelector('#mon-wiz-adjectives').value = e.wizard.defaults['mon-wiz-adjectives'] || '';
                         }
                     }),
                     new WizardPage({
                         title: 'Long description',
                         body: document.getElementById('mon-wizard-description-long'),
                         reset: (e) => {
-                            e.page.querySelector('#mon-wiz-long').value = '';
+                            e.page.querySelector('#mon-wiz-long').value = e.wizard.defaults['mon-wiz-long'] || '';
                         }
                     }),
                     new WizardPage({
                         title: 'Physical properties',
                         body: document.getElementById('mon-wizard-physical'),
                         reset: (e) => {
-                            e.page.querySelector('#mon-wiz-mass').value = '0';
-                            e.page.querySelector('#mon-wiz-height').value = '1';
-                            e.page.querySelector('#mon-wiz-eye').value = '';
-                            e.page.querySelector('#mon-wiz-hair').value = '';
-                            $('#mon-wiz-gender', e.page).val('male').selectpicker('render');
-                            e.page.querySelector('#mon-wiz-body').value = '';
+                            e.page.querySelector('#mon-wiz-mass').value = e.wizard.defaults['mon-wiz-mass'] || '0';
+                            e.page.querySelector('#mon-wiz-height').value = e.wizard.defaults['mon-wiz-height'] || '1';
+                            e.page.querySelector('#mon-wiz-eye').value = e.wizard.defaults['mon-wiz-eye'] || '';
+                            e.page.querySelector('#mon-wiz-hair').value = e.wizard.defaults['mon-wiz-hair'] || '';
+                            $('#mon-wiz-gender', e.page).val(e.wizard.defaults['mon-wiz-gender'] || 'male').selectpicker('render');
+                            e.page.querySelector('#mon-wiz-body').value = e.wizard.defaults['mon-wiz-body'] || '';
                         }
                     }),
                     new WizardPage({
                         title: 'Advanced properties',
                         body: document.getElementById('mon-wizard-advanced'),
                         reset: (e) => {
-                            e.page.querySelector('#mon-wiz-no-corpse').value = '';
-                            e.page.querySelector('#mon-wiz-no-limbs').value = '';
+                            e.page.querySelector('#mon-wiz-no-corpse').value = e.wizard.defaults['mon-wiz-no-corpse'] || '';
+                            e.page.querySelector('#mon-wiz-no-limbs').value = e.wizard.defaults['mon-wiz-no-limbs'] || '';
                         }
                     }),
                     new WizardPage({
                         title: 'Movement',
                         body: document.getElementById('mon-wizard-movement'),
                         reset: (e) => {
-                            e.page.querySelector('#mon-wiz-speed').value = '0';
-                            e.page.querySelector('#mon-wiz-patrol').value = '';
-                            e.page.querySelector('#mon-wiz-no-walk').value = '';
+                            e.page.querySelector('#mon-wiz-speed').value = e.wizard.defaults['mon-wiz-speed'] || '0';
+                            e.page.querySelector('#mon-wiz-patrol').value = e.wizard.defaults['mon-wiz-patrol'] || '';
+                            e.page.querySelector('#mon-wiz-no-walk').value = e.wizard.defaults['mon-wiz-no-walk'] || '';
                         }
                     }),
                     new WizardPage({
                         title: 'Combat',
                         body: document.getElementById('mon-wizard-combat'),
                         reset: (e) => {
-                            e.page.querySelector('#mon-wiz-chance').value = '33';
-                            e.page.querySelector('#mon-wiz-commands').value = '';
-                            e.page.querySelector('#mon-wiz-initiators').value = '';
+                            e.page.querySelector('#mon-wiz-chance').value = e.wizard.defaults['mon-wiz-chance'] || '33';
+                            e.page.querySelector('#mon-wiz-commands').value = e.wizard.defaults['mon-wiz-commands'] || '';
+                            e.page.querySelector('#mon-wiz-initiators').value = e.wizard.defaults['mon-wiz-initiators'] || '';
                         }
                     }),
                     new WizardPage({
                         title: 'Aggressive',
                         body: document.getElementById('mon-wizard-aggressive'),
                         reset: (e) => {
-                            e.page.querySelector('#mon-wiz-aggressive').value = '';
+                            e.page.querySelector('#mon-wiz-aggressive').value = e.wizard.defaults['mon-wiz-type'] || '';
                         }
                     }),
                     new WizardPage({
                         title: 'Actions',
                         body: document.getElementById('mon-wizard-actions'),
                         reset: (e) => {
-                            e.page.querySelector('#mon-wiz-auto-drop').value = '1';
-                            e.page.querySelector('#mon-wiz-auto-drop-enabled').checked = false;
-                            e.page.querySelector('#mon-wiz-storage').value = '3';
-                            e.page.querySelector('#mon-wiz-storage-enabled').checked = true;
-                            e.page.querySelector('#mon-wiz-auto-wield').value = '3';
-                            e.page.querySelector('#mon-wiz-auto-wield-enabled').checked = true;
-                            e.page.querySelector('#mon-wiz-auto-wear').value = '3';
-                            e.page.querySelector('#mon-wiz-auto-wear-enabled').checked = false;
-                            e.page.querySelector('#mon-wiz-auto-loot').value = '1';
-                            e.page.querySelector('#mon-wiz-auto-loot-enabled').checked = false;
-                            e.page.querySelector('#mon-wiz-auto-stand').checked = true;
-                            e.page.querySelector('#mon-wiz-drop-encumbered').checked = false;
-                            e.page.querySelector('#mon-wiz-drop-encumbered-combat').checked = false;
-                            e.page.querySelector('#mon-wiz-wimpy').value = '0';
+                            e.page.querySelector('#mon-wiz-auto-drop').value = e.wizard.defaults['mon-wiz-drop'] || '1';
+                            e.page.querySelector('#mon-wiz-auto-drop-enabled').checked = e.wizard.defaults['mon-wiz-drop-enabled'] || false;
+                            e.page.querySelector('#mon-wiz-storage').value = e.wizard.defaults['mon-wiz-storage'] || '3';
+                            e.page.querySelector('#mon-wiz-storage-enabled').checked = e.wizard.defaults.hasOwnProperty('#mon-wiz-storage-enabled') ? e.wizard.defaults['mon-wiz-storage-enabled'] : true;
+                            e.page.querySelector('#mon-wiz-auto-wield').value = e.wizard.defaults['mon-wiz-auto-wield'] || '3';
+                            e.page.querySelector('#mon-wiz-auto-wield-enabled').checked = e.wizard.defaults.hasOwnProperty('#mon-wiz-auto-wield-enabled') ? e.wizard.defaults['mon-wiz-auto-wield-enabled'] : true;
+                            e.page.querySelector('#mon-wiz-auto-wear').value = e.wizard.defaults['mon-wiz-auto-wear'] || '3';
+                            e.page.querySelector('#mon-wiz-auto-wear-enabled').checked = e.wizard.defaults['mon-wiz-auto-wear-enabled'] || false;
+                            e.page.querySelector('#mon-wiz-auto-loot').value = e.wizard.defaults['mon-wiz-auto-loot'] || '1';
+                            e.page.querySelector('#mon-wiz-auto-loot-enabled').checked = e.wizard.defaults['mon-wiz-auto-loot-enabled'] || false;
+                            e.page.querySelector('#mon-wiz-auto-stand').checked = e.wizard.defaults.hasOwnProperty('#mon-wiz-auto-stand') ? e.wizard.defaults['mon-wiz-auto-stand'] : true;
+                            e.page.querySelector('#mon-wiz-drop-encumbered').checked = e.wizard.defaults['mon-wiz-drop-encumbered'] || false;
+                            e.page.querySelector('#mon-wiz-drop-encumbered-combat').checked = e.wizard.defaults['mon-wiz--drop-encumbered-combat'] || false;
+                            e.page.querySelector('#mon-wiz-wimpy').value = e.wizard.defaults['mon-wiz-wimpy'] || '0';
                         }
                     }),
                     new WizardPage({
@@ -5889,6 +5894,10 @@
                 menubar.enabled = true;
             });
             $dialogs.monster.on('finished', (e) => {
+                if ($dialogs.monster.finish) {
+                    $dialogs.monster.finish(e.data);
+                    return;
+                }
                 var value = fs.readFileSync(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'monster.c')), 'utf8');
                 var data = e.data;
                 var tmpl = baseParseData();
@@ -6169,7 +6178,9 @@
                 newCounter++;
             });
         }
-        $dialogs.monster.show();
+        $dialogs.room.defaults = dData || {};
+        $dialogs.monster.finish = finish;
+        $dialogs.monster.showModal();
     }
 
     function createFunction(name, type, args) {
@@ -6872,6 +6883,12 @@
             if (enableAreas && path.extname(data.file) === '.area') {
                 data.options = options.areaOptions;
                 p.editor = new AreaDesigner(data);
+                p.editor.on('show-room-wizard', e => {
+                    roomWizard(e.data, e.finish);
+                });
+                p.editor.on('show-monster-wizard', e => {
+                    monsterWizard(e.data, e.finish);
+                });
                 p.editor.on('show-resize', size => {
                     showResizeDialog(size);
                 });
