@@ -25,6 +25,8 @@ export class PropertyGrid extends EventEmitter {
     private _updating;
     private $readonly: any = false;
 
+    public defaults;
+
     constructor(options?: PropertyGridOptions) {
         super();
         if (options) {
@@ -199,6 +201,8 @@ export class PropertyGrid extends EventEmitter {
     private defaultValue(prop) {
         if (!prop || !this.$options[prop])
             return null;
+        if (this.defaults)
+            return this.$options[prop].default || this.defaults[prop];
         return this.$options[prop].default;
     }
 
