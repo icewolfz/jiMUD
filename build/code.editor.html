@@ -1609,7 +1609,8 @@
     /*global _ready:true*/
     const { shell, remote, ipcRenderer, webFrame, clipboard } = require('electron');
     const { DockManager } = require('./js/dockmanager');
-    const { DataGrid, EditorType } = require('./js/datagrid');
+    const { EditorType } = require('./js/value.editors');
+    const { DataGrid } = require('./js/datagrid');
     const { MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
 
@@ -5657,7 +5658,7 @@
         }
         $dialogs.room.defaults = dData || {};
         $dialogs.room.finish = finish;
-        $dialogs.room.showModal();
+        $dialogs.room.show();
     }
 
     function monsterWizard(dData, finish) {
@@ -6180,7 +6181,7 @@
         }
         $dialogs.room.defaults = dData || {};
         $dialogs.monster.finish = finish;
-        $dialogs.monster.showModal();
+        $dialogs.monster.show();
     }
 
     function createFunction(name, type, args) {
