@@ -1043,13 +1043,12 @@ input[type=checkbox].property-grid-editor {
     background-image: none;
 }
 
-.dropdown-menu > li > a:focus, 
+.dropdown-menu > li > a:focus,
 .dropdown-menu > li > a.new.active:hover,
 .dropdown-menu > li > a.changed:hover,
 .dropdown-menu > li > a.new:hover,
 .dropdown-menu > li > a.active:hover,
-.dropdown-menu > li > a.active.changed:hover
- {
+.dropdown-menu > li > a.active.changed:hover {
     background-color: #e8e8e8;
     background-image: -webkit-linear-gradient(top, #f5f5f5 0, #e8e8e8 100%);
     background-image: -o-linear-gradient(top, #f5f5f5 0, #e8e8e8 100%);
@@ -1166,11 +1165,29 @@ input[type=checkbox].property-grid-editor {
 */
 
 .line-error-margin {
-    background: url('./../../assets/editor/error.png') no-repeat !important;
+    background: url("./../../assets/editor/error.png") no-repeat !important;
     z-index: 1;
 }
 
 .line-warning-margin {
-    background: url('./../../assets/editor/warning.png') no-repeat;
+    background: url("./../../assets/editor/warning.png") no-repeat;
     z-index: 0;
+}
+
+.area-editor-properites {
+    top: 26px;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: absolute;
+}
+
+.area-editor-properites .tab-content {
+    margin-left: 125px;
+    background: white;
+    height: 100%;
+}
+
+.area-editor-properites .tab-pane {
+    height: 100%;
 }

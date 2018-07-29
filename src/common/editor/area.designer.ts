@@ -71,6 +71,27 @@ const RoomTypes = [
     { value: 'ROOMTYPE_VENDOR_STORAGE', display: 'Vendor storage', group: 'Standard' }
 ];
 
+const MonsterTypes = [
+    { value: 'STD_MONSTER', display: 'Standard', group: 'Standard' },
+    { value: 'MONTYPE_ARMOR_REPAIR', display: 'Armor Repair', group: 'Standard' },
+    { value: 'MONTYPE_BARKEEP', display: 'Barkeep', group: 'Standard' },
+    { value: 'MONTYPE_CLERIC_TRAINER', display: 'Cleric Trainer', group: 'Standard' },
+    { value: 'MONTYPE_SUBCLASSER', display: 'Command Trainer', group: 'Standard' },
+    { value: 'MONTYPE_HEALER', display: 'Healer', group: 'Standard' },
+    { value: 'MONTYPE_JEWELER', display: 'Jeweler', group: 'Standard' },
+    { value: 'MONTYPE_LOCKPICK_REPAIR', display: 'Lock pick Repair', group: 'Standard' },
+    { value: 'MONTYPE_MAGE_TRAINER', display: 'Mage Trainer', group: 'Standard' },
+    { value: 'MONTYPE_MON_EDIBLE', display: 'Edible Monster', group: 'Standard' },
+    { value: 'MONTYPE_SAGE_NPC', display: 'Sage', group: 'Standard' },
+    { value: 'MONTYPE_SKILL_TRAINER', display: 'Skill Trainer', group: 'Standard' },
+    { value: 'MONTYPE_SMITH', display: 'Smith', group: 'Standard' },
+    { value: 'MONTYPE_SUMMON_MOB', display: 'Summon Monster', group: 'Standard' },
+    { value: 'MONTYPE_TATTOOIST', display: 'Tattooist', group: 'Standard' },
+    { value: 'MONTYPE_CMD_TRAIN_NPC', display: 'Trainer', group: 'Standard' },
+    { value: 'MONTYPE_VENDOR', display: 'Vendor', group: 'Standard' },
+    { value: 'MONTYPE_WEAPON_REPAIR', display: 'Weapon Repair', group: 'Standard' }
+];
+
 export enum UpdateType { none = 0, drawMap = 1, buildMap = 2, resize = 4, status = 8 }
 
 interface ObjectInfo {
@@ -649,6 +670,7 @@ export class AreaDesigner extends EditorBase {
 
     private $roomPreview;
     private $roomEditor;
+    private $propertiesEditor;
 
     private $area: Area;
     private $startOptions;
@@ -835,8 +857,8 @@ export class AreaDesigner extends EditorBase {
     }
 
     public createControl() {
+        //#region depth
         this.$depth = 0;
-
         this.$depthToolbar = document.createElement('input');
         this.$depthToolbar.id = this.parent.id + '-level';
         this.$depthToolbar.classList.add('form-control', 'input-xs');
@@ -873,6 +895,7 @@ export class AreaDesigner extends EditorBase {
             }
             this.doUpdate(UpdateType.drawMap);
         });
+        //#endregion
         if (!window.$roomImg) {
             window.$roomImg = new Image();
             window.$roomImg.src = './../assets/editor/rooms.png';
@@ -2755,7 +2778,7 @@ export class AreaDesigner extends EditorBase {
 
             }
             else if (prop === 'type') {
-                const nDefault = this.$area.baseRooms[newValue];
+                const nDefault = this.$area.baseRooms[newValue] || new Room(0, 0, 0);
                 while (sl--) {
                     const curr = selected[sl];
                     const old = this.getRoom(curr.x, curr.y, curr.z);
@@ -2763,14 +2786,14 @@ export class AreaDesigner extends EditorBase {
                     oldValues[sl] = old.clone();
                     for (prop in oDefault) {
                         if (prop === 'type' || prop === 'x' || prop === 'y' || prop === 'z' || !oDefault.hasOwnProperty(prop)) continue;
-                        if (curr[prop] === oDefault[prop])
+                        if (oDefault && curr[prop] === oDefault[prop])
                             curr[prop] = copy(nDefault[prop]);
                     }
                     curr.type = newValue;
                     this.RoomChanged(curr, old, true);
                     for (prop in oDefault) {
                         if (prop === 'type' || prop === 'x' || prop === 'y' || prop === 'z' || !oDefault.hasOwnProperty(prop)) continue;
-                        if (old[prop] === oDefault[prop])
+                        if (oDefault && old[prop] === oDefault[prop])
                             old[prop] = copy(nDefault[prop]);
                     }
                     old.type = newValue;
@@ -3419,6 +3442,37 @@ export class AreaDesigner extends EditorBase {
             }
         });
         this.$observer.observe(this.$mapContainer, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
+        //#endregion
+        //#region create properties editor
+        this.$propertiesEditor = {
+            container: document.createElement('div'),
+            generalTab: document.createElement('div'),
+            monstersTab: document.createElement('div'),
+            roomsTab: document.createElement('div'),
+            tabs: document.createElement('ul'),
+            tabsContents: document.createElement('div')
+        };
+        this.$propertiesEditor.container.classList.add('tabbable', 'tabs-left', 'area-editor-properites');
+        this.$propertiesEditor.tabs.classList.add('nav', 'nav-tabs');
+        this.$propertiesEditor.tabs.style.height = '100%';
+        this.$propertiesEditor.tabs.innerHTML = '<li class="active"><a href="#' + this.parent.id + 'general" data-toggle="tab">General</a></li><li><a href="#' + this.parent.id + 'rooms" data-toggle="tab">Base rooms</a></li><li><a href="#' + this.parent.id + 'monsters" data-toggle="tab">Base monsters</a></li>';
+        this.$propertiesEditor.container.appendChild(this.$propertiesEditor.tabs);
+        this.$propertiesEditor.tabsContents.classList.add('tab-content');
+        this.$propertiesEditor.container.appendChild(this.$propertiesEditor.tabsContents);
+        this.$propertiesEditor.tabsContents.appendChild(this.$propertiesEditor.generalTab);
+        this.$propertiesEditor.tabsContents.appendChild(this.$propertiesEditor.monstersTab);
+        this.$propertiesEditor.tabsContents.appendChild(this.$propertiesEditor.roomsTab);
+        this.$propertiesEditor.generalTab.id = this.parent.id + 'general';
+        this.$propertiesEditor.generalTab.classList.add('tab-pane', 'active');
+        this.$propertiesEditor.generalTab.innerHTML = 'general!';
+        this.$propertiesEditor.roomsTab.id = this.parent.id + 'rooms';
+        this.$propertiesEditor.roomsTab.classList.add('tab-pane');
+        this.$propertiesEditor.roomsTab.innerHTML = 'Base rooms!';        
+        this.$propertiesEditor.monstersTab.id = this.parent.id + 'monsters';
+        this.$propertiesEditor.monstersTab.classList.add('tab-pane');
+        this.$propertiesEditor.monstersTab.innerHTML = 'Base monsters!';
+        this.$propertiesEditor.container.style.display = 'none';
+        this.parent.appendChild(this.$propertiesEditor.container);
         //#endregion
     }
 
@@ -4566,6 +4620,7 @@ export class AreaDesigner extends EditorBase {
                 this.$splitterEditor.hide();
                 break;
             case View.properties:
+                this.$propertiesEditor.container.style.display = 'none';
                 break;
             case View.monsters:
                 break;
@@ -4583,10 +4638,11 @@ export class AreaDesigner extends EditorBase {
                 break;
             case View.properties:
                 this.$label.textContent = 'Properties';
+                this.$propertiesEditor.container.style.display = '';
                 break;
             case View.monsters:
-                /*
                 this.$label.textContent = 'Monsters';
+                /*
                 bGroup = document.createElement('div');
                 bGroup.classList.add('btn-group');
 
@@ -4670,8 +4726,8 @@ export class AreaDesigner extends EditorBase {
                 */
                 break;
             case View.objects:
+                this.$label.textContent = 'Items';
                 /*
-                    this.$label.textContent = 'Items';
                     bGroup = document.createElement('div');
                     bGroup.classList.add('btn-group');
 
@@ -6058,7 +6114,9 @@ export class AreaDesigner extends EditorBase {
         if (this.selectedFocusedRoom)
             this.$depthToolbar.value = '' + this.selectedFocusedRoom.z;
         const objs = [];
-        if (rooms) {
+        let type;
+        if (rooms && rooms.length) {
+            type = rooms[0].type || 'base';
             let rl = rooms.length;
             const ri = [];
             const re = {};
@@ -6072,6 +6130,11 @@ export class AreaDesigner extends EditorBase {
                 objs.unshift(o);
             }
         }
+        else
+            type = this.$area.defaultRoom || 'base';
+        this.$roomEditor.defaults = this.$area.baseRooms[type] ? this.$area.baseRooms[type].clone() : new Room(0, 0, 0);
+        this.$roomEditor.defaults.type = 'base';
+        this.$roomEditor.defaults.exitsDetails = Object.values(this.$roomEditor.defaults.exitsDetails);
         this.$roomEditor.objects = objs;
     }
 
@@ -6272,7 +6335,7 @@ export class AreaDesigner extends EditorBase {
     }
 
     public openExits() {
-        this.$roomEditor.beginEdit('exits', true);
+        this.$roomEditor.beginEdit('exitsDetails', true);
     }
 
     public openMonsters() {
