@@ -401,14 +401,14 @@ export class PropertyGrid extends EventEmitter {
             property: this.$editor.property,
             type: this.$editor.type
         };
-        this.$editor = null;
-        //do last in case the event changes the property editor
-        if (!canceled && value !== oldValue)
-            this.emit('value-changed', prop, value, oldValue);
         if (value === this.defaultFormattedValue(prop))
             this.$editor.el.classList.add('default');
         else
             this.$editor.el.classList.remove('default');
+        this.$editor = null;
+        //do last in case the event changes the property editor
+        if (!canceled && value !== oldValue)
+            this.emit('value-changed', prop, value, oldValue);
     }
 
     public createEditor(el: HTMLElement) {
