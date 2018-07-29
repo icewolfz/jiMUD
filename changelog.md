@@ -18,6 +18,7 @@
     - Fixed indenting errors to report correct line #s
     - Clear test / formatting errors when changed text as errors are probably no longer valid
     - Add filter efun to syntax highlighting
+    - When opening many files fast from immortal tools editor would not load correctly
   - Auto update: fix progress dialog not showing correct percent
   - Fixed -c command line argument
   - Fixed error logging in low level systems

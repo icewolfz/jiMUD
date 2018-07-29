@@ -1,4 +1,4 @@
-//cSpell:words submenu, pasteandmatchstyle, statusvisible, taskbar 
+//cSpell:words submenu, pasteandmatchstyle, statusvisible, taskbar
 //cSpell:ignore prefs, partyhealth, combathealth
 const { app, BrowserWindow, shell } = require('electron');
 const { Tray, dialog, Menu } = require('electron');
@@ -418,7 +418,7 @@ var menuTemp = [
       {
         label: '&Buttons',
         id: 'buttons',
-        /*        
+        /*
         type: 'checkbox',
         checked: true,        
         click: () => {
@@ -1896,11 +1896,12 @@ ipcMain.on('set-color', (event, type, color, code, window) => {
 
 ipcMain.on('open-editor', (event, file, remote, remoteEdit) => {
   showCodeEditor();
-  //win.webContents.executeJavaScript('showCodeEditor()');
   openEditor(file, remote, remoteEdit);
 });
 
 function openEditor(file, remote, remoteEdit) {
+  console.log(file);
+  console.log('CodeREady: ' + codeReady);
   if (!codeReady || !winCode) {
     setTimeout(() => {
       openEditor(file, remote, remoteEdit);
@@ -3362,7 +3363,6 @@ function createCodeEditor(show, loading, loaded) {
     w.loadURL(URL);
     event.newGuest = w;
   });
-
 }
 
 function showCodeEditor(loading) {
@@ -3372,6 +3372,8 @@ function showCodeEditor(loading) {
     edset.window.show = true;
   edset.save(parseTemplate(path.join('{data}', 'editor.json')));
   if (winCode != null) {
+    if(!codeReady)
+      return;
     if (codeMax)
       winCode.maximize();
     winCode.show();
