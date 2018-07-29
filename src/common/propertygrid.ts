@@ -219,12 +219,12 @@ export class PropertyGrid extends EventEmitter {
     }
 
     private defaultFormattedValue(prop) {
-        if (!prop || this.defaults === 0)
+        if (!prop)
             return null;
         if (!this.$options[prop])
             return this.defaultValue(prop);
         if (this.$options[prop].formatter)
-            return this.$options[prop].formatter(prop, this.defaultValue(prop), this.$objects.length !== 0 ? this.$objects : null);
+            return this.$options[prop].formatter(prop, this.defaultValue(prop), this.$objects.length !== 0 ? this.$objects : null, 1);
         if (this.$options[prop].editor && this.$options[prop].editor.options && this.$options[prop].editor.type === EditorType.flag)
             return enumToString(this.defaultValue(prop), this.$options[prop].editor.options.enum);
         return this.defaultValue(prop);
