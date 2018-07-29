@@ -1107,6 +1107,8 @@ export class CollectionValueEditor extends ValueEditor {
         this.$dButton.innerHTML = '&hellip;';
         this.$dButton.dataset.editor = 'dropdown';
         this.$dButton.addEventListener('click', (e) => {
+            if (this.$dialog && this.$dialog.open)
+                return;
             this.$dialog = <HTMLDialogElement>document.createElement('dialog');
             this.$dialog.style.width = '500px';
             this.$dialog.style.height = '300px';
