@@ -2375,10 +2375,10 @@ export class DataGrid extends EventEmitter {
                     editor.editor = new DropDownEditValueEditor(this, cell, prop, editorOptions);
                     break;
                 case EditorType.select:
-                    editor.editor = new SelectValueEditor(this, el, prop, editorOptions);
+                    editor.editor = new SelectValueEditor(this, cell, prop, editorOptions);
                     break;
                 case EditorType.collection:
-                    editor.editor = new CollectionValueEditor(this, el, prop, editorOptions);
+                    editor.editor = new CollectionValueEditor(this, cell, prop, editorOptions);
                     break;
                 case EditorType.custom:
                     if (this.$cols[col] && this.$cols[col].editor && this.$cols[col].editor.editor)
