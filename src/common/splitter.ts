@@ -1,4 +1,5 @@
 import EventEmitter = require('events');
+const ResizeObserver = require('resize-observer-polyfill');
 
 export interface SplitterOptions {
     container?: any;
@@ -28,6 +29,9 @@ export class Splitter extends EventEmitter {
     private $dragging = false;
     private $id;
     private $collapsed = 0;
+    private $resizer;
+    private $resizerCache;
+    private $observer: MutationObserver;
 
     public live = true;
 
@@ -349,19 +353,7 @@ export class Splitter extends EventEmitter {
             this.emit('dblclick', e);
         });
         window.addEventListener('resize', () => {
-            if (this.$orientation === Orientation.vertical) {
-                if (this.$panel2.clientHeight < this.$panel1MinSize)
-                    this.SplitterDistance = this.$panel1MinSize;
-                else if (this.$panel1.clientHeight < this.$panel2MinSize)
-                    this.SplitterDistance = this.$panel2MinSize;
-            }
-            else {
-                if (this.$panel2.clientWidth < this.$panel1MinSize)
-                    this.SplitterDistance = this.$panel1MinSize;
-                else if (this.$panel1.clientWidth < this.$panel2MinSize)
-                    this.SplitterDistance = this.$panel2MinSize;
-            }
-            this.$elBounds = this.$el.getBoundingClientRect();
+            this.resize();
         });
         document.addEventListener('mouseup', (e) => {
             if (!this.$dragging) return;
@@ -396,5 +388,42 @@ export class Splitter extends EventEmitter {
         setTimeout(() => {
             this.$elBounds = this.$el.getBoundingClientRect();
         }, 10);
+
+        this.$resizer = new ResizeObserver((entries, observer) => {
+            if (entries.length === 0) return;
+            if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
+                return;
+            if (!this.$resizerCache || this.$resizerCache.width !== entries[0].contentRect.width || this.$resizerCache.height !== entries[0].contentRect.height) {
+                this.$resizerCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
+                this.resize();
+            }
+        });
+        this.$resizer.observe(this.$el);
+        this.$observer = new MutationObserver((mutationsList) => {
+            let mutation;
+            for (mutation of mutationsList) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    if (mutation.oldValue === 'display: none;')
+                        this.resize();
+                }
+            }
+        });
+        this.$observer.observe(this.$el, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
+    }
+
+    public resize() {
+        if (this.$orientation === Orientation.vertical) {
+            if (this.$panel2.clientHeight < this.$panel1MinSize)
+                this.SplitterDistance = this.$panel1MinSize;
+            else if (this.$panel1.clientHeight < this.$panel2MinSize)
+                this.SplitterDistance = this.$panel2MinSize;
+        }
+        else {
+            if (this.$panel2.clientWidth < this.$panel1MinSize)
+                this.SplitterDistance = this.$panel1MinSize;
+            else if (this.$panel1.clientWidth < this.$panel2MinSize)
+                this.SplitterDistance = this.$panel2MinSize;
+        }
+        this.$elBounds = this.$el.getBoundingClientRect();
     }
 }
