@@ -13,7 +13,8 @@ export enum EditorType {
     custom,
     readonly,
     dropdown,
-    collection
+    collection,
+    button
 }
 
 export abstract class ValueEditor extends EventEmitter {
@@ -1452,5 +1453,70 @@ export class SelectValueEditor extends ValueEditor {
     }
     set value(value: any) {
         this.$el.value = value;
+    }
+}
+
+export class ButtonValueEditor extends ValueEditor {
+    private $el: HTMLButtonElement;
+    private $val;
+
+    public create() {
+        this.$el = document.createElement('button');
+        this.$el.innerHTML = this.options ? this.options.caption || this.options.label || '&hellip;' : '&hellip;';
+        this.$el.title = this.options ? this.options.title || '' : '';
+        this.$el.dataset.editor = 'true';
+        this.$el.classList.add('btn', 'btn-default', 'btn-xs', 'property-grid-editor-button');
+        this.$el.addEventListener('keydown', (e2) => {
+            if (e2.keyCode === 27) {
+                e2.preventDefault();
+                e2.stopPropagation();
+                return false;
+            }
+        });
+        this.$el.addEventListener('keyup', (e) => {
+            if (e.keyCode === 13) {
+                e.stopPropagation();
+                e.preventDefault();
+                setTimeout(() => this.control.clearEditor(e, this));
+                return false;
+            }
+            else if (e.keyCode === 27) {
+                setTimeout(() => this.control.clearEditor(e, null, true));
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            }
+            return;
+        });
+        this.$el.addEventListener('blur', (e) => {
+            setTimeout(() => this.control.clearEditor(e));
+        });
+        this.$el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
+            if (this.options && this.options.click)
+                this.options.click(this);
+        });
+        this.parent.appendChild(this.$el);
+    }
+    public focus() {
+        this.$el.focus();
+    }
+    public destroy() {
+        if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
+            this.$el.remove();
+    }
+
+    public scroll() { /**/ }
+
+    public openAdvanced() {
+        this.$el.click();
+    }
+
+    get value() {
+        return this.$val;
+    }
+    set value(value: any) {
+        this.$val = value;
     }
 }

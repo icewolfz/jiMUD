@@ -1,8 +1,8 @@
 //https://developers.google.com/web/updates/2016/10/resizeobserver
 import EventEmitter = require('events');
 import { capitalize, clone } from './library';
-import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, SelectValueEditor, CollectionValueEditor } from './value.editors';
-export { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, SelectValueEditor, CollectionValueEditor } from './value.editors';
+import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, SelectValueEditor, CollectionValueEditor, ButtonValueEditor } from './value.editors';
+export { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, SelectValueEditor, CollectionValueEditor, ButtonValueEditor } from './value.editors';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu } = remote;
@@ -2379,6 +2379,9 @@ export class DataGrid extends EventEmitter {
                     break;
                 case EditorType.collection:
                     editor.editor = new CollectionValueEditor(this, cell, prop, editorOptions);
+                    break;
+                case EditorType.button:
+                    editor.editor = new ButtonValueEditor(this, cell, prop, editorOptions);
                     break;
                 case EditorType.custom:
                     if (this.$cols[col] && this.$cols[col].editor && this.$cols[col].editor.editor)

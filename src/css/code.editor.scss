@@ -776,6 +776,12 @@ cause test to be brighter but more bold looking
     color: black;
 }
 
+.property-grid-editor-button {
+    height: 20px;
+    top: 1px;
+    position: absolute;
+}
+
 select.property-grid-editor {
     -webkit-appearance: none;
     background: url(./../../assets/editor/select.png) no-repeat 100% 50%;
@@ -1174,7 +1180,7 @@ input[type=checkbox].property-grid-editor {
     z-index: 0;
 }
 
-.area-editor-properites {
+.area-editor-properties {
     top: 26px;
     left: 0;
     bottom: 0;
@@ -1182,12 +1188,25 @@ input[type=checkbox].property-grid-editor {
     position: absolute;
 }
 
-.area-editor-properites .tab-content {
+.area-editor-properties .tab-content {
     margin-left: 125px;
     background: white;
     height: 100%;
 }
 
-.area-editor-properites .tab-pane {
+.area-editor-properties .tab-pane {
     height: 100%;
+    position: relative;
+    padding: 5px;
+}
+
+.area-editor-properties .datagrid {
+    left: 5px;
+    bottom: 5px;
+    right: 5px;
+    top: 32px;
+}
+
+.area-editor-properties > .nav-tabs {
+    margin-right: 5px;
 }
