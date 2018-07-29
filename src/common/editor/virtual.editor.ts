@@ -3959,9 +3959,9 @@ export class VirtualEditor extends EditorBase {
         return value.map(i => i.item).join(':');
     }
 
-    private formatExits(prop, value) {
+    private formatExits(prop, value, data, d) {
         if (value === 0)
-            return 'None';
+            return d ? null : 'None';
         const states = Object.keys(RoomExit).filter(key => !isNaN(Number(RoomExit[key])));
         const f = [];
         let state = states.length;
@@ -3973,15 +3973,15 @@ export class VirtualEditor extends EditorBase {
         return f.join(', ');
     }
 
-    private formatExternal(prop, value, data) {
-        if (!data) return 'None';
+    private formatExternal(prop, value, data, d) {
+        if (!data) return d ? null : 'None';
         let ee;
         if (Array.isArray(data))
             ee = data[0].ee;
         else
             ee = data.ee;
         if (ee === 0)
-            return 'None';
+            return d ? null : 'None';
         const states = Object.keys(RoomExit).filter(key => !isNaN(Number(RoomExit[key])));
         const f = [];
         let state = states.length;
