@@ -1489,6 +1489,14 @@ export class ButtonValueEditor extends ValueEditor {
             return;
         });
         this.$el.addEventListener('blur', (e) => {
+            if (e.currentTarget === this.$el || (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown')) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                return;
+            }
+            if (this.control.parent === e.relatedTarget)
+                return;
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$el.addEventListener('click', (e) => {
