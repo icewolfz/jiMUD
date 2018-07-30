@@ -2233,12 +2233,12 @@ export class DataGrid extends EventEmitter {
                     }
                 }
                 if (col.formatter) {
-                    editor.el.textContent = col.formatter(data);
+                    editor.el.innerHTML = col.formatter(data);
                     if (parent !== -1) {
                         const ep = this.$body.firstElementChild.querySelector('[data-data-index="' + parent + '"][data-parent="-1"]');
                         if (ep) {
                             const pIdx = [...ep.parentElement.children].indexOf(ep);
-                            ep.children[editor.column].textContent = col.formatter({ row: this.$rows[parent], cell: field ? (this.$rows[parent][field]) : (idx >= 0 && idx < this.$rows[parent].length) ? this.$rows[parent][idx] : null, index: idx, column: +editor.el.dataset.column, rowIndex: pIdx, field: field, parent: -1, child: -1, dataIndex: parent });
+                            ep.children[editor.column].innerHTML = col.formatter({ row: this.$rows[parent], cell: field ? (this.$rows[parent][field]) : (idx >= 0 && idx < this.$rows[parent].length) ? this.$rows[parent][idx] : null, index: idx, column: +editor.el.dataset.column, rowIndex: pIdx, field: field, parent: -1, child: -1, dataIndex: parent });
                         }
                     }
                 }
