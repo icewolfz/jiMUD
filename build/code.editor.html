@@ -16,14 +16,28 @@
     <link href="css/editorcontent.css" rel="stylesheet" type="text/css" />
     <script>
         // eslint-disable-next-line no-unused-vars
-        /* global _ready, doUpdate, manager, inverse, capitalize, options, monaco, initEditor */
+        /* global _ready, doUpdate, manager, inverse, capitalize, options, monaco, initEditor, shell */
         // eslint-disable-next-line no-unused-vars
         var _ready = false;
         const { SetupEditor } = require('./js/editor/code.editor');
         const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
 
-        function initEditor(editor) {
-
+        function initEditor(editor, diff) {
+            if(diff)
+            {
+                editor.getModifiedEditor().getContribution('editor.linkDetector').openerService.open = (url) => {
+                    shell.openExternal(url.toString());
+                };
+                editor.getOriginalEditor().getContribution('editor.linkDetector').openerService.open = (url) => {
+                    shell.openExternal(url.toString());
+                };
+            }
+            else
+                editor.getContribution('editor.linkDetector').openerService.open = (url) => {
+                    console.log(url);
+                    console.log(url.toString());                    
+                    shell.openExternal(url.toString());
+                };
             editor.addAction({
                 id: 'jimud.action.transformToInverse',
                 label: 'Transform to Inverse',
@@ -209,7 +223,7 @@
                     ignoreCharChanges: true // jump from line to line
                 })
             ];
-            initEditor(window.$dEditors[0]);
+            initEditor(window.$dEditors[0], 1);
             _ready = true;
         });
     </script>
