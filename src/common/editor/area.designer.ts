@@ -49,7 +49,21 @@ export enum RoomFlags {
     None = 0
 }
 
-const RoomTypes = [
+export enum MonsterFlags {
+    None = 0,
+    Ridable = 1 << 0,
+    Flying = 1 << 1,
+    Getable = 1 << 2,
+    Undead = 1 << 3,
+    Water_Breathing = 1 << 4,
+    Requires_Water = 1 << 5,
+    No_Bleeding = 1 << 6,
+    Auto_Stand = 1 << 7,
+    Drop_encumbered = 1 << 8,
+    Drop_encumbered_combat = 1 << 9
+}
+
+export const RoomTypes = [
     { value: 'STD_ROOM', display: 'Standard', group: 'Standard' },
     { value: 'ROOMTYPE_ADVANCE_ROOM', display: 'Advance room', group: 'Standard' },
     { value: 'ROOMTYPE_BANK', display: 'Bank', group: 'Standard' },
@@ -71,7 +85,7 @@ const RoomTypes = [
     { value: 'ROOMTYPE_VENDOR_STORAGE', display: 'Vendor storage', group: 'Standard' }
 ];
 
-const MonsterTypes = [
+export const MonsterTypes = [
     { value: 'STD_MONSTER', display: 'Standard', group: 'Standard' },
     { value: 'MONTYPE_ARMOR_REPAIR', display: 'Armor Repair', group: 'Standard' },
     { value: 'MONTYPE_BARKEEP', display: 'Barkeep', group: 'Standard' },
@@ -139,15 +153,29 @@ interface RoomSearch {
     message: string;
 }
 
+interface MonsterAction {
+    time: number;
+    enabled: boolean;
+}
+
 export class Room {
-    public type: string = 'base';
-    public exits: RoomExit = 0;
-    public external: RoomExit = 0;
-    public climbs: RoomExit = 0;
-    public exitsDetails = {};
+    //readonly
     public x = 0;
     public y = 0;
     public z = 0;
+    public external: RoomExit = 0;
+    public climbs: RoomExit = 0;
+    public exits: RoomExit = 0;
+
+    //area designer
+    public objects: ObjectInfo[] = [];
+    public monsters: ObjectInfo[] = [];
+    public subArea: string = '';
+
+    public type: string = 'base';
+
+    //roomwizard supports
+    public exitsDetails = {};
     public terrain = '';
     public flags: RoomFlags = RoomFlags.None;
     public short = '';
@@ -160,14 +188,12 @@ export class Room {
     public smells: RoomSmell[] = [];
     public searches: RoomSearch[] = [];
     public items: RoomItem[] = [];
-    public objects: ObjectInfo[] = [];
-    public monsters: ObjectInfo[] = [];
-    public subArea: string = '';
     public forage: number = -1;
     public maxForage: number = 0;
     public secretExit: string = '';
     public dirtType: string = '';
     public preventPeer: string = '';
+    public temperature: number;
 
     constructor(x, y, z, data?, type?) {
         if (data)
@@ -334,16 +360,44 @@ const Timer = new DebugTimer();
 
 class Monster {
     public id: number;
-    public name: string;
-    public long: string;
-    public short: string;
-    public class: string;
-    public level: number;
-    public race: string;
-    public maxAmount: number;
+    public maxAmount: number = -1;
     public unique: boolean;
     public objects: ObjectInfo[] = [];
-    public type: string;
+
+    public type: string = 'base';
+
+    public name: string = '';
+    public long: string = '';
+    public short: string = '';
+    public class: string = '';
+    public level: number = 1;
+    public race: string = '';
+    public alignment: string = '';
+    public language: string = '';
+    public flags: MonsterFlags = MonsterFlags.None;
+    public nouns: string = '';
+    public adjectives: string = '';
+    public mass: number = 0;
+    public height: number = 1;
+    public eyeColor: string = '';
+    public hairColor: string = '';
+    public gender: string = 'male';
+    public bodyType: string = '';
+    public noCorpse: string = '';
+    public noLimbs: string = '';
+    public speed: number = 0;
+    public patrolRoute: string = '';
+    public noWalkRooms: string = '';
+    public attackCommands: string = '';
+    public attackCommandChance: number = 33;
+    public attackInitiators: string = '';
+    public aggressive: string = '';
+    public autoDrop: MonsterAction = { time: 1, enabled: false };
+    public openStorage: MonsterAction = { time: 3, enabled: true };
+    public autoWield: MonsterAction = { time: 3, enabled: true };
+    public autoLoot: MonsterAction = { time: 1, enabled: false };
+    public autoWear: MonsterAction = { time: 3, enabled: false };
+    public wimpy: number = 0;
 
     constructor(id?, data?, type?) {
         if (typeof id === 'string') {
@@ -386,7 +440,7 @@ class Monster {
 }
 
 enum StdObjectType {
-    default, chest
+    default, chest, material, ore
 }
 
 class StdObject {
@@ -396,6 +450,10 @@ class StdObject {
     public short: string;
     public type;
     public keyid;
+    public mass: number;
+    public nouns: string;
+    public adjectives: string;
+    public material: string;
 
     constructor(id?, data?) {
         if (typeof id === 'object') {
@@ -457,7 +515,6 @@ class Size {
 
 class Area {
     public name: string;
-    public virtual: boolean;
     public rooms: Room[][][];
     public monsters;
     public objects;
@@ -599,6 +656,7 @@ export class AreaDesigner extends EditorBase {
     private $redo = [];
     private $undoGroup;
     private $redoGroup;
+    private $new = { baseRooms: 0, baseMonsters: 0, objects: 0, monsters: 0 };
 
     private $label: HTMLElement;
     private $splitterPreview: Splitter;
@@ -3444,6 +3502,7 @@ export class AreaDesigner extends EditorBase {
         this.$observer.observe(this.$mapContainer, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
         //#endregion
         //#region create properties editor
+        let el;
         this.$propertiesEditor = {
             container: document.createElement('div'),
             generalTab: document.createElement('div'),
@@ -3452,7 +3511,7 @@ export class AreaDesigner extends EditorBase {
             tabs: document.createElement('ul'),
             tabsContents: document.createElement('div')
         };
-        this.$propertiesEditor.container.classList.add('tabbable', 'tabs-left', 'area-editor-properites');
+        this.$propertiesEditor.container.classList.add('tabbable', 'tabs-left', 'area-editor-properties');
         this.$propertiesEditor.tabs.classList.add('nav', 'nav-tabs');
         this.$propertiesEditor.tabs.style.height = '100%';
         this.$propertiesEditor.tabs.innerHTML = '<li class="active"><a href="#' + this.parent.id + 'general" data-toggle="tab">General</a></li><li><a href="#' + this.parent.id + 'rooms" data-toggle="tab">Base rooms</a></li><li><a href="#' + this.parent.id + 'monsters" data-toggle="tab">Base monsters</a></li>';
@@ -3464,16 +3523,630 @@ export class AreaDesigner extends EditorBase {
         this.$propertiesEditor.tabsContents.appendChild(this.$propertiesEditor.roomsTab);
         this.$propertiesEditor.generalTab.id = this.parent.id + 'general';
         this.$propertiesEditor.generalTab.classList.add('tab-pane', 'active');
-        this.$propertiesEditor.generalTab.innerHTML = 'general!';
+        this.$propertiesEditor.generalTab.innerHTML = `
+        <div class="form-group">
+            <label class="control-label">Default room
+                <br>
+                <select class="form-control selectpicker" data-container="body" data-width="250px">
+                </select>
+            </label>
+        </div>
+        <div class="form-group">
+            <label class="control-label">Default monster
+                <br>
+                <select class="form-control selectpicker" data-container="body" data-width="250px">
+                </select>
+            </label>
+        </div>`;
+        el = this.$propertiesEditor.generalTab.querySelectorAll('select');
+        el[0].innerHTML = '<optgroup label="Area"><option value="base">Base</option></optgroup><optgroup label="Standard">' +
+            RoomTypes.map(r => `<option value="${r.value}">${r.display}</option>`).join('') + '</optgroup>';
+        el[1].innerHTML = '<optgroup label="Area"><option value="base">Base</option></optgroup><optgroup label="Standard">' +
+            MonsterTypes.map(r => `<option value="${r.value}">${r.display}</option>`).join('') + '</optgroup>';
+        this.$propertiesEditor.defaultRoom = $(el[0]).selectpicker();
+        this.$propertiesEditor.defaultRoom.on('change', () => {
+            this.pushUndo(undoAction.edit, undoType.properties, { property: 'defaultRoom', old: this.$area.defaultRoom, new: this.$propertiesEditor.defaultRoom.val() });
+            this.$area.defaultRoom = this.$propertiesEditor.defaultRoom.val();
+            this.changed = true;
+        });
+        this.$propertiesEditor.defaultMonster = $(el[1]).selectpicker();
+        this.$propertiesEditor.defaultMonster.on('change', () => {
+            this.pushUndo(undoAction.edit, undoType.properties, { property: 'defaultMonster', old: this.$area.defaultMonster, new: this.$propertiesEditor.defaultMonster.val() });
+            this.$area.defaultMonster = this.$propertiesEditor.defaultMonster.val();
+            this.changed = true;
+        });
         this.$propertiesEditor.roomsTab.id = this.parent.id + 'rooms';
         this.$propertiesEditor.roomsTab.classList.add('tab-pane');
-        this.$propertiesEditor.roomsTab.innerHTML = 'Base rooms!';        
         this.$propertiesEditor.monstersTab.id = this.parent.id + 'monsters';
         this.$propertiesEditor.monstersTab.classList.add('tab-pane');
-        this.$propertiesEditor.monstersTab.innerHTML = 'Base monsters!';
         this.$propertiesEditor.container.style.display = 'none';
+        el = document.createElement('div');
+        el.classList.add('datagrid-standard');
+        this.$propertiesEditor.monsterGrid = new DataGrid(el);
+        this.$propertiesEditor.monsterGrid.clipboardPrefix = 'jiMUD/';
+        this.$propertiesEditor.monsterGrid.enterMoveFirst = this.$enterMoveFirst;
+        this.$propertiesEditor.monsterGrid.enterMoveNext = this.$enterMoveNext;
+        this.$propertiesEditor.monsterGrid.enterMoveNew = this.$enterMoveNew;
+        this.$propertiesEditor.monsterGrid.columns = [
+            {
+                label: 'Name',
+                field: 'name',
+                width: 150,
+                spring: true,
+                editor: {
+                    options: {
+                        singleLine: true,
+                        validate: (oldValue, newValue) => {
+                            if (oldValue !== newValue && this.$area.baseMonsters[newValue])
+                                return `Base monster named ${newValue} already exist!`;
+                            return true;
+                        }
+                    }
+                }
+            },
+            {
+                label: 'Max amount',
+                field: 'maxAmount',
+                width: 150
+            },
+            {
+                label: 'Unique',
+                field: 'unique',
+                width: 150
+            },
+            {
+                field: 'objects',
+                label: 'Objects',
+                sortable: false,
+                formatter: this.formatCollection,
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
+                    }
+                },
+                sort: 2
+            },
+            {
+                field: 'monster',
+                sortable: false,
+                label: '',
+                width: 32,
+                editor: {
+                    type: EditorType.button,
+                    options: {
+                        click: ed => {
+                            this.emit('show-monster-wizard', {
+                                title: 'Edit base monster',
+                                data: {
+                                    'mon-wiz-welcome-message': 'Welcome to the base monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
+                                    'mon-wiz-area-types': [Object.keys(this.$area.baseMonsters || { base: null }).filter(r => r !== ed.value.type).map(r => {
+                                        return {
+                                            value: r,
+                                            display: capitalize(r),
+                                            group: 'Area'
+                                        };
+                                    })],
+                                    'mon-wiz-type': ed.value.type || 'base',
+                                    'mon-wiz-level': '' + ed.value.level,
+                                    'mon-wiz-alignment': '' + ed.value.alignment,
+                                    'mon-wiz-race': ed.value.race,
+                                    'mon-wiz-class': ed.value.class,
+                                    'mon-wiz-language': ed.value.language,
+                                    'mon-wiz-ridable': (ed.value.flags & MonsterFlags.Ridable) === MonsterFlags.Ridable,
+                                    'mon-wiz-flying': (ed.value.flags & MonsterFlags.Flying) === MonsterFlags.Flying,
+                                    'mon-wiz-getable': (ed.value.flags & MonsterFlags.Getable) === MonsterFlags.Getable,
+                                    'mon-wiz-undead': (ed.value.flags & MonsterFlags.Undead) === MonsterFlags.Undead,
+                                    'mon-wiz-waterbreathing': (ed.value.flags & MonsterFlags.Water_Breathing) === MonsterFlags.Water_Breathing,
+                                    'mon-wiz-requires-water': (ed.value.flags & MonsterFlags.Requires_Water) === MonsterFlags.Requires_Water,
+                                    'mon-wiz-no-bleed': (ed.value.flags & MonsterFlags.No_Bleeding) === MonsterFlags.No_Bleeding,
+                                    'mon-wiz-name': ed.value.name,
+                                    'mon-wiz-short': ed.value.short,
+                                    'mon-wiz-nouns': ed.value.nouns,
+                                    'mon-wiz-adjectives': ed.value.adjectives,
+                                    'mon-wiz-long': ed.value.long,
+                                    'mon-wiz-mass': '' + ed.value.mass,
+                                    'mon-wiz-height': '' + ed.value.height,
+                                    'mon-wiz-eye': ed.value.eyeColor,
+                                    'mon-wiz-hair': ed.value.hairColor,
+                                    'mon-wiz-gender': ed.value.gender,
+                                    'mon-wiz-body': ed.value.bodyType,
+                                    'mon-wiz-no-corpse': ed.value.noCorpse,
+                                    'mon-wiz-no-limbs': ed.value.noLimbs,
+                                    'mon-wiz-commands': ed.value.attackCommands,
+                                    'mon-wiz-chance': '' + ed.value.attackCommandChance,
+                                    'mon-wiz-initiators': ed.value.attackInitiators,
+                                    'mon-wiz-aggressive': ed.value.aggressive,
+                                    'mon-wiz-speed': '' + ed.value.speed,
+                                    'mon-wiz-patrol': ed.value.patrolRoute,
+                                    'mon-wiz-no-walk': ed.value.noWalkRooms,
+                                    'mon-wiz-auto-drop': '' + ed.value.autoDrop.time,
+                                    'mon-wiz-auto-drop-enabled': ed.value.autoDrop,
+                                    'mon-wiz-storage': '' + ed.value.openStorage.time,
+                                    'mon-wiz-storage-enabled': ed.value.openStorage.enabled,
+                                    'mon-wiz-auto-wield': '' + ed.value.autoWield.time,
+                                    'mon-wiz-auto-wield-enabled': ed.value.autoWield.enabled,
+                                    'mon-wiz-auto-loot': '' + ed.value.autoLoot.time,
+                                    'mon-wiz-auto-loot-enabled': ed.value.autoLoot.enabled,
+                                    'mon-wiz-auto-wear': '' + ed.value.autoWear.time,
+                                    'mon-wiz-auto-wear-enabled': ed.value.autoWear.enabled,
+                                    'mon-wiz-wimpy': '' + ed.value.wimpy,
+                                    'mon-wiz-drop-encumbered': (ed.value.flags & MonsterFlags.Drop_encumbered) === MonsterFlags.Drop_encumbered,
+                                    'mon-wiz-drop-encumbered-combat': (ed.value.flags & MonsterFlags.Drop_encumbered_combat) === MonsterFlags.Drop_encumbered_combat,
+                                    'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand
+                                },
+                                finish: e => {
+                                    const nMonster = ed.value.clone();
+                                    nMonster.flags = RoomFlags.None;
+                                    nMonster.type = e.data['room-wiz-type'].value;
+                                    nMonster.level = +e.data['mon-wiz-level'];
+                                    nMonster.alignment = +e.data['mon-wiz-alignment'];
+                                    nMonster.race = e.data['mon-wiz-race'];
+                                    nMonster.class = e.data['mon-wiz-class'];
+                                    nMonster.language = e.data['mon-wiz-language'];
+                                    if (e.data['mon-wiz-ridable'])
+                                        nMonster.flags |= MonsterFlags.Ridable;
+                                    if (e.data['mon-wiz-flying'])
+                                        nMonster.flags |= MonsterFlags.Flying;
+                                    if (e.data['mon-wiz-getable'])
+                                        nMonster.flags |= MonsterFlags.Getable;
+                                    if (e.data['mon-wiz-undead'])
+                                        nMonster.flags |= MonsterFlags.Undead;
+                                    if (e.data['mon-wiz-waterbreathing'])
+                                        nMonster.flags |= MonsterFlags.Water_Breathing;
+                                    if (e.data['mon-wiz-requires-water'])
+                                        nMonster.flags |= MonsterFlags.Requires_Water;
+                                    if (e.data['mon-wiz-no-bleed'])
+                                        nMonster.flags |= MonsterFlags.No_Bleeding;
+                                    nMonster.name = e.data['mon-wiz-name'];
+                                    nMonster.short = e.data['mon-wiz-short'];
+                                    nMonster.nouns = e.data['mon-wiz-nouns'];
+                                    nMonster.adjectives = e.data['mon-wiz-adjectives'];
+                                    nMonster.long = e.data['mon-wiz-long'];
+                                    nMonster.mass = +e.data['mon-wiz-mass'];
+                                    nMonster.height = +e.data['mon-wiz-height'];
+                                    nMonster.eyeColor = e.data['mon-wiz-eye'];
+                                    nMonster.hairColor = e.data['mon-wiz-hair'];
+                                    nMonster.gender = e.data['mon-wiz-gender'];
+                                    nMonster.bodyType = e.data['mon-wiz-body'];
+                                    nMonster.noCorpse = e.data['mon-wiz-no-corpse'];
+                                    nMonster.noLimbs = e.data['mon-wiz-no-limbs'];
+                                    nMonster.attackCommands = e.data['mon-wiz-commands'];
+                                    nMonster.attackCommandChance = +e.data['mon-wiz-chance'];
+                                    nMonster.attackInitiators = e.data['mon-wiz-initiators'];
+                                    nMonster.aggressive = e.data['mon-wiz-aggressive'];
+                                    nMonster.speed = +e.data['mon-wiz-speed'];
+                                    nMonster.patrolRoute = e.data['mon-wiz-patrol'];
+                                    nMonster.noWalkRooms = e.data['mon-wiz-no-walk'];
+                                    nMonster.autoDrop.time = +e.data['mon-wiz-auto-drop'];
+                                    nMonster.autoDrop = e.data['mon-wiz-auto-drop-enabled'];
+                                    nMonster.openStorage.time = +e.data['mon-wiz-storage'];
+                                    nMonster.openStorage.enabled = e.data['mon-wiz-storage-enabled'];
+                                    nMonster.autoWield.time = +e.data['mon-wiz-auto-wield'];
+                                    nMonster.autoWield.enabled = e.data['mon-wiz-auto-wield-enabled'];
+                                    nMonster.autoLoot.time = +e.data['mon-wiz-auto-loot'];
+                                    nMonster.autoLoot.enabled = e.data['mon-wiz-auto-loot-enabled'];
+                                    nMonster.autoWear.time = +e.data['mon-wiz-auto-wear'];
+                                    nMonster.autoWear.enabled = e.data['mon-wiz-auto-wear-enabled'];
+                                    nMonster.wimpy = +e.data['mon-wiz-wimpy'];
+                                    if (e.data['mon-wiz-drop-encumbered'])
+                                        nMonster.flags |= MonsterFlags.Drop_encumbered;
+                                    if (e.data['mon-wiz-drop-encumbered-combat'])
+                                        nMonster.flags |= MonsterFlags.Drop_encumbered_combat;
+                                    if (e.data['mon-wiz-auto-stand'])
+                                        nMonster.flags |= MonsterFlags.Auto_Stand;
+
+                                    if (!nMonster.equals(ed.data.monster))
+                                        ed.value = nMonster;
+                                    ed.focus();
+                                },
+                                closed: e => {
+                                    ed.focus();
+                                }
+                            });
+                        }
+                    }
+                },
+                sort: 2
+            }
+        ];
+        this.$propertiesEditor.monsterGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
+            this.pushUndo(undoAction.edit, undoType.properties, { property: 'baseMonsters', old: oldValue, new: newValue });
+            if (oldValue.name !== newValue.name)
+                delete this.$area.baseMonsters[oldValue.name];
+            this.$area.baseMonsters[newValue.name] = newValue;
+            this.changed = true;
+        });
+        this.$propertiesEditor.monsterGrid.on('add', e => {
+            this.$new.baseMonsters++;
+            this.$area.baseMonsters['base' + this.$new.baseMonsters] = new Monster('STD_MONSTER');
+            e.data = {
+                name: 'base' + this.$new.baseMonsters,
+                maxAmount: this.$area.baseMonsters['base' + this.$new.baseMonsters].maxAmount,
+                unique: this.$area.baseMonsters['base' + this.$new.baseMonsters].unique,
+                objects: this.$area.baseMonsters['base' + this.$new.baseMonsters].objects,
+                monster: this.$area.baseMonsters['base' + this.$new.baseMonsters]
+            };
+            this.pushUndo(undoAction.add, undoType.properties, { property: 'baseMonsters', name: 'base' + this.$new.baseMonsters, value: e.data });
+            this.changed = true;
+        });
+        this.$propertiesEditor.monsterGrid.on('cut', (e) => {
+            this.pushUndo(undoAction.delete, undoType.properties, {
+                property: 'baseMonsters', values: e.data.map(r => {
+                    delete this.$area.baseMonsters[r.data.name];
+                    return { name: r.name, value: r.monster };
+                })
+            });
+            this.emit('supports-changed');
+            this.changed = true;
+        });
+        this.$propertiesEditor.monsterGrid.on('copy', () => {
+            this.emit('supports-changed');
+        });
+        this.$propertiesEditor.monsterGrid.on('paste', (e) => {
+            this.startUndoGroup();
+            e.data.forEach(d => {
+                if (this.$area.baseMonsters[d.data.name]) {
+                    this.$new.baseMonsters++;
+                    d.data.name += this.$new.baseMonsters;
+                }
+                this.$area.baseMonsters[d.data.name] = d.data;
+                this.pushUndo(undoAction.add, undoType.properties, { property: 'baseMonsters', name: d.data.name, value: d.data });
+            });
+            this.stopUndoGroup();
+            this.changed = true;
+        });
+        this.$propertiesEditor.monsterGrid.on('delete', (e) => {
+            if (dialog.showMessageBox(
+                remote.getCurrentWindow(),
+                {
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete selected base monster' + (this.$propertiesEditor.monsterGrid.selectedCount > 1 ? 's' : '') + '?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                })
+                === 1)
+                e.preventDefault = true;
+            else {
+                this.pushUndo(undoAction.delete, undoType.properties, {
+                    property: 'baseMonsters', values: e.data.map(r => {
+                        delete this.$area.baseMonsters[r.data.name];
+                        return { name: r.name, value: r.monster };
+                    })
+                });
+                this.changed = true;
+            }
+        });
+        this.$propertiesEditor.monsterGrid.on('selection-changed', () => {
+            if (this.$view !== View.properties) return;
+            const group = this.$propertiesEditor.monstersTab.firstChild;
+            if (this.$propertiesEditor.monsterGrid.selectedCount) {
+                group.children[1].removeAttribute('disabled');
+                group.children[2].removeAttribute('disabled');
+                if (this.$propertiesEditor.monsterGrid.selectedCount > 1)
+                    (<HTMLElement>group.children[2]).title = 'Delete base monsters';
+                else
+                    (<HTMLElement>group.children[2]).title = 'Delete base monster';
+            }
+            else {
+                group.children[1].setAttribute('disabled', 'true');
+                group.children[2].setAttribute('disabled', 'true');
+                (<HTMLElement>group.children[2]).title = 'Delete base monster(s)';
+            }
+            this.emit('selection-changed');
+        });
+        this.$propertiesEditor.monstersTab.appendChild(this.createButtonGroup(this.$propertiesEditor.monsterGrid, 'base monster'));
+        this.$propertiesEditor.monstersTab.appendChild(el);
+        el = document.createElement('div');
+        el.classList.add('datagrid-standard');
+        this.$propertiesEditor.roomGrid = new DataGrid(el);
+        this.$propertiesEditor.roomGrid.clipboardPrefix = 'jiMUD/';
+        this.$propertiesEditor.roomGrid.enterMoveFirst = this.$enterMoveFirst;
+        this.$propertiesEditor.roomGrid.enterMoveNext = this.$enterMoveNext;
+        this.$propertiesEditor.roomGrid.enterMoveNew = this.$enterMoveNew;
+        this.$propertiesEditor.roomGrid.columns = [
+            {
+                label: 'Name',
+                field: 'name',
+                width: 150,
+                spring: true,
+                editor: {
+                    options: {
+                        singleLine: true,
+                        validate: (oldValue, newValue) => {
+                            if (oldValue !== newValue && this.$area.baseRooms[newValue])
+                                return `Base room named ${newValue} already exist!`;
+                            return true;
+                        }
+                    }
+                }
+            },
+            {
+                field: 'objects',
+                label: 'Objects',
+                sortable: false,
+                formatter: this.formatCollection,
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
+                    }
+                },
+                sort: 2
+            },
+            {
+                field: 'monsters',
+                label: 'Monsters',
+                sortable: false,
+                formatter: this.formatCollection,
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
+                    }
+                },
+                sort: 2
+            },
+            {
+                field: 'room',
+                sortable: false,
+                label: '',
+                width: 32,
+                editor: {
+                    type: EditorType.button,
+                    options: {
+                        click: ed => {
+                            this.emit('show-room-wizard', {
+                                title: 'Edit base room',
+                                data: {
+                                    'room-wiz-welcome-message': 'Welcome to the base room editor, this will take you through the steps to edit a base room quickly and easily. You may finish at any time to save your current selections.',
+                                    'room-wiz-area-types': [Object.keys(this.$area.baseRooms || { base: null }).filter(r => r !== ed.value.type).map(r => {
+                                        return {
+                                            value: r,
+                                            display: capitalize(r),
+                                            group: 'Area'
+                                        };
+                                    })],
+                                    'room-wiz-type': ed.value.type || 'base',
+                                    'room-wiz-terrain': ed.value.terrain,
+                                    'room-wiz-short': ed.value.short,
+                                    'room-wiz-light': '' + ed.value.light,
+                                    'room-wiz-night-adjust': '' + ed.value.nightAdjust,
+                                    'room-wiz-prevent-peer': ed.value.preventPeer,
+                                    'room-wiz-long': ed.value.long,
+                                    'room-wiz-indoors': (ed.value.flags & RoomFlags.Indoors) === RoomFlags.Indoors,
+                                    'room-wiz-no-magic': (ed.value.flags & RoomFlags.No_Magic) === RoomFlags.No_Magic,
+                                    'room-wiz-no-scry': (ed.value.flags & RoomFlags.No_Scry) === RoomFlags.No_Scry,
+                                    'room-wiz-no-teleport': (ed.value.flags & RoomFlags.No_Teleport) === RoomFlags.No_Teleport,
+                                    'room-wiz-explored': (ed.value.flags & RoomFlags.Explored) === RoomFlags.Explored,
+                                    'room-wiz-no-map': (ed.value.flags & RoomFlags.No_Map_Send) === RoomFlags.No_Map_Send,
+                                    'room-wiz-hide-exits': (ed.value.flags & RoomFlags.Hide_Exits) === RoomFlags.Hide_Exits,
+                                    'room-wiz-no-forage': (ed.value.flags & RoomFlags.No_Forage) === RoomFlags.No_Forage,
+                                    'room-wiz-forage': '' + ed.value.forage,
+                                    'room-wiz-max-forage': '' + ed.value.maxForage,
+                                    'room-wiz-secret-exit': ed.value.secretExit,
+                                    'room-wiz-no-attack': (ed.value.flags & RoomFlags.No_Attack) === RoomFlags.No_Attack,
+                                    'room-wiz-council': (ed.value.flags & RoomFlags.Council) === RoomFlags.Council,
+                                    'room-wiz-melee': (ed.value.flags & RoomFlags.Melee_As_Ability) === RoomFlags.Melee_As_Ability,
+                                    'room-wiz-pk': (ed.value.flags & RoomFlags.Enable_Pk) === RoomFlags.Enable_Pk,
+                                    'room-wiz-no-dirt': (ed.value.flags & RoomFlags.No_Dirt) === RoomFlags.No_Dirt,
+                                    'room-wiz-dirt': ed.value.dirtType,
+                                    'room-wiz-temperature': '' + ed.value.temperature,
+                                    'room-wiz-exits': Object.values(ed.value.exitsDetails),
+                                    'room-wiz-items': ed.value.items,
+                                    'room-wiz-smells': ed.value.smell && ed.value.smell.length > 0 ? [{ smell: 'default', description: ed.value.smell }].concat(...ed.value.smells) : ed.value.smells,
+                                    'room-wiz-sounds': ed.value.sound && ed.value.sound.length > 0 ? [{ sound: 'default', description: ed.value.sound }].concat(...ed.value.sounds) : ed.value.sounds,
+                                    'room-wiz-searches': ed.value.searches
+                                },
+                                finish: e => {
+                                    const nRoom = ed.value.clone();
+                                    nRoom.flags = RoomFlags.None;
+                                    nRoom.type = e.data['room-wiz-type'].value;
+                                    nRoom.terrain = e.data['room-wiz-terrain'];
+                                    nRoom.short = e.data['room-wiz-short'];
+                                    nRoom.light = +e.data['room-wiz-light'];
+                                    nRoom.nightAdjust = +e.data['room-wiz-night-adjust'];
+                                    nRoom.preventPeer = e.data['room-wiz-prevent-peer'];
+                                    nRoom.long = e.data['room-wiz-long'];
+                                    if (e.data['room-wiz-indoors'])
+                                        nRoom.flags |= RoomFlags.Indoors;
+                                    if (e.data['room-wiz-no-magic'])
+                                        nRoom.flags |= RoomFlags.No_Magic;
+                                    if (e.data['room-wiz-no-scry'])
+                                        nRoom.flags |= RoomFlags.No_Scry;
+                                    if (e.data['room-wiz-no-teleport'])
+                                        nRoom.flags |= RoomFlags.No_Teleport;
+                                    if (e.data['room-wiz-explored'])
+                                        nRoom.flags |= RoomFlags.Explored;
+                                    if (e.data['room-wiz-no-map'])
+                                        nRoom.flags |= RoomFlags.No_Map_Send;
+                                    if (e.data['room-wiz-hide-exits'])
+                                        nRoom.flags |= RoomFlags.Hide_Exits;
+                                    if (e.data['room-wiz-no-forage'])
+                                        nRoom.flags |= RoomFlags.No_Forage;
+                                    if (e.data['room-wiz-no-attack'])
+                                        nRoom.flags |= RoomFlags.No_Attack;
+                                    if (e.data['room-wiz-council'])
+                                        nRoom.flags |= RoomFlags.Council;
+                                    if (e.data['room-wiz-melee'])
+                                        nRoom.flags |= RoomFlags.Melee_As_Ability;
+                                    if (e.data['room-wiz-pk'])
+                                        nRoom.flags |= RoomFlags.Enable_Pk;
+                                    if (e.data['room-wiz-no-dirt'])
+                                        nRoom.flags |= RoomFlags.No_Dirt;
+                                    nRoom.forage = +e.data['room-wiz-forage'];
+                                    nRoom.maxForage = +e.data['room-wiz-max-forage'];
+                                    nRoom.secretExit = e.data['room-wiz-secret-exit'];
+                                    nRoom.dirtType = e.data['room-wiz-dirt'];
+                                    nRoom.temperature = +e.data['room-wiz-temperature'];
+                                    nRoom.exitsDetails = {};
+                                    e.data['room-wiz-exits'].forEach(x => {
+                                        nRoom.exitsDetails[x.exit] = x;
+                                    });
+                                    nRoom.items = e.data['room-wiz-items'];
+                                    let idx = e.data['room-wiz-smells'].map(s => s.smell).indexOf('default');
+                                    if (idx !== -1) {
+                                        nRoom.smell = e.data['room-wiz-smells'][idx].description;
+                                        e.data['room-wiz-smells'].splice(idx);
+                                    }
+                                    nRoom.smells = e.data['room-wiz-smells'];
+                                    idx = e.data['room-wiz-sounds'].map(s => s.sound).indexOf('default');
+                                    if (idx !== -1) {
+                                        nRoom.sound = e.data['room-wiz-sounds'][idx].description;
+                                        e.data['room-wiz-smells'].splice(idx);
+                                    }
+                                    nRoom.sounds = e.data['room-wiz-sounds'];
+                                    nRoom.searches = e.data['room-wiz-searches'];
+                                    if (!nRoom.equals(ed.data.room))
+                                        ed.value = nRoom;
+                                    ed.focus();
+                                },
+                                closed: e => {
+                                    ed.focus();
+                                }
+                            });
+                        }
+                    }
+                },
+                sort: 2
+            }
+        ];
+        this.$propertiesEditor.roomGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
+            this.pushUndo(undoAction.edit, undoType.properties, { property: 'baserooms', old: oldValue, new: newValue });
+            if (oldValue.name !== newValue.name)
+                delete this.$area.baseRooms[oldValue.name];
+            this.$area.baseRooms[newValue.name] = newValue;
+            this.changed = true;
+        });
+        this.$propertiesEditor.roomGrid.on('add', e => {
+            this.$new.baseRooms++;
+            this.$area.baseRooms['base' + this.$new.baseRooms] = new Room(0, 0, 0, null, 'STD_ROOM');
+            e.data = {
+                name: 'base' + this.$new.baseRooms,
+                objects: this.$area.baseRooms['base' + this.$new.baseRooms].objects,
+                monsters: this.$area.baseRooms['base' + this.$new.baseRooms].monsters,
+                room: this.$area.baseRooms['base' + this.$new.baseRooms]
+            };
+            this.pushUndo(undoAction.add, undoType.properties, { property: 'baserooms', name: 'base' + this.$new.baseRooms, value: e.data });
+            this.changed = true;
+        });
+        this.$propertiesEditor.roomGrid.on('cut', (e) => {
+            this.pushUndo(undoAction.delete, undoType.properties, {
+                property: 'baserooms', values: e.data.map(r => {
+                    delete this.$area.baseRooms[r.data.name];
+                    return { name: r.name, value: r.room };
+                })
+            });
+            this.emit('supports-changed');
+            this.changed = true;
+        });
+        this.$propertiesEditor.roomGrid.on('copy', () => {
+            this.emit('supports-changed');
+        });
+        this.$propertiesEditor.roomGrid.on('paste', (e) => {
+            this.startUndoGroup();
+            e.data.forEach(d => {
+                if (this.$area.baseRooms[d.data.name]) {
+                    this.$new.baseRooms++;
+                    d.data.name += this.$new.baseRooms;
+                }
+                this.$area.baseRooms[d.data.name] = d.data;
+                this.pushUndo(undoAction.add, undoType.properties, { property: 'baseRooms', name: d.data.name, value: d.data });
+            });
+            this.stopUndoGroup();
+            this.changed = true;
+        });
+        this.$propertiesEditor.roomGrid.on('delete', (e) => {
+            if (dialog.showMessageBox(
+                remote.getCurrentWindow(),
+                {
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete selected base room' + (this.$propertiesEditor.roomGrid.selectedCount > 1 ? 's' : '') + '?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                })
+                === 1)
+                e.preventDefault = true;
+            else {
+                this.pushUndo(undoAction.delete, undoType.properties, {
+                    property: 'baserooms', values: e.data.map(r => {
+                        delete this.$area.baseRooms[r.data.name];
+                        return { name: r.name, value: r.room };
+                    })
+                });
+                this.changed = true;
+            }
+        });
+        this.$propertiesEditor.roomGrid.on('selection-changed', () => {
+            if (this.$view !== View.properties) return;
+            const group = this.$propertiesEditor.roomsTab.firstChild;
+            if (this.$propertiesEditor.roomGrid.selectedCount) {
+                group.children[1].removeAttribute('disabled');
+                group.children[2].removeAttribute('disabled');
+                if (this.$propertiesEditor.roomGrid.selectedCount > 1)
+                    (<HTMLElement>group.children[2]).title = 'Delete base rooms';
+                else
+                    (<HTMLElement>group.children[2]).title = 'Delete base room';
+            }
+            else {
+                group.children[1].setAttribute('disabled', 'true');
+                group.children[2].setAttribute('disabled', 'true');
+                (<HTMLElement>group.children[2]).title = 'Delete base room(s)';
+            }
+            this.emit('selection-changed');
+        });
+        this.$propertiesEditor.roomsTab.appendChild(this.createButtonGroup(this.$propertiesEditor.roomGrid, 'base room'));
+        this.$propertiesEditor.roomsTab.appendChild(el);
         this.parent.appendChild(this.$propertiesEditor.container);
         //#endregion
+    }
+
+    private createButtonGroup(grid, type) {
+        let bGroup;
+        let button;
+        bGroup = document.createElement('div');
+        bGroup.classList.add('btn-group');
+        button = document.createElement('button');
+        button.type = 'button';
+        button.classList.add('btn', 'btn-default', 'btn-xs');
+        button.addEventListener('click', () => {
+            grid.addNewRow();
+        });
+        button.title = 'Add ' + type;
+        button.innerHTML = '<i class="fa fa-plus"></i> Add';
+        bGroup.appendChild(button);
+        button = document.createElement('button');
+        button.type = 'button';
+        button.disabled = grid.selectedCount === 0;
+        button.classList.add('btn', 'btn-default', 'btn-xs');
+        button.addEventListener('click', () => {
+            grid.beginEdit(grid.selected[0].row);
+        });
+        button.title = 'Edit ' + type;
+        button.innerHTML = '<i class="fa fa-edit"></i> Edit';
+        bGroup.appendChild(button);
+        button = document.createElement('button');
+        button.disabled = grid.selectedCount === 0;
+        button.type = 'button';
+        button.title = 'Delete ' + type + '(s)';
+        button.classList.add('btn', 'btn-danger', 'btn-xs');
+        button.addEventListener('click', () => {
+            grid.delete();
+        });
+        button.innerHTML = '<i class="fa fa-trash"></i> Delete';
+        bGroup.appendChild(button);
+        return bGroup;
     }
 
     private formatExits(prop, value) {
@@ -4089,6 +4762,37 @@ export class AreaDesigner extends EditorBase {
         switch (undo.action) {
             case undoAction.add:
                 switch (undo.type) {
+                    case undoType.properties:
+                        switch (undo.data.property) {
+                            case 'baserooms':
+                                //this.pushUndo(undoAction.add, undoType.properties, { property: 'baserooms', name: 'base' + this.$new.baseRooms, value: e.data });
+                                delete this.$area.baseRooms[undo.data.name];
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.roomGrid.rows = Object.keys(this.$area.baseRooms).map(r => {
+                                    return {
+                                        name: r,
+                                        monsters: this.$area.baseRooms[r].monsters,
+                                        objects: this.$area.baseRooms[r].objects,
+                                        room: this.$area.baseRooms[r]
+                                    };
+                                });
+                                break;
+                            case 'basemonsters':
+                                //this.pushUndo(undoAction.add, undoType.properties, { property: 'baserooms', name: 'base' + this.$new.baseRooms, value: e.data });
+                                delete this.$area.baseMonsters[undo.data.name];
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.monsterGrid.rows = Object.keys(this.$area.baseMonsters).map(r => {
+                                    return {
+                                        name: r,
+                                        maxAmount: this.$area.baseMonsters[r].maxAmount,
+                                        unique: this.$area.baseMonsters[r].unique,
+                                        objects: this.$area.baseMonsters[r].objects,
+                                        monster: this.$area.baseMonsters[r]
+                                    };
+                                });
+                                break;
+                        }
+                        break;
                     case undoType.room:
                         room = this.getRoom(undo.data.x, undo.data.y, undo.data.z);
                         this.setRoom(undo.data);
@@ -4102,6 +4806,47 @@ export class AreaDesigner extends EditorBase {
                 break;
             case undoAction.delete:
                 switch (undo.type) {
+                    case undoType.properties:
+                        switch (undo.data.property) {
+                            case 'baserooms':
+                                undo.data.values.forEach(r => {
+                                    this.$area.baseRooms[r.name] = r.value;
+                                });
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.roomGrid.rows = Object.keys(this.$area.baseRooms).map(r => {
+                                    return {
+                                        name: r,
+                                        monsters: this.$area.baseRooms[r].monsters,
+                                        objects: this.$area.baseRooms[r].objects,
+                                        room: this.$area.baseRooms[r]
+                                    };
+                                });
+                                /*
+                                this.pushUndo(undoAction.delete, undoType.properties, {
+                                    property: 'baserooms', values: e.data.map(r => {
+                                        delete this.$area.baseRooms[r.data.name];
+                                        return { name: r.name, value: r.room };
+                                    })
+                                });
+                                */
+                                break;
+                            case 'basemonsters':
+                                undo.data.values.forEach(r => {
+                                    this.$area.baseMonsters[r.name] = r.value;
+                                });
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.monsterGrid.rows = Object.keys(this.$area.baseMonsters).map(r => {
+                                    return {
+                                        name: r,
+                                        maxAmount: this.$area.baseMonsters[r].maxAmount,
+                                        unique: this.$area.baseMonsters[r].unique,
+                                        objects: this.$area.baseMonsters[r].objects,
+                                        monster: this.$area.baseMonsters[r]
+                                    };
+                                });
+                                break;
+                        }
+                        break;
                     case undoType.room:
                         l = undo.data.length;
                         const values = [];
@@ -4136,6 +4881,46 @@ export class AreaDesigner extends EditorBase {
                 break;
             case undoAction.edit:
                 switch (undo.type) {
+                    case undoType.properties:
+                        //this.pushUndo(undoAction.edit, undoType.properties, { property: 'baserooms', old: oldValue, new: newValue });
+                        switch (undo.data.property) {
+                            case 'baserooms':
+                                if (undo.data.old.name !== undo.data.new.name)
+                                    delete this.$area.baseRooms[undo.data.new.name];
+                                this.$area.baseRooms[undo.data.old.name] = undo.data.old;
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.roomGrid.rows = Object.keys(this.$area.baseRooms).map(r => {
+                                    return {
+                                        name: r,
+                                        monsters: this.$area.baseRooms[r].monsters,
+                                        objects: this.$area.baseRooms[r].objects,
+                                        room: this.$area.baseRooms[r]
+                                    };
+                                });
+                                break;
+                            case 'basemonsters':
+                                if (undo.data.old.name !== undo.data.new.name)
+                                    delete this.$area.baseMonsters[undo.data.new.name];
+                                this.$area.baseMonsters[undo.data.old.name] = undo.data.old;
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.monsterGrid.rows = Object.keys(this.$area.baseMonsters).map(r => {
+                                    return {
+                                        name: r,
+                                        maxAmount: this.$area.baseMonsters[r].maxAmount,
+                                        unique: this.$area.baseMonsters[r].unique,
+                                        objects: this.$area.baseMonsters[r].objects,
+                                        monster: this.$area.baseMonsters[r]
+                                    };
+                                });
+                                break;
+                            case 'defaultRoom':
+                            case 'defaultMonster':
+                                this.$area[undo.data.property] = undo.data.old;
+                                this.$propertiesEditor[undo.data.property].val(undo.data.old).selectpicker('render');
+                                this.pushRedo(undo);
+                                break;
+                        }
+                        break;
                     case undoType.resize:
                         this.resizeMap(-undo.data.width, -undo.data.height, -undo.data.depth, undo.data.shift, true);
                         this.pushRedo(undo);
@@ -4192,6 +4977,37 @@ export class AreaDesigner extends EditorBase {
         switch (undo.action) {
             case undoAction.add:
                 switch (undo.type) {
+                    case undoType.properties:
+                        switch (undo.data.property) {
+                            case 'baserooms':
+                                //this.pushUndo(undoAction.add, undoType.properties, { property: 'baserooms', name: 'base' + this.$new.baseRooms, value: e.data });
+                                this.$area.baseRooms[undo.data.name] = undo.data.value;
+                                this.pushUndoObject(undo);
+                                this.$propertiesEditor.roomGrid.rows = Object.keys(this.$area.baseRooms).map(r => {
+                                    return {
+                                        name: r,
+                                        monsters: this.$area.baseRooms[r].monsters,
+                                        objects: this.$area.baseRooms[r].objects,
+                                        room: this.$area.baseRooms[r]
+                                    };
+                                });
+                                break;
+                            case 'basemonsters':
+                                //this.pushUndo(undoAction.add, undoType.properties, { property: 'baserooms', name: 'base' + this.$new.baseRooms, value: e.data });
+                                this.$area.baseMonsters[undo.data.name] = undo.data.value;
+                                this.pushUndoObject(undo);
+                                this.$propertiesEditor.monsterGrid.rows = Object.keys(this.$area.baseMonsters).map(r => {
+                                    return {
+                                        name: r,
+                                        maxAmount: this.$area.baseMonsters[r].maxAmount,
+                                        unique: this.$area.baseMonsters[r].unique,
+                                        objects: this.$area.baseMonsters[r].objects,
+                                        monster: this.$area.baseMonsters[r]
+                                    };
+                                });
+                                break;
+                        }
+                        break;
                     case undoType.room:
                         room = this.getRoom(undo.data.x, undo.data.y, undo.data.z);
                         this.setRoom(undo.data);
@@ -4205,6 +5021,55 @@ export class AreaDesigner extends EditorBase {
                 break;
             case undoAction.delete:
                 switch (undo.type) {
+                    case undoType.properties:
+                        switch (undo.data.property) {
+                            case 'baserooms':
+                                undo.data.values.forEach(r => {
+                                    delete this.$area.baseRooms[r.name];
+                                });
+                                this.pushUndoObject(undo);
+                                this.$propertiesEditor.roomGrid.rows = Object.keys(this.$area.baseRooms).map(r => {
+                                    return {
+                                        name: r,
+                                        monsters: this.$area.baseRooms[r].monsters,
+                                        objects: this.$area.baseRooms[r].objects,
+                                        room: this.$area.baseRooms[r]
+                                    };
+                                });
+                                /*
+                                this.pushUndo(undoAction.delete, undoType.properties, {
+                                    property: 'baserooms', values: e.data.map(r => {
+                                        delete this.$area.baseRooms[r.data.name];
+                                        return { name: r.name, value: r.room };
+                                    })
+                                });
+                                */
+                                break;
+                            case 'basemonsters':
+                                undo.data.values.forEach(r => {
+                                    delete this.$area.baseMonsters[r.name];
+                                });
+                                this.pushUndoObject(undo);
+                                this.$propertiesEditor.monsterGrid.rows = Object.keys(this.$area.baseMonsters).map(r => {
+                                    return {
+                                        name: r,
+                                        maxAmount: this.$area.baseMonsters[r].maxAmount,
+                                        unique: this.$area.baseMonsters[r].unique,
+                                        objects: this.$area.baseMonsters[r].objects,
+                                        monster: this.$area.baseMonsters[r]
+                                    };
+                                });
+                                /*
+                                this.pushUndo(undoAction.delete, undoType.properties, {
+                                    property: 'baserooms', values: e.data.map(r => {
+                                        delete this.$area.baseRooms[r.data.name];
+                                        return { name: r.name, value: r.room };
+                                    })
+                                });
+                                */
+                                break;
+                        }
+                        break;
                     case undoType.room:
                         l = undo.data.length;
                         const values = [];
@@ -4239,6 +5104,46 @@ export class AreaDesigner extends EditorBase {
                 break;
             case undoAction.edit:
                 switch (undo.type) {
+                    case undoType.properties:
+                        //this.pushUndo(undoAction.edit, undoType.properties, { property: 'baserooms', old: oldValue, new: newValue });
+                        switch (undo.data.property) {
+                            case 'baserooms':
+                                if (undo.data.old.name !== undo.data.new.name)
+                                    delete this.$area.baseRooms[undo.data.old.name];
+                                this.$area.baseRooms[undo.data.new.name] = undo.data.new;
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.roomGrid.rows = Object.keys(this.$area.baseRooms).map(r => {
+                                    return {
+                                        name: r,
+                                        monsters: this.$area.baseRooms[r].monsters,
+                                        objects: this.$area.baseRooms[r].objects,
+                                        room: this.$area.baseRooms[r]
+                                    };
+                                });
+                                break;
+                            case 'basemonsters':
+                                if (undo.data.old.name !== undo.data.new.name)
+                                    delete this.$area.baseMonsters[undo.data.old.name];
+                                this.$area.baseMonsters[undo.data.new.name] = undo.data.new;
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.monsterGrid.rows = Object.keys(this.$area.baseMonsters).map(r => {
+                                    return {
+                                        name: r,
+                                        maxAmount: this.$area.baseMonsters[r].maxAmount,
+                                        unique: this.$area.baseMonsters[r].unique,
+                                        objects: this.$area.baseMonsters[r].objects,
+                                        monster: this.$area.baseMonsters[r]
+                                    };
+                                });
+                                break;
+                            case 'defaultRoom':
+                            case 'defaultMonster':
+                                this.$area[undo.data.property] = undo.data.new;
+                                this.$propertiesEditor[undo.data.property].val(undo.data.new).selectpicker('render');
+                                this.pushRedo(undo);
+                                break;
+                        }
+                        break;
                     case undoType.resize:
                         this.resizeMap(undo.data.width, undo.data.height, undo.data.depth, undo.data.shift, true);
                         this.pushUndoObject(undo);
@@ -4574,6 +5479,19 @@ export class AreaDesigner extends EditorBase {
             }
         }
 
+        let cols = this.$propertiesEditor.roomGrid.columns;
+        cols[1].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[1].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[1].editor.options.enterMoveNew = this.$enterMoveNew;
+        cols[2].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[2].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[2].editor.options.enterMoveNew = this.$enterMoveNew;
+        this.$propertiesEditor.roomGrid.columns = cols;
+
+        //TODO update once monster columns set
+        cols = this.$propertiesEditor.monsterGrid.columns;
+        this.$propertiesEditor.monsterGrid.columns = cols;
+
         this.AllowResize = value.allowResize;
         this.AllowExitWalk = value.allowExitWalk;
         this.$roomPreview.container.style.fontSize = value.previewFontSize + 'px';
@@ -4726,7 +5644,7 @@ export class AreaDesigner extends EditorBase {
                 */
                 break;
             case View.objects:
-                this.$label.textContent = 'Items';
+                this.$label.textContent = 'Objects';
                 /*
                     bGroup = document.createElement('div');
                     bGroup.classList.add('btn-group');
@@ -6267,7 +7185,24 @@ export class AreaDesigner extends EditorBase {
         }
         else
             this.doUpdate(UpdateType.drawMap);
-        this.loadRoomTypes();
+        this.loadTypes();
+        this.$propertiesEditor.roomGrid.rows = Object.keys(this.$area.baseRooms).map(r => {
+            return {
+                name: r,
+                monsters: this.$area.baseRooms[r].monsters,
+                objects: this.$area.baseRooms[r].objects,
+                room: this.$area.baseRooms[r]
+            };
+        });
+        this.$propertiesEditor.monsterGrid.rows = Object.keys(this.$area.baseMonsters).map(r => {
+            return {
+                name: r,
+                maxAmount: this.$area.baseMonsters[r].maxAmount,
+                unique: this.$area.baseMonsters[r].unique,
+                objects: this.$area.baseMonsters[r].objects,
+                monster: this.$area.baseMonsters[r]
+            };
+        });
         this.emit('rebuild-buttons');
         Timer.end('BuildMap time');
     }
@@ -6606,7 +7541,7 @@ export class AreaDesigner extends EditorBase {
         return nShift;
     }
 
-    private loadRoomTypes() {
+    private loadTypes() {
         this.$roomEditor.setPropertyOptions({
             property: 'type',
             formatter: this.formatType,
@@ -6614,7 +7549,7 @@ export class AreaDesigner extends EditorBase {
             editor: {
                 type: EditorType.select,
                 options: {
-                    data: Object.keys(this.$area.baseRooms || { value: 'base', display: 'Base', group: 'Area' }).map(r => {
+                    data: Object.keys(this.$area.baseRooms || { base: null }).map(r => {
                         return {
                             value: r,
                             display: capitalize(r),
@@ -6625,7 +7560,20 @@ export class AreaDesigner extends EditorBase {
             },
             sort: 0
         });
+        if (this.$propertiesEditor.defaultRoom) {
+            this.$propertiesEditor.defaultRoom.html('<optgroup label="Area">' + Object.keys(this.$area.baseRooms || { base: null })
+                .map(r => `<option value="${r}">${capitalize(r)}</option>`).join('') + '</optgroup><optgroup label="Standard">' +
+                RoomTypes.map(r => `<option value="${r.value}">${r.display}</option>`).join('') + '</optgroup>');
+            this.$propertiesEditor.defaultRoom.val(this.$area.defaultRoom).selectpicker('render');
+        }
+        if (this.$propertiesEditor.defaultMonster) {
+            this.$propertiesEditor.defaultMonster.html('<optgroup label="Area">' + Object.keys(this.$area.baseMonsters || { base: null })
+                .map(r => `<option value="${r}">${capitalize(r)}</option>`).join('') + '</optgroup><optgroup label="Standard">' +
+                MonsterTypes.map(r => `<option value="${r.value}">${r.display}</option>`).join('') + '</optgroup>');
+            this.$propertiesEditor.defaultMonster.val(this.$area.defaultMonster).selectpicker('render');
+        }
     }
+
 }
 
 function consolidate(amt, str) {
