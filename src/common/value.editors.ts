@@ -69,7 +69,9 @@ export abstract class ValueEditor extends EventEmitter {
 
     public abstract create(): void;
     public abstract focus(): void;
-    public abstract destroy(): void;
+    public destroy() {
+        $(this.parent).tooltip('destroy');
+    }
     public abstract scroll(): void;
     public abstract openAdvanced(): void;
 
@@ -93,6 +95,28 @@ export abstract class ValueEditor extends EventEmitter {
         else if (this.options.container instanceof HTMLElement)
             return this.$container = this.options.container || d;
         return this.$container = d;
+    }
+
+    public valid() {
+        if (this.options && this.options.validate) {
+            this.$parent.title = '';
+            const r = this.options.validate(this.data[this.property], this.value, this.data);
+            if (typeof r === 'string') {
+                this.$parent.title = r;
+                $(this.$parent).tooltip({ container: 'body', delay: {  show: 100, hide: 250  } });
+                $(this.$parent).tooltip('show');
+                this.focus();
+                return false;
+            }
+            else if (!r) {
+                this.$parent.title = 'Invalid value';
+                $(this.$parent).tooltip({ container: 'body', delay: {  show: 100, hide: 250  } });
+                $(this.$parent).tooltip('show');
+                this.focus();
+                return false;
+            }
+        }
+        return true;
     }
 }
 
@@ -357,6 +381,7 @@ export class TextValueEditor extends ValueEditor {
         resetCursor(this.$editor);
     }
     public destroy() {
+        super.destroy();
         if (this.$dropdown && this.$dropdown.parentNode && this.$dropdown.parentNode.contains(this.$dropdown))
             this.$dropdown.remove();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
@@ -460,6 +485,7 @@ export class BooleanValueEditor extends ValueEditor {
         this.$el.focus();
     }
     public destroy() {
+        super.destroy();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
@@ -529,6 +555,7 @@ export class NumberValueEditor extends ValueEditor {
         this.$el.focus();
     }
     public destroy() {
+        super.destroy();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
@@ -745,6 +772,7 @@ export class FlagValueEditor extends ValueEditor {
         resetCursor(this.$editor);
     }
     public destroy() {
+        super.destroy();
         if (this.$dropdown && this.$dropdown.parentNode && this.$dropdown.parentNode.contains(this.$dropdown))
             this.$dropdown.remove();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
@@ -971,6 +999,7 @@ export class DropDownEditValueEditor extends ValueEditor {
         resetCursor(this.$editor);
     }
     public destroy() {
+        super.destroy();
         if (this.$dropdown && this.$dropdown.parentNode && this.$dropdown.parentNode.contains(this.$dropdown))
             this.$dropdown.remove();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
@@ -1335,6 +1364,7 @@ export class CollectionValueEditor extends ValueEditor {
         this.$editor.focus();
     }
     public destroy() {
+        super.destroy();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
@@ -1440,6 +1470,7 @@ export class SelectValueEditor extends ValueEditor {
         this.$el.focus();
     }
     public destroy() {
+        super.destroy();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
@@ -1511,6 +1542,7 @@ export class ButtonValueEditor extends ValueEditor {
         this.$el.focus();
     }
     public destroy() {
+        super.destroy();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }

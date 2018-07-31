@@ -566,8 +566,8 @@ export class DataGrid extends EventEmitter {
         this.$body.appendChild(this.$dataBody);
         this.$body.appendChild(document.createElement('tfoot'));
         this.$body.children[1].addEventListener('click', (e) => {
-            this.clearSelection();
-            this.clearEditor(e);
+            if (this.clearEditor(e))
+                this.clearSelection();
         });
         el.appendChild(this.$body);
         this.$parent.appendChild(el);
@@ -1430,6 +1430,8 @@ export class DataGrid extends EventEmitter {
             if (e.defaultPrevented || e.cancelBubble)
                 return;
             let eRow = <HTMLElement>e.currentTarget;
+            if (this.$editor && this.$editor.el !== eRow && !this.clearEditor())
+                return;
             //var sIdx = +eRow.dataset.row;
             let sIdx = [...eRow.parentElement.children].indexOf(eRow);
             //var rowIdx = +(<HTMLElement>e.currentTarget);
@@ -1514,8 +1516,6 @@ export class DataGrid extends EventEmitter {
                 this.$shiftStart = this.$focused;
             }
             this.emit('selection-changed');
-            if (this.$editor && this.$editor.el !== eRow)
-                this.clearEditor();
         });
         row.addEventListener('dblclick', (e) => {
             if (e.defaultPrevented || e.cancelBubble)
@@ -2153,19 +2153,23 @@ export class DataGrid extends EventEmitter {
 
     public clearEditor(evt?, next?, canceled?) {
         if (!this.$editor) return;
-        if (evt && evt.relatedTarget && (this.$editor.el.contains(evt.relatedTarget) || this.$editor.el.contains(evt.relatedTarget.editor)))
-            return;
         let e = 0;
+        if (evt && evt.relatedTarget && (this.$editor.el.contains(evt.relatedTarget) || this.$editor.el.contains(evt.relatedTarget.editor)))
+            return false;
         const el = this.$editor.editors.length;
-        if (next && this.enterMoveNext) {
-            /*
-            for (; e < el; e++) {
-                if (this.$editor.editors[e].editor === next && e < el - 1) {
-                    this.$editor.editors[e + 1].editor.focus();
-                    return;
-                }
+        if (!canceled) {
+            for (e = 0; e < el; e++) {
+                if (!this.$editor.editors[e].editor.valid())
+                    return false;
             }
-            */
+        }
+        const eEvt = { preventDefault: false, data: {} };
+        this.$editor.editors.forEach(v => { eEvt.data[v.property] = { old: v.data[v.property], new: v.editor.value }; });
+        this.emit('end-edit', eEvt);
+        if (eEvt.preventDefault)
+            return false;
+
+        if (next && this.enterMoveNext) {
             next = this.$editor.el.nextSibling;
             if (!next && this.enterMoveNew)
                 next = true;
@@ -2174,7 +2178,6 @@ export class DataGrid extends EventEmitter {
         }
         else
             next = null;
-        e = 0;
         this.$prevEditor = {
             el: el,
             editors: []
@@ -2194,7 +2197,7 @@ export class DataGrid extends EventEmitter {
         let data;
         let col;
         let editor;
-        for (; e < el; e++) {
+        for (e = 0; e < el; e++) {
             editor = this.$editor.editors[e];
             let value;
             let oldValue;
@@ -2281,6 +2284,7 @@ export class DataGrid extends EventEmitter {
             setTimeout(() => this.beginEditRow(next));
         else
             this.focus();
+        return true;
     }
 
     public createEditor(el: HTMLElement, fCol: any = 0) {
@@ -2295,7 +2299,8 @@ export class DataGrid extends EventEmitter {
                     this.$editor.editors[fCol].editor.focus();
                 return;
             }
-            this.clearEditor();
+            if (!this.clearEditor())
+                return;
         }
         let c;
         const cl = el.children.length;

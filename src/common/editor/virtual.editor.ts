@@ -9229,6 +9229,7 @@ export class FileOpenValueEditor extends ValueEditor {
         this.$editor.focus();
     }
     public destroy() {
+        super.destroy();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
@@ -9325,6 +9326,7 @@ export class FileBrowseValueEditor extends ValueEditor {
         this.$editor.focus();
     }
     public destroy() {
+        super.destroy();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
@@ -9675,6 +9677,7 @@ export class ExternalExitValueEditor extends ValueEditor {
         this.$editor.focus();
     }
     public destroy() {
+        super.destroy();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
@@ -10006,6 +10009,7 @@ export class ItemsValueEditor extends ValueEditor {
         this.$editor.focus();
     }
     public destroy() {
+        super.destroy();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
     }
