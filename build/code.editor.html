@@ -685,31 +685,35 @@
     <div style="display: none" id="wizard-pages">
         <div id="mon-wizard-welcome">
             <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 56px;">
-            <div style="padding-top:76px">Welcome to the new monster wizard, this will take you through the steps to create a monster quickly and easily. You may finish at any time to generate a monster based on your current selections.</div>
+            <div style="padding-top:76px" id="mon-wizard-welcome-message">Welcome to the new monster wizard, this will take you through the steps to create a monster quickly and easily. You may finish at any time to generate a monster based on your current selections.</div>
         </div>
         <div id="mon-wizard-general">
             <div class="col-sm-6 form-group">
                 <label class="control-label">Type
                     <select id="mon-wiz-type" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
-                        <option value='STD_MONSTER'>Standard</option>
-                        <option value='BASEMONSTER'>Base</option>
-                        <option value='MONTYPE_ARMOR_REPAIR'>Armor Repair</option>
-                        <option value='MONTYPE_BARKEEP'>Barkeep</option>
-                        <option value='MONTYPE_CLERIC_TRAINER'>Cleric Trainer</option>
-                        <option value='MONTYPE_SUBCLASSER'>Command Trainer</option>
-                        <option value='MONTYPE_HEALER'>Healer</option>
-                        <option value='MONTYPE_JEWELER'>Jeweler</option>
-                        <option value='MONTYPE_LOCKPICK_REPAIR'>Lock pick Repair</option>
-                        <option value='MONTYPE_MAGE_TRAINER'>Mage Trainer</option>
-                        <option value='MONTYPE_MON_EDIBLE'>Edible Monster</option>
-                        <option value='MONTYPE_SAGE_NPC'>Sage</option>
-                        <option value='MONTYPE_SKILL_TRAINER'>Skill Trainer</option>
-                        <option value='MONTYPE_SMITH'>Smith</option>
-                        <option value='MONTYPE_SUMMON_MOB'>Summon Monster</option>
-                        <option value='MONTYPE_TATTOOIST'>Tattooist</option>
-                        <option value='MONTYPE_CMD_TRAIN_NPC'>Trainer</option>
-                        <option value='MONTYPE_VENDOR'>Vendor</option>
-                        <option value='MONTYPE_WEAPON_REPAIR'>Weapon Repair</option>
+                        <optgroup label="Area" id="mon-wiz-area-types">
+                            <option value='BASEMONSTER'>Base</option>
+                        </optgroup>
+                        <optgroup label="Standard">
+                            <option value='STD_MONSTER'>Standard</option>
+                            <option value='MONTYPE_ARMOR_REPAIR'>Armor Repair</option>
+                            <option value='MONTYPE_BARKEEP'>Barkeep</option>
+                            <option value='MONTYPE_CLERIC_TRAINER'>Cleric Trainer</option>
+                            <option value='MONTYPE_SUBCLASSER'>Command Trainer</option>
+                            <option value='MONTYPE_HEALER'>Healer</option>
+                            <option value='MONTYPE_JEWELER'>Jeweler</option>
+                            <option value='MONTYPE_LOCKPICK_REPAIR'>Lock pick Repair</option>
+                            <option value='MONTYPE_MAGE_TRAINER'>Mage Trainer</option>
+                            <option value='MONTYPE_MON_EDIBLE'>Edible Monster</option>
+                            <option value='MONTYPE_SAGE_NPC'>Sage</option>
+                            <option value='MONTYPE_SKILL_TRAINER'>Skill Trainer</option>
+                            <option value='MONTYPE_SMITH'>Smith</option>
+                            <option value='MONTYPE_SUMMON_MOB'>Summon Monster</option>
+                            <option value='MONTYPE_TATTOOIST'>Tattooist</option>
+                            <option value='MONTYPE_CMD_TRAIN_NPC'>Trainer</option>
+                            <option value='MONTYPE_VENDOR'>Vendor</option>
+                            <option value='MONTYPE_WEAPON_REPAIR'>Weapon Repair</option>
+                        </optgroup>
                     </select>
                 </label>
             </div>
@@ -1293,7 +1297,7 @@
         </div>
         <div id="room-wizard-welcome">
             <img src="../assets/icons/png/wizroomlogo.png" alt="Welcome to the room wizard" style="float: left;margin-top: 56px;height: 128px;width:128px;">
-            <div style="padding-top:76px">Welcome to the new room wizard, this will take you through the steps to create a room quickly and easily. You may finish at any time to generate a room based on your current selections.</div>
+            <div style="padding-top:76px" id="room-wizard-welcome-message">Welcome to the new room wizard, this will take you through the steps to create a room quickly and easily. You may finish at any time to generate a room based on your current selections.</div>
         </div>
         <div id="room-wizard-finish">
             <img src="../assets/icons/png/wizroomlogo.png" alt="Room wizard summary" style="float: left;margin-top: 56px;height: 128px;width:128px;"> To finish your room simply click finished
@@ -1303,26 +1307,30 @@
             <div class="col-sm-6 form-group">
                 <label class="control-label">Type
                     <select id="room-wiz-type" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
-                        <option value="STD_ROOM">Standard</option>
-                        <option value="BASEROOM">Base</option>
-                        <option value="ROOMTYPE_ADVANCE_ROOM">Advance room</option>
-                        <option value="ROOMTYPE_BANK">Bank</option>
-                        <option value="ROOMTYPE_CLASS_JOIN">Class join</option>
-                        <option value="ROOMTYPE_CLIMB">Climb</option>
-                        <option value="ROOMTYPE_DOCK">Dock</option>
-                        <option value="ROOMTYPE_GUILD_HALL">Guild hall</option>
-                        <option value="ROOMTYPE_INN">Inn</option>
-                        <option value="ROOMTYPE_LIBRARY">Library</option>
-                        <option value="ROOMTYPE_LOCKER">Locker</option>
-                        <option value="ROOMTYPE_MODROOM">Mod room</option>
-                        <option value="ROOMTYPE_PIER">Pier</option>
-                        <option value="ROOMTYPE_SAGE">Sage</option>
-                        <option value="ROOMTYPE_SINK_ROOM">Sink</option>
-                        <option value="ROOMTYPE_SKY_ROOM">Sky</option>
-                        <option value="ROOMTYPE_STABLE">Stable</option>
-                        <option value="ROOMTYPE_TRAIN_ROOM">Train</option>
-                        <option value="ROOMTYPE_VAULT">Vault</option>
-                        <option value="ROOMTYPE_VENDOR_STORAGE">Vendor storage</option>
+                        <optgroup label="Area" id="room-wiz-area-types">
+                            <option value="BASEROOM">Base</option>
+                        </optgroup>
+                        <optgroup label="Standard">
+                            <option value="STD_ROOM" selected="selected">Standard</option>
+                            <option value="ROOMTYPE_ADVANCE_ROOM">Advance room</option>
+                            <option value="ROOMTYPE_BANK">Bank</option>
+                            <option value="ROOMTYPE_CLASS_JOIN">Class join</option>
+                            <option value="ROOMTYPE_CLIMB">Climb</option>
+                            <option value="ROOMTYPE_DOCK">Dock</option>
+                            <option value="ROOMTYPE_GUILD_HALL">Guild hall</option>
+                            <option value="ROOMTYPE_INN">Inn</option>
+                            <option value="ROOMTYPE_LIBRARY">Library</option>
+                            <option value="ROOMTYPE_LOCKER">Locker</option>
+                            <option value="ROOMTYPE_MODROOM">Mod room</option>
+                            <option value="ROOMTYPE_PIER">Pier</option>
+                            <option value="ROOMTYPE_SAGE">Sage</option>
+                            <option value="ROOMTYPE_SINK_ROOM">Sink</option>
+                            <option value="ROOMTYPE_SKY_ROOM">Sky</option>
+                            <option value="ROOMTYPE_STABLE">Stable</option>
+                            <option value="ROOMTYPE_TRAIN_ROOM">Train</option>
+                            <option value="ROOMTYPE_VAULT">Vault</option>
+                            <option value="ROOMTYPE_VENDOR_STORAGE">Vendor storage</option>
+                        </optgroup>
                     </select>
                 </label>
             </div>
@@ -1531,6 +1539,12 @@
                 <label class="control-label">Secret exit
                     <input type="text" class="input-sm form-control" id="room-wiz-secret-exit" />
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;">String, function, or boolean to indicate there is a secret exit</span>
+                </label>
+            </div>
+            <div class="col-sm-4 form-group">
+                <label class="control-label">
+                    Temperature
+                    <input type="number" id="room-wiz-temperature" class="input-sm form-control" min="-1000" max="1000" />
                 </label>
             </div>
         </div>
@@ -3403,6 +3417,7 @@
             dialog.showModal();
     }
 
+    // eslint-disable-next-line no-unused-vars
     function resizeMap() {
         if (manager.active.editor && manager.active.editor.resizeMap) {
             var w = (+$('#map-resize-width').val()) || 0;
@@ -4743,7 +4758,7 @@
         return f;
     }
 
-    function roomWizard(dData, finish) {
+    function roomWizard(dData, finish, closed, title) {
         if (!$dialogs.room) {
             $dialogs.roomExitPage = new WizardDataGridPage({
                 title: 'Exits',
@@ -4916,12 +4931,25 @@
                 pages: [
                     new WizardPage({
                         title: 'Welcome',
-                        body: document.getElementById('room-wizard-welcome')
+                        body: document.getElementById('room-wizard-welcome'),
+                        reset: e => {
+                            e.page.querySelector('#room-wizard-welcome-message').textContent = e.wizard.defaults['room-wiz-welcome-message'] || 'Welcome to the new room wizard, this will take you through the steps to create a room quickly and easily. You may finish at any time to generate a room based on your current selections.';
+                        }
                     }),
                     new WizardPage({
                         title: 'General properties',
                         body: document.getElementById('room-wizard-general'),
-                        reset: (e) => {
+                        reset: e => {
+                            var aTypes = e.page.querySelector('#room-wiz-area-types');
+                            aTypes.innerHTML = '';
+                            if (e.wizard.defaults['room-wiz-area-types'] && e.wizard.defaults['room-wiz-area-types'].length > 0) {
+                                if (Array.isArray(e.wizard.defaults['room-wiz-area-types']))
+                                    aTypes.innerHTML = e.wizard.defaults['room-wiz-area-types'].map(r => `<option value="${r.value || r.display}">${r.display || r.value}</option>`).join('');
+                                else
+                                    aTypes.innerHTML = e.wizard.defaults['room-wiz-area-types'];
+                            }
+                            else
+                                aTypes.innerHTML = '<option value="BASEROOM">Base</option>';
                             $('#room-wiz-type', e.page).val(e.wizard.defaults['room-wiz-type'] || 'STD_ROOM').selectpicker('render');
                             e.page.querySelector('#room-wiz-terrain').value = e.wizard.defaults['room-wiz-terrain'] || '';
                             e.page.querySelector('#room-wiz-short').value = e.wizard.defaults['room-wiz-short'] || '';
@@ -4952,6 +4980,7 @@
                             e.page.querySelector('#room-wiz-forage').value = e.wizard.defaults['room-wiz-forage'] || '-1';
                             e.page.querySelector('#room-wiz-max-forage').value = e.wizard.defaults['room-wiz-max-forage'] || '0';
                             e.page.querySelector('#room-wiz-secret-exit').value = e.wizard.defaults['room-wiz-secret-exit'] || '';
+                            e.page.querySelector('#room-wiz-temperature').value = e.wizard.defaults['room-wiz-temperature'] || '0';
                         }
                     }),
                     new WizardPage({
@@ -5139,6 +5168,9 @@
                                 sum += '<div><span style="font-weight:bold">Dirt type:</span> ' + data['room-wiz-dirt'] + '</div>';
                             if (data['room-wiz-secret-exit'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Secret exit:</span> ' + data['room-wiz-secret-exit'] + '</div>';
+                            if (data['room-wiz-temperature'] !== 0)
+                                sum += '<div><span style="font-weight:bold">Temperature:</span> ' + data['room-wiz-temperature'] + '</div>';
+
                             if (data['room-wiz-no-attack']) sum += '<div><span style="font-weight:bold">No attack:</span> Yes</div>';
                             if (data['room-wiz-council']) sum += '<div><span style="font-weight:bold">Council:</span> Yes</div>';
                             if (data['room-wiz-melee']) sum += '<div><span style="font-weight:bold">Melee as ability:</span> Yes</div>';
@@ -5167,18 +5199,19 @@
             $dialogs.room.on('open', () => {
                 menubar.enabled = false;
             });
-            $dialogs.room.on('open', () => {
-                menubar.enabled = false;
-            });
             $dialogs.room.on('close', () => {
                 menubar.enabled = true;
+                if ($dialogs.room.closed)
+                    $dialogs.room.closed();
             });
             $dialogs.room.on('cancel', () => {
                 menubar.enabled = true;
+                if ($dialogs.room.closed)
+                    $dialogs.room.closed();
             });
             $dialogs.room.on('finished', (e) => {
                 if ($dialogs.room.finish) {
-                    $dialogs.room.finish(e.data);
+                    $dialogs.room.finish(e);
                     return;
                 }
                 var value = fs.readFileSync(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'room.c')), 'utf8');
@@ -5637,6 +5670,9 @@
                     tmpl['create body'] += tmp.join(',\n       ');
                     tmpl['create body'] += '\n     ]) );\n';
                 }
+                if (data['room-wiz-temperature'] !== 0)
+                    tmpl['create body'] += `   set_temperature(${data['room-wiz-temperature']});\n`;
+
                 if (data['room-wiz-create-body'] && data['room-wiz-create-body'].length > 0)
                     tmpl['create body'] += data['room-wiz-create-body'];
                 //ad docs
@@ -5656,12 +5692,14 @@
                 newFromValue(parseFileTemplate(value, tmpl), this.$dialogs.room.defaults['room-wiz-file'] || f);
             });
         }
+        $dialogs.room.title = title || 'Create new room...';
         $dialogs.room.defaults = dData || {};
         $dialogs.room.finish = finish;
+        $dialogs.room.closed = closed;
         $dialogs.room.show();
     }
 
-    function monsterWizard(dData, finish) {
+    function monsterWizard(dData, finish, closed, title) {
         if (!$dialogs.monster) {
             var colors = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'color.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
             var races = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'monster-race.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
@@ -5680,12 +5718,25 @@
                 pages: [
                     new WizardPage({
                         title: 'Welcome',
-                        body: document.getElementById('mon-wizard-welcome')
+                        body: document.getElementById('mon-wizard-welcome'),
+                        reset: e => {
+                            e.page.querySelector('#mon-wizard-welcome-message').textContent = e.wizard.defaults['room-wiz-welcome-message'] || 'Welcome to the new monster wizard, this will take you through the steps to create a monster quickly and easily. You may finish at any time to generate a monster based on your current selections.';
+                        }
                     }),
                     new WizardPage({
                         title: 'General properties',
                         body: document.getElementById('mon-wizard-general'),
                         reset: (e) => {
+                            var aTypes = e.page.querySelector('#mon-wiz-area-types');
+                            aTypes.innerHTML = '';
+                            if (e.wizard.defaults['mon-wiz-area-types'] && e.wizard.defaults['mon-wiz-area-types'].length > 0) {
+                                if (Array.isArray(e.wizard.defaults['mon-wiz-area-types']))
+                                    aTypes.innerHTML = e.wizard.defaults['mon-wiz-area-types'].map(r => `<option value="${r.value || r.display}">${r.display || r.value}</option>`).join('');
+                                else
+                                    aTypes.innerHTML = e.wizard.defaults['mon-wiz-area-types'];
+                            }
+                            else
+                                aTypes.innerHTML = '<option value="BASEMONSTER">Base</option>';
                             $('#mon-wiz-type', e.page).val(e.wizard.defaults['mon-wiz-type'] || 'STD_MONSTER').selectpicker('render');
                             e.page.querySelector('#mon-wiz-level').value = e.wizard.defaults['mon-wiz-level'] || '1';
                             e.page.querySelector('#mon-wiz-alignment').value = e.wizard.defaults['mon-wiz-alignment'] || '';
@@ -5890,13 +5941,17 @@
             });
             $dialogs.monster.on('close', () => {
                 menubar.enabled = true;
+                if ($dialogs.monster.closed)
+                    $dialogs.monster.closed();
             });
             $dialogs.monster.on('cancel', () => {
                 menubar.enabled = true;
+                if ($dialogs.monster.closed)
+                    $dialogs.monster.closed();
             });
             $dialogs.monster.on('finished', (e) => {
                 if ($dialogs.monster.finish) {
-                    $dialogs.monster.finish(e.data);
+                    $dialogs.monster.finish(e);
                     return;
                 }
                 var value = fs.readFileSync(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'monster.c')), 'utf8');
@@ -6179,8 +6234,10 @@
                 newCounter++;
             });
         }
-        $dialogs.room.defaults = dData || {};
+        $dialogs.room.title = title || 'Create new room...';
+        $dialogs.monster.defaults = dData || {};
         $dialogs.monster.finish = finish;
+        $dialogs.monster.closed = closed;
         $dialogs.monster.show();
     }
 
@@ -6885,10 +6942,10 @@
                 data.options = options.areaOptions;
                 p.editor = new AreaDesigner(data);
                 p.editor.on('show-room-wizard', e => {
-                    roomWizard(e.data, e.finish);
+                    roomWizard(e.data, e.finish, e.closed, e.title);
                 });
                 p.editor.on('show-monster-wizard', e => {
-                    monsterWizard(e.data, e.finish);
+                    monsterWizard(e.data, e.finish, e.closed, e.title);
                 });
                 p.editor.on('show-resize', size => {
                     showResizeDialog(size);
@@ -6898,10 +6955,9 @@
                 p.editor.on('dialog-open', () => menubar.enabled = false);
                 /*
                 p.editor.on('room-dblclick', (room) => {
-                    
                 });
                 */
-                p.editor.on('map-context-menu', (e) => {
+                p.editor.on('map-context-menu', () => {
                     let temp = [];
                     if (p.editor.supports('undo'))
                         temp.push({
@@ -7289,10 +7345,11 @@
                                 if ((room.state & RoomStates.Water) === RoomStates.Water)
                                     data['room-wiz-terrain'] = 'water';
                                 data['room-wiz-create-body'] = '';
+
                                 if ((room.state & RoomStates.Cold) === RoomStates.Cold)
-                                    data['room-wiz-create-body'] += '   set_temperature(-200);\n';
+                                    data['room-wiz-temperature'] = -200;
                                 else if ((room.state & RoomStates.Hot) === RoomStates.Hot)
-                                    data['room-wiz-create-body'] += '   set_temperature(200);\n';
+                                    data['room-wiz-temperature'] = 200;
                                 if (((room.state & RoomStates.SinkingUp) === RoomStates.SinkingUp && z + 1 < depth) || ((room.state & RoomStates.SinkingDown) === RoomStates.SinkingDown && z > 0 && depth > 1))
                                     data['room-wiz-create-body'] += '   set_living_sink(1);\n';
                                 if ((room.state & RoomStates.SinkingUp) === RoomStates.SinkingUp && z + 1 < depth)
