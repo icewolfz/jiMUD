@@ -5883,7 +5883,7 @@
                         title: 'Aggressive',
                         body: document.getElementById('mon-wizard-aggressive'),
                         reset: (e) => {
-                            e.page.querySelector('#mon-wiz-aggressive').value = e.wizard.defaults['mon-wiz-type'] || '';
+                            e.page.querySelector('#mon-wiz-aggressive').value = e.wizard.defaults['mon-wiz-aggressive'] || '';
                         }
                     }),
                     new WizardPage({
@@ -6306,7 +6306,7 @@
                 newCounter++;
             });
         }
-        $dialogs.room.title = title || 'Create new room...';
+        $dialogs.monster.title = title || 'Create new monster...';
         $dialogs.monster.defaults = dData || {};
         $dialogs.monster.finish = finish;
         $dialogs.monster.closed = closed;

@@ -351,7 +351,7 @@ const Timer = new DebugTimer();
 class Monster {
     public id: number;
     public maxAmount: number = -1;
-    public unique: boolean;
+    public unique: boolean = false;
     public objects: ObjectInfo[] = [];
 
     public type: string = 'base';
@@ -3623,6 +3623,7 @@ export class AreaDesigner extends EditorBase {
                 sortable: false,
                 label: '',
                 width: 32,
+                formatter: () => '',
                 editor: {
                     type: EditorType.button,
                     options: {
@@ -3631,13 +3632,13 @@ export class AreaDesigner extends EditorBase {
                                 title: 'Edit base monster',
                                 data: {
                                     'mon-wiz-welcome-message': 'Welcome to the base monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
-                                    'mon-wiz-area-types': [Object.keys(this.$area.baseMonsters || { base: null }).filter(r => r !== ed.value.type).map(r => {
+                                    'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).filter(r => r !== ed.value.type).map(r => {
                                         return {
                                             value: r,
                                             display: capitalize(r),
                                             group: 'Area'
                                         };
-                                    })],
+                                    }),
                                     'mon-wiz-type': ed.value.type || 'base',
                                     'mon-wiz-level': '' + ed.value.level,
                                     'mon-wiz-alignment': '' + ed.value.alignment,
@@ -3911,6 +3912,7 @@ export class AreaDesigner extends EditorBase {
                 sortable: false,
                 label: '',
                 width: 32,
+                formatter: () => '',
                 editor: {
                     type: EditorType.button,
                     options: {
@@ -3919,13 +3921,13 @@ export class AreaDesigner extends EditorBase {
                                 title: 'Edit base room',
                                 data: {
                                     'room-wiz-welcome-message': 'Welcome to the base room editor, this will take you through the steps to edit a base room quickly and easily. You may finish at any time to save your current selections.',
-                                    'room-wiz-area-types': [Object.keys(this.$area.baseRooms || { base: null }).filter(r => r !== ed.value.type).map(r => {
+                                    'room-wiz-area-types': Object.keys(this.$area.baseRooms || { base: null }).filter(r => r !== ed.value.type).map(r => {
                                         return {
                                             value: r,
                                             display: capitalize(r),
                                             group: 'Area'
                                         };
-                                    })],
+                                    }),
                                     'room-wiz-type': ed.value.type || 'base',
                                     'room-wiz-terrain': ed.value.terrain,
                                     'room-wiz-short': ed.value.short,
@@ -4146,7 +4148,7 @@ export class AreaDesigner extends EditorBase {
             {
                 label: 'Max amount',
                 field: 'maxAmount',
-                width: 50,
+                width: 125,
                 editor: {
                     options: {
                         min: -1,
@@ -4180,6 +4182,7 @@ export class AreaDesigner extends EditorBase {
                 sortable: false,
                 label: '',
                 width: 32,
+                formatter: () => '',
                 editor: {
                     type: EditorType.button,
                     options: {
@@ -4188,13 +4191,13 @@ export class AreaDesigner extends EditorBase {
                                 title: 'Edit base monster',
                                 data: {
                                     'mon-wiz-welcome-message': 'Welcome to the base monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
-                                    'mon-wiz-area-types': [Object.keys(this.$area.baseMonsters || { base: null }).map(r => {
+                                    'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).map(r => {
                                         return {
                                             value: r,
                                             display: capitalize(r),
                                             group: 'Area'
                                         };
-                                    })],
+                                    }),
                                     'mon-wiz-type': ed.value.type || 'base',
                                     'mon-wiz-level': '' + ed.value.level,
                                     'mon-wiz-alignment': '' + ed.value.alignment,
@@ -4384,22 +4387,15 @@ export class AreaDesigner extends EditorBase {
             if (this.$monsterGrid.selectedCount) {
                 this.$label.children[0].children[1].removeAttribute('disabled');
                 this.$label.children[0].children[2].removeAttribute('disabled');
-                this.$label.children[0].children[3].removeAttribute('disabled');
                 if (this.$monsterGrid.selectedCount > 1)
-                    (<HTMLElement>this.$label.children[0].children[3]).title = 'Delete monsters';
+                    (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete monsters';
                 else
-                    (<HTMLElement>this.$label.children[0].children[3]).title = 'Delete monster';
-
-                this.$label.children[1].children[0].removeAttribute('disabled');
-                this.$label.children[1].children[1].removeAttribute('disabled');
+                    (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete monster';
             }
             else {
                 this.$label.children[0].children[1].setAttribute('disabled', 'true');
                 this.$label.children[0].children[2].setAttribute('disabled', 'true');
-                this.$label.children[0].children[3].setAttribute('disabled', 'true');
-                this.$label.children[1].children[0].setAttribute('disabled', 'true');
-                this.$label.children[1].children[1].setAttribute('disabled', 'true');
-                (<HTMLElement>this.$label.children[0].children[3]).title = 'Delete monster(s)';
+                (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete monster(s)';
             }
             this.emit('selection-changed');
         });
@@ -5861,8 +5857,10 @@ export class AreaDesigner extends EditorBase {
                 this.$propertiesEditor.container.style.display = 'none';
                 break;
             case View.monsters:
+                this.$monsterGrid.parent.style.display = 'none';
                 break;
             case View.objects:
+                this.$objectGrid.parent.style.display = 'none';
                 break;
         }
         this.$view = view;
