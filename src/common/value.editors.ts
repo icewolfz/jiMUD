@@ -103,14 +103,14 @@ export abstract class ValueEditor extends EventEmitter {
             const r = this.options.validate(this.data[this.property], this.value, this.data);
             if (typeof r === 'string') {
                 this.$parent.title = r;
-                $(this.$parent).tooltip({ container: 'body', delay: {  show: 100, hide: 250  } });
+                $(this.$parent).tooltip({ container: 'body', delay: { show: 100, hide: 250 } });
                 $(this.$parent).tooltip('show');
                 this.focus();
                 return false;
             }
             else if (!r) {
                 this.$parent.title = 'Invalid value';
-                $(this.$parent).tooltip({ container: 'body', delay: {  show: 100, hide: 250  } });
+                $(this.$parent).tooltip({ container: 'body', delay: { show: 100, hide: 250 } });
                 $(this.$parent).tooltip('show');
                 this.focus();
                 return false;
@@ -1480,6 +1480,8 @@ export class SelectValueEditor extends ValueEditor {
     public openAdvanced() { /**/ }
 
     get value() {
+        if (this.options && typeof this.options.data === 'object')
+            return +this.$el.value;
         return this.$el.value;
     }
     set value(value: any) {
