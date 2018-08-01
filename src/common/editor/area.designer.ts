@@ -3,7 +3,7 @@ import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType, ValueEditor } from '../value.editors';
 import { DataGrid } from '../datagrid';
-import { copy, formatString, existsSync, capitalize, wordwrap, Cardinal, enumToString } from '../library';
+import { copy, formatString, existsSync, capitalize, wordwrap, Cardinal, enumToString, pinkfishToHTML, stripPinkfish, consolidate } from '../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
@@ -113,6 +113,7 @@ interface ObjectInfo {
     amount?: number;
     maxAmount?: number;
     random?: boolean;
+    unique?: boolean;
 }
 
 interface RoomItem {
@@ -199,8 +200,8 @@ export class Room {
 
     constructor(x, y, z, data?, type?) {
         if (data)
-            for (const prop in this) {
-                if (!this.hasOwnProperty(prop)) continue;
+            for (const prop in data) {
+                if (!data.hasOwnProperty(prop)) continue;
                 this[prop] = copy(data[prop]);
             }
         this.type = type;
@@ -402,8 +403,8 @@ class Monster {
             id = 0;
         }
         if (data) {
-            for (const prop in this) {
-                if (!this.hasOwnProperty(prop)) continue;
+            for (const prop in data) {
+                if (!data.hasOwnProperty(prop)) continue;
                 this[prop] = copy(data[prop]);
             }
             this.type = type || data.type;
@@ -440,7 +441,7 @@ class StdObject {
     public name: string;
     public long: string;
     public short: string;
-    public type;
+    public type: StdObjectType;
     public keyid;
     public mass: number;
     public nouns: string;
@@ -454,6 +455,7 @@ class StdObject {
     armor - type, quality, limbs, enchantment
     material - size, quality, describers
     ore - size, quality, bonuses?
+    chest - objects, money
     */
 
     constructor(id?, data?) {
@@ -462,8 +464,8 @@ class StdObject {
             id = 0;
         }
         if (data) {
-            for (const prop in this) {
-                if (!this.hasOwnProperty(prop)) continue;
+            for (const prop in data) {
+                if (!data.hasOwnProperty(prop)) continue;
                 this[prop] = copy(data[prop]);
             }
             this.id = id || data.id || new Date().getTime();
@@ -7367,12 +7369,12 @@ export class AreaDesigner extends EditorBase {
             if (items.length > 0) {
                 items = items[room.item].children.slice().sort((a, b) => { return b.item.length - a.item.length; });
                 for (c = 0, cl = items.length; c < cl; c++)
-                    str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b'), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
+                    str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'gi'), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
             }
             else
                 items = null;
             str += '<br><br>';
-            this.$roomPreview.long.innerHTML = str;
+            this.$roomPreview.long.innerHTML = pinkfishToHTML(str);
             if (items && items.length > 0) {
                 for (c = 0, cl = items.length; c < cl; c++) {
                     item = document.getElementById(this.parent.id + '-room-preview' + c);
@@ -7879,352 +7881,4 @@ export class AreaDesigner extends EditorBase {
         }
     }
 
-}
-
-function consolidate(amt, str) {
-    let y;
-    let l;
-    let e = '';
-    if (!str || amt < 2) return str;
-    if (str.endsWith(' ')) {
-        e = ' ';
-        str = str.trim();
-    }
-    str = str.split(' ');
-    if (str[0].toLowerCase() === 'a' || str[0].toLowerCase() === 'an' || str[0].toLowerCase() === 'the')
-        str.shift();
-    l = str.length;
-    y = str.indexOf('of');
-    if (y > 0)
-        str[y - 1] = pluralize(str[y - 1]);
-    else if (str[l - 1].endsWith(')')) {
-        y = l - 1;
-        while (y >= 0) {
-            if (str[y].startsWith('('))
-                break;
-            y--;
-        }
-        if (y - 1 >= 0)
-            str[y - 1] = pluralize(str[y - 1]);
-    }
-    else if (str[l - 1].match(/\(.*\)/)) {
-        if (l - 2 >= 0)
-            str[l - 2] = pluralize(str[l - 2]);
-    }
-    else
-        str[l - 1] = pluralize(str[l - 1]);
-    if (amt > 10)
-        return 'numerous ' + str.join(' ') + e;
-    return ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][amt] + str.join(' ') + e;
-}
-
-function pluralize(revert) {
-    const plural = {
-        '(quiz)$': '$1zes',
-        '^(ox)$': '$1en',
-        '([m|l])ouse$': '$1ice',
-        '(matr|vert|ind)ix|ex$': '$1ices',
-        '(x|ch|ss|sh)$': '$1es',
-        '([^aeiouy]|qu)y$': '$1ies',
-        '(hive)$': '$1s',
-        '(?:([^f])fe|([lr])f)$': '$1$2ves',
-        '(shea|lea|loa|thie)f$': '$1ves',
-        sis$: 'ses',
-        '([ti])um$': '$1a',
-        '(tomat|potat|ech|her|vet)o$': '$1oes',
-        '(bu)s$': '$1ses',
-        '(alias)$': '$1es',
-        '(octop)us$': '$1i',
-        '(ax|test)is$': '$1es',
-        '(us)$': '$1es',
-        '([^s]+)$': '$1s'
-    };
-
-    const singular = {
-        '(quiz)zes$': '$1',
-        '(matr)ices$': '$1ix',
-        '(vert|ind)ices$': '$1ex',
-        '^(ox)en$': '$1',
-        '(alias)es$': '$1',
-        '(octop|vir)i$': '$1us',
-        '(cris|ax|test)es$': '$1is',
-        '(shoe)s$': '$1',
-        '(o)es$': '$1',
-        '(bus)es$': '$1',
-        '([m|l])ice$': '$1ouse',
-        '(x|ch|ss|sh)es$': '$1',
-        '(m)ovies$': '$1ovie',
-        '(s)eries$': '$1eries',
-        '([^aeiouy]|qu)ies$': '$1y',
-        '([lr])ves$': '$1f',
-        '(tive)s$': '$1',
-        '(hive)s$': '$1',
-        '(li|wi|kni)ves$': '$1fe',
-        '(shea|loa|lea|thie)ves$': '$1f',
-        '(^analy)ses$': '$1sis',
-        '((a)naly|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)ses$': '$1$2sis',
-        '([ti])a$': '$1um',
-        '(n)ews$': '$1ews',
-        '(h|bl)ouses$': '$1ouse',
-        '(corpse)s$': '$1',
-        '(us)es$': '$1',
-        s$: ''
-    };
-
-    const irregular = {
-        move: 'moves',
-        foot: 'feet',
-        goose: 'geese',
-        sex: 'sexes',
-        child: 'children',
-        man: 'men',
-        tooth: 'teeth',
-        person: 'people'
-    };
-
-    const uncountable = [
-        'sheep',
-        'fish',
-        'deer',
-        'moose',
-        'series',
-        'species',
-        'money',
-        'rice',
-        'information',
-        'equipment'
-    ];
-
-    // save some time in the case that singular and plural are the same
-    if (uncountable.indexOf(this.toLowerCase()) >= 0)
-        return this;
-    let word;
-    // check for irregular forms
-    for (word in irregular) {
-        if (!irregular.hasOwnProperty(word)) continue;
-        let pattern;
-        let replace;
-        if (revert) {
-            pattern = new RegExp(irregular[word] + '$', 'i');
-            replace = word;
-        } else {
-            pattern = new RegExp(word + '$', 'i');
-            replace = irregular[word];
-        }
-        if (pattern.test(this))
-            return this.replace(pattern, replace);
-    }
-    let array;
-    if (revert) array = singular;
-    else array = plural;
-    let reg;
-
-    // check for matches using regular expressions
-    for (reg in array) {
-        if (!array.hasOwnProperty(reg)) continue;
-        const pattern = new RegExp(reg, 'i');
-
-        if (pattern.test(this))
-            return this.replace(pattern, array[reg]);
-    }
-
-    return revert;
-}
-
-function stripPinkfish(text) {
-    text = text || '';
-    text = text.split('%^');
-    const stack = [];
-    let t = 0;
-    const tl = text.length;
-    for (; t < tl; t++) {
-        switch (text[t]) {
-            case 'ITALIC':
-            case 'UNDERLINE':
-            case 'STRIKEOUT':
-            case 'DBLUNDERLINE':
-            case 'OVERLINE':
-            case 'FLASH':
-            case 'REVERSE':
-            case 'RESET':
-            case 'DEFAULT':
-            case 'BOLD':
-            case '':
-                break;
-            default:
-                if (text[t].startsWith('B_'))
-                    continue;
-                else if (text[t].match(/^RGB[0-5][0-5][0-5]$/))
-                    continue;
-                stack.push(text[t]);
-                break;
-        }
-    }
-    return stack.join('');
-}
-
-let _colorCodes;
-function pinkfishToHTML(text) {
-    text = text || '';
-    text = text.split('%^');
-    if (!_colorCodes)
-        loadColors();
-    const stack = [];
-    let codes = [];
-    let t = 0;
-    let tl = text.length;
-    let bold = false;
-    let classes = [];
-    for (; t < tl; t++) {
-        switch (text[t]) {
-            case 'ITALIC':
-                this.stack.push('<em>');
-                this.codes.push('</em>');
-                break;
-            case 'UNDERLINE':
-                classes.push('underline');
-                break;
-            case 'STRIKEOUT':
-                classes.push('strikeout');
-                break;
-            case 'DBLUNDERLINE':
-                classes.push('dblunderline');
-                break;
-            case 'OVERLINE':
-                classes.push('overline');
-                break;
-            case 'FLASH':
-                classes.push('noflash');
-                break;
-            case 'REVERSE':
-                classes.push('reverse');
-                break;
-            case 'RESET':
-            case 'DEFAULT':
-                const cl = codes.length;
-                for (let c = 0; c < cl; c++)
-                    stack.push(codes[c]);
-                codes = [];
-                classes = [];
-                break;
-            case 'BOLD':
-                bold = true;
-                break;
-            case '':
-                break;
-            default:
-                if (text[t].startsWith('B_')) {
-                    text[t] = text[t].substr(2);
-                    if (bold) {
-                        stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
-                        codes.push('</span>');
-                    }
-                    stack.push('<span style=border: inherit;text-decoration:inherit;"background-color: #' + _colorCodes[text[t]] + '">');
-                    codes.push('</span>');
-                    bold = false;
-                    continue;
-                }
-                else if (_colorCodes[text[t]]) {
-                    if (bold && !_colorCodes['BOLD%^%^' + text[t]]) {
-                        stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
-                        codes.push('</span>');
-                    }
-                    else if (bold) {
-                        stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^' + text[t]] + '">');
-                        codes.push('</span>');
-                        continue;
-                    }
-                    stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes[text[t]] + '">');
-                    codes.push('</span>');
-                    continue;
-                }
-                else if (bold) {
-                    stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
-                    codes.push('</span>');
-                }
-                if (classes.length) {
-                    stack.push('<span class="' + classes.join(' ') + '">');
-                    codes.push('</span>');
-                    classes = [];
-                }
-                stack.push(text[t]);
-                bold = false;
-                break;
-        }
-    }
-    if (classes.length) {
-        stack.push('<span class="' + classes.join(' ') + '">');
-        codes.push('</span>');
-    }
-    for (t = 0, tl = codes.length; t < tl; t++)
-        stack.push(codes[t]);
-    return stack.join('');
-}
-
-function loadColors() {
-    const rgbcolor = require('rgbcolor');
-    const _dColors = Settings.getColors();
-    let c;
-    let color;
-    let r;
-    let g;
-    let b;
-    let idx;
-    _colorCodes = {};
-
-    _colorCodes['BLACK'] = new rgbcolor(_dColors[0]).toHex().substr(1).toUpperCase();
-    _colorCodes['RED'] = new rgbcolor(_dColors[1]).toHex().substr(1).toUpperCase();
-    _colorCodes['GREEN'] = new rgbcolor(_dColors[2]).toHex().substr(1).toUpperCase();
-    _colorCodes['ORANGE'] = new rgbcolor(_dColors[3]).toHex().substr(1).toUpperCase();
-    _colorCodes['BLUE'] = new rgbcolor(_dColors[4]).toHex().substr(1).toUpperCase();
-    _colorCodes['MAGENTA'] = new rgbcolor(_dColors[5]).toHex().substr(1).toUpperCase();
-    _colorCodes['CYAN'] = new rgbcolor(_dColors[6]).toHex().substr(1).toUpperCase();
-    _colorCodes['WHITE'] = new rgbcolor(_dColors[7]).toHex().substr(1).toUpperCase();
-    _colorCodes['mono11'] = new rgbcolor(_dColors[8]).toHex().substr(1).toUpperCase();
-    _colorCodes['BOLD%^%^RED'] = new rgbcolor(_dColors[9]).toHex().substr(1).toUpperCase();
-    _colorCodes['BOLD%^%^GREEN'] = new rgbcolor(_dColors[10]).toHex().substr(1).toUpperCase();
-    _colorCodes['YELLOW'] = new rgbcolor(_dColors[11]).toHex().substr(1).toUpperCase();
-    _colorCodes['BOLD%^%^BLUE'] = new rgbcolor(_dColors[12]).toHex().substr(1).toUpperCase();
-    _colorCodes['BOLD%^%^MAGENTA'] = new rgbcolor(_dColors[13]).toHex().substr(1).toUpperCase();
-    _colorCodes['BOLD%^%^CYAN'] = new rgbcolor(_dColors[14]).toHex().substr(1).toUpperCase();
-    _colorCodes['BOLD%^%^WHITE'] = new rgbcolor(_dColors[15]).toHex().substr(1).toUpperCase();
-
-    for (r = 0; r < 6; r++) {
-        for (g = 0; g < 6; g++) {
-            for (b = 0; b < 6; b++) {
-                idx = `RGB${r}${g}${b}`;
-                color = '';
-                c = 0;
-                c = r * 40 + 55;
-                if (c < 16)
-                    color += '0';
-                color += c.toString(16);
-                c = 0;
-                c = g * 40 + 55;
-                if (c < 16)
-                    color += '0';
-                color += c.toString(16);
-                c = 0;
-                c = b * 40 + 55;
-                if (c < 16)
-                    color += '0';
-                color += c.toString(16);
-                if (!_colorCodes[idx])
-                    _colorCodes[idx] = color.toUpperCase();
-            }
-        }
-    }
-
-    for (r = 232; r <= 255; r++) {
-        g = (r - 232) * 10 + 8;
-        if (g < 16)
-            g = '0' + g.toString(16).toUpperCase();
-        else
-            g = g.toString(16).toUpperCase();
-        g = g + g + g;
-        if (r < 242)
-            _colorCodes['mono0' + (r - 232)] = g;
-        else
-            _colorCodes['mono' + (r - 232)] = g;
-    }
 }

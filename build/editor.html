@@ -25,7 +25,7 @@
         /* global tinymce */
         const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
         const { nativeImage, dialog, Menu, MenuItem } = remote;
-        const { stripHTML, htmlEncode, invert } = require('./js/library');
+        const { stripHTML, htmlEncode, invert, getColors } = require('./js/library');
         const { Settings } = require('./js/settings');
         const rgbcolor = require("rgbcolor");
         const fs = require('fs');
@@ -1106,7 +1106,7 @@
         });
 
         function loadColors() {
-            var _dColors = Settings.getColors();
+            var _dColors = getColors();
             var c, color, r, g, b, idx, _bold = [], bl;
             _ColorTable = [];
             _colors = {};

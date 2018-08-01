@@ -7,6 +7,7 @@
     - Add go to line for code editing, edit > goto to line or ctrl+g
     - Add warning and error icons for debug/formatting errors to make it easier to see errors/warnings
     - Room wizard: added temperature property to control temperatures of room
+    - Virtual area editor: Room preview long description now supports color code preview
     - Area designer:
       - Create an area in a gui designer to create quick basic areas with rooms, monsters and objects
 - **Changed:**

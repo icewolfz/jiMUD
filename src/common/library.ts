@@ -1383,3 +1383,428 @@ export function formatString(str, indent, width?, prefix?, postFix?, preIdent?) 
     preIdent = preIdent || '';
     return prefix + list.join(postFix + '\n' + preIdent + ' '.repeat(indent) + prefix) + postFix;
 }
+
+export function consolidate(amt, str) {
+    let y;
+    let l;
+    let e = '';
+    if (!str || amt < 2) return str;
+    if (str.endsWith(' ')) {
+        e = ' ';
+        str = str.trim();
+    }
+    str = str.split(' ');
+    if (str[0].toLowerCase() === 'a' || str[0].toLowerCase() === 'an' || str[0].toLowerCase() === 'the')
+        str.shift();
+    l = str.length;
+    y = str.indexOf('of');
+    if (y > 0)
+        str[y - 1] = pluralize(str[y - 1]);
+    else if (str[l - 1].endsWith(')')) {
+        y = l - 1;
+        while (y >= 0) {
+            if (str[y].startsWith('('))
+                break;
+            y--;
+        }
+        if (y - 1 >= 0)
+            str[y - 1] = pluralize(str[y - 1]);
+    }
+    else if (str[l - 1].match(/\(.*\)/)) {
+        if (l - 2 >= 0)
+            str[l - 2] = pluralize(str[l - 2]);
+    }
+    else
+        str[l - 1] = pluralize(str[l - 1]);
+    if (amt > 10)
+        return 'numerous ' + str.join(' ') + e;
+    return ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][amt] + str.join(' ') + e;
+}
+
+export function pluralize(revert) {
+    const plural = {
+        '(quiz)$': '$1zes',
+        '^(ox)$': '$1en',
+        '([m|l])ouse$': '$1ice',
+        '(matr|vert|ind)ix|ex$': '$1ices',
+        '(x|ch|ss|sh)$': '$1es',
+        '([^aeiouy]|qu)y$': '$1ies',
+        '(hive)$': '$1s',
+        '(?:([^f])fe|([lr])f)$': '$1$2ves',
+        '(shea|lea|loa|thie)f$': '$1ves',
+        sis$: 'ses',
+        '([ti])um$': '$1a',
+        '(tomat|potat|ech|her|vet)o$': '$1oes',
+        '(bu)s$': '$1ses',
+        '(alias)$': '$1es',
+        '(octop)us$': '$1i',
+        '(ax|test)is$': '$1es',
+        '(us)$': '$1es',
+        '([^s]+)$': '$1s'
+    };
+
+    const singular = {
+        '(quiz)zes$': '$1',
+        '(matr)ices$': '$1ix',
+        '(vert|ind)ices$': '$1ex',
+        '^(ox)en$': '$1',
+        '(alias)es$': '$1',
+        '(octop|vir)i$': '$1us',
+        '(cris|ax|test)es$': '$1is',
+        '(shoe)s$': '$1',
+        '(o)es$': '$1',
+        '(bus)es$': '$1',
+        '([m|l])ice$': '$1ouse',
+        '(x|ch|ss|sh)es$': '$1',
+        '(m)ovies$': '$1ovie',
+        '(s)eries$': '$1eries',
+        '([^aeiouy]|qu)ies$': '$1y',
+        '([lr])ves$': '$1f',
+        '(tive)s$': '$1',
+        '(hive)s$': '$1',
+        '(li|wi|kni)ves$': '$1fe',
+        '(shea|loa|lea|thie)ves$': '$1f',
+        '(^analy)ses$': '$1sis',
+        '((a)naly|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)ses$': '$1$2sis',
+        '([ti])a$': '$1um',
+        '(n)ews$': '$1ews',
+        '(h|bl)ouses$': '$1ouse',
+        '(corpse)s$': '$1',
+        '(us)es$': '$1',
+        s$: ''
+    };
+
+    const irregular = {
+        move: 'moves',
+        foot: 'feet',
+        goose: 'geese',
+        sex: 'sexes',
+        child: 'children',
+        man: 'men',
+        tooth: 'teeth',
+        person: 'people'
+    };
+
+    const uncountable = [
+        'sheep',
+        'fish',
+        'deer',
+        'moose',
+        'series',
+        'species',
+        'money',
+        'rice',
+        'information',
+        'equipment'
+    ];
+
+    // save some time in the case that singular and plural are the same
+    if (uncountable.indexOf(this.toLowerCase()) >= 0)
+        return this;
+    let word;
+    // check for irregular forms
+    for (word in irregular) {
+        if (!irregular.hasOwnProperty(word)) continue;
+        let pattern;
+        let replace;
+        if (revert) {
+            pattern = new RegExp(irregular[word] + '$', 'i');
+            replace = word;
+        } else {
+            pattern = new RegExp(word + '$', 'i');
+            replace = irregular[word];
+        }
+        if (pattern.test(this))
+            return this.replace(pattern, replace);
+    }
+    let array;
+    if (revert) array = singular;
+    else array = plural;
+    let reg;
+
+    // check for matches using regular expressions
+    for (reg in array) {
+        if (!array.hasOwnProperty(reg)) continue;
+        const pattern = new RegExp(reg, 'i');
+
+        if (pattern.test(this))
+            return this.replace(pattern, array[reg]);
+    }
+
+    return revert;
+}
+
+export function stripPinkfish(text) {
+    text = text || '';
+    text = text.split('%^');
+    const stack = [];
+    let t = 0;
+    const tl = text.length;
+    for (; t < tl; t++) {
+        switch (text[t]) {
+            case 'ITALIC':
+            case 'UNDERLINE':
+            case 'STRIKEOUT':
+            case 'DBLUNDERLINE':
+            case 'OVERLINE':
+            case 'FLASH':
+            case 'REVERSE':
+            case 'RESET':
+            case 'DEFAULT':
+            case 'BOLD':
+            case '':
+                break;
+            default:
+                if (text[t].startsWith('B_'))
+                    continue;
+                else if (text[t].match(/^RGB[0-5][0-5][0-5]$/))
+                    continue;
+                stack.push(text[t]);
+                break;
+        }
+    }
+    return stack.join('');
+}
+
+let _colorCodes;
+export function pinkfishToHTML(text) {
+    text = text || '';
+    text = text.split('%^');
+    if (!_colorCodes)
+        loadColors();
+    const stack = [];
+    let codes = [];
+    let t = 0;
+    let tl = text.length;
+    let bold = false;
+    let classes = [];
+    for (; t < tl; t++) {
+        switch (text[t]) {
+            case 'ITALIC':
+                this.stack.push('<em>');
+                this.codes.push('</em>');
+                break;
+            case 'UNDERLINE':
+                classes.push('underline');
+                break;
+            case 'STRIKEOUT':
+                classes.push('strikeout');
+                break;
+            case 'DBLUNDERLINE':
+                classes.push('dblunderline');
+                break;
+            case 'OVERLINE':
+                classes.push('overline');
+                break;
+            case 'FLASH':
+                classes.push('noflash');
+                break;
+            case 'REVERSE':
+                classes.push('reverse');
+                break;
+            case 'RESET':
+            case 'DEFAULT':
+                const cl = codes.length;
+                for (let c = 0; c < cl; c++)
+                    stack.push(codes[c]);
+                codes = [];
+                classes = [];
+                break;
+            case 'BOLD':
+                bold = true;
+                break;
+            case '':
+                break;
+            default:
+                if (text[t].startsWith('B_')) {
+                    text[t] = text[t].substr(2);
+                    if (bold) {
+                        stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
+                        codes.push('</span>');
+                    }
+                    stack.push('<span style=border: inherit;text-decoration:inherit;"background-color: #' + _colorCodes[text[t]] + '">');
+                    codes.push('</span>');
+                    bold = false;
+                    continue;
+                }
+                else if (_colorCodes[text[t]]) {
+                    if (bold && !_colorCodes['BOLD%^%^' + text[t]]) {
+                        stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
+                        codes.push('</span>');
+                    }
+                    else if (bold) {
+                        stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^' + text[t]] + '">');
+                        codes.push('</span>');
+                        continue;
+                    }
+                    stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes[text[t]] + '">');
+                    codes.push('</span>');
+                    continue;
+                }
+                else if (bold) {
+                    stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
+                    codes.push('</span>');
+                }
+                if (classes.length) {
+                    stack.push('<span class="' + classes.join(' ') + '">');
+                    codes.push('</span>');
+                    classes = [];
+                }
+                stack.push(text[t]);
+                bold = false;
+                break;
+        }
+    }
+    if (classes.length) {
+        stack.push('<span class="' + classes.join(' ') + '">');
+        codes.push('</span>');
+    }
+    for (t = 0, tl = codes.length; t < tl; t++)
+        stack.push(codes[t]);
+    return stack.join('');
+}
+
+function loadColors() {
+    const rgbcolor = require('rgbcolor');
+    const _dColors = getColors();
+    let c;
+    let color;
+    let r;
+    let g;
+    let b;
+    let idx;
+    _colorCodes = {};
+
+    _colorCodes['BLACK'] = new rgbcolor(_dColors[0]).toHex().substr(1).toUpperCase();
+    _colorCodes['RED'] = new rgbcolor(_dColors[1]).toHex().substr(1).toUpperCase();
+    _colorCodes['GREEN'] = new rgbcolor(_dColors[2]).toHex().substr(1).toUpperCase();
+    _colorCodes['ORANGE'] = new rgbcolor(_dColors[3]).toHex().substr(1).toUpperCase();
+    _colorCodes['BLUE'] = new rgbcolor(_dColors[4]).toHex().substr(1).toUpperCase();
+    _colorCodes['MAGENTA'] = new rgbcolor(_dColors[5]).toHex().substr(1).toUpperCase();
+    _colorCodes['CYAN'] = new rgbcolor(_dColors[6]).toHex().substr(1).toUpperCase();
+    _colorCodes['WHITE'] = new rgbcolor(_dColors[7]).toHex().substr(1).toUpperCase();
+    _colorCodes['mono11'] = new rgbcolor(_dColors[8]).toHex().substr(1).toUpperCase();
+    _colorCodes['BOLD%^%^RED'] = new rgbcolor(_dColors[9]).toHex().substr(1).toUpperCase();
+    _colorCodes['BOLD%^%^GREEN'] = new rgbcolor(_dColors[10]).toHex().substr(1).toUpperCase();
+    _colorCodes['YELLOW'] = new rgbcolor(_dColors[11]).toHex().substr(1).toUpperCase();
+    _colorCodes['BOLD%^%^BLUE'] = new rgbcolor(_dColors[12]).toHex().substr(1).toUpperCase();
+    _colorCodes['BOLD%^%^MAGENTA'] = new rgbcolor(_dColors[13]).toHex().substr(1).toUpperCase();
+    _colorCodes['BOLD%^%^CYAN'] = new rgbcolor(_dColors[14]).toHex().substr(1).toUpperCase();
+    _colorCodes['BOLD%^%^WHITE'] = new rgbcolor(_dColors[15]).toHex().substr(1).toUpperCase();
+
+    for (r = 0; r < 6; r++) {
+        for (g = 0; g < 6; g++) {
+            for (b = 0; b < 6; b++) {
+                idx = `RGB${r}${g}${b}`;
+                color = '';
+                c = 0;
+                c = r * 40 + 55;
+                if (c < 16)
+                    color += '0';
+                color += c.toString(16);
+                c = 0;
+                c = g * 40 + 55;
+                if (c < 16)
+                    color += '0';
+                color += c.toString(16);
+                c = 0;
+                c = b * 40 + 55;
+                if (c < 16)
+                    color += '0';
+                color += c.toString(16);
+                if (!_colorCodes[idx])
+                    _colorCodes[idx] = color.toUpperCase();
+            }
+        }
+    }
+
+    for (r = 232; r <= 255; r++) {
+        g = (r - 232) * 10 + 8;
+        if (g < 16)
+            g = '0' + g.toString(16).toUpperCase();
+        else
+            g = g.toString(16).toUpperCase();
+        g = g + g + g;
+        if (r < 242)
+            _colorCodes['mono0' + (r - 232)] = g;
+        else
+            _colorCodes['mono' + (r - 232)] = g;
+    }
+}
+
+export function getColors() {
+    const _ColorTable = [];
+    let r;
+    let g;
+    let b;
+    let idx;
+    for (r = 0; r < 6; r++) {
+        for (g = 0; g < 6; g++) {
+            for (b = 0; b < 6; b++) {
+                idx = 16 + (r * 36) + (g * 6) + b;
+                _ColorTable[idx] = 'rgb(';
+                if (r > 0)
+                    _ColorTable[idx] += r * 40 + 55;
+                else
+                    _ColorTable[idx] += '0';
+                _ColorTable[idx] += ',';
+                if (g > 0)
+                    _ColorTable[idx] += g * 40 + 55;
+                else
+                    _ColorTable[idx] += '0';
+                _ColorTable[idx] += ',';
+                if (b > 0)
+                    _ColorTable[idx] += b * 40 + 55;
+                else
+                    _ColorTable[idx] += '0';
+                _ColorTable[idx] += ')';
+            }
+        }
+    }
+    for (r = 232; r <= 255; r++) {
+        g = (r - 232) * 10 + 8;
+        _ColorTable[r] = ['rgb(', g, ',', g, ',', g, ')'].join('');
+    }
+    _ColorTable[0] = 'rgb(0,0,0)'; //black fore
+    _ColorTable[1] = 'rgb(128, 0, 0)'; //red fore
+    _ColorTable[2] = 'rgb(0, 128, 0)'; //green fore
+    _ColorTable[3] = 'rgb(128, 128, 0)'; //yellow fore
+    _ColorTable[4] = 'rgb(0, 0, 238)'; //blue fore
+    _ColorTable[5] = 'rgb(128, 0, 128)'; //magenta fore
+    _ColorTable[6] = 'rgb(0, 128, 128)'; //cyan fore
+    _ColorTable[7] = 'rgb(187, 187, 187)'; //white fore
+    _ColorTable[8] = 'rgb(128, 128, 128)'; //black  bold
+    _ColorTable[9] = 'rgb(255, 0, 0)'; //Red bold
+    _ColorTable[10] = 'rgb(0, 255, 0)'; //green bold
+    _ColorTable[11] = 'rgb(255, 255, 0)'; //yellow bold
+    _ColorTable[12] = 'rgb(92, 92, 255)'; //blue bold
+    _ColorTable[13] = 'rgb(255, 0, 255)'; //magenta bold
+    _ColorTable[14] = 'rgb(0, 255, 255)'; //cyan bold
+    _ColorTable[15] = 'rgb(255, 255, 255)'; //white bold
+    _ColorTable[256] = 'rgb(0, 0, 0)'; //black faint
+    _ColorTable[257] = 'rgb(118, 0, 0)'; //red  faint
+    _ColorTable[258] = 'rgb(0, 108, 0)'; //green faint
+    _ColorTable[259] = 'rgb(145, 136, 0)'; //yellow faint
+    _ColorTable[260] = 'rgb(0, 0, 167)'; //blue faint
+    _ColorTable[261] = 'rgb(108, 0, 108)'; //magenta faint
+    _ColorTable[262] = 'rgb(0, 108, 108)'; //cyan faint
+    _ColorTable[263] = 'rgb(161, 161, 161)'; //white faint
+    _ColorTable[264] = 'rgb(0, 0, 0)'; //BackgroundBlack
+    _ColorTable[265] = 'rgb(128, 0, 0)'; //red back
+    _ColorTable[266] = 'rgb(0, 128, 0)'; //greenback
+    _ColorTable[267] = 'rgb(128, 128, 0)'; //yellow back
+    _ColorTable[268] = 'rgb(0, 0, 238)'; //blue back
+    _ColorTable[269] = 'rgb(128, 0, 128)'; //magenta back
+    _ColorTable[270] = 'rgb(0, 128, 128)'; //cyan back
+    _ColorTable[271] = 'rgb(187, 187, 187)'; //white back
+    _ColorTable[272] = 'rgb(0,0,0)'; //iceMudInfoBackground
+    _ColorTable[273] = 'rgb(0, 255, 255)'; //iceMudInfoText
+    _ColorTable[274] = 'rgb(0,0,0)'; //LocalEchoBackground
+    _ColorTable[275] = 'rgb(255, 255, 0)'; //LocalEchoText
+    _ColorTable[276] = 'rgb(0, 0, 0)'; //DefaultBack
+    _ColorTable[277] = 'rgb(229, 229, 229)'; //DefaultFore
+    _ColorTable[278] = 'rgb(205, 0, 0)'; //ErrorFore
+    _ColorTable[279] = 'rgb(229, 229, 229)'; //ErrorBack
+    _ColorTable[280] = 'rgb(255,255,255)'; //DefaultBrightFore
+    return _ColorTable;
+}

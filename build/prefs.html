@@ -90,7 +90,7 @@
   <script src="../lib/bootstrap-treeview.min.js"></script>
   <script>
     //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-    const { parseTemplate, templatePath, existsSync } = require('./js/library');
+    const { parseTemplate, templatePath, existsSync, getColors } = require('./js/library');
     const { TrayClick } = require('./js/types');
     const Settings = require('./js/settings').Settings;
     const { remote, ipcRenderer } = require('electron');
@@ -717,7 +717,7 @@
     function LoadColors() {
       $("#colorScheme").val("0");
       currentColors = _settings.colors.slice();
-      var _colors = Settings.getColors();
+      var _colors = getColors();
       var c;
       for (c = 0; c < 16; c++)
         setColor("color" + c, currentColors[c] || _colors[c], true);
@@ -768,7 +768,7 @@
       var c;
       switch (idx) {
         case 0:
-          _colors = Settings.getColors();
+          _colors = getColors();
           for (c = 0; c < 16; c++)
             setColor("color" + c, currentColors[c] || _colors[c]);
           for (c = 256; c < 280; c++)
@@ -1069,7 +1069,7 @@
           setColor("color279", "rgb(204,204,204)");//ErrorBack         
           break;
         default:
-          _colors = Settings.getColors();
+          _colors = getColors();
           for (c = 0; c < 16; c++)
             setColor("color" + c, _colors[c]);
           for (c = 256; c < 280; c++)

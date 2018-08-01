@@ -36,6 +36,7 @@
             //cSpell:ignore tinymce, rgbcolor, forecolor, colorbtn, colorbutton
             const { remote, ipcRenderer } = require('electron');
             const { Settings } = require('./js/settings');
+            const { getColors } = require('./js/library');
             const rgbcolor = require("rgbcolor");
 
             var type = 'forecolor';
@@ -339,7 +340,7 @@
             }
 
             function loadColors() {
-                var _dColors = Settings.getColors();
+                var _dColors = getColors();
                 var c, color, r, g, b, idx, cl;
                 $('body').empty();
                 var _ColorTable = [];

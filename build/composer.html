@@ -26,7 +26,7 @@
         /* global tinymce */
         const { remote, ipcRenderer, webFrame } = require('electron');
         const { nativeImage, dialog, Menu, MenuItem } = remote;
-        const { stripHTML, htmlEncode, parseTemplate } = require('./js/library');
+        const { stripHTML, htmlEncode, parseTemplate, getColors } = require('./js/library');
         const { Settings } = require('./js/settings');
         const { Mail } = require('./js/mail');
         const { MailStatus, MailReadFormat } = require('./js/types');
@@ -1153,7 +1153,7 @@
         });
 
         function loadColors() {
-            var _dColors = Settings.getColors();
+            var _dColors = getColors();
             var c, color, r, g, b, idx, _bold = [], bl;
             _ColorTable = [];
             _colors = {};

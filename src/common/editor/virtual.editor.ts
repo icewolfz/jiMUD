@@ -3,7 +3,7 @@ import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType, ValueEditor } from '../value.editors';
 import { DataGrid } from '../datagrid';
-import { copy, formatString, existsSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString } from '../library';
+import { copy, formatString, existsSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString, pinkfishToHTML } from '../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
@@ -8231,7 +8231,7 @@ export class VirtualEditor extends EditorBase {
                     str += ' from here.';
                 }
                 str += '<br><br>';
-                this.$roomPreview.long.innerHTML = str;
+                this.$roomPreview.long.innerHTML = pinkfishToHTML(str);
                 if (items && items.length > 0) {
                     for (c = 0, cl = items.length; c < cl; c++) {
                         item = document.getElementById(this.parent.id + '-room-preview' + c);
@@ -8319,7 +8319,7 @@ export class VirtualEditor extends EditorBase {
                 else
                     items = null;
                 str += '<br><br>';
-                this.$roomPreview.long.innerHTML = str;
+                this.$roomPreview.long.innerHTML = pinkfishToHTML(str);
                 if (items && items.length > 0) {
                     for (c = 0, cl = items.length; c < cl; c++) {
                         item = document.getElementById(this.parent.id + '-room-preview' + c);
