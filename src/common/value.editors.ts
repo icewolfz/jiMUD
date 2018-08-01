@@ -25,6 +25,7 @@ export abstract class ValueEditor extends EventEmitter {
     private $data: any;
     public editorClick: any;
     public property;
+    public editors: any[];
 
     constructor(control, parent, property?, options?) {
         super();

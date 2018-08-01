@@ -2409,6 +2409,7 @@ export class DataGrid extends EventEmitter {
             if (editor) {
                 editor.editor.data = data;
                 editor.editor.value = data[prop];
+                editor.editor.editors = this.$editor.editors;
                 this.$editor.editors.push(editor);
             }
         }
