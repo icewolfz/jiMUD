@@ -2,6 +2,8 @@
 
 The code editor allows immortals or those wanting to code lpc files using a graphical editor
 
+See [Area designer](codeeditor.designer.md) for area designer docs
+
 ## Basic Features
 
 - `New area` allows creation of a new area with standard folder layout and all standard files with basic info and set dates/creator name if possible
@@ -32,6 +34,10 @@ The code editor allows immortals or those wanting to code lpc files using a grap
       - `Sinking Down` rooms will sink down to room below if possible, only works if base room inherits SINK_ROOM, or has custom set_down(room below path), **Note** disabled if depth is only 1
       - `Sinking Up` rooms will float up to the room above if possible, only works if base room inherits SINK_ROOM, or has custom set_up(room above path), **Note** disabled if depth is only 1
       - `None` turn off all states
+- `New area design` allows you to create a new area design that can be later used to create all the required code for an area
+  - `Width` the width of the new area, min 2, max 100, can be resized later
+  - `Height` the height of the new area, min 2, max 100, can be resized later
+  - `Depth` the height of the new area, min 1, max 100, can be resized later
 - `New room`
   - `General properties` general room properties
     - `Type` the room type
@@ -50,9 +56,10 @@ The code editor allows immortals or those wanting to code lpc files using a grap
     - `No map send` do not send map data to client
     - `Hide exits` hide the exit line from the player
     - `No forage` can not forage for food
-    - `Forage` the max amount a player gets each time they forage
+    - `Forage` the amount of food returned each forage, -1 default to random amount of Max forage
     - `Max forage` the max amount player can forage per reset
     - `Secret exit` provide a hint that there is a secret exit in this room
+    - `Temperature` set the room Temperature, every 100 or -100 triggers damage done by heat or cold
   - `Combat properties` properties related to combat
     - `No attack` disable all combat in the room
     - `Council` allow players to kill each other using council rooms, good for arenas
@@ -176,7 +183,7 @@ Allows you to edit a virtual map easily with out having to know all file formats
 
 ### Room editor
 
-The room editor allows you to editor the currently selected rooms, if rooms have different property values, that property will remain blank until edited.
+The room editor allows you to edit the currently selected rooms, if rooms have different property values, that property will remain blank until edited.
 Pressing escape inside any active property editor will cancel the editor and not modify the value, pressing enter or clicking outside of the editor will confirm the change and update the value.
 
 - `Description` the properties of a room related to description
@@ -280,6 +287,7 @@ Editor preferences are stored in their own file independent of client or charact
 
 - `Move to next editor or next row when editing data grid` when editing a data grid, move to next editor on enter
 - `Move back to first on enter in last row when editing data grid` when editing a data grid, move to first row if on last on enter
+- `Add new row on enter if last row when editing data grid` Add new row on enter if last row
 - `Raw Font` font used for raw editors
 - `Raw Font weight` font weight for raw editors
 - `Raw Font size` font size for raw editors
@@ -289,6 +297,14 @@ Editor preferences are stored in their own file independent of client or charact
   - `End` Set it to last description
   - `End + 1` Set it to last description + 1
   - `Start` Set to first description
+- `Preview Font` font for room preview
+- `Preview Font size` font size for room preview
+
+### Designer
+
+- `Move to next editor or next row when editing data grid` when editing a data grid, move to next editor on enter
+- `Move back to first on enter in last row when editing data grid` when editing a data grid, move to first row if on last on enter
+- `Add new row on enter if last row when editing data grid` Add new row on enter if last row
 - `Preview Font` font for room preview
 - `Preview Font size` font size for room preview
 

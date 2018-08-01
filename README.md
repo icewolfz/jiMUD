@@ -57,6 +57,7 @@ Basic questions answered about jiMUD
 - [Mapper](docs/mapper.md)
 - [Immortal Tools](docs/immortal.md)
 - [Code editor](docs/codeeditor.md)
+  - [Area designer](codeeditor.designer.md)
 
 ## Known Issues
 

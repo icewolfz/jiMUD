@@ -23,8 +23,7 @@
         const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
 
         function initEditor(editor, diff) {
-            if(diff)
-            {
+            if (diff) {
                 editor.getModifiedEditor().getContribution('editor.linkDetector').openerService.open = (url) => {
                     shell.openExternal(url.toString());
                 };
@@ -35,7 +34,7 @@
             else
                 editor.getContribution('editor.linkDetector').openerService.open = (url) => {
                     console.log(url);
-                    console.log(url.toString());                    
+                    console.log(url.toString());
                     shell.openExternal(url.toString());
                 };
             editor.addAction({
@@ -346,10 +345,10 @@
         <span id="statusbar-location" class="right"></span>
         <span id="statusbar-size" class="right"></span>
     </div>
-    <dialog id="map-resize" class="resize-dialog" data-title="Resize map" style="width:250px;height:353px;padding:5px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
+    <dialog id="map-resize" class="resize-dialog" data-title="Resize map" style="width:280px;height:353px;padding:5px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
         <div class="dialog-header" style="font-weight: bold">
             <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('map-resize').close();">&times;</button>
-            <div style="padding-top: 2px;">Create new area...</div>
+            <div style="padding-top: 2px;">Resize map...</div>
         </div>
         <div class="dialog-body" style="padding-top:38px">
             <div class="form-group col-sm-4">
@@ -401,6 +400,36 @@
         <div class="dialog-footer">
             <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('map-resize').close();">Cancel</button>
             <button style="float: right" type="button" class="btn btn-primary" onclick="resizeMap()">Ok</button>
+        </div>
+    </dialog>
+    <dialog id="new-design" class="resize-dialog" data-title="Resize map" style="width:280px;height:158px;padding:5px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
+        <div class="dialog-header" style="font-weight: bold">
+            <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('new-design').close();">&times;</button>
+            <div style="padding-top: 2px;">New area design...</div>
+        </div>
+        <div class="dialog-body" style="padding-top:38px">
+            <div class="form-group col-sm-4">
+                <label class="control-label">
+                    Width
+                    <input type="number" id="new-design-width" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
+                </label>
+            </div>
+            <div class="form-group col-sm-4">
+                <label class="control-label">
+                    Height
+                    <input type="number" id="new-design-height" class="input-sm form-control" value="2" min="2" max="100" style="width: 100%" />
+                </label>
+            </div>
+            <div class="form-group col-sm-4">
+                <label class="control-label">
+                    Depth
+                    <input type="number" id="new-design-depth" class="input-sm form-control" value="1" min="1" max="100" style="width: 100%" />
+                </label>
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('new-design').close();">Cancel</button>
+            <button style="float: right" type="button" class="btn btn-primary" onclick="createAreaDesign()">Ok</button>
         </div>
     </dialog>
 
@@ -1689,11 +1718,12 @@
     var $id = 0;
 
     var $fileFilters = [
-        { name: 'Supported files (*.c, *.h, *.map)', extensions: ['c', 'h', 'map'] },
+        { name: 'Supported files (*.c, *.h, *.map, *.design)', extensions: ['c', 'h', 'map', 'design'] },
         { name: 'Code files (*.c, *.h)', extensions: ['c', 'h'] },
         { name: 'Data files (*.o, *.cfg)', extensions: ['o', 'cfg'] },
         { name: 'Text files (*.txt)', extensions: ['txt'] },
         { name: 'Map files (*.map)', extensions: ['map'] },
+        { name: 'Area design files (*.design)', extensions: ['design'] },
         { name: 'All files (*.*)', extensions: ['*'] },
     ];
 
@@ -1929,13 +1959,11 @@
                             //accelerator: "CmdOrCtrl+N",
                             click: newVirtualArea
                         },
-                        /*
                         {
                             label: 'Area &design...',
                             //accelerator: "CmdOrCtrl+N",
                             click: newAreaDesign
                         },
-                        */
                         { type: 'separator' },
                         {
                             label: '&Room...',
@@ -3970,13 +3998,12 @@
                     newVirtualArea();
                 }
             }));
-            /*
             addMenu.append(new MenuItem({
                 label: 'New area design...', click() {
                     clearButton('#btn-add-dropdown');
+                    newAreaDesign();
                 }
             }));
-            */
             addMenu.append(new MenuItem({ type: 'separator' }));
             addMenu.append(new MenuItem({
                 label: 'New room...', click() {
@@ -4744,6 +4771,30 @@
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
+    function newAreaDesign() {
+        if (!$dialogs.design) {
+            $dialogs.design = {
+                dialog: document.getElementById('new-design')
+            };
+        }
+        $('#new-design-width').val('25');
+        $('#new-design-height').val('25');
+        $('#new-design-depth').val('1');
+        menubar.enabled = false;
+        document.getElementById('new-design').showModal();
+    }
+
+    function createAreaDesign(file, width, height, depth) {
+        width = width || +$('#new-design-width').val() || 25;
+        height = height || +$('#new-design-height').val() || 25;
+        depth = depth || +$('#new-design-depth').val() || 1;
+        createEditor({ file: file || 'new_design_' + newCounter + '.design', width: width, height: height, depth: depth, new: true }, true);
+        newCounter++;
+        doUpdate(1);
+        updatePanel(manager.active);
+        document.getElementById('new-design').close();
+    }
+
     function buildNewVirtualMap(width, height, depth, exits, states) {
         var f = width + " " + height;
         if (depth > 1) f += " " + depth;
@@ -5240,8 +5291,15 @@
                 tmpl['create pre'] = '';
                 tmpl['create body'] = '';
                 tmpl['create post'] = '';
-                tmpl['create arguments'] = $dialogs.room.defaults['room-wiz-create'] || '';
 
+                if (data['room-wiz-forage'] !== -1 && doors.filter(r => r.locked).length > 0) {
+                    tmpl['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
+                    if (data['room-wiz-forage'] !== -1)
+                        tmpl['create post'] += `   set_property('forage', ${data['room-wiz-forage']});\n`;
+                    tmpl['create post'] += doors.filter(r => r.locked).map(r => `   set_locked("${r.door}", 1);\n`).join('');
+                    tmpl['create post'] += '}';
+                }
+                tmpl['create arguments'] = $dialogs.room.defaults['room-wiz-create'] || '';
                 if ($dialogs.room.defaults['room-wiz-virtual'] && (data['room-wiz-type'].display === 'Standard') || data['room-wiz-type'].display === 'Base')
                     data['room-wiz-type'] = { display: 'Base', value: '(VIR+"baseroom")' };
                 //if standard but has doors replace with vault, base leave alone as that is a different issue, all other types inherit vault
@@ -5511,7 +5569,7 @@
                     if (i.dest.length > 0)
                         tmp2.push(`"room" : "${i.dest}"`);
                     if (i.blocker.length > 0)
-                        tmp2.push(`"blockers" : "${i.blocker}"`);
+                        tmp2.push(`"blockers" : ({ "${i.blocker.split(',').map(b => b.trim()).join('", "')}" })`);
                     if (!i.exit.startsWith('"') && !i.exit.endsWith('"')) {
                         if (tmp2.length > 0)
                             return `   "${i.exit}" : ([])\n       ${tmp2.join(',\n       ')}\n     ]) );\n`;
@@ -6923,8 +6981,6 @@
         }
     }
 
-    var enableAreas = false;
-
     function createEditor(data, add, dock, tmpObj) {//file, open, remoteFile, _new, value) {
         var p;
         if (data.source)
@@ -6952,8 +7008,8 @@
                     stopWatchFile(files[f]);
                 }
             };
-            if (enableAreas && path.extname(data.file) === '.area') {
-                data.options = options.areaOptions;
+            if (path.extname(data.file) === '.design') {
+                data.options = options.designOptions;
                 p.editor = new AreaDesigner(data);
                 p.editor.on('show-room-wizard', e => {
                     roomWizard(e.data, e.finish, e.closed, e.title);
@@ -7760,7 +7816,7 @@
                     saveOptions();
                 }
                 if (p.editor.type === 3) {
-                    options.areaOptions[option] = value;
+                    options.designOptions[option] = value;
                     saveOptions();
                 }
             });

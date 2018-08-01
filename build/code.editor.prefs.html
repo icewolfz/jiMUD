@@ -128,6 +128,7 @@
                     $('#editorOptions-fontFamily').selectpicker('refresh');
                     $('#virtualOptions-rawFontFamily').selectpicker('refresh');
                     $('#virtualOptions-previewFontFamily').selectpicker('refresh');
+                    $('#designOptions-previewFontFamily').selectpicker('refresh');
                 });
             }
             $('#editorOptions-fontFamily').change(() => {
@@ -175,6 +176,16 @@
                 $('#virtualOptions-preview-font-sample').css("font-family", $("#virtualOptions-previewFontFamily").val());
                 $('#virtualOptions-preview-font-sample').css("font-size", $("#virtualOptions-previewFontSize").val() + 'px');
             });
+
+            $('#designOptions-previewFontFamily').change(() => {
+                $('#designOptions-preview-font-sample').css('font-family', $('#designOptions-previewFontFamily').val());
+                $('#designOptions-preview-font-sample').css('font-size', $('#designOptions-previewFontSize').val()) + 'px';
+            });
+
+            $('#designOptions-previewFontSize').on('input', () => {
+                $('#designOptions-preview-font-sample').css("font-family", $("#designOptions-previewFontFamily").val());
+                $('#designOptions-preview-font-sample').css("font-size", $("#designOptions-previewFontSize").val() + 'px');
+            });            
 
             _settings = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
             loadSettings();
@@ -299,6 +310,13 @@
             $('#virtualOptions-previewFontSize').val(_settings.virtualOptions.previewFontSize);
             $('#virtualOptions-previewFontSize').change();
             $('#virtualOptions-previewFontSize').trigger('input');
+
+            $('#designOptions-previewFontFamily').val(_settings.designOptions.previewFontFamily);
+            $('#designOptions-previewFontFamily').selectpicker('render');
+            $('#designOptions-previewFontFamily').change();
+            $('#designOptions-previewFontSize').val(_settings.designOptions.previewFontSize);
+            $('#designOptions-previewFontSize').change();
+            $('#designOptions-previewFontSize').trigger('input');
 
             $('#editorOptions-acceptSuggestionOnEnter-0').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'on');
             $('#editorOptions-acceptSuggestionOnEnter-1').prop('checked', _settings.editorOptions.acceptSuggestionOnEnter === 'smart');
@@ -708,6 +726,59 @@
                 </div>      
                 -->
             </div>
+            <div role="tabpanel" class="container tab-pane fade" id="designer">
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="designOptions-enterMoveNext" /> Move to next editor or next row when editing data grid
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="designOptions-enterMoveFirst" /> Move back to first on enter in last row when editing data grid
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="designOptions-enterMoveNew" /> Add new row on enter if last row when editing data grid
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Preview Font
+                        <br>
+                        <select id="designOptions-previewFontFamily" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <optgroup label="Basic">
+                                <option value="Consolas, 'Courier New', monospace">Consolas, 'Courier New', monospace</option>
+                                <option value="'Courier New', Courier, monospace">'Courier New', Courier, monospace</option>
+                                <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
+                                <option value="Georgia, serif">Georgia, serif</option>
+                                <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">'Palatino Linotype', 'Book Antiqua', Palatino, serif</option>
+                                <option value="'Times New Roman', Times, serif">'Times New Roman', Times, serif</option>
+                                <option value="Arial, Helvetica, sans-serif">Arial, Helvetica, sans-serif</option>
+                                <option value="'Arial Black', Gadget, sans-serif">'Arial Black', Gadget, sans-serif</option>
+                                <option value="'Comic Sans MS', cursive, sans-serif">'Comic Sans MS', cursive, sans-serif</option>
+                                <option value="Impact, Charcoal, sans-serif">Impact, Charcoal, sans-serif</option>
+                                <option value="'Lucida Sans Unicode', 'Lucida Grande', sans-serif">'Lucida Sans Unicode', 'Lucida Grande', sans-serif</option>
+                                <option value="Tahoma, Geneva, sans-serif">Tahoma, Geneva, sans-serif</option>
+                                <option value="'Trebuchet MS', Helvetica, sans-serif">'Trebuchet MS', Helvetica, sans-serif</option>
+                                <option value="Verdana, Geneva, sans-serif ">Verdana, Geneva, sans-serif </option>
+                            </optgroup>
+                            <optgroup id="preview-font-system" label="System">
+                            </optgroup>
+                        </select>
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        Preview Font size
+                        <input type="number" id="designOptions-previewFontSize" class="input-sm form-control" min="1" />
+                    </label>
+                </div>
+                <div class="col-sm-12 form-group">
+                    <label class="control-label">Preview Font sample
+                        <div id="designOptions-preview-font-sample" style="font-weight: normal;margin: 0px; padding: 2px;height:1.5em;width:100%;overflow:hidden;">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+                    </label>
+                </div>
+            </div>            
             <div role="tabpanel" class="container tab-pane fade" id="window">
                 <div class="col-xs-12">
                     <div class="col-xs-6 form-group">

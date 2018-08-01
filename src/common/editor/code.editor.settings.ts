@@ -88,7 +88,7 @@ export class EditorSettings {
         enterMoveNew: true
     };
 
-    public areaOptions = {
+    public designOptions = {
         allowResize: true,
         allowExitWalk: true,
         previewFontSize: 15,
@@ -128,7 +128,7 @@ export class EditorSettings {
             if (!data.hasOwnProperty(prop)) {
                 continue;
             }
-            if (prop === 'areaOptions' || prop === 'editorOptions' || prop === 'modelOptions' || prop === 'virtualOptions') {
+            if (prop === 'designOptions' || prop === 'editorOptions' || prop === 'modelOptions' || prop === 'virtualOptions') {
                 for (prop2 in data[prop]) {
                     if (!data[prop].hasOwnProperty(prop2)) {
                         continue;

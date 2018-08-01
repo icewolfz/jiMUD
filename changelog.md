@@ -7,6 +7,8 @@
     - Add go to line for code editing, edit > goto to line or ctrl+g
     - Add warning and error icons for debug/formatting errors to make it easier to see errors/warnings
     - Room wizard: added temperature property to control temperatures of room
+    - Area designer:
+      - Create an area in a gui designer to create quick basic areas with rooms, monsters and objects
 - **Changed:**
   - Update electron from 2.0.4 to 2.0.5
   - Update node-sqlite3 from 4.0.1 to 4.0.2
