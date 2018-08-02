@@ -438,10 +438,10 @@ enum StdObjectType {
 
 class StdObject {
     public id: number;
+    public type: StdObjectType = StdObjectType.object;
     public name: string = '';
     public long: string = '';
     public short: string = '';
-    public type: StdObjectType = StdObjectType.object;
     public keyid: string = '';
     public mass: number = 0;
     public nouns: string = '';
@@ -4595,17 +4595,34 @@ export class AreaDesigner extends EditorBase {
                             wiz.height = '340px';
                             wiz.on('open', () => {
                                 this.emit('dialog-open');
+                                ed.focus();
                             });
                             wiz.on('close', () => {
                                 this.emit('dialog-close');
                                 wiz.destroy();
+                                ed.focus();
                             });
                             wiz.on('cancel', () => {
                                 this.emit('dialog-cancel');
                                 wiz.destroy();
+                                ed.focus();
                             });
                             wiz.on('finished', (e) => {
-                                //TODO
+                                if (ed.editors) {
+                                    ed.editors[0].editor.value = e.data['obj-name'];
+                                    ed.editors[1].editor.value = e.data['obj-short'];
+                                }
+                                const nObject = ed.value.clone();
+                                for (const prop in e.data) {
+                                    if (!e.data.hasOwnProperty) continue;
+                                    if (typeof e.data[prop] === 'object')
+                                        nObject[prop.substr(4)] = e.data[prop].value;
+                                    else
+                                        nObject[prop.substr(4)] = e.data[prop];
+                                }
+                                if (!nObject.equals(ed.data.object))
+                                   ed.value = nObject;
+                                ed.focus();
                             });
                             const qualities = `<div class="col-sm-12 form-group">
                             <label class="control-label" style="width: 100%;">Quality
@@ -4632,7 +4649,7 @@ export class AreaDesigner extends EditorBase {
                                         title: 'Sheath properties',
                                         body: `<div class="col-sm-12 form-group">
                                     <label class="control-label" style="width: 100%;">Type
-                                        <select id="obj-type" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                        <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
                                             <optgroup label="accessory"><option value="accessory">Accessory</option><option value="buckler">Buckler</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Bandedmail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splintmail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chainmail</option><option value="ringmail">Ringmail</option><option value="scalemail">Scalemail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy overclothing</option><option value="overclothing">Overclothing</option><option value="thin overclothing">Thin overclothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Underclothing</option></optgroup>
                                         </select>
                                     </label>
@@ -4643,10 +4660,10 @@ export class AreaDesigner extends EditorBase {
                                         <div class="input-group edit-dropdown">
                                             <input type="text" id="obj-limbs" class="input-sm form-control">
                                             <span class="input-group-btn">
-                                                <button id="btn-room-wiz-terrain" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <button id="btn-obj-limbs" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                     <span class="caret" style="margin-left: -1px;"></span>
                                                 </button>
-                                                <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-terrain" data-container="body">
+                                                <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-limbs" data-container="body">
                                                     <li><a href="#">All limbs</a></li><li><a href="#">Overall</a></li><li><a href="#">Limb only</a></li><li><a href="#">Torso</a></li><li><a href="#">Head</a></li><li><a href="#">Left arm</a></li><li><a href="#">Right arm</a></li><li><a href="#">Left hand</a></li><li><a href="#">Right hand</a></li><li><a href="#">Left leg</a></li><li><a href="#">Right leg</a></li><li><a href="#">Left foot</a></li><li><a href="#">Right foot</a></li><li><a href="#">Right wing</a></li><li><a href="#">Left wing</a></li><li><a href="#">Left hoof</a></li><li><a href="#">Right hoof</a></li><li><a href="#">Tail</a></li><li><a href="#">Arms</a></li><li><a href="#">Legs</a></li><li><a href="#">Hands</a></li><li><a href="#">Feet</a></li><li><a href="#">Wings</a></li><li><a href="#">Hooves</a></li><li><a href="#">Lower body</a></li><li><a href="#">Core body</a></li><li><a href="#">Upper core</a></li><li><a href="#">Upper body</a></li><li><a href="#">Winged core</a></li><li><a href="#">Winged upper</a></li><li><a href="#">Upper trunk</a></li><li><a href="#">Lower trunk</a></li><li><a href="#">Trunk</a></li><li><a href="#">Winged trunk</a></li><li><a href="#">Full body</a></li><li><a href="#">Total body</a></li><li><a href="#">Winged body</a></li>
                                                 </ul>
                                             </span>
@@ -4660,7 +4677,7 @@ export class AreaDesigner extends EditorBase {
                                     </label>
                                 </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-type').value = ed.value.subType || 'sheath';
+                                            e.page.querySelector('#obj-subType').value = ed.value.subType || 'sheath';
                                             e.page.querySelector('#obj-limbs').value = ed.value.limbs || '0';
                                             e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
@@ -4675,7 +4692,7 @@ export class AreaDesigner extends EditorBase {
                                         title: 'Armor properties',
                                         body: `<div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%;">Type
-                                            <select id="obj-type" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                            <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
                                                 <optgroup label="accessory"><option value="accessory">Accessory</option><option value="buckler">Buckler</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Bandedmail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splintmail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chainmail</option><option value="ringmail">Ringmail</option><option value="scalemail">Scalemail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy overclothing</option><option value="overclothing">Overclothing</option><option value="thin overclothing">Thin overclothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Underclothing</option></optgroup>
                                             </select>
                                         </label>
@@ -4686,10 +4703,10 @@ export class AreaDesigner extends EditorBase {
                                             <div class="input-group edit-dropdown">
                                                 <input type="text" id="obj-limbs" class="input-sm form-control">
                                                 <span class="input-group-btn">
-                                                    <button id="btn-room-wiz-terrain" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <button id="btn-obj-limbs" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-terrain" data-container="body">
+                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-limbs" data-container="body">
                                                         <li><a href="#">All limbs</a></li><li><a href="#">Overall</a></li><li><a href="#">Limb only</a></li><li><a href="#">Torso</a></li><li><a href="#">Head</a></li><li><a href="#">Left arm</a></li><li><a href="#">Right arm</a></li><li><a href="#">Left hand</a></li><li><a href="#">Right hand</a></li><li><a href="#">Left leg</a></li><li><a href="#">Right leg</a></li><li><a href="#">Left foot</a></li><li><a href="#">Right foot</a></li><li><a href="#">Right wing</a></li><li><a href="#">Left wing</a></li><li><a href="#">Left hoof</a></li><li><a href="#">Right hoof</a></li><li><a href="#">Tail</a></li><li><a href="#">Arms</a></li><li><a href="#">Legs</a></li><li><a href="#">Hands</a></li><li><a href="#">Feet</a></li><li><a href="#">Wings</a></li><li><a href="#">Hooves</a></li><li><a href="#">Lower body</a></li><li><a href="#">Core body</a></li><li><a href="#">Upper core</a></li><li><a href="#">Upper body</a></li><li><a href="#">Winged core</a></li><li><a href="#">Winged upper</a></li><li><a href="#">Upper trunk</a></li><li><a href="#">Lower trunk</a></li><li><a href="#">Trunk</a></li><li><a href="#">Winged trunk</a></li><li><a href="#">Full body</a></li><li><a href="#">Total body</a></li><li><a href="#">Winged body</a></li>
                                                     </ul>
                                                 </span>
@@ -4703,7 +4720,7 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-type').value = ed.value.subType || '';
+                                            e.page.querySelector('#obj-subType').value = ed.value.subType || '';
                                             e.page.querySelector('#obj-limbs').value = ed.value.limbs || '0';
                                             e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
@@ -4726,10 +4743,10 @@ export class AreaDesigner extends EditorBase {
                                             <div class="input-group edit-dropdown">
                                                 <input type="text" id="obj-size" class="input-sm form-control">
                                                 <span class="input-group-btn">
-                                                    <button id="btn-room-wiz-terrain" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-terrain" data-container="body">
+                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                         <li><a href="#">Small</a></li>
                                                         <li><a href="#">Medium</a></li>
                                                         <li><a href="#">Large</a></li>
@@ -4765,10 +4782,10 @@ export class AreaDesigner extends EditorBase {
                                             <div class="input-group edit-dropdown">
                                                 <input type="text" id="obj-size" class="input-sm form-control">
                                                 <span class="input-group-btn">
-                                                    <button id="btn-room-wiz-terrain" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-terrain" data-container="body">
+                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                         <li><a href="#">Small</a></li>
                                                         <li><a href="#">Medium</a></li>
                                                         <li><a href="#">Large</a></li>
@@ -4793,7 +4810,7 @@ export class AreaDesigner extends EditorBase {
                                         title: 'Weapon properties',
                                         body: `<div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%;">Type
-                                            <select id="obj-type" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                            <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
                                             <optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Bow"><option value="bow">Bow</option><option value="crossbow">Crossbow</option><option value="long bow">Long bow</option><option value="longbow">Longbow</option><option value="recurve bow">Recurve bow</option><option value="self bow">Self bow</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Shield"><option value="buckler">Buckler</option><option value="large shield">Large shield</option><option value="shield">Shield</option><option value="small shield">Small shield</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="arrow">Arrow</option><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
                                             </select>
                                         </label>
@@ -4805,7 +4822,7 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-type').value = ed.value.subType || '';
+                                            e.page.querySelector('#obj-subType').value = ed.value.subType || '';
                                             e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
