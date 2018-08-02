@@ -5177,7 +5177,7 @@
                             var doors = data['room-wiz-exits'].filter(r => r.door && r.door.length > 0 && !r.climb);
                             var exits = data['room-wiz-exits'].filter(r => !r.door || r.door.length === 0 && !r.climb);
                             var climbs = data['room-wiz-exits'].filter(r => !r.door || r.door.length === 0 && r.climb);
-                            var sum = '<div><span style="font-weight:bold">Type:</span> ' + data['room-wiz-type'].display + '</div>';
+                            var sum = '<div><span style="font-weight:bold">Type:</span> ' + (data['room-wiz-type'].display || '') + '</div>';
                             sum += '<div><span style="font-weight:bold">Terrain:</span> ' + data['room-wiz-terrain'] + '</div>';
                             sum += '<div><span style="font-weight:bold">Short:</span> ' + data['room-wiz-short'] + '</div>';
                             sum += '<div><span style="font-weight:bold">Long:</span> ' + ellipse(data['room-wiz-long']) + '</div>';
@@ -5919,7 +5919,7 @@
                                 sum += '<div><span style="font-weight:bold">Eyes:</span> ' + data['mon-wiz-eye'] + '</div>';
                             if (data['mon-wiz-hair'] && data['mon-wiz-hair'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Hair:</span> ' + data['mon-wiz-hair'] + '</div>';
-                            if (data['mon-wiz-gender'].value.length > 0)
+                            if (data['mon-wiz-gender'].value && data['mon-wiz-gender'].value.length > 0)
                                 sum += '<div><span style="font-weight:bold">Gender:</span> ' + data['mon-wiz-gender'].value + '</div>';
                             if (data['mon-wiz-body'] && data['mon-wiz-body'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Body type:</span> ' + data['mon-wiz-body'] + '</div>';
@@ -6196,7 +6196,7 @@
                 }
                 if (data['mon-wiz-language'].length > 0)
                     tmpl['create body'] += `   set_primary_lang("${data['mon-wiz-mass']}");\n`;
-                if (data['mon-wiz-gender'].value.length > 0)
+                if (data['mon-wiz-gender'].value && data['mon-wiz-gender'].value.length > 0)
                     tmpl['create body'] += `   set_gender("${data['mon-wiz-gender'].value}");\n`;
                 if (data['mon-wiz-eye'].length > 0)
                     tmpl['create body'] += `   set_eyecolor("${data['mon-wiz-mass']}");\n`;

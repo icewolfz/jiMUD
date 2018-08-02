@@ -114,6 +114,7 @@ interface ObjectInfo {
     maxAmount?: number;
     random?: boolean;
     unique?: boolean;
+    action?: string;
 }
 
 interface RoomItem {
@@ -4694,7 +4695,7 @@ export class AreaDesigner extends EditorBase {
                                         body: `<div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%;">Type
                                             <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
-                                                <optgroup label="accessory"><option value="accessory">Accessory</option><option value="buckler">Buckler</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Bandedmail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splintmail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chainmail</option><option value="ringmail">Ringmail</option><option value="scalemail">Scalemail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy overclothing</option><option value="overclothing">Overclothing</option><option value="thin overclothing">Thin overclothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Underclothing</option></optgroup>
+                                                <optgroup label="accessory"><option value="accessory">Accessory</option><option value="buckler">Buckler</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Banded mail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splint mail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chain mail</option><option value="ringmail">Ring mail</option><option value="scalemail">Scalemail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy overclothing</option><option value="overclothing">Overclothing</option><option value="thin overclothing">Thin overclothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Underclothing</option></optgroup>
                                             </select>
                                         </label>
                                     </div>
@@ -4721,7 +4722,7 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-subType').value = ed.value.subType || '';
+                                            e.page.querySelector('#obj-subType').value = ed.value.subType || 'accessory';
                                             e.page.querySelector('#obj-limbs').value = ed.value.limbs || '0';
                                             e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
@@ -4954,7 +4955,7 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-subType').value = ed.value.subType || '';
+                                            e.page.querySelector('#obj-subType').value = ed.value.subType || 'bell';
                                             e.page.querySelector('#obj-wType').value = ed.value.wType || '';
                                             e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
@@ -5000,7 +5001,7 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-subType').value = ed.value.subType || '';
+                                            e.page.querySelector('#obj-subType').value = ed.value.subType || 'blunt';
                                             e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
@@ -5046,7 +5047,7 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-subType').value = ed.value.subType || '';
+                                            e.page.querySelector('#obj-subType').value = ed.value.subType || 'blunt';
                                             e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-size').value = ed.value.size || '0';
@@ -6378,10 +6379,10 @@ export class AreaDesigner extends EditorBase {
         group.appendChild(this.createButton('Show properties', 'list-alt', () => {
             this.switchView(View.properties);
         }, this.$view === View.properties));
-        group.appendChild(this.createButton('Show monsters', 'user', () => {
+        group.appendChild(this.createButton('Show monsters', 'child', () => {
             this.switchView(View.monsters);
         }, this.$view === View.monsters));
-        group.appendChild(this.createButton('Show objects', 'list', () => {
+        group.appendChild(this.createButton('Show objects', 'cube', () => {
             this.switchView(View.objects);
         }, this.$view === View.objects));
         frag.appendChild(group);
