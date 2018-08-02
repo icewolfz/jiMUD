@@ -2320,7 +2320,7 @@ export class DataGrid extends EventEmitter {
             cell = <HTMLElement>el.children[c];
             prop = cell.dataset.field;
             col = +cell.dataset.column;
-            if (cols[c].readonly) {
+            if (cols[c] && cols[c].readonly) {
                 fCol--;
                 continue;
             }
