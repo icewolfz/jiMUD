@@ -433,21 +433,20 @@ class Monster {
 }
 
 enum StdObjectType {
-    default, chest, material, ore, weapon, armor
+    object, chest, material, ore, weapon, armor
 }
 
 class StdObject {
     public id: number;
-    public name: string;
-    public long: string;
-    public short: string;
-    public type: StdObjectType;
-    public keyid;
-    public mass: number;
-    public nouns: string;
-    public adjectives: string;
-    public material: string;
-    public fields = {};
+    public name: string = '';
+    public long: string = '';
+    public short: string = '';
+    public type: StdObjectType = StdObjectType.object;
+    public keyid: string = '';
+    public mass: number = 1;
+    public nouns: string = '';
+    public adjectives: string = '';
+    public material: string = '';
     public notes: string = '';
     public custom: string = '';
     /*
@@ -3675,7 +3674,7 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-patrol': ed.value.patrolRoute,
                                     'mon-wiz-no-walk': ed.value.noWalkRooms,
                                     'mon-wiz-auto-drop': '' + ed.value.autoDrop.time,
-                                    'mon-wiz-auto-drop-enabled': ed.value.autoDrop,
+                                    'mon-wiz-auto-drop-enabled': ed.value.autoDrop.enabled,
                                     'mon-wiz-storage': '' + ed.value.openStorage.time,
                                     'mon-wiz-storage-enabled': ed.value.openStorage.enabled,
                                     'mon-wiz-auto-wield': '' + ed.value.autoWield.time,
@@ -3692,7 +3691,7 @@ export class AreaDesigner extends EditorBase {
                                 finish: e => {
                                     const nMonster = ed.value.clone();
                                     nMonster.flags = RoomFlags.None;
-                                    nMonster.type = e.data['room-wiz-type'].value;
+                                    nMonster.type = e.data['mon-wiz-type'].value;
                                     nMonster.level = +e.data['mon-wiz-level'];
                                     nMonster.alignment = +e.data['mon-wiz-alignment'];
                                     nMonster.race = e.data['mon-wiz-race'];
@@ -3733,7 +3732,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.patrolRoute = e.data['mon-wiz-patrol'];
                                     nMonster.noWalkRooms = e.data['mon-wiz-no-walk'];
                                     nMonster.autoDrop.time = +e.data['mon-wiz-auto-drop'];
-                                    nMonster.autoDrop = e.data['mon-wiz-auto-drop-enabled'];
+                                    nMonster.autoDrop.enabled = e.data['mon-wiz-auto-drop-enabled'];
                                     nMonster.openStorage.time = +e.data['mon-wiz-storage'];
                                     nMonster.openStorage.enabled = e.data['mon-wiz-storage-enabled'];
                                     nMonster.autoWield.time = +e.data['mon-wiz-auto-wield'];
@@ -3788,7 +3787,7 @@ export class AreaDesigner extends EditorBase {
         this.$propertiesEditor.monsterGrid.on('cut', (e) => {
             this.pushUndo(undoAction.delete, undoType.properties, {
                 property: 'baseMonsters', values: e.data.map(r => {
-                    delete this.$area.baseMonsters[r.data.name];
+                    delete this.$area.baseMonsters[r.name];
                     return { name: r.name, value: r.monster };
                 })
             });
@@ -3826,7 +3825,7 @@ export class AreaDesigner extends EditorBase {
             else {
                 this.pushUndo(undoAction.delete, undoType.properties, {
                     property: 'baseMonsters', values: e.data.map(r => {
-                        delete this.$area.baseMonsters[r.data.name];
+                        delete this.$area.baseMonsters[r.name];
                         return { name: r.name, value: r.monster };
                     })
                 });
@@ -4058,7 +4057,7 @@ export class AreaDesigner extends EditorBase {
         this.$propertiesEditor.roomGrid.on('cut', (e) => {
             this.pushUndo(undoAction.delete, undoType.properties, {
                 property: 'baserooms', values: e.data.map(r => {
-                    delete this.$area.baseRooms[r.data.name];
+                    delete this.$area.baseRooms[r.name];
                     return { name: r.name, value: r.room };
                 })
             });
@@ -4096,7 +4095,7 @@ export class AreaDesigner extends EditorBase {
             else {
                 this.pushUndo(undoAction.delete, undoType.properties, {
                     property: 'baserooms', values: e.data.map(r => {
-                        delete this.$area.baseRooms[r.data.name];
+                        delete this.$area.baseRooms[r.name];
                         return { name: r.name, value: r.room };
                     })
                 });
@@ -4136,6 +4135,17 @@ export class AreaDesigner extends EditorBase {
         this.$monsterGrid.enterMoveNew = this.$enterMoveNew;
         this.$monsterGrid.clipboardPrefix = 'jiMUD/';
         this.$monsterGrid.columns = [
+            {
+                label: 'Name',
+                field: 'name',
+                width: 250,
+                spring: true,
+                editor: {
+                    options: {
+                        singleLine: true
+                    }
+                }
+            },
             {
                 label: 'Short',
                 field: 'short',
@@ -4213,8 +4223,8 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-waterbreathing': (ed.value.flags & MonsterFlags.Water_Breathing) === MonsterFlags.Water_Breathing,
                                     'mon-wiz-requires-water': (ed.value.flags & MonsterFlags.Requires_Water) === MonsterFlags.Requires_Water,
                                     'mon-wiz-no-bleed': (ed.value.flags & MonsterFlags.No_Bleeding) === MonsterFlags.No_Bleeding,
-                                    'mon-wiz-name': ed.value.name,
-                                    'mon-wiz-short': ed.value.short,
+                                    'mon-wiz-name': ed.editors ? ed.editors[0].editor.value : ed.value.name,
+                                    'mon-wiz-short': ed.editors ? ed.editors[1].editor.value : ed.value.short,
                                     'mon-wiz-nouns': ed.value.nouns,
                                     'mon-wiz-adjectives': ed.value.adjectives,
                                     'mon-wiz-long': ed.value.long,
@@ -4234,7 +4244,7 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-patrol': ed.value.patrolRoute,
                                     'mon-wiz-no-walk': ed.value.noWalkRooms,
                                     'mon-wiz-auto-drop': '' + ed.value.autoDrop.time,
-                                    'mon-wiz-auto-drop-enabled': ed.value.autoDrop,
+                                    'mon-wiz-auto-drop-enabled': ed.value.autoDrop.enabled,
                                     'mon-wiz-storage': '' + ed.value.openStorage.time,
                                     'mon-wiz-storage-enabled': ed.value.openStorage.enabled,
                                     'mon-wiz-auto-wield': '' + ed.value.autoWield.time,
@@ -4249,9 +4259,13 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand
                                 },
                                 finish: e => {
+                                    if (ed.editors) {
+                                        ed.editors[0].editor.value = e.data['mon-wiz-name'];
+                                        ed.editors[1].editor.value = e.data['mon-wiz-short'];
+                                    }
                                     const nMonster = ed.value.clone();
                                     nMonster.flags = RoomFlags.None;
-                                    nMonster.type = e.data['room-wiz-type'].value;
+                                    nMonster.type = e.data['mon-wiz-type'].value;
                                     nMonster.level = +e.data['mon-wiz-level'];
                                     nMonster.alignment = +e.data['mon-wiz-alignment'];
                                     nMonster.race = e.data['mon-wiz-race'];
@@ -4292,7 +4306,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.patrolRoute = e.data['mon-wiz-patrol'];
                                     nMonster.noWalkRooms = e.data['mon-wiz-no-walk'];
                                     nMonster.autoDrop.time = +e.data['mon-wiz-auto-drop'];
-                                    nMonster.autoDrop = e.data['mon-wiz-auto-drop-enabled'];
+                                    nMonster.autoDrop.enabled = e.data['mon-wiz-auto-drop-enabled'];
                                     nMonster.openStorage.time = +e.data['mon-wiz-storage'];
                                     nMonster.openStorage.enabled = e.data['mon-wiz-storage-enabled'];
                                     nMonster.autoWield.time = +e.data['mon-wiz-auto-wield'];
@@ -4338,7 +4352,7 @@ export class AreaDesigner extends EditorBase {
             else {
                 this.pushUndo(undoAction.delete, undoType.monster, {
                     values: e.data.map(r => {
-                        delete this.$area.baseMonsters[r.data.name];
+                        delete this.$area.monsters[r.id];
                         return { id: r.id, value: r.monster };
                     })
                 });
@@ -4348,7 +4362,7 @@ export class AreaDesigner extends EditorBase {
         this.$monsterGrid.on('cut', (e) => {
             this.pushUndo(undoAction.delete, undoType.monster, {
                 values: e.data.map(r => {
-                    delete this.$area.baseMonsters[r.data.name];
+                    delete this.$area.monsters[r.id];
                     return { id: r.id, value: r.monster };
                 })
             });
@@ -4371,9 +4385,10 @@ export class AreaDesigner extends EditorBase {
         });
         this.$monsterGrid.on('add', e => {
             const m = new Monster();
-            this.$area.baseRooms[m.id] = m;
+            this.$area.monsters[m.id] = m;
             e.data = {
                 id: m.id,
+                name: m.name,
                 short: m.short,
                 maxAmount: m.maxAmount,
                 unique: m.unique,
@@ -4403,12 +4418,180 @@ export class AreaDesigner extends EditorBase {
         });
         this.$monsterGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
             this.pushUndo(undoAction.edit, undoType.monster, { old: oldValue, new: newValue });
+            if (newValue.monster.name === oldValue.monster.name)
+                newValue.monster.name = newValue.name;
             if (newValue.monster.short === oldValue.monster.short)
                 newValue.monster.short = newValue.short;
             newValue.monster.maxAmount = newValue.maxAmount;
             newValue.monster.unique = newValue.unique;
             newValue.monster.objects = newValue.objects;
             this.$area.monsters[newValue.id] = newValue.monster;
+            this.changed = true;
+        });
+        //#endregion
+        //#region create object grid
+        el = document.createElement('div');
+        el.classList.add('datagrid-standard');
+        el.style.display = 'none';
+        this.parent.appendChild(el);
+        this.$objectGrid = new DataGrid(el);
+        this.$objectGrid.enterMoveFirst = this.$enterMoveFirst;
+        this.$objectGrid.enterMoveNext = this.$enterMoveNext;
+        this.$objectGrid.enterMoveNew = this.$enterMoveNew;
+        this.$objectGrid.clipboardPrefix = 'jiMUD/';
+        this.$objectGrid.columns = [
+            {
+                label: 'Name',
+                field: 'name',
+                width: 250,
+                spring: true,
+                editor: {
+                    options: {
+                        singleLine: true
+                    }
+                }
+            },
+            {
+                label: 'Short',
+                field: 'short',
+                width: 250,
+                spring: true,
+                editor: {
+                    options: {
+                        singleLine: true
+                    }
+                }
+            },
+            {
+                label: 'Type',
+                field: 'type',
+                width: 125,
+                formatter: data => !data || !data.row ? '' : capitalize(Object.keys(StdObjectType).filter(key => !isNaN(Number(StdObjectType[key])))[data.row.type]),
+                editor: {
+                    type: EditorType.select,
+                    options: {
+                        data: StdObjectType
+                    }
+                }
+            },
+            {
+                field: 'object',
+                sortable: false,
+                label: '',
+                width: 32,
+                formatter: () => '',
+                editor: {
+                    type: EditorType.button,
+                    options: {
+                        click: ed => {
+                            let ty = ed.data.type;
+                            let sh = ed.value.short;
+                            let name = ed.value.name;
+                            if (ed.editors) {
+                                name = ed.editors[0].editor.value;
+                                sh = ed.editors[1].editor.value;
+                                ty = ed.editors[2].editor.value;
+                            }
+                            switch (ty) {
+                                case StdObjectType.object:
+                                case StdObjectType.armor:
+                                case StdObjectType.chest:
+                                case StdObjectType.material:
+                                case StdObjectType.ore:
+                                case StdObjectType.weapon:
+                                    break;
+                            }
+                        }
+                    }
+                },
+                sort: 2
+            }
+        ];
+        this.$objectGrid.on('delete', (e) => {
+            if (dialog.showMessageBox(
+                remote.getCurrentWindow(),
+                {
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete object' + (this.$objectGrid.selectedCount > 1 ? 's' : '') + '?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                })
+                === 1)
+                e.preventDefault = true;
+            else {
+                this.pushUndo(undoAction.delete, undoType.object, {
+                    values: e.data.map(r => {
+                        delete this.$area.objects[r.id];
+                        return { id: r.id, value: r.object };
+                    })
+                });
+                this.changed = true;
+            }
+        });
+        this.$objectGrid.on('cut', (e) => {
+            this.pushUndo(undoAction.delete, undoType.object, {
+                values: e.data.map(r => {
+                    delete this.$area.objects[r.id];
+                    return { id: r.id, value: r.object };
+                })
+            });
+            this.changed = true;
+            this.emit('supports-changed');
+        });
+        this.$objectGrid.on('copy', (e) => {
+            this.emit('supports-changed');
+        });
+        this.$objectGrid.on('paste', (e) => {
+            this.startUndoGroup();
+            e.data.forEach(d => {
+                const m = new StdObject(d.data);
+                m.id = new Date().getTime();
+                this.$area.monsters[m.id] = m;
+                this.pushUndo(undoAction.add, undoType.object, { id: m.id, value: m });
+            });
+            this.stopUndoGroup();
+            this.changed = true;
+        });
+        this.$objectGrid.on('add', e => {
+            const m = new StdObject();
+            this.$area.objects[m.id] = m;
+            e.data = {
+                id: m.id,
+                name: m.name,
+                short: m.short,
+                type: m.type,
+                object: m
+            };
+            this.pushUndo(undoAction.add, undoType.object, { id: m.id, value: e.data.object });
+            this.changed = true;
+        });
+        this.$objectGrid.sort(0);
+        this.$objectGrid.on('selection-changed', () => {
+            if (this.$view !== View.objects) return;
+            if (this.$objectGrid.selectedCount) {
+                this.$label.children[0].children[1].removeAttribute('disabled');
+                this.$label.children[0].children[2].removeAttribute('disabled');
+                if (this.$objectGrid.selectedCount > 1)
+                    (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete objects';
+                else
+                    (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete object';
+            }
+            else {
+                this.$label.children[0].children[1].setAttribute('disabled', 'true');
+                this.$label.children[0].children[2].setAttribute('disabled', 'true');
+                (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete object(s)';
+            }
+            this.emit('selection-changed');
+        });
+        this.$objectGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
+            this.pushUndo(undoAction.edit, undoType.object, { old: oldValue, new: newValue });
+            if (newValue.object.name === oldValue.object.name)
+                newValue.object.name = newValue.name;
+            if (newValue.object.short === oldValue.object.short)
+                newValue.object.short = newValue.short;
+            newValue.object.type = newValue.type;
+            this.$area.objects[newValue.id] = newValue.object;
             this.changed = true;
         });
         //#endregion
@@ -5130,6 +5313,12 @@ export class AreaDesigner extends EditorBase {
         switch (undo.action) {
             case undoAction.add:
                 switch (undo.type) {
+                    case undoType.object:
+                        delete this.$area.objects[undo.data.id];
+                        this.pushRedo(undo);
+                        this.changed = true;
+                        this.updateObjects();
+                        break;
                     case undoType.monster:
                         delete this.$area.monsters[undo.data.id];
                         this.pushRedo(undo);
@@ -5167,6 +5356,14 @@ export class AreaDesigner extends EditorBase {
                 break;
             case undoAction.delete:
                 switch (undo.type) {
+                    case undoType.object:
+                        undo.data.values.forEach(r => {
+                            this.$area.objects[r.id] = r.value;
+                        });
+                        this.pushRedo(undo);
+                        this.updateObjects();
+                        this.changed = true;
+                        break;
                     case undoType.monster:
                         undo.data.values.forEach(r => {
                             this.$area.monsters[r.id] = r.value;
@@ -5237,8 +5434,14 @@ export class AreaDesigner extends EditorBase {
                 break;
             case undoAction.edit:
                 switch (undo.type) {
+                    case undoType.object:
+                        this.$area.objects[undo.data.old.id] = undo.data.old.object;
+                        this.pushRedo(undo);
+                        this.updateObjects();
+                        this.changed = true;
+                        break;
                     case undoType.monster:
-                        this.$area.baseRooms[undo.data.old.id] = undo.data.old.monster;
+                        this.$area.monsters[undo.data.old.id] = undo.data.old.monster;
                         this.pushRedo(undo);
                         this.updateMonsters();
                         this.changed = true;
@@ -5327,6 +5530,12 @@ export class AreaDesigner extends EditorBase {
         switch (undo.action) {
             case undoAction.add:
                 switch (undo.type) {
+                    case undoType.object:
+                        this.$area.objects[undo.data.id] = undo.data.value;
+                        this.pushUndoObject(undo);
+                        this.changed = true;
+                        this.updateObjects();
+                        break;
                     case undoType.monster:
                         this.$area.monsters[undo.data.id] = undo.data.value;
                         this.pushUndoObject(undo);
@@ -5929,141 +6138,51 @@ export class AreaDesigner extends EditorBase {
                 break;
             case View.objects:
                 this.$label.textContent = 'Objects';
-                /*
-                    bGroup = document.createElement('div');
-                    bGroup.classList.add('btn-group');
+                bGroup = document.createElement('div');
+                bGroup.classList.add('btn-group');
 
-                    button = document.createElement('button');
-                    button.type = 'button';
-                    button.classList.add('btn', 'btn-default', 'btn-xs');
-                    button.addEventListener('click', () => {
-                        const idx = this.$items.length;
-                        this.$itemGrid.addRow({
-                            idx: idx,
-                            items: '',
-                            description: '',
-                            tag: idx + 1
-                        });
-                        this.updateRaw(this.$itemRaw, idx * 2, ['', ''], false, true);
-                        resetCursor(this.$itemRaw);
-                        this.$itemGrid.focus();
-                        this.$itemGrid.selectByDataIndex(idx, true);
-                    });
-                    button.title = 'Add item group';
-                    button.innerHTML = '<i class="fa fa-plus-square-o"></i> Add group';
-                    bGroup.appendChild(button);
-                    const sc = this.$itemGrid.selected;
+                button = document.createElement('button');
+                button.type = 'button';
+                button.classList.add('btn', 'btn-default', 'btn-xs');
+                button.addEventListener('click', () => {
+                    this.$objectGrid.addNewRow();
+                });
+                button.title = 'Add object';
+                button.innerHTML = '<i class="fa fa-plus"></i> Add';
+                bGroup.appendChild(button);
 
-                    button = document.createElement('button');
-                    //TODO remove when insert works
-                    button.style.display = 'none';
-                    button.type = 'button';
-                    button.disabled = this.$itemGrid.selectedCount === 0;
-                    button.classList.add('btn', 'btn-default', 'btn-xs');
-                    button.addEventListener('click', () => {
+                button = document.createElement('button');
+                button.type = 'button';
+                button.disabled = this.$objectGrid.selectedCount === 0;
+                button.classList.add('btn', 'btn-default', 'btn-xs');
+                button.addEventListener('click', () => {
+                    this.$objectGrid.focus();
+                    this.$objectGrid.beginEdit(this.$objectGrid.selected[0].row);
+                });
+                button.title = 'Edit object';
+                button.innerHTML = '<i class="fa fa-edit"></i> Edit';
+                bGroup.appendChild(button);
 
-                   });
-                    button.title = 'Insert group';
-                    button.innerHTML = '<i class="fa fa-arrows-v"></i> Insert group';
-                    bGroup.appendChild(button);
+                button = document.createElement('button');
+                button.disabled = this.$objectGrid.selectedCount === 0;
+                button.type = 'button';
+                button.title = 'Delete object(s)';
+                button.classList.add('btn', 'btn-danger', 'btn-xs');
+                button.addEventListener('click', () => {
+                    this.$objectGrid.delete();
+                });
+                button.innerHTML = '<i class="fa fa-trash"></i> Delete';
+                bGroup.appendChild(button);
+                this.$label.appendChild(bGroup);
 
-                    button = document.createElement('button');
-                    button.type = 'button';
-                    button.disabled = this.$itemGrid.selectedCount === 0;
-                    button.classList.add('btn', 'btn-default', 'btn-xs');
-                    button.addEventListener('click', () => {
-                        const selected = this.$itemGrid.selected.sort((a, b) => { if (a.row > b.row) return 1; if (a.row < b.row) return -1; return 0; });
-                        if (selected.length === 0) return;
-                        let parent;
-                        if (selected[0].parent === -1)
-                            parent = selected[0].data;
-                        else
-                            parent = this.$items[selected[0].dataIndex];
-                        if (!parent.children)
-                            parent.children = [];
-                        parent.children.push({
-                            idx: '',
-                            item: '',
-                            description: '',
-                            tag: (parent.idx + 1) + '-' + parent.children.length,
-                            parentId: parent.idx
-                        });
-                        this.$itemGrid.refresh();
-                        this.$itemGrid.expandRows(selected[0].index).then(() => {
-                            this.$itemGrid.focus();
-                            this.$itemGrid.beginEditChild(selected[0].dataIndex, parent.children.length - 1);
-                            this.updateRaw(this.$itemRaw, parent.idx * 2, [
-                                parent.children.map(i => i.item).join(':'),
-                                parent.children.map(i => i.description).join(':')
-                            ], false, true);
-                        });
-                    });
-                    button.title = 'Add item';
-                    button.innerHTML = '<i class="fa fa-plus"></i> Add';
-                    bGroup.appendChild(button);
+                bGroup = document.createElement('div');
+                bGroup.classList.add('btn-group');
+                bGroup.style.display = 'none';
 
-                    button = document.createElement('button');
-                    button.type = 'button';
-                    button.disabled = sc.filter(r => r.parent !== -1).length === 0;
-                    button.classList.add('btn', 'btn-default', 'btn-xs');
-                    button.addEventListener('click', () => {
-                        const sl = this.$itemGrid.selectedCount;
-                        const selected = this.$itemGrid.selected;
-                        for (let s = 0; s < sl; s++) {
-                            if (selected[s].parent !== -1) {
-                                this.$itemGrid.focus();
-                                this.$itemGrid.beginEditChild(selected[s].parent, selected[s].child);
-                                break;
-                            }
-                        }
-                    });
-                    button.title = 'Edit item';
-                    button.innerHTML = '<i class="fa fa-edit"></i> Edit';
-                    bGroup.appendChild(button);
+                this.$label.appendChild(bGroup);
 
-                    button = document.createElement('button');
-                    button.disabled = this.$itemGrid.selectedCount === 0;
-                    button.type = 'button';
-                    button.title = 'Delete item(s)';
-                    button.classList.add('btn', 'btn-danger', 'btn-xs');
-                    button.addEventListener('click', () => {
-                        this.$itemGrid.delete();
-                    });
-                    button.innerHTML = '<i class="fa fa-trash"></i> Delete';
-                    bGroup.appendChild(button);
-                    this.$label.appendChild(bGroup);
-
-                    bGroup = document.createElement('div');
-                    bGroup.classList.add('btn-group');
-                    bGroup.style.display = 'none';
-
-                    button = document.createElement('button');
-                    button.disabled = this.$descriptionGrid.selectedCount === 0;
-                    button.type = 'button';
-                    button.classList.add('btn', 'btn-default', 'btn-xs');
-                    button.addEventListener('click', () => {
-
-                    });
-                    button.title = 'Move up';
-                    button.innerHTML = '<i class="fa fa-long-arrow-up"></i> Move up';
-                    bGroup.appendChild(button);
-
-                    button = document.createElement('button');
-                    button.disabled = this.$descriptionGrid.selectedCount === 0;
-                    button.type = 'button';
-                    button.classList.add('btn', 'btn-default', 'btn-xs');
-                    button.addEventListener('click', () => {
-
-                    });
-                    button.title = 'Move down';
-                    button.innerHTML = '<i class="fa fa-long-arrow-down"></i> Move down';
-                    bGroup.appendChild(button);
-
-                    this.$label.appendChild(bGroup);
-
-                    this.$itemGrid.parent.style.display = '';
-                    this.$itemGrid.focus();
-                    */
+                this.$objectGrid.parent.style.display = '';
+                this.$objectGrid.focus();
                 break;
         }
         this.emit('menu-update', 'view|map', { checked: view === View.map });
@@ -7505,11 +7624,24 @@ export class AreaDesigner extends EditorBase {
         this.$monsterGrid.rows = Object.keys(this.$area.monsters).map(m => {
             return {
                 id: m,
+                name:  this.$area.monsters[m].name,
                 short: this.$area.monsters[m].short,
                 maxAmount: this.$area.monsters[m].maxAmount,
                 unique: this.$area.monsters[m].unique,
                 objects: this.$area.monsters[m].objects,
                 monster: this.$area.monsters[m]
+            };
+        });
+    }
+
+    private updateObjects() {
+        this.$objectGrid.rows = Object.keys(this.$area.objects).map(m => {
+            return {
+                id: m,
+                name: this.$area.objects[m].name,
+                short: this.$area.objects[m].short,
+                type: this.$area.objects[m].type,
+                object: this.$area.objects[m]
             };
         });
     }
