@@ -578,7 +578,7 @@ export class Wizard extends EventEmitter {
 
     private getDataSelect(e) {
         const el = e.relatedTarget || e.target;
-        this.$data[el.id || el.name] = { value: el.value, display: el.selectedOptions[0].textContent };
+        this.$data[el.id || el.name] = { value: el.selectedOptions.length ? el.value : null, display: el.selectedOptions.length ? el.selectedOptions[0].textContent : null };
     }
 
     private getDataNumber(e) {
