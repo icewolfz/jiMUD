@@ -9,7 +9,7 @@ const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
 const path = require('path');
 const fs = require('fs-extra');
-import { Wizard, WizardPage, WizardDataGridPage } from '../Wizard';
+import { Wizard, WizardPage, WizardDataGridPage } from '../wizard';
 import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit } from './virtual.editor';
 
 import RGBColor = require('rgbcolor');
