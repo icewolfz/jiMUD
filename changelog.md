@@ -11,7 +11,7 @@
     - Area designer:
       - Create an area in a gui designer to create quick basic areas with rooms, monsters and objects
 - **Changed:**
-  - Update electron from 2.0.4 to 2.0.5
+  - Update electron from 2.0.4 to 2.0.6
   - Update node-sqlite3 from 4.0.1 to 4.0.2
   - Several minor 3rd party libraries have been updated
   - Code editor:
