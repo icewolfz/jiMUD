@@ -1676,7 +1676,7 @@
     const { Wizard, WizardPage, WizardDataGridPage } = require('./js/wizard');
 
     // eslint-disable-next-line no-unused-vars
-    const { formatString, wordWrap, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize } = require('./js/library');
+    const { formatString, wordWrap, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize, updateEditDropdown, initEditDropdown } = require('./js/library');
     const { IEDError } = require('./js/types');
 
     const { IED } = require('./js/ied');
@@ -4038,38 +4038,6 @@
         createWatcher();
         postEditorLoad();
     });
-
-    function initEditDropdown(d) {
-        updateEditDropdown(d);
-        var ip = d.querySelector('input');
-        var b = d.querySelector('button');
-        b.addEventListener('click', () => {
-            var m = Array.from(b.nextElementSibling.querySelectorAll('li > a'));
-            m.forEach(i => {
-                i.classList.remove('active');
-            });
-            var el = m.filter(i => i.dataset.value === ip.value);
-            if (el.length === 0)
-                el = m.filter(i => i.textContent === ip.value);
-            if (el.length === 0)
-                return;
-            el = el[0];
-            el.classList.add('active');
-        });
-    }
-
-    function updateEditDropdown(d) {
-        var m = Array.from(d.querySelectorAll('ul > li > a'));
-        var ip = d.querySelector('input');
-        m.forEach(i => {
-            i.addEventListener('click', (e) => {
-                ip.value = e.target.dataset.value || e.target.textContent || '';
-                const evt = document.createEvent('HTMLEvents');
-                evt.initEvent('change', false, true);
-                ip.dispatchEvent(evt);
-            });
-        });
-    }
 
     function postEditorLoad() {
         if (!_ready) {

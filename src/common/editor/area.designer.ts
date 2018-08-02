@@ -3,13 +3,13 @@ import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType, ValueEditor } from '../value.editors';
 import { DataGrid } from '../datagrid';
-import { copy, formatString, existsSync, capitalize, wordwrap, Cardinal, enumToString, pinkfishToHTML, stripPinkfish, consolidate } from '../library';
+import { copy, formatString, existsSync, capitalize, wordwrap, Cardinal, enumToString, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown } from '../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
 const path = require('path');
 const fs = require('fs-extra');
-import { Settings } from '../settings';
+import { Wizard, WizardPage } from '../Wizard';
 import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit } from './virtual.editor';
 
 import RGBColor = require('rgbcolor');
@@ -433,7 +433,7 @@ class Monster {
 }
 
 enum StdObjectType {
-    object, chest, material, ore, weapon, armor
+    object, chest, material, ore, weapon, armor, sheath
 }
 
 class StdObject {
@@ -443,7 +443,7 @@ class StdObject {
     public short: string = '';
     public type: StdObjectType = StdObjectType.object;
     public keyid: string = '';
-    public mass: number = 1;
+    public mass: number = 0;
     public nouns: string = '';
     public adjectives: string = '';
     public material: string = '';
@@ -452,6 +452,7 @@ class StdObject {
     /*
     weapon - type, quality, enchantment
     armor - type, quality, limbs, enchantment
+    sheath - type, quality, limbs, enchantment
     material - size, quality, describers
     ore - size, quality, bonuses?
     chest - objects, money
@@ -4492,15 +4493,349 @@ export class AreaDesigner extends EditorBase {
                                 sh = ed.editors[1].editor.value;
                                 ty = ed.editors[2].editor.value;
                             }
+                            const wiz = new Wizard({
+                                id: 'object-wizard',
+                                title: 'Edit object...',
+                                pages: [
+                                    new WizardPage({
+                                        id: 'obj-welcome',
+                                        title: 'Welcome',
+                                        body: `
+                                        <img src="../assets/icons/png/wizobjlogo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 56px;">
+                                        <div style="padding-top:76px">Welcome to the object editor wizard, this will take you through the steps to edit an objectquickly and easily. You may finish at any time to save your current selections.</div>
+                                        `
+                                    }),
+                                    new WizardPage({
+                                        id: 'obj-description',
+                                        title: 'Description',
+                                        body: `<div class="col-sm-12 form-group">
+                                        <label class="control-label">Name
+                                            <input type="text" class="input-sm form-control" id="obj-name" />
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-12 form-group">
+                                        <label class="control-label">Short
+                                            <input type="text" class="input-sm form-control" id="obj-short" />
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-12 form-group">
+                                        <label class="control-label" style="width: 100%">Nouns
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of words</span>
+                                            <input type="text" class="input-sm form-control" id="obj-nouns" />
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-12 form-group">
+                                        <label class="control-label" style="width: 100%">Adjectives
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of words</span>
+                                            <input type="text" class="input-sm form-control" id="obj-adjectives" />
+                                        </label>
+                                    </div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-name').value = name || '';
+                                            e.page.querySelector('#obj-short').value = sh || '';
+                                            e.page.querySelector('#obj-nouns').value = ed.value.nouns || '';
+                                            e.page.querySelector('#obj-adjectives').value = ed.value.adjectives || '';
+                                        }
+                                    }),
+                                    new WizardPage({
+                                        id: 'obj-description-long',
+                                        title: 'Long description',
+                                        body: `<div class="col-sm-12 form-group">
+                                        <label class="control-label" style="width: 100%">Long
+                                            <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('obj-long').value, 'editor', true);document.getElementById('obj-long').focus();">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+                                            <textarea class="input-sm form-control" id="obj-long" style="width: 100%;height: 216px;"></textarea>
+                                        </label>
+                                    </div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-long').value = ed.value.long || '';
+                                        }
+                                    }),
+                                    new WizardPage({
+                                        id: 'obj-properties',
+                                        title: 'General properties',
+                                        body: `<div class="col-sm-12 form-group">
+                                        <label class="control-label" style="width: 100%">Key ID
+                                            <input type="text" class="input-sm form-control" id="obj-keyid" />
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Mass
+                                            <input type="number" id="obj-mass" class="input-sm form-control" min="0" value="0" />
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A mass of 0 will use default mass</span>
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">Material
+                                            <div class="input-group edit-dropdown">
+                                                <input type="text" id="obj-material" class="input-sm form-control">
+                                                <span class="input-group-btn">
+                                                    <button id="btn-obj-material" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret" style="margin-left: -1px;"></span>
+                                                    </button>
+                                                    <ul id="obj-material-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-material" data-container="body">
+                                                    </ul>
+                                                </span>
+                                            </div>
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Required for all but basic object</span>
+                                        </label>
+                                    </div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-keyid').value = ed.value.keyid || '';
+                                            e.page.querySelector('#obj-mass').value = ed.value.mass || '0';
+                                            e.page.querySelector('#obj-material').value = ed.value.material || '';
+                                        }
+                                    })
+                                ]
+                            });
+                            wiz.pages[3].page.querySelector('#obj-material-list').innerHTML = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'material.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
+                            initEditDropdown(wiz.pages[3].page.querySelector('#obj-material-list').closest('.edit-dropdown'));
+                            wiz.height = '340px';
+                            wiz.on('open', () => {
+                                this.emit('dialog-open');
+                            });
+                            wiz.on('close', () => {
+                                this.emit('dialog-close');
+                                wiz.destroy();
+                            });
+                            wiz.on('cancel', () => {
+                                this.emit('dialog-cancel');
+                                wiz.destroy();
+                            });
+                            wiz.on('finished', (e) => {
+                                //TODO
+                            });
+                            const qualities = `<div class="col-sm-12 form-group">
+                            <label class="control-label" style="width: 100%;">Quality
+                                <select id="obj-quality" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                    <option value='inferior'>Inferior</option>
+                                    <option value='poor'>Poor</option>
+                                    <option value='rough'>Rough</option>
+                                    <option value='ordinary'>Ordinary</option>
+                                    <option value='average'>Average</option>
+                                    <option value='fair'>Fair</option>
+                                    <option value='good'>Good</option>
+                                    <option value='fine'>Fine</option>
+                                    <option value='exceptional'>Exceptional</option>
+                                    <option value='flawless'>Flawless</option>
+                                </select>
+                            </label>
+                        </div>`;
                             switch (ty) {
-                                case StdObjectType.object:
+                                case StdObjectType.sheath:
+                                    wiz.title = 'Edit sheath...';
+                                    //type, quality, limbs, enchantment
+                                    wiz.addPages(new WizardPage({
+                                        id: 'obj-armor',
+                                        title: 'Sheath properties',
+                                        body: `<div class="col-sm-12 form-group">
+                                    <label class="control-label" style="width: 100%;">Type
+                                        <select id="obj-type" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                            <optgroup label="accessory"><option value="accessory">Accessory</option><option value="buckler">Buckler</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Bandedmail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splintmail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chainmail</option><option value="ringmail">Ringmail</option><option value="scalemail">Scalemail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy overclothing</option><option value="overclothing">Overclothing</option><option value="thin overclothing">Thin overclothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Underclothing</option></optgroup>
+                                        </select>
+                                    </label>
+                                </div>
+                                <div class="col-sm-12 form-group">
+                                    <label class="control-label">Limbs
+                                        <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of limbs</span>
+                                        <div class="input-group edit-dropdown">
+                                            <input type="text" id="obj-limbs" class="input-sm form-control">
+                                            <span class="input-group-btn">
+                                                <button id="btn-room-wiz-terrain" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <span class="caret" style="margin-left: -1px;"></span>
+                                                </button>
+                                                <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-terrain" data-container="body">
+                                                    <li><a href="#">All limbs</a></li><li><a href="#">Overall</a></li><li><a href="#">Limb only</a></li><li><a href="#">Torso</a></li><li><a href="#">Head</a></li><li><a href="#">Left arm</a></li><li><a href="#">Right arm</a></li><li><a href="#">Left hand</a></li><li><a href="#">Right hand</a></li><li><a href="#">Left leg</a></li><li><a href="#">Right leg</a></li><li><a href="#">Left foot</a></li><li><a href="#">Right foot</a></li><li><a href="#">Right wing</a></li><li><a href="#">Left wing</a></li><li><a href="#">Left hoof</a></li><li><a href="#">Right hoof</a></li><li><a href="#">Tail</a></li><li><a href="#">Arms</a></li><li><a href="#">Legs</a></li><li><a href="#">Hands</a></li><li><a href="#">Feet</a></li><li><a href="#">Wings</a></li><li><a href="#">Hooves</a></li><li><a href="#">Lower body</a></li><li><a href="#">Core body</a></li><li><a href="#">Upper core</a></li><li><a href="#">Upper body</a></li><li><a href="#">Winged core</a></li><li><a href="#">Winged upper</a></li><li><a href="#">Upper trunk</a></li><li><a href="#">Lower trunk</a></li><li><a href="#">Trunk</a></li><li><a href="#">Winged trunk</a></li><li><a href="#">Full body</a></li><li><a href="#">Total body</a></li><li><a href="#">Winged body</a></li>
+                                                </ul>
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>${qualities}
+                                <div class="form-group col-sm-12">
+                                    <label class="control-label">
+                                        Enchantment
+                                        <input type="number" id="obj-enchantment" class="input-sm form-control" value="0" min="0" max="1000" style="width: 100%" />
+                                    </label>
+                                </div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-type').value = ed.value.subType || 'sheath';
+                                            e.page.querySelector('#obj-limbs').value = ed.value.limbs || '0';
+                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
+                                        }
+                                    }));
+                                    break;
                                 case StdObjectType.armor:
+                                    wiz.title = 'Edit armor...';
+                                    //type, quality, limbs, enchantment
+                                    wiz.addPages(new WizardPage({
+                                        id: 'obj-armor',
+                                        title: 'Armor properties',
+                                        body: `<div class="col-sm-12 form-group">
+                                        <label class="control-label" style="width: 100%;">Type
+                                            <select id="obj-type" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                                <optgroup label="accessory"><option value="accessory">Accessory</option><option value="buckler">Buckler</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Bandedmail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splintmail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chainmail</option><option value="ringmail">Ringmail</option><option value="scalemail">Scalemail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy overclothing</option><option value="overclothing">Overclothing</option><option value="thin overclothing">Thin overclothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Underclothing</option></optgroup>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-12 form-group">
+                                        <label class="control-label">Limbs
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of limbs</span>
+                                            <div class="input-group edit-dropdown">
+                                                <input type="text" id="obj-limbs" class="input-sm form-control">
+                                                <span class="input-group-btn">
+                                                    <button id="btn-room-wiz-terrain" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret" style="margin-left: -1px;"></span>
+                                                    </button>
+                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-terrain" data-container="body">
+                                                        <li><a href="#">All limbs</a></li><li><a href="#">Overall</a></li><li><a href="#">Limb only</a></li><li><a href="#">Torso</a></li><li><a href="#">Head</a></li><li><a href="#">Left arm</a></li><li><a href="#">Right arm</a></li><li><a href="#">Left hand</a></li><li><a href="#">Right hand</a></li><li><a href="#">Left leg</a></li><li><a href="#">Right leg</a></li><li><a href="#">Left foot</a></li><li><a href="#">Right foot</a></li><li><a href="#">Right wing</a></li><li><a href="#">Left wing</a></li><li><a href="#">Left hoof</a></li><li><a href="#">Right hoof</a></li><li><a href="#">Tail</a></li><li><a href="#">Arms</a></li><li><a href="#">Legs</a></li><li><a href="#">Hands</a></li><li><a href="#">Feet</a></li><li><a href="#">Wings</a></li><li><a href="#">Hooves</a></li><li><a href="#">Lower body</a></li><li><a href="#">Core body</a></li><li><a href="#">Upper core</a></li><li><a href="#">Upper body</a></li><li><a href="#">Winged core</a></li><li><a href="#">Winged upper</a></li><li><a href="#">Upper trunk</a></li><li><a href="#">Lower trunk</a></li><li><a href="#">Trunk</a></li><li><a href="#">Winged trunk</a></li><li><a href="#">Full body</a></li><li><a href="#">Total body</a></li><li><a href="#">Winged body</a></li>
+                                                    </ul>
+                                                </span>
+                                            </div>
+                                        </label>
+                                    </div>${qualities}
+                                    <div class="form-group col-sm-12">
+                                        <label class="control-label">
+                                            Enchantment
+                                            <input type="number" id="obj-enchantment" class="input-sm form-control" value="0" min="0" max="1000" style="width: 100%" />
+                                        </label>
+                                    </div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-type').value = ed.value.subType || '';
+                                            e.page.querySelector('#obj-limbs').value = ed.value.limbs || '0';
+                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
+                                        }
+                                    }));
+                                    break;
                                 case StdObjectType.chest:
+                                    wiz.title = 'Edit chest...';
+                                    //objects, money
+                                    break;
                                 case StdObjectType.material:
+                                    wiz.title = 'Edit material...';
+                                    //size, quality, describers
+                                    wiz.addPages(new WizardPage({
+                                        id: 'obj-ore',
+                                        title: 'Ore properties',
+                                        body: ` <div class="col-sm-12 form-group">
+                                        <label class="control-label">Size
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A number or predefined string</span>
+                                            <div class="input-group edit-dropdown">
+                                                <input type="text" id="obj-size" class="input-sm form-control">
+                                                <span class="input-group-btn">
+                                                    <button id="btn-room-wiz-terrain" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret" style="margin-left: -1px;"></span>
+                                                    </button>
+                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-terrain" data-container="body">
+                                                        <li><a href="#">Small</a></li>
+                                                        <li><a href="#">Medium</a></li>
+                                                        <li><a href="#">Large</a></li>
+                                                        <li><a href="#">Huge</a></li>
+                                                        <li><a href="#">Giant</a></li>
+                                                    </ul>
+                                                </span>
+                                            </div>
+                                        </label>
+                                    </div>${qualities}
+                                    <div class="col-sm-12 form-group">
+                                        <label class="control-label" style="width: 100%">Describers
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of words</span>
+                                            <input type="text" class="input-sm form-control" id="obj-describers" />
+                                        </label>
+                                    </div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            e.page.querySelector('#obj-size').value = ed.value.size || '0';
+                                            e.page.querySelector('#obj-describers').value = ed.value.describers || '';
+                                        }
+                                    }));
+                                    break;
                                 case StdObjectType.ore:
+                                    wiz.title = 'Edit ore...';
+                                    //size, quality, bonuses?
+                                    wiz.addPages(new WizardPage({
+                                        id: 'obj-ore',
+                                        title: 'Ore properties',
+                                        body: ` <div class="col-sm-12 form-group">
+                                        <label class="control-label">Size
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A number or predefined string</span>
+                                            <div class="input-group edit-dropdown">
+                                                <input type="text" id="obj-size" class="input-sm form-control">
+                                                <span class="input-group-btn">
+                                                    <button id="btn-room-wiz-terrain" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret" style="margin-left: -1px;"></span>
+                                                    </button>
+                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-terrain" data-container="body">
+                                                        <li><a href="#">Small</a></li>
+                                                        <li><a href="#">Medium</a></li>
+                                                        <li><a href="#">Large</a></li>
+                                                        <li><a href="#">Huge</a></li>
+                                                        <li><a href="#">Giant</a></li>
+                                                    </ul>
+                                                </span>
+                                            </div>
+                                        </label>
+                                    </div>${qualities}`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            e.page.querySelector('#obj-size').value = ed.value.size || '0';
+                                        }
+                                    }));
+                                    break;
                                 case StdObjectType.weapon:
+                                    wiz.title = 'Edit weapon...';
+                                    //type, quality, enchantment
+                                    wiz.addPages(new WizardPage({
+                                        id: 'obj-weapon',
+                                        title: 'Weapon properties',
+                                        body: `<div class="col-sm-12 form-group">
+                                        <label class="control-label" style="width: 100%;">Type
+                                            <select id="obj-type" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                            <optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Bow"><option value="bow">Bow</option><option value="crossbow">Crossbow</option><option value="long bow">Long bow</option><option value="longbow">Longbow</option><option value="recurve bow">Recurve bow</option><option value="self bow">Self bow</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Shield"><option value="buckler">Buckler</option><option value="large shield">Large shield</option><option value="shield">Shield</option><option value="small shield">Small shield</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="arrow">Arrow</option><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
+                                            </select>
+                                        </label>
+                                    </div>${qualities}
+                                    <div class="form-group col-sm-12">
+                                        <label class="control-label">
+                                            Enchantment
+                                            <input type="number" id="obj-enchantment" class="input-sm form-control" value="0" min="0" max="1000" style="width: 100%" />
+                                        </label>
+                                    </div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-type').value = ed.value.subType || '';
+                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
+                                        }
+                                    }));
                                     break;
                             }
+                            if (wiz.pages.length === 5) {
+                                $(wiz.pages[4].page.querySelectorAll('.selectpicker')).selectpicker();
+                                Array.from(wiz.pages[4].page.querySelectorAll('.edit-dropdown')).forEach(initEditDropdown);
+                            }
+                            wiz.addPages(new WizardPage({
+                                id: 'obj-finish',
+                                title: 'Finish',
+                                body: `<img src="../assets/icons/png/wizobjlogo.png" alt="Object editor summary" style="float: left;margin-top: 56px;height: 128px;width:128px;"> To finish your room simply click finished
+                                    <div id="obj-summary" readonly="readonly" class="form-control" style="overflow:auto;height:219px;width:355px;white-space:pre;float: right;"></div>`,
+                                shown: (e) => {
+                                    const summary = e.page.querySelector('#obj-summary');
+                                    const data = e.wizard.data;
+                                    let sum = '';
+                                    for (const prop in data) {
+                                        if (!data.hasOwnProperty) continue;
+                                        if (typeof data[prop] === 'object')
+                                            sum += '<div><span style="font-weight:bold">' + capitalize(prop.substr(4)) + ':</span> ' + data[prop].display + '</div>';
+                                        else
+                                            sum += '<div><span style="font-weight:bold">' + capitalize(prop.substr(4)) + ':</span> ' + data[prop] + '</div>';
+                                    }
+                                    summary.innerHTML = sum;
+                                }
+                            }));
+                            wiz.show();
                         }
                     }
                 },
@@ -7624,7 +7959,7 @@ export class AreaDesigner extends EditorBase {
         this.$monsterGrid.rows = Object.keys(this.$area.monsters).map(m => {
             return {
                 id: m,
-                name:  this.$area.monsters[m].name,
+                name: this.$area.monsters[m].name,
                 short: this.$area.monsters[m].short,
                 maxAmount: this.$area.monsters[m].maxAmount,
                 unique: this.$area.monsters[m].unique,

@@ -1808,3 +1808,35 @@ export function getColors() {
     _ColorTable[280] = 'rgb(255,255,255)'; //DefaultBrightFore
     return _ColorTable;
 }
+
+export function updateEditDropdown(d) {
+    const m = Array.from(d.querySelectorAll('ul > li > a'));
+    const ip = d.querySelector('input');
+    m.forEach(i => {
+        (<HTMLElement>i).addEventListener('click', (e) => {
+            ip.value = (<HTMLElement>e.target).dataset.value || (<HTMLElement>e.target).textContent || '';
+            const evt = document.createEvent('HTMLEvents');
+            evt.initEvent('change', false, true);
+            ip.dispatchEvent(evt);
+        });
+    });
+}
+
+export function initEditDropdown(d) {
+    updateEditDropdown(d);
+    const ip = d.querySelector('input');
+    const b = d.querySelector('button');
+    b.addEventListener('click', () => {
+        const m = Array.from(b.nextElementSibling.querySelectorAll('li > a'));
+        m.forEach(i => {
+            (<HTMLElement>i).classList.remove('active');
+        });
+        let el: any = m.filter(i => (<HTMLElement>i).dataset.value === ip.value);
+        if (el.length === 0)
+            el = m.filter(i => (<HTMLElement>i).textContent === ip.value);
+        if (el.length === 0)
+            return;
+        el = el[0];
+        el.classList.add('active');
+    });
+}
