@@ -1,12 +1,16 @@
+//cSpell:ignore MONTYPE ROOMTYPE datagrid propertygrid dropdown polyfill rgbcolor, MODROOM, SUBCLASSER LOCKPICK selectall waterbreathing
+//cSpell:ignore consolas lucida bitstream tabbable varargs
+//cSpell:ignore dirtroad highmountain icesheet pavedroad rockdesert sanddesert
+//cSpell:ignore bandedmail splintmail chainmail ringmail scalemail overclothing
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
-import { EditorType, ValueEditor } from '../value.editors';
+import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, existsSync, capitalize, wordwrap, Cardinal, enumToString, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown } from '../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
-const { Menu, MenuItem, dialog } = remote;
+const { Menu, dialog } = remote;
 const path = require('path');
 const fs = require('fs-extra');
 import { Wizard, WizardPage, WizardDataGridPage } from '../wizard';
@@ -160,6 +164,11 @@ interface MonsterAction {
     enabled: boolean;
 }
 
+interface MonsterReaction {
+    reaction: string;
+    action: string;
+}
+
 export class Room {
     //readonly
     public x = 0;
@@ -176,7 +185,7 @@ export class Room {
 
     public type: string = 'base';
 
-    //roomwizard supports
+    //room wizard supports
     public exitsDetails = {};
     public terrain = '';
     public flags: RoomFlags = RoomFlags.None;
@@ -392,6 +401,7 @@ class Monster {
     public wimpy: number = 0;
     public notes: string = '';
     public custom: string = '';
+    public reactions: MonsterReaction[] = [];
 
     constructor(id?, data?, type?) {
         if (typeof id === 'string') {
@@ -443,7 +453,7 @@ class StdObject {
     public name: string = '';
     public long: string = '';
     public short: string = '';
-    public keyid: string = '';
+    public keyID: string = '';
     public mass: number = 0;
     public nouns: string = '';
     public adjectives: string = '';
@@ -692,8 +702,8 @@ export class AreaDesigner extends EditorBase {
     private _wMove;
     private _wUp;
     private _scrollTimer: NodeJS.Timer;
-    private $resizer;
-    private $resizerCache;
+    private $reSizer;
+    private $reSizerCache;
     private $observer: MutationObserver;
     private $allowResize: boolean = true;
     private $allowExitWalk: boolean = true;
@@ -3265,29 +3275,11 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Random',
                                 field: 'random',
                                 width: 150
-                            }
-                            ,
+                            },
                             {
                                 label: 'Unique',
                                 field: 'unique',
                                 width: 150
-                            }
-                            ,
-                            {
-                                label: 'Action',
-                                field: 'action',
-                                width: 150,
-                                spring: true,
-                                editor: {
-                                    type: EditorType.dropdown,
-                                    options: {
-                                        data: [
-                                            'wield',
-                                            'wear',
-                                            'sheath'
-                                        ]
-                                    }
-                                }
                             }
                         ],
                         onAdd: (e) => {
@@ -3296,8 +3288,7 @@ export class AreaDesigner extends EditorBase {
                                 minAmount: 0,
                                 maxAmount: 0,
                                 random: 0,
-                                unique: false,
-                                action: ''
+                                unique: false
                             };
                         },
                         type: 'object',
@@ -3316,6 +3307,84 @@ export class AreaDesigner extends EditorBase {
                     type: EditorType.collection,
                     options: {
                         open: true,
+                        columns: [
+                            {
+                                label: 'Name',
+                                field: 'id',
+                                formatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.monsters[data.cell])
+                                        return this.$area.monsters[data.cell].short;
+                                    return '';
+                                },
+                                tooltipFormatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.monsters[data.cell])
+                                        return this.$area.monsters[data.cell].short;
+                                    return '';
+                                },
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: this.$area ? Object.values<Monster>(this.$area.monsters).map(o => {
+                                            return {
+                                                display: o.name || o.short,
+                                                value: o.id
+                                            };
+                                        }) : []
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Min amount',
+                                field: 'minAmount',
+                                width: 150
+                            },
+                            {
+                                label: 'Max amount',
+                                field: 'maxAmount',
+                                width: 150
+                            },
+                            {
+                                label: 'Random',
+                                field: 'random',
+                                width: 150
+                            }
+                            ,
+                            {
+                                label: 'Unique',
+                                field: 'unique',
+                                width: 150
+                            }
+                            ,
+                            {
+                                label: 'Action',
+                                field: 'action',
+                                width: 150,
+                                spring: true,
+                                editor: {
+                                    type: EditorType.dropdown,
+                                    options: {
+                                        data: [
+                                            'cloak',
+                                            'conceal',
+                                            'sit'
+                                        ]
+                                    }
+                                }
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                id: 0,
+                                minAmount: 0,
+                                maxAmount: 0,
+                                random: 0,
+                                unique: false,
+                                action: ''
+                            };
+                        },
+                        type: 'object',
                         enterMoveFirst: this.$enterMoveFirst,
                         enterMoveNext: this.$enterMoveNext,
                         enterMoveNew: this.$enterMoveNew
@@ -3575,16 +3644,16 @@ export class AreaDesigner extends EditorBase {
             }
         ]);
         this.doUpdate(UpdateType.resize);
-        this.$resizer = new ResizeObserver((entries, observer) => {
+        this.$reSizer = new ResizeObserver((entries, observer) => {
             if (entries.length === 0) return;
             if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
                 return;
-            if (!this.$resizerCache || this.$resizerCache.width !== entries[0].contentRect.width || this.$resizerCache.height !== entries[0].contentRect.height) {
-                this.$resizerCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
+            if (!this.$reSizerCache || this.$reSizerCache.width !== entries[0].contentRect.width || this.$reSizerCache.height !== entries[0].contentRect.height) {
+                this.$reSizerCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
                 this.doUpdate(UpdateType.resize);
             }
         });
-        this.$resizer.observe(this.$mapContainer);
+        this.$reSizer.observe(this.$mapContainer);
         this.$observer = new MutationObserver((mutationsList) => {
             let mutation;
             for (mutation of mutationsList) {
@@ -3753,7 +3822,8 @@ export class AreaDesigner extends EditorBase {
                                     options: {
                                         data: [
                                             'wield',
-                                            'wear'
+                                            'wear',
+                                            'sheath'
                                         ]
                                     }
                                 }
@@ -4085,28 +4155,11 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Random',
                                 field: 'random',
                                 width: 150
-                            }
-                            ,
+                            },
                             {
                                 label: 'Unique',
                                 field: 'unique',
                                 width: 150
-                            }
-                            ,
-                            {
-                                label: 'Action',
-                                field: 'action',
-                                width: 150,
-                                spring: true,
-                                editor: {
-                                    type: EditorType.dropdown,
-                                    options: {
-                                        data: [
-                                            'wield',
-                                            'wear'
-                                        ]
-                                    }
-                                }
                             }
                         ],
                         onAdd: (e) => {
@@ -4115,8 +4168,7 @@ export class AreaDesigner extends EditorBase {
                                 minAmount: 0,
                                 maxAmount: 0,
                                 random: 0,
-                                unique: false,
-                                action: ''
+                                unique: false
                             };
                         },
                         type: 'object',
@@ -4136,12 +4188,90 @@ export class AreaDesigner extends EditorBase {
                     type: EditorType.collection,
                     options: {
                         open: true,
+                        columns: [
+                            {
+                                label: 'Name',
+                                field: 'id',
+                                formatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.monsters[data.cell])
+                                        return this.$area.monsters[data.cell].short;
+                                    return '';
+                                },
+                                tooltipFormatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.monsters[data.cell])
+                                        return this.$area.monsters[data.cell].short;
+                                    return '';
+                                },
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: this.$area ? Object.values<Monster>(this.$area.monsters).map(o => {
+                                            return {
+                                                display: o.name || o.short,
+                                                value: o.id
+                                            };
+                                        }) : []
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Min amount',
+                                field: 'minAmount',
+                                width: 150
+                            },
+                            {
+                                label: 'Max amount',
+                                field: 'maxAmount',
+                                width: 150
+                            },
+                            {
+                                label: 'Random',
+                                field: 'random',
+                                width: 150
+                            }
+                            ,
+                            {
+                                label: 'Unique',
+                                field: 'unique',
+                                width: 150
+                            }
+                            ,
+                            {
+                                label: 'Action',
+                                field: 'action',
+                                width: 150,
+                                spring: true,
+                                editor: {
+                                    type: EditorType.dropdown,
+                                    options: {
+                                        data: [
+                                            'cloak',
+                                            'conceal',
+                                            'sit'
+                                        ]
+                                    }
+                                }
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                id: 0,
+                                minAmount: 0,
+                                maxAmount: 0,
+                                random: 0,
+                                unique: false,
+                                action: ''
+                            };
+                        },
+                        type: 'object',
                         enterMoveFirst: this.$enterMoveFirst,
                         enterMoveNext: this.$enterMoveNext,
                         enterMoveNew: this.$enterMoveNew
-                    }
-                },
-                sort: 2
+                    },
+                    sort: 2
+                }
             },
             {
                 field: 'room',
@@ -4269,7 +4399,7 @@ export class AreaDesigner extends EditorBase {
             }
         ];
         this.$propertiesEditor.roomGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
-            this.pushUndo(undoAction.edit, undoType.properties, { property: 'baserooms', old: oldValue, new: newValue });
+            this.pushUndo(undoAction.edit, undoType.properties, { property: 'baseRooms', old: oldValue, new: newValue });
             if (oldValue.name !== newValue.name)
                 delete this.$area.baseRooms[oldValue.name];
             newValue.monster.monsters = newValue.monsters;
@@ -4286,12 +4416,12 @@ export class AreaDesigner extends EditorBase {
                 monsters: this.$area.baseRooms['base' + this.$new.baseRooms].monsters,
                 room: this.$area.baseRooms['base' + this.$new.baseRooms]
             };
-            this.pushUndo(undoAction.add, undoType.properties, { property: 'baserooms', name: 'base' + this.$new.baseRooms, value: e.data.room });
+            this.pushUndo(undoAction.add, undoType.properties, { property: 'baseRooms', name: 'base' + this.$new.baseRooms, value: e.data.room });
             this.changed = true;
         });
         this.$propertiesEditor.roomGrid.on('cut', (e) => {
             this.pushUndo(undoAction.delete, undoType.properties, {
-                property: 'baserooms', values: e.data.map(r => {
+                property: 'baseRooms', values: e.data.map(r => {
                     delete this.$area.baseRooms[r.name];
                     return { name: r.name, value: r.room };
                 })
@@ -4329,7 +4459,7 @@ export class AreaDesigner extends EditorBase {
                 e.preventDefault = true;
             else {
                 this.pushUndo(undoAction.delete, undoType.properties, {
-                    property: 'baserooms', values: e.data.map(r => {
+                    property: 'baseRooms', values: e.data.map(r => {
                         delete this.$area.baseRooms[r.name];
                         return { name: r.name, value: r.room };
                     })
@@ -4477,7 +4607,8 @@ export class AreaDesigner extends EditorBase {
                                     options: {
                                         data: [
                                             'wield',
-                                            'wear'
+                                            'wear',
+                                            'sheath'
                                         ]
                                     }
                                 }
@@ -4568,7 +4699,8 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-wimpy': '' + ed.value.wimpy,
                                     'mon-wiz-drop-encumbered': (ed.value.flags & MonsterFlags.Drop_encumbered) === MonsterFlags.Drop_encumbered,
                                     'mon-wiz-drop-encumbered-combat': (ed.value.flags & MonsterFlags.Drop_encumbered_combat) === MonsterFlags.Drop_encumbered_combat,
-                                    'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand
+                                    'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand,
+                                    'mon-wiz-reactions' : ed.value.reactions
                                 },
                                 finish: e => {
                                     if (ed.editors) {
@@ -4628,6 +4760,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.autoWear.time = +e.data['mon-wiz-auto-wear'];
                                     nMonster.autoWear.enabled = e.data['mon-wiz-auto-wear-enabled'];
                                     nMonster.wimpy = +e.data['mon-wiz-wimpy'];
+                                    nMonster.reactions = e.data['mon-wiz-reactions'] || [];
                                     if (e.data['mon-wiz-drop-encumbered'])
                                         nMonster.flags |= MonsterFlags.Drop_encumbered;
                                     if (e.data['mon-wiz-drop-encumbered-combat'])
@@ -4639,7 +4772,7 @@ export class AreaDesigner extends EditorBase {
                                         ed.value = nMonster;
                                     ed.focus();
                                 },
-                                closed: e => {
+                                closed: () => {
                                     ed.focus();
                                 }
                             });
@@ -4812,8 +4945,8 @@ export class AreaDesigner extends EditorBase {
                                         id: 'obj-welcome',
                                         title: 'Welcome',
                                         body: `
-                                        <img src="../assets/icons/png/wizobjlogo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 56px;">
-                                        <div style="padding-top:76px">Welcome to the object editor wizard, this will take you through the steps to edit an objectquickly and easily. You may finish at any time to save your current selections.</div>
+                                        <img src="../assets/icons/png/wiz.obj.logo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 56px;">
+                                        <div style="padding-top:76px">Welcome to the object editor wizard, this will take you through the steps to edit an object quickly and easily. You may finish at any time to save your current selections.</div>
                                         `
                                     }),
                                     new WizardPage({
@@ -4868,7 +5001,7 @@ export class AreaDesigner extends EditorBase {
                                         title: 'General properties',
                                         body: `<div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%">Key ID
-                                            <input type="text" class="input-sm form-control" id="obj-keyid" />
+                                            <input type="text" class="input-sm form-control" id="obj-keyID" />
                                         </label>
                                     </div>
                                     <div class="col-sm-6 form-group">
@@ -4894,7 +5027,7 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-keyid').value = ed.value.keyid || '';
+                                            e.page.querySelector('#obj-keyID').value = ed.value.keyID || '';
                                             e.page.querySelector('#obj-mass').value = ed.value.mass || '0';
                                             e.page.querySelector('#obj-material').value = ed.value.material || '';
                                         }
@@ -4961,7 +5094,7 @@ export class AreaDesigner extends EditorBase {
                                         body: `<div class="col-sm-12 form-group">
                                     <label class="control-label" style="width: 100%;">Type
                                         <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
-                                            <optgroup label="accessory"><option value="accessory">Accessory</option><option value="buckler">Buckler</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Bandedmail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splintmail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chainmail</option><option value="ringmail">Ringmail</option><option value="scalemail">Scalemail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy overclothing</option><option value="overclothing">Overclothing</option><option value="thin overclothing">Thin overclothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Underclothing</option></optgroup>
+                                            <optgroup label="accessory"><option value="accessory">Accessory</option><option value="buckler">Buckler</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Banded mail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splintmail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chainmail</option><option value="ringmail">Ring mail</option><option value="scalemail">Scalemail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy over clothing</option><option value="overclothing">Over clothing</option><option value="thin overclothing">Thin over clothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Under clothing</option></optgroup>
                                         </select>
                                     </label>
                                 </div>
@@ -5004,7 +5137,7 @@ export class AreaDesigner extends EditorBase {
                                         body: `<div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%;">Type
                                             <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
-                                                <optgroup label="accessory"><option value="accessory">Accessory</option><option value="buckler">Buckler</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Banded mail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splint mail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chain mail</option><option value="ringmail">Ring mail</option><option value="scalemail">Scalemail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy overclothing</option><option value="overclothing">Overclothing</option><option value="thin overclothing">Thin overclothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Underclothing</option></optgroup>
+                                                <optgroup label="accessory"><option value="accessory">Accessory</option><option value="buckler">Buckler</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Banded mail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splint mail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chain mail</option><option value="ringmail">Ring mail</option><option value="scalemail">Scale mail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy overclothing</option><option value="overclothing">Overclothing</option><option value="thin overclothing">Thin overclothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Underclothing</option></optgroup>
                                             </select>
                                         </label>
                                     </div>
@@ -5240,6 +5373,7 @@ export class AreaDesigner extends EditorBase {
                                 case StdObjectType.instrument:
                                     wiz.title = 'Edit instrument...';
                                     //type, quality, enchantment
+                                    //cSpell:disable
                                     wiz.addPages(new WizardPage({
                                         id: 'obj-instrument',
                                         title: 'Instrument properties',
@@ -5270,6 +5404,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
                                     }));
+                                    //cSpell:enable
                                     break;
                                 case StdObjectType.rope:
                                     wiz.title = 'Edit rope...';
@@ -5293,6 +5428,7 @@ export class AreaDesigner extends EditorBase {
                                 case StdObjectType.weapon:
                                     wiz.title = 'Edit weapon...';
                                     //type, quality, enchantment
+                                    //cSpell:disable
                                     wiz.addPages(new WizardPage({
                                         id: 'obj-weapon',
                                         title: 'Weapon properties',
@@ -5315,10 +5451,12 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
                                     }));
+                                    //cSpell:enable
                                     break;
                                 case StdObjectType.material_weapon:
                                     wiz.title = 'Edit material weapon...';
                                     //type, quality, enchantment
+                                    //cSpell:disable
                                     wiz.addPages(new WizardPage({
                                         id: 'obj-weapon',
                                         title: 'Material weapon properties',
@@ -5362,6 +5500,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-size').value = ed.value.size || '0';
                                         }
                                     }));
+                                    //cSpell:enable
                                     break;
                             }
                             if (wiz.pages.length === 5) {
@@ -5371,7 +5510,7 @@ export class AreaDesigner extends EditorBase {
                             wiz.addPages(new WizardPage({
                                 id: 'obj-finish',
                                 title: 'Finish',
-                                body: `<img src="../assets/icons/png/wizobjlogo.png" alt="Object editor summary" style="float: left;margin-top: 56px;height: 128px;width:128px;"> To finish your room simply click finished
+                                body: `<img src="../assets/icons/png/wiz.obj.logo.png" alt="Object editor summary" style="float: left;margin-top: 56px;height: 128px;width:128px;"> To finish your room simply click finished
                                     <div id="obj-summary" readonly="readonly" class="form-control" style="overflow:auto;height:219px;width:355px;white-space:pre;float: right;"></div>`,
                                 shown: (e) => {
                                     const summary = e.page.querySelector('#obj-summary');
@@ -6214,15 +6353,15 @@ export class AreaDesigner extends EditorBase {
                         break;
                     case undoType.properties:
                         switch (undo.data.property) {
-                            case 'baserooms':
-                                //this.pushUndo(undoAction.add, undoType.properties, { property: 'baserooms', name: 'base' + this.$new.baseRooms, value: e.data });
+                            case 'baseRooms':
+                                //this.pushUndo(undoAction.add, undoType.properties, { property: 'baseRooms', name: 'base' + this.$new.baseRooms, value: e.data });
                                 delete this.$area.baseRooms[undo.data.name];
                                 this.pushRedo(undo);
                                 this.updateBaseRooms();
                                 this.changed = true;
                                 break;
-                            case 'basemonsters':
-                                //this.pushUndo(undoAction.add, undoType.properties, { property: 'baserooms', name: 'base' + this.$new.baseRooms, value: e.data });
+                            case 'baseMonsters':
+                                //this.pushUndo(undoAction.add, undoType.properties, { property: 'baseRooms', name: 'base' + this.$new.baseRooms, value: e.data });
                                 delete this.$area.baseMonsters[undo.data.name];
                                 this.pushRedo(undo);
                                 this.updateBaseMonsters();
@@ -6261,7 +6400,7 @@ export class AreaDesigner extends EditorBase {
                         break;
                     case undoType.properties:
                         switch (undo.data.property) {
-                            case 'baserooms':
+                            case 'baseRooms':
                                 undo.data.values.forEach(r => {
                                     this.$area.baseRooms[r.name] = r.value;
                                 });
@@ -6270,14 +6409,14 @@ export class AreaDesigner extends EditorBase {
                                 this.changed = true;
                                 /*
                                 this.pushUndo(undoAction.delete, undoType.properties, {
-                                    property: 'baserooms', values: e.data.map(r => {
+                                    property: 'baseRooms', values: e.data.map(r => {
                                         delete this.$area.baseRooms[r.data.name];
                                         return { name: r.name, value: r.room };
                                     })
                                 });
                                 */
                                 break;
-                            case 'basemonsters':
+                            case 'baseMonsters':
                                 undo.data.values.forEach(r => {
                                     this.$area.baseMonsters[r.name] = r.value;
                                 });
@@ -6334,9 +6473,9 @@ export class AreaDesigner extends EditorBase {
                         this.changed = true;
                         break;
                     case undoType.properties:
-                        //this.pushUndo(undoAction.edit, undoType.properties, { property: 'baserooms', old: oldValue, new: newValue });
+                        //this.pushUndo(undoAction.edit, undoType.properties, { property: 'baseRooms', old: oldValue, new: newValue });
                         switch (undo.data.property) {
-                            case 'baserooms':
+                            case 'baseRooms':
                                 if (undo.data.old.name !== undo.data.new.name)
                                     delete this.$area.baseRooms[undo.data.new.name];
                                 this.$area.baseRooms[undo.data.old.name] = undo.data.old.room;
@@ -6344,7 +6483,7 @@ export class AreaDesigner extends EditorBase {
                                 this.updateBaseRooms();
                                 this.changed = true;
                                 break;
-                            case 'basemonsters':
+                            case 'baseMonsters':
                                 if (undo.data.old.name !== undo.data.new.name)
                                     delete this.$area.baseMonsters[undo.data.new.name];
                                 this.$area.baseMonsters[undo.data.old.name] = undo.data.old.monster;
@@ -6431,15 +6570,15 @@ export class AreaDesigner extends EditorBase {
                         break;
                     case undoType.properties:
                         switch (undo.data.property) {
-                            case 'baserooms':
-                                //this.pushUndo(undoAction.add, undoType.properties, { property: 'baserooms', name: 'base' + this.$new.baseRooms, value: e.data });
+                            case 'baseRooms':
+                                //this.pushUndo(undoAction.add, undoType.properties, { property: 'baseRooms', name: 'base' + this.$new.baseRooms, value: e.data });
                                 this.$area.baseRooms[undo.data.name] = undo.data.value;
                                 this.pushUndoObject(undo);
                                 this.updateBaseRooms();
                                 this.changed = true;
                                 break;
-                            case 'basemonsters':
-                                //this.pushUndo(undoAction.add, undoType.properties, { property: 'baserooms', name: 'base' + this.$new.baseRooms, value: e.data });
+                            case 'baseMonsters':
+                                //this.pushUndo(undoAction.add, undoType.properties, { property: 'baseRooms', name: 'base' + this.$new.baseRooms, value: e.data });
                                 this.$area.baseMonsters[undo.data.name] = undo.data.value;
                                 this.pushUndoObject(undo);
                                 this.updateBaseMonsters();
@@ -6462,7 +6601,7 @@ export class AreaDesigner extends EditorBase {
                 switch (undo.type) {
                     case undoType.properties:
                         switch (undo.data.property) {
-                            case 'baserooms':
+                            case 'baseRooms':
                                 undo.data.values.forEach(r => {
                                     delete this.$area.baseRooms[r.name];
                                 });
@@ -6471,14 +6610,14 @@ export class AreaDesigner extends EditorBase {
                                 this.changed = true;
                                 /*
                                 this.pushUndo(undoAction.delete, undoType.properties, {
-                                    property: 'baserooms', values: e.data.map(r => {
+                                    property: 'baseRooms', values: e.data.map(r => {
                                         delete this.$area.baseRooms[r.data.name];
                                         return { name: r.name, value: r.room };
                                     })
                                 });
                                 */
                                 break;
-                            case 'basemonsters':
+                            case 'baseMonsters':
                                 undo.data.values.forEach(r => {
                                     delete this.$area.baseMonsters[r.name];
                                 });
@@ -6487,7 +6626,7 @@ export class AreaDesigner extends EditorBase {
                                 this.changed = true;
                                 /*
                                 this.pushUndo(undoAction.delete, undoType.properties, {
-                                    property: 'baserooms', values: e.data.map(r => {
+                                    property: 'baseRooms', values: e.data.map(r => {
                                         delete this.$area.baseRooms[r.data.name];
                                         return { name: r.name, value: r.room };
                                     })
@@ -6531,9 +6670,9 @@ export class AreaDesigner extends EditorBase {
             case undoAction.edit:
                 switch (undo.type) {
                     case undoType.properties:
-                        //this.pushUndo(undoAction.edit, undoType.properties, { property: 'baserooms', old: oldValue, new: newValue });
+                        //this.pushUndo(undoAction.edit, undoType.properties, { property: 'baseRooms', old: oldValue, new: newValue });
                         switch (undo.data.property) {
-                            case 'baserooms':
+                            case 'baseRooms':
                                 if (undo.data.old.name !== undo.data.new.name)
                                     delete this.$area.baseRooms[undo.data.old.name];
                                 this.$area.baseRooms[undo.data.new.name] = undo.data.new;
@@ -6541,7 +6680,7 @@ export class AreaDesigner extends EditorBase {
                                 this.updateBaseRooms();
                                 this.changed = true;
                                 break;
-                            case 'basemonsters':
+                            case 'baseMonsters':
                                 if (undo.data.old.name !== undo.data.new.name)
                                     delete this.$area.baseMonsters[undo.data.old.name];
                                 this.$area.baseMonsters[undo.data.new.name] = undo.data.new;
@@ -8522,6 +8661,19 @@ export class AreaDesigner extends EditorBase {
                 monster: this.$area.monsters[m]
             };
         });
+        const data = Object.values<Monster>(this.$area.monsters).map(o => {
+            return {
+                display: o.name || o.short,
+                value: o.id
+            };
+        });
+        let cols = this.$propertiesEditor.roomGrid.columns;
+        cols[2].editor.options.columns[0].editor.options.data = data;
+        this.$propertiesEditor.roomGrid.columns = cols;
+
+        cols = this.$roomEditor.getPropertyOptions('monsters');
+        cols.editor.options.columns[0].editor.options.data = data;
+        this.$roomEditor.setPropertyOptions('monsters', cols);
     }
 
     private updateObjects() {
@@ -8550,7 +8702,7 @@ export class AreaDesigner extends EditorBase {
 
         cols = this.$propertiesEditor.roomGrid.columns;
         cols[1].editor.options.columns[0].editor.options.data = data;
-        this.$propertiesEditor.monsterGrid.columns = cols;
+        this.$propertiesEditor.roomGrid.columns = cols;
 
         cols = this.$roomEditor.getPropertyOptions('objects');
         cols.editor.options.columns[0].editor.options.data = data;
@@ -8649,12 +8801,13 @@ export class AreaDesigner extends EditorBase {
             return '';
         let t;
         let d;
+        //cSpell:disable
         if (this.$area.size.depth > 1)
             d = '/**\n * External virtual room ' + r.x + ', ' + r.y + ', ' + r.z + '\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */\n';
         else
             d = '/**\n * External virtual room ' + r.x + ', ' + r.y + '\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */\n';
         d += '#include <std.h>\n#include "../area.h"\n\ninherit (VIR + "baseroom.c");\n\n/**\n * Create\n *\n * Create the base virtual room, passing correct parameters to baseroom\n */\nvoid create()\n{\n   ::create(' + r.x + ', ' + r.y + ', ' + r.z + ', ' + r.terrain + ', ' + r.item + ', ' + r.exits + ');\n';
-
+        //cSpell:enable
         t = [];
         if (r.light !== 0)
             t.push(`"light" : ${r.light}`);
