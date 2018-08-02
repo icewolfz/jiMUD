@@ -16,7 +16,7 @@ inherit OBJ_ROPE;
 void create()
 {
    //Name, Material, Quality, Natural enchantment
-   ::create("", "", "", "");
+   ::create("", "", "", 0);
    set_nouns("");
    set_adjectives("");
    set_name("");

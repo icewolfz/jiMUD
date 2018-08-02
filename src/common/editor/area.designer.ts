@@ -433,7 +433,7 @@ class Monster {
 }
 
 enum StdObjectType {
-    object, chest, material, ore, weapon, armor, sheath
+    object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument
 }
 
 class StdObject {
@@ -4621,7 +4621,7 @@ export class AreaDesigner extends EditorBase {
                                         nObject[prop.substr(4)] = e.data[prop];
                                 }
                                 if (!nObject.equals(ed.data.object))
-                                   ed.value = nObject;
+                                    ed.value = nObject;
                                 ed.focus();
                             });
                             const qualities = `<div class="col-sm-12 form-group">
@@ -4776,7 +4776,7 @@ export class AreaDesigner extends EditorBase {
                                     wiz.addPages(new WizardPage({
                                         id: 'obj-ore',
                                         title: 'Ore properties',
-                                        body: ` <div class="col-sm-12 form-group">
+                                        body: `<div class="col-sm-12 form-group">
                                         <label class="control-label">Size
                                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A number or predefined string</span>
                                             <div class="input-group edit-dropdown">
@@ -4798,7 +4798,60 @@ export class AreaDesigner extends EditorBase {
                                     </div>${qualities}`,
                                         reset: (e) => {
                                             e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
-                                            e.page.querySelector('#obj-size').value = ed.value.size || '0';
+                                            e.page.querySelector('#obj-size').value = ed.value.size || '1';
+                                        }
+                                    }));
+                                    break;
+                                case StdObjectType.instrument:
+                                    wiz.title = 'Edit instrument...';
+                                    //type, quality, enchantment
+                                    wiz.addPages(new WizardPage({
+                                        id: 'obj-instrument',
+                                        title: 'Instrument properties',
+                                        body: `<div class="col-sm-12 form-group">
+                                        <label class="control-label" style="width: 100%;">Type
+                                            <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                            <option value="bagpipes">Bagpipes</option><option value="bell">Bell</option><option value="bladder pipe">Bladder pipe</option><option value="cornamuse">Cornamuse</option><option value="crumhorn">Crumhorn</option><option value="cymbal">Cymbal</option><option value="drum">Drum</option><option value="dulcian">Dulcian</option><option value="dulcimer">Dulcimer</option><option value="flute">Flute</option><option value="gamba">Gamba</option><option value="gemshorn">Gemshorn</option><option value="harp">Harp</option><option value="hirtenschalmei">Hirtenschalmei</option><option value="horn">Horn</option><option value="hurdy-gurdy">Hurdy-gurdy</option><option value="kortholt">Kortholt</option><option value="lizard">Lizard</option><option value="lute">Lute</option><option value="mute cornett">Mute cornett</option><option value="organetto">Organetto</option><option value="percussion">Percussion</option><option value="pipe and tabor">Pipe and tabor</option><option value="psaltery">Psaltery</option><option value="rackett">Rackett</option><option value="rauschpfeife">Rauschpfeife</option><option value="rebec">Rebec</option><option value="recorder">Recorder</option><option value="sacbut">Sacbut</option><option value="schalmei">Schalmei</option><option value="serpent">Serpent</option><option value="shawm">Shawm</option><option value="shofar">Shofar</option><option value="tambourine">Tambourine</option><option value="transverse flute">Transverse flute</option><option value="viol">Viol</option><option value="zink">Zink</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-12 form-group">
+                                        <label class="control-label" style="width: 100%;">Weapon type
+                                            <select id="obj-wType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                            <option value="">Default</option><optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Bow"><option value="bow">Bow</option><option value="crossbow">Crossbow</option><option value="long bow">Long bow</option><option value="longbow">Longbow</option><option value="recurve bow">Recurve bow</option><option value="self bow">Self bow</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="bolas">Bolas</option><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Shield"><option value="buckler">Buckler</option><option value="large shield">Large shield</option><option value="shield">Shield</option><option value="small shield">Small shield</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="arrow">Arrow</option><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
+                                            </select>
+                                        </label>
+                                    </div>${qualities}
+                                    <div class="form-group col-sm-12">
+                                        <label class="control-label">
+                                            Enchantment
+                                            <input type="number" id="obj-enchantment" class="input-sm form-control" value="0" min="0" max="1000" style="width: 100%" />
+                                        </label>
+                                    </div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-subType').value = ed.value.subType || '';
+                                            e.page.querySelector('#obj-wType').value = ed.value.wType || '';
+                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
+                                        }
+                                    }));
+                                    break;
+                                case StdObjectType.rope:
+                                    wiz.title = 'Edit rope...';
+                                    //quality, enchantment
+                                    wiz.addPages(new WizardPage({
+                                        id: 'obj-weapon',
+                                        title: 'Weapon properties',
+                                        body: `${qualities}
+                                <div class="form-group col-sm-12">
+                                    <label class="control-label">
+                                        Enchantment
+                                        <input type="number" id="obj-enchantment" class="input-sm form-control" value="0" min="0" max="1000" style="width: 100%" />
+                                    </label>
+                                </div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
                                     }));
                                     break;
@@ -4811,7 +4864,7 @@ export class AreaDesigner extends EditorBase {
                                         body: `<div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%;">Type
                                             <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
-                                            <optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Bow"><option value="bow">Bow</option><option value="crossbow">Crossbow</option><option value="long bow">Long bow</option><option value="longbow">Longbow</option><option value="recurve bow">Recurve bow</option><option value="self bow">Self bow</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Shield"><option value="buckler">Buckler</option><option value="large shield">Large shield</option><option value="shield">Shield</option><option value="small shield">Small shield</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="arrow">Arrow</option><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
+                                            <optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Bow"><option value="bow">Bow</option><option value="crossbow">Crossbow</option><option value="long bow">Long bow</option><option value="longbow">Longbow</option><option value="recurve bow">Recurve bow</option><option value="self bow">Self bow</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="bolas">Bolas</option><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Shield"><option value="buckler">Buckler</option><option value="large shield">Large shield</option><option value="shield">Shield</option><option value="small shield">Small shield</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="arrow">Arrow</option><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
                                             </select>
                                         </label>
                                     </div>${qualities}
@@ -4825,6 +4878,53 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-subType').value = ed.value.subType || '';
                                             e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
+                                        }
+                                    }));
+                                    break;
+                                case StdObjectType.material_weapon:
+                                    wiz.title = 'Edit material weapon...';
+                                    //type, quality, enchantment
+                                    wiz.addPages(new WizardPage({
+                                        id: 'obj-weapon',
+                                        title: 'Material weapon properties',
+                                        body: `<div class="col-sm-12 form-group">
+                                        <label class="control-label" style="width: 100%;">Type
+                                            <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                            <optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Bow"><option value="bow">Bow</option><option value="crossbow">Crossbow</option><option value="long bow">Long bow</option><option value="longbow">Longbow</option><option value="recurve bow">Recurve bow</option><option value="self bow">Self bow</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="bolas">Bolas</option><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Shield"><option value="buckler">Buckler</option><option value="large shield">Large shield</option><option value="shield">Shield</option><option value="small shield">Small shield</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="arrow">Arrow</option><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
+                                            </select>
+                                        </label>
+                                    </div>${qualities}
+                                    <div class="col-sm-12 form-group">
+                                        <label class="control-label">Size
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A number or predefined string</span>
+                                            <div class="input-group edit-dropdown">
+                                                <input type="text" id="obj-size" class="input-sm form-control">
+                                                <span class="input-group-btn">
+                                                    <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret" style="margin-left: -1px;"></span>
+                                                    </button>
+                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                        <li><a href="#">Small</a></li>
+                                                        <li><a href="#">Medium</a></li>
+                                                        <li><a href="#">Large</a></li>
+                                                        <li><a href="#">Huge</a></li>
+                                                        <li><a href="#">Giant</a></li>
+                                                    </ul>
+                                                </span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="form-group col-sm-12">
+                                        <label class="control-label">
+                                            Enchantment
+                                            <input type="number" id="obj-enchantment" class="input-sm form-control" value="0" min="0" max="1000" style="width: 100%" />
+                                        </label>
+                                    </div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-subType').value = ed.value.subType || '';
+                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
+                                            e.page.querySelector('#obj-size').value = ed.value.size || '0';
                                         }
                                     }));
                                     break;
