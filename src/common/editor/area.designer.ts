@@ -110,9 +110,9 @@ export enum UpdateType { none = 0, drawMap = 1, buildMap = 2, resize = 4, status
 
 interface ObjectInfo {
     id: number;
-    amount?: number;
+    minAmount?: number;
     maxAmount?: number;
-    random?: boolean;
+    random?: number;
     unique?: boolean;
     action?: string;
 }
@@ -3223,6 +3223,84 @@ export class AreaDesigner extends EditorBase {
                     type: EditorType.collection,
                     options: {
                         open: true,
+                        columns: [
+                            {
+                                label: 'Name',
+                                field: 'id',
+                                formatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return this.$area.objects[data.cell].short;
+                                    return '';
+                                },
+                                tooltipFormatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return this.$area.objects[data.cell].short;
+                                    return '';
+                                },
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
+                                            return {
+                                                display: o.name || o.short,
+                                                value: o.id
+                                            };
+                                        }) : []
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Min amount',
+                                field: 'minAmount',
+                                width: 150
+                            },
+                            {
+                                label: 'Max amount',
+                                field: 'maxAmount',
+                                width: 150
+                            },
+                            {
+                                label: 'Random',
+                                field: 'random',
+                                width: 150
+                            }
+                            ,
+                            {
+                                label: 'Unique',
+                                field: 'unique',
+                                width: 150
+                            }
+                            ,
+                            {
+                                label: 'Action',
+                                field: 'action',
+                                width: 150,
+                                spring: true,
+                                editor: {
+                                    type: EditorType.dropdown,
+                                    options: {
+                                        data: [
+                                            'wield',
+                                            'wear',
+                                            'sheath'
+                                        ]
+                                    }
+                                }
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                id: 0,
+                                minAmount: 0,
+                                maxAmount: 0,
+                                random: 0,
+                                unique: false,
+                                action: ''
+                            };
+                        },
+                        type: 'object',
                         enterMoveFirst: this.$enterMoveFirst,
                         enterMoveNext: this.$enterMoveNext,
                         enterMoveNew: this.$enterMoveNew
@@ -3615,6 +3693,83 @@ export class AreaDesigner extends EditorBase {
                     type: EditorType.collection,
                     options: {
                         open: true,
+                        columns: [
+                            {
+                                label: 'Name',
+                                field: 'id',
+                                formatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return this.$area.objects[data.cell].short;
+                                    return '';
+                                },
+                                tooltipFormatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return this.$area.objects[data.cell].short;
+                                    return '';
+                                },
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
+                                            return {
+                                                display: o.name || o.short,
+                                                value: o.id
+                                            };
+                                        }) : []
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Min amount',
+                                field: 'minAmount',
+                                width: 150
+                            },
+                            {
+                                label: 'Max amount',
+                                field: 'maxAmount',
+                                width: 150
+                            },
+                            {
+                                label: 'Random',
+                                field: 'random',
+                                width: 150
+                            }
+                            ,
+                            {
+                                label: 'Unique',
+                                field: 'unique',
+                                width: 150
+                            }
+                            ,
+                            {
+                                label: 'Action',
+                                field: 'action',
+                                width: 150,
+                                spring: true,
+                                editor: {
+                                    type: EditorType.dropdown,
+                                    options: {
+                                        data: [
+                                            'wield',
+                                            'wear'
+                                        ]
+                                    }
+                                }
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                id: 0,
+                                minAmount: 0,
+                                maxAmount: 0,
+                                random: 0,
+                                unique: false,
+                                action: ''
+                            };
+                        },
+                        type: 'object',
                         enterMoveFirst: this.$enterMoveFirst,
                         enterMoveNext: this.$enterMoveNext,
                         enterMoveNew: this.$enterMoveNew
@@ -3888,6 +4043,83 @@ export class AreaDesigner extends EditorBase {
                     type: EditorType.collection,
                     options: {
                         open: true,
+                        columns: [
+                            {
+                                label: 'Name',
+                                field: 'id',
+                                formatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return this.$area.objects[data.cell].short;
+                                    return '';
+                                },
+                                tooltipFormatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return this.$area.objects[data.cell].short;
+                                    return '';
+                                },
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
+                                            return {
+                                                display: o.name || o.short,
+                                                value: o.id
+                                            };
+                                        }) : []
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Min amount',
+                                field: 'minAmount',
+                                width: 150
+                            },
+                            {
+                                label: 'Max amount',
+                                field: 'maxAmount',
+                                width: 150
+                            },
+                            {
+                                label: 'Random',
+                                field: 'random',
+                                width: 150
+                            }
+                            ,
+                            {
+                                label: 'Unique',
+                                field: 'unique',
+                                width: 150
+                            }
+                            ,
+                            {
+                                label: 'Action',
+                                field: 'action',
+                                width: 150,
+                                spring: true,
+                                editor: {
+                                    type: EditorType.dropdown,
+                                    options: {
+                                        data: [
+                                            'wield',
+                                            'wear'
+                                        ]
+                                    }
+                                }
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                id: 0,
+                                minAmount: 0,
+                                maxAmount: 0,
+                                random: 0,
+                                unique: false,
+                                action: ''
+                            };
+                        },
+                        type: 'object',
                         enterMoveFirst: this.$enterMoveFirst,
                         enterMoveNext: this.$enterMoveNext,
                         enterMoveNew: this.$enterMoveNew
@@ -4185,6 +4417,83 @@ export class AreaDesigner extends EditorBase {
                     type: EditorType.collection,
                     options: {
                         open: true,
+                        columns: [
+                            {
+                                label: 'Name',
+                                field: 'id',
+                                formatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return this.$area.objects[data.cell].short;
+                                    return '';
+                                },
+                                tooltipFormatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return this.$area.objects[data.cell].short;
+                                    return '';
+                                },
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
+                                            return {
+                                                display: o.name || o.short,
+                                                value: o.id
+                                            };
+                                        }) : []
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Min amount',
+                                field: 'minAmount',
+                                width: 150
+                            },
+                            {
+                                label: 'Max amount',
+                                field: 'maxAmount',
+                                width: 150
+                            },
+                            {
+                                label: 'Random',
+                                field: 'random',
+                                width: 150
+                            }
+                            ,
+                            {
+                                label: 'Unique',
+                                field: 'unique',
+                                width: 150
+                            }
+                            ,
+                            {
+                                label: 'Action',
+                                field: 'action',
+                                width: 150,
+                                spring: true,
+                                editor: {
+                                    type: EditorType.dropdown,
+                                    options: {
+                                        data: [
+                                            'wield',
+                                            'wear'
+                                        ]
+                                    }
+                                }
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                id: 0,
+                                minAmount: 0,
+                                maxAmount: 0,
+                                random: 0,
+                                unique: false,
+                                action: ''
+                            };
+                        },
+                        type: 'object',
                         enterMoveFirst: this.$enterMoveFirst,
                         enterMoveNext: this.$enterMoveNext,
                         enterMoveNew: this.$enterMoveNew
@@ -8225,6 +8534,27 @@ export class AreaDesigner extends EditorBase {
                 object: this.$area.objects[m]
             };
         });
+        const data = Object.values<StdObject>(this.$area.objects).map(o => {
+            return {
+                display: o.name || o.short,
+                value: o.id
+            };
+        });
+        let cols = this.$monsterGrid.columns;
+        cols[4].editor.options.columns[0].editor.options.data = data;
+        this.$monsterGrid.columns = cols;
+
+        cols = this.$propertiesEditor.monsterGrid.columns;
+        cols[2].editor.options.columns[0].editor.options.data = data;
+        this.$propertiesEditor.monsterGrid.columns = cols;
+
+        cols = this.$propertiesEditor.roomGrid.columns;
+        cols[1].editor.options.columns[0].editor.options.data = data;
+        this.$propertiesEditor.monsterGrid.columns = cols;
+
+        cols = this.$roomEditor.getPropertyOptions('objects');
+        cols.editor.options.columns[0].editor.options.data = data;
+        this.$roomEditor.setPropertyOptions('objects', cols);
     }
 
     private BuildAxises() {
