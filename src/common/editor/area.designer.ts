@@ -9,7 +9,7 @@ const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
 const path = require('path');
 const fs = require('fs-extra');
-import { Wizard, WizardPage } from '../Wizard';
+import { Wizard, WizardPage, WizardDataGridPage } from '../Wizard';
 import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit } from './virtual.editor';
 
 import RGBColor = require('rgbcolor');
@@ -517,6 +517,7 @@ class Size {
 }
 
 class Area {
+    public version = 1;
     public name: string;
     public rooms: Room[][][];
     public monsters;
@@ -4728,8 +4729,132 @@ export class AreaDesigner extends EditorBase {
                                     }));
                                     break;
                                 case StdObjectType.chest:
+                                    wiz.defaults = {
+                                        'obj-contents': ed.value.contents || []
+                                    };
                                     wiz.title = 'Edit chest...';
                                     //objects, money
+                                    wiz.addPages(new WizardDataGridPage({
+                                        title: 'Chest contents',
+                                        id: 'obj-contents',
+                                        columns: [
+                                            {
+                                                label: 'Item',
+                                                field: 'item',
+                                                width: 150,
+                                                formatter: (data) => {
+                                                    if (!data) return '';
+                                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                                        return this.$area.objects[data.cell].short;
+                                                    switch (data.cell) {
+                                                        case -1:
+                                                            return 'common gem';
+                                                        case -2:
+                                                            return 'uncommon gem';
+                                                        case -3:
+                                                            return 'rare gem';
+                                                        case -4:
+                                                            return 'exceptional gem';
+                                                        case -5:
+                                                            return 'platinum';
+                                                        case -6:
+                                                            return 'gold';
+                                                        case -7:
+                                                            return 'electrum';
+                                                        case -8:
+                                                            return 'silver';
+                                                        case -9:
+                                                            return 'copper';
+                                                    }
+                                                    return '';
+                                                },
+                                                tooltipFormatter: (data) => {
+                                                    if (!data) return '';
+                                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                                        return this.$area.objects[data.cell].short;
+                                                    switch (data.cell) {
+                                                        case -1:
+                                                            return 'common gem';
+                                                        case -2:
+                                                            return 'uncommon gem';
+                                                        case -3:
+                                                            return 'rare gem';
+                                                        case -4:
+                                                            return 'exceptional gem';
+                                                        case -5:
+                                                            return 'platinum';
+                                                        case -6:
+                                                            return 'gold';
+                                                        case -7:
+                                                            return 'electrum';
+                                                        case -8:
+                                                            return 'silver';
+                                                        case -9:
+                                                            return 'copper';
+                                                    }
+                                                    return '';
+                                                },
+                                                editor: {
+                                                    type: EditorType.select,
+                                                    options: {
+                                                        data: [
+                                                            { display: 'common gem', value: -1 },
+                                                            { display: 'uncommon gem', value: 2 },
+                                                            { display: 'rare gem', value: -3 },
+                                                            { display: 'exceptional gem', value: -4 },
+                                                            { display: 'platinum', value: -5 },
+                                                            { display: 'gold', value: -6 },
+                                                            { display: 'electrum', value: -7 },
+                                                            { display: 'silver', value: -8 },
+                                                            { display: 'copper', value: -9 }
+                                                        ].concat(...Object.values<StdObject>(this.$area.objects).filter(o => o.id !== ed.value.id).map(o => {
+                                                            return {
+                                                                display: o.name || o.short,
+                                                                value: o.id
+                                                            };
+                                                        }))
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                label: 'Min amount',
+                                                field: 'minAmount',
+                                                width: 150
+                                            },
+                                            {
+                                                label: 'Max amount',
+                                                field: 'maxAmount',
+                                                width: 150
+                                            },
+                                            {
+                                                label: 'Random',
+                                                field: 'random',
+                                                width: 150,
+                                                editor: {
+                                                    options: {
+                                                        min: 0,
+                                                        max: 100
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                label: 'Blockers',
+                                                field: 'blockers',
+                                                width: 300,
+                                                spring: true
+                                            }
+
+                                        ],
+                                        add: (e) => {
+                                            e.data = {
+                                                item: '',
+                                                minAmount: 0,
+                                                maxAmount: 0,
+                                                random: 0,
+                                                blockers: ''
+                                            };
+                                        }
+                                    }));
                                     break;
                                 case StdObjectType.material:
                                     wiz.title = 'Edit material...';
