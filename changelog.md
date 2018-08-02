@@ -31,6 +31,7 @@
   - Fixed error logging in low level systems
   - Fixed disconnect dialog count down timer when it is disconnects more then 3 times
   - Advanced editor: fix bug when inserting pinkfish formated text
+  - When files saved update open time to save time, as file has been changed and old open is invalid
 
 ## 0.4.60 2018-07-23
 

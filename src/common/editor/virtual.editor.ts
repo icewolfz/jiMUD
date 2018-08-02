@@ -5632,8 +5632,10 @@ export class VirtualEditor extends EditorBase {
                             return;
                         this.emit('reload', action, file);
                     }
-                    else
+                    else {
+                        this.$opened[path.basename(file)] = new Date().getTime();
                         this.$saving[path.basename(file)] = false;
+                    }
                     break;
             }
         }

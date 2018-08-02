@@ -426,7 +426,10 @@ export class MonacoCodeEditor extends EditorBase {
                     this.emit('reload', action);
                 }
                 else
+                {
+                    this.opened = new Date().getTime();
                     this.$saving = false;
+                }
                 break;
         }
     }

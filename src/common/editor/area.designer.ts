@@ -4680,7 +4680,7 @@ export class AreaDesigner extends EditorBase {
                                 </div>`,
                                         reset: (e) => {
                                             e.page.querySelector('#obj-subType').value = ed.value.subType || 'sheath';
-                                            e.page.querySelector('#obj-limbs').value = ed.value.limbs || '0';
+                                            e.page.querySelector('#obj-limbs').value = ed.value.limbs || '';
                                             e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
@@ -4723,7 +4723,7 @@ export class AreaDesigner extends EditorBase {
                                     </div>`,
                                         reset: (e) => {
                                             e.page.querySelector('#obj-subType').value = ed.value.subType || 'accessory';
-                                            e.page.querySelector('#obj-limbs').value = ed.value.limbs || '0';
+                                            e.page.querySelector('#obj-limbs').value = ed.value.limbs || '';
                                             e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
@@ -6300,13 +6300,15 @@ export class AreaDesigner extends EditorBase {
             case 'add':
             case 'change':
             case 'unlink':
-                if (!this.$saving[path.basename(file)]) {
+                if (!this.$saving) {
                     if (details && details.mtimeMs < this.opened)
                         return;
                     this.emit('reload', action, file);
                 }
-                else
-                    this.$saving[path.basename(file)] = false;
+                else {
+                    this.opened = new Date().getTime();
+                    this.$saving = false;
+                }
                 break;
         }
     }
@@ -8172,6 +8174,7 @@ export class AreaDesigner extends EditorBase {
         this.updateBaseRooms();
         this.updateBaseMonsters();
         this.updateMonsters();
+        this.updateObjects();
         this.emit('rebuild-buttons');
         Timer.end('BuildMap time');
     }
