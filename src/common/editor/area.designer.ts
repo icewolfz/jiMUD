@@ -7,7 +7,7 @@ import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
-import { copy, formatString, existsSync, capitalize, wordwrap, Cardinal, enumToString, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown } from '../library';
+import { copy, formatString, existsSync, capitalize, wordwrap, Cardinal, enumToString, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish } from '../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, dialog } = remote;
@@ -184,6 +184,8 @@ export class Room {
     public subArea: string = '';
 
     public type: string = 'base';
+    public noBaseMonsters: boolean = false;
+    public noBaseObjects: boolean = false;
 
     //room wizard supports
     public exitsDetails = {};
@@ -2925,7 +2927,8 @@ export class AreaDesigner extends EditorBase {
                 property: 'exitsDetails',
                 label: 'Exits',
                 group: 'Exits',
-                formatter: this.formatCollection,
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
                 editor: {
                     type: EditorType.collection,
                     options: {
@@ -3095,7 +3098,8 @@ export class AreaDesigner extends EditorBase {
             {
                 property: 'items',
                 group: 'Description',
-                formatter: this.formatCollection,
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
                 editor: {
                     type: EditorType.collection,
                     options: {
@@ -3228,7 +3232,8 @@ export class AreaDesigner extends EditorBase {
             {
                 property: 'objects',
                 group: 'Description',
-                formatter: this.formatCollection,
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
                 editor: {
                     type: EditorType.collection,
                     options: {
@@ -3240,13 +3245,13 @@ export class AreaDesigner extends EditorBase {
                                 formatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return this.$area.objects[data.cell].short;
+                                        return stripPinkfish(this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return this.$area.objects[data.cell].short;
+                                        return stripPinkfish(this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 editor: {
@@ -3302,7 +3307,8 @@ export class AreaDesigner extends EditorBase {
             {
                 property: 'monsters',
                 group: 'Description',
-                formatter: this.formatCollection,
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
                 editor: {
                     type: EditorType.collection,
                     options: {
@@ -3446,7 +3452,8 @@ export class AreaDesigner extends EditorBase {
             {
                 property: 'smells',
                 group: 'Advanced',
-                formatter: this.formatCollection,
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
                 sort: 3,
                 editor: {
                     type: EditorType.collection,
@@ -3486,7 +3493,8 @@ export class AreaDesigner extends EditorBase {
             {
                 property: 'searches',
                 group: 'Advanced',
-                formatter: this.formatCollection,
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
                 sort: 4,
                 editor: {
                     type: EditorType.collection,
@@ -3534,6 +3542,18 @@ export class AreaDesigner extends EditorBase {
                         container: document.body
                     }
                 }
+            },
+            {
+                property: 'noBaseMonsters',
+                label: 'No base monsters',
+                group: 'Advanced',
+                sort: 2
+            },
+            {
+                property: 'noBaseObjects',
+                label: 'No base objects',
+                group: 'Advanced',
+                sort: 2
             },
             {
                 property: 'light',
@@ -3757,7 +3777,8 @@ export class AreaDesigner extends EditorBase {
                 field: 'objects',
                 label: 'Objects',
                 sortable: false,
-                formatter: this.formatCollection,
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
                 editor: {
                     type: EditorType.collection,
                     options: {
@@ -3769,13 +3790,13 @@ export class AreaDesigner extends EditorBase {
                                 formatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return this.$area.objects[data.cell].short;
+                                        return stripPinkfish(this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return this.$area.objects[data.cell].short;
+                                        return stripPinkfish(this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 editor: {
@@ -4108,7 +4129,8 @@ export class AreaDesigner extends EditorBase {
                 field: 'objects',
                 label: 'Objects',
                 sortable: false,
-                formatter: this.formatCollection,
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
                 editor: {
                     type: EditorType.collection,
                     options: {
@@ -4120,13 +4142,13 @@ export class AreaDesigner extends EditorBase {
                                 formatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return this.$area.objects[data.cell].short;
+                                        return stripPinkfish(this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return this.$area.objects[data.cell].short;
+                                        return stripPinkfish(this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 editor: {
@@ -4183,7 +4205,8 @@ export class AreaDesigner extends EditorBase {
                 field: 'monsters',
                 label: 'Monsters',
                 sortable: false,
-                formatter: this.formatCollection,
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
                 editor: {
                     type: EditorType.collection,
                     options: {
@@ -4402,8 +4425,8 @@ export class AreaDesigner extends EditorBase {
             this.pushUndo(undoAction.edit, undoType.properties, { property: 'baseRooms', old: oldValue, new: newValue });
             if (oldValue.name !== newValue.name)
                 delete this.$area.baseRooms[oldValue.name];
-            newValue.monster.monsters = newValue.monsters;
-            newValue.monster.objects = newValue.objects;
+            newValue.room.monsters = newValue.monsters;
+            newValue.room.objects = newValue.objects;
             this.$area.baseRooms[newValue.name] = newValue.room;
             this.changed = true;
         });
@@ -4542,7 +4565,8 @@ export class AreaDesigner extends EditorBase {
                 field: 'objects',
                 label: 'Objects',
                 sortable: false,
-                formatter: this.formatCollection,
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
                 editor: {
                     type: EditorType.collection,
                     options: {
@@ -4554,13 +4578,13 @@ export class AreaDesigner extends EditorBase {
                                 formatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return this.$area.objects[data.cell].short;
+                                        return stripPinkfish(this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return this.$area.objects[data.cell].short;
+                                        return stripPinkfish(this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 editor: {
@@ -4700,7 +4724,7 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-drop-encumbered': (ed.value.flags & MonsterFlags.Drop_encumbered) === MonsterFlags.Drop_encumbered,
                                     'mon-wiz-drop-encumbered-combat': (ed.value.flags & MonsterFlags.Drop_encumbered_combat) === MonsterFlags.Drop_encumbered_combat,
                                     'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand,
-                                    'mon-wiz-reactions' : ed.value.reactions
+                                    'mon-wiz-reactions': ed.value.reactions
                                 },
                                 finish: e => {
                                     if (ed.editors) {
@@ -5684,12 +5708,16 @@ export class AreaDesigner extends EditorBase {
     }
 
     private formatCollection(prop, value) {
+        if (typeof prop === 'object') {
+            value = prop.cell;
+            prop = prop.field;
+        }
         if (!value || value.length === 0) return '';
         switch (prop) {
             case 'objects':
-                return value.map(v => capitalize(this.$area.objects[v.id].name)).join(' ,');
+                return value.map(v => stripPinkfish(this.$area.objects[v.id].name)).join(', ');
             case 'monsters':
-                return value.map(v => capitalize(this.$area.monsters[v.id].name)).join(' ,');
+                return value.map(v => capitalize(this.$area.monsters[v.id].name)).join(', ');
             case 'items':
                 return value.map(i => i.item).join(':');
             case 'smells':
@@ -8508,18 +8536,47 @@ export class AreaDesigner extends EditorBase {
             this.$roomPreview.objects.textContent = '';
         }
         else {
-            this.$roomPreview.short.textContent = room.short;
-            this.$roomPreview.long.textContent = room.long;
+            const base = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
+
+            this.$roomPreview.short.textContent = room.short || base.short;
+            this.$roomPreview.long.textContent = room.long || base.short;
             str = this.$roomPreview.long.innerHTML;
 
-            items = room.items;
+            items = room.items || base.items;
             if (items.length > 0) {
-                items = items[room.item].children.slice().sort((a, b) => { return b.item.length - a.item.length; });
+                items = items.slice().sort((a, b) => { return b.item.length - a.item.length; });
                 for (c = 0, cl = items.length; c < cl; c++)
                     str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'gi'), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
             }
             else
                 items = null;
+            e = room.climbs | base.climbs;
+            if (e !== RoomExit.None) {
+                ex = [];
+                for (exit in RoomExits) {
+                    if (!RoomExits.hasOwnProperty(exit)) continue;
+                    if (!RoomExits[exit]) continue;
+                    if ((e & RoomExits[exit]) === RoomExits[exit]) {
+                        if (room.exitsDetails[exit]) {
+                            if (room.exitsDetails[exit].hidden)
+                                continue;
+                        }
+                        else if (base.exitsDetails[exit]) {
+                            if (base.exitsDetails[exit].hidden)
+                                continue;
+                        }
+                        ex.push(exit);
+                    }
+                }
+                if (ex.length === 1)
+                    str += `<br>You can climb ${ex[0]} from here.`;
+                else if (ex.length > 1) {
+                    str = '<br>You can climb ';
+                    str += ex.slice(0, -1).join(', ');
+                    str += ' or ' + ex.pop();
+                    this.$roomPreview.exits.textContent = str + ' from here.';
+                }
+            }
             str += '<br><br>';
             this.$roomPreview.long.innerHTML = pinkfishToHTML(str);
             if (items && items.length > 0) {
@@ -8529,26 +8586,29 @@ export class AreaDesigner extends EditorBase {
                         item.title = items[c].description;
                 }
             }
-            if (room.smell.length > 0 && room.sound.length > 0) {
+
+            const smell = room.smell || base.smell;
+            const sound = room.sound || base.sound;
+            if (smell.length > 0 && sound.length > 0) {
                 this.$roomPreview.sound.style.display = 'block';
                 this.$roomPreview.smell.style.display = 'block';
-                this.$roomPreview.smell.textContent = room.smell;
-                this.$roomPreview.sound.textContent = room.sound;
+                this.$roomPreview.smell.textContent = smell;
+                this.$roomPreview.sound.textContent = sound;
                 this.$roomPreview.sound.appendChild(document.createElement('br'));
                 this.$roomPreview.sound.appendChild(document.createElement('br'));
             }
-            else if (room.smell.length > 0) {
+            else if (smell.length > 0) {
                 this.$roomPreview.sound.style.display = 'none';
                 this.$roomPreview.smell.style.display = 'block';
-                this.$roomPreview.smell.textContent = room.smell;
+                this.$roomPreview.smell.textContent = smell;
                 this.$roomPreview.sound.textContent = '';
                 this.$roomPreview.smell.appendChild(document.createElement('br'));
                 this.$roomPreview.smell.appendChild(document.createElement('br'));
             }
-            else if (room.sound.length > 0) {
+            else if (sound.length > 0) {
                 this.$roomPreview.smell.style.display = 'none';
                 this.$roomPreview.sound.style.display = 'block';
-                this.$roomPreview.sound.textContent = room.sound;
+                this.$roomPreview.sound.textContent = sound;
                 this.$roomPreview.sound.appendChild(document.createElement('br'));
                 this.$roomPreview.sound.appendChild(document.createElement('br'));
             }
@@ -8556,7 +8616,7 @@ export class AreaDesigner extends EditorBase {
                 this.$roomPreview.smell.style.display = 'none';
                 this.$roomPreview.sound.style.display = 'none';
             }
-            e = room.exits | room.external;
+            e = room.exits | room.external || base.exits || base.external;
             if (e === RoomExit.None)
                 this.$roomPreview.exits.textContent = 'There are no obvious exits.';
             else {
@@ -8564,10 +8624,21 @@ export class AreaDesigner extends EditorBase {
                 for (exit in RoomExits) {
                     if (!RoomExits.hasOwnProperty(exit)) continue;
                     if (!RoomExits[exit]) continue;
-                    if ((e & RoomExits[exit]) === RoomExits[exit])
+                    if ((e & RoomExits[exit]) === RoomExits[exit]) {
+                        if (room.exitsDetails[exit]) {
+                            if (room.exitsDetails[exit].hidden)
+                                continue;
+                        }
+                        else if (base.exitsDetails[exit]) {
+                            if (base.exitsDetails[exit].hidden)
+                                continue;
+                        }
                         ex.push(exit);
+                    }
                 }
-                if (ex.length === 1)
+                if (ex.length === 0)
+                    this.$roomPreview.exits.textContent = 'There are no obvious exits.';
+                else if (ex.length === 1)
                     this.$roomPreview.exits.textContent = 'There is one obvious exit: ' + ex[0];
                 else {
                     str = 'There are ' + Cardinal(ex.length) + ' obvious exits: ';
@@ -8576,15 +8647,32 @@ export class AreaDesigner extends EditorBase {
                     this.$roomPreview.exits.textContent = str;
                 }
             }
-            if (this.$area.monsters.length > 0) {
+            items = room.monsters.filter(i => i.minAmount > 0 || i.unique);
+            if (!room.noBaseMonsters)
+                items = items.concat(...base.monsters.filter(i => i.minAmount > 0 || i.unique));
+
+            if (items.length > 0) {
                 this.$roomPreview.living.style.display = '';
-                this.$roomPreview.living.innerHTML = '<br>' + room.monsters.map(v => stripPinkfish(capitalize(consolidate(v.amount, this.$area.monsters[v.id].short)))).join('<br>');
+                this.$roomPreview.living.innerHTML = '<br>' + stripPinkfish(items.map(v => capitalize(consolidate(v.minAmount, this.$area.monsters[v.id].short))).join('<br>'));
             }
             else
                 this.$roomPreview.living.style.display = 'none';
-            if (this.$area.objects.length > 0) {
+            items = room.objects.filter(i => i.minAmount > 0 || i.unique);
+            if (!room.noBaseObjects)
+                items = items.concat(...base.objects.filter(i => i.minAmount > 0 || i.unique));
+            if (items.length === 1) {
                 this.$roomPreview.objects.style.display = '';
-                this.$roomPreview.living.innerHTML = '<br>' + room.objects.map(v => pinkfishToHTML(capitalize(consolidate(v.amount, this.$area.objects[v.id].short)))).join(', ');
+                if (items[0].minAmount > 1)
+                    this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(this.$area.objects[items[0].id].short)) + ' are here.';
+                else
+                    this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(consolidate(items[0].minAmount, this.$area.objects[items[0].id].short))) + ' is here.';
+            }
+            else if (items.length > 0) {
+                this.$roomPreview.objects.style.display = '';
+                items = items.map(v => consolidate(v.minAmount, this.$area.objects[v.id].short));
+                str = items.slice(0, -1).join(', ');
+                str += ' and ' + items.pop();
+                this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(str)) + ' are here.';
             }
             else
                 this.$roomPreview.objects.style.display = 'none';
@@ -8688,7 +8776,7 @@ export class AreaDesigner extends EditorBase {
         });
         const data = Object.values<StdObject>(this.$area.objects).map(o => {
             return {
-                display: o.name || o.short,
+                display: stripPinkfish(o.name || o.short),
                 value: o.id
             };
         });
@@ -8912,18 +9000,21 @@ export class AreaDesigner extends EditorBase {
         if (!p) return;
     }
 
-    public generateRoomCode(room) {
+    public generateRoomCode(room, files) {
         if (!room) return '';
+        files = files || {};
         return '';
     }
 
-    public generateMonsterCode(monster) {
+    public generateMonsterCode(monster, files) {
         if (!monster) return '';
+        files = files || {};
         return '';
     }
 
-    public generateObjectCode(obj) {
+    public generateObjectCode(obj, files) {
         if (!obj) return '';
+        files = files || {};
         return '';
     }
 
