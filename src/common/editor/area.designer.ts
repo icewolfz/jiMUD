@@ -442,6 +442,56 @@ class Monster {
         }
         return true;
     }
+
+    public clear(data?, type?) {
+        if (data)
+            for (const prop in this) {
+                if (prop === 'id' || !this.hasOwnProperty(prop)) continue;
+                this[prop] = copy(data[prop]);
+            }
+        else {
+            this.maxAmount = -1;
+            this.unique = false;
+            this.type = 'base';
+            this.name = '';
+            this.long = '';
+            this.short = '';
+            this.class = '';
+            this.level = 1;
+            this.race = '';
+            this.alignment = '';
+            this.language = '';
+            this.flags = MonsterFlags.None;
+            this.nouns = '';
+            this.adjectives = '';
+            this.mass = 0;
+            this.height = 1;
+            this.eyeColor = '';
+            this.hairColor = '';
+            this.gender = 'male';
+            this.bodyType = '';
+            this.noCorpse = '';
+            this.noLimbs = '';
+            this.speed = 0;
+            this.patrolRoute = '';
+            this.noWalkRooms = '';
+            this.attackCommands = '';
+            this.attackCommandChance = 33;
+            this.attackInitiators = '';
+            this.aggressive = '';
+            this.autoDrop = { time: 1, enabled: false };
+            this.openStorage = { time: 3, enabled: true };
+            this.autoWield = { time: 3, enabled: true };
+            this.autoLoot = { time: 1, enabled: false };
+            this.autoWear = { time: 3, enabled: false };
+            this.wimpy = 0;
+            this.notes = '';
+            this.custom = '';
+        }
+        this.type = type || 'base';
+        this.reactions = [];
+        this.objects = [];
+    }
 }
 
 enum StdObjectType {
@@ -2904,18 +2954,20 @@ export class AreaDesigner extends EditorBase {
                     const old = this.getRoom(curr.x, curr.y, curr.z);
                     const oDefault = this.$area.baseRooms[old.type];
                     oldValues[sl] = old.clone();
-                    for (prop in oDefault) {
-                        if (prop === 'type' || prop === 'x' || prop === 'y' || prop === 'z' || !oDefault.hasOwnProperty(prop)) continue;
-                        if (oDefault && curr[prop] === oDefault[prop])
-                            curr[prop] = copy(nDefault[prop]);
-                    }
+                    if (oDefault && nDefault)
+                        for (prop in oDefault) {
+                            if (prop === 'type' || prop === 'x' || prop === 'y' || prop === 'z' || !oDefault.hasOwnProperty(prop)) continue;
+                            if (curr[prop] === oDefault[prop])
+                                curr[prop] = copy(nDefault[prop]);
+                        }
                     curr.type = newValue;
                     this.RoomChanged(curr, old, true);
-                    for (prop in oDefault) {
-                        if (prop === 'type' || prop === 'x' || prop === 'y' || prop === 'z' || !oDefault.hasOwnProperty(prop)) continue;
-                        if (oDefault && old[prop] === oDefault[prop])
-                            old[prop] = copy(nDefault[prop]);
-                    }
+                    if (oDefault && nDefault)
+                        for (prop in oDefault) {
+                            if (prop === 'type' || prop === 'x' || prop === 'y' || prop === 'z' || !oDefault.hasOwnProperty(prop)) continue;
+                            if (old[prop] === oDefault[prop])
+                                old[prop] = copy(nDefault[prop]);
+                        }
                     old.type = newValue;
                     this.DrawRoom(this.$mapContext, old, true, old.at(mx, my));
                 }
@@ -4059,7 +4111,6 @@ export class AreaDesigner extends EditorBase {
                                         nMonster.flags |= MonsterFlags.Drop_encumbered_combat;
                                     if (e.data['mon-wiz-auto-stand'])
                                         nMonster.flags |= MonsterFlags.Auto_Stand;
-
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;
                                     ed.focus();
@@ -4916,7 +4967,16 @@ export class AreaDesigner extends EditorBase {
         });
         this.$monsterGrid.on('add', e => {
             const m = new Monster();
+            m.clear(this.$area.baseMonsters[this.$area.defaultMonster], this.$area.defaultMonster);
             this.$area.monsters[m.id] = m;
+            if (!m.name || m.name.length !== 0) {
+                this.$new.monsters++;
+                if (this.$new.monsters > 1)
+                    m.name = 'new monster ' + this.$new.monsters;
+                else
+                    m.name = 'new monster';
+            }
+            m.short = m.short || ('a ' + m.name);
             e.data = {
                 id: m.id,
                 name: m.name,
@@ -5667,6 +5727,12 @@ export class AreaDesigner extends EditorBase {
         });
         this.$objectGrid.on('add', e => {
             const m = new StdObject();
+            this.$new.objects++;
+            if (this.$new.objects > 1)
+                m.name = 'new object ' + this.$new.objects;
+            else
+                m.name = 'new object';
+            m.short = 'a ' + m.name;
             this.$area.objects[m.id] = m;
             e.data = {
                 id: m.id,
@@ -7742,7 +7808,7 @@ export class AreaDesigner extends EditorBase {
     }
 
     public DrawDoor(ctx, x, y, w, h, exit) {
-        if (!exit || !exit.door || !exit.door.length) return;
+        if (!exit || !exit.door || exit.door.length !== 0) return;
         ctx.beginPath();
         ctx.clearRect(x, y, w, h);
         ctx.fillStyle = 'black';
@@ -7760,7 +7826,7 @@ export class AreaDesigner extends EditorBase {
     }
 
     public DrawDDoor(ctx, x, y, w, h, exit) {
-        if (!exit || !exit.door || !exit.door.length) return;
+        if (!exit || !exit.door || exit.door.lengthh !== 0) return;
         ctx.beginPath();
         ctx.fillStyle = 'black';
         ctx.strokeStyle = 'black';
@@ -8756,7 +8822,7 @@ export class AreaDesigner extends EditorBase {
             this.$depthToolbar.value = '' + this.selectedFocusedRoom.z;
         const objects = [];
         let type;
-        if (rooms && rooms.length) {
+        if (rooms && rooms.length !== 0) {
             type = rooms[0].type || 'base';
             let rl = rooms.length;
             const ri = [];
@@ -9295,13 +9361,15 @@ export class AreaDesigner extends EditorBase {
 
     public generateCode(p, data) {
         if (!p) return;
+        this.emit('progress-start', 'designer');
         const files = {};
         data = data || {};
+        this.emit('progress-complete', { type: 'designer', percent: 0, title: 'Generating file names&hellip;' });
         //#region Generate file names
         let counts = {};
         //generate monster names, count in case they have the same name and store based on unique id for lookup in code generate
         Object.keys(this.$area.monsters).forEach(m => {
-            const name = this.$area.monsters[m].name.replace(/ /g, '_');
+            const name = this.$area.monsters[m].name.replace(/ /g, '_').toLowerCase();
             if (!counts[name])
                 counts[name] = 1;
             else
@@ -9311,10 +9379,10 @@ export class AreaDesigner extends EditorBase {
             else
                 files[m] = name + counts[name];
         });
-        counts = {};
         //generate object names, count in case they have the same name and store based on unique id for lookup in code generate
+        counts = {};
         Object.keys(this.$area.objects).forEach(m => {
-            const name = this.$area.objects[m].name.replace(/ /g, '_');
+            const name = this.$area.objects[m].name.replace(/ /g, '_').toLowerCase();
             if (!counts[name])
                 counts[name] = 1;
             else
@@ -9324,8 +9392,8 @@ export class AreaDesigner extends EditorBase {
             else
                 files[m] = name + counts[name];
         });
-        counts = {};
         //generate room names and assign to x/y/z as if rooms are empty they will be skipped
+        counts = {};
         const zl = this.$area.size.depth;
         const xl = this.$area.size.width;
         const yl = this.$area.size.height;
@@ -9334,7 +9402,7 @@ export class AreaDesigner extends EditorBase {
                 for (let x = 0; x < xl; x++) {
                     const r = this.$area.rooms[z][y][x];
                     if (r.empty) continue;
-                    const name = r.subArea && r.subArea.length > 0 ? r.subArea : data.area;
+                    const name = (r.subArea && r.subArea.length > 0 ? r.subArea : data.area).toLowerCase();
                     if (!counts[name])
                         counts[name] = 1;
                     else
@@ -9343,11 +9411,55 @@ export class AreaDesigner extends EditorBase {
                 }
             }
         }
+        Object.keys(this.$area.baseRooms).forEach(r => files[r] = r.replace(/ /g, '_').toUpperCase() + 'ROOM');
+        Object.keys(this.$area.baseMonsters).forEach(r => files[r] = r.replace(/ /g, '_').toUpperCase() + 'MONSTER');
         //#endregion
+        this.emit('progress-complete', { type: 'designer', percent: 10, title: 'Creating paths&hellip;' });
+        //create paths
         fs.mkdirSync(p);
         fs.mkdirSync(path.join(p, 'obj'));
         fs.mkdirSync(path.join(p, 'mon'));
         fs.mkdirSync(path.join(p, 'std'));
+        this.emit('progress-complete', { type: 'designer', percent: 20, title: 'Creating base files' });
+        //Generate area.h
+        const template = copy(data);
+        const templePath = parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer'));
+        template['area post'] = '\n';
+        template['doc'] = '';
+        let value = fs.readFileSync(path.join(templePath, 'area.h'), 'utf8');
+        Object.keys(this.$area.baseRooms).forEach(r => template['area post'] += `\n#define ${files[r]} (STD + "${files[r].toLowerCase()}")`);
+        template['area post'] = '\n';
+        Object.keys(this.$area.baseMonsters).forEach(r => template['area post'] += `\n#define ${files[r]} (STD + "${files[r].toLowerCase()}")`);
+        Object.keys(this.$area.baseMonsters).filter(r => this.$area.baseMonsters[r].maxAmount > 0).forEach(r => template['area post'] += `\n#define MAX${r.replace(/ /g, '_').toUpperCase()} ${this.$area.baseMonsters[r].maxAmount}`);
+        value = this.parseFileTemplate(value, template);
+        this.write(value, path.join(p, 'area.h'));
+        //Generate base rooms
+        this.emit('progress-complete', { type: 'designer', percent: 24, title: 'Creating base files&hellip;' });
+        Object.keys(this.$area.baseRooms).forEach(r => this.write(this.generateRoomCode(this.$area.baseRooms[r], files, copy(data)), path.join(p, 'std', files[r].toLowerCase())));
+        //generate base monsters
+        this.emit('progress-complete', { type: 'designer', percent: 28, title: 'Creating base files&hellip;' });
+        Object.keys(this.$area.baseMonsters).forEach(r => this.write(this.generateMonsterCode(this.$area.baseMonsters[r], files, copy(data)), path.join(p, 'std', files[r].toLowerCase())));
+        //generate monsters
+        this.emit('progress-complete', { type: 'designer', percent: 30, title: 'Creating monster files&hellip;' });
+        Object.keys(this.$area.monsters).forEach(r => this.write(this.generateMonsterCode(this.$area.monsters[r], files, copy(data)), path.join(p, 'mon', files[r])));
+        //generate objects
+        this.emit('progress-complete', { type: 'designer', percent: 40, title: 'Creating object files&hellip;' });
+        Object.keys(this.$area.objects).forEach(r => this.write(this.generateObjectCode(this.$area.objects[r], files, copy(data)), path.join(p, 'obj', files[r])));
+        this.emit('progress-complete', { type: 'designer', percent: 50, title: 'Creating room files&hellip;' });
+        //generate rooms
+        let count = 0;
+        for (let z = 0; z < zl; z++) {
+            for (let y = 0; y < yl; y++) {
+                for (let x = 0; x < xl; x++) {
+                    const r = this.$area.rooms[z][y][x];
+                    if (r.empty) continue;
+                    this.write(this.generateObjectCode(r, files, copy(data)), path.join(p, files[`${r.x},${r.y},${r.z}`]));
+                    count++;
+                    this.emit('progress-complete', { type: 'designer', percent: 50 + Math.round(50 * count / this.$roomCount) });
+                }
+            }
+        }
+        this.emit('progress-complete', 'designer');
     }
 
     public generateRoomCode(room, files, data) {
@@ -9366,6 +9478,20 @@ export class AreaDesigner extends EditorBase {
         if (!obj) return '';
         files = files || {};
         return '';
+    }
+
+    private parseFileTemplate(template, data) {
+        if (!data || !template || template.length === 0) return template;
+        let d;
+        for (d in data) {
+            if (!data.hasOwnProperty(d))
+                continue;
+            if (data[d].regex)
+                template = template.replace(data[d].regex, data[d].value);
+            else
+                template = template.replace(new RegExp('{' + d + '}', 'g'), data[d]);
+        }
+        return template;
     }
 
     public resizeMap(width, height, depth, shift: shiftType, noUndo?) {
