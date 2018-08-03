@@ -953,13 +953,13 @@ export function formatSize(size) {
     return size.toLocaleString() + ' B';
 }
 
-export function capitalize(s) {
+export function capitalize(s, first?) {
     if (!s) return '';
     s = s.split(' ');
     let c;
     let i;
     let p;
-    const il = s.length;
+    const il = first ? 1 : s.length;
     for (i = 0; i < il; i++) {
         const pl = s[i].length;
         for (p = 0; p < pl; p++) {
@@ -971,6 +971,90 @@ export function capitalize(s) {
         }
     }
     return s.join(' ');
+}
+
+export function capitalizePinkfish(s) {
+    const p = string_parts(s);
+    if (p.length !== 3)
+        return capitalize(s, true);
+    return p[0] + capitalize(p[1], true) + p[2];
+}
+
+function is_color(str) {
+    if (!_colorCodes)
+        loadColors();
+    if (!str)
+        return false;
+    if (_colorCodes[str])
+        return true;
+    switch (str) {
+        case 'ITALIC':
+        case 'UNDERLINE':
+        case 'STRIKEOUT':
+        case 'DBLUNDERLINE':
+        case 'OVERLINE':
+        case 'FLASH':
+        case 'REVERSE':
+        case 'RESET':
+        case 'DEFAULT':
+        case 'BOLD':
+            return true;
+    }
+    return false;
+}
+
+function string_parts(str) {
+    let tmp;
+    let t2;
+    let ss;
+    let se;
+    let sm;
+    let s;
+    let e;
+    let c;
+    //more accurate then a regex even if slower in some cases
+    if (!str.length) return ['', '', ''];
+    tmp = str.split('%^');
+    c = tmp.length;
+    if (c === 1)
+        return ['', str, ''];
+
+    if (tmp[0].length === 0) {
+        for (s = 0; s < c; s++) {
+            t2 = tmp[s];
+            if (!t2.length) continue;
+            if (!is_color(t2)) {
+                s--;
+                break;
+            }
+        }
+    }
+    else
+        s--;
+    if (tmp[c - 1].length === 0) {
+        for (e = c - 1; e > s; e--) {
+            t2 = tmp[e];
+            if (!t2.length) continue;
+            if (!is_color(t2)) {
+                e++;
+                break;
+            }
+        }
+    }
+    else
+        e = c;
+    sm = tmp.slice(s + 1, e).join('%^');
+    if (!sm.length)
+        return [str, '', ''];
+    ss = tmp.slice(0, s + 1).join('%^');
+    se = tmp.slice(e).join('%^');
+    if (sm.length) {
+        if (ss.length)
+            ss += '%^';
+        if (se.length)
+            se = '%^' + se;
+    }
+    return [ss, sm, se];
 }
 
 export function inverse(s) {
@@ -1388,7 +1472,7 @@ export function consolidate(amt, str) {
     let y;
     let l;
     let e = '';
-    if (!str || amt < 2) return str;
+    if (!amt || !str || amt < 2) return str;
     if (str.endsWith(' ')) {
         e = ' ';
         str = str.trim();
@@ -1499,8 +1583,8 @@ export function pluralize(revert) {
     ];
 
     // save some time in the case that singular and plural are the same
-    if (uncountable.indexOf(this.toLowerCase()) >= 0)
-        return this;
+    if (uncountable.indexOf(revert.toLowerCase()) >= 0)
+        return revert;
     let word;
     // check for irregular forms
     for (word in irregular) {
@@ -1514,8 +1598,8 @@ export function pluralize(revert) {
             pattern = new RegExp(word + '$', 'i');
             replace = irregular[word];
         }
-        if (pattern.test(this))
-            return this.replace(pattern, replace);
+        if (pattern.test(revert))
+            return revert.replace(pattern, replace);
     }
     let array;
     if (revert) array = singular;
@@ -1527,8 +1611,8 @@ export function pluralize(revert) {
         if (!array.hasOwnProperty(reg)) continue;
         const pattern = new RegExp(reg, 'i');
 
-        if (pattern.test(this))
-            return this.replace(pattern, array[reg]);
+        if (pattern.test(revert))
+            return revert.replace(pattern, array[reg]);
     }
 
     return revert;
