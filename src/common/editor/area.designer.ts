@@ -732,8 +732,6 @@ export class AreaDesigner extends EditorBase {
     };
     private $mouseSelect;
 
-    private $measure;
-
     private $depth;
     private $roomCount;
     private $depthToolbar: HTMLInputElement;
@@ -8741,8 +8739,8 @@ export class AreaDesigner extends EditorBase {
         if (old) {
             if (room.equals(old))
                 return;
-            if (old.exits) this.$roomCount--;
-            if (room.exits) this.$roomCount++;
+            if (!old.empty) this.$roomCount--;
+            if (!room.empty) this.$roomCount++;
             this.doUpdate(UpdateType.status);
         }
         this.changed = true;
@@ -8751,25 +8749,6 @@ export class AreaDesigner extends EditorBase {
                 this.UpdateEditor(this.$selectedRooms);
             this.UpdatePreview(room);
         }
-    }
-
-    private roomsChanged() {
-        //store room lengths
-        const zl = this.$area.size.depth;
-        const xl = this.$area.size.width;
-        const yl = this.$area.size.height;
-        this.$roomCount = 0;
-
-        for (let z = 0; z < zl; z++) {
-            for (let y = 0; y < yl; y++) {
-                for (let x = 0; x < xl; x++) {
-                    const room = this.$area.rooms[z][y][x];
-                    if (room.exits) this.$roomCount++;
-                }
-            }
-        }
-        this.changed = true;
-        this.doUpdate(UpdateType.status);
     }
 
     private UpdateEditor(rooms) {
@@ -9004,7 +8983,7 @@ export class AreaDesigner extends EditorBase {
             for (let y = 0; y < yl; y++) {
                 for (let x = 0; x < xl; x++) {
                     const room = this.$area.rooms[z][y][x];
-                    if (room.exits) this.$roomCount++;
+                    if (!room.empty) this.$roomCount++;
                 }
             }
         }
@@ -9435,7 +9414,7 @@ export class AreaDesigner extends EditorBase {
                             this.$selectedRooms[idx] = rooms[room.z][room.y][room.x];
                         if (this.$focusedRoom && this.$focusedRoom.at(x, y, z))
                             this.$focusedRoom = rooms[room.z][room.y][room.x];
-                        if (room.exits) this.$roomCount++;
+                        if (!room.empty) this.$roomCount++;
                     }
                     else {
                         if (room.exits) {
