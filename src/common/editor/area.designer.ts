@@ -24,13 +24,6 @@ interface AreaDesignerOptions extends EditorOptions {
     depth?: number;
 }
 
-declare global {
-    interface Window {
-        $roomImg: HTMLImageElement;
-        $roomImgLoaded: boolean;
-    }
-}
-
 export enum RoomFlags {
     Melee_As_Ability = 1 << 17,
     No_Dirt = 1 << 16,
@@ -977,13 +970,6 @@ export class AreaDesigner extends EditorBase {
             this.doUpdate(UpdateType.drawMap);
         });
         //#endregion
-        if (!window.$roomImg) {
-            window.$roomImg = new Image();
-            window.$roomImg.src = './../assets/editor/rooms.png';
-            window.$roomImg.addEventListener('load', () => {
-                window.$roomImgLoaded = true;
-            });
-        }
         const frag = document.createDocumentFragment();
         this.$label = document.createElement('div');
         this.$label.classList.add('virtual-editor-label');
@@ -7811,10 +7797,6 @@ export class AreaDesigner extends EditorBase {
             this.$mapContext.restore();
             return;
         }
-        if (!window.$roomImgLoaded) {
-            this.doUpdate(UpdateType.drawMap);
-            return;
-        }
         yl = this.$area.size.height;
         xl = this.$area.size.width;
         Timer.start();
@@ -7914,10 +7896,6 @@ export class AreaDesigner extends EditorBase {
         this.$mapContext.lineWidth = 0.6;
         if (!this.$area.rooms) {
             this.$mapContext.restore();
-            return;
-        }
-        if (!window.$roomImgLoaded) {
-            setTimeout(() => { this.drawRegion(sX, sY, sWidth, sHeight); }, 10);
             return;
         }
         this.$mapContext.strokeStyle = 'black';
