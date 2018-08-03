@@ -38,7 +38,7 @@ export class AceCodeEditor extends EditorBase {
             this.emit('progress-start', 'indent');
         });
         this.$indenter.on('progress', (p) => {
-            this.emit('progress', p, 'indent');
+            this.emit('progress', { percent: p, type: 'indent' });
         });
         this.$indenter.on('complete', (lines) => {
             const Range = ace.require('ace/range').Range;

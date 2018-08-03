@@ -3372,10 +3372,15 @@
 
     function showProgressDialog(data) {
         var progress = document.getElementById('progress-dialog');
-        this.$queue.push(data);
+        if (typeof data === 'object') {
+            $queue.push(data);
+            document.getElementById('progress-dialog-title').innerHTML = $queue[0].title || 'Retrieving&hellip;';
+        }
+        else
+            document.getElementById('progress-dialog-title').innerHTML = data || 'Retrieving&hellip;';
         if (progress.open) return;
         menubar.enabled = false;
-        document.getElementById('progress-dialog-title').innerHTML = $queue[0].title || 'Retrieving&hellip;';
+
         progress.addEventListener('close', closeProgressDialog);
         progress.addEventListener('cancel', closeProgressDialog);
         document.getElementById('progress-dialog-cancel').addEventListener('click', closeProgressDialog);
@@ -3383,10 +3388,12 @@
         progress.showModal();
     }
 
-    function setProgressDialogValue(value) {
+    function setProgressDialogValue(value, title) {
         ipcRenderer.send('set-progress', { value: value });
         ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
         document.getElementById('progress-dialog-progressbar').value = value;
+        if (title && title.length > 0)
+            document.getElementById('progress-dialog-title').innerHTML = title;
     }
 
     function closeProgressDialog(id, saveTmp, removeItem) {
@@ -3409,27 +3416,29 @@
         }
         else
             data = $queue.shift();
-        if (removeItem && data.file)
-            _ied.removeItem(data.tag);
-        else if (removeItem && data.files) {
-            var fl = data.files.length;
-            for (var f = 0; f < fl; f++)
-                _ied.removeItem(data.tag + f);
-        }
-        if (data.tmp && !saveTmp) {
-            if (!Array.isArray(data.tmp))
-                data.tmp = [data.tmp];
-            var tl = data.tmp.length;
-            for (var t = 0; t < tl; t++) {
-                if (typeof data.tmp[t] === 'string') {
-                    if (existsSync(data.tmp[t]))
-                        fs.unlinkSync(data.tmp[t]);
-                    continue;
+        if (data) {
+            if (removeItem && data.file)
+                _ied.removeItem(data.tag);
+            else if (removeItem && data.files) {
+                var fl = data.files.length;
+                for (var f = 0; f < fl; f++)
+                    _ied.removeItem(data.tag + f);
+            }
+            if (data.tmp && !saveTmp) {
+                if (!Array.isArray(data.tmp))
+                    data.tmp = [data.tmp];
+                var tl = data.tmp.length;
+                for (var t = 0; t < tl; t++) {
+                    if (typeof data.tmp[t] === 'string') {
+                        if (existsSync(data.tmp[t]))
+                            fs.unlinkSync(data.tmp[t]);
+                        continue;
+                    }
+                    var n = data.tmp[t].name;
+                    data.tmp[t].removeCallback();
+                    if (existsSync(n))
+                        fs.unlinkSync(n);
                 }
-                var n = data.tmp[t].name;
-                data.tmp[t].removeCallback();
-                if (existsSync(n))
-                    fs.unlinkSync(n);
             }
         }
         if ($queue.length === 0) {
@@ -4768,6 +4777,7 @@
         document.getElementById('new-design').showModal();
     }
 
+    // eslint-disable-next-line no-unused-vars
     function createAreaDesign(file, width, height, depth) {
         width = width || +$('#new-design-width').val() || 25;
         height = height || +$('#new-design-height').val() || 25;
@@ -7793,13 +7803,23 @@
                     logOutput(manager.active.editor.filename + ': Indenting started');
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting started');
+                else if (type === 'designer') {
+                    showProgressDialog('Generating area&hellip;');
+                }
             });
-            //p.editor.on('progress', (p, type) => {});
+            p.editor.on('progress', (pObject) => {
+                if (!pObject) return;
+                if (pObject.type === 'designer') {
+                    setProgressDialogValue(pObject.percent, pObject.title);
+                }
+            });
             p.editor.on('progress-complete', (type) => {
                 if (type === 'indent')
                     logOutput(manager.active.editor.filename + ': Indenting finished');
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting finished');
+                else if (type === 'designer')
+                    closeProgressDialog();
             });
             p.editor.on('output', (msg) => {
                 logOutput(msg, true);
