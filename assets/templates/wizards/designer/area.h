@@ -13,6 +13,4 @@
 #define OBJ (RMS+"obj/") //the path to all objects
 #define STD (RMS+"std/") //the path to all standard files
 #define CMDS (RMS+"std") //the path to custom commands
-
-#define BASEMONSTER (STD+"basemonster") //the path to the base monster object
-#define BASEROOM (STD+"baseroom") //the path to the base room object
+{area post}

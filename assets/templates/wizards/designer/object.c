@@ -7,7 +7,8 @@
  * @created {date}
  * @typeof object
 {doc} */
-#include <std.h>{includes}
+#include <std.h>
+#include "../area.h"{includes}
 
 inherit {inherit};{inherits}
 

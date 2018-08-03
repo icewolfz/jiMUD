@@ -182,6 +182,7 @@ export class Room {
     public objects: ObjectInfo[] = [];
     public monsters: ObjectInfo[] = [];
     public subArea: string = '';
+    public background: string = '';
 
     public type: string = 'base';
     public noBaseMonsters: boolean = false;
@@ -280,9 +281,6 @@ export class Room {
             this.type = 'base';
             this.exits = data.exits || 0;
             this.exitsDetails = {};
-            this.x = 0;
-            this.y = 0;
-            this.z = 0;
             this.terrain = '';
             this.flags = RoomFlags.None;
             this.climbs = 0;
@@ -308,6 +306,7 @@ export class Room {
             this.temperature = 0;
             this.notes = '';
             this.custom = '';
+            this.background = '';
         }
     }
 
@@ -325,7 +324,7 @@ export class Room {
         if (this.forage !== -1) return false;
         if (this.flags !== RoomFlags.None) return false;
         for (const prop in this) {
-            if (prop === 'type' || prop === 'forage' || prop === 'flags' || !this.hasOwnProperty(prop)) continue;
+            if (prop === 'x' || prop === 'y' || prop === 'z' || prop === 'type' || prop === 'forage' || prop === 'flags' || !this.hasOwnProperty(prop)) continue;
             const tp = typeof this[prop];
             const value = <any>this[prop];
             if (tp === 'string' && value !== '')
@@ -344,8 +343,8 @@ export class Room {
 
     public addExit(exit, details?) {
         this.exits |= exit;
-        if (!this.exitsDetails[RoomExit[exit]])
-            this.exitsDetails[RoomExit[exit]] = details || new Exit(RoomExit[exit].toLowerCase());
+        if (!this.exitsDetails[RoomExit[exit].toLowerCase()])
+            this.exitsDetails[RoomExit[exit].toLowerCase()] = details || new Exit(RoomExit[exit].toLowerCase());
     }
 }
 
@@ -1262,8 +1261,13 @@ export class AreaDesigner extends EditorBase {
         });
         this.$mapContainer.appendChild(this.$map);
         this.$mapContext = this.$map.getContext('2d');
+
         this.$mapContext.mozImageSmoothingEnabled = false;
+        //this.$mapContext.imageSmoothingQuality = 'Medium';
+        this.$mapContext.webkitImageSmoothingEnabled = false;
+        //this.$mapContext.msImageSmoothingEnabled = false;
         this.$mapContext.imageSmoothingEnabled = false;
+
         this.$mapParent.appendChild(this.$mapContainer);
 
         this.$roomPreview = {};
@@ -3544,6 +3548,18 @@ export class AreaDesigner extends EditorBase {
                 }
             },
             {
+                property: 'background',
+                label: 'Background',
+                group: 'Advanced',
+                sort: 1,
+                editor: {
+                    options: {
+                        singleLine: true,
+                        container: document.body
+                    }
+                }
+            },
+            {
                 property: 'noBaseMonsters',
                 label: 'No base monsters',
                 group: 'Advanced',
@@ -3553,7 +3569,7 @@ export class AreaDesigner extends EditorBase {
                 property: 'noBaseObjects',
                 label: 'No base objects',
                 group: 'Advanced',
-                sort: 2
+                sort: 3
             },
             {
                 property: 'light',
@@ -6879,6 +6895,13 @@ export class AreaDesigner extends EditorBase {
         frag.appendChild(this.createButton('Resize map', 'arrows', () => {
             this.emit('show-resize', this.$area.size);
         }, false, this.$view !== View.map));
+        frag.appendChild(this.createButton('Generate area', 'bolt', () => {
+            this.emit('show-area', {
+                title: 'Generate area...', ok: (local, data) => {
+                    this.generateCode(local, data);
+                }
+            });
+        }, false));
         if (this.$area.size.depth > 1) {
             el = document.createElement('label');
             el.setAttribute('for', this.parent.id + '-level');
@@ -7003,6 +7026,17 @@ export class AreaDesigner extends EditorBase {
                     click: () => {
                         this.emit('show-resize', this.$area.size);
                     }
+                },
+                { type: 'separator' },
+                {
+                    label: 'Generate area',
+                    click: () => {
+                        this.emit('show-area', {
+                            title: 'Generate area...', ok: (local, data) => {
+                                this.generateCode(local, data);
+                            }
+                        });
+                    }
                 }
             ];
         }
@@ -7071,9 +7105,23 @@ export class AreaDesigner extends EditorBase {
         cols[2].editor.options.enterMoveNew = this.$enterMoveNew;
         this.$propertiesEditor.roomGrid.columns = cols;
 
-        //TODO update once monster columns set
         cols = this.$propertiesEditor.monsterGrid.columns;
+        cols[2].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[2].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[2].editor.options.enterMoveNew = this.$enterMoveNew;
         this.$propertiesEditor.monsterGrid.columns = cols;
+
+        cols = this.$monsterGrid.columns;
+        cols[4].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[4].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[4].editor.options.enterMoveNew = this.$enterMoveNew;
+        this.$monsterGrid.columns = cols;
+
+        cols = this.$objectGrid.columns;
+        cols[3].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[3].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[3].editor.options.enterMoveNew = this.$enterMoveNew;
+        this.$objectGrid.columns = cols;
 
         this.AllowResize = value.allowResize;
         this.AllowExitWalk = value.allowExitWalk;
@@ -7386,7 +7434,9 @@ export class AreaDesigner extends EditorBase {
         const x = room.x * 32;
         const y = room.y * 32;
         const ex = room.exits | room.climbs;
-        let exs = ex;
+        const indoors = (room.flags & RoomFlags.Indoors) === RoomFlags.Indoors;
+        let f = false;
+
         //if(ex === RoomExit.None) clr = "#E6E6E6";
         ctx.save();
         if (c) {
@@ -7401,13 +7451,13 @@ export class AreaDesigner extends EditorBase {
                     ctx.fillStyle = 'rgba(135, 206, 250, 0.50)';
                 else
                     ctx.fillStyle = 'rgba(142, 142, 142, 0.50)';
-                ctx.fillRoundedRect(1 + x, 1 + y, 30, 30, 8);
+                ctx.fillRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
             }
             if (this.$focused)
                 ctx.strokeStyle = '#f7b32e';
             else
                 ctx.strokeStyle = 'rgba(142, 142, 142, 0.50)';
-            ctx.strokeRoundedRect(1 + x, 1 + y, 30, 30, 8);
+            ctx.strokeRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
         }
         else if (this.$selectedRooms.indexOf(room) !== -1) {
             if (this.$focused) {
@@ -7418,10 +7468,170 @@ export class AreaDesigner extends EditorBase {
                 ctx.fillStyle = 'rgba(142, 142, 142, 0.50)';
                 ctx.strokeStyle = 'rgba(142, 142, 142, 0.50)';
             }
-            ctx.fillRoundedRect(1 + x, 1 + y, 30, 30, 8);
-            ctx.strokeRoundedRect(1 + x, 1 + y, 30, 30, 8);
+            ctx.fillRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
+            ctx.strokeRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
+        }
+        ctx.beginPath();
+        if (room.background && room.background.length) {
+            ctx.fillStyle = room.background;
+            f = true;
+        }
+        else if (room.terrain && room.terrain.length) {
+            switch (room.terrain) {
+                case 'wood':
+                    ctx.fillStyle = '#966F33';
+                    f = true;
+                    break;
+                case 'jungle':
+                    ctx.fillStyle = '#347C2C';
+                    f = true;
+                    break;
+                case 'forest':
+                    ctx.fillStyle = '#4E9258';
+                    f = true;
+                    break;
+                case 'grass':
+                case 'grassland':
+                case 'plains':
+                case 'prairie':
+                case 'savannah':
+                    ctx.fillStyle = '#4AA02C';
+                    f = true;
+                    break;
+                case 'desert':
+                case 'dirt':
+                case 'dirtroad':
+                case 'beach':
+                case 'sand':
+                case 'sanddesert':
+                    ctx.fillStyle = '#C2B280';
+                    f = true;
+                    break;
+                case 'snow':
+                    ctx.fillStyle = '#F0F8FF';
+                    f = true;
+                    break;
+                case 'tundra':
+                case 'icesheet':
+                    ctx.fillStyle = '#368BC1';
+                    f = true;
+                    break;
+                case 'underwater':
+                case 'water':
+                case 'lake':
+                case 'river':
+                    ctx.fillStyle = '#EBF4FA';
+                    f = true;
+                    break;
+                case 'ocean':
+                    ctx.fillStyle = '#C2DFFF';
+                    f = true;
+                    break;
+                case 'bog':
+                case 'city':
+                case 'cliff':
+                case 'cobble':
+                case 'farmland':
+                case 'highmountain':
+                case 'hills':
+                case 'mountain':
+                case 'pavedroad':
+                case 'rockdesert':
+                case 'rocky':
+                case 'stone':
+                case 'swamp':
+                    f = false;
+                    break;
+                default:
+                    f = false;
+                    break;
+            }
+        }
+        else
+            f = false;
+
+        if (room.empty)
+            ctx.strokeStyle = '#eae9e9';
+        else
+            ctx.strokeStyle = 'black';
+
+        ctx.lineWidth = 0.6;
+        if (!indoors) {
+            ctx.arc(x + 16.5, y + 16.5, 8.5, 0, Math.PI * 2, false);
+            if (f) ctx.fill();
+            ctx.stroke();
+        }
+        else {
+            if (f) ctx.fillRect(x + 8.5, y + 8.5, 16, 16);
+            ctx.strokeRect(x + 8.5, y + 8.5, 16, 16);
+        }
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.fillStyle = '#cccccc';
+        ctx.strokeStyle = 'black';
+        if (room.exitsDetails.north) {
+            ctx.moveTo(x + 16.5, y);
+            ctx.lineTo(x + 16.5, y + 8.5);
+        }
+        if (room.exitsDetails.northwest) {
+            if (!indoors) {
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + 10.5, y + 10.5);
+            }
+            else {
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + 8.5, y + 8.5);
+            }
         }
 
+        if (room.exitsDetails.northeast) {
+            if (!indoors) {
+                ctx.moveTo(x + 32.5, y);
+                ctx.lineTo(x + 22.5, y + 10.5);
+            }
+            else {
+                ctx.moveTo(x + 32.5, y);
+                ctx.lineTo(x + 24.5, y + 8.5);
+            }
+        }
+
+        if (room.exitsDetails.east) {
+            ctx.moveTo(x + 24.5, y + 16.5);
+            ctx.lineTo(x + 32.5, y + 16.5);
+        }
+
+        if (room.exitsDetails.west) {
+            ctx.moveTo(x, y + 16.5);
+            ctx.lineTo(x + 8.5, y + 16.5);
+        }
+
+        if (room.exitsDetails.south) {
+            ctx.moveTo(x + 16.5, y + 24.5);
+            ctx.lineTo(x + 16.5, y + 32.5);
+        }
+
+        if (room.exitsDetails.southeast) {
+            if (!indoors) {
+                ctx.moveTo(x + 32.5, y + 32.5);
+                ctx.lineTo(x + 22.5, y + 22.5);
+            }
+            else {
+                ctx.moveTo(x + 32.5, y + 32.5);
+                ctx.lineTo(x + 24.5, y + 24.5);
+            }
+        }
+        if (room.exitsDetails.southwest) {
+            if (!indoors) {
+                ctx.moveTo(x, y + 32.5);
+                ctx.lineTo(x + 10.5, y + 22.5);
+            }
+            else {
+                ctx.moveTo(x, y + 32.5);
+                ctx.lineTo(x + 8.5, y + 24.5);
+            }
+        }
+        ctx.closePath();
+        ctx.stroke();
         if (room.external) {
             ctx.strokeStyle = 'red';
             ctx.beginPath();
@@ -7461,84 +7671,40 @@ export class AreaDesigner extends EditorBase {
             ctx.stroke();
             ctx.strokeStyle = 'black';
         }
-
-        if ((exs & RoomExit.Up) === RoomExit.Up) exs &= ~RoomExit.Up;
-        if ((exs & RoomExit.Down) === RoomExit.Down) exs &= ~RoomExit.Down;
-        if ((exs & RoomExit.Out) === RoomExit.Out) exs &= ~RoomExit.Out;
-        if ((exs & RoomExit.Enter) === RoomExit.Enter) exs &= ~RoomExit.Enter;
-        if (exs === RoomExit.None && ex !== RoomExit.None && room.external !== RoomExit.None) {
-            ctx.strokeStyle = 'black';
-            ctx.strokeRect(0.5 + x + 7, 0.5 + y + 7, 17, 17);
-        }
-        else
-            ctx.drawImage(window.$roomImg, ((exs % 16) >> 0) * 32, ((exs / 16) >> 0) * 32,
-                32,
-                32,
-                x,
-                y,
-                32,
-                32
-            );
-
-        if (room.ef) {
-            ctx.fillStyle = '#FFE4E1';
-            ctx.fillRect(x + 8, y + 8, 16, 16);
-            if (ex !== RoomExit.None) {
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(0.5 + x + 7, 0.5 + y + 7, 17, 17);
-            }
-        }
         ctx.fillStyle = 'black';
-        if (ex !== RoomExit.None) {
-            if ((ex & RoomExit.Up) === RoomExit.Up) {
-                if ((room.external & RoomExit.Up) === RoomExit.Up)
-                    ctx.fillStyle = 'red';
-                else
-                    ctx.fillStyle = 'black';
-                ctx.beginPath();
-                ctx.moveTo(x + 1, y + 11);
-                ctx.lineTo(x + 7, y + 11);
-                ctx.lineTo(x + 4, y + 8);
-                ctx.closePath();
-                ctx.fill();
+        ctx.strokeStyle = 'black';
+        if (room.exitsDetails.up) {
+            ctx.beginPath();
+            ctx.moveTo(x + 1, y + 11);
+            ctx.lineTo(x + 7, y + 11);
+            ctx.lineTo(x + 4, y + 8);
+            ctx.closePath();
+            ctx.fill();
+        }
+        if (room.exitsDetails.down) {
+            ctx.beginPath();
+            ctx.moveTo(x + 1, y + 21);
+            ctx.lineTo(x + 7, y + 21);
+            ctx.lineTo(x + 4, y + 24);
+            ctx.closePath();
+            ctx.fill();
+        }
+        if (room.exitsDetails.out) {
+            ctx.beginPath();
+            ctx.moveTo(x + 26, y + 8);
+            ctx.lineTo(x + 29, y + 11);
+            ctx.lineTo(x + 26, y + 14);
+            ctx.closePath();
+            ctx.fill();
 
-            }
-            if ((ex & RoomExit.Down) === RoomExit.Down) {
-                if ((room.external & RoomExit.Down) === RoomExit.Down)
-                    ctx.fillStyle = 'red';
-                else
-                    ctx.fillStyle = 'black';
-                ctx.beginPath();
-                ctx.moveTo(x + 1, y + 21);
-                ctx.lineTo(x + 7, y + 21);
-                ctx.lineTo(x + 4, y + 24);
-                ctx.closePath();
-                ctx.fill();
-            }
-            if ((ex & RoomExit.Out) === RoomExit.Out) {
-                if ((room.external & RoomExit.Out) === RoomExit.Out)
-                    ctx.fillStyle = 'red';
-                else
-                    ctx.fillStyle = 'black';
-                ctx.beginPath();
-                ctx.moveTo(x + 26, y + 8);
-                ctx.lineTo(x + 29, y + 11);
-                ctx.lineTo(x + 26, y + 14);
-                ctx.closePath();
-                ctx.fill();
-            }
-            if ((ex & RoomExit.Enter) === RoomExit.Enter) {
-                if ((room.external & RoomExit.Enter) === RoomExit.Enter)
-                    ctx.fillStyle = 'red';
-                else
-                    ctx.fillStyle = 'black';
-                ctx.beginPath();
-                ctx.moveTo(x + 29, y + 19);
-                ctx.lineTo(x + 26, y + 22);
-                ctx.lineTo(x + 29, y + 25);
-                ctx.closePath();
-                ctx.fill();
-            }
+        }
+        if (room.exitsDetails.enter) {
+            ctx.beginPath();
+            ctx.moveTo(x + 29, y + 19);
+            ctx.lineTo(x + 26, y + 22);
+            ctx.lineTo(x + 29, y + 25);
+            ctx.closePath();
+            ctx.fill();
         }
         if (h) {
             if (this.$focused) {
@@ -7549,8 +7715,8 @@ export class AreaDesigner extends EditorBase {
                 ctx.fillStyle = 'rgba(221, 221, 221, 0.75)';
                 ctx.strokeStyle = 'rgba(142, 142, 142, 0.75)';
             }
-            ctx.fillRoundedRect(1 + x, 1 + y, 30, 30, 8);
-            ctx.strokeRoundedRect(1 + x, 1 + y, 30, 30, 8);
+            ctx.fillRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
+            ctx.strokeRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
         }
         ctx.restore();
     }
@@ -8693,6 +8859,9 @@ export class AreaDesigner extends EditorBase {
                 }
             }
         }
+        this.$selectedRooms.map(r => this.getRoom(r.x, r.y, r.z));
+        if (this.$focusedRoom)
+            this.$focusedRoom = this.getRoom(this.$focusedRoom.x, this.$focusedRoom.y, this.$focusedRoom.z);
         if (this.$depth >= this.$area.size.depth)
             this.$depth = this.$area.size.depth - 1;
         if (this.$area.size.right !== this.$map.width || this.$map.height !== this.$area.size.bottom) {
@@ -8996,23 +9165,67 @@ export class AreaDesigner extends EditorBase {
         return d;
     }
 
-    public generateCode(p) {
+    public generateCode(p, data) {
         if (!p) return;
+        const files = {};
+        data = data || {};
+        //#region Generate file names
+        let counts = {};
+        //generate monster names, count in case they have the same name and store based on unique id for lookup in code generate
+        Object.keys(this.$area.monsters).forEach(m => {
+            const name = this.$area.monsters[m].name.replace(/ /g, '_');
+            counts[name]++;
+            if (counts[name] === 1)
+                files[m] = name;
+            else
+                files[m] = name + counts[name];
+        });
+        counts = {};
+        //generate object names, count in case they have the same name and store based on unique id for lookup in code generate
+        Object.keys(this.$area.objects).forEach(m => {
+            const name = this.$area.objects[m].name.replace(/ /g, '_');
+            counts[name]++;
+            if (counts[name] === 1)
+                files[m] = name;
+            else
+                files[m] = name + counts[name];
+        });
+        counts = {};
+        //generate room names and assign to x/y/z as if rooms are empty they will be skipped
+        const zl = this.$area.size.depth;
+        const xl = this.$area.size.width;
+        const yl = this.$area.size.height;
+        for (let z = 0; z < zl; z++) {
+            for (let y = 0; y < yl; y++) {
+                for (let x = 0; x < xl; x++) {
+                    const r = this.$area.rooms[z][y][x];
+                    if (r.empty) continue;
+                    const name = r.subArea && r.subArea.length > 0 ? r.subArea : data.area;
+                    counts[name]++;
+                    files[`${x},${y},${z}`] = name + counts[name];
+                }
+            }
+        }
+        //#endregion
+        fs.mkdirSync(p);
+        fs.mkdirSync(path.join(p, 'obj'));
+        fs.mkdirSync(path.join(p, 'mon'));
+        fs.mkdirSync(path.join(p, 'std'));
     }
 
-    public generateRoomCode(room, files) {
+    public generateRoomCode(room, files, data) {
         if (!room) return '';
         files = files || {};
         return '';
     }
 
-    public generateMonsterCode(monster, files) {
+    public generateMonsterCode(monster, files, data) {
         if (!monster) return '';
         files = files || {};
         return '';
     }
 
-    public generateObjectCode(obj, files) {
+    public generateObjectCode(obj, files, data) {
         if (!obj) return '';
         files = files || {};
         return '';

@@ -10,7 +10,8 @@
  * @doc /doc/build/room/Intermediate
  * @doc /doc/build/room/Advanced
 {doc} */
-#include <std.h>{includes}
+#include <std.h>
+#include "area.h"{includes}
 
 inherit {inherit};{inherits}
 

@@ -436,7 +436,7 @@
     <dialog id="new-area" data-title="Create new area" style="width:400px;height:348px;padding:5px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
         <div class="dialog-header" style="font-weight: bold">
             <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('new-area').close();">&times;</button>
-            <div style="padding-top: 2px;">Create new area...</div>
+            <div style="padding-top: 2px;" id="new-area-title">Create new area...</div>
         </div>
         <div class="dialog-body" style="padding-top:40px">
             <div class="form-group">
@@ -4360,7 +4360,7 @@
         };
     }
 
-    function newArea() {
+    function newArea(title, ok) {
         if (!$dialogs.area) {
             $dialogs.area = {
                 dialog: document.getElementById('new-area'),
@@ -4390,6 +4390,9 @@
                 });
             });
         }
+        $dialogs.area.ok = ok;
+        $dialogs.area.dialog.dataset.title = title || 'Create new area...';
+        $('#new-area-title').text(title || 'Create new area...');
         $('#new-area *').attr('disabled', false);
         $('#btn-new-area-remote-path').attr('disabled', !connected);
 
@@ -4454,7 +4457,20 @@
         }
         options.browse = $('#new-area-path').val();
         doUpdate(16);
+        var data;
         $('#new-area *').attr('disabled', true);
+        if ($dialogs.area.ok) {
+            data = baseParseData();
+            data.area = $('#new-area-name').val();
+            data.path = $('#new-area-remote-path').val() || '/realms/' + data.name.toLowerCase() + '/' + $('#new-area-name').val().toLowerCase();
+            if (data.path.endsWith('/'))
+                data.path = data.path.substr(0, data.path.length - 1);
+            if (!data.path.startsWith('/'))
+                data.path = '/' + data.path;
+            $dialogs.area.ok(aPath, data);
+            document.getElementById('new-area').close();
+            if (manager.active && manager.active.editor) manager.active.editor.focus();
+        }
         var templatePath = parseTemplate(path.join('{assets}', 'templates', 'wizards', 'area'));
         var template = walkSync(templatePath);
         var templateRegex = new RegExp('^' + templatePath.replace(/\\/g, '\\\\'));
@@ -4465,7 +4481,7 @@
             fs.mkdirSync(template.dirs[c].replace(templateRegex, aPath));
         c = 0;
         cl = template.files.length;
-        var data = baseParseData();
+        data = baseParseData();
         data.area = $('#new-area-name').val();
         data.path = $('#new-area-remote-path').val() || '/realms/' + data.name.toLowerCase() + '/' + $('#new-area-name').val().toLowerCase();
         if (data.path.endsWith('/'))
@@ -6987,6 +7003,9 @@
                 });
                 p.editor.on('show-resize', size => {
                     showResizeDialog(size);
+                });
+                p.editor.on('show-area', e => {
+                    newArea(e.title, e.ok);
                 });
                 p.editor.on('dialog-close', () => menubar.enabled = true);
                 p.editor.on('dialog-cancel', () => menubar.enabled = true);

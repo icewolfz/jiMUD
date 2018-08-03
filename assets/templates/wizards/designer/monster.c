@@ -8,7 +8,8 @@
  * @typeof object
  * @doc /doc/build/monster/tutorial
 {doc} */
-#include <std.h>{includes}
+#include <std.h>
+#include "../area.h"{includes}
 
 inherit {inherit};
 
