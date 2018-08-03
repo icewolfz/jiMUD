@@ -78,7 +78,8 @@ See [Area designer](codeeditor.designer.md) for area designer docs
     - `Blocker` a comma delimited list of monster ids that block the exit
     - `Prevent peer` a message, true/false or a function to prevent peering this exit
     - `Destination door` optional destination door id, defaults to door if empty
-    - `Locked` does the door lock every reset
+    - `Locked` does the door lock or unlock every reset
+    - `Closed` is the door closed or open every reset
     - `Climb` is this exit a climbs, **Note** climbs are only supported with standard, base (see area if supported), and climb types.
     - `Climbing difficulty` how hard the climb is if this exit is a climb
   - `Smells` the smells for the room

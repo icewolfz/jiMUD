@@ -4935,6 +4935,11 @@
                         width: 60
                     },
                     {
+                        label: 'Closed',
+                        field: 'closed',
+                        width: 60
+                    },
+                    {
                         label: 'Climb',
                         field: 'climb',
                         width: 60
@@ -4956,6 +4961,7 @@
                         peer: '',
                         destDoor: '',
                         locked: false,
+                        closed: true,
                         climb: false,
                         diff: 0,
                     };
@@ -5276,13 +5282,17 @@
                 tmpl['create body'] = '';
                 tmpl['create post'] = '';
 
-                if (data['room-wiz-forage'] !== -1 && doors.filter(r => r.locked).length > 0) {
+                if (data['room-wiz-forage'] !== -1 && doors.length > 0) {
                     tmpl['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
                     if (data['room-wiz-forage'] !== -1)
                         tmpl['create post'] += `   set_property('forage', ${data['room-wiz-forage']});\n`;
-                    tmpl['create post'] += doors.filter(r => r.locked).map(r => `   set_locked("${r.door}", 1);\n`).join('');
+                    doors.forEach(r => {
+                        tmpl['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
+                        tmpl['create post'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
+                    });
                     tmpl['create post'] += '}';
                 }
+
                 tmpl['create arguments'] = $dialogs.room.defaults['room-wiz-create'] || '';
                 if ($dialogs.room.defaults['room-wiz-virtual'] && (data['room-wiz-type'].display === 'Standard') || data['room-wiz-type'].display === 'Base')
                     data['room-wiz-type'] = { display: 'Base', value: '(VIR+"baseroom")' };
@@ -7231,6 +7241,7 @@
                                         peer: '',
                                         destDoor: '',
                                         locked: false,
+                                        closed: true,
                                         climb: false,
                                         diff: 0,
                                     };
@@ -7256,6 +7267,7 @@
                                         peer: '',
                                         destDoor: '',
                                         locked: false,
+                                        closed: true,
                                         climb: false,
                                         diff: 0,
                                     });
@@ -7271,6 +7283,7 @@
                                         peer: '',
                                         destDoor: '',
                                         locked: false,
+                                        closed: true,
                                         climb: false,
                                         diff: 0,
                                     });
@@ -7286,6 +7299,7 @@
                                         peer: '',
                                         destDoor: '',
                                         locked: false,
+                                        closed: true,
                                         climb: false,
                                         diff: 0,
                                     });
@@ -7301,6 +7315,7 @@
                                         peer: '',
                                         destDoor: '',
                                         locked: false,
+                                        closed: true,
                                         climb: false,
                                         diff: 0,
                                     });
@@ -7316,6 +7331,7 @@
                                         peer: '',
                                         destDoor: '',
                                         locked: false,
+                                        closed: true,
                                         climb: false,
                                         diff: 0,
                                     });
@@ -7331,6 +7347,7 @@
                                         peer: '',
                                         destDoor: '',
                                         locked: false,
+                                        closed: true,
                                         climb: false,
                                         diff: 0,
                                     });
@@ -7346,6 +7363,7 @@
                                         peer: '',
                                         destDoor: '',
                                         locked: false,
+                                        closed: true,
                                         climb: false,
                                         diff: 0,
                                     });
@@ -7361,6 +7379,7 @@
                                         peer: '',
                                         destDoor: '',
                                         locked: false,
+                                        closed: true,
                                         climb: false,
                                         diff: 0,
                                     });
@@ -7376,6 +7395,7 @@
                                         peer: '',
                                         destDoor: '',
                                         locked: false,
+                                        closed: true,
                                         climb: false,
                                         diff: 0,
                                     });
@@ -7391,6 +7411,7 @@
                                         peer: '',
                                         destDoor: '',
                                         locked: false,
+                                        closed: true,
                                         climb: false,
                                         diff: 0,
                                     });

@@ -52,7 +52,8 @@ The basic properties used to describe the room
     - `Blocker` a name or list of comma delimited names of monsters that block exit
     - `Prevent peer` a string to display if can no peer exit
     - `Destination door` the destination door id from the destination
-    - `Locked` is the door locked every repop
+    - `Locked` is the door locked or unlocked every repop
+    - `Closed` is the door opened or closed every repop
     - `Climb` is this exit a climb
     - `Climb difficulty` if climb how hard is it
 - `External` A simple read only field to display if current selection has external exits
