@@ -1625,27 +1625,11 @@ export function stripPinkfish(text) {
     let t = 0;
     const tl = text.length;
     for (; t < tl; t++) {
-        switch (text[t]) {
-            case 'ITALIC':
-            case 'UNDERLINE':
-            case 'STRIKEOUT':
-            case 'DBLUNDERLINE':
-            case 'OVERLINE':
-            case 'FLASH':
-            case 'REVERSE':
-            case 'RESET':
-            case 'DEFAULT':
-            case 'BOLD':
-            case '':
-                break;
-            default:
-                if (text[t].startsWith('B_'))
-                    continue;
-                else if (text[t].match(/^RGB[0-5][0-5][0-5]$/))
-                    continue;
-                stack.push(text[t]);
-                break;
-        }
+        if (text[t].startsWith('B_') && is_color(text[t].substr(2)))
+            continue;
+        else if (is_color(text[t]))
+            continue;
+        stack.push(text[t]);
     }
     return stack.join('');
 }
