@@ -2372,3 +2372,68 @@ export class LPCFormatter extends EventEmitter {
         return tokens;
     }
 }
+
+export function createFunction(name, type?, args?) {
+    name = name.trim();
+    if (name.startsWith('(:'))
+        name = name.substr(2);
+    if (name.endsWith(':)'))
+        name = name.substr(0, name.length - 2);
+    name = name.trim();
+    if (!type) type = 'void';
+    if (type === 'void')
+        return `${type} ${name}(${args})\n{\n}\n\n`;
+    if (type === 'string')
+        return `${type} ${name}(${args})\n{\n   return "";\n}\n\n`;
+    return `${type} ${name}(${args})\n{\n   return 0;\n}\n\n`;
+}
+
+export function formatFunctionPointer(pointer, trim?) {
+    //remove spaces
+    pointer = pointer.trim();
+    //remove (::)
+    pointer = pointer.substr(2);
+    pointer = pointer.substr(0, pointer.length - 2);
+    if (trim)
+        return `(: ${pointer.trim()} :)`;
+    return ` (: ${pointer.trim()} :) `;
+}
+
+export function formatArgumentList(str, first, second?, indent?, quotes?) {
+    if (!str) return;
+    first = first || 64;
+    second = second || 75;
+    indent = indent || 5;
+    if (!Array.isArray(str))
+        str = str.splitQuote(',');
+    str = str.map(s => {
+        s = s.trim().replace(/\n|\r/g, '');
+        if (!quotes && !s.startsWith('"'))
+            s = '"' + s;
+        if (!quotes && !s.endsWith('"'))
+            s += '"';
+        return s;
+    });
+    const tmp = [];
+    const tl = str.length;
+    let tmp2 = [];
+    let tl2 = 0;
+    let w = first;
+    for (let t = 0; t < tl; t++) {
+        const c = str[t];
+        if (tmp.length > 0)
+            w = second;
+        if (tl2 + (tmp2.length - 1) * 2 + c.length < w) {
+            tmp2.push(c);
+            tl2 += c.length;
+        }
+        else {
+            tmp.push(tmp2.join(', '));
+            tmp2 = [c];
+            tl2 = c.length;
+        }
+    }
+    if (tmp2.length)
+        tmp.push(tmp2.join(', '));
+    return tmp.join(',\n' + ' '.repeat(indent));
+}
