@@ -8676,7 +8676,7 @@ export class AreaDesigner extends EditorBase {
         data['reset body'] = '';
         data['reset post'] = '';
         const base = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
-        if (baseRoom && (room.maxForage !== base.maxForage || doors.length > 0 || room.objects.length !== 0 || room.monsters.length !== 0)) {
+        if (baseRoom && (room.forage !== base.forage || doors.length > 0 || room.objects.length !== 0 || room.monsters.length !== 0)) {
             data['reset body'] += '\n';
             if (room.forage !== base.forage)
                 data['reset body'] += `   set_property('forage', ${room.forage});\n`;
@@ -8733,10 +8733,10 @@ export class AreaDesigner extends EditorBase {
                 });
             }
         }
-        else if (!baseRoom && (room.maxForage !== -1 || doors.length > 0 || room.objects.length !== 0 || room.monsters.length !== 0)) {
+        else if (!baseRoom && (room.forage !== base.forage || doors.length > 0 || room.objects.length !== 0 || room.monsters.length !== 0)) {
             data['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
-            if (room.maxForage !== -1 && room.maxForage !== base.maxForage)
-                data['create post'] += `   set_property('forage', ${room.maxForage});\n`;
+            if (room.forage !== base.forage)
+                data['create post'] += `   set_property('forage', ${room.forage});\n`;
             doors.forEach(r => {
                 data['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
                 data['create post'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
