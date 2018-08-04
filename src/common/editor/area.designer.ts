@@ -9333,7 +9333,7 @@ export class AreaDesigner extends EditorBase {
             case 'east':
                 return `${x + 1},${y},${z}`;
             case 'southeast':
-                return `${x + 1},${y - 1},${z}`;
+                return `${x + 1},${y + 1},${z}`;
             case 'south':
                 return `${x},${y + 1},${z}`;
             case 'southwest':
