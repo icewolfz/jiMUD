@@ -5462,7 +5462,7 @@
                     }
                 }
                 if (data['room-wiz-terrain'].length !== 0)
-                    tmpl['create body'] += `   set_terrain("${data['room-wiz-terrain']}");\n`;                
+                    tmpl['create body'] += `   set_terrain("${data['room-wiz-terrain']}");\n`;
                 tmp = [];
                 if (data['room-wiz-light'] !== 0)
                     tmp.push(`"light" : ${data['room-wiz-light']}`);
@@ -5555,7 +5555,7 @@
                             t = '"' + t + '"';
                         return t;
                     });
-                    if (tmp2.lengh === 1)
+                    if (tmp2.length === 1)
                         tmp2 = tmp2[0];
                     else
                         tmp2 = `({ ${tmp2.join(', ')} })`;
@@ -5651,7 +5651,7 @@
                             t = '"' + t + '"';
                         return t;
                     });
-                    if (tmp2.lengh === 1)
+                    if (tmp2.length === 1)
                         tmp2 = tmp2[0];
                     else
                         tmp2 = `({ ${tmp2.join(', ')} })`;
@@ -5687,7 +5687,7 @@
                             t = '"' + t + '"';
                         return t;
                     });
-                    if (tmp2.lengh === 1)
+                    if (tmp2.length === 1)
                         tmp2 = tmp2[0];
                     else
                         tmp2 = `({ ${tmp2.join(', ')} })`;
@@ -5723,7 +5723,7 @@
                             t = '"' + t + '"';
                         return t;
                     });
-                    if (tmp2.lengh === 1)
+                    if (tmp2.length === 1)
                         tmp2 = tmp2[0];
                     else
                         tmp2 = `({ ${tmp2.join(', ')} })`;
@@ -7485,9 +7485,9 @@
                                 if (((room.state & RoomStates.SinkingUp) === RoomStates.SinkingUp && z + 1 < depth) || ((room.state & RoomStates.SinkingDown) === RoomStates.SinkingDown && z > 0 && depth > 1))
                                     data['room-wiz-create-body'] += '   set_living_sink(1);\n';
                                 if ((room.state & RoomStates.SinkingUp) === RoomStates.SinkingUp && z + 1 < depth)
-                                    data['room-wiz-create-body'] += `   set_up(VIR+"${x},${y},${z + 1}");\n`;
+                                    data['room-wiz-create-body'] += `   set_up(VIR + "${x},${y},${z + 1}.c");\n`;
                                 if ((room.state & RoomStates.SinkingDown) === RoomStates.SinkingDown && z > 0 && depth > 1)
-                                    data['room-wiz-create-body'] += `   set_down(VIR+"${x},${y},${z - 1}");\n`;
+                                    data['room-wiz-create-body'] += `   set_down(VIR + "${x},${y},${z - 1}.c");\n`;
                                 data['room-wiz-exits'].push(...tmp);
                                 roomWizard(data);
                             }

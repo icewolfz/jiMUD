@@ -8,7 +8,7 @@ import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
-import { copy, formatString, existsSync, capitalize, wordwrap, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish } from '../library';
+import { copy, formatString, existsSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish } from '../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, dialog } = remote;
@@ -26,23 +26,20 @@ interface AreaDesignerOptions extends EditorOptions {
 }
 
 export enum RoomFlags {
-    No_MGive = 1 << 18,
-    Melee_As_Ability = 1 << 17,
-    No_Dirt = 1 << 16,
-    Enable_Pk = 1 << 15,
-    No_Forage = 1 << 14,
-    Hide_Exits = 1 << 13,
-    No_Map_Send = 1 << 12,
-    Explored = 1 << 11,
-    No_Teleport = 1 << 10,
-    No_Attack = 1 << 9,
-    No_Magic = 1 << 8,
-    Council = 1 << 7,
-    No_Scry = 1 << 6,
-    Indoors = 1 << 5,
-    Water = 1 << 4,
-    Hot = 1 << 3,
-    Cold = 1 << 2,
+    No_MGive = 1 << 15,
+    Melee_As_Ability = 1 << 14,
+    No_Dirt = 1 << 13,
+    Enable_Pk = 1 << 12,
+    No_Forage = 1 << 11,
+    Hide_Exits = 1 << 10,
+    No_Map_Send = 1 << 9,
+    Explored = 1 << 8,
+    No_Teleport = 1 << 7,
+    No_Attack = 1 << 6,
+    No_Magic = 1 << 5,
+    Council = 1 << 4,
+    No_Scry = 1 << 3,
+    Indoors = 1 << 2,
     Sinking_Up = 1 << 1,
     Sinking_Down = 1 << 0,
     None = 0
@@ -7795,7 +7792,7 @@ export class AreaDesigner extends EditorBase {
     }
 
     public DrawDDoor(ctx, x, y, w, h, exit) {
-        if (!exit || !exit.door || exit.door.lengthh !== 0) return;
+        if (!exit || !exit.door || exit.door.length !== 0) return;
         ctx.beginPath();
         ctx.fillStyle = 'black';
         ctx.strokeStyle = 'black';
@@ -8109,665 +8106,6 @@ export class AreaDesigner extends EditorBase {
         if (p) this.DrawRoom(this.$mapContext, p, true);
         if (this.$mouseSelect)
             this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mousePrevious.x - this.$mouseDown.x, this.$mousePrevious.y - this.$mouseDown.y);
-    }
-
-    private parseRoomCode(r, code) {
-        if (typeof (r) === 'undefined')
-            r = new Room(-1, -1, -1);
-        if (!code || code.length === 0)
-            return r;
-        let idx = 0;
-        let idx2;
-        const len = code.length;
-        let state = 0;
-        let start = 1;
-        let ident = '';
-        let c;
-        let i;
-        let b = 0;
-        let b2;
-        let quote = false;
-        let block;
-        r.smell = '';
-        r.sound = '';
-        r.long = '';
-        r.exits = 0;
-        r.terrain = '';
-        r.item = -1;
-        r.flags = 0;
-        let exit;
-        let exits;
-        for (; idx < len; idx++) {
-            c = code.charAt(idx);
-            i = code.charCodeAt(idx);
-            switch (state) {
-                case 1:
-                    if (b === 1 && c === '}') {
-                        state = 0;
-                        b = 0;
-                        ident = '';
-                    }
-                    else if (c === '}') {
-                        b--;
-                        ident = '';
-                    }
-                    else if (c === '{') {
-                        b++;
-                        ident = '';
-                    }
-                    else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c === '_') {
-                        ident += c;
-                    }
-                    else if (ident.length > 0) {
-                        switch (ident) {
-                            case 'set_short':
-                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
-                                    idx++;
-                                if (code.charAt(idx) === '(')
-                                    idx++;
-                                for (idx2 = idx; idx2 < len; idx2++) {
-                                    c = code.charAt(idx2);
-                                    if (c === '"') {
-                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                            continue;
-                                        quote = !quote;
-                                    }
-                                    if (!quote && c === ';')
-                                        break;
-                                }
-                                if (code.charAt(idx2 - 1) === ')')
-                                    r.short = this.parseString(code.substring(idx, idx2 - 1).trim());
-                                else
-                                    r.short = this.parseString(code.substring(idx, idx2).trim());
-                                idx = idx2;
-                                break;
-                            case 'set_long':
-                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
-                                    idx++;
-                                if (code.charAt(idx) === '(')
-                                    idx++;
-                                for (idx2 = idx; idx2 < len; idx2++) {
-                                    c = code.charAt(idx2);
-                                    if (c === '"') {
-                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                            continue;
-                                        quote = !quote;
-                                    }
-                                    if (!quote && c === ';')
-                                        break;
-                                }
-                                if (code.charAt(idx2 - 1) === ')')
-                                    r.long = this.parseString(code.substring(idx, idx2 - 1).trim());
-                                else
-                                    r.long = this.parseString(code.substring(idx, idx2).trim());
-                                idx = idx2;
-                                break;
-                            case 'add_exit':
-                                idx++;
-                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
-                                    idx++;
-                                for (idx2 = idx; idx2 < len; idx2++) {
-                                    c = code.charAt(idx2);
-                                    if (c === '"') {
-                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                            continue;
-                                        quote = !quote;
-                                    }
-                                    if (!quote && c === ';')
-                                        break;
-                                }
-                                exit = code.substring(idx, idx2 - 1).trim().splitQuote(',', 3, 3);
-                                if (exit.length > 0) {
-                                    switch (this.parseString(exit[0])) {
-                                        case 'north':
-                                            r.exits |= RoomExit.North;
-                                            break;
-                                        case 'northeast':
-                                            r.exits |= RoomExit.NorthEast;
-                                            break;
-                                        case 'east':
-                                            r.exits |= RoomExit.East;
-                                            break;
-                                        case 'southeast':
-                                            r.exits |= RoomExit.SouthEast;
-                                            break;
-                                        case 'south':
-                                            r.exits |= RoomExit.South;
-                                            break;
-                                        case 'southwest':
-                                            r.exits |= RoomExit.SouthWest;
-                                            break;
-                                        case 'west':
-                                            r.exits |= RoomExit.West;
-                                            break;
-                                        case 'northwest':
-                                            r.exits |= RoomExit.NorthWest;
-                                            break;
-                                        case 'up':
-                                            r.exits |= RoomExit.Up;
-                                            break;
-                                        case 'down':
-                                            r.exits |= RoomExit.Down;
-                                            break;
-                                        case 'out':
-                                            r.exits |= RoomExit.Out;
-                                            break;
-                                        case 'enter':
-                                            r.exits |= RoomExit.Enter;
-                                            break;
-                                        default:
-                                            r.exits |= RoomExit.Unknown;
-                                            break;
-                                    }
-                                }
-                                idx = idx2;
-                                break;
-                            case 'set_exits':
-                                idx++;
-                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
-                                    idx++;
-                                for (idx2 = idx; idx2 < len; idx2++) {
-                                    c = code.charAt(idx2);
-                                    if (c === '"') {
-                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                            continue;
-                                        quote = !quote;
-                                    }
-                                    if (!quote && c === ';')
-                                        break;
-                                }
-                                exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
-                                for (exit in exits) {
-                                    if (exit.length === 0 || !exits.hasOwnProperty(exit)) continue;
-                                    switch (exit) {
-                                        case 'north':
-                                            r.exits |= RoomExit.North;
-                                            break;
-                                        case 'northeast':
-                                            r.exits |= RoomExit.NorthEast;
-                                            break;
-                                        case 'east':
-                                            r.exits |= RoomExit.East;
-                                            break;
-                                        case 'southeast':
-                                            r.exits |= RoomExit.SouthEast;
-                                            break;
-                                        case 'south':
-                                            r.exits |= RoomExit.South;
-                                            break;
-                                        case 'southwest':
-                                            r.exits |= RoomExit.SouthWest;
-                                            break;
-                                        case 'west':
-                                            r.exits |= RoomExit.West;
-                                            break;
-                                        case 'northwest':
-                                            r.exits |= RoomExit.NorthWest;
-                                            break;
-                                        case 'up':
-                                            r.exits |= RoomExit.Up;
-                                            break;
-                                        case 'down':
-                                            r.exits |= RoomExit.Down;
-                                            break;
-                                        case 'out':
-                                            r.exits |= RoomExit.Out;
-                                            break;
-                                        case 'enter':
-                                            r.exits |= RoomExit.Enter;
-                                            break;
-                                        default:
-                                            r.exits |= RoomExit.Unknown;
-                                            break;
-                                    }
-                                }
-                                idx = idx2;
-                                break;
-                            case 'add_climb':
-                                idx++;
-                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
-                                    idx++;
-                                c = code.charAt(idx);
-                                if (c === '"') {
-                                    //idx++;
-                                    for (idx2 = idx; idx2 < len; idx2++) {
-                                        c = code.charAt(idx2);
-                                        if (c === '"') {
-                                            if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                                continue;
-                                            quote = !quote;
-                                        }
-                                        if (!quote && c === ',')
-                                            break;
-                                    }
-                                    block = this.parseString(code.substring(idx, idx2));
-                                    idx = idx2 + 1;
-                                    switch (block) {
-                                        case 'up':
-                                            r.climbs |= RoomExit.Up;
-                                            break;
-                                        case 'down':
-                                            r.climbs |= RoomExit.Down;
-                                            break;
-                                    }
-                                    for (idx2 = idx; idx2 < len; idx2++) {
-                                        c = code.charAt(idx2);
-                                        if (c === '"') {
-                                            if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                                continue;
-                                            quote = !quote;
-                                        }
-                                        if (!quote && c === ';')
-                                            break;
-                                    }
-                                    idx = idx2;
-                                }
-                                break;
-                            case 'set_terrain':
-                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
-                                    idx++;
-                                if (code.charAt(idx) === '(')
-                                    idx++;
-                                for (idx2 = idx; idx2 < len; idx2++) {
-                                    c = code.charAt(idx2);
-                                    if (c === '"') {
-                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                            continue;
-                                        quote = !quote;
-                                    }
-                                    if (!quote && c === ';')
-                                        break;
-                                }
-                                r.terrain = this.parseString(code.substring(idx, idx2 - 1).trim());
-                                idx = idx2;
-                                break;
-                            case 'set_listen':
-                                idx++;
-                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
-                                    idx++;
-                                b2 = 0;
-                                for (idx2 = idx; idx2 < len; idx2++) {
-                                    c = code.charAt(idx2);
-                                    if (c === '"') {
-                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                            continue;
-                                        quote = !quote;
-                                    }
-                                    if (!quote && c === ',') {
-                                        b2 = 1;
-                                        break;
-                                    }
-                                    if (!quote && c === ';')
-                                        break;
-                                }
-                                block = code.substring(idx, idx2).trim();
-                                idx = idx2 + 1;
-                                if (b2) {
-                                    block = this.parseString(block);
-                                    for (idx2 = idx; idx2 < len; idx2++) {
-                                        c = code.charAt(idx2);
-                                        if (c === '"') {
-                                            if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                                continue;
-                                            quote = !quote;
-                                        }
-                                        if (!quote && c === ';')
-                                            break;
-                                    }
-                                    if (block === 'default')
-                                        r.sound = this.parseString(code.substring(idx, idx2 - 1).trim());
-                                }
-                                else {
-                                    if (block.startsWith('"'))
-                                        r.sound = this.parseString(block);
-                                    else if (block.startsWith('(:'))
-                                        r.sound = 'Function: ' + block.slice(0, -1);
-                                    else if (block.startsWith('([')) {
-                                        const sounds = this.parseMapping(block);
-                                        let sound;
-                                        for (sound in sounds) {
-                                            if (sound.length === 0 || !sounds.hasOwnProperty(sound)) continue;
-                                            if (sound === 'default') {
-                                                r.sound = sound;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                                idx = idx2;
-                                break;
-                            case 'set_smell':
-                                idx++;
-                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
-                                    idx++;
-                                b2 = 0;
-                                for (idx2 = idx; idx2 < len; idx2++) {
-                                    c = code.charAt(idx2);
-                                    if (c === '"') {
-                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                            continue;
-                                        quote = !quote;
-                                    }
-                                    if (!quote && c === ',') {
-                                        b2 = 1;
-                                        break;
-                                    }
-                                    if (!quote && c === ';')
-                                        break;
-                                }
-                                block = code.substring(idx, idx2).trim();
-                                idx = idx2 + 1;
-                                if (b2) {
-                                    block = this.parseString(block);
-                                    for (idx2 = idx; idx2 < len; idx2++) {
-                                        c = code.charAt(idx2);
-                                        if (c === '"') {
-                                            if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                                continue;
-                                            quote = !quote;
-                                        }
-                                        if (!quote && c === ';')
-                                            break;
-                                    }
-                                    if (block === 'default')
-                                        r.smell = this.parseString(code.substring(idx, idx2 - 1).trim());
-                                    idx = idx2;
-                                }
-                                else {
-                                    if (block.startsWith('"'))
-                                        r.smell = this.parseString(block);
-                                    else if (block.startsWith('(:'))
-                                        r.smell = 'Function: ' + block.slice(0, -1);
-                                    else if (block.startsWith('([')) {
-                                        const smells = this.parseMapping(block);
-                                        let smell;
-                                        for (smell in smells) {
-                                            if (smell.length === 0 || !smells.hasOwnProperty(smell)) continue;
-                                            if (smell === 'default') {
-                                                r.smell = smell;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    idx = idx2;
-                                }
-                                break;
-                            case 'add_items':
-                            case 'set_items':
-                                idx++;
-                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
-                                    idx++;
-                                for (idx2 = idx; idx2 < len; idx2++) {
-                                    c = code.charAt(idx2);
-                                    if (c === '"') {
-                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                            continue;
-                                        quote = !quote;
-                                    }
-                                    if (!quote && c === ';')
-                                        break;
-                                }
-                                block = code.substring(idx, idx2 - 1).trim();
-                                const items = this.parseMapping(block);
-                                if (!r.items) r.items = [];
-                                let item;
-                                for (item in items) {
-                                    if (item.length === 0 || !items.hasOwnProperty(item)) continue;
-                                    if (item.startsWith('({') && item.endsWith('})')) {
-                                        const k = item.slice(2, -2).splitQuote(',', 3, 3);
-                                        let s;
-                                        const sl = k.length;
-                                        for (s = 0; s < sl; s++)
-                                            r.items.push({
-                                                item: this.parseString(k[s].trim()),
-                                                description: this.parseString(items[item].trim())
-                                            });
-                                    }
-                                    else
-                                        r.items.push({
-                                            item: this.parseString(item),
-                                            description: this.parseString(items[item].trim())
-                                        });
-                                }
-                                break;
-                            case 'set_property':
-                                idx++;
-                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
-                                    idx++;
-                                for (idx2 = idx; idx2 < len; idx2++) {
-                                    c = code.charAt(idx2);
-                                    if (c === '"') {
-                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                            continue;
-                                        quote = !quote;
-                                    }
-                                    if (!quote && c === ';')
-                                        break;
-                                }
-                                exit = code.substring(idx, idx2 - 1).trim().splitQuote(',', 3, 3);
-                                if (this.parseString(exit[0]) === 'light')
-                                    r.light = + +this.parseString(exit[1]);
-                                idx = idx2;
-                                break;
-                            case 'set_properties':
-                                idx++;
-                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
-                                    idx++;
-                                for (idx2 = idx; idx2 < len; idx2++) {
-                                    c = code.charAt(idx2);
-                                    if (c === '"') {
-                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
-                                            continue;
-                                        quote = !quote;
-                                    }
-                                    if (!quote && c === ';')
-                                        break;
-                                }
-                                exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
-                                for (exit in exits) {
-                                    if (exit.length === 0 || !exits.hasOwnProperty(exit)) continue;
-                                    if (exit === 'light') {
-                                        r.light = +exits[exit];
-                                        break;
-                                    }
-                                }
-                                idx = idx2;
-                                break;
-                        }
-                        ident = '';
-                    }
-                    else
-                        ident = '';
-                    break;
-                default:
-                    switch (c) {
-                        case '\n':
-                            start = 1;
-                            ident = '';
-                            break;
-                        default:
-                            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c === '_' || c === ' ')
-                                ident += c;
-                            else if (start && (ident === 'void create' || ident === 'varargs void create')) {
-                                state = 1;
-                                ident = '';
-                            }
-                            else {
-                                start = 0;
-                                ident = '';
-                            }
-                            break;
-                    }
-                    break;
-            }
-        }
-        return r;
-    }
-
-    private parseString(str) {
-        if (!str || str.length === 0)
-            return str;
-        const end = str.length;
-        if (str.startsWith('(:'))
-            return 'Function: ' + str;
-        if (str.startsWith('(['))
-            return 'Mapping: ' + str;
-        if (str.startsWith('({'))
-            return 'Array: ' + str;
-        const sb = [];
-        let save = true;
-        let c;
-        for (let idx = 0; idx < end; idx++) {
-            c = str.charAt(idx);
-            switch (c) {
-                case '\\': //escaped;
-                    idx++;
-                    if (idx >= end) break;
-                    sb.push(c);
-                    break;
-                case '"':
-                    if (!save) {
-                        idx++;
-                        while (idx < end && str.charAt(idx) !== '"')
-                            idx++;
-                        save = true;
-                    }
-                    save = false;
-                    break;
-                default:
-                    sb.push(c);
-                    break;
-            }
-        }
-
-        return sb.join('');
-    }
-
-    private parseMapping(str) {
-        if (!str || str.length === 0)
-            return {};
-        if (!str.startsWith('(['))
-            return {};
-        if (!str.endsWith('])'))
-            return {};
-
-        str = str.slice(2, -2).trim();
-        let idx = 0;
-        let pIdx = 0;
-        const end = str.length;
-        const m = {};
-        let array = 0;
-        let pair;
-        let c;
-        for (; idx < end; idx++) {
-            c = str.charAt(idx);
-            switch (c) {
-                case '/':
-                    if (idx + 1 < end && str.charAt(idx + 1) === '/') {
-                        if (pIdx < idx) {
-                            pair = this.parseKeyPair(str.substring(pIdx, idx).trim());
-                            m[pair[0]] = pair[1];
-                        }
-                        while (idx < end) {
-                            c = str.charAt(idx);
-                            if (c === '\n')
-                                break;
-                            idx++;
-                            pIdx = idx;
-                        }
-                    }
-                    else if (idx + 1 < end && str.charAt(idx + 1) === '*') {
-                        if (pIdx < idx) {
-                            pair = this.parseKeyPair(str.substring(pIdx, idx).trim());
-                            m[pair[0]] = pair[1];
-                        }
-                        while (idx < end) {
-                            c = str.charAt(idx);
-                            if (idx + 1 < end && c === '*' && str.charAt(idx + 1) === '/') {
-                                break;
-                            }
-                            idx++;
-                            pIdx = idx;
-                        }
-                    }
-                    break;
-                case '(':
-                    array++;
-                    break;
-                case '"':
-                    idx++;
-                    while (idx < end) {
-                        c = str.charAt(idx);
-                        if (str === '\\')
-                            idx++;
-                        else if (c === '"')
-                            break;
-                        idx++;
-                    }
-                    break;
-                case ')':
-                    array--;
-                    break;
-                case ',':
-                    if (array > 0) {
-                        idx++;
-                        continue;
-                    }
-                    pair = this.parseKeyPair(str.substring(pIdx, idx).trim());
-                    m[pair[0]] = pair[1];
-                    pIdx = idx + 1;
-                    break;
-            }
-        }
-        if (pIdx < idx) {
-            pair = this.parseKeyPair(str.substring(pIdx, idx).trim());
-            m[pair[0]] = pair[1];
-        }
-        return m || {};
-
-    }
-
-    private parseKeyPair(str) {
-        if (!str || str.length === 0)
-            return ['', ''];
-        const pair = ['', ''];
-        let c;
-        let idx = 0;
-        const end = str.length;
-        let array;
-        for (; idx < end; idx++) {
-            c = str.charAt(idx);
-            switch (c) {
-                case '(':
-                    array++;
-                    break;
-                case ')':
-                    idx++;
-                    pair[0] = str.substring(0, idx).trim();
-                    idx++;
-                    pair[1] = str.substring(idx).trim();
-                    return pair;
-                case '"':
-                    idx++;
-                    while (idx < end) {
-                        c = str.charAt(idx);
-                        if (str === '\\')
-                            idx++;
-                        else if (c === '"')
-                            break;
-                        idx++;
-                    }
-                    break;
-                case ':':
-                    if (array > 0) continue;
-                    pair[0] = this.parseString(str.substring(0, idx).trim());
-                    idx++;
-                    pair[1] = str.substring(idx).trim();
-                    return pair;
-            }
-        }
-        pair[0] = str;
-        return pair;
     }
 
     private RoomChanged(room, old?, silentUpdate?) {
@@ -9206,131 +8544,6 @@ export class AreaDesigner extends EditorBase {
         this.$roomEditor.beginEdit('objects', true);
     }
 
-    public externalCode(r?, y?, z?) {
-        if (typeof r === 'number')
-            r = this.getRoom(r, y, z);
-        else if (Array.isArray(r)) {
-            if (r.length >= 3)
-                r = this.getRoom(r[0], r[1], r[2]);
-            else if (r.length === 2)
-                r = this.getRoom(r[0], r[1]);
-            else //not enough data
-                return '';
-        }
-        else if (!r)
-            r = this.selectedFocusedRoom;
-        //no room return empty string
-        if (!r)
-            return '';
-        let t;
-        let d;
-        //cSpell:disable
-        if (this.$area.size.depth > 1)
-            d = '/**\n * External virtual room ' + r.x + ', ' + r.y + ', ' + r.z + '\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */\n';
-        else
-            d = '/**\n * External virtual room ' + r.x + ', ' + r.y + '\n * \n * An external room for virtual area\n * \n * @author {your name}\n * @created {date}\n * @typeof include\n * @doc /doc/build/virtual/generic_virtual\n * @doc /doc/build/room/Basic\n */\n';
-        d += '#include <std.h>\n#include "../area.h"\n\ninherit (VIR + "baseroom.c");\n\n/**\n * Create\n *\n * Create the base virtual room, passing correct parameters to baseroom\n */\nvoid create()\n{\n   ::create(' + r.x + ', ' + r.y + ', ' + r.z + ', ' + r.terrain + ', ' + r.item + ', ' + r.exits + ');\n';
-        //cSpell:enable
-        t = [];
-        if (r.light !== 0)
-            t.push(`"light" : ${r.light}`);
-        if ((r.state & RoomFlags.No_Attack) === RoomFlags.No_Attack)
-            t.push('"no attack" : 1');
-        if ((r.state & RoomFlags.No_Magic) === RoomFlags.No_Magic)
-            t.push('"no magic" : 1');
-        if ((r.state & RoomFlags.Council) === RoomFlags.Council)
-            t.push('"council" : 1');
-        if ((r.state & RoomFlags.Indoors) === RoomFlags.Indoors)
-            t.push('"indoors" : 1');
-        if (t.length > 0) {
-            d += '   set_properties( ([\n       ';
-            d += t.join(',\n       ');
-            d += '\n     ]) );\n';
-        }
-        d += '   set_short("' + r.short + '");\n';
-        d += '   set_long("';
-        if (r.long.length > 70) {
-            t = r.long.substr(0, 66);
-            let tl = t.length;
-            while (tl--) {
-                if (t.charAt(tl) === ' ') {
-                    t.substr(0, tl);
-                    break;
-                }
-            }
-            d += `"${t}"\n     `;
-            d += formatString(r.long.substr(t.length), 5, 73);
-        }
-        else
-            d += r.long + '");\n';
-        if (r.terrain.length > 0)
-            d += '   set_terrain("' + r.terrain + '");\n';
-        else if ((r.state & RoomFlags.Water) === RoomFlags.Water)
-            d += '   set_terrain("water");\n';
-
-        if (r.items.length > 0) {
-            d += '   set_items( ([\n       ';
-            d += r.items.map(i => {
-                return `"${i.item}" : "${i.description}"`;
-            });
-            d += '\n     ]) );\n';
-        }
-        if (r.smell.length > 0)
-            d += '   set_smell("' + r.smell + '");\n';
-        if (r.sound.length > 0)
-            d += '   set_listen("' + r.sound + '");\n';
-
-        if (RoomExit.None !== r.exits) {
-            d += '   set_exits( ([\n';
-            if (this.$area.size.depth > 1) {
-                if ((r.exits & RoomExit.Up) === RoomExit.Up)
-                    d += '       "up" : VIR + "' + (r.x) + ',' + (r.y) + ',' + (r.z + 1) + '.c",\n';
-                if ((r.exits & RoomExit.Down) === RoomExit.Down)
-                    d += '       "down" : VIR + "' + (r.x) + ',' + (r.y) + ',' + (r.z - 1) + '.c",\n';
-                t = ',' + r.z;
-            }
-            else
-                t = '';
-            if ((r.exits & RoomExit.North) === RoomExit.North)
-                d += '       "north" : VIR + "' + (r.x) + ',' + (r.y - 1) + t + '.c",\n';
-            if ((r.exits & RoomExit.NorthWest) === RoomExit.NorthWest)
-                d += '       "northwest" : VIR + "' + (r.x - 1) + ',' + (r.y - 1) + t + '.c",\n';
-            if ((r.exits & RoomExit.NorthEast) === RoomExit.NorthEast)
-                d += '       "northeast" : VIR + "' + (r.x + 1) + ',' + (r.y - 1) + t + '.c",\n';
-            if ((r.exits & RoomExit.East) === RoomExit.East)
-                d += '       "east" : VIR + "' + (r.x + 1) + ',' + (r.y) + t + '.c",\n';
-            if ((r.exits & RoomExit.West) === RoomExit.West)
-                d += '       "west" : VIR + "' + (r.x - 1) + ',' + (r.y) + t + '.c",\n';
-            if ((r.exits & RoomExit.South) === RoomExit.South)
-                d += '       "south" : VIR + "' + (r.x) + ',' + (r.y + 1) + t + '.c",\n';
-            if ((r.exits & RoomExit.SouthEast) === RoomExit.SouthEast)
-                d += '       "southeast" : VIR + "' + (r.x + 1) + ',' + (r.y + 1) + t + '.c",\n';
-            if ((r.exits & RoomExit.SouthWest) === RoomExit.SouthWest)
-                d += '       "southwest" : VIR + "' + (r.x - 1) + ',' + (r.y + 1) + t + '.c",\n';
-            let ri;
-            const re = Object.keys(r.external);
-            const rl = re.length;
-            for (ri = 0; ri < rl; ri++) {
-                if (!r.external[re[ri]].enabled)
-                    continue;
-                d += '       "' + r.external[re[ri]].exit + '":"' + r.external[re[ri]].dest + '",\n';
-            }
-            d += '     ]) );\n';
-        }
-        if ((r.state & RoomFlags.Cold) === RoomFlags.Cold)
-            d += '   set_temperature(-200);\n';
-        else if ((r.state & RoomFlags.Hot) === RoomFlags.Hot)
-            d += '   set_temperature(200);\n';
-        if ((r.state & RoomFlags.Sinking_Up) === RoomFlags.Sinking_Up || (r.state & RoomFlags.Sinking_Down) === RoomFlags.Sinking_Down)
-            d += '   set_living_sink(1);\n';
-        if ((r.state & RoomFlags.Sinking_Up) === RoomFlags.Sinking_Up && r.z + 1 < this.$area.size.depth)
-            d += `   set_up(VIR+"${r.x},${r.y},${r.z + 1}");\n`;
-        if ((r.state & RoomFlags.Sinking_Down) === RoomFlags.Sinking_Down && r.z > 0 && this.$area.size.depth > 1)
-            d += `   set_down(VIR+"${r.x},${r.y},${r.z - 1}");\n`;
-        d += '}';
-        return d;
-    }
-
     public generateCode(p, data) {
         if (!p) return;
         this.emit('progress-start', 'designer');
@@ -9440,7 +8653,7 @@ export class AreaDesigner extends EditorBase {
         this.emit('progress-complete', 'designer');
     }
 
-    public generateRoomCode(room: Room, files, data, baseroom?) {
+    public generateRoomCode(room: Room, files, data, baseRoom?) {
         if (!room) return '';
         files = files || {};
         let tmp;
@@ -9460,7 +8673,7 @@ export class AreaDesigner extends EditorBase {
         data['reset body'] = '';
         data['reset post'] = '';
         const base = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
-        if (baseroom && (room.maxForage !== base.maxForage || doors.length > 0 || room.objects.length !== 0 || room.monsters.length !== 0)) {
+        if (baseRoom && (room.maxForage !== base.maxForage || doors.length > 0 || room.objects.length !== 0 || room.monsters.length !== 0)) {
             data['reset body'] += '\n';
             if (room.forage !== base.forage)
                 data['reset body'] += `   set_property('forage', ${room.forage});\n`;
@@ -9517,7 +8730,7 @@ export class AreaDesigner extends EditorBase {
                 });
             }
         }
-        else if (!baseroom && (room.maxForage !== -1 || doors.length > 0 || room.objects.length !== 0 || room.monsters.length !== 0)) {
+        else if (!baseRoom && (room.maxForage !== -1 || doors.length > 0 || room.objects.length !== 0 || room.monsters.length !== 0)) {
             data['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
             if (room.maxForage !== -1 && room.maxForage !== base.maxForage)
                 data['create post'] += `   set_property('forage', ${room.maxForage});\n`;
@@ -9818,7 +9031,7 @@ export class AreaDesigner extends EditorBase {
                     t = '"' + t + '"';
                 return t;
             });
-            if (tmp2.lengh === 1)
+            if (tmp2.length === 1)
                 tmp2 = tmp2[0];
             else
                 tmp2 = `({ ${tmp2.join(', ')} })`;
@@ -9889,7 +9102,7 @@ export class AreaDesigner extends EditorBase {
                     tmp2.push(`"dest" : "${i.dest}"`);
             }
             else {
-                tmp3 = this.getExitId(i.exit, room.x, room.y, room.x);
+                tmp3 = this.getExitId(i.exit, room.x, room.y, room.z);
                 if (files[tmp3])
                     tmp2.push(`"dest" : RMS + "${files[tmp3]}.c"`);
             }
@@ -9917,7 +9130,7 @@ export class AreaDesigner extends EditorBase {
                     tmp = `RMS + "${files[tmp.replace(/ /g, '') + ',0']}.c"`;
             }
             else {
-                tmp3 = this.getExitId(d.exit, room.x, room.y, room.x);
+                tmp3 = this.getExitId(d.exit, room.x, room.y, room.z);
                 if (files[tmp3])
                     tmp = `RMS + "${files[tmp3]}.c"`;
             }
@@ -9957,7 +9170,7 @@ export class AreaDesigner extends EditorBase {
                     t = '"' + t + '"';
                 return t;
             });
-            if (tmp2.lengh === 1)
+            if (tmp2.length === 1)
                 tmp2 = tmp2[0];
             else
                 tmp2 = `({ ${tmp2.join(', ')} })`;
@@ -10001,7 +9214,7 @@ export class AreaDesigner extends EditorBase {
                     t = '"' + t + '"';
                 return t;
             });
-            if (tmp2.lengh === 1)
+            if (tmp2.length === 1)
                 tmp2 = tmp2[0];
             else
                 tmp2 = `({ ${tmp2.join(', ')} })`;
@@ -10042,7 +9255,7 @@ export class AreaDesigner extends EditorBase {
                     t = '"' + t + '"';
                 return t;
             });
-            if (tmp2.lengh === 1)
+            if (tmp2.length === 1)
                 tmp2 = tmp2[0];
             else
                 tmp2 = `({ ${tmp2.join(', ')} })`;
@@ -10075,12 +9288,23 @@ export class AreaDesigner extends EditorBase {
         }
         if (room.temperature !== base.temperature)
             data['create body'] += `   set_temperature(${room.temperature});\n`;
+
+        tmp = this.getExitId('up', room.x, room.y, room.z);
+        tmp2 = this.getExitId('down', room.x, room.y, room.z);
+
+        if ((files[tmp] && (room.flags & RoomFlags.Sinking_Up) === RoomFlags.Sinking_Up && (base.flags & RoomFlags.Sinking_Up) !== RoomFlags.Sinking_Up) || (files[tmp2] && (room.flags & RoomFlags.Sinking_Down) === RoomFlags.Sinking_Down && (base.flags & RoomFlags.Sinking_Down) !== RoomFlags.Sinking_Down))
+            data['create body'] += '   set_living_sink(1);\n';
+        if (files[tmp] && (room.flags & RoomFlags.Sinking_Up) === RoomFlags.Sinking_Up && (base.flags & RoomFlags.Sinking_Up) !== RoomFlags.Sinking_Up)
+            data['create body'] += `   set_up(RMS + "${files[tmp]}.c");\n`;
+        if (files[tmp2] && (room.flags & RoomFlags.Sinking_Down) === RoomFlags.Sinking_Down && (base.flags & RoomFlags.Sinking_Down) !== RoomFlags.Sinking_Down)
+            data['create body'] += `   set_down(RMS + "${files[tmp2]}.c");\n`;
+
         //add docs
         if (data['doc'].length > 0)
             data['doc'] = ' * @doc' + data['doc'].join('\n * @doc') + '\n';
         else
             data['doc'] = '';
-        if (baseroom)
+        if (baseRoom)
             return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'baseroom.c'))), data);
         return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'room.c'))), data);
     }
