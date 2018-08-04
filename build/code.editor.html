@@ -3380,17 +3380,19 @@
             document.getElementById('progress-dialog-title').innerHTML = data || 'Retrieving&hellip;';
         if (progress.open) return;
         menubar.enabled = false;
-
-        progress.addEventListener('close', closeProgressDialog);
-        progress.addEventListener('cancel', closeProgressDialog);
-        document.getElementById('progress-dialog-cancel').addEventListener('click', closeProgressDialog);
+        if (!$dialogs.progress) {
+            $dialogs.progress = { };
+            progress.addEventListener('close', closeProgressDialog);
+            progress.addEventListener('cancel', closeProgressDialog);
+            document.getElementById('progress-dialog-cancel').addEventListener('click', closeProgressDialog);
+        }
         setProgressDialogValue(0);
         progress.showModal();
     }
 
     function setProgressDialogValue(value, title) {
-        ipcRenderer.send('set-progress', { value: value });
-        ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+        ipcRenderer.send('set-progress', { value: value / 100 });
+        ipcRenderer.send('set-progress-window', 'code-editor', { value: value / 100 });
         document.getElementById('progress-dialog-progressbar').value = value;
         if (title && title.length > 0)
             document.getElementById('progress-dialog-title').innerHTML = title;
@@ -4369,7 +4371,7 @@
         };
     }
 
-    function newArea(title, ok) {
+    function newArea(title, ok, name) {
         if (!$dialogs.area) {
             $dialogs.area = {
                 dialog: document.getElementById('new-area'),
@@ -4413,7 +4415,7 @@
         p.removeClass("has-error");
         p.removeClass("has-feedback");
         $('#new-area-path').val(options.browse || ((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')));
-        $('#new-area-name').val('');
+        $('#new-area-name').val(name || '');
         menubar.enabled = false;
         document.getElementById('new-area').showModal();
     }
@@ -4479,6 +4481,7 @@
             $dialogs.area.ok(aPath, data);
             document.getElementById('new-area').close();
             if (manager.active && manager.active.editor) manager.active.editor.focus();
+            return;
         }
         var templatePath = parseTemplate(path.join('{assets}', 'templates', 'wizards', 'area'));
         var template = walkSync(templatePath);
@@ -7025,7 +7028,7 @@
                     showResizeDialog(size);
                 });
                 p.editor.on('show-area', e => {
-                    newArea(e.title, e.ok);
+                    newArea(e.title, e.ok, e.name);
                 });
                 p.editor.on('dialog-close', () => menubar.enabled = true);
                 p.editor.on('dialog-cancel', () => menubar.enabled = true);
