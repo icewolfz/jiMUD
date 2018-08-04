@@ -10,13 +10,16 @@
     - Virtual area editor: Room preview long description now supports color code preview
     - Area designer:
       - Create an area in a gui designer to create quick basic areas with rooms, monsters and objects
+    - Monster wizard: Added full reaction support to let you give your monsters a little smarts
 - **Changed:**
   - Update electron from 2.0.4 to 2.0.6
   - Update node-sqlite3 from 4.0.1 to 4.0.2
   - Several minor 3rd party libraries have been updated
   - Code editor:
     - Room wizard: Group types by area/standard types
-    - Monster wizard: Group types by area/standard types
+    - Monster wizard:
+      - Group types by area/standard types
+      - Removed drop encumbered/drop combat encumbered
 - **Fixed:**
   - Code editor:
     - Fixed formating of case statements when they use parentheses

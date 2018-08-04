@@ -142,6 +142,52 @@ See [Area designer](codeeditor.designer.md) for area designer docs
     - `Drop encumbered` drop extra inventory when 50% or higher encumbered
     - `Drop encumbered combat` drop extra inventory when 50% or higher encumbered if in combat
     - `Auto stand` stand backup when lying on the ground during combat
+  - `Reactions` Determine how your monster reactions to different effects
+    - `Type` The type of reaction, see /doc/build/monster/reactions
+      - `Normal` a normal reaction that happens out side of combat
+      - `Party` a normal reaction that happens outside of combat but only effects party members
+      - `Combat` a reaction during combat
+      - `Combat party` a reaction during combat that effects party members
+    - `Reaction` the reaction that causes monsters to react
+      - `low health ` fired when < 10% hp
+      - `half health` fired when < 50% hp
+      - `hurt` fired when hp < max hp
+      - `full health` fired when 100% hp
+      - `poisoned` fired when poisoned
+      - `bleeding` fired when bleeding
+      - `severed limb` fired if has severed limbs
+      - `magic protection` fired if no magical protection (buffer/skins)
+      - `faith protection` fired if no faith protection (fortify)
+      - `cursed` fired if cursed
+      - `held` fired being held but something
+      - `cloaked` fired if cloaked
+      - `no cloak` fired if not cloaked
+      - `0 minions` fired if no minions
+      - `1 minions` fired if 1 minion
+      - `2 minions` fired if 2 minions
+      - `3 minions` fired if 3 minions
+      - `4 minions` fired if 4 minions
+      - `encumbered 90` fired if encumbered 90% or higher
+      - `encumbered 50` fired if encumbered 50% or higher
+      - `encumbered 10` fired if encumbered 10% or higher
+      - `present` a special reaction to reaction to objects in the room format of command is an array ({"id", "command to fire"})
+      - `not present` opposite of present
+      - `enhance` a special reaction that will fire if the command enhancement system is used and able to use it, format of command:
+        - ({"command", "command 2", ... }) or
+        - ({ ({"command", "syntax to fire"}), ({"command 2", "syntax to fire"}), ... })
+        - ({ ({"command", "syntax to fire", target}), ({"command 2", "syntax to fire", target}), ... })
+        - target can be an object or a string, if string will look for an object with matching id in room of monster
+      - `enhance self` a special reaction that will fire if the command enhancement system is used and able to use it and target yourself, format of command:
+        - ({"command", "command 2", ... }) or
+        - ({ ({"command", "syntax to fire"}), ({"command 2", "syntax to fire"}), ... })
+      - `temp property` special reaction that will fire a property matches a value, it requires a more advanced command format:
+        - format of command is an array
+        - ({"property name", value to match, "command to fire"}) or
+        - ({"property name", value to match, function test, "command to fire"})
+      - `temp properties` special reaction that will fire a property matches a value, it requires a more advanced command format
+        - format of command is an array of arrays from temp property
+        - ({ ({"property name", value to match, "command to fire"}), ... })
+    - `Action` the action to do, see docs for full formatting for more advanced reactions
   - `Finish` A final summary of selected options and properties, some properties and options will always be set even if empty: name, level, race, short, long
 
 ## Code editor features

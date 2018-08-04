@@ -1247,6 +1247,12 @@
             </div>
         </div>
         <div id="mon-wizard-actions">
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%">Actions
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of commands to execute on pop</span>
+                    <input type="text" class="input-sm form-control" id="mon-wiz-actions" />
+                </label>
+            </div>
             <div class="col-sm-6 form-group">
                 <label class="control-label">
                     Auto drop
@@ -1321,22 +1327,11 @@
                     </div>
                 </label>
             </div>
-            <div class="col-sm-5 form-group">
-                <label class="control-label">
-                    <input type="checkbox" id="mon-wiz-drop-encumbered" /> Drop encumbered
-                </label>
-            </div>
-            <div class="col-sm-7 form-group">
-                <label class="control-label">
-                    <input type="checkbox" id="mon-wiz-drop-encumbered-combat" /> Drop encumbered combat
-                </label>
-            </div>
             <div class="col-sm-6 form-group">
                 <label class="control-label">
                     <input type="checkbox" id="mon-wiz-auto-stand" /> Auto stand
                 </label>
             </div>
-
         </div>
         <div id="room-wizard-welcome">
             <img src="../assets/icons/png/wizroomlogo.png" alt="Welcome to the room wizard" style="float: left;margin-top: 56px;height: 128px;width:128px;">
@@ -3381,7 +3376,7 @@
         if (progress.open) return;
         menubar.enabled = false;
         if (!$dialogs.progress) {
-            $dialogs.progress = { };
+            $dialogs.progress = {};
             progress.addEventListener('close', closeProgressDialog);
             progress.addEventListener('cancel', closeProgressDialog);
             document.getElementById('progress-dialog-cancel').addEventListener('click', closeProgressDialog);
@@ -5262,7 +5257,7 @@
                     })
                 ]
             });
-            $dialogs.room.height = '340px';
+            $dialogs.room.height = '345px';
             $dialogs.room.width = '570px';
             $dialogs.room.on('open', () => {
                 menubar.enabled = false;
@@ -5295,7 +5290,7 @@
                 tmpl['create body'] = '';
                 tmpl['create post'] = '';
 
-                if (data['room-wiz-forage'] !== -1 && doors.length > 0) {
+                if (data['room-wiz-forage'] !== -1 || doors.length > 0) {
                     tmpl['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
                     if (data['room-wiz-forage'] !== -1)
                         tmpl['create post'] += `   set_property('forage', ${data['room-wiz-forage']});\n`;
@@ -5897,6 +5892,7 @@
                         title: 'Actions',
                         body: document.getElementById('mon-wizard-actions'),
                         reset: (e) => {
+                            e.page.querySelector('#mon-wiz-actions').value = e.wizard.defaults['mon-wiz-actions'] || '';
                             e.page.querySelector('#mon-wiz-auto-drop').value = e.wizard.defaults['mon-wiz-drop'] || '1';
                             e.page.querySelector('#mon-wiz-auto-drop-enabled').checked = e.wizard.defaults['mon-wiz-drop-enabled'] || false;
                             e.page.querySelector('#mon-wiz-storage').value = e.wizard.defaults['mon-wiz-storage'] || '3';
@@ -5908,9 +5904,89 @@
                             e.page.querySelector('#mon-wiz-auto-loot').value = e.wizard.defaults['mon-wiz-auto-loot'] || '1';
                             e.page.querySelector('#mon-wiz-auto-loot-enabled').checked = e.wizard.defaults['mon-wiz-auto-loot-enabled'] || false;
                             e.page.querySelector('#mon-wiz-auto-stand').checked = e.wizard.defaults.hasOwnProperty('#mon-wiz-auto-stand') ? e.wizard.defaults['mon-wiz-auto-stand'] : true;
-                            e.page.querySelector('#mon-wiz-drop-encumbered').checked = e.wizard.defaults['mon-wiz-drop-encumbered'] || false;
-                            e.page.querySelector('#mon-wiz-drop-encumbered-combat').checked = e.wizard.defaults['mon-wiz--drop-encumbered-combat'] || false;
                             e.page.querySelector('#mon-wiz-wimpy').value = e.wizard.defaults['mon-wiz-wimpy'] || '0';
+                        }
+                    }),
+                    new WizardDataGridPage({
+                        title: 'Reactions',
+                        id: 'mon-wiz-reactions',
+                        columns: [
+                            {
+                                label: 'Type',
+                                field: 'type',
+                                width: 150,
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        container: '#monster-wizard',
+                                        data: [
+                                            { value: '', display: 'Normal' },
+                                            { value: 'party', display: 'Party' },
+                                            { value: 'combat', display: 'Combat' },
+                                            { value: 'Combat party', display: 'Combat party' }
+                                        ],
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Reaction',
+                                field: 'reaction',
+                                width: 200,
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: [
+                                            'low health',
+                                            'half health',
+                                            'hurt',
+                                            'full health',
+                                            'poisoned',
+                                            'bleeding',
+                                            'severed limb',
+                                            'magic protection',
+                                            'faith protection',
+                                            'cursed',
+                                            'held',
+                                            'cloaked',
+                                            'no cloak',
+                                            '0 minions',
+                                            '1 minions',
+                                            '2 minions',
+                                            '3 minions',
+                                            '4 minions',
+                                            'encumbered 90',
+                                            'encumbered 50',
+                                            'encumbered 10',
+                                            'present',
+                                            'not present',
+                                            'enhance',
+                                            'enhance self',
+                                            'temp property',
+                                            'temp properties'
+                                        ],
+                                        container: '#monster-wizard'
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Action',
+                                field: 'action',
+                                spring: true,
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        container: '#monster-wizard',
+                                        singleLine: true
+                                    }
+                                }
+                            }
+                        ],
+                        add: (e) => {
+                            e.data = {
+                                type: '',
+                                reaction: '',
+                                action: ''
+                            };
                         }
                     }),
                     new WizardPage({
@@ -5981,6 +6057,9 @@
                             if (data['mon-wiz-aggressive'] && data['mon-wiz-aggressive'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Aggressive:</span> ' + ellipse(data['mon-wiz-aggressive']) + '</div>';
 
+                            if (data['mon-wiz-actions'] && data['mon-wiz-actions'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Actions:</span> ' + ellipse(data['mon-wiz-actions']) + '</div>';
+
                             if (data['mon-wiz-auto-drop-enabled']) {
                                 sum += '<div><span style="font-weight:bold">Auto drop:</span> Yes</div>';
                                 sum += '<div><span style="font-weight:bold">Auto drop delay:</span> ' + data['mon-wiz-auto-drop'] + ' seconds</div>';
@@ -6005,16 +6084,12 @@
                                 sum += '<div><span style="font-weight:bold">Wimpy:</span> ' + data['mon-wiz-wimpy'] + '%</div>';
                             if (data['mon-wiz-auto-stand'])
                                 sum += '<div><span style="font-weight:bold">Auto stand:</span> Yes</div>';
-                            if (data['mon-wiz-drop-encumbered'])
-                                sum += '<div><span style="font-weight:bold">Drop encumbered:</span> Yes</div>';
-                            if (data['mon-wiz-drop-encumbered-combat'])
-                                sum += '<div><span style="font-weight:bold">Drop encumbered combat:</span> Yes</div>';
                             summary.innerHTML = sum;
                         }
                     })
                 ]
             });
-            $dialogs.monster.height = '340px';
+            $dialogs.monster.height = '345px';
             $dialogs.monster.on('open', () => {
                 menubar.enabled = false;
             });
@@ -6261,7 +6336,7 @@
                 if (data['mon-wiz-initiators'].length > 0)
                     tmpl['create body'] += `   set_combat_initiator(${formatArgumentList(data['mon-wiz-initiators'], 56)}); //Set attack initiators\n`;
                 if (data['mon-wiz-aggressive'].length > 0) {
-                    tmpl['create body'] += `   set_aggressive(${data['mon-wiz-chance']}); //Set monster aggressiveness\n`;
+                    tmpl['create body'] += `   set_aggressive(${data['mon-wiz-aggressive']}); //Set monster aggressiveness\n`;
                     tmpl['doc'].push('/doc/build/monster/haggle');
                 }
                 if (data['mon-wiz-auto-drop-enabled'])
@@ -6288,13 +6363,28 @@
                     tmpl['create body'] += `   set_wimpy(${data['mon-wiz-wimpy']});`;
                 if (!data['mon-wiz-auto-stand'])
                     tmpl['create body'] += `   set_auto_stand(0);`;
-                if (data['mon-wiz-drop-encumbered'] && data['mon-wiz-drop-encumbered-combat'])
-                    tmpl['create body'] += '   set_reactions( ([\n       "encumbered 50" : "drop extra"\n       combat encumbered 50" : "drop extra"\n     ]) );\n';
-                else if (data['mon-wiz-drop-encumbered'])
-                    tmpl['create body'] += '   set_reaction("encumbered 50", "drop extra");\n';
-                else if (data['mon-wiz-drop-encumbered-combat'])
-                    tmpl['create body'] += '   set_reaction("combat encumbered 50", "drop extra");\n';
-
+                data['mon-wiz-reactions'] = data['mon-wiz-reactions'].filter(r => r.reaction.length > 0 && r.action.length > 0);
+                if (data['mon-wiz-reactions'].length === 1)
+                    tmpl['create body'] += `   set_reaction("${data['mon-wiz-reactions'][0].type}${data['mon-wiz-reactions'][0].reaction}", "${data['mon-wiz-reactions'][0].action}");\n`;
+                else if (data['mon-wiz-reactions'].length > 1) {
+                    tmpl['create body'] += '   set_reactions( ([\n';
+                    data['mon-wiz-reactions'].forEach(r => {
+                        tmpl['create body'] += `       "${r.type}${r.reaction}" : "${r.action}"\n`;
+                    });
+                    tmpl['create body'] += '\n     ]) );\n';
+                }
+                if (data['mon-wiz-actions'].length > 0) {
+                    data['mon-wiz-actions'] = data['mon-wiz-actions'].split(',');
+                    data['mon-wiz-actions'].forEachh(w => {
+                        w = w.trim();
+                        if (w.length === 0) return;
+                        if (!w.startsWith('"'))
+                            w = '"' + w;
+                        if (!w.endsWith('"'))
+                            w += '"';
+                        tmpl['create body'] += `   command(${w});\n`;
+                    });
+                }
                 if (tmpl['doc'].length > 0)
                     tmpl['doc'] = ' * @doc' + tmpl['doc'].join('\n * @doc') + '\n';
                 else
