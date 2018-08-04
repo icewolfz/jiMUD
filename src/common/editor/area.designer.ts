@@ -202,7 +202,6 @@ export class Room {
     public preventPeer: string = '';
     public temperature: number = 0;
     public notes: string = '';
-    public custom: string = '';
 
     constructor(x, y, z, data?, type?) {
         if (data)
@@ -297,7 +296,6 @@ export class Room {
             this.external = 0;
             this.temperature = 0;
             this.notes = '';
-            this.custom = '';
             this.background = '';
         }
         this.type = type || 'base';
@@ -400,7 +398,6 @@ class Monster {
     public autoWear: MonsterAction = { time: 3, enabled: false };
     public wimpy: number = 0;
     public notes: string = '';
-    public custom: string = '';
     public reactions: MonsterReaction[] = [];
     public actions: string = '';
 
@@ -486,7 +483,6 @@ class Monster {
             this.autoWear = { time: 3, enabled: false };
             this.wimpy = 0;
             this.notes = '';
-            this.custom = '';
             this.actions = '';
         }
         this.type = type || 'base';
@@ -2880,7 +2876,7 @@ export class AreaDesigner extends EditorBase {
         this.$roomEditor.on('dialog-open', () => this.emit('dialog-open'));
         this.$roomEditor.on('dialog-close', () => this.emit('dialog-close'));
         this.$roomEditor.on('dialog-cancel', () => this.emit('dialog-cancel'));
-        this.$roomEditor.on('open-file', (property) => {
+        this.$roomEditor.on('open-file', () => {
             let f;
             if (this.$area.size.depth > 1)
                 f = this.selectedFocusedRoom.x + ',' + this.selectedFocusedRoom.y + ',' + this.selectedFocusedRoom.z + '.c';
@@ -3644,19 +3640,26 @@ export class AreaDesigner extends EditorBase {
                 property: 'noBaseMonsters',
                 label: 'No base monsters',
                 group: 'Advanced',
-                sort: 2
+                sort: 5
             },
             {
                 property: 'noBaseObjects',
                 label: 'No base objects',
                 group: 'Advanced',
-                sort: 3
+                sort: 5
             },
             {
                 property: 'noBaseItems',
                 label: 'No base items',
                 group: 'Advanced',
-                sort: 3
+                sort: 5
+            },
+            {
+                property: 'notes',
+                label: 'Notes',
+                group: 'Advanced',
+                visible: false,
+                sort: 6
             },
             {
                 property: 'light',
