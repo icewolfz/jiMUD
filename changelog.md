@@ -29,6 +29,9 @@
     - Clear test / formatting errors when changed text as errors are probably no longer valid
     - Add filter efun to syntax highlighting
     - When opening many files fast from immortal tools editor would not load correctly
+    - Room wizard
+      - Fixed bugs climbs, maxforage, prevent exit peers, hidden exits in code generation
+      - Fixed bugs with type order setting for climb/doors
   - Auto update: fix progress dialog not showing correct percent
   - Fixed -c command line argument
   - Fixed error logging in low level systems

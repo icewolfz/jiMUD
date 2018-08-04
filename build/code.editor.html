@@ -1585,6 +1585,11 @@
                     <input type="number" id="room-wiz-temperature" class="input-sm form-control" min="-1000" max="1000" />
                 </label>
             </div>
+            <div class="col-sm-4 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-no-mgive" /> No mgive
+                </label>
+            </div>
         </div>
         <div id="room-wizard-combat-properties">
             <div class="col-sm-3 form-group">
@@ -1663,7 +1668,7 @@
     const { DockManager } = require('./js/dockmanager');
     const { EditorType } = require('./js/value.editors');
     const { DataGrid } = require('./js/datagrid');
-    const { MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
+    const { createFunction, formatFunctionPointer, formatArgumentList, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
 
     const { dialog, Menu, MenuItem, app } = remote;
@@ -5044,6 +5049,7 @@
                             e.page.querySelector('#room-wiz-max-forage').value = e.wizard.defaults['room-wiz-max-forage'] || '0';
                             e.page.querySelector('#room-wiz-secret-exit').value = e.wizard.defaults['room-wiz-secret-exit'] || '';
                             e.page.querySelector('#room-wiz-temperature').value = e.wizard.defaults['room-wiz-temperature'] || '0';
+                            e.page.querySelector('#room-wiz-no-mgive').checked = e.wizard.defaults['room-wiz-no-mgive'] || false;
                         }
                     }),
                     new WizardPage({
@@ -5225,6 +5231,7 @@
                             if (data['room-wiz-no-forage']) sum += '<div><span style="font-weight:bold">No forage:</span> Yes</div>';
                             if (data['room-wiz-forage'] >= 0) sum += '<div><span style="font-weight:bold">' + data['room-wiz-forage'] + ':</span> Yes</div>';
                             if (data['room-wiz-no-dirt']) sum += '<div><span style="font-weight:bold">No dirt:</span> Yes</div>';
+                            if (data['room-wiz-no-mgive']) sum += '<div><span style="font-weight:bold">No mgive:</span> Yes</div>';
                             if (data['room-wiz-max-forage'] > 0)
                                 sum += '<div><span style="font-weight:bold">Max forage:</span> ' + data['room-wiz-max-forage'] + '</div>';
                             if (data['room-wiz-dirt'].length > 0)
@@ -5304,11 +5311,12 @@
                 tmpl['create arguments'] = $dialogs.room.defaults['room-wiz-create'] || '';
                 if ($dialogs.room.defaults['room-wiz-virtual'] && (data['room-wiz-type'].display === 'Standard') || data['room-wiz-type'].display === 'Base')
                     data['room-wiz-type'] = { display: 'Base', value: '(VIR+"baseroom")' };
+                //check climbs first, as climb supports doors
+                else if (climbs.length > 0 && data['room-wiz-type'].display === 'Standard')
+                    data['room-wiz-type'] = { display: 'Climb', value: 'ROOMTYPE_CLIMB' };
                 //if standard but has doors replace with vault, base leave alone as that is a different issue, all other types inherit vault
                 else if (doors.length > 0 && data['room-wiz-type'].display === 'Standard')
                     data['room-wiz-type'] = { display: 'Vault', value: 'ROOMTYPE_VAULT' };
-                else if (climbs.length > 0 && data['room-wiz-type'].display === 'Standard')
-                    data['room-wiz-type'] = { display: 'Climb', value: 'ROOMTYPE_CLIMB' };
 
                 tmpl.inherit = data['room-wiz-type'].value;
                 tmpl.inherits = '';
@@ -5466,6 +5474,8 @@
                     tmp.push('"no scry" : 1');
                 if (data['room-wiz-no-teleport'])
                     tmp.push('"no teleport" : 1');
+                if (data['room-wiz-no-mgive'])
+                    tmp.push('"no mgive" : 1');                    
                 if (data['room-wiz-council'])
                     tmp.push('"council" : 1');
                 if (data['room-wiz-no-map'])
@@ -5478,8 +5488,6 @@
                     tmp.push('"hide exits" : 1');
                 if (data['room-wiz-no-forage'])
                     tmp.push('"no forage" : 1');
-                if (data['room-wiz-forage'] >= 0)
-                    tmp.push(`"forage" : ${data['room-wiz-forage']}`);
                 if (data['room-wiz-no-dirt'])
                     tmp.push('"no dirt" : 1');
                 if (data['room-wiz-dirt'].length > 0)
@@ -5498,7 +5506,7 @@
                     tmp.push(`"secret exit" : "${data['room-wiz-secret-exit'].replace(/"/g, '\\"')}"`);
                 }
                 if (data['room-wiz-max-forage'] > 0)
-                    tmp.push(`"light" : ${data['room-wiz-max-forage']}`);
+                    tmp.push(`"maxforage" : ${data['room-wiz-max-forage']}`);
 
                 if (tmp.length > 0) {
                     tmpl['create body'] += '   set_properties( ([\n       ';
@@ -5523,14 +5531,14 @@
                     tmpl['create body'] += `   set_prevent_peer(${data['room-wiz-prevent-peer']});\n`;
                 else if (data['room-wiz-prevent-peer'].length > 0)
                     tmpl['create body'] += `   set_prevent_peer("${data['room-wiz-prevent-peer'].replace(/"/g, '\\"')}");\n`;
-                data['room-wiz-exits'].filter(p => p.peer && e.peer.trim().length > 0).forEach(p => {
+                data['room-wiz-exits'].filter(p => p.peer && p.peer.trim().length > 0).forEach(p => {
                     p.peer = p.peer.trim();
                     if (p.peer === 'false') { /**/ }
                     if (p.peer.startsWith('(:')) {
                         tmpl['create body'] += `   set_prevent_peer("${p.exit}",${formatFunctionPointer(p.peer)});\n`;
                         tmpl['create pre'] += createFunction(p, 'string', 'string dir, object player');
                     }
-                    else if (data['room-wiz-prevent-peer'] === 'true')
+                    else if (p.peer === 'true')
                         tmpl['create body'] += `   set_prevent_peer("${p.exit}", 1);\n`;
                     else if (p.peer.startsWith('"') && p.peer.endsWith('"'))
                         tmpl['create body'] += `   set_prevent_peer("${p.exit}", ${p.peer});\n`;
@@ -5587,27 +5595,22 @@
                     tmpl['create body'] += tmp.join(',\n       ');
                     tmpl['create body'] += '\n     ]) );\n';
                 }
-                tmp = exits.filter(i => i.hidden).map(i => {
-                    i.trim();
-                    if (!i.startsWith('"') && !i.endsWith('"'))
-                        i = '"' + i + '"';
-                    return i;
-                });
+                tmp = exits.filter(i => i.hidden).map(i => i.exit);
                 if (tmp.length > 0)
                     tmpl['create body'] += `   add_invis_exits(${formatArgumentList(tmp.join(', '), 61)});\n`;
                 //add climbs
                 tmp = exits.map(i => {
                     if (i.exit.length === 0) return '';
                     tmp2 = [];
-                    if (exits.dest.length > 0)
-                        tmp2.push(`"dest" : "${exits.dest}"`);
-                    if (exits.diff.length > 0)
-                        tmp2.push(`"difficulty" : "${exits.diff}"`);
-                    if (tmp2.length > 0)
+                    if (i.dest.length !== 0)
+                        tmp2.push(`"dest" : "${i.dest}"`);
+                    if (i.diff !== 0)
+                        tmp2.push(`"difficulty" : "${i.diff}"`);
+                    if (tmp2.length !== 0)
                         return `   ${i.exit} : ([])\n       ${tmp2.join(',\n       ')}\n     ]) );\n`;
                     return `   ${i.exit} : ([])`;
                 });
-                if (tmp.length > 0) {
+                if (tmp.length !== 0) {
                     tmpl['create body'] += '   set_climbs( ([\n       ';
                     tmpl['create body'] += tmp.join(',\n       ');
                     tmpl['create body'] += '\n     ]) );\n';
@@ -5692,7 +5695,7 @@
                     return `${tmp2} : ${tmp3}`;
                 });
 
-                if (tmp.length === 1 && data['room-wiz-sounds'][0].smell === 'default') {
+                if (tmp.length === 1 && data['room-wiz-sounds'][0].sound === 'default') {
                     data['room-wiz-sounds'][0].description = data['room-wiz-sounds'][0].description.trim();
                     if (data['room-wiz-sounds'][0].description.startsWith('(:'))
                         tmpl['create body'] += `   set_listen(${formatFunctionPointer(data['room-wiz-sounds'][0].description)});`;
@@ -6415,71 +6418,6 @@
         $dialogs.monster.finish = finish;
         $dialogs.monster.closed = closed;
         $dialogs.monster.show();
-    }
-
-    function createFunction(name, type, args) {
-        name = name.trim();
-        if (name.startsWith('(:'))
-            name = name.substr(2);
-        if (name.endsWith(':)'))
-            name = name.substr(0, name.length - 2);
-        name = name.trim();
-        if (!type) type = 'void';
-        if (type === 'void')
-            return `${type} ${name}(${args})\n{\n}\n\n`;
-        if (type === 'string')
-            return `${type} ${name}(${args})\n{\n   return "";\n}\n\n`;
-        return `${type} ${name}(${args})\n{\n   return 0;\n}\n\n`;
-    }
-
-    function formatFunctionPointer(pointer, trim) {
-        //remove spaces
-        pointer = pointer.trim();
-        //remove (::)
-        pointer = pointer.substr(2);
-        pointer = pointer.substr(0, pointer.length - 2);
-        if (trim)
-            return `(: ${pointer.trim()} :)`;
-        return ` (: ${pointer.trim()} :) `;
-    }
-
-    function formatArgumentList(str, first, second, indent, quotes) {
-        if (!str) return;
-        first = first || 64;
-        second = second || 75;
-        indent = indent || 5;
-        if (!Array.isArray(str))
-            str = str.splitQuote(',');
-        str = str.map(w => {
-            w = w.trim().replace(/\n|\r/g, '');
-            if (!quotes && !w.startsWith('"'))
-                w = '"' + w;
-            if (!quotes && !w.endsWith('"'))
-                w += '"';
-            return w;
-        });
-        var tmp = [];
-        var tl = str.length;
-        var tmp2 = [];
-        var tl2 = 0;
-        var w = first;
-        for (var t = 0; t < tl; t++) {
-            var c = str[t];
-            if (tmp.length > 0)
-                w = second;
-            if (tl2 + (tmp2.length - 1) * 2 + c.length < w) {
-                tmp2.push(c);
-                tl2 += c.length;
-            }
-            else {
-                tmp.push(tmp2.join(', '));
-                tmp2 = [c];
-                tl2 = c.length;
-            }
-        }
-        if (tmp2.length)
-            tmp.push(tmp2.join(', '));
-        return tmp.join(',\n' + ' '.repeat(indent));
     }
 
     function ellipse(text, len) {
