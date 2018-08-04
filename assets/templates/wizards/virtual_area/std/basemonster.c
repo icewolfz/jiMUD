@@ -1,7 +1,7 @@
 /**
  * Base monster
  * 
- * Contants all base monster settings and requirements
+ * Contains all base monster settings and requirements
  * 
  * @author {your name}
  * @created {date}

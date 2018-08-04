@@ -1,7 +1,7 @@
 /**
  * Area settings
  * 
- * Contants all paths and global area settings
+ * Contains all paths and global area settings
  * 
  * @author {your name}
  * @created {date}
