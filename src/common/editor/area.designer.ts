@@ -3,11 +3,12 @@
 //cSpell:ignore dirtroad highmountain icesheet pavedroad rockdesert sanddesert
 //cSpell:ignore bandedmail splintmail chainmail ringmail scalemail overclothing
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
+import { createFunction, formatFunctionPointer, formatArgumentList } from './lpc';
 import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
-import { copy, formatString, existsSync, capitalize, wordwrap, Cardinal, enumToString, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish } from '../library';
+import { copy, formatString, existsSync, capitalize, wordwrap, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish } from '../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, dialog } = remote;
@@ -25,6 +26,7 @@ interface AreaDesignerOptions extends EditorOptions {
 }
 
 export enum RoomFlags {
+    No_MGive = 1 << 18,
     Melee_As_Ability = 1 << 17,
     No_Dirt = 1 << 16,
     Enable_Pk = 1 << 15,
@@ -180,6 +182,7 @@ export class Room {
     public type: string = 'base';
     public noBaseMonsters: boolean = false;
     public noBaseObjects: boolean = false;
+    public noBaseItems: boolean = false;
 
     //room wizard supports
     public exitsDetails = {};
@@ -3653,6 +3656,12 @@ export class AreaDesigner extends EditorBase {
                 sort: 3
             },
             {
+                property: 'noBaseItems',
+                label: 'No base items',
+                group: 'Advanced',
+                sort: 3
+            },
+            {
                 property: 'light',
                 group: 'Properties',
                 sort: 0,
@@ -3706,7 +3715,7 @@ export class AreaDesigner extends EditorBase {
                 sort: 4,
                 editor: {
                     options: {
-                        min: -1,
+                        min: 0,
                         max: 40
                     }
                 }
@@ -4412,6 +4421,7 @@ export class AreaDesigner extends EditorBase {
                                     'room-wiz-no-attack': (ed.value.flags & RoomFlags.No_Attack) === RoomFlags.No_Attack,
                                     'room-wiz-council': (ed.value.flags & RoomFlags.Council) === RoomFlags.Council,
                                     'room-wiz-melee': (ed.value.flags & RoomFlags.Melee_As_Ability) === RoomFlags.Melee_As_Ability,
+                                    'room-wiz-no_mgive': (ed.value.flags & RoomFlags.No_MGive) === RoomFlags.No_MGive,
                                     'room-wiz-pk': (ed.value.flags & RoomFlags.Enable_Pk) === RoomFlags.Enable_Pk,
                                     'room-wiz-no-dirt': (ed.value.flags & RoomFlags.No_Dirt) === RoomFlags.No_Dirt,
                                     'room-wiz-dirt': ed.value.dirtType,
@@ -4454,6 +4464,8 @@ export class AreaDesigner extends EditorBase {
                                         nRoom.flags |= RoomFlags.Council;
                                     if (e.data['room-wiz-melee'])
                                         nRoom.flags |= RoomFlags.Melee_As_Ability;
+                                    if (e.data['room-wiz-no_mgive'])
+                                        nRoom.flags |= RoomFlags.No_MGive;
                                     if (e.data['room-wiz-pk'])
                                         nRoom.flags |= RoomFlags.Enable_Pk;
                                     if (e.data['room-wiz-no-dirt'])
@@ -8827,7 +8839,10 @@ export class AreaDesigner extends EditorBase {
             this.$roomPreview.long.textContent = room.long || base.short;
             str = this.$roomPreview.long.innerHTML;
 
-            items = room.items || base.items;
+            if (!room.noBaseItems)
+                items = room.items.concat(...base.items);
+            else
+                items = room.items || [];
             if (items.length > 0) {
                 items = items.slice().sort((a, b) => { return b.item.length - a.item.length; });
                 for (c = 0, cl = items.length; c < cl; c++)
@@ -9384,10 +9399,16 @@ export class AreaDesigner extends EditorBase {
         template['area post'] = '\n';
         template['doc'] = '';
         let value = fs.readFileSync(path.join(templePath, 'area.h'), 'utf8');
-        Object.keys(this.$area.baseRooms).forEach(r => template['area post'] += `\n#define ${files[r + 'room']} (STD + "${files[r + 'room'].toLowerCase()}")`);
-        template['area post'] += '\n';
-        Object.keys(this.$area.baseMonsters).forEach(r => template['area post'] += `\n#define ${files[r + 'monster']} (STD + "${files[r + 'monster'].toLowerCase()}")`);
-        Object.keys(this.$area.baseMonsters).filter(r => this.$area.baseMonsters[r].maxAmount > 0).forEach(r => template['area post'] += `\n#define MAX${r.replace(/ /g, '_').toUpperCase()} ${this.$area.baseMonsters[r].maxAmount}`);
+        template['area post'] += '//Define base room inherits\n';
+        Object.keys(this.$area.baseRooms).forEach(r => template['area post'] += `#define ${files[r + 'room']} (STD + "${files[r + 'room'].toLowerCase()}")\n`);
+        template['area post'] += '//Define base monster inherits\n';
+        Object.keys(this.$area.baseMonsters).forEach(r => template['area post'] += `#define ${files[r + 'monster']} (STD + "${files[r + 'monster'].toLowerCase()}")\n`);
+
+        const temp = Object.keys(this.$area.baseMonsters).filter(r => this.$area.baseMonsters[r].maxAmount > 0);
+        if (temp.length > 0) {
+            template['area post'] += '//Define monster maxes\n';
+            temp.forEach(r => template['area post'] += `#define MAX${r.replace(/ /g, '_').toUpperCase()} ${this.$area.baseMonsters[r].maxAmount}\n`);
+        }
         value = this.parseFileTemplate(value, template);
         this.write(value, path.join(p, 'area.h'));
         //Generate base rooms
@@ -9395,7 +9416,7 @@ export class AreaDesigner extends EditorBase {
         Object.keys(this.$area.baseRooms).forEach(r => this.write(this.generateRoomCode(this.$area.baseRooms[r], files, copy(data), true), path.join(p, 'std', files[r + 'room'].toLowerCase() + '.c')));
         //generate base monsters
         this.emit('progress', { type: 'designer', percent: 28, title: 'Creating base files&hellip;' });
-        Object.keys(this.$area.baseMonsters).forEach(r => this.write(this.generateMonsterCode(this.$area.baseMonsters[r], files, copy(data)), path.join(p, 'std', files[r + 'monster'].toLowerCase() + '.c')));
+        Object.keys(this.$area.baseMonsters).forEach(r => this.write(this.generateMonsterCode(this.$area.baseMonsters[r], files, copy(data), true), path.join(p, 'std', files[r + 'monster'].toLowerCase() + '.c')));
         //generate monsters
         this.emit('progress', { type: 'designer', percent: 30, title: 'Creating monster files&hellip;' });
         Object.keys(this.$area.monsters).forEach(r => this.write(this.generateMonsterCode(this.$area.monsters[r], files, copy(data)), path.join(p, 'mon', files[r] + '.c')));
@@ -9422,147 +9443,649 @@ export class AreaDesigner extends EditorBase {
     public generateRoomCode(room: Room, files, data, baseroom?) {
         if (!room) return '';
         files = files || {};
+        let tmp;
+        let tmp2;
+        let tmp3;
+        let tmp4;
         const eArray: Exit[] = Object.values(room.exitsDetails);
         const doors = eArray.filter(r => r.exit.length > 0 && r.door && r.door.length > 0 && !r.climb);
-        const exits = eArray.filter(r => r.exit.length > 0 && !r.door || r.door.length === 0 && !r.climb);
-        const climbs = eArray.filter(r => r.exit.length > 0 && !r.door || r.door.length === 0 && r.climb);
+        const exits = eArray.filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && !r.climb);
+        const climbs = eArray.filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && r.climb);
         data.doc = [];
         data.includes = '';
         data['create pre'] = '';
         data['create body'] = '';
         data['create post'] = '';
+        data['create arguments'] = '';
         data['reset body'] = '';
-        data['reset pre body'] = '';
         data['reset post'] = '';
         const base = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
-        if (baseroom) {
-            if (room.maxForage !== -1 || doors.length > 0) {
-                data['reset pre body'] += '\n';
-                if (data['room-wiz-forage'] !== -1)
-                    data['reset pre body'] += `   set_property('forage', ${data['room-wiz-forage']});\n`;
-                doors.forEach(r => {
-                    data['reset pre body'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
-                    data['reset pre body'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
+        if (baseroom && (room.maxForage !== base.maxForage || doors.length > 0 || room.objects.length !== 0 || room.monsters.length !== 0)) {
+            data['reset body'] += '\n';
+            if (room.forage !== base.forage)
+                data['reset body'] += `   set_property('forage', ${room.forage});\n`;
+            doors.forEach(r => {
+                data['reset body'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
+                data['reset body'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
+            });
+            tmp = room.objects.filter(o => this.$area.objects[o.id]);
+            if (tmp.length !== 0) {
+                data['reset body'] += '   if(!query_property("no clone objects"))\n   {\n';
+                tmp.forEach(o => {
+                    tmp = '';
+                    if (o.unique)
+                        tmp = `      clone_unique(OBJ + "${files[o.id]}.c");\n`;
+                    else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1))
+                        tmp = `      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
+                    else if (o.minAmount > 0 && o.maxAmount > 0)
+                        tmp = `      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}));\n`;
+                    if (o.random > 0 && tmp.length !== 0)
+                        data['reset body'] += `      if(random(${o.random}) <= random(101))\n   `;
+                    data['reset body'] += tmp;
                 });
-
-                if (room.objects.length !== 0) {
-                    data['reset pre body'] += '   if(!query_property("no clone monsters"))\n   {\n';
-                    room.objects.forEach(o => {
-                        let ident = '';
-                        if (!this.$area.objects[o.id]) return;
-                        if (o.random > 0) {
-                            data['reset pre body'] += `      if(random(${o.random}) <= random(101)\n      {\n`;
-                            ident = '   ';
-                        }
-                        if (o.unique)
-                            data['reset pre body'] += `${ident}      clone_unique(OBJ + "${files[o.id]}.c")`;
-                        else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1))
-                            data['reset pre body'] += `${ident}      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount})`;
-                        else if (o.minAmount > 0 && o.maxAmount > 0)
-                            data['reset pre body'] += `${ident}      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}))`;
-                        if (o.random > 0)
-                            data['reset pre body'] += `      }\n`;
-                    });
-                    data['reset pre body'] += '   }';
-                }
-
-                if (room.monsters.length !== 0) {
-                    room.monsters.forEach(o => {
-                        let ident = '';
-                        const mon = this.$area.monsters[o.id];
-                        if (!mon) return;
-                        let max = '';
-                        if (this.$area.baseMonsters[mon.type]) {
-                            if (this.$area.baseMonsters[mon.type].maxAmount > 0)
-                                max = `MAX${mon.type.replace(/ /g, '_').toUpperCase()}`;
-                        }
-                        if (o.random > 0) {
-                            data['reset body'] += `   if(random(${o.random}) <= random(101)\n   {\n`;
-                            ident = '   ';
-                        }
-                        if (o.unique)
-                            data['reset body'] += `${ident}   clone_unique(OBJ + "${files[o.id]}.c")`;
-                        else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1)) {
-                            if (max.length !== 0)
-                                data['reset body'] += `${ident}   clone_max_children(OBJ + "${files[o.id]}.c", ${o.minAmount}, ${max})`;
-                            else
-                                data['reset body'] += `${ident}   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount})`;
-                        }
-                        else if (max.length !== 0 && o.minAmount > 0 && o.maxAmount > 0)
-                            data['reset body'] += `${ident}   clone_max_children(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}), ${max})`;
-                        else if (o.minAmount > 0 && o.maxAmount > 0)
-                            data['reset body'] += `${ident}   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}))`;
-                        if (o.random > 0)
-                            data['reset body'] += `   }\n`;
-                    });
-                }
+                data['reset body'] += '   }\n';
             }
-            else {
-                data['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
-                if (data['room-wiz-forage'] !== -1)
-                    data['create post'] += `   set_property('forage', ${data['room-wiz-forage']});\n`;
-                doors.forEach(r => {
-                    data['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
-                    data['create post'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
+
+            tmp = room.monsters.filter(o => this.$area.monsters[o.id]);
+            if (tmp.length !== 0) {
+                data['reset body'] += `   //Perform a probably check to allow disabling of default monsters\n   if(query_property("no clone monsters"))\n      return;\n   // If monsters already in room do not create more\n   if(sizeof(filter(query_living_contents(), (: $1->is_${data.area}_monster() :) )))\n      return;\n`;
+                tmp.forEach(o => {
+                    const mon = this.$area.monsters[o.id];
+                    if (!mon) return;
+                    let max = '';
+                    tmp = '';
+                    if (this.$area.baseMonsters[mon.type]) {
+                        if (this.$area.baseMonsters[mon.type].maxAmount > 0)
+                            max = `MAX${mon.type.replace(/ /g, '_').toUpperCase()}`;
+                    }
+                    if (o.unique)
+                        tmp = `   clone_unique(MON + "${files[o.id]}.c");\n`;
+                    else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1)) {
+                        if (max.length !== 0)
+                            tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount}, ${max});\n`;
+                        else
+                            tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount});\n`;
+                    }
+                    else if (max.length !== 0 && o.minAmount > 0 && o.maxAmount > 0)
+                        tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}), ${max});\n`;
+                    else if (o.minAmount > 0 && o.maxAmount > 0)
+                        tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}));\n`;
+
+                    if (o.random > 0 && tmp.length !== 0)
+                        data['reset body'] += `  if(random(${o.random}) <= random(101))\n   `;
+                    data['reset body'] += tmp;
                 });
-                if (room.objects.length !== 0) {
-                    data['create post'] += '   if(!query_property("no clone monsters"))\n   {\n';
-                    room.objects.forEach(o => {
-                        let ident = '';
-                        if (o.random > 0) {
-                            data['create post'] += `      if(random(${o.random}) <= random(101)\n      {\n`;
-                            ident = '   ';
-                        }
-                        if (o.unique)
-                            data['create post'] += `${ident}      clone_unique(OBJ + "${files[o.id]}.c")`;
-                        else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
-                            data['create post'] += `${ident}      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount})`;
-                        else if (o.minAmount > 0 && o.maxAmount > 0)
-                            data['create post'] += `${ident}      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}))`;
-                        if (o.random > 0)
-                            data['create post'] += `      }\n`;
-                    });
-                    data['create post'] += '   }';
-                }
-                if (room.monsters.length !== 0) {
-                    room.monsters.forEach(o => {
-                        let ident = '';
-                        const mon = this.$area.monsters[o.id];
-                        if (!mon) return;
-                        let max = '';
-                        if (this.$area.baseMonsters[mon.type]) {
-                            if (this.$area.baseMonsters[mon.type].maxAmount > 0)
-                                max = `MAX${mon.type.replace(/ /g, '_').toUpperCase()}`;
-                        }
-                        if (o.random > 0) {
-                            data['create post'] += `   if(random(${o.random}) <= random(101)\n   {\n`;
-                            ident = '   ';
-                        }
-                        if (o.unique)
-                            data['create post'] += `${ident}   clone_unique(OBJ + "${files[o.id]}.c")`;
-                        else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1)) {
-                            if (max.length !== 0)
-                                data['create post'] += `${ident}   clone_max_children(OBJ + "${files[o.id]}.c", ${o.minAmount}, ${max})`;
-                            else
-                                data['create post'] += `${ident}   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount})`;
-                        }
-                        else if (max.length !== 0 && o.minAmount > 0 && o.maxAmount > 0)
-                            data['create post'] += `${ident}   clone_max_children(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}), ${max})`;
-                        else if (o.minAmount > 0 && o.maxAmount > 0)
-                            data['create post'] += `${ident}   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}))`;
-                        if (o.random > 0)
-                            data['create post'] += `   }\n`;
-                    });
-                }
-                data['create post'] += '}';
             }
         }
+        else if (!baseroom && (room.maxForage !== -1 || doors.length > 0 || room.objects.length !== 0 || room.monsters.length !== 0)) {
+            data['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
+            if (room.maxForage !== -1 && room.maxForage !== base.maxForage)
+                data['create post'] += `   set_property('forage', ${room.maxForage});\n`;
+            doors.forEach(r => {
+                data['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
+                data['create post'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
+            });
+            if (room.objects.length !== 0) {
+                room.objects.forEach(o => {
+                    tmp = '';
+                    if (o.unique)
+                        tmp = `   clone_unique(OBJ + "${files[o.id]}.c");\n`;
+                    else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                        tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
+                    else if (o.minAmount > 0 && o.maxAmount > 0)
+                        tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}));\n`;
+                    if (o.random > 0 && tmp.length !== 0)
+                        data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
+                    data['create post'] += tmp;
+                });
+            }
+            if (room.monsters.length !== 0) {
+                room.monsters.forEach(o => {
+                    const mon = this.$area.monsters[o.id];
+                    if (!mon) return;
+                    let max = '';
+                    tmp = '';
+                    if (this.$area.baseMonsters[mon.type]) {
+                        if (this.$area.baseMonsters[mon.type].maxAmount > 0)
+                            max = `MAX${mon.type.replace(/ /g, '_').toUpperCase()}`;
+                    }
+                    if (o.unique)
+                        tmp = `   clone_unique(MON + "${files[o.id]}.c")`;
+                    else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1)) {
+                        if (max.length !== 0)
+                            tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount}, ${max});\n`;
+                        else
+                            tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount});\n`;
+                    }
+                    else if (max.length !== 0 && o.minAmount > 0 && o.maxAmount > 0)
+                        tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}), ${max});\n`;
+                    else if (o.minAmount > 0 && o.maxAmount > 0)
+                        tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}));\n`;
+                    if (o.random > 0 && tmp.length !== 0)
+                        data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
+                    data['create post'] += tmp;
+                });
+            }
+            data['create post'] += '}';
+        }
+
+        if (!room.type)
+            room.type = 'STD_ROOM';
+        if (room.type === 'STD_ROOM' && climbs.length !== 0)
+            room.type = 'ROOMTYPE_CLIMB';
+        else if (room.type === 'STD_ROOM' && doors.length !== 0)
+            room.type = 'ROOMTYPE_VAULT';
+
+        data.inherit = room.type;
+        data.inherits = '';
+        if (climbs.length !== 0 && room.type !== 'ROOMTYPE_CLIMB' && base.type !== 'ROOMTYPE_CLIMB') {
+            data.inherits += '\ninherit CLIMBING;';
+            data.doc.push('/doc/build/etc/climbing');
+        }
+        data.doc.push('/doc/build/areas/tutorial');
+        switch (room.type.toUpperCase()) {
+            case 'ROOMTYPE_ADVANCE_ROOM':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/bank');
+                break;
+            case 'ROOMTYPE_BANK':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/bank');
+                break;
+            case 'ROOMTYPE_CLASS_JOIN':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/classjoin');
+                break;
+            case 'ROOMTYPE_CLIMB':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/climb');
+                data.doc.push('/doc/build/etc/climbing');
+                break;
+            case 'ROOMTYPE_DOCK':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/pier');
+                data.doc.push('/doc/build/room/types/dock');
+                break;
+            case 'ROOMTYPE_GUILD_HALL':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/guild_hall');
+                data.doc.push('/doc/build/etc/voter');
+                break;
+            case 'ROOMTYPE_INN':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/inn');
+                break;
+            case 'ROOMTYPE_LIBRARY':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/library');
+                break;
+            case 'ROOMTYPE_LOCKER':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/locker');
+                break;
+            case 'ROOMTYPE_MODROOM':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/modroom');
+                break;
+            case 'ROOMTYPE_PIER':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/pier');
+                data.doc.push('/doc/build/room/fishing');
+                break;
+            case 'ROOMTYPE_SAGE':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/library');
+                data.doc.push('/doc/build/room/types/sage');
+                data.doc.push('/doc/build/etc/sagebase');
+                break;
+            case 'ROOMTYPE_SINK_ROOM':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/sink_room');
+                break;
+            case 'ROOMTYPE_SKY_ROOM':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/sky_room');
+                break;
+            case 'ROOMTYPE_STABLE':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/stable');
+                break;
+            case 'ROOMTYPE_TRAIN_ROOM':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('/doc/build/room/types/train_room');
+                break;
+            case 'ROOMTYPE_VAULT':
+                data.doc.push('/doc/build/room/doors');
+                data.doc.push('/doc/build/room/types/vault');
+                break;
+            case 'ROOMTYPE_VENDOR_STORAGE':
+                data.doc.push('/doc/build/room/types/vault');
+                data.doc.push('doc/build/room/types/vendor_storage');
+                break;
+        }
+        room.short = room.short.trim();
+        if (room.short.startsWith('(:')) {
+            data.short = formatFunctionPointer(room.short);
+            data['create pre'] += createFunction(data.short, 'string');
+            data.name = room.short.substr(2);
+            if (data.name.endsWith(':)'))
+                data.name = data.name.substr(0, data.name.length - 1);
+            data.name = data.name.trim();
+        }
+        else if (room.short.startsWith('"') && room.short.endsWith('"')) {
+            data.short = room.short;
+            data.name = data.short.substr(1, data.short.length - 2);
+        }
+        else {
+            data.short = `"${room.short.replace(/"/g, '\\"')}"`;
+            data.name = room.short;
+        }
+        room.long = room.long.trim();
+        if (room.long.startsWith('(:')) {
+            data['long'] = formatFunctionPointer(room.long);
+            data['create pre'] += createFunction(room.long, 'string');
+            data['description'] = room.long.substr(2);
+            if (data['description'].endsWith(':)'))
+                data['description'] = data['description'].substr(0, data['description'].length - 2);
+            data['description'] = data['description'].trim();
+        }
+        else {
+            if (!room.long.startsWith('"') && !room.long.endsWith('"'))
+                room.long = room.long.replace(/"/g, '\\"');
+            if (room.long.startsWith('"'))
+                room.long = room.long.substr(1);
+            if (room.long.endsWith('"'))
+                room.long = room.long.substr(0, room.long.length - 1);
+            if (room.long.length > 70) {
+                data['description'] = formatString(room.long, 0, 80, ' * ', '');
+                tmp = room.long.substr(0, 66);
+                let tl = tmp.length;
+                while (tl--) {
+                    if (tmp.charAt(tl) === ' ') {
+                        tmp.substr(0, tl);
+                        break;
+                    }
+                }
+                data['long'] = `"${tmp}"\n     `;
+                room.long = room.long.substr(tmp.length);
+                data['long'] += `${formatString(room.long, 5, 73)}`;
+            }
+            else {
+                data['description'] = ' * ' + room.long;
+                data['long'] = `"${room.long}"`;
+            }
+        }
+        if (room.terrain !== base.terrain)
+            data['create body'] += `   set_terrain("${room.terrain}");\n`;
+        tmp = [];
+        if (room.light !== base.light)
+            tmp.push(`"light" : ${room.light}`);
+        if ((room.flags & RoomFlags.Indoors) === RoomFlags.Indoors && (base.flags & RoomFlags.Indoors) !== RoomFlags.Indoors)
+            tmp.push('"indoors" : 1');
+        if ((room.flags & RoomFlags.No_Magic) === RoomFlags.No_Magic && (base.flags & RoomFlags.No_Magic) !== RoomFlags.No_Magic)
+            tmp.push('"no magic" : 1');
+        if ((room.flags & RoomFlags.No_Attack) === RoomFlags.No_Attack && (base.flags & RoomFlags.No_Attack) !== RoomFlags.No_Attack)
+            tmp.push('"no attack" : 1');
+        if ((room.flags & RoomFlags.No_Scry) === RoomFlags.No_Scry && (base.flags & RoomFlags.No_Scry) !== RoomFlags.No_Scry)
+            tmp.push('"no scry" : 1');
+        if ((room.flags & RoomFlags.No_Teleport) === RoomFlags.No_Teleport && (base.flags & RoomFlags.No_Teleport) !== RoomFlags.No_Teleport)
+            tmp.push('"no teleport" : 1');
+        if ((room.flags & RoomFlags.No_MGive) === RoomFlags.No_MGive && (base.flags & RoomFlags.No_MGive) !== RoomFlags.No_MGive)
+            tmp.push('"no mgive" : 1');
+        if ((room.flags & RoomFlags.Council) === RoomFlags.Council && (base.flags & RoomFlags.Council) !== RoomFlags.Council)
+            tmp.push('"council" : 1');
+        if ((room.flags & RoomFlags.No_Map_Send) === RoomFlags.No_Map_Send && (base.flags & RoomFlags.No_Map_Send) !== RoomFlags.No_Map_Send)
+            tmp.push('"no send info" : 1');
+        if ((room.flags & RoomFlags.Melee_As_Ability) === RoomFlags.Melee_As_Ability && (base.flags & RoomFlags.Melee_As_Ability) !== RoomFlags.Melee_As_Ability)
+            tmp.push('"melee as ability" : 1');
+        if ((room.flags & RoomFlags.Enable_Pk) === RoomFlags.Enable_Pk && (base.flags & RoomFlags.Enable_Pk) !== RoomFlags.Enable_Pk)
+            tmp.push('"enable pk" : 1');
+        if ((room.flags & RoomFlags.Hide_Exits) === RoomFlags.Hide_Exits && (base.flags & RoomFlags.Hide_Exits) !== RoomFlags.Hide_Exits)
+            tmp.push('"hide exits" : 1');
+        if ((room.flags & RoomFlags.No_Forage) === RoomFlags.No_Forage && (base.flags & RoomFlags.No_Forage) !== RoomFlags.No_Forage)
+            tmp.push('"no forage" : 1');
+        if ((room.flags & RoomFlags.No_Dirt) === RoomFlags.No_Dirt && (base.flags & RoomFlags.No_Dirt) !== RoomFlags.No_Dirt)
+            tmp.push('"no dirt" : 1');
+        if (room.dirtType !== base.dirtType)
+            tmp.push(`"dirt type" : "${room.dirtType}"`);
+        if (room.noBaseMonsters && !base.noBaseItems)
+            tmp.push(`"no clone monsters" : 1`);
+        if (room.noBaseObjects && !base.noBaseObjects)
+            tmp.push(`"no clone objects" : 1`);
+
+        room.secretExit = room.secretExit.trim();
+        if (room.secretExit !== base.secretExit.trim()) {
+            if (room.secretExit === 'false') { /**/ }
+            else if (room.secretExit.startsWith('(:')) {
+                tmp.push(`"secret exit" : ${formatFunctionPointer(room.secretExit, true)})`);
+                data['create pre'] += createFunction(room.secretExit, 'string', 'object room, object player');
+            }
+            else if (room.secretExit === 'true')
+                tmp.push(`"secret exit" : 1`);
+            else if (typeof room.secretExit === 'string' && parseFloat(room.secretExit).toString() === room.secretExit)
+                tmp.push(`"secret exit" : ${room.secretExit}`);
+            else if (room.secretExit.length > 0) {
+                tmp.push(`"secret exit" : "${room.secretExit.replace(/"/g, '\\"')}"`);
+            }
+        }
+        if (room.maxForage !== base.maxForage)
+            tmp.push(`"maxforage" : ${room.maxForage}`);
+
+        if (tmp.length > 0) {
+            data['create body'] += '   set_properties( ([\n       ';
+            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+
+        if ((room.flags & RoomFlags.Explored) === RoomFlags.Explored && (base.flags & RoomFlags.Explored) !== RoomFlags.Explored)
+            data['create body'] += '   set_explored_marker(1);\n';
+        if (room.nightAdjust !== base.nightAdjust)
+            data['create body'] += `   set_night_adjust(${room.nightAdjust});\n`;
+
+        room.preventPeer = room.preventPeer.trim();
+        if (room.preventPeer !== base.preventPeer.trim()) {
+            if (room.preventPeer === 'false') { /**/ }
+            else if (room.preventPeer.startsWith('(:')) {
+                data['create body'] += `   set_prevent_peer(${formatFunctionPointer(room.preventPeer)});\n`;
+                data['create pre'] += createFunction(room.preventPeer, 'string', 'string dir, object player');
+            }
+            else if (room.preventPeer === 'true')
+                data['create body'] += `   set_prevent_peer(1);\n`;
+            else if (room.preventPeer.startsWith('"') && room.preventPeer.endsWith('"'))
+                data['create body'] += `   set_prevent_peer(${room.preventPeer});\n`;
+            else if (room.preventPeer.length > 0)
+                data['create body'] += `   set_prevent_peer("${room.preventPeer.replace(/"/g, '\\"')}");\n`;
+        }
+        eArray.filter(p => p.peer && p.peer.trim().length > 0).forEach(p => {
+            p.peer = p.peer.trim();
+            if (p.peer === 'false') { /**/ }
+            if (p.peer.startsWith('(:')) {
+                data['create body'] += `   set_prevent_peer("${p.exit}",${formatFunctionPointer(p.peer)});\n`;
+                data['create pre'] += createFunction(p, 'string', 'string dir, object player');
+            }
+            else if (p.peer === 'true')
+                data['create body'] += `   set_prevent_peer("${p.exit}", 1);\n`;
+            else if (p.peer.startsWith('"') && p.peer.endsWith('"'))
+                data['create body'] += `   set_prevent_peer("${p.exit}", ${p.peer});\n`;
+            else
+                data['create body'] += `   set_prevent_peer("${p.exit}", "${p.peer.replace(/"/g, '\\"')}");\n`;
+        });
+        //add items
+        tmp = room.items.map(i => {
+            tmp2 = i.item.split(',').map(t => {
+                t.trim();
+                if (!t.startsWith('"') && !t.endsWith('"'))
+                    t = '"' + t + '"';
+                return t;
+            });
+            if (tmp2.lengh === 1)
+                tmp2 = tmp2[0];
+            else
+                tmp2 = `({ ${tmp2.join(', ')} })`;
+            tmp3 = i.description.trim();
+            if (tmp3.startsWith('(:')) {
+                tmp3 = formatFunctionPointer(tmp3, true);
+                data['create pre'] += createFunction(tmp3, 'string');
+            }
+            else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                tmp3 = '"' + tmp3 + '"';
+            return `${tmp2} : ${tmp3}`;
+        });
+        if (tmp.length > 0) {
+            if (base.items.length !== 0 && !room.noBaseItems)
+                data['create body'] += '   add_items( ([\n       ';
+            else
+                data['create body'] += '   set_items( ([\n       ';
+            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+        //add exits
+        tmp = exits.map(i => {
+            if (i.exit.length === 0) return '';
+            tmp2 = '';
+            if (i.dest.length !== 0) {
+                if (i.dest.match(/^\d+\s*,\s*\d+\s*,\s*\d+$/) && files[i.dest.replace(/ /g, '')])
+                    tmp2 = `RMS + "${files[i.dest.replace(/ /g, '')]}.c"`;
+                else if (i.dest.match(/^\d+\s*,\s*\d+$/) && files[i.dest.replace(/ /g, '') + ',0'])
+                    tmp2 = `RMS + "${files[i.dest.replace(/ /g, '') + ',0']}.c"`;
+                else
+                    tmp2 = `"${i.dest}"`;
+            }
+            else {
+                tmp3 = this.getExitId(i.exit, room.x, room.y, room.z);
+                if (files[tmp3])
+                    tmp2 = `RMS + "${files[tmp3]}.c"`;
+            }
+            if (!i.exit.startsWith('"') && !i.exit.endsWith('"'))
+                i.exit = `"${i.exit}"`;
+            if (i.blocker.length !== 0) {
+                tmp3 = `"blockers" : ({ "${i.blocker.split(',').map(b => b.trim()).join('", "')}" })`;
+                if (tmp2.length !== 0)
+                    return `${i.exit} : ([\n         "room" : ${tmp2},\n         ${tmp3}\n       ])`;
+                return `${i.exit} : ([\n       ${tmp3}\n     ])`;
+            }
+            else if (tmp2.length !== 0)
+                return `${i.exit} : ${tmp2}`;
+            return `${i.exit} : ""`;
+        });
+        if (tmp.length > 0) {
+            data['create body'] += '   set_exits( ([\n       ';
+            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+        tmp = exits.filter(i => i.hidden).map(i => i.exit);
+        if (tmp.length > 0)
+            data['create body'] += `   add_invis_exits(${formatArgumentList(tmp.join(', '), 61)});\n`;
+        //add climbs
+        tmp = climbs.map(i => {
+            if (i.exit.length === 0) return '';
+            tmp2 = [];
+            if (i.dest.length !== 0) {
+                if (i.dest.match(/^\d+\s*,\s*\d+\s*,\s*\d+$/) && files[i.dest.replace(/ /g, '')])
+                    tmp2.push(`"dest" : RMS + "${files[i.dest.replace(/ /g, '')]}.c"`);
+                else if (i.dest.match(/^\d+\s*,\s*\d+$/) && files[i.dest.replace(/ /g, '') + ',0'])
+                    tmp2.push(`"dest" : RMS + "${files[i.dest.replace(/ /g, '') + ',0']}.c"`);
+                else
+                    tmp2.push(`"dest" : "${i.dest}"`);
+            }
+            else {
+                tmp3 = this.getExitId(i.exit, room.x, room.y, room.x);
+                if (files[tmp3])
+                    tmp2.push(`"dest" : RMS + "${files[tmp3]}.c"`);
+            }
+            if (i.diff !== 0)
+                tmp2.push(`"difficulty" : "${i.diff}"`);
+            if (!i.exit.startsWith('"') && !i.exit.endsWith('"'))
+                i.exit = `"${i.exit}"`;
+            if (tmp2.length !== 0)
+                return `${i.exit} : ([\n         ${tmp2.join(',\n         ')}\n       ])`;
+            return `${i.exit} : ([])`;
+        });
+        if (tmp.length !== 0) {
+            data['create body'] += '   set_climbs( ([\n       ';
+            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+        //add doors
+        doors.forEach(d => {
+            //get destination path
+            tmp = d.dest;
+            if (tmp.length !== 0) {
+                if (tmp.match(/^\d+\s*,\s*\d+\s*,\s*\d+$/) && files[tmp.replace(/ /g, '')])
+                    tmp = `RMS + "${files[tmp.replace(/ /g, '')]}.c"`;
+                else if (tmp.match(/^\d+\s*,\s*\d+$/) && files[tmp.replace(/ /g, '') + ',0'])
+                    tmp = `RMS + "${files[tmp.replace(/ /g, '') + ',0']}.c"`;
+            }
+            else {
+                tmp3 = this.getExitId(d.exit, room.x, room.y, room.x);
+                if (files[tmp3])
+                    tmp = `RMS + "${files[tmp3]}.c"`;
+            }
+
+            if (!d.door.startsWith('"') && !d.door.endsWith('"'))
+                d.door = '"' + d.door + '"';
+            if (!d.exit.startsWith('"') && !d.exit.endsWith('"'))
+                d.exit = '"' + d.exit + '"';
+            if (d.key.length === 0)
+                d.key = '0';
+            else if (!d.key.startsWith('"') && !d.key.endsWith('"'))
+                d.key = '"' + d.key + '"';
+            if (d.destDoor.length > 0) {
+                if (!d.destDoor.startsWith('"') && !d.destDoor.endsWith('"'))
+                    d.destDoor = '"' + d.destDoor + '"';
+                data['create body'] += `   set_door(${d.door}, "${tmp}", ${d.exit}, ${d.key}, ${d.hidden ? 1 : 0}, ${d.destDoor});\n`;
+            }
+            else if (d.hidden)
+                data['create body'] += `   set_door(${d.door}, "${tmp}", ${d.exit}, ${d.key}, 1);\n`;
+            else if (d.key !== '0')
+                data['create body'] += `   set_door(${d.door}, "${tmp}", ${d.exit}, ${d.key});\n`;
+            else
+                data['create body'] += `   set_door(${d.door}, "${tmp}", ${d.exit});\n`;
+        });
+        //smells
+        tmp = copy(room.smells);
+        tmp4 = base.smells.map(s => s.smell);
+        if (room.smell && room.smell.length !== 0 && room.smell !== base.smell)
+            tmp.unshift({ smell: 'default', description: room.smell });
+        tmp.map(i => {
+            const idx = tmp4.indexOf(i.smell);
+            if (idx !== -1 && base.smells[idx].description === i.description)
+                return '';
+            tmp2 = i.smell.split(',').map(t => {
+                t.trim();
+                if (!t.startsWith('"') && !t.endsWith('"'))
+                    t = '"' + t + '"';
+                return t;
+            });
+            if (tmp2.lengh === 1)
+                tmp2 = tmp2[0];
+            else
+                tmp2 = `({ ${tmp2.join(', ')} })`;
+            tmp3 = i.description.trim();
+            if (tmp3.startsWith('(:')) {
+                tmp3 = formatFunctionPointer(tmp3, true);
+                data['create pre'] += createFunction(tmp3, 'string', 'string smell, object room, object player');
+            }
+            else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                tmp3 = '"' + tmp3 + '"';
+            return `${tmp2} : ${tmp3}`;
+        });
+        tmp = tmp.filter(s => s.length !== 0);
+
+        if (tmp.length === 1 && room.smell.length !== 0 && room.smell !== base.smell) {
+            room.smell = room.smell.trim();
+            if (room.smell.startsWith('(:'))
+                data['create body'] += `   set_smell(${formatFunctionPointer(room.smell)});`;
+            else if (!room.smell.startsWith('"') && !room.smell.endsWith('"'))
+                data['create body'] += `   set_smell("${room.smell}");`;
+            else
+                data['create body'] += `   set_smell(${room.smell});`;
+        }
+        else if (tmp.length > 0) {
+            data['create body'] += '   set_smells( ([\n       ';
+            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+        //sounds
+        tmp = copy(room.sounds);
+        tmp4 = base.sounds.map(s => s.sound);
+        if (room.sound && room.sound.length !== 0 && room.sound !== base.sound)
+            tmp.unshift({ sound: 'default', description: room.sound });
+        tmp.map(i => {
+            const idx = tmp4.indexOf(i.sound);
+            if (idx !== -1 && base.sounds[idx].description === i.description)
+                return '';
+            tmp2 = i.sound.split(',').map(t => {
+                t.trim();
+                if (!t.startsWith('"') && !t.endsWith('"'))
+                    t = '"' + t + '"';
+                return t;
+            });
+            if (tmp2.lengh === 1)
+                tmp2 = tmp2[0];
+            else
+                tmp2 = `({ ${tmp2.join(', ')} })`;
+            tmp3 = i.description.trim();
+            if (tmp3.startsWith('(:')) {
+                tmp3 = formatFunctionPointer(tmp3, true);
+                data['create pre'] += createFunction(tmp3, 'string', 'string sound, object room, object player');
+            }
+            else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                tmp3 = '"' + tmp3 + '"';
+            return `${tmp2} : ${tmp3}`;
+        });
+        tmp = tmp.filter(s => s.length !== 0);
+
+        if (tmp.length === 1 && room.sound.length !== 0 && room.sound !== base.sound) {
+            room.sound = room.sound.trim();
+            if (room.sound.startsWith('(:'))
+                data['create body'] += `   set_listen(${formatFunctionPointer(room.sound)});`;
+            else if (!room.sound.startsWith('"') && !room.sound.endsWith('"'))
+                data['create body'] += `   set_listen("${room.sound}");`;
+            else
+                data['create body'] += `   set_listen(${room.sound});`;
+        }
+        else if (tmp.length > 0) {
+            data['create body'] += '   set_listens( ([\n       ';
+            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+        //searches
+        tmp4 = base.sounds.map(s => s.search);
+        tmp = room.searches.map(i => {
+            const idx = tmp4.indexOf(i.search);
+            if (idx !== -1 && base.searches[idx].message === i.message)
+                return '';
+            tmp2 = i.search.split(',').map(t => {
+                t.trim();
+                if (!t.startsWith('"') && !t.endsWith('"'))
+                    t = '"' + t + '"';
+                return t;
+            });
+            if (tmp2.lengh === 1)
+                tmp2 = tmp2[0];
+            else
+                tmp2 = `({ ${tmp2.join(', ')} })`;
+            tmp3 = i.message.trim();
+            if (tmp3.startsWith('(:')) {
+                tmp3 = formatFunctionPointer(tmp3, true);
+                data['create pre'] += createFunction(tmp3, 'string', 'string search');
+            }
+            else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                tmp3 = '"' + tmp3 + '"';
+            return `${tmp2} : ${tmp3}`;
+        });
+        tmp = tmp.filter(s => s.length !== 0);
+
+        if (tmp.length === 1) {
+            if (!room.searches[0].search.trim().startsWith('"') && !room.searches[0].search.trim().endsWith('"'))
+                room.searches[0].search = `"${room.searches[0].search.trim()}"`;
+            room.searches[0].message = room.searches[0].message.trim();
+            if (room.searches[0].message.startsWith('(:'))
+                data['create body'] += `   set_search(${room.searches[0].search},${formatFunctionPointer(room.searches[0].message)});`;
+            else if (!room.searches[0].message.startsWith('"') && !room.searches[0].message.endsWith('"'))
+                data['create body'] += `   set_search(${room.searches[0].search}, "${room.searches[0].message}");`;
+            else
+                data['create body'] += `   set_search(${room.searches[0].search}, ${room.searches[0].message});`;
+        }
+        else if (tmp.length > 0) {
+            data['create body'] += '   set_search( ([\n       ';
+            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+        if (room.temperature !== base.temperature)
+            data['create body'] += `   set_temperature(${room.temperature});\n`;
+        //add docs
+        if (data['doc'].length > 0)
+            data['doc'] = ' * @doc' + data['doc'].join('\n * @doc') + '\n';
+        else
+            data['doc'] = '';
         if (baseroom)
             return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'baseroom.c'))), data);
         return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'room.c'))), data);
     }
 
-    public generateMonsterCode(monster, files, data) {
+    public generateMonsterCode(monster, files, data, baseMonster?) {
         if (!monster) return '';
         files = files || {};
         return '';
@@ -9571,6 +10094,32 @@ export class AreaDesigner extends EditorBase {
     public generateObjectCode(obj, files, data) {
         if (!obj) return '';
         files = files || {};
+        return '';
+    }
+
+    private getExitId(exit, x, y, z) {
+        switch (exit) {
+            case 'north':
+                return `${x},${y - 1},${z}`;
+            case 'northeast':
+                return `${x + 1},${y - 1},${z}`;
+            case 'east':
+                return `${x + 1},${y},${z}`;
+            case 'southeast':
+                return `${x + 1},${y - 1},${z}`;
+            case 'south':
+                return `${x},${y + 1},${z}`;
+            case 'southwest':
+                return `${x - 1},${y + 1},${z}`;
+            case 'west':
+                return `${x - 1},${y},${z}`;
+            case 'northwest':
+                return `${x - 1},${y - 1},${z}`;
+            case 'up':
+                return `${x},${y},${z + 1}`;
+            case 'down':
+                return `${x},${y},${z - 1}`;
+        }
         return '';
     }
 
@@ -9686,23 +10235,6 @@ export class AreaDesigner extends EditorBase {
         this.doUpdate(UpdateType.drawMap);
         if (!noUndo)
             this.pushUndo(undoAction.edit, undoType.resize, { width: width, height: height, depth: depth, shift: shift });
-    }
-
-    private reverseShiftType(shift: shiftType) {
-        let nShift = shiftType.none;
-        if ((shift & shiftType.top) === shiftType.top)
-            nShift |= shiftType.bottom;
-        if ((shift & shiftType.bottom) === shiftType.bottom)
-            nShift |= shiftType.top;
-        if ((shift & shiftType.left) === shiftType.left)
-            nShift |= shiftType.right;
-        if ((shift & shiftType.right) === shiftType.right)
-            nShift |= shiftType.left;
-        if ((shift & shiftType.up) === shiftType.up)
-            nShift |= shiftType.down;
-        if ((shift & shiftType.down) === shiftType.down)
-            nShift |= shiftType.up;
-        return nShift;
     }
 
     private loadTypes() {

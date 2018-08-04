@@ -30,11 +30,5 @@ inherit {inherit};{inherits}
  */
 void reset() 
 {
-   ::reset();{reset pre body}
-   //Perform a probably check to allow disabling of default monsters
-   if(query_property("no clone monsters"))
-      return;
-   // If monsters already in room do not create more
-   if(sizeof(filter(query_living_contents(), (: $1->is_{area}_monster() :) )))
-      return;
+   ::reset();
 {reset body}}{reset post}
