@@ -5,7 +5,7 @@
  * 
  * @author {your name}
  * @created {date}
- * @typeof include
+ * @typeof inherit
  * @doc /doc/build/areas/tutorial
  * @doc /doc/build/room/Basic
  * @doc /doc/build/room/Intermediate
@@ -30,11 +30,11 @@ inherit {inherit};{inherits}
  */
 void reset() 
 {
-   ::reset();
+   ::reset();{reset pre body}
    //Perform a probably check to allow disabling of default monsters
    if(query_property("no clone monsters"))
       return;
    // If monsters already in room do not create more
    if(sizeof(filter(query_living_contents(), (: $1->is_{area}_monster() :) )))
       return;
-{reset body}}
+{reset body}}{reset post}
