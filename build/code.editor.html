@@ -5914,6 +5914,8 @@
                             {
                                 label: 'Type',
                                 field: 'type',
+                                formatter: data => data ? capitalize(data.cell) : '',
+                                tooltipFormatter: data => data ? capitalize(data.cell) : '',
                                 width: 150,
                                 editor: {
                                     type: EditorType.select,
@@ -5931,6 +5933,8 @@
                             {
                                 label: 'Reaction',
                                 field: 'reaction',
+                                formatter: data => data ? capitalize(data.cell) : '',
+                                tooltipFormatter: data => data ? capitalize(data.cell) : '',
                                 width: 200,
                                 editor: {
                                     type: EditorType.select,
@@ -6059,6 +6063,9 @@
 
                             if (data['mon-wiz-actions'] && data['mon-wiz-actions'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Actions:</span> ' + ellipse(data['mon-wiz-actions']) + '</div>';
+
+                            if (data['mon-wiz-reactions'] && data['mon-wiz-reactions'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Reactions:</span> ' + data['mon-wiz-reactions'].length + '</div>';
 
                             if (data['mon-wiz-auto-drop-enabled']) {
                                 sum += '<div><span style="font-weight:bold">Auto drop:</span> Yes</div>';
@@ -6363,13 +6370,13 @@
                     tmpl['create body'] += `   set_wimpy(${data['mon-wiz-wimpy']});`;
                 if (!data['mon-wiz-auto-stand'])
                     tmpl['create body'] += `   set_auto_stand(0);`;
-                data['mon-wiz-reactions'] = data['mon-wiz-reactions'].filter(r => r.reaction.length > 0 && r.action.length > 0);
+                data['mon-wiz-reactions'] = data['mon-wiz-reactions'].filter(r => r.reaction.length > 0);
                 if (data['mon-wiz-reactions'].length === 1)
-                    tmpl['create body'] += `   set_reaction("${data['mon-wiz-reactions'][0].type}${data['mon-wiz-reactions'][0].reaction}", "${data['mon-wiz-reactions'][0].action}");\n`;
+                    tmpl['create body'] += `   set_reaction("${data['mon-wiz-reactions'][0].type.length > 0 ? data['mon-wiz-reactions'][0].type + ' ' : ''}${data['mon-wiz-reactions'][0].reaction}", "${data['mon-wiz-reactions'][0].action}");\n`;
                 else if (data['mon-wiz-reactions'].length > 1) {
                     tmpl['create body'] += '   set_reactions( ([\n';
                     data['mon-wiz-reactions'].forEach(r => {
-                        tmpl['create body'] += `       "${r.type}${r.reaction}" : "${r.action}"\n`;
+                        tmpl['create body'] += `       "${r.type.length > 0 ? r.type + ' ' : ''}${r.reaction}" : "${r.action}"\n`;
                     });
                     tmpl['create body'] += '\n     ]) );\n';
                 }
