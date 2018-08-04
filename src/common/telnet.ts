@@ -1757,6 +1757,7 @@ export class Telnet extends EventEmitter {
             this.socket.removeAllListeners();
             if (this.connected)
                 this.socket.end();
+            this.socket.destroy();
             delete this.socket;
         }
         catch (e) {
