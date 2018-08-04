@@ -55,9 +55,7 @@ export enum MonsterFlags {
     Water_Breathing = 1 << 4,
     Requires_Water = 1 << 5,
     No_Bleeding = 1 << 6,
-    Auto_Stand = 1 << 7,
-    Drop_encumbered = 1 << 8,
-    Drop_encumbered_combat = 1 << 9
+    Auto_Stand = 1 << 7
 }
 
 export const RoomTypes = [
@@ -159,6 +157,7 @@ interface MonsterAction {
 }
 
 interface MonsterReaction {
+    type: string;
     reaction: string;
     action: string;
 }
@@ -403,6 +402,7 @@ class Monster {
     public notes: string = '';
     public custom: string = '';
     public reactions: MonsterReaction[] = [];
+    public actions: string = '';
 
     constructor(id?, data?, type?) {
         if (typeof id === 'string') {
@@ -487,6 +487,7 @@ class Monster {
             this.wimpy = 0;
             this.notes = '';
             this.custom = '';
+            this.actions = '';
         }
         this.type = type || 'base';
         this.reactions = [];
@@ -3457,29 +3458,11 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Random',
                                 field: 'random',
                                 width: 150
-                            }
-                            ,
+                            },
                             {
                                 label: 'Unique',
                                 field: 'unique',
                                 width: 150
-                            }
-                            ,
-                            {
-                                label: 'Action',
-                                field: 'action',
-                                width: 150,
-                                spring: true,
-                                editor: {
-                                    type: EditorType.dropdown,
-                                    options: {
-                                        data: [
-                                            'cloak',
-                                            'conceal',
-                                            'sit'
-                                        ]
-                                    }
-                                }
                             }
                         ],
                         onAdd: (e) => {
@@ -3939,14 +3922,12 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Random',
                                 field: 'random',
                                 width: 150
-                            }
-                            ,
+                            },
                             {
                                 label: 'Unique',
                                 field: 'unique',
                                 width: 150
-                            }
-                            ,
+                            },
                             {
                                 label: 'Action',
                                 field: 'action',
@@ -4047,9 +4028,9 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-auto-wear': '' + ed.value.autoWear.time,
                                     'mon-wiz-auto-wear-enabled': ed.value.autoWear.enabled,
                                     'mon-wiz-wimpy': '' + ed.value.wimpy,
-                                    'mon-wiz-drop-encumbered': (ed.value.flags & MonsterFlags.Drop_encumbered) === MonsterFlags.Drop_encumbered,
-                                    'mon-wiz-drop-encumbered-combat': (ed.value.flags & MonsterFlags.Drop_encumbered_combat) === MonsterFlags.Drop_encumbered_combat,
-                                    'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand
+                                    'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand,
+                                    'mon-wiz-actions': ed.value.actions,
+                                    'mon-wiz-reactions': ed.value.reactions || []
                                 },
                                 finish: e => {
                                     const nMonster = ed.value.clone();
@@ -4105,10 +4086,8 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.autoWear.time = +e.data['mon-wiz-auto-wear'];
                                     nMonster.autoWear.enabled = e.data['mon-wiz-auto-wear-enabled'];
                                     nMonster.wimpy = +e.data['mon-wiz-wimpy'];
-                                    if (e.data['mon-wiz-drop-encumbered'])
-                                        nMonster.flags |= MonsterFlags.Drop_encumbered;
-                                    if (e.data['mon-wiz-drop-encumbered-combat'])
-                                        nMonster.flags |= MonsterFlags.Drop_encumbered_combat;
+                                    nMonster.actions = e.data['mon-wiz-actions'];
+                                    nMonster.reactions = e.data['mon-wiz-reactions'] || [];
                                     if (e.data['mon-wiz-auto-stand'])
                                         nMonster.flags |= MonsterFlags.Auto_Stand;
                                     if (!nMonster.equals(ed.data.monster))
@@ -4366,29 +4345,11 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Random',
                                 field: 'random',
                                 width: 150
-                            }
-                            ,
+                            },
                             {
                                 label: 'Unique',
                                 field: 'unique',
                                 width: 150
-                            }
-                            ,
-                            {
-                                label: 'Action',
-                                field: 'action',
-                                width: 150,
-                                spring: true,
-                                editor: {
-                                    type: EditorType.dropdown,
-                                    options: {
-                                        data: [
-                                            'cloak',
-                                            'conceal',
-                                            'sit'
-                                        ]
-                                    }
-                                }
                             }
                         ],
                         onAdd: (e) => {
@@ -4834,9 +4795,8 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-auto-wear': '' + ed.value.autoWear.time,
                                     'mon-wiz-auto-wear-enabled': ed.value.autoWear.enabled,
                                     'mon-wiz-wimpy': '' + ed.value.wimpy,
-                                    'mon-wiz-drop-encumbered': (ed.value.flags & MonsterFlags.Drop_encumbered) === MonsterFlags.Drop_encumbered,
-                                    'mon-wiz-drop-encumbered-combat': (ed.value.flags & MonsterFlags.Drop_encumbered_combat) === MonsterFlags.Drop_encumbered_combat,
                                     'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand,
+                                    'mon-wiz-actions': ed.value.actions,
                                     'mon-wiz-reactions': ed.value.reactions
                                 },
                                 finish: e => {
@@ -4897,11 +4857,8 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.autoWear.time = +e.data['mon-wiz-auto-wear'];
                                     nMonster.autoWear.enabled = e.data['mon-wiz-auto-wear-enabled'];
                                     nMonster.wimpy = +e.data['mon-wiz-wimpy'];
+                                    nMonster.actions = e.data['mon-wiz-actions'];
                                     nMonster.reactions = e.data['mon-wiz-reactions'] || [];
-                                    if (e.data['mon-wiz-drop-encumbered'])
-                                        nMonster.flags |= MonsterFlags.Drop_encumbered;
-                                    if (e.data['mon-wiz-drop-encumbered-combat'])
-                                        nMonster.flags |= MonsterFlags.Drop_encumbered_combat;
                                     if (e.data['mon-wiz-auto-stand'])
                                         nMonster.flags |= MonsterFlags.Auto_Stand;
 
@@ -7039,7 +6996,7 @@ export class AreaDesigner extends EditorBase {
         }, false, this.$view !== View.map));
         frag.appendChild(this.createButton('Generate area', 'bolt', () => {
             this.emit('show-area', {
-                title: 'Generate area...', ok: (local, data) => {
+                title: 'Generate area...', name: path.basename(this.file, '.design'), ok: (local, data) => {
                     this.generateCode(local, data);
                 }
             });
@@ -7174,7 +7131,7 @@ export class AreaDesigner extends EditorBase {
                     label: 'Generate area',
                     click: () => {
                         this.emit('show-area', {
-                            title: 'Generate area...', ok: (local, data) => {
+                            title: 'Generate area...', name: path.basename(this.file, '.design'), ok: (local, data) => {
                                 this.generateCode(local, data);
                             }
                         });
@@ -9364,7 +9321,7 @@ export class AreaDesigner extends EditorBase {
         this.emit('progress-start', 'designer');
         const files = {};
         data = data || {};
-        this.emit('progress-complete', { type: 'designer', percent: 0, title: 'Generating file names&hellip;' });
+        this.emit('progress', { type: 'designer', percent: 0, title: 'Generating file names&hellip;' });
         //#region Generate file names
         let counts = {};
         //generate monster names, count in case they have the same name and store based on unique id for lookup in code generate
@@ -9382,7 +9339,7 @@ export class AreaDesigner extends EditorBase {
         //generate object names, count in case they have the same name and store based on unique id for lookup in code generate
         counts = {};
         Object.keys(this.$area.objects).forEach(m => {
-            const name = this.$area.objects[m].name.replace(/ /g, '_').toLowerCase();
+            const name = stripPinkfish(this.$area.objects[m].name).replace(/ /g, '_').toLowerCase();
             if (!counts[name])
                 counts[name] = 1;
             else
@@ -9411,41 +9368,41 @@ export class AreaDesigner extends EditorBase {
                 }
             }
         }
-        Object.keys(this.$area.baseRooms).forEach(r => files[r] = r.replace(/ /g, '_').toUpperCase() + 'ROOM');
-        Object.keys(this.$area.baseMonsters).forEach(r => files[r] = r.replace(/ /g, '_').toUpperCase() + 'MONSTER');
+        Object.keys(this.$area.baseRooms).forEach(r => files[r + 'room'] = r.replace(/ /g, '_').toUpperCase() + 'ROOM');
+        Object.keys(this.$area.baseMonsters).forEach(r => files[r + 'monster'] = r.replace(/ /g, '_').toUpperCase() + 'MONSTER');
         //#endregion
-        this.emit('progress-complete', { type: 'designer', percent: 10, title: 'Creating paths&hellip;' });
+        this.emit('progress', { type: 'designer', percent: 10, title: 'Creating paths&hellip;' });
         //create paths
         fs.mkdirSync(p);
         fs.mkdirSync(path.join(p, 'obj'));
         fs.mkdirSync(path.join(p, 'mon'));
         fs.mkdirSync(path.join(p, 'std'));
-        this.emit('progress-complete', { type: 'designer', percent: 20, title: 'Creating base files' });
+        this.emit('progress', { type: 'designer', percent: 20, title: 'Creating base files' });
         //Generate area.h
         const template = copy(data);
         const templePath = parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer'));
         template['area post'] = '\n';
         template['doc'] = '';
         let value = fs.readFileSync(path.join(templePath, 'area.h'), 'utf8');
-        Object.keys(this.$area.baseRooms).forEach(r => template['area post'] += `\n#define ${files[r]} (STD + "${files[r].toLowerCase()}")`);
-        template['area post'] = '\n';
-        Object.keys(this.$area.baseMonsters).forEach(r => template['area post'] += `\n#define ${files[r]} (STD + "${files[r].toLowerCase()}")`);
+        Object.keys(this.$area.baseRooms).forEach(r => template['area post'] += `\n#define ${files[r + 'room']} (STD + "${files[r + 'room'].toLowerCase()}")`);
+        template['area post'] += '\n';
+        Object.keys(this.$area.baseMonsters).forEach(r => template['area post'] += `\n#define ${files[r + 'monster']} (STD + "${files[r + 'monster'].toLowerCase()}")`);
         Object.keys(this.$area.baseMonsters).filter(r => this.$area.baseMonsters[r].maxAmount > 0).forEach(r => template['area post'] += `\n#define MAX${r.replace(/ /g, '_').toUpperCase()} ${this.$area.baseMonsters[r].maxAmount}`);
         value = this.parseFileTemplate(value, template);
         this.write(value, path.join(p, 'area.h'));
         //Generate base rooms
-        this.emit('progress-complete', { type: 'designer', percent: 24, title: 'Creating base files&hellip;' });
-        Object.keys(this.$area.baseRooms).forEach(r => this.write(this.generateRoomCode(this.$area.baseRooms[r], files, copy(data)), path.join(p, 'std', files[r].toLowerCase())));
+        this.emit('progress', { type: 'designer', percent: 24, title: 'Creating base files&hellip;' });
+        Object.keys(this.$area.baseRooms).forEach(r => this.write(this.generateRoomCode(this.$area.baseRooms[r], files, copy(data), true), path.join(p, 'std', files[r + 'room'].toLowerCase() + '.c')));
         //generate base monsters
-        this.emit('progress-complete', { type: 'designer', percent: 28, title: 'Creating base files&hellip;' });
-        Object.keys(this.$area.baseMonsters).forEach(r => this.write(this.generateMonsterCode(this.$area.baseMonsters[r], files, copy(data)), path.join(p, 'std', files[r].toLowerCase())));
+        this.emit('progress', { type: 'designer', percent: 28, title: 'Creating base files&hellip;' });
+        Object.keys(this.$area.baseMonsters).forEach(r => this.write(this.generateMonsterCode(this.$area.baseMonsters[r], files, copy(data)), path.join(p, 'std', files[r + 'monster'].toLowerCase() + '.c')));
         //generate monsters
-        this.emit('progress-complete', { type: 'designer', percent: 30, title: 'Creating monster files&hellip;' });
-        Object.keys(this.$area.monsters).forEach(r => this.write(this.generateMonsterCode(this.$area.monsters[r], files, copy(data)), path.join(p, 'mon', files[r])));
+        this.emit('progress', { type: 'designer', percent: 30, title: 'Creating monster files&hellip;' });
+        Object.keys(this.$area.monsters).forEach(r => this.write(this.generateMonsterCode(this.$area.monsters[r], files, copy(data)), path.join(p, 'mon', files[r] + '.c')));
         //generate objects
-        this.emit('progress-complete', { type: 'designer', percent: 40, title: 'Creating object files&hellip;' });
-        Object.keys(this.$area.objects).forEach(r => this.write(this.generateObjectCode(this.$area.objects[r], files, copy(data)), path.join(p, 'obj', files[r])));
-        this.emit('progress-complete', { type: 'designer', percent: 50, title: 'Creating room files&hellip;' });
+        this.emit('progress', { type: 'designer', percent: 40, title: 'Creating object files&hellip;' });
+        Object.keys(this.$area.objects).forEach(r => this.write(this.generateObjectCode(this.$area.objects[r], files, copy(data)), path.join(p, 'obj', files[r] + '.c')));
+        this.emit('progress', { type: 'designer', percent: 50, title: 'Creating room files&hellip;' });
         //generate rooms
         let count = 0;
         for (let z = 0; z < zl; z++) {
@@ -9453,19 +9410,156 @@ export class AreaDesigner extends EditorBase {
                 for (let x = 0; x < xl; x++) {
                     const r = this.$area.rooms[z][y][x];
                     if (r.empty) continue;
-                    this.write(this.generateObjectCode(r, files, copy(data)), path.join(p, files[`${r.x},${r.y},${r.z}`]));
+                    this.write(this.generateRoomCode(r, files, copy(data)), path.join(p, files[`${r.x},${r.y},${r.z}`] + '.c'));
                     count++;
-                    this.emit('progress-complete', { type: 'designer', percent: 50 + Math.round(50 * count / this.$roomCount) });
+                    this.emit('progress', { type: 'designer', percent: 50 + Math.round(50 * count / this.$roomCount) });
                 }
             }
         }
         this.emit('progress-complete', 'designer');
     }
 
-    public generateRoomCode(room, files, data) {
+    public generateRoomCode(room: Room, files, data, baseroom?) {
         if (!room) return '';
         files = files || {};
-        return '';
+        const eArray: Exit[] = Object.values(room.exitsDetails);
+        const doors = eArray.filter(r => r.exit.length > 0 && r.door && r.door.length > 0 && !r.climb);
+        const exits = eArray.filter(r => r.exit.length > 0 && !r.door || r.door.length === 0 && !r.climb);
+        const climbs = eArray.filter(r => r.exit.length > 0 && !r.door || r.door.length === 0 && r.climb);
+        data.doc = [];
+        data.includes = '';
+        data['create pre'] = '';
+        data['create body'] = '';
+        data['create post'] = '';
+        data['reset body'] = '';
+        data['reset pre body'] = '';
+        data['reset post'] = '';
+        const base = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
+        if (baseroom) {
+            if (room.maxForage !== -1 || doors.length > 0) {
+                data['reset pre body'] += '\n';
+                if (data['room-wiz-forage'] !== -1)
+                    data['reset pre body'] += `   set_property('forage', ${data['room-wiz-forage']});\n`;
+                doors.forEach(r => {
+                    data['reset pre body'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
+                    data['reset pre body'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
+                });
+
+                if (room.objects.length !== 0) {
+                    data['reset pre body'] += '   if(!query_property("no clone monsters"))\n   {\n';
+                    room.objects.forEach(o => {
+                        let ident = '';
+                        if (!this.$area.objects[o.id]) return;
+                        if (o.random > 0) {
+                            data['reset pre body'] += `      if(random(${o.random}) <= random(101)\n      {\n`;
+                            ident = '   ';
+                        }
+                        if (o.unique)
+                            data['reset pre body'] += `${ident}      clone_unique(OBJ + "${files[o.id]}.c")`;
+                        else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1))
+                            data['reset pre body'] += `${ident}      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount})`;
+                        else if (o.minAmount > 0 && o.maxAmount > 0)
+                            data['reset pre body'] += `${ident}      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}))`;
+                        if (o.random > 0)
+                            data['reset pre body'] += `      }\n`;
+                    });
+                    data['reset pre body'] += '   }';
+                }
+
+                if (room.monsters.length !== 0) {
+                    room.monsters.forEach(o => {
+                        let ident = '';
+                        const mon = this.$area.monsters[o.id];
+                        if (!mon) return;
+                        let max = '';
+                        if (this.$area.baseMonsters[mon.type]) {
+                            if (this.$area.baseMonsters[mon.type].maxAmount > 0)
+                                max = `MAX${mon.type.replace(/ /g, '_').toUpperCase()}`;
+                        }
+                        if (o.random > 0) {
+                            data['reset body'] += `   if(random(${o.random}) <= random(101)\n   {\n`;
+                            ident = '   ';
+                        }
+                        if (o.unique)
+                            data['reset body'] += `${ident}   clone_unique(OBJ + "${files[o.id]}.c")`;
+                        else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1)) {
+                            if (max.length !== 0)
+                                data['reset body'] += `${ident}   clone_max_children(OBJ + "${files[o.id]}.c", ${o.minAmount}, ${max})`;
+                            else
+                                data['reset body'] += `${ident}   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount})`;
+                        }
+                        else if (max.length !== 0 && o.minAmount > 0 && o.maxAmount > 0)
+                            data['reset body'] += `${ident}   clone_max_children(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}), ${max})`;
+                        else if (o.minAmount > 0 && o.maxAmount > 0)
+                            data['reset body'] += `${ident}   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}))`;
+                        if (o.random > 0)
+                            data['reset body'] += `   }\n`;
+                    });
+                }
+            }
+            else {
+                data['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
+                if (data['room-wiz-forage'] !== -1)
+                    data['create post'] += `   set_property('forage', ${data['room-wiz-forage']});\n`;
+                doors.forEach(r => {
+                    data['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
+                    data['create post'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
+                });
+                if (room.objects.length !== 0) {
+                    data['create post'] += '   if(!query_property("no clone monsters"))\n   {\n';
+                    room.objects.forEach(o => {
+                        let ident = '';
+                        if (o.random > 0) {
+                            data['create post'] += `      if(random(${o.random}) <= random(101)\n      {\n`;
+                            ident = '   ';
+                        }
+                        if (o.unique)
+                            data['create post'] += `${ident}      clone_unique(OBJ + "${files[o.id]}.c")`;
+                        else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                            data['create post'] += `${ident}      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount})`;
+                        else if (o.minAmount > 0 && o.maxAmount > 0)
+                            data['create post'] += `${ident}      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}))`;
+                        if (o.random > 0)
+                            data['create post'] += `      }\n`;
+                    });
+                    data['create post'] += '   }';
+                }
+                if (room.monsters.length !== 0) {
+                    room.monsters.forEach(o => {
+                        let ident = '';
+                        const mon = this.$area.monsters[o.id];
+                        if (!mon) return;
+                        let max = '';
+                        if (this.$area.baseMonsters[mon.type]) {
+                            if (this.$area.baseMonsters[mon.type].maxAmount > 0)
+                                max = `MAX${mon.type.replace(/ /g, '_').toUpperCase()}`;
+                        }
+                        if (o.random > 0) {
+                            data['create post'] += `   if(random(${o.random}) <= random(101)\n   {\n`;
+                            ident = '   ';
+                        }
+                        if (o.unique)
+                            data['create post'] += `${ident}   clone_unique(OBJ + "${files[o.id]}.c")`;
+                        else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1)) {
+                            if (max.length !== 0)
+                                data['create post'] += `${ident}   clone_max_children(OBJ + "${files[o.id]}.c", ${o.minAmount}, ${max})`;
+                            else
+                                data['create post'] += `${ident}   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount})`;
+                        }
+                        else if (max.length !== 0 && o.minAmount > 0 && o.maxAmount > 0)
+                            data['create post'] += `${ident}   clone_max_children(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}), ${max})`;
+                        else if (o.minAmount > 0 && o.maxAmount > 0)
+                            data['create post'] += `${ident}   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}))`;
+                        if (o.random > 0)
+                            data['create post'] += `   }\n`;
+                    });
+                }
+                data['create post'] += '}';
+            }
+        }
+        if (baseroom)
+            return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'baseroom.c'))), data);
+        return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'room.c'))), data);
     }
 
     public generateMonsterCode(monster, files, data) {
