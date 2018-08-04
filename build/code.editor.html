@@ -1249,7 +1249,7 @@
         <div id="mon-wizard-actions">
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Actions
-                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of commands to execute on pop</span>
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of commands to execute on repop</span>
                     <input type="text" class="input-sm form-control" id="mon-wiz-actions" />
                 </label>
             </div>
@@ -1676,7 +1676,7 @@
     const { Wizard, WizardPage, WizardDataGridPage } = require('./js/wizard');
 
     // eslint-disable-next-line no-unused-vars
-    const { formatString, wordWrap, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize, updateEditDropdown, initEditDropdown } = require('./js/library');
+    const { formatString, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize, updateEditDropdown, initEditDropdown } = require('./js/library');
     const { IEDError } = require('./js/types');
 
     const { IED } = require('./js/ied');
@@ -5289,8 +5289,8 @@
                 var tmpl = baseParseData();
                 var tmp, tmp2, tmp3;
                 var doors = data['room-wiz-exits'].filter(r => r.exit.length > 0 && r.door && r.door.length > 0 && !r.climb);
-                var exits = data['room-wiz-exits'].filter(r => r.exit.length > 0 && !r.door || r.door.length === 0 && !r.climb);
-                var climbs = data['room-wiz-exits'].filter(r => r.exit.length > 0 && !r.door || r.door.length === 0 && r.climb);
+                var exits = data['room-wiz-exits'].filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && !r.climb);
+                var climbs = data['room-wiz-exits'].filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && r.climb);
                 tmpl.doc = [];
                 tmpl.includes = '';
                 tmpl['create pre'] = '';
@@ -5321,7 +5321,7 @@
                 tmpl.inherit = data['room-wiz-type'].value;
                 tmpl.inherits = '';
                 if (climbs.length > 0 && data['room-wiz-type'].display !== 'Climb') {
-                    tmpl.includes += '\n#include <climbing.h>';
+                    tmpl.inherits += '\ninherit CLIMBING;';
                     tmpl.doc.push('/doc/build/etc/climbing');
                 }
                 if (data['room-wiz-type'].display === 'Base' || $dialogs.room.defaults['room-wiz-virtual'])
@@ -5461,6 +5461,8 @@
                         tmpl['long'] = `"${data['room-wiz-long']}"`;
                     }
                 }
+                if (data['room-wiz-terrain'].length !== 0)
+                    tmpl['create body'] += `   set_terrain("${data['room-wiz-terrain']}");\n`;                
                 tmp = [];
                 if (data['room-wiz-light'] !== 0)
                     tmp.push(`"light" : ${data['room-wiz-light']}`);
@@ -5475,7 +5477,7 @@
                 if (data['room-wiz-no-teleport'])
                     tmp.push('"no teleport" : 1');
                 if (data['room-wiz-no-mgive'])
-                    tmp.push('"no mgive" : 1');                    
+                    tmp.push('"no mgive" : 1');
                 if (data['room-wiz-council'])
                     tmp.push('"council" : 1');
                 if (data['room-wiz-no-map'])
@@ -5491,7 +5493,7 @@
                 if (data['room-wiz-no-dirt'])
                     tmp.push('"no dirt" : 1');
                 if (data['room-wiz-dirt'].length > 0)
-                    tmp.push(`"dirt type" : ${data['room-wiz-dirt']}`);
+                    tmp.push(`"dirt type" : "${data['room-wiz-dirt']}"`);
                 data['room-wiz-secret-exit'] = data['room-wiz-secret-exit'].trim();
                 if (data['room-wiz-secret-exit'] === 'false') { /**/ }
                 else if (data['room-wiz-secret-exit'].startsWith('(:')) {
@@ -5566,7 +5568,6 @@
                         tmp3 = '"' + tmp3 + '"';
                     return `${tmp2} : ${tmp3}`;
                 });
-
                 if (tmp.length > 0) {
                     tmpl['create body'] += '   set_items( ([\n       ';
                     tmpl['create body'] += tmp.join(',\n       ');
@@ -5575,20 +5576,23 @@
                 //add exits
                 tmp = exits.map(i => {
                     if (i.exit.length === 0) return '';
-                    tmp2 = [];
+                    tmp2 = '';
                     if (i.dest.length > 0)
-                        tmp2.push(`"room" : "${i.dest}"`);
+                        tmp2 = `"${i.dest}"`;
                     if (i.blocker.length > 0)
-                        tmp2.push(`"blockers" : ({ "${i.blocker.split(',').map(b => b.trim()).join('", "')}" })`);
-                    if (!i.exit.startsWith('"') && !i.exit.endsWith('"')) {
-                        if (tmp2.length > 0)
-                            return `   "${i.exit}" : ([])\n       ${tmp2.join(',\n       ')}\n     ]) );\n`;
-                        return `   "${i.exit}" : ([])`;
-                    }
-                    if (tmp2.length > 0)
-                        return `   ${i.exit} : ([])\n       ${tmp2.join(',\n       ')}\n     ]) );\n`;
-                    return `   ${i.exit} : ([])`;
+                        tmp3 = `"blockers" : ({ "${i.blocker.split(',').map(b => b.trim()).join('", "')}" })`;
 
+                    if (!i.exit.startsWith('"') && !i.exit.endsWith('"'))
+                        i.exit = `"${i.exit}"`;
+                    if (i.blocker.length !== 0) {
+                        tmp3 = `"blockers" : ({ "${i.blocker.split(',').map(b => b.trim()).join('", "')}" })`;
+                        if (tmp2.length !== 0)
+                            return `${i.exit} : ([\n         "room" : ${tmp2},\n         ${tmp3}\n       ])`;
+                        return `${i.exit} : ([\n       ${tmp3}\n     ])`;
+                    }
+                    else if (tmp2.length !== 0)
+                        return `${i.exit} : ${tmp2}`;
+                    return `${i.exit} : ""`;
                 });
                 if (tmp.length > 0) {
                     tmpl['create body'] += '   set_exits( ([\n       ';
@@ -5599,16 +5603,18 @@
                 if (tmp.length > 0)
                     tmpl['create body'] += `   add_invis_exits(${formatArgumentList(tmp.join(', '), 61)});\n`;
                 //add climbs
-                tmp = exits.map(i => {
+                tmp = climbs.map(i => {
                     if (i.exit.length === 0) return '';
                     tmp2 = [];
                     if (i.dest.length !== 0)
                         tmp2.push(`"dest" : "${i.dest}"`);
                     if (i.diff !== 0)
                         tmp2.push(`"difficulty" : "${i.diff}"`);
+                    if (!i.exit.startsWith('"') && !i.exit.endsWith('"'))
+                        i.exit = `"${i.exit}"`;
                     if (tmp2.length !== 0)
-                        return `   ${i.exit} : ([])\n       ${tmp2.join(',\n       ')}\n     ]) );\n`;
-                    return `   ${i.exit} : ([])`;
+                        return `${i.exit} : ([\n         ${tmp2.join(',\n         ')}\n       ])`;
+                    return `${i.exit} : ([])`;
                 });
                 if (tmp.length !== 0) {
                     tmpl['create body'] += '   set_climbs( ([\n       ';
