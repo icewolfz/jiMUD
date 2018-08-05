@@ -15,7 +15,6 @@
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
     <link id="theme" rel="stylesheet" href="" type="text/css">
 </head>
-
 <body>
     <div id="toolbar" class="btn-toolbar" role="toolbar">
         <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="profileUI.doRefresh()">
@@ -566,6 +565,7 @@
 
     <script>
         const profileUI = require('./js/profile.ui');
+        const MacroDisplay = profileUI.MacroDisplay;
         profileUI.init();
     </script>
 
