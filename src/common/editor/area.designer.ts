@@ -161,6 +161,15 @@ interface MonsterReaction {
     action: string;
 }
 
+interface MonsterTopic {
+    topic: string;
+    message: string;
+}
+
+enum MonsterResponseType {
+    say = 0, tell = 1, speak = 2, whisper = 3, custom = 4
+}
+
 export class Room {
     //readonly
     public x = 0;
@@ -362,6 +371,7 @@ class Monster {
     public maxAmount: number = -1;
     public unique: boolean = false;
     public objects: ObjectInfo[] = [];
+    public noBaseTopics: boolean = false;
 
     public type: string = 'base';
 
@@ -400,6 +410,16 @@ class Monster {
     public notes: string = '';
     public reactions: MonsterReaction[] = [];
     public actions: string = '';
+
+    public party: string = '';
+    public tracking: boolean = false;
+    public trackingMessage: string = '';
+    public trackingType: string = '';
+    public trackingAggressively: boolean = false;
+    public askEnabled: boolean = false;
+    public askNoTopic: string = '';
+    public askResponseType: MonsterResponseType = MonsterResponseType.say;
+    public askTopics: MonsterTopic[] = [];
 
     constructor(id?, data?, type?) {
         if (typeof id === 'string') {
@@ -484,10 +504,20 @@ class Monster {
             this.wimpy = 0;
             this.notes = '';
             this.actions = '';
+            this.party = '';
+            this.tracking = false;
+            this.trackingMessage = '';
+            this.trackingType = '';
+            this.trackingAggressively = false;
+            this.askEnabled = false;
+            this.askNoTopic = '';
+            this.askResponseType = MonsterResponseType.say;
+            this.noBaseTopics = false;
         }
         this.type = type || 'base';
         this.reactions = [];
         this.objects = [];
+        this.askTopics = [];
     }
 }
 
@@ -3880,6 +3910,11 @@ export class AreaDesigner extends EditorBase {
                 width: 150
             },
             {
+                property: 'noBaseTopics',
+                label: 'No base topics',
+                width: 200
+            },
+            {
                 field: 'objects',
                 label: 'Objects',
                 sortable: false,
@@ -4039,7 +4074,16 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-wimpy': '' + ed.value.wimpy,
                                     'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand,
                                     'mon-wiz-actions': ed.value.actions,
-                                    'mon-wiz-reactions': ed.value.reactions || []
+                                    'mon-wiz-reactions': ed.value.reactions || [],
+                                    'mon-wiz-party': ed.value.party,
+                                    'mon-wiz-tracking': ed.value.tracking,
+                                    'mon-wiz-tracking-message': ed.value.trackingMessage,
+                                    'mon-wiz-tracking-type': ed.value.trackingType,
+                                    'mon-wiz-tracking-aggressively': ed.value.trackingAggressively,
+                                    'mon-wiz-ask': ed.value.askEnabled,
+                                    'mon-wiz-ask-no-topic': ed.value.askNoTopic,
+                                    'mon-wiz-ask-response': '' + ed.value.askResponseType,
+                                    'mon-wiz-ask-topics': ed.value.askTopics
                                 },
                                 finish: e => {
                                     const nMonster = ed.value.clone();
@@ -4099,6 +4143,18 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.reactions = e.data['mon-wiz-reactions'] || [];
                                     if (e.data['mon-wiz-auto-stand'])
                                         nMonster.flags |= MonsterFlags.Auto_Stand;
+
+                                    nMonster.party = e.data['mon-wiz-party'];
+                                    nMonster.tracking = e.data['mon-wiz-tracking'];
+                                    nMonster.trackingMessage = e.data['mon-wiz-tracking-message'];
+                                    nMonster.trackingType = e.data['mon-wiz-tracking-type'];
+                                    nMonster.trackingAggressively = e.data['mon-wiz-tracking-aggressively'];
+
+                                    nMonster.askEnabled = e.data['mon-wiz-ask'];
+                                    nMonster.askNoTopic = e.data['mon-wiz-ask-no-topic'];
+                                    nMonster.askResponseType = +e.data['mon-wiz-ask-response'];
+                                    nMonster.askTopics = e.data['mon-wiz-ask-topics'];
+
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;
                                     ed.focus();
@@ -4119,6 +4175,7 @@ export class AreaDesigner extends EditorBase {
                 delete this.$area.baseMonsters[oldValue.name];
             newValue.monster.maxAmount = newValue.maxAmount;
             newValue.monster.objects = newValue.objects;
+            newValue.monster.noBaseTopics = newValue.noBaseTopics;
             this.$area.baseMonsters[newValue.name] = newValue.monster;
             this.changed = true;
         });
@@ -4128,6 +4185,7 @@ export class AreaDesigner extends EditorBase {
             e.data = {
                 name: 'base' + this.$new.baseMonsters,
                 maxAmount: this.$area.baseMonsters['base' + this.$new.baseMonsters].maxAmount,
+                noBaseTopics: this.$area.baseMonsters['base' + this.$new.baseMonsters].noBaseTopics,
                 objects: this.$area.baseMonsters['base' + this.$new.baseMonsters].objects,
                 monster: this.$area.baseMonsters['base' + this.$new.baseMonsters]
             };
@@ -4648,6 +4706,11 @@ export class AreaDesigner extends EditorBase {
                 width: 125
             },
             {
+                property: 'noBaseTopics',
+                label: 'No base topics',
+                width: 200
+            },
+            {
                 field: 'objects',
                 label: 'Objects',
                 sortable: false,
@@ -4952,6 +5015,7 @@ export class AreaDesigner extends EditorBase {
                 short: m.short,
                 maxAmount: m.maxAmount,
                 unique: m.unique,
+                noBaseTopics: m.noBaseTopics,
                 objects: m.objects,
                 monster: m
             };
@@ -4985,6 +5049,7 @@ export class AreaDesigner extends EditorBase {
             newValue.monster.maxAmount = newValue.maxAmount;
             newValue.monster.unique = newValue.unique;
             newValue.monster.objects = newValue.objects;
+            newValue.monster.noBaseTopics = newValue.noBaseTopics;
             this.$area.monsters[newValue.id] = newValue.monster;
             this.changed = true;
         });
@@ -8407,6 +8472,7 @@ export class AreaDesigner extends EditorBase {
             return {
                 name: r,
                 maxAmount: this.$area.baseMonsters[r].maxAmount,
+                noBaseTopics: this.$area.baseMonsters[r].noBaseTopics,
                 objects: this.$area.baseMonsters[r].objects,
                 monster: this.$area.baseMonsters[r]
             };
@@ -8421,6 +8487,7 @@ export class AreaDesigner extends EditorBase {
                 short: this.$area.monsters[m].short,
                 maxAmount: this.$area.monsters[m].maxAmount,
                 unique: this.$area.monsters[m].unique,
+                noBaseTopics: this.$area.monsters[m].noBaseTopics,
                 objects: this.$area.monsters[m].objects,
                 monster: this.$area.monsters[m]
             };

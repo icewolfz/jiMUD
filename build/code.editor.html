@@ -1177,6 +1177,29 @@
                 </label>
             </div>
         </div>
+        <div id="mon-wizard-ask">
+            <div class="col-sm-4 form-group" style="width: auto;">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-ask" /> Can be asked questions
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label" style="width: 100%">Ask no topic reply
+                    <input type="text" class="input-sm form-control" id="mon-wiz-ask-no-topic" />
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Ask response type
+                    <select id="mon-wiz-ask-response" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                        <option value='0'>Say</option>
+                        <option value='1'>Tell</option>
+                        <option value='2'>Speak</option>
+                        <option value='3'>Whisper</option>
+                        <option value='4'>Custom</option>
+                    </select>
+                </label>
+            </div>
+        </div>
         <div id="mon-wizard-advanced">
             <div class="col-sm-12 form-group">
                 <label class="control-label">No corpse
@@ -1188,6 +1211,11 @@
                 <label class="control-label">No limbs
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">"" disable, $N/$n name, $L/$l limb, empty default</span>
                     <input type="text" class="input-sm form-control" id="mon-wiz-no-limbs" />
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label">Monster party
+                    <input type="text" class="input-sm form-control" id="mon-wiz-party" />
                 </label>
             </div>
         </div>
@@ -1214,6 +1242,49 @@
                 <label class="control-label" style="width: 100%">Attack initiators
                     <textarea class="input-sm form-control" id="mon-wiz-initiators" style="width: 100%;height: 44px;"></textarea>
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A comma delimited list of commands, defaults based on class</span>
+                </label>
+            </div>
+        </div>
+        <div id="mon-wizard-tracking">
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-tracking" /> Enable attacker tracking
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label">Enter message
+                    <input type="text" class="input-sm form-control" id="mon-wiz-tracking-message" />
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Enter message action
+                    <div class="input-group edit-dropdown">
+                        <input type="text" id="mon-wiz-tracking-type" class="input-sm form-control">
+                        <span class="input-group-btn">
+                            <button id="btn-mon-wiz-class" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret" style="margin-left: -1px;"></span>
+                            </button>
+                            <ul style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-class" data-container="body">
+                                <li>
+                                    <a href="#" class="main">say</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">yell</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">speak</a>
+                                </li>
+                                <li>
+                                    <a href="#" class="sub">emote</a>
+                                </li>
+                            </ul>
+                        </span>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-tracking-aggressively" /> Track aggressively only
                 </label>
             </div>
         </div>
@@ -5865,11 +5936,50 @@
                         }
                     }),
                     new WizardPage({
+                        title: 'Ask',
+                        body: document.getElementById('mon-wizard-ask'),
+                        reset: (e) => {
+                            e.page.querySelector('#mon-wiz-ask').value = e.wizard.defaults['mon-wiz-ask'] || false;
+                            e.page.querySelector('#mon-wiz-ask-no-topic').value = e.wizard.defaults['mon-wiz-no-topic'] || '';
+                            $('#mon-wiz-ask-response', e.page).val(e.wizard.defaults['mon-wiz-ask-response'] || '0').selectpicker('render');
+                        }
+                    }),
+                    new WizardDataGridPage({
+                        title: 'Ask topics',
+                        id: 'mon-wiz-ask-topics',
+                        columns: [
+                            {
+                                label: 'Topic',
+                                field: 'topic',
+                                width: 200,
+                            },
+                            {
+                                label: 'Message',
+                                field: 'message',
+                                spring: true,
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        container: '#monster-wizard',
+                                        singleLine: true
+                                    }
+                                }
+                            }
+                        ],
+                        add: (e) => {
+                            e.data = {
+                                topic: '',
+                                message: ''
+                            };
+                        }
+                    }),
+                    new WizardPage({
                         title: 'Advanced properties',
                         body: document.getElementById('mon-wizard-advanced'),
                         reset: (e) => {
                             e.page.querySelector('#mon-wiz-no-corpse').value = e.wizard.defaults['mon-wiz-no-corpse'] || '';
                             e.page.querySelector('#mon-wiz-no-limbs').value = e.wizard.defaults['mon-wiz-no-limbs'] || '';
+                            e.page.querySelector('#mon-wiz-party').value = e.wizard.defaults['mon-wiz-limbs'] || '';
                         }
                     }),
                     new WizardPage({
@@ -5888,6 +5998,16 @@
                             e.page.querySelector('#mon-wiz-chance').value = e.wizard.defaults['mon-wiz-chance'] || '33';
                             e.page.querySelector('#mon-wiz-commands').value = e.wizard.defaults['mon-wiz-commands'] || '';
                             e.page.querySelector('#mon-wiz-initiators').value = e.wizard.defaults['mon-wiz-initiators'] || '';
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Tracking',
+                        body: document.getElementById('mon-wizard-tracking'),
+                        reset: (e) => {
+                            e.page.querySelector('#mon-wiz-tracking').checked = e.wizard.defaults['mon-wiz-tracking'] || false;
+                            e.page.querySelector('#mon-wiz-tracking-message').value = e.wizard.defaults['mon-wiz-tracking-message'] || '';
+                            e.page.querySelector('#mon-wiz-tracking-type').value = e.wizard.defaults['mon-wiz-tracking-type'] || '';
+                            e.page.querySelector('#mon-wiz-tracking-aggressively').checked = e.wizard.defaults['mon-wiz-tracking-aggressively'] || false;
                         }
                     }),
                     new WizardPage({
@@ -6051,10 +6171,20 @@
                                 sum += '<div><span style="font-weight:bold">Gender:</span> ' + data['mon-wiz-gender'].value + '</div>';
                             if (data['mon-wiz-body'] && data['mon-wiz-body'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Body type:</span> ' + data['mon-wiz-body'] + '</div>';
+
+                            if (data['mon-wiz-ask'] || data['mon-wiz-ask-topics'].length !== 0)
+                                sum += '<div><span style="font-weight:bold">Can ask questions:</span> Yes</div>';
+                            if (data['mon-wiz-ask-no-topic'] && data['mon-wiz-ask-no-topic'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Ask no topic:</span> ' + ellipse(data['mon-wiz-ask-no-topic'].replace(/\n/g, '')) + '</div>';
+                            sum += '<div><span style="font-weight:bold">Ask response type:</span> ' + data['mon-wiz-ask-response'].display + '</div>';
+                            if (data['mon-wiz-ask-topics'].length !== 0)
+                                sum += '<div><span style="font-weight:bold">Ask topics:</span> ' + data['mon-wiz-ask-topics'].length + '</div>';
                             if (data['mon-wiz-no-corpse'] && data['mon-wiz-no-corpse'].length > 0)
                                 sum += '<div><span style="font-weight:bold">No corpse:</span> ' + ellipse(data['mon-wiz-no-corpse'].replace(/\n/g, '')) + '</div>';
-                            if (data['mon-wiz-no-limbs'] && data['mon-wiz-hair'].length > 0)
+                            if (data['mon-wiz-no-limbs'] && data['mon-wiz-no-limbs'].length > 0)
                                 sum += '<div><span style="font-weight:bold">No limbs:</span> ' + ellipse(data['mon-wiz-no-limbs'].replace(/\n/g, '')) + '</div>';
+                            if (data['mon-wiz-party'] && data['mon-wiz-party'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Party:</span> ' + ellipse(data['mon-wiz-party'].replace(/\n/g, '')) + '</div>';
                             if (data['mon-wiz-speed'] > 0)
                                 sum += '<div><span style="font-weight:bold">Speed:</span> ' + data['mon-wiz-speed'] + '</div>';
                             if (data['mon-wiz-patrol'] && data['mon-wiz-patrol'].length > 0)
@@ -6067,6 +6197,16 @@
                                 sum += '<div><span style="font-weight:bold">Attack commands chance:</span> ' + data['mon-wiz-chance'] + '%</div>';
                             if (data['mon-wiz-initiators'] && data['mon-wiz-initiators'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Attack initiators:</span> ' + ellipse(data['mon-wiz-initiators'].replace(/\n/g, '')) + '</div>';
+
+                            if (data['mon-wiz-tracking'])
+                                sum += '<div><span style="font-weight:bold">Enable attacker tracking:</span> ' + data['mon-wiz-tracking'] ? 'Yes' : 'No' + '</div>';
+                            if (data['mon-wiz-tracking-message'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Enter message:</span> ' + ellipse(data['mon-wiz-tracking-message']) + '</div>';
+                            if (data['mon-wiz-tracking-type'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Enter message action:</span> ' + ellipse(data['mon-wiz-tracking-type']) + '</div>';
+                            if (data['mon-wiz-tracking-aggressively'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Aggressive:</span> ' + data['mon-wiz-tracking-aggressively'] ? 'Yes' : 'No' + '</div>';
+
                             if (data['mon-wiz-aggressive'] && data['mon-wiz-aggressive'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Aggressive:</span> ' + ellipse(data['mon-wiz-aggressive']) + '</div>';
 
@@ -6331,7 +6471,7 @@
                 if (data['mon-wiz-eye'].length > 0)
                     tmpl['create body'] += `   set_eyecolor("${data['mon-wiz-mass']}");\n`;
                 if (data['mon-wiz-hair'].length > 0)
-                    tmpl['create body'] += `   set_haircolor("${data['mon-wiz-mass']}");\n`;
+                    tmpl['create body'] += `   set_haircolor("${data['mon-wiz-hair']}");\n`;
                 if (data['mon-wiz-ridable'])
                     tmpl['create body'] += '   set_rideable(1); //Enable riding\n   set_follow_type("steed");/ /set the follow type to steed for proper limiting\n';
                 if (data['mon-wiz-flying'])
@@ -6355,6 +6495,8 @@
                     tmpl['create body'] += `   set_aggressive(${data['mon-wiz-aggressive']}); //Set monster aggressiveness\n`;
                     tmpl['doc'].push('/doc/build/monster/haggle');
                 }
+                if (data['mon-wiz-party'].length > 0)
+                    tmpl['create body'] += `   set_mon_party("${data['mon-wiz-party']}");\n`;
                 if (data['mon-wiz-auto-drop-enabled'])
                     tmpl['create body'] += `   set_auto_drop(1);`;
                 if (data['mon-wiz-auto-drop'] !== 1)
@@ -6389,6 +6531,74 @@
                     });
                     tmpl['create body'] += '\n     ]) );\n';
                 }
+
+                if (data['mon-wiz-tracking'])
+                    tmpl['create body'] += `   set_track_attackers(1);\n`;
+                if (data['mon-wiz-tracking-message'].length > 0)
+                    tmpl['create body'] += `   set_track_enter_message("${data['mon-wiz-tracking-message']}");\n`;
+                if (data['mon-wiz-tracking'].length > 0)
+                    tmpl['create body'] += `   set_track_enter_message_type("${data['mon-wiz-tracking-type']}");\n`;
+                if (data['mon-wiz-tracking-aggressively'].length > 0)
+                    tmpl['create body'] += `   set_track_aggressively_only(1);\n`;
+
+                if (data['mon-wiz-ask'] && data['mon-wiz-ask-topics'].length === 0)
+                    tmpl['create body'] += `   set_enable_ask(1);\n`;
+                if (data['mon-wiz-ask-no-topic'].trim().length !== 0)
+                    tmpl['create body'] += `   set_no_topic("${data['mon-wiz-ask-no-topic'].trim()}");\n`;
+                switch (data['mon-wiz-ask-response']) {
+                    case 1:
+                        tmpl['create body'] += `   set_response_type("tell");\n`;
+                        break;
+                    case 2:
+                        tmpl['create body'] += `   set_response_type("speak");\n`;
+                        break;
+                    case 3:
+                        tmpl['create body'] += `   set_response_type("whisper");\n`;
+                        break;
+                    case 4:
+                        tmpl['create body'] += `   set_response_type("custom");\n`;
+                        break;
+                }
+                let tmp2;
+                let tmp3;
+                tmp = data['mon-wiz-ask-topics'].map(i => {
+                    tmp2 = i.topic.split(',').map(t => {
+                        t.trim();
+                        if (!t.startsWith('"') && !t.endsWith('"'))
+                            t = '"' + t + '"';
+                        return t;
+                    });
+                    if (tmp2.length === 1)
+                        tmp2 = tmp2[0];
+                    else
+                        tmp2 = `({ ${tmp2.join(', ')} })`;
+                    tmp3 = i.message.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmpl['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    return `${tmp2} : ${tmp3}`;
+                });
+
+                if (tmp.length === 1) {
+                    if (!data['mon-wiz-ask-topics'][0].topic.trim().startsWith('"') && !data['mon-wiz-ask-topics'][0].topic.trim().endsWith('"'))
+                        data['mon-wiz-ask-topics'][0].topic = `"${data['mon-wiz-ask-topics'][0].topic.trim()}"`;
+                    data['mon-wiz-ask-topics'][0].message = data['mon-wiz-ask-topics'][0].message.trim();
+                    if (data['mon-wiz-ask-topics'][0].message.startsWith('(:'))
+                        tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic},${formatFunctionPointer(data['mon-wiz-ask-topics'][0].message)});`;
+                    else if (!data['mon-wiz-ask-topics'][0].message.startsWith('"') && !data['mon-wiz-ask-topics'][0].message.endsWith('"'))
+                        tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic}, "${data['mon-wiz-ask-topics'][0].message}");`;
+                    else
+                        tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic}, ${data['mon-wiz-ask-topics'][0].message});`;
+                }
+                else if (tmp.length > 0) {
+                    tmpl['create body'] += '   set_topics( ([\n       ';
+                    tmpl['create body'] += tmp.join(',\n       ');
+                    tmpl['create body'] += '\n     ]) );\n';
+                }
+
                 if (data['mon-wiz-actions'].length > 0) {
                     data['mon-wiz-actions'] = data['mon-wiz-actions'].split(',');
                     data['mon-wiz-actions'].forEachh(w => {
