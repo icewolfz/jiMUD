@@ -14,7 +14,7 @@ inherit {inherit};
 
 {create pre}void create()
 {
-   ::create({create}); //Level, Race{create comment}
+   ::create({create arguments}); //Level, Race{create arguments comment}
    set_name("{name}");
    set_short({short});
    set_long({long});

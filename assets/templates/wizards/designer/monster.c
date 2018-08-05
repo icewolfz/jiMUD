@@ -11,13 +11,9 @@
 #include <std.h>
 #include "../area.h"{includes}
 
-inherit {inherit};
+inherit {inherit};{inherits}
 
 {create pre}void create()
 {
-   ::create({create}); //Level, Race{create comment}
-   set_name("{name}");
-   set_short({short});
-   set_long({long});
-   set_height({height}); // height in inches
+{create pre inherit}   ::create({create arguments}); //Level, Race{create arguments comment}
 {create body}}{create post}

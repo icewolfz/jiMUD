@@ -377,6 +377,7 @@ class Monster {
     public maxAmount: number = -1;
     public unique: boolean = false;
     public objects: ObjectInfo[] = [];
+    public noBaseObjects: boolean = false;
     public noBaseTopics: boolean = false;
 
     public type: string = 'base';
@@ -522,6 +523,7 @@ class Monster {
             this.askNoTopic = '';
             this.askResponseType = MonsterResponseType.say;
             this.noBaseTopics = false;
+            this.noBaseObjects = false;
             this.reputationGroup = '';
         }
         this.type = type || 'base';
@@ -3921,7 +3923,12 @@ export class AreaDesigner extends EditorBase {
                 width: 150
             },
             {
-                property: 'noBaseTopics',
+                field: 'noBaseObjects',
+                label: 'No base objects',
+                width: 200
+            },
+            {
+                field: 'noBaseTopics',
                 label: 'No base topics',
                 width: 200
             },
@@ -4191,6 +4198,7 @@ export class AreaDesigner extends EditorBase {
             newValue.monster.maxAmount = newValue.maxAmount;
             newValue.monster.objects = newValue.objects;
             newValue.monster.noBaseTopics = newValue.noBaseTopics;
+            newValue.monster.noBaseObjects = newValue.noBaseObjects;
             this.$area.baseMonsters[newValue.name] = newValue.monster;
             this.changed = true;
         });
@@ -4200,6 +4208,7 @@ export class AreaDesigner extends EditorBase {
             e.data = {
                 name: 'base' + this.$new.baseMonsters,
                 maxAmount: this.$area.baseMonsters['base' + this.$new.baseMonsters].maxAmount,
+                noBaseObjects: this.$area.baseMonsters['base' + this.$new.baseMonsters].noBaseObjects,
                 noBaseTopics: this.$area.baseMonsters['base' + this.$new.baseMonsters].noBaseTopics,
                 objects: this.$area.baseMonsters['base' + this.$new.baseMonsters].objects,
                 monster: this.$area.baseMonsters['base' + this.$new.baseMonsters]
@@ -4721,6 +4730,11 @@ export class AreaDesigner extends EditorBase {
                 width: 125
             },
             {
+                property: 'noBaseObjects',
+                label: 'No base objects',
+                width: 200
+            },
+            {
                 property: 'noBaseTopics',
                 label: 'No base topics',
                 width: 200
@@ -5031,6 +5045,7 @@ export class AreaDesigner extends EditorBase {
                 maxAmount: m.maxAmount,
                 unique: m.unique,
                 noBaseTopics: m.noBaseTopics,
+                noBaseObjects: m.noBaseObjects,
                 objects: m.objects,
                 monster: m
             };
@@ -5065,6 +5080,7 @@ export class AreaDesigner extends EditorBase {
             newValue.monster.unique = newValue.unique;
             newValue.monster.objects = newValue.objects;
             newValue.monster.noBaseTopics = newValue.noBaseTopics;
+            newValue.monster.noBaseObjects = newValue.noBaseObjects;
             this.$area.monsters[newValue.id] = newValue.monster;
             this.changed = true;
         });
@@ -8488,6 +8504,7 @@ export class AreaDesigner extends EditorBase {
                 name: r,
                 maxAmount: this.$area.baseMonsters[r].maxAmount,
                 noBaseTopics: this.$area.baseMonsters[r].noBaseTopics,
+                noBaseObjects: this.$area.baseMonsters[r].noBaseObjects,
                 objects: this.$area.baseMonsters[r].objects,
                 monster: this.$area.baseMonsters[r]
             };
@@ -8503,6 +8520,7 @@ export class AreaDesigner extends EditorBase {
                 maxAmount: this.$area.monsters[m].maxAmount,
                 unique: this.$area.monsters[m].unique,
                 noBaseTopics: this.$area.monsters[m].noBaseTopics,
+                noBaseObjects: this.$area.monsters[m].noBaseObjects,
                 objects: this.$area.monsters[m].objects,
                 monster: this.$area.monsters[m]
             };
@@ -8961,56 +8979,92 @@ export class AreaDesigner extends EditorBase {
                 data.doc.push('doc/build/room/types/vendor_storage');
                 break;
         }
-        room.short = room.short.trim();
-        if (room.short.startsWith('(:')) {
-            data.short = formatFunctionPointer(room.short);
-            data['create pre'] += createFunction(data.short, 'string');
-            data.name = room.short.substr(2);
-            if (data.name.endsWith(':)'))
-                data.name = data.name.substr(0, data.name.length - 1);
-            data.name = data.name.trim();
-        }
-        else if (room.short.startsWith('"') && room.short.endsWith('"')) {
-            data.short = room.short;
-            data.name = data.short.substr(1, data.short.length - 2);
-        }
-        else {
-            data.short = `"${room.short.replace(/"/g, '\\"')}"`;
-            data.name = room.short;
-        }
-        room.long = room.long.trim();
-        if (room.long.startsWith('(:')) {
-            data['long'] = formatFunctionPointer(room.long);
-            data['create pre'] += createFunction(room.long, 'string');
-            data['description'] = room.long.substr(2);
-            if (data['description'].endsWith(':)'))
-                data['description'] = data['description'].substr(0, data['description'].length - 2);
-            data['description'] = data['description'].trim();
-        }
-        else {
-            if (!room.long.startsWith('"') && !room.long.endsWith('"'))
-                room.long = room.long.replace(/"/g, '\\"');
-            if (room.long.startsWith('"'))
-                room.long = room.long.substr(1);
-            if (room.long.endsWith('"'))
-                room.long = room.long.substr(0, room.long.length - 1);
-            if (room.long.length > 70) {
-                data['description'] = formatString(room.long, 0, 80, ' * ', '');
-                tmp = room.long.substr(0, 66);
-                let tl = tmp.length;
-                while (tl--) {
-                    if (tmp.charAt(tl) === ' ') {
-                        tmp.substr(0, tl);
-                        break;
-                    }
-                }
-                data['long'] = `"${tmp}"\n     `;
-                room.long = room.long.substr(tmp.length);
-                data['long'] += `${formatString(room.long, 5, 73)}`;
+        if (room.short !== base.short) {
+            room.short = room.short.trim();
+            if (room.short.startsWith('(:')) {
+                data.short = formatFunctionPointer(room.short);
+                data['create pre'] += createFunction(data.short, 'string');
+                data.name = room.short.substr(2);
+                if (data.name.endsWith(':)'))
+                    data.name = data.name.substr(0, data.name.length - 1);
+                data.name = data.name.trim();
+            }
+            else if (room.short.startsWith('"') && room.short.endsWith('"')) {
+                data.short = room.short;
+                data.name = data.short.substr(1, data.short.length - 2);
             }
             else {
-                data['description'] = ' * ' + room.long;
-                data['long'] = `"${room.long}"`;
+                data.short = `"${room.short.replace(/"/g, '\\"')}"`;
+                data.name = room.short;
+            }
+        }
+        else {
+            data.name = room.short.trim();
+            if (data.name.startsWith('(:')) {
+                data.name = formatFunctionPointer(data.name).substr(2);
+                if (data.name.endsWith(':)'))
+                    data.name = data.name.substr(0, data.name.length - 1);
+                data.name = data.name.trim();
+            }
+            else if (data.name.startsWith('"') && data.name.endsWith('"'))
+                data.name = data.name.substr(1, data.name.length - 2);
+            else
+                data.name = `"${data.name.replace(/"/g, '\\"')}"`;
+        }
+        if (room.long !== base.long) {
+            room.long = room.long.trim();
+            if (room.long.startsWith('(:')) {
+                data['long'] = formatFunctionPointer(room.long);
+                data['create pre'] += createFunction(room.long, 'string');
+                data.description = room.long.substr(2);
+                if (data.description.endsWith(':)'))
+                    data.description = data.description.substr(0, data.description.length - 2);
+                data.description = data.description.trim();
+            }
+            else {
+                if (!room.long.startsWith('"') && !room.long.endsWith('"'))
+                    room.long = room.long.replace(/"/g, '\\"');
+                if (room.long.startsWith('"'))
+                    room.long = room.long.substr(1);
+                if (room.long.endsWith('"'))
+                    room.long = room.long.substr(0, room.long.length - 1);
+                if (room.long.length > 70) {
+                    data.description = formatString(room.long, 0, 80, ' * ', '');
+                    tmp = room.long.substr(0, 66);
+                    let tl = tmp.length;
+                    while (tl--) {
+                        if (tmp.charAt(tl) === ' ') {
+                            tmp.substr(0, tl);
+                            break;
+                        }
+                    }
+                    data['long'] = `"${tmp}"\n     `;
+                    room.long = room.long.substr(tmp.length);
+                    data['long'] += `${formatString(room.long, 5, 73)}`;
+                }
+                else {
+                    data.description = ' * ' + room.long;
+                    data['long'] = `"${room.long}"`;
+                }
+            }
+        }
+        else {
+            data.description = room.long.trim();
+            if (data.description.startsWith('(:')) {
+                data.description = formatFunctionPointer(data.description).substr(2);
+                if (data.description.endsWith(':)'))
+                    data.description = data.description.substr(0, data.description.length - 2);
+                data.description = data.description.trim();
+            }
+            else {
+                if (data.description.startsWith('"'))
+                    data.description = data.description.substr(1);
+                if (data.description.endsWith('"'))
+                    data.description = data.description.substr(0, data.description.length - 1);
+                if (data.description.length > 70)
+                    data.description = formatString(data.description, 0, 80, ' * ', '');
+                else
+                    data.description = ' * ' + data.description;
             }
         }
         if (room.terrain !== base.terrain)
@@ -9397,7 +9451,497 @@ export class AreaDesigner extends EditorBase {
     public generateMonsterCode(monster, files, data, baseMonster?) {
         if (!monster) return '';
         files = files || {};
-        return '';
+        data.doc = [];
+        data.includes = '';
+        data['create pre'] = '';
+        data['create body'] = '';
+        data['create post'] = '';
+        data['create pre inherit'] = '';
+        data['create arguments'] = '';
+        data['create arguments comment'] = '';
+
+        let tmp;
+        const base = this.$area.baseRooms[monster.type] || new Monster();
+
+        data.inherit = files[monster.type + 'monster'] || monster.type;
+        data.inherits = '';
+
+        data.doc.push('/doc/build/areas/tutorial');
+
+        switch (monster.type) {
+            case 'MONTYPE_ARMOR_REPAIR':
+                data.doc.push('/doc/build/monster/types/smith');
+                data.doc.push('/doc/build/monster/types/vendor');
+                break;
+            case 'MONTYPE_BARKEEP':
+                data.doc.push('/doc/build/monster/types/barkeep');
+                break;
+            case 'MONTYPE_CLERIC_TRAINER':
+                data.doc.push('/doc/build/monster/types/cleric_trainer');
+                break;
+            case 'MONTYPE_SUBCLASSER':
+                data.doc.push('/doc/build/monster/types/subclasser');
+                break;
+            case 'MONTYPE_HEALER':
+                data.doc.push('/doc/build/monster/types/healer');
+                break;
+            case 'MONTYPE_JEWELER':
+                data.doc.push('/doc/build/monster/types/jeweler');
+                data.doc.push('/doc/build/monster/types/vendor');
+                break;
+            case 'MONTYPE_LOCKPICK_REPAIR':
+                data.doc.push('/doc/build/monster/types/lockpick_repair');
+                data.doc.push('/doc/build/monster/types/vendor');
+                break;
+            case 'MONTYPE_MAGE_TRAINER':
+                data.doc.push('/doc/build/monster/types/mage_trainer');
+                break;
+            case 'MONTYPE_MON_EDIBLE':
+                data.doc.push('/doc/build/monster/types/mon_edible');
+                break;
+            case 'MONTYPE_SAGE_NPC':
+                data.doc.push('/doc/build/monster/types/sage');
+                data.doc.push('/doc/build/etc/sagebase');
+                break;
+            case 'MONTYPE_SKILL_TRAINER':
+                data.doc.push('/doc/build/monster/types/skill_trainer');
+                break;
+            case 'MONTYPE_SMITH':
+                data.doc.push('/doc/build/monster/types/smith');
+                data.doc.push('/doc/build/monster/types/vendor');
+                break;
+            case 'MONTYPE_SUMMON_MOB':
+                data.doc.push('/doc/build/monster/types/summon');
+                break;
+            case 'MONTYPE_TATTOOIST':
+                data.doc.push('/doc/build/monster/types/tattooist');
+                break;
+            case 'MONTYPE_CMD_TRAIN_NPC':
+                data.doc.push('/doc/build/monster/types/subclasser');
+                break;
+            case 'MONTYPE_VENDOR':
+                data.doc.push('/doc/build/monster/types/vendor');
+                break;
+            case 'MONTYPE_WEAPON_REPAIR':
+                data.doc.push('/doc/build/monster/types/smith');
+                data.doc.push('/doc/build/monster/types/vendor');
+                break;
+        }
+
+        if (baseMonster) {
+            if (monster.level !== base.level)
+                data['create arguments'] = `lvl || ${monster.level}, `;
+            else
+                data['create arguments'] = `lvl, `;
+            if (monster.race !== base.race)
+                data['create arguments'] = `race || "${monster.race}", `;
+            else
+                data['create arguments'] = `race, `;
+            if (monster.race !== base.race)
+                data['create arguments'] = `cls || "${monster.class}", `;
+            else
+                data['create arguments'] = `cls, `;
+            if (monster.race !== base.bodyType)
+                data['create arguments'] = `btype || "${monster.bodyType}", autospells, args`;
+            else
+                data['create arguments'] = `btype, autospells, args`;
+        }
+        else {
+            data['create arguments'] = `${monster.level || base.level}, "${monster.race || base.race || 'human'}"`;
+            if (monster.class !== base.class && monster.class.length > 0) {
+                data['create arguments'] += `, "${monster.class}"`;
+                data['create arguments comment'] += ', Class';
+            }
+            else if (monster.bodyType !== base.bodyType && monster.bodyType.length > 0) {
+                data['create arguments'] += `, 0`;
+                data['create arguments comment'] += ', No class';
+            }
+
+            if (monster.bodyType !== base.bodyType && monster.bodyType.length > 0) {
+                data['create arguments'] += `, "${monster.bodyType}"`;
+                data['create arguments comment'] += ', Body type';
+            }
+        }
+
+        data['create body'] = '';
+
+        if (monster.name.startsWith('"') && monster.name.endsWith('"'))
+            data['name'] = monster.name.substr(1, monster.name.length - 2).replace(/"/g, '\\"');
+        else
+            data['name'] = monster.name;
+        if (monster.name !== base.name)
+            data['create body'] += `   set_name("${data['name']}");\n`;
+
+        if (monster.short !== base.short) {
+            monster.short = monster.short.trim();
+            if (monster.short.startsWith('(:')) {
+                data['create body'] += `   set_short(${formatFunctionPointer(monster.short)});\n`;
+                data['create pre'] += createFunction(monster.short, 'string');
+            }
+            else if (monster.short.startsWith('"') && monster.short.endsWith('"'))
+                data['create body'] += `   set_short(${monster.short});\n`;
+            else
+                data['create body'] += `   set_short("${monster.short.replace(/"/g, '\\"')}");\n`;
+        }
+        if (monster.long !== base.long) {
+            monster.long = monster.long.trim();
+            if (monster.long.startsWith('(:')) {
+                data['create body'] += `   set_long(${formatFunctionPointer(monster.long)});\n`;
+                data['create pre'] += createFunction(monster.long, 'string');
+                data.description = monster.long.substr(2);
+                if (data.description.endsWith(':)'))
+                    data.description = data.description.substr(0, data.description.length - 2);
+                data.description = data.description.trim();
+            }
+            else {
+                if (!monster.long.startsWith('"') && !monster.long.endsWith('"'))
+                    monster.long = monster.long.replace(/"/g, '\\"');
+                if (monster.long.startsWith('"'))
+                    monster.long = monster.long.substr(1);
+                if (monster.long.endsWith('"'))
+                    monster.long = monster.long.substr(0, monster.long.length - 1);
+                if (monster.long.length > 70) {
+                    data.description = formatString(monster.long, 0, 80, ' * ', '');
+                    tmp = monster.long.substr(0, 66);
+                    let tl = tmp.length;
+                    while (tl--) {
+                        if (tmp.charAt(tl) === ' ') {
+                            tmp.substr(0, tl);
+                            break;
+                        }
+                    }
+                    data['create body'] += `   set_long("${tmp}"\n     `;
+                    monster.long = monster.long.substr(tmp.length);
+                    data['create body'] += `${formatString(monster.long, 5, 73)});\n`;
+                }
+                else {
+                    data['create body'] = `   set_long("${monster.long}");\n`;
+                    data.description = ' * ' + monster.long;
+                }
+            }
+        }
+        else {
+            monster.description = monster.long.trim();
+            if (monster.description.startsWith('(:')) {
+                data.description = formatFunctionPointer(monster.description).substr(2);
+                if (data.description.endsWith(':)'))
+                    data.description = data.description.substr(0, data.description.length - 2);
+                data.description = data.description.trim();
+            }
+            else {
+                if (data.description.startsWith('"'))
+                    data.description = data.description.substr(1);
+                if (data.description.endsWith('"'))
+                    data.description = data.description.substr(0, data.description.length - 1);
+                if (data.description.length > 70)
+                    data.description = formatString(data.description, 0, 80, ' * ', '');
+                else
+                    data.description = ' * ' + data.description;
+            }
+        }
+        if (monster.nouns !== base.nouns) {
+            monster.nouns = monster.nouns.split(',');
+            monster.nouns = monster.nouns.map(w => {
+                w = w.trim();
+                if (!w.startsWith('"'))
+                    w = '"' + w;
+                if (!w.endsWith('"'))
+                    w += '"';
+                return w;
+            });
+            data['create body'] += '   set_nouns(' + monster.nouns.join(', ') + ');\n';
+        }
+        if (monster.adjectives !== base.adjectives) {
+            monster.adjectives = monster.adjectives.split(',');
+            monster.adjectives = monster.adjectives.map(w => {
+                w = w.trim();
+                if (!w.startsWith('"'))
+                    w = '"' + w;
+                if (!w.endsWith('"'))
+                    w += '"';
+                return w;
+            });
+            data['create body'] += '   set_adjectives(' + monster.adjectives.join(', ') + ');\n';
+        }
+        tmp = [];
+        if ((monster.flags & MonsterFlags.Undead) === MonsterFlags.Undead && (base.flags & MonsterFlags.Undead) !== MonsterFlags.Undead)
+            tmp.push('"undead" : 1');
+        if ((monster.flags & MonsterFlags.Water_Breathing) === MonsterFlags.Water_Breathing && (base.flags & MonsterFlags.Water_Breathing) !== MonsterFlags.Water_Breathing)
+            tmp.push('"waterbreathing" : 1');
+        if ((monster.flags & MonsterFlags.Requires_Water) === MonsterFlags.Requires_Water && (base.flags & MonsterFlags.Requires_Water) !== MonsterFlags.Requires_Water)
+            tmp.push('"requires water" : 1');
+        if ((monster.flags & MonsterFlags.No_Bleeding) === MonsterFlags.No_Bleeding && (base.flags & MonsterFlags.No_Bleeding) !== MonsterFlags.No_Bleeding)
+            tmp.push('"no bleed" : 1');
+
+        if (monster.noCorpse !== base.noCorpse) {
+            monster.noCorpse = monster.noCorpse.trim();
+            if (monster.noCorpse.startsWith('(:')) {
+                tmp.push(`"no corpse" : ${formatFunctionPointer(monster.noCorpse, true)}`);
+                data['create pre'] += createFunction(monster.noCorpse, 'string');
+            }
+            else if (monster.noCorpse.startsWith('"') && monster.noCorpse.endsWith('"'))
+                tmp.push(`"no corpse" : ${monster.noCorpse}`);
+            else if (monster.noCorpse.length > 0)
+                tmp.push(`"no corpse" : "${monster.noCorpse.replace(/"/g, '\\"')}"`);
+        }
+        if (monster.noLimbs !== base.noLimbs) {
+            monster.noLimbs = monster.noLimbs.trim();
+            if (monster.noLimbs.startsWith('(:')) {
+                tmp.push(`"no limbs" : ${formatFunctionPointer(monster.noLimbs, true)}`);
+                data['create pre'] += createFunction(monster.noLimbs, 'string');
+            }
+            else if (monster.noLimbs.startsWith('"') && monster.noLimbs.endsWith('"'))
+                tmp.push(`"no limbs" : ${monster.noLimbs}`);
+            else if (monster.noLimbs.length > 0)
+                tmp.push(`"no limbs" : "${monster.noLimbs.replace(/"/g, '\\"')}"`);
+        }
+        if (tmp.length > 0) {
+            data['create body'] += '   set_properties( ([\n       ';
+            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+        if (monster.mass !== base.mass)
+            data['create body'] += `   set_mass(${monster.mass});\n`;
+        if (monster.height !== base.height)
+            data['create body'] = `   set_height("${monster.height}");\n`;
+
+        if (monster.alignment !== base.alignment) {
+            if (typeof monster.alignment === 'string' && parseFloat(monster.alignment).toString() === monster.alignment)
+                data['create body'] += `   set_alignment(${monster.alignment});\n`;
+            else
+                data['create body'] += `   set_alignment("${monster.alignment}");\n`;
+        }
+        if (monster.language !== base.language)
+            data['create body'] += `   set_primary_lang("${monster.language}");\n`;
+        if (monster.gender !== base.gender)
+            data['create body'] += `   set_gender("${monster.gender}");\n`;
+        if (monster.eyeColor !== base.eyeColor)
+            data['create body'] += `   set_eyecolor("${monster.eyeColor}");\n`;
+        if (monster.hairColor !== base.hairColor)
+            data['create body'] += `   set_haircolor("${monster.hairColor}");\n`;
+        if ((monster.flags & MonsterFlags.Ridable) === MonsterFlags.Ridable && (base.flags & MonsterFlags.Ridable) !== MonsterFlags.Ridable)
+            data['create body'] += '   set_rideable(1); //Enable riding\n   set_follow_type("steed");/ /set the follow type to steed for proper limiting\n';
+        if ((monster.flags & MonsterFlags.Flying) === MonsterFlags.Flying && (base.flags & MonsterFlags.Flying) !== MonsterFlags.Flying)
+            data['create body'] += '   set_can_fly(1); //Enable fly/land abilities\n';
+        if ((monster.flags & MonsterFlags.Getable) === MonsterFlags.Getable && (base.flags & MonsterFlags.Getable) !== MonsterFlags.Getable)
+            data['create body'] += '   set_getable(1); //turn on getable\n';
+        if (monster.patrolRoute !== base.patrolRoute)
+            data['create body'] += `   set_patrol(${monster.speed}, ${formatArgumentList(monster.patrolRoute, 64 - ('' + monster.speed).length)}); //Set speed and patrol route\n`;
+        else if (monster.speed !== base.speed)
+            data['create body'] += `   set_speed(${monster.speed}); //Set speed\n`;
+
+        if (monster.noWalkRooms !== base.noWalkrooms)
+            data['create body'] += `   set_no_walk(${formatArgumentList(monster.noWalkRooms, 63, 0, 0, true)}); //Set no walk rooms\n`;
+        if (monster.attackCommandChance !== base.attackCommandChance)
+            data['create body'] += `   set_spell_chance(${monster.attackCommandChance}); //Set the chance an attack command will be used\n`;
+        if (monster.attackCommands !== base.attackCommands)
+            data['create body'] += `   set_spells(${formatArgumentList(monster.attackCommands, 64)}); //Set attack commands\n`;
+        if (monster.attackInitiators !== base.attackInitiators)
+            data['create body'] += `   set_combat_initiator(${formatArgumentList(monster.attackInitiators, 56)}); //Set attack initiators\n`;
+        if (monster.aggressive !== base.aggressive) {
+            data['create body'] += `   set_aggressive(${monster.aggressive}); //Set monster aggressiveness\n`;
+            data['doc'].push('/doc/build/monster/haggle');
+            data['doc'].push('/doc/build/monster/aggressive');
+        }
+        if (monster.party !== base.party)
+            data['create body'] += `   set_mon_party("${monster.party}");\n`;
+        if (monster.autoDrop.enabled && !base.autoDrop.enabled)
+            data['create body'] += `   set_auto_drop(1);`;
+        if (monster.autoDrop.time !== base.autoDrop.time)
+            data['create body'] += `   set_auto_drop_delay(${monster.autoDrop.time});`;
+        if (!monster.autoDrop.enabled && base.autoDrop.enabled)
+            data['create body'] += `   set_open_storage(0);`;
+        if (monster.openStorage.time !== base.openStorage.time)
+            data['create body'] += `   set_open_storage_delay(${monster.openStorage.time});`;
+        if (!monster.autoDrop.enabled && base.autoDrop.enabled)
+            data['create body'] += `   set_auto_wield(0);`;
+        if (monster.autoWield.time !== base.autoWield.time)
+            data['create body'] += `   set_auto_wield_delay(${monster.autoWield.time});`;
+        if (monster.autoDrop.enabled && !base.autoDrop.enabled)
+            data['create body'] += `   set_auto_loot(1);`;
+        if (monster.autoLoot.time !== base.autoLoot.time)
+            data['create body'] += `   set_auto_loot_delay(${monster.autoLoot.time});`;
+        if (monster.autoDrop.enabled && !base.autoDrop.enabled)
+            data['create body'] += `   set_auto_wear(1);`;
+        if (monster.ed.value.autoWear.time !== base.autoWear.time)
+            data['create body'] += `   set_auto_wear_delay(${monster.ed.value.autoWear.time});`;
+        if (monster.wimpy !== base.wimpy)
+            data['create body'] += `   set_wimpy(${monster.wimpy});`;
+
+        if ((monster.flags & MonsterFlags.Auto_Stand) !== MonsterFlags.Auto_Stand && (base.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand)
+            data['create body'] += `   set_auto_stand(0);`;
+
+        tmp = monster.reactions.filter(r => r.reaction.length > 0);
+        if (tmp.length === 1)
+            data['create body'] += `   set_reaction("${tmp[0].type.length > 0 ? tmp[0].type + ' ' : ''}${tmp[0].reaction}", "${tmp[0].action}");\n`;
+        else if (tmp.length > 1) {
+            data['create body'] += '   set_reactions( ([\n';
+            tmp.forEach(r => {
+                data['create body'] += `       "${r.type.length > 0 ? r.type + ' ' : ''}${r.reaction}" : "${r.action}"\n`;
+            });
+            data['create body'] += '\n     ]) );\n';
+        }
+
+        if (monster.tracking && !base.tracking)
+            data['create body'] += `   set_track_attackers(1);\n`;
+        if (monster.trackingMessage !== base.trackingMessage)
+            data['create body'] += `   set_track_enter_message("${monster.trackingMessage}");\n`;
+        if (monster.trackingType !== base.trackingType)
+            data['create body'] += `   set_track_enter_message_type("${monster.trackingType.trim()}");\n`;
+        if (monster.trackingAggressively !== base.trackingAggressively)
+            data['create body'] += `   set_track_aggressively_only(1);\n`;
+        if (monster.noBaseTopics) {
+            if (monster.askEnabled && monster.askTopics.length === 0)
+                data['create body'] += `   set_enable_ask(1);\n`;
+        }
+        else if (monster.askEnabled && !base.askEnabled && monster.askTopics.length === 0 && base.askTopics.length === 0)
+            data['create body'] += `   set_enable_ask(1);\n`;
+
+        if (monster.askNoTopic !== base.askNoTopic)
+            data['create body'] += `   set_no_topic("${monster.askNoTopic.trim()}");\n`;
+        if (monster.askResponseType !== base.askResponseType)
+            switch (monster.askResponseType) {
+                case 1:
+                    data['create body'] += `   set_response_type("tell");\n`;
+                    break;
+                case 2:
+                    data['create body'] += `   set_response_type("speak");\n`;
+                    break;
+                case 3:
+                    data['create body'] += `   set_response_type("whisper");\n`;
+                    break;
+                case 4:
+                    data['create body'] += `   set_response_type("custom");\n`;
+                    break;
+            }
+
+        let tmp2;
+        let tmp3;
+        let tmp4 = base.askTopics.map(s => s.topic);
+        tmp = monster.askTopics.map(i => {
+            const idx = tmp4.indexOf(i.topic);
+            if (idx !== -1 && base.askTopics[idx].message === i.message)
+                return '';
+
+            tmp2 = i.topic.split(',').map(t => {
+                t.trim();
+                if (!t.startsWith('"') && !t.endsWith('"'))
+                    t = '"' + t + '"';
+                return t;
+            });
+            if (tmp2.length === 1)
+                tmp2 = tmp2[0];
+            else
+                tmp2 = `({ ${tmp2.join(', ')} })`;
+            tmp3 = i.message.trim();
+            if (tmp3.startsWith('(:')) {
+                tmp3 = formatFunctionPointer(tmp3, true);
+                data['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
+            }
+            else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                tmp3 = '"' + tmp3 + '"';
+            return `${tmp2} : ${tmp3}`;
+        });
+        tmp = tmp.filter(s => s.length !== 0);
+
+        if (tmp.length === 1) {
+            tmp = monster.askTopics[0].topic.trim();
+            if (!tmp.trim().startsWith('"') && !tmp.trim().endsWith('"'))
+                tmp = `"${tmp.trim()}"`;
+            monster.askTopics[0].message = monster.askTopics[0].message.trim();
+            if (monster.askTopics[0].message.trim().startsWith('(:')) {
+                tmp3 = formatFunctionPointer(monster.askTopics[0].message);
+                data['create body'] += `   set_topic(${tmp}, ${tmp3});`;
+                data['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
+            }
+            else if (!monster.askTopics[0].message.startsWith('"') && !monster.askTopics[0].message.endsWith('"'))
+                data['create body'] += `   set_topic(${tmp}, "${monster.askTopics[0].message}");`;
+            else
+                data['create body'] += `   set_topic(${tmp}, ${monster.askTopics[0].message});`;
+        }
+        else if (tmp.length > 0) {
+            if (monster.noBaseTopics)
+                data['create body'] += '   set_topics( ([\n       ';
+            else
+                data['create body'] += '   add_topics( ([\n       ';
+            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+
+        if (monster.reputationGroup !== base.reputationGroup)
+            data['create body'] += `   set_reputation_area("${monster.reputationGroup.trim()}");\n`;
+
+        tmp4 = base.reputations.map(r => `${r.type}${r.group}${r.amount}`);
+        monster.reputations.forEach(r => {
+            const idx = tmp.indexOf(`${r.type}${r.group}${r.amount}`);
+            if (idx !== -1 || !r.amount) return;
+            r.amount.trim();
+            if (r.amount.length === 0 || r.amount === '0') return;
+            const fun = r.type === 1 ? 'ondie' : 'onattack';
+            r.group = r.group.trim();
+            if (r.group.length !== 0 && !r.group.startsWith('"') && !r.group.endsWith('"'))
+                r.group = `"${r.group.replace(/"/g, '\\"')}", `;
+            else if (r.group.length !== 0)
+                r.group = `${r.group}, `;
+
+            if (typeof r.amount === 'string' && parseFloat(r.amount).toString() === r.amount)
+                data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});\n`;
+            else if (r.amount.startsWith('(:')) {
+                tmp3 = formatFunctionPointer(r.amount);
+                data['create body'] += `   set_reputation_${fun}(${r.group}${tmp3});`;
+                data['create pre'] += createFunction(tmp3, 'string', 'object monster, object killer');
+            }
+            else if (!r.amount.startsWith('"') && !r.amount.endsWith('"'))
+                data['create body'] += `   set_reputation_${fun}(${r.group}"${r.amount}");`;
+            else
+                data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});`;
+        });
+        if (monster.noBaseObjects && !base.noBaseObjects)
+            data['create pre inherit'] += '   set_property("no objects", 1);\n';
+
+        if (monster.objects.length !== 0) {
+            tmp2 = '';
+            if (baseMonster)
+            {
+                tmp2 = '   ';
+                data['create body'] += '   if(!query_property("no objects"))\n{\n';
+            }
+            monster.objects.forEach(o => {
+                tmp = '';
+                if (o.unique)
+                    tmp = `   clone_unique(OBJ + "${files[o.id]}.c");\n`;
+                else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                    tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
+                else if (o.minAmount > 0 && o.maxAmount > 0)
+                    tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}));\n`;
+                if (o.random > 0 && tmp.length !== 0)
+                    data['create body'] += `${tmp2}   if(random(${o.random}) <= random(101))\n   `;
+                data['create body'] += tmp2 + tmp;
+            });
+            if (baseMonster)
+                data['create body'] += '   }\n';
+        }
+
+        if (monster.actions !== base.actions) {
+            monster.actions = monster.actions.split(',');
+            monster.actions.forEachh(w => {
+                w = w.trim();
+                if (w.length === 0) return;
+                if (!w.startsWith('"'))
+                    w = '"' + w;
+                if (!w.endsWith('"'))
+                    w += '"';
+                data['create body'] += `   command(${w});\n`;
+            });
+        }
+        if (data['doc'].length > 0)
+            data['doc'] = ' * @doc' + data['doc'].join('\n * @doc') + '\n';
+        else
+            data['doc'] = '';
+
+        if (baseMonster)
+            return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'basemonster.c'))), data);
+        return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'monster.c'))), data);
     }
 
     public generateObjectCode(obj, files, data) {

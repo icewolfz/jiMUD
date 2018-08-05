@@ -5903,6 +5903,12 @@
                         label: 'Amount',
                         field: 'amount',
                         width: 200,
+                        editor: {
+                            options: {
+                                min: -1000,
+                                max: 1000
+                            }
+                        }
                     }
                 ],
                 add: (e) => {
@@ -6265,14 +6271,12 @@
                             if (data['mon-wiz-initiators'] && data['mon-wiz-initiators'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Attack initiators:</span> ' + ellipse(data['mon-wiz-initiators'].replace(/\n/g, '')) + '</div>';
 
-                            if (data['mon-wiz-tracking'])
-                                sum += '<div><span style="font-weight:bold">Enable attacker tracking:</span> ' + data['mon-wiz-tracking'] ? 'Yes' : 'No' + '</div>';
+                            sum += '<div><span style="font-weight:bold">Enable attacker tracking:</span> ' + data['mon-wiz-tracking'] ? 'Yes' : 'No' + '</div>';
                             if (data['mon-wiz-tracking-message'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Enter message:</span> ' + ellipse(data['mon-wiz-tracking-message']) + '</div>';
                             if (data['mon-wiz-tracking-type'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Enter message action:</span> ' + ellipse(data['mon-wiz-tracking-type']) + '</div>';
-                            if (data['mon-wiz-tracking-aggressively'].length > 0)
-                                sum += '<div><span style="font-weight:bold">Aggressive:</span> ' + data['mon-wiz-tracking-aggressively'] ? 'Yes' : 'No' + '</div>';
+                            sum += '<div><span style="font-weight:bold">Aggressive:</span> ' + data['mon-wiz-tracking-aggressively'] ? 'Yes' : 'No' + '</div>';
 
                             if (data['mon-wiz-aggressive'] && data['mon-wiz-aggressive'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Aggressive:</span> ' + ellipse(data['mon-wiz-aggressive']) + '</div>';
@@ -6454,15 +6458,19 @@
                 }
                 tmpl['height'] = data['mon-wiz-height'];
 
-                tmpl['create'] = `${data['mon-wiz-level']}, "${data['mon-wiz-race'] || 'human'}"`;
-                tmpl['create comment'] = '';
+                tmpl['create arguments'] = `${data['mon-wiz-level']}, "${data['mon-wiz-race'] || 'human'}"`;
+                tmpl['create arguments comment'] = '';
                 if (data['mon-wiz-class'].length > 0) {
-                    tmpl['create'] += `, "${data['mon-wiz-class']}"`;
-                    tmpl['create comment'] += ', Class';
+                    tmpl['create arguments'] += `, "${data['mon-wiz-class']}"`;
+                    tmpl['create arguments comment'] += ', Class';
+                }
+                else if (data['mon-wiz-body'].length > 0) {
+                    tmpl['create arguments'] += `, 0`;
+                    tmpl['create arguments comment'] += ', No class';
                 }
                 if (data['mon-wiz-body'].length > 0) {
-                    tmpl['create'] += `, "${data['mon-wiz-body']}"`;
-                    tmpl['create comment'] += ', Body type';
+                    tmpl['create arguments'] += `, "${data['mon-wiz-body']}"`;
+                    tmpl['create arguments comment'] += ', Body type';
                 }
                 tmpl['create body'] = '';
                 if (data['mon-wiz-nouns'].length > 0) {
@@ -6524,7 +6532,7 @@
                 }
                 if (data['mon-wiz-mass'] > 0)
                     tmpl['create body'] += `   set_mass(${data['mon-wiz-mass']});\n`;
-                tmpl['create body'] += `   set_height(${data['mon-wiz-height']});\n`;
+                //tmpl['create body'] += `   set_height(${data['mon-wiz-height']});\n`;
                 if (data['mon-wiz-alignment'].length > 0 && data['mon-wiz-alignment'] !== '0' && data['mon-wiz-alignment'] !== 'neutral') {
                     if (typeof data['mon-wiz-alignment'] === "string" && parseFloat(data['mon-wiz-alignment']).toString() == data['mon-wiz-alignment'])
                         tmpl['create body'] += `   set_alignment(${data['mon-wiz-alignment']});\n`;
@@ -6532,18 +6540,18 @@
                         tmpl['create body'] += `   set_alignment("${data['mon-wiz-alignment']}");\n`;
                 }
                 if (data['mon-wiz-language'].length > 0)
-                    tmpl['create body'] += `   set_primary_lang("${data['mon-wiz-mass']}");\n`;
+                    tmpl['create body'] += `   set_primary_lang("${data['mon-wiz-language']}");\n`;
                 if (data['mon-wiz-gender'].value && data['mon-wiz-gender'].value.length > 0)
                     tmpl['create body'] += `   set_gender("${data['mon-wiz-gender'].value}");\n`;
                 if (data['mon-wiz-eye'].length > 0)
-                    tmpl['create body'] += `   set_eyecolor("${data['mon-wiz-mass']}");\n`;
+                    tmpl['create body'] += `   set_eyecolor("${data['mon-wiz-eye']}");\n`;
                 if (data['mon-wiz-hair'].length > 0)
                     tmpl['create body'] += `   set_haircolor("${data['mon-wiz-hair']}");\n`;
                 if (data['mon-wiz-ridable'])
                     tmpl['create body'] += '   set_rideable(1); //Enable riding\n   set_follow_type("steed");/ /set the follow type to steed for proper limiting\n';
                 if (data['mon-wiz-flying'])
                     tmpl['create body'] += '   set_can_fly(1); //Enable fly/land abilities\n';
-                if (data['mon-wiz-flying'])
+                if (data['mon-wiz-getable'])
                     tmpl['create body'] += '   set_getable(1); //turn on getable\n';
                 data['mon-wiz-speed'] = data['mon-wiz-speed'] || 0;
                 if (data['mon-wiz-patrol'].length > 0)
@@ -6552,7 +6560,7 @@
                     tmpl['create body'] += `   set_speed(${data['mon-wiz-speed']}); //Set speed\n`;
                 if (data['mon-wiz-no-walk'].length > 0)
                     tmpl['create body'] += `   set_no_walk(${formatArgumentList(data['mon-wiz-no-walk'], 63, 0, 0, true)}); //Set no walk rooms\n`;
-                if (data['mon-wiz-chance'].length > 0)
+                if (data['mon-wiz-chance'] !== 0)
                     tmpl['create body'] += `   set_spell_chance(${data['mon-wiz-chance']}); //Set the chance an attack command will be used\n`;
                 if (data['mon-wiz-commands'].length > 0)
                     tmpl['create body'] += `   set_spells(${formatArgumentList(data['mon-wiz-commands'], 64)}); //Set attack commands\n`;
@@ -6561,6 +6569,7 @@
                 if (data['mon-wiz-aggressive'].length > 0) {
                     tmpl['create body'] += `   set_aggressive(${data['mon-wiz-aggressive']}); //Set monster aggressiveness\n`;
                     tmpl['doc'].push('/doc/build/monster/haggle');
+                    data['doc'].push('/doc/build/monster/aggressive');
                 }
                 if (data['mon-wiz-party'].length > 0)
                     tmpl['create body'] += `   set_mon_party("${data['mon-wiz-party']}");\n`;
@@ -6605,7 +6614,7 @@
                     tmpl['create body'] += `   set_track_enter_message("${data['mon-wiz-tracking-message']}");\n`;
                 if (data['mon-wiz-tracking'].length > 0)
                     tmpl['create body'] += `   set_track_enter_message_type("${data['mon-wiz-tracking-type']}");\n`;
-                if (data['mon-wiz-tracking-aggressively'].length > 0)
+                if (data['mon-wiz-tracking-aggressively'])
                     tmpl['create body'] += `   set_track_aggressively_only(1);\n`;
 
                 if (data['mon-wiz-ask'] && data['mon-wiz-ask-topics'].length === 0)
@@ -6695,8 +6704,6 @@
                     else
                         tmpl['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});`;
                 });
-                //set_reputation_onattack(area, amount);
-                //set_reputation_ondie(area, amount);
 
                 if (data['mon-wiz-actions'].length > 0) {
                     data['mon-wiz-actions'] = data['mon-wiz-actions'].split(',');
@@ -7780,7 +7787,7 @@
                                     });
                                 }
                                 data['room-wiz-no-attack'] = (room.state & RoomStates.NoAttack) === RoomStates.NoAttack;
-                                data['room-wiz-council'] = (room.state & RoomStates.Council) === RoomStates.Council;
+                                data['room-wiz-coul'] = (room.state & RoomStates.Council) === RoomStates.Council;
                                 data['room-wiz-no-magic'] = (room.state & RoomStates.NoMagic) === RoomStates.NoMagic;
                                 data['room-wiz-indoors'] = (room.state & RoomStates.Indoors) === RoomStates.Indoors;
                                 if ((room.state & RoomStates.Water) === RoomStates.Water)

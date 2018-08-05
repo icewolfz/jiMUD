@@ -12,7 +12,7 @@
 #include <std.h>
 #include "../area.h"{includes}
 
-inherit {inherit};
+inherit {inherit};{inherits}
 
 //allow for easy filtering
 int is_{area}_monster()
@@ -22,7 +22,7 @@ int is_{area}_monster()
 
 {create pre}varargs void create(int lvl, string race, string cls, string btype, int autospells, mapping args)
 {
-   //pass arguments to base monster
-   ::create(lvl, race, cls, btype, autospells, args);
+   {create pre inherit}//pass arguments to base monster
+   ::create({create arguments});
    add_search_path(CMDS); //add CMDS as a command path for any custom commands             
 {create body}}{create post}
