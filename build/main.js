@@ -3161,12 +3161,12 @@ function copyWindowOptions(name) {
 function loadWindowScripts(window, name) {
   if (!window || !name) return;
   if (isFileSync(path.join(app.getPath('userData'), name + '.css'))) {
-    fs.readFile(path.join(app.getPath('userData'), '.css'), 'utf8', (err, data) => {
+    fs.readFile(path.join(app.getPath('userData'), name + '.css'), 'utf8', (err, data) => {
       window.webContents.insertCSS(parseTemplate(data));
     });
   }
-  if (isFileSync(path.join(app.getPath('userData'), '.js'))) {
-    fs.readFile(path.join(app.getPath('userData'), '.js'), 'utf8', (err, data) => {
+  if (isFileSync(path.join(app.getPath('userData'), name + '.js'))) {
+    fs.readFile(path.join(app.getPath('userData'), name + '.js'), 'utf8', (err, data) => {
       window.webContents.executeJavaScript(data);
     });
   }

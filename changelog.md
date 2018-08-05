@@ -33,6 +33,7 @@
     - Room wizard
       - Fixed bugs climbs, maxforage, prevent exit peers, hidden exits in code generation
       - Fixed bugs with type order setting for climb/doors
+  - Fix loading of external css/js scripts for different windows
   - Profile manager: Fix macro editing, at some point and upgrade to typescript changed how it imported a function block
   - Auto update: fix progress dialog not showing correct percent
   - Fixed -c command line argument
