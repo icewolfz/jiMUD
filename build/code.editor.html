@@ -727,8 +727,8 @@
     </dialog>
     <div style="display: none" id="wizard-pages">
         <div id="mon-wizard-welcome">
-            <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 56px;">
-            <div style="padding-top:76px" id="mon-wizard-welcome-message">Welcome to the new monster wizard, this will take you through the steps to create a monster quickly and easily. You may finish at any time to generate a monster based on your current selections.</div>
+            <img src="../assets/icons/png/wizmonlogo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 84px;">
+            <div style="padding-top:104px" id="mon-wizard-welcome-message">Welcome to the new monster wizard, this will take you through the steps to create a monster quickly and easily. You may finish at any time to generate a monster based on your current selections.</div>
         </div>
         <div id="mon-wizard-general">
             <div class="col-sm-6 form-group">
@@ -1101,7 +1101,7 @@
                     <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('mon-wiz-long').value, 'editor', true);document.getElementById('mon-wizard-description-long').focus();">
                         <i class="fa fa-edit"></i>
                     </a>
-                    <textarea class="input-sm form-control" id="mon-wiz-long" style="width: 100%;height: 216px;"></textarea>
+                    <textarea class="input-sm form-control" id="mon-wiz-long" style="width: 100%;height: 273px;"></textarea>
                 </label>
             </div>
         </div>
@@ -1221,12 +1221,12 @@
         </div>
         <div id="mon-wizard-finish">
             <img src="../assets/icons/png/wizmonlogo.png" alt="Monster finish summary" style="float: left;padding-top: 56px;"> To finish your monster simply click finished
-            <div id="mon-wiz-summary" readonly="readonly" class="form-control" style="overflow:auto;height:219px;width:355px;white-space:pre;float: right;"></div>
+            <div id="mon-wiz-summary" readonly="readonly" class="form-control" style="overflow:auto;height:280px;width:355px;white-space:pre;float: right;"></div>
         </div>
         <div id="mon-wizard-combat">
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Attack commands
-                    <textarea class="input-sm form-control" id="mon-wiz-commands" style="width: 100%;height: 44px;"></textarea>
+                    <textarea class="input-sm form-control" id="mon-wiz-commands" style="width: 100%;height: 78px;"></textarea>
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A comma delimited list of commands, defaults based on class</span>
                 </label>
             </div>
@@ -1240,15 +1240,20 @@
             </div>
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Attack initiators
-                    <textarea class="input-sm form-control" id="mon-wiz-initiators" style="width: 100%;height: 44px;"></textarea>
+                    <textarea class="input-sm form-control" id="mon-wiz-initiators" style="width: 100%;height: 78px;"></textarea>
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A comma delimited list of commands, defaults based on class</span>
                 </label>
             </div>
         </div>
         <div id="mon-wizard-tracking">
-            <div class="col-sm-3 form-group">
+            <div class="col-sm-6 form-group">
                 <label class="control-label">
                     <input type="checkbox" id="mon-wiz-tracking" /> Enable attacker tracking
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-tracking-aggressively" /> Track aggressively only
                 </label>
             </div>
             <div class="col-sm-12 form-group">
@@ -1266,32 +1271,27 @@
                             </button>
                             <ul style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-class" data-container="body">
                                 <li>
-                                    <a href="#" class="main">say</a>
+                                    <a href="#">say</a>
                                 </li>
                                 <li>
-                                    <a href="#" class="sub">yell</a>
+                                    <a href="#">yell</a>
                                 </li>
                                 <li>
-                                    <a href="#" class="sub">speak</a>
+                                    <a href="#">speak</a>
                                 </li>
                                 <li>
-                                    <a href="#" class="sub">emote</a>
+                                    <a href="#">emote</a>
                                 </li>
                             </ul>
                         </span>
                     </div>
                 </label>
             </div>
-            <div class="col-sm-3 form-group">
-                <label class="control-label">
-                    <input type="checkbox" id="mon-wiz-tracking-aggressively" /> Track aggressively only
-                </label>
-            </div>
         </div>
         <div id="mon-wizard-aggressive">
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Aggressive
-                    <textarea class="input-sm form-control" id="mon-wiz-aggressive" style="width: 100%;height: 200px;"></textarea>
+                    <textarea class="input-sm form-control" id="mon-wiz-aggressive" style="width: 100%;height: 265px;"></textarea>
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">See /doc/build/monster/haggle for details</span>
                 </label>
             </div>
@@ -1306,13 +1306,13 @@
             </div>
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Patrol route
-                    <textarea class="input-sm form-control" id="mon-wiz-patrol" style="width: 100%;height: 44px;"></textarea>
+                    <textarea class="input-sm form-control" id="mon-wiz-patrol" style="width: 100%;height: 78px;"></textarea>
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A comma delimited list of directions</span>
                 </label>
             </div>
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">No walk rooms
-                    <textarea class="input-sm form-control" id="mon-wiz-no-walk" style="width: 100%;height: 44px;"></textarea>
+                    <textarea class="input-sm form-control" id="mon-wiz-no-walk" style="width: 100%;height: 78px;"></textarea>
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A comma delimited list of room paths</span>
                 </label>
             </div>
@@ -2328,7 +2328,7 @@
             theme: 'lpcTheme',
             model: null
         });
-        initEditor(editor);
+        initEditor(editor, 1);
         window.$dEditors.splice(idx, 0, editor);
         var nav = monaco.editor.createDiffNavigator(editor, {
             followsCaret: true, // resets the navigator state when the user selects something in the editor
@@ -5866,6 +5866,65 @@
             updateEditDropdown(document.getElementById('mon-wiz-race-list').closest('.edit-dropdown'));
             updateEditDropdown(document.getElementById('mon-wiz-eye-list').closest('.edit-dropdown'));
             updateEditDropdown(document.getElementById('mon-wiz-hair-list').closest('.edit-dropdown'));
+            const reputation = new WizardDataGridPage({
+                title: 'Reputation',
+                id: 'mon-wiz-reputations',
+                columns: [
+                    {
+                        label: 'Type',
+                        field: 'type',
+                        formatter: data => data ? (data.cell === 1 ? 'Die' : 'Attack') : 'Attack',
+                        tooltipFormatter: data => data ? (data.cell === 1 ? 'Die' : 'Attack') : 'Attack',
+                        width: 150,
+                        editor: {
+                            type: EditorType.select,
+                            options: {
+                                container: '#monster-wizard',
+                                data: [
+                                    { value: 0, display: 'Attack' },
+                                    { value: 1, display: 'Die' },
+                                ],
+                            }
+                        }
+                    },
+                    {
+                        label: 'Group',
+                        field: 'group',
+                        spring: true,
+                        width: 200,
+                        editor: {
+                            options: {
+                                container: '#monster-wizard',
+                                singleLine: true
+                            }
+                        }
+                    },
+                    {
+                        label: 'Amount',
+                        field: 'amount',
+                        width: 200,
+                    }
+                ],
+                add: (e) => {
+                    e.data = {
+                        type: 0,
+                        group: '',
+                        amount: ''
+                    };
+                }
+            });
+            reputation.page.lastChild.style.top = '90px';
+            reputation.page.firstChild.textContent = 'Reputations';
+            var el = document.createElement('div');
+            el.classList.add('col-sm-12', 'form-group');
+            el.style.padding = '0';
+            el.innerHTML = '<label class="control-label">Default group<input type="text" class="input-sm form-control" id="mon-wiz-reputation-group" /></label>';
+            reputation.page.insertBefore(el, reputation.page.firstChild);
+
+            reputation.on('reset', (e) => {
+                e.page.querySelector('#mon-wiz-reputation-group').value = e.wizard.defaults['mon-wiz-reputation-group'] || '';
+            });
+
             $dialogs.monster = new Wizard({
                 id: 'monster-wizard',
                 title: 'Create new monster...',
@@ -5982,6 +6041,7 @@
                             e.page.querySelector('#mon-wiz-party').value = e.wizard.defaults['mon-wiz-limbs'] || '';
                         }
                     }),
+                    reputation,
                     new WizardPage({
                         title: 'Movement',
                         body: document.getElementById('mon-wizard-movement'),
@@ -6185,6 +6245,13 @@
                                 sum += '<div><span style="font-weight:bold">No limbs:</span> ' + ellipse(data['mon-wiz-no-limbs'].replace(/\n/g, '')) + '</div>';
                             if (data['mon-wiz-party'] && data['mon-wiz-party'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Party:</span> ' + ellipse(data['mon-wiz-party'].replace(/\n/g, '')) + '</div>';
+
+                            if (data['mon-wiz-reputation-group'].length !== 0)
+                                sum += '<div><span style="font-weight:bold">Default reputation group:</span> ' + ellipse(data['mon-wiz-reputation-group'].replace(/\n/g, '')) + '</div>';
+
+                            if (data['mon-wiz-reputations'].length !== 0)
+                                sum += '<div><span style="font-weight:bold">Reputations:</span> ' + data['mon-wiz-reputations'].length + '</div>';
+
                             if (data['mon-wiz-speed'] > 0)
                                 sum += '<div><span style="font-weight:bold">Speed:</span> ' + data['mon-wiz-speed'] + '</div>';
                             if (data['mon-wiz-patrol'] && data['mon-wiz-patrol'].length > 0)
@@ -6245,7 +6312,7 @@
                     })
                 ]
             });
-            $dialogs.monster.height = '345px';
+            $dialogs.monster.height = '402px';
             $dialogs.monster.on('open', () => {
                 menubar.enabled = false;
             });
@@ -6586,8 +6653,11 @@
                     if (!data['mon-wiz-ask-topics'][0].topic.trim().startsWith('"') && !data['mon-wiz-ask-topics'][0].topic.trim().endsWith('"'))
                         data['mon-wiz-ask-topics'][0].topic = `"${data['mon-wiz-ask-topics'][0].topic.trim()}"`;
                     data['mon-wiz-ask-topics'][0].message = data['mon-wiz-ask-topics'][0].message.trim();
-                    if (data['mon-wiz-ask-topics'][0].message.startsWith('(:'))
-                        tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic},${formatFunctionPointer(data['mon-wiz-ask-topics'][0].message)});`;
+                    if (data['mon-wiz-ask-topics'][0].message.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(data['mon-wiz-ask-topics'][0].message);
+                        tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic}, ${tmp3});`;
+                        tmpl['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
+                    }
                     else if (!data['mon-wiz-ask-topics'][0].message.startsWith('"') && !data['mon-wiz-ask-topics'][0].message.endsWith('"'))
                         tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic}, "${data['mon-wiz-ask-topics'][0].message}");`;
                     else
@@ -6598,6 +6668,35 @@
                     tmpl['create body'] += tmp.join(',\n       ');
                     tmpl['create body'] += '\n     ]) );\n';
                 }
+
+                if (data['mon-wiz-reputation-group'].length !== 0)
+                    tmpl['create body'] += `   set_reputation_area("${data['mon-wiz-reputation-group'].trim()}");\n`;
+
+                data['mon-wiz-reputations'].forEach(r => {
+                    if (!r.amount) return;
+                    r.amount.trim();
+                    if (r.amount.length === 0 || r.amount === '0') return;
+                    const fun = r.type === 1 ? 'ondie' : 'onattack';
+                    r.group = r.group.trim();
+                    if (r.group.length !== 0 && !r.group.startsWith('"') && !r.group.endsWith('"'))
+                        r.group = `"${r.group.replace(/"/g, '\\"')}", `;
+                    else if (r.group.length !== 0)
+                        r.group = `${r.group}, `;
+
+                    if (typeof r.amount === "string" && parseFloat(r.amount).toString() == r.amount)
+                        tmpl['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});\n`;
+                    else if (r.amount.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(r.amount);
+                        tmpl['create body'] += `   set_reputation_${fun}(${r.group}${tmp3});`;
+                        tmpl['create pre'] += createFunction(tmp3, 'string', 'object monster, object killer');
+                    }
+                    else if (!r.amount.startsWith('"') && !r.amount.endsWith('"'))
+                        tmpl['create body'] += `   set_reputation_${fun}(${r.group}"${r.amount}");`;
+                    else
+                        tmpl['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});`;
+                });
+                //set_reputation_onattack(area, amount);
+                //set_reputation_ondie(area, amount);
 
                 if (data['mon-wiz-actions'].length > 0) {
                     data['mon-wiz-actions'] = data['mon-wiz-actions'].split(',');

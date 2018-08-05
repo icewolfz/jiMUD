@@ -29,6 +29,7 @@
     - Clear test / formatting errors when changed text as errors are probably no longer valid
     - Add filter efun to syntax highlighting
     - When opening many files fast from immortal tools editor would not load correctly
+    - Fixed issue when dragging and drop tabs to display side by side
     - Room wizard
       - Fixed bugs climbs, maxforage, prevent exit peers, hidden exits in code generation
       - Fixed bugs with type order setting for climb/doors

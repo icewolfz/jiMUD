@@ -170,6 +170,12 @@ enum MonsterResponseType {
     say = 0, tell = 1, speak = 2, whisper = 3, custom = 4
 }
 
+interface MonsterReputation {
+    type: number;
+    group: string;
+    amount: string;
+}
+
 export class Room {
     //readonly
     public x = 0;
@@ -421,6 +427,9 @@ class Monster {
     public askResponseType: MonsterResponseType = MonsterResponseType.say;
     public askTopics: MonsterTopic[] = [];
 
+    public reputationGroup: string = '';
+    public reputation: MonsterReputation[] = [];
+
     constructor(id?, data?, type?) {
         if (typeof id === 'string') {
             type = id;
@@ -513,11 +522,13 @@ class Monster {
             this.askNoTopic = '';
             this.askResponseType = MonsterResponseType.say;
             this.noBaseTopics = false;
+            this.reputationGroup = '';
         }
         this.type = type || 'base';
         this.reactions = [];
         this.objects = [];
         this.askTopics = [];
+        this.reputation = [];
     }
 }
 
@@ -4083,7 +4094,9 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-ask': ed.value.askEnabled,
                                     'mon-wiz-ask-no-topic': ed.value.askNoTopic,
                                     'mon-wiz-ask-response': '' + ed.value.askResponseType,
-                                    'mon-wiz-ask-topics': ed.value.askTopics
+                                    'mon-wiz-ask-topics': ed.value.askTopics,
+                                    'mon-wiz-reputation-group': ed.value.reputationGroup,
+                                    'mon-wiz-reputations': ed.value.reputations
                                 },
                                 finish: e => {
                                     const nMonster = ed.value.clone();
@@ -4141,6 +4154,8 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.wimpy = +e.data['mon-wiz-wimpy'];
                                     nMonster.actions = e.data['mon-wiz-actions'];
                                     nMonster.reactions = e.data['mon-wiz-reactions'] || [];
+                                    nMonster.reputationGroup = e.data['mon-wiz-reputation-group'];
+                                    nMonster.reputations = e.data['mon-wiz-reputations'] || [];
                                     if (e.data['mon-wiz-auto-stand'])
                                         nMonster.flags |= MonsterFlags.Auto_Stand;
 
