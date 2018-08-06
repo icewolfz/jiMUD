@@ -5831,7 +5831,7 @@
                     tmpl['create body'] += data['room-wiz-create-body'];
                 //ad docs
                 if (tmpl['doc'].length > 0)
-                    tmpl['doc'] = ' * @doc' + tmpl['doc'].join('\n * @doc') + '\n';
+                    tmpl['doc'] = ' * @doc ' + tmpl['doc'].join('\n * @doc ') + '\n';
                 else
                     tmpl['doc'] = '';
                 var f;
@@ -6718,7 +6718,7 @@
                     });
                 }
                 if (tmpl['doc'].length > 0)
-                    tmpl['doc'] = ' * @doc' + tmpl['doc'].join('\n * @doc') + '\n';
+                    tmpl['doc'] = ' * @doc ' + tmpl['doc'].join('\n * @doc ') + '\n';
                 else
                     tmpl['doc'] = '';
 
