@@ -31,8 +31,11 @@
     - When opening many files fast from immortal tools editor would not load correctly
     - Fixed issue when dragging and drop tabs to display side by side
     - Room wizard
-      - Fixed bugs climbs, maxforage, prevent exit peers, hidden exits in code generation
+      - Fixed bugs with climbs, maxforage, prevent exit peers, and hidden exits in code generation
       - Fixed bugs with type order setting for climb/doors
+    - Monster wizard
+      - Fixed double set_height, mass being set to hair and other minor issues
+    - When files saved update open time to save time, as file has been changed and old open is invalid
   - Fix loading of external css/js scripts for different windows
   - Profile manager: Fix macro editing, at some point and upgrade to typescript changed how it imported a function block
   - Auto update: fix progress dialog not showing correct percent
@@ -40,7 +43,6 @@
   - Fixed error logging in low level systems
   - Fixed disconnect dialog count down timer when it is disconnects more then 3 times
   - Advanced editor: fix bug when inserting pinkfish formated text
-  - When files saved update open time to save time, as file has been changed and old open is invalid
   - Fixed disconnect not fully disconnecting from mud
 
 ## 0.4.60 2018-07-23
