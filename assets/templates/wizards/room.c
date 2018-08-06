@@ -1,7 +1,7 @@
 /**
  * {name}
  * 
- * {description}
+{description}
  * 
  * @author {your name}
  * @created {date}
