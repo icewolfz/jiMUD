@@ -38,157 +38,163 @@ See [Area designer](codeeditor.designer.md) for area designer docs
   - `Width` the width of the new area, min 2, max 100, can be resized later
   - `Height` the height of the new area, min 2, max 100, can be resized later
   - `Depth` the height of the new area, min 1, max 100, can be resized later
-- `New room`
-  - `General properties` general room properties
-    - `Type` the room type
-    - `Terrain` the room's terrain
-    - `Short` the short description
-    - `Light` the amount of light in the room
-    - `Night light adjustment` the amount to adjust light when nigh
-    - `Prevent peer all direction` a message, true/false or a function to prevent peering any exit
-  - `Description` The long description, with link to open advanced editor to allow editing in editor for easy colorizing
-  - `Properties` Miscellaneous properties
-    - `Indoors` is the room indoors
-    - `No magic` disable all magic in the room
-    - `No scry` prevent scrying people while in room
-    - `No teleport` prevent teleport in and out
-    - `Explored marker` set an explored marker when player enters room
-    - `No map send` do not send map data to client
-    - `Hide exits` hide the exit line from the player
-    - `No forage` can not forage for food
-    - `Forage` the amount of food returned each forage, -1 default to random amount of Max forage
-    - `Max forage` the max amount player can forage per reset
-    - `Secret exit` provide a hint that there is a secret exit in this room
-    - `Temperature` set the room Temperature, every 100 or -100 triggers damage done by heat or cold
-  - `Combat properties` properties related to combat
-    - `No attack` disable all combat in the room
-    - `Council` allow players to kill each other using council rooms, good for arenas
-    - `Melee as ability` all basic melee combat will be considered an ability for protection calculation
-    - `Enable pk` allow players to kill each other
-    - `No dirt` can not throw dirt
-    - `Dirt type` custom dirt type, if empty it will be based on terrain and weather
-  - `Items` the items you can look at in the room, there should be one for each noun from the description
-    - `Item` the item name
-    - `Description` the item description, you should also add any looks for nouns in descriptions of other items
-  - `Exits` Exits from the room, can be standard, doors, or climbs, **Note** climbs are only supported with standard, base (see area if supported), and climb types.
-    - `Exit` the exit name, a list predefined list of standard exits is provided to pick from or you can enter a custom one
-    - `Door` is this exit a door
-    - `Key ID` a unique key id to use to lock or unlock if the exit is a door
-    - `Hidden` is the exit hidden
-    - `Blocker` a comma delimited list of monster ids that block the exit
-    - `Prevent peer` a message, true/false or a function to prevent peering this exit
-    - `Destination door` optional destination door id, defaults to door if empty
-    - `Locked` does the door lock or unlock every reset
-    - `Closed` is the door closed or open every reset
-    - `Climb` is this exit a climbs, **Note** climbs are only supported with standard, base (see area if supported), and climb types.
-    - `Climbing difficulty` how hard the climb is if this exit is a climb
-  - `Smells` the smells for the room
-    - `Smell` the smell, use `default` to have the smell set as default room smell
-    - `Description` the smell description
-  - `Sounds` the sounds for the room
-    - `Sound` the sound, use `default` to have the smell set as default room smell
-    - `Description` the sound description
-  - `Searches` the searches for the room
-    - `Search` the search/searches, you can supply a comma delimited list to assign all searches the same description
-    - `Message` the message to display or a function to execute
-  - `Finish` A final summary of selected options and properties, some properties and options will always be set even if empty: terrain, short, long, exits, items, **Note** climbs are only supported with standard, base (see area if supported), and climb types and will prevent you from finishing until you pick a supported type or remove climbs.
-- `New monster` create a new monster using a wizard for easy option selection
-  - `General properties` general monster properties
-    - `Type` the monster type
-    - `Level` the level
-    - `Alignment` The alignment, can pick from preselected list or use -1000 to 1000 raw number values, defaults to neutral if empty
-    - `Race` pick from predefined list or supply a custom race, defaults to human if empty
-    - `Class` pick from predefined list of classes and subclasses or supply your own
-    - `Language` pick primary language from predefined list, custom language or leave blank to determine based on race
-    - `Ridable` is monster ridable
-    - `Flying` can the monster fly
-    - `Getable` can the monster be picked up
-    - `Undead` is the monster undead, **Note** some monster races are automatically undead and setting this will not matter
-    - `Water breathing` can monster breathe under water
-    - `Requires water` requires water to live, if out of water it will suffocate
-    - `No bleeding` monster will not bleed
-  - `Description` Basic description properties
-    - `Name` the monster's name
-    - `Short` the monster's short, normal proper cased name or name prefixed with a/a/the
-    - `Nouns` a list of comma delimited nouns used to build an id list
-    - `Adjectives` a list of comma delimited adjectives use to build an id list with nouns
-  - `Long description` The long description, with link to open advanced editor to allow editing in editor for easy colorizing
-  - `Physical properties` properties related to physical attributes
-    - `Mass` the monsters mass, 0 will default to internal formula based on several factors
-    - `Height` the height of the monster in inches from 1 to infinity
-    - `Eye color` monster's eye color, pick from predefined list or supply any color you wish
-    - `Hair color` monster's hair color, pick from predefined list or supply any color you wish
-    - `Gender` the monster's gender, male, female, or none
-    - `Body type` allows you to pick a body type to set the initial limbs for monster, if not set will be determined based on race
-  - `Advanced properties` Advanced options that while useful are not always needed
-    - `No corpse` will the monster leave a corpse, string will be displayed to player and no corpse left, if "" no message and no corpse, $N/$n replaced with monster's name
-    - `No limbs` will the limbs be dropped on the ground, if "" no limbs and no message, else message displayed to player, $L/$l will be replaced with limb name, $N/$n replaced with monster's name
-  - `Movement` determine if the monster will wander randomly or a set list of direction
-    - `Speed` he speed the monster moves in heartbeats, must be set to enable movement
-    - `Patrol route` a set list of exits the monster will attempt to follow
-    - `No walk rooms` a list of room file names that the monster can no enter, allows containment of monster to a general area, **Note** filenames should always include the trailing `.c`
-  - `Combat` combat related options
-    - `Attack commands` a list of comma delimited abilities or commands the monster will randomly do during combat
-    - `Attack command chance` the chance a command will be used, from 0 to 101, 0 never, 100/101 always
-    - `Attack initiators` list of comma delimited commands or abilities to randomly picked from when the monster starts combat
-  - `Aggressive` monsters aggressiveness, can be a simple number or a complex mapping of values to determine how different races, classes and others options effects auto attacking, see /doc/build/monster/haggle on mud for full list and details
-  - `Actions` actions or reactions to different things
-    - `Auto drop` drop items after a delay of seconds
-    - `Open storage` open storage items that have been given and how long to wait
-    - `Auto wield` wield any weapon given or looted after a delay of seconds
-    - `Auto loot` loot the room of items after a delay of seconds
-    - `Auto wear` wear any armor given or looted after a delay of seconds
-    - `Wimpy` wimpy after percent of damage is reached
-    - `Drop encumbered` drop extra inventory when 50% or higher encumbered
-    - `Drop encumbered combat` drop extra inventory when 50% or higher encumbered if in combat
-    - `Auto stand` stand backup when lying on the ground during combat
-  - `Reactions` Determine how your monster reactions to different effects
-    - `Type` The type of reaction, see /doc/build/monster/reactions
-      - `Normal` a normal reaction that happens out side of combat
-      - `Party` a normal reaction that happens outside of combat but only effects party members
-      - `Combat` a reaction during combat
-      - `Combat party` a reaction during combat that effects party members
-    - `Reaction` the reaction that causes monsters to react
-      - `low health ` fired when < 10% hp
-      - `half health` fired when < 50% hp
-      - `hurt` fired when hp < max hp
-      - `full health` fired when 100% hp
-      - `poisoned` fired when poisoned
-      - `bleeding` fired when bleeding
-      - `severed limb` fired if has severed limbs
-      - `magic protection` fired if no magical protection (buffer/skins)
-      - `faith protection` fired if no faith protection (fortify)
-      - `cursed` fired if cursed
-      - `held` fired being held but something
-      - `cloaked` fired if cloaked
-      - `no cloak` fired if not cloaked
-      - `0 minions` fired if no minions
-      - `1 minions` fired if 1 minion
-      - `2 minions` fired if 2 minions
-      - `3 minions` fired if 3 minions
-      - `4 minions` fired if 4 minions
-      - `encumbered 90` fired if encumbered 90% or higher
-      - `encumbered 50` fired if encumbered 50% or higher
-      - `encumbered 10` fired if encumbered 10% or higher
-      - `present` a special reaction to reaction to objects in the room format of command is an array ({"id", "command to fire"})
-      - `not present` opposite of present
-      - `enhance` a special reaction that will fire if the command enhancement system is used and able to use it, format of command:
-        - ({"command", "command 2", ... }) or
-        - ({ ({"command", "syntax to fire"}), ({"command 2", "syntax to fire"}), ... })
-        - ({ ({"command", "syntax to fire", target}), ({"command 2", "syntax to fire", target}), ... })
-        - target can be an object or a string, if string will look for an object with matching id in room of monster
-      - `enhance self` a special reaction that will fire if the command enhancement system is used and able to use it and target yourself, format of command:
-        - ({"command", "command 2", ... }) or
-        - ({ ({"command", "syntax to fire"}), ({"command 2", "syntax to fire"}), ... })
-      - `temp property` special reaction that will fire a property matches a value, it requires a more advanced command format:
-        - format of command is an array
-        - ({"property name", value to match, "command to fire"}) or
-        - ({"property name", value to match, function test, "command to fire"})
-      - `temp properties` special reaction that will fire a property matches a value, it requires a more advanced command format
-        - format of command is an array of arrays from temp property
-        - ({ ({"property name", value to match, "command to fire"}), ... })
-    - `Action` the action to do, see docs for full formatting for more advanced reactions
-  - `Finish` A final summary of selected options and properties, some properties and options will always be set even if empty: name, level, race, short, long
+  
+### New room
+
+- `General properties` general room properties
+  - `Type` the room type
+  - `Terrain` the room's terrain
+  - `Short` the short description
+  - `Light` the amount of light in the room
+  - `Night light adjustment` the amount to adjust light when nigh
+  - `Prevent peer all direction` a message, true/false or a function to prevent peering any exit
+- `Description` The long description, with link to open advanced editor to allow editing in editor for easy colorizing
+- `Properties` Miscellaneous properties
+  - `Indoors` is the room indoors
+  - `No magic` disable all magic in the room
+  - `No scry` prevent scrying people while in room
+  - `No teleport` prevent teleport in and out
+  - `Explored marker` set an explored marker when player enters room
+  - `No map send` do not send map data to client
+  - `Hide exits` hide the exit line from the player
+  - `No forage` can not forage for food
+  - `Forage` the amount of food returned each forage, -1 default to random amount of Max forage
+  - `Max forage` the max amount player can forage per reset
+  - `Secret exit` provide a hint that there is a secret exit in this room
+  - `Temperature` set the room Temperature, every 100 or -100 triggers damage done by heat or cold
+- `Combat properties` properties related to combat
+  - `No attack` disable all combat in the room
+  - `Council` allow players to kill each other using council rooms, good for arenas
+  - `Melee as ability` all basic melee combat will be considered an ability for protection calculation
+  - `Enable pk` allow players to kill each other
+  - `No dirt` can not throw dirt
+  - `Dirt type` custom dirt type, if empty it will be based on terrain and weather
+- `Items` the items you can look at in the room, there should be one for each noun from the description
+  - `Item` the item name
+  - `Description` the item description, you should also add any looks for nouns in descriptions of other items
+- `Exits` Exits from the room, can be standard, doors, or climbs, **Note** climbs are only supported with standard, base (see area if supported), and climb types.
+  - `Exit` the exit name, a list predefined list of standard exits is provided to pick from or you can enter a custom one
+  - `Door` is this exit a door
+  - `Key ID` a unique key id to use to lock or unlock if the exit is a door
+  - `Hidden` is the exit hidden
+  - `Blocker` a comma delimited list of monster ids that block the exit
+  - `Prevent peer` a message, true/false or a function to prevent peering this exit
+  - `Destination door` optional destination door id, defaults to door if empty
+  - `Locked` does the door lock or unlock every reset
+  - `Closed` is the door closed or open every reset
+  - `Climb` is this exit a climbs, **Note** climbs are only supported with standard, base (see area if supported), and climb types.
+  - `Climbing difficulty` how hard the climb is if this exit is a climb
+- `Smells` the smells for the room
+  - `Smell` the smell, use `default` to have the smell set as default room smell
+  - `Description` the smell description
+- `Sounds` the sounds for the room
+  - `Sound` the sound, use `default` to have the smell set as default room smell
+  - `Description` the sound description
+- `Searches` the searches for the room
+  - `Search` the search/searches, you can supply a comma delimited list to assign all searches the same description
+  - `Message` the message to display or a function to execute
+- `Finish` A final summary of selected options and properties, some properties and options will always be set even if empty: terrain, short, long, exits, items, **Note** climbs are only supported with standard, base (see area if supported), and climb types and will prevent you from finishing until you pick a supported type or remove climbs.
+
+### New monster
+
+Create a new monster using a wizard for easy option selection
+
+- `General properties` general monster properties
+  - `Type` the monster type
+  - `Level` the level
+  - `Alignment` The alignment, can pick from preselected list or use -1000 to 1000 raw number values, defaults to neutral if empty
+  - `Race` pick from predefined list or supply a custom race, defaults to human if empty
+  - `Class` pick from predefined list of classes and subclasses or supply your own
+  - `Language` pick primary language from predefined list, custom language or leave blank to determine based on race
+  - `Ridable` is monster ridable
+  - `Flying` can the monster fly
+  - `Getable` can the monster be picked up
+  - `Undead` is the monster undead, **Note** some monster races are automatically undead and setting this will not matter
+  - `Water breathing` can monster breathe under water
+  - `Requires water` requires water to live, if out of water it will suffocate
+  - `No bleeding` monster will not bleed
+- `Description` Basic description properties
+  - `Name` the monster's name
+  - `Short` the monster's short, normal proper cased name or name prefixed with a/a/the
+  - `Nouns` a list of comma delimited nouns used to build an id list
+  - `Adjectives` a list of comma delimited adjectives use to build an id list with nouns
+- `Long description` The long description, with link to open advanced editor to allow editing in editor for easy colorizing
+- `Physical properties` properties related to physical attributes
+  - `Mass` the monsters mass, 0 will default to internal formula based on several factors
+  - `Height` the height of the monster in inches from 1 to infinity
+  - `Eye color` monster's eye color, pick from predefined list or supply any color you wish
+  - `Hair color` monster's hair color, pick from predefined list or supply any color you wish
+  - `Gender` the monster's gender, male, female, or none
+  - `Body type` allows you to pick a body type to set the initial limbs for monster, if not set will be determined based on race
+- `Advanced properties` Advanced options that while useful are not always needed
+  - `No corpse` will the monster leave a corpse, string will be displayed to player and no corpse left, if "" no message and no corpse, $N/$n replaced with monster's name
+  - `No limbs` will the limbs be dropped on the ground, if "" no limbs and no message, else message displayed to player, $L/$l will be replaced with limb name, $N/$n replaced with monster's name
+- `Movement` determine if the monster will wander randomly or a set list of direction
+  - `Speed` he speed the monster moves in heartbeats, must be set to enable movement
+  - `Patrol route` a set list of exits the monster will attempt to follow
+  - `No walk rooms` a list of room file names that the monster can no enter, allows containment of monster to a general area, **Note** filenames should always include the trailing `.c`
+- `Combat` combat related options
+  - `Attack commands` a list of comma delimited abilities or commands the monster will randomly do during combat
+  - `Attack command chance` the chance a command will be used, from 0 to 101, 0 never, 100/101 always
+  - `Attack initiators` list of comma delimited commands or abilities to randomly picked from when the monster starts combat
+- `Aggressive` monsters aggressiveness, can be a simple number or a complex mapping of values to determine how different races, classes and others options effects auto attacking, see /doc/build/monster/haggle on mud for full list and details
+- `Actions` actions or reactions to different things
+  - `Auto drop` drop items after a delay of seconds
+  - `Open storage` open storage items that have been given and how long to wait
+  - `Auto wield` wield any weapon given or looted after a delay of seconds
+  - `Auto loot` loot the room of items after a delay of seconds
+  - `Auto wear` wear any armor given or looted after a delay of seconds
+  - `Wimpy` wimpy after percent of damage is reached
+  - `Drop encumbered` drop extra inventory when 50% or higher encumbered
+  - `Drop encumbered combat` drop extra inventory when 50% or higher encumbered if in combat
+  - `Auto stand` stand backup when lying on the ground during combat
+- `Reactions` Determine how your monster reactions to different effects
+  - `Type` The type of reaction, see /doc/build/monster/reactions
+    - `Normal` a normal reaction that happens out side of combat
+    - `Party` a normal reaction that happens outside of combat but only effects party members
+    - `Combat` a reaction during combat
+    - `Combat party` a reaction during combat that effects party members
+  - `Reaction` the reaction that causes monsters to react
+    - `low health ` fired when < 10% hp
+    - `half health` fired when < 50% hp
+    - `hurt` fired when hp < max hp
+    - `full health` fired when 100% hp
+    - `poisoned` fired when poisoned
+    - `bleeding` fired when bleeding
+    - `severed limb` fired if has severed limbs
+    - `magic protection` fired if no magical protection (buffer/skins)
+    - `faith protection` fired if no faith protection (fortify)
+    - `cursed` fired if cursed
+    - `held` fired being held but something
+    - `cloaked` fired if cloaked
+    - `no cloak` fired if not cloaked
+    - `0 minions` fired if no minions
+    - `1 minions` fired if 1 minion
+    - `2 minions` fired if 2 minions
+    - `3 minions` fired if 3 minions
+    - `4 minions` fired if 4 minions
+    - `encumbered 90` fired if encumbered 90% or higher
+    - `encumbered 50` fired if encumbered 50% or higher
+    - `encumbered 10` fired if encumbered 10% or higher
+    - `present` a special reaction to reaction to objects in the room format of command is an array ({"id", "command to fire"})
+    - `not present` opposite of present
+    - `enhance` a special reaction that will fire if the command enhancement system is used and able to use it, format of command:
+      - ({"command", "command 2", ... }) or
+      - ({ ({"command", "syntax to fire"}), ({"command 2", "syntax to fire"}), ... })
+      - ({ ({"command", "syntax to fire", target}), ({"command 2", "syntax to fire", target}), ... })
+      - target can be an object or a string, if string will look for an object with matching id in room of monster
+    - `enhance self` a special reaction that will fire if the command enhancement system is used and able to use it and target yourself, format of command:
+      - ({"command", "command 2", ... }) or
+      - ({ ({"command", "syntax to fire"}), ({"command 2", "syntax to fire"}), ... })
+    - `temp property` special reaction that will fire a property matches a value, it requires a more advanced command format:
+      - format of command is an array
+      - ({"property name", value to match, "command to fire"}) or
+      - ({"property name", value to match, function test, "command to fire"})
+    - `temp properties` special reaction that will fire a property matches a value, it requires a more advanced command format
+      - format of command is an array of arrays from temp property
+      - ({ ({"property name", value to match, "command to fire"}), ... })
+  - `Action` the action to do, see docs for full formatting for more advanced reactions
+- `Finish` A final summary of selected options and properties, some properties and options will always be set even if empty: name, level, race, short, long
 
 ## Code editor features
 
