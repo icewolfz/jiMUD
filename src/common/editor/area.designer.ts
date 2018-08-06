@@ -9156,6 +9156,7 @@ export class AreaDesigner extends EditorBase {
                     data.description = ' * ' + data.description;
             }
         }
+
         if (room.terrain !== base.terrain)
             data['create body'] += `   set_terrain("${room.terrain}");\n`;
         tmp = [];
@@ -9532,6 +9533,11 @@ export class AreaDesigner extends EditorBase {
             data['doc'] = ' * @doc' + data['doc'].join('\n * @doc') + '\n';
         else
             data['doc'] = '';
+        if (room.notes.length > 0) {
+            if (data.description.lenth !== 0)
+                data.description += '\n';
+            data.description += ' * ' + room.notes.split('\n').join('\n * ') + '\n';
+        }
         if (baseRoom)
             return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'baseroom.c'))), data);
         return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'room.c'))), data);
@@ -10027,7 +10033,11 @@ export class AreaDesigner extends EditorBase {
             data['doc'] = ' * @doc' + data['doc'].join('\n * @doc') + '\n';
         else
             data['doc'] = '';
-
+        if (monster.notes.length > 0) {
+            if (data.description.lenth !== 0)
+                data.description += '\n';
+            data.description += ' * ' + monster.notes.split('\n').join('\n * ') + '\n';
+        }
         if (baseMonster)
             return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'basemonster.c'))), data);
         return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'monster.c'))), data);
@@ -10502,6 +10512,11 @@ export class AreaDesigner extends EditorBase {
             data['doc'] = '';
         if (data['help'].length > 0)
             data['doc'] += ' * @help' + data['help'].join('\n * @help') + '\n';
+        if (obj.notes.length > 0) {
+            if (data.description.lenth !== 0)
+                data.description += '\n';
+            data.description += ' * ' + obj.notes.split('\n').join('\n * ') + '\n';
+        }
         return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'object.c'))), data);
     }
 
