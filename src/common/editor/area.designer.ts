@@ -4752,12 +4752,12 @@ export class AreaDesigner extends EditorBase {
                 width: 125
             },
             {
-                property: 'noBaseObjects',
+                field: 'noBaseObjects',
                 label: 'No base objects',
                 width: 125
             },
             {
-                property: 'noBaseTopics',
+                field: 'noBaseTopics',
                 label: 'No base topics',
                 width: 125
             },
