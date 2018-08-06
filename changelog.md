@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.61
+## 0.4.61 2018-08-06
 
 - **New:**
   - Code editor:
