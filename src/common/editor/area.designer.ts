@@ -2911,6 +2911,7 @@ export class AreaDesigner extends EditorBase {
             this.setFocus(false);
         });
         this.$roomEditor = new PropertyGrid({ parent: this.$splitterEditor.panel2 });
+        this.$roomEditor.hideUnSetProperties = true;
         this.$roomEditor.readonly = (prop, value, object) => {
             if (object && object.filter(o => o.ef).length !== 0)
                 return prop !== 'ef';
@@ -3925,12 +3926,12 @@ export class AreaDesigner extends EditorBase {
             {
                 field: 'noBaseObjects',
                 label: 'No base objects',
-                width: 200
+                width: 125
             },
             {
                 field: 'noBaseTopics',
                 label: 'No base topics',
-                width: 200
+                width: 125
             },
             {
                 field: 'objects',
@@ -4310,15 +4311,18 @@ export class AreaDesigner extends EditorBase {
             },
             {
                 field: 'noBaseMonsters',
-                label: 'No base monsters'
+                label: 'No base monsters',
+                width: 125
             },
             {
                 field: 'noBaseObjects',
-                label: 'No base objects'
+                label: 'No base objects',
+                width: 125
             },
             {
                 field: 'noBaseItems',
-                label: 'No base items'
+                label: 'No base items',
+                width: 125
             },
             {
                 field: 'objects',
@@ -4750,12 +4754,12 @@ export class AreaDesigner extends EditorBase {
             {
                 property: 'noBaseObjects',
                 label: 'No base objects',
-                width: 200
+                width: 125
             },
             {
                 property: 'noBaseTopics',
                 label: 'No base topics',
-                width: 200
+                width: 125
             },
             {
                 field: 'objects',
