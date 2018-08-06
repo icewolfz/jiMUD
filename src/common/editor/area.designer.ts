@@ -8855,7 +8855,7 @@ export class AreaDesigner extends EditorBase {
                         tmp = `      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
                     else if (o.minAmount > 0 && o.maxAmount > 0)
                         tmp = `      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
-                    if (o.random > 0 && tmp.length !== 0)
+                    if (o.random > 0 && tmp.length !== 0 && o.random < 100)
                         data['reset body'] += `      if(random(${o.random}) <= random(101))\n   `;
                     data['reset body'] += tmp;
                 });
@@ -8889,7 +8889,7 @@ export class AreaDesigner extends EditorBase {
                     else if (o.minAmount > 0 && o.maxAmount > 0)
                         tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
 
-                    if (o.random > 0 && tmp.length !== 0)
+                    if (o.random > 0 && tmp.length !== 0 && o.random < 100)
                         data['reset body'] += `  if(random(${o.random}) <= random(101))\n   `;
                     data['reset body'] += tmp;
                 });
@@ -8913,7 +8913,7 @@ export class AreaDesigner extends EditorBase {
                         tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
                     else if (o.minAmount > 0 && o.maxAmount > 0)
                         tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
-                    if (o.random > 0 && tmp.length !== 0)
+                    if (o.random > 0 && tmp.length !== 0 && o.random < 100)
                         data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
                     data['create post'] += tmp;
                 });
@@ -8943,7 +8943,7 @@ export class AreaDesigner extends EditorBase {
                         tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}), ${max});\n`;
                     else if (o.minAmount > 0 && o.maxAmount > 0)
                         tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
-                    if (o.random > 0 && tmp.length !== 0)
+                    if (o.random > 0 && tmp.length !== 0 && o.random < 100)
                         data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
                     data['create post'] += tmp;
                 });
@@ -9980,7 +9980,7 @@ export class AreaDesigner extends EditorBase {
                     tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
                 else if (o.minAmount > 0 && o.maxAmount > 0)
                     tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
-                if (o.random > 0 && tmp.length !== 0)
+                if (o.random > 0 && tmp.length !== 0 && o.random < 100)
                     data['create body'] += `${tmp2}   if(random(${o.random}) <= random(101))\n   `;
                 data['create body'] += tmp2 + tmp;
             });
@@ -10130,7 +10130,7 @@ export class AreaDesigner extends EditorBase {
                                 c = `   money->add_money(${type}, ${o.minAmount});\n`;
                             else if (o.minAmount > 0 && o.maxAmount > 0)
                                 c = `   money->add_money(${type}, ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
-                            if (o.random > 0 && c.length !== 0)
+                            if (o.random > 0 && c.length !== 0 && o.random < 100)
                                 data['create body'] += `   if(random(${o.random}) <= random(101))\n   `;
                             data['create body'] += c;
                         });
@@ -10159,7 +10159,7 @@ export class AreaDesigner extends EditorBase {
                                 c = `   gems = ${o.minAmount < 1 ? 1 : o.minAmount};\n`;
                             else if (o.minAmount > 0 && o.maxAmount > 0)
                                 c = `   gems = ${o.minAmount} + random(${o.maxAmount - o.minAmount});\n`;
-                            if (o.random > 0 && c.length !== 0) {
+                            if (o.random > 0 && c.length !== 0 && o.random < 100) {
                                 data['create body'] += `   if(random(${o.random}) <= random(101))\n{\n   `;
                                 data['create body'] += c;
                                 data['create body'] += '      while(gems--)\n';
@@ -10182,7 +10182,7 @@ export class AreaDesigner extends EditorBase {
                             tmp = `   clone_max(OBJ + "${files[o.item]}.c", ${o.minAmount});\n`;
                         else if (o.minAmount > 0 && o.maxAmount > 0)
                             tmp = `   clone_max(OBJ + "${files[o.item]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
-                        if (o.random > 0 && tmp.length !== 0)
+                        if (o.random > 0 && tmp.length !== 0 && o.random < 100)
                             data['create body'] += `   if(random(${o.random}) <= random(101))\n   `;
                         data['create body'] += tmp;
                     });
