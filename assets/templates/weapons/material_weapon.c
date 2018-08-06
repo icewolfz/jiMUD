@@ -9,6 +9,8 @@
  * @doc /doc/build/weapon/tutorial
  * @doc /doc/build/weapon/types/material_weapon
  * @doc /doc/build/etc/material
+ * @help mattypes
+ * @help wtypes
  */
 #include <std.h>
 
@@ -23,4 +25,5 @@ void create()
    set_name("");
    set_short("");
    set_long("");
+   set_describers(""); // List of describers for use in crafting custom weapons
 }

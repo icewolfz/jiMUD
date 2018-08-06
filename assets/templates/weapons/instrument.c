@@ -10,6 +10,7 @@
  * @doc /doc/build/weapon/types/instrument
  * @help instrumenttypes
  * @help wtypes
+ * @help mattypes
  */
 #include <std.h>
 

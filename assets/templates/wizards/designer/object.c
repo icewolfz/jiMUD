@@ -14,7 +14,7 @@ inherit {inherit};{inherits}
 
 {create pre}void create()
 {
-   ::create({create arguments});
+   ::create({create arguments});{create arguments comment}
    set_name("{name}");
    set_short({short});
    set_long({long});

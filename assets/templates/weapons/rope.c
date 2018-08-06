@@ -8,6 +8,7 @@
  * @typeof object
  * @doc /doc/build/weapon/tutorial
  * @doc /doc/build/weapon/types/rope
+ * @help mattypes
  */
 #include <std.h>
 
