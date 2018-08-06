@@ -26,6 +26,7 @@ export class PropertyGrid extends EventEmitter {
     private $readonly: any = false;
 
     public defaults;
+    public hideUnSetProperties = false;
 
     constructor(options?: PropertyGridOptions) {
         super();
@@ -279,7 +280,7 @@ export class PropertyGrid extends EventEmitter {
                     readonly: this.isReadonly(prop)
                 });
             }
-            else {
+            else if (!this.hideUnSetProperties) {
                 layout['Misc'].push({
                     name: prop,
                     value: same ? obj[prop] : '',
