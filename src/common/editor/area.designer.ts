@@ -534,6 +534,7 @@ class Monster {
     }
 }
 
+//TODO add food, drink
 enum StdObjectType {
     object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument
 }
@@ -550,7 +551,6 @@ class StdObject {
     public adjectives: string = '';
     public material: string = '';
     public notes: string = '';
-    public custom: string = '';
     /*
     weapon - type, quality, enchantment
     armor - type, quality, limbs, enchantment
@@ -4309,6 +4309,18 @@ export class AreaDesigner extends EditorBase {
                 }
             },
             {
+                field: 'noBaseMonsters',
+                label: 'No base monsters'
+            },
+            {
+                field: 'noBaseObjects',
+                label: 'No base objects'
+            },
+            {
+                field: 'noBaseItems',
+                label: 'No base items'
+            },
+            {
                 field: 'objects',
                 label: 'Objects',
                 sortable: false,
@@ -4595,6 +4607,9 @@ export class AreaDesigner extends EditorBase {
                 delete this.$area.baseRooms[oldValue.name];
             newValue.room.monsters = newValue.monsters;
             newValue.room.objects = newValue.objects;
+            newValue.room.noBaseMonsters = newValue.noBaseMonsters;
+            newValue.room.noBaseObjects = newValue.noBaseObjects;
+            newValue.room.noBaseItems = newValue.noBaseItems;
             this.$area.baseRooms[newValue.name] = newValue.room;
             this.changed = true;
         });
@@ -4603,6 +4618,9 @@ export class AreaDesigner extends EditorBase {
             this.$area.baseRooms['base' + this.$new.baseRooms] = new Room(0, 0, 0, null, 'STD_ROOM');
             e.data = {
                 name: 'base' + this.$new.baseRooms,
+                noBaseMonsters: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseMonsters,
+                noBaseObjects: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseObjects,
+                noBaseItems: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseItems,
                 objects: this.$area.baseRooms['base' + this.$new.baseRooms].objects,
                 monsters: this.$area.baseRooms['base' + this.$new.baseRooms].monsters,
                 room: this.$area.baseRooms['base' + this.$new.baseRooms]
@@ -4995,8 +5013,8 @@ export class AreaDesigner extends EditorBase {
             else {
                 this.pushUndo(undoAction.delete, undoType.monster, {
                     values: e.data.map(r => {
-                        delete this.$area.monsters[r.id];
-                        return { id: r.id, value: r.monster };
+                        delete this.$area.monsters[r.data.id];
+                        return { id: r.data.id, value: r.data.monster };
                     })
                 });
                 this.changed = true;
@@ -5005,8 +5023,8 @@ export class AreaDesigner extends EditorBase {
         this.$monsterGrid.on('cut', (e) => {
             this.pushUndo(undoAction.delete, undoType.monster, {
                 values: e.data.map(r => {
-                    delete this.$area.monsters[r.id];
-                    return { id: r.id, value: r.monster };
+                    delete this.$area.monsters[r.data.id];
+                    return { id: r.data.id, value: r.data.monster };
                 })
             });
             this.changed = true;
@@ -5269,8 +5287,10 @@ export class AreaDesigner extends EditorBase {
                                 }
                                 const nObject = ed.value.clone();
                                 for (const prop in e.data) {
-                                    if (!e.data.hasOwnProperty) continue;
-                                    if (typeof e.data[prop] === 'object')
+                                    if (!e.data.hasOwnProperty(prop)) continue;
+                                    if (Array.isArray(e.data[prop]))
+                                        nObject[prop.substr(4)] = e.data[prop];
+                                    else if (typeof e.data[prop] === 'object')
                                         nObject[prop.substr(4)] = e.data[prop].value;
                                     else
                                         nObject[prop.substr(4)] = e.data[prop];
@@ -5324,22 +5344,31 @@ export class AreaDesigner extends EditorBase {
                                             </span>
                                         </div>
                                     </label>
-                                </div>${qualities}
-                                <div class="form-group col-sm-12">
+                                </div>${qualities.replace('col-sm-12', 'col-sm-6')}
+                                <div class="col-sm-6 form-group">
+                                        <label class="control-label" style="width: 100%;">Weapon type
+                                            <select id="obj-wType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                            <optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="arrow">Arrow</option><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
+                                            </select>
+                                        </label>
+                                    </div>
+                                <div class="form-group col-sm-6">
                                     <label class="control-label">
                                         Enchantment
                                         <input type="number" id="obj-enchantment" class="input-sm form-control" value="0" min="0" max="1000" style="width: 100%" />
                                     </label>
                                 </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-subType').value = ed.value.subType || 'sheath';
+                                            $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'sheath').selectpicker('render');
+                                            $(e.page.querySelector('#obj-wType')).val(ed.value.subType || 'knife').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-limbs').value = ed.value.limbs || '';
-                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
                                     }));
                                     break;
                                 case StdObjectType.armor:
+                                    //TODO add armour damage systems
                                     wiz.title = 'Edit armor...';
                                     //type, quality, limbs, enchantment
                                     wiz.addPages(new WizardPage({
@@ -5375,20 +5404,34 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-subType').value = ed.value.subType || 'accessory';
+                                            $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'accessory').selectpicker('render');
                                             e.page.querySelector('#obj-limbs').value = ed.value.limbs || '';
-                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
                                     }));
                                     break;
                                 case StdObjectType.chest:
                                     wiz.defaults = {
-                                        'obj-contents': ed.value.contents || []
+                                        'obj-contents': ed.value.contents || [],
+                                        'obj-blockers': ''
                                     };
                                     wiz.title = 'Edit chest...';
+                                    const props = new WizardPage({
+                                        title: 'Chest properties',
+                                        id: 'obj-chest',
+                                        body: `<div class="form-group col-sm-12">
+                                        <label class="control-label">
+                                            Blockers
+                                            <input type="text" id="obj-blockers" class="input-sm form-control"/>
+                                        </label>
+                                    </div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-blockers').value = ed.value.blockers || '';
+                                        }
+                                    });
                                     //objects, money
-                                    wiz.addPages(new WizardDataGridPage({
+                                    wiz.addPages([props, new WizardDataGridPage({
                                         title: 'Chest contents',
                                         id: 'obj-contents',
                                         columns: [
@@ -5399,7 +5442,7 @@ export class AreaDesigner extends EditorBase {
                                                 formatter: (data) => {
                                                     if (!data) return '';
                                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                                        return this.$area.objects[data.cell].short;
+                                                        return stripPinkfish(this.$area.objects[data.cell].short);
                                                     switch (data.cell) {
                                                         case -1:
                                                             return 'common gem';
@@ -5453,7 +5496,7 @@ export class AreaDesigner extends EditorBase {
                                                     options: {
                                                         data: [
                                                             { display: 'common gem', value: -1 },
-                                                            { display: 'uncommon gem', value: 2 },
+                                                            { display: 'uncommon gem', value: -2 },
                                                             { display: 'rare gem', value: -3 },
                                                             { display: 'exceptional gem', value: -4 },
                                                             { display: 'platinum', value: -5 },
@@ -5463,7 +5506,7 @@ export class AreaDesigner extends EditorBase {
                                                             { display: 'copper', value: -9 }
                                                         ].concat(...Object.values<StdObject>(this.$area.objects).filter(o => o.id !== ed.value.id).map(o => {
                                                             return {
-                                                                display: o.name || o.short,
+                                                                display: stripPinkfish(o.short || o.name),
                                                                 value: o.id
                                                             };
                                                         }))
@@ -5490,25 +5533,17 @@ export class AreaDesigner extends EditorBase {
                                                         max: 100
                                                     }
                                                 }
-                                            },
-                                            {
-                                                label: 'Blockers',
-                                                field: 'blockers',
-                                                width: 300,
-                                                spring: true
                                             }
-
                                         ],
                                         add: (e) => {
                                             e.data = {
                                                 item: '',
                                                 minAmount: 0,
                                                 maxAmount: 0,
-                                                random: 0,
-                                                blockers: ''
+                                                random: 0
                                             };
                                         }
-                                    }));
+                                    })]);
                                     break;
                                 case StdObjectType.material:
                                     wiz.title = 'Edit material...';
@@ -5543,13 +5578,14 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-size').value = ed.value.size || '0';
                                             e.page.querySelector('#obj-describers').value = ed.value.describers || '';
                                         }
                                     }));
                                     break;
                                 case StdObjectType.ore:
+                                    //TODO add bonuses
                                     wiz.title = 'Edit ore...';
                                     //size, quality, bonuses?
                                     wiz.addPages(new WizardPage({
@@ -5574,10 +5610,17 @@ export class AreaDesigner extends EditorBase {
                                                 </span>
                                             </div>
                                         </label>
-                                    </div>${qualities}`,
+                                    </div>${qualities}
+                                    <div class="col-sm-12 form-group">
+                                        <label class="control-label" style="width: 100%">Describers
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of words</span>
+                                            <input type="text" class="input-sm form-control" id="obj-describers" />
+                                        </label>
+                                    </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-size').value = ed.value.size || '1';
+                                            e.page.querySelector('#obj-describers').value = ed.value.describers || '';
                                         }
                                     }));
                                     break;
@@ -5598,7 +5641,7 @@ export class AreaDesigner extends EditorBase {
                                     <div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%;">Weapon type
                                             <select id="obj-wType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
-                                            <option value="">Default</option><optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Bow"><option value="bow">Bow</option><option value="crossbow">Crossbow</option><option value="long bow">Long bow</option><option value="longbow">Longbow</option><option value="recurve bow">Recurve bow</option><option value="self bow">Self bow</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="bolas">Bolas</option><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Shield"><option value="buckler">Buckler</option><option value="large shield">Large shield</option><option value="shield">Shield</option><option value="small shield">Small shield</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="arrow">Arrow</option><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
+                                            <option value="">Default</option><optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
                                             </select>
                                         </label>
                                     </div>${qualities}
@@ -5609,9 +5652,9 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-subType').value = ed.value.subType || 'bell';
-                                            e.page.querySelector('#obj-wType').value = ed.value.wType || '';
-                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'bell').selectpicker('render');
+                                            $(e.page.querySelector('#obj-wType')).val(ed.value.subType || '').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
                                     }));
@@ -5622,7 +5665,7 @@ export class AreaDesigner extends EditorBase {
                                     //quality, enchantment
                                     wiz.addPages(new WizardPage({
                                         id: 'obj-weapon',
-                                        title: 'Weapon properties',
+                                        title: 'Rope properties',
                                         body: `${qualities}
                                 <div class="form-group col-sm-12">
                                     <label class="control-label">
@@ -5631,12 +5674,13 @@ export class AreaDesigner extends EditorBase {
                                     </label>
                                 </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
                                     }));
                                     break;
                                 case StdObjectType.weapon:
+                                    //TODO add bonus systems
                                     wiz.title = 'Edit weapon...';
                                     //type, quality, enchantment
                                     //cSpell:disable
@@ -5657,8 +5701,8 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-subType').value = ed.value.subType || 'blunt';
-                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'blunt').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
                                     }));
@@ -5674,7 +5718,7 @@ export class AreaDesigner extends EditorBase {
                                         body: `<div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%;">Type
                                             <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
-                                            <optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Bow"><option value="bow">Bow</option><option value="crossbow">Crossbow</option><option value="long bow">Long bow</option><option value="longbow">Longbow</option><option value="recurve bow">Recurve bow</option><option value="self bow">Self bow</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="bolas">Bolas</option><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Shield"><option value="buckler">Buckler</option><option value="large shield">Large shield</option><option value="shield">Shield</option><option value="small shield">Small shield</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="arrow">Arrow</option><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
+                                            <option value="">Default</option><optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="arrow">Arrow</option><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
                                             </select>
                                         </label>
                                     </div>${qualities}
@@ -5703,12 +5747,19 @@ export class AreaDesigner extends EditorBase {
                                             Enchantment
                                             <input type="number" id="obj-enchantment" class="input-sm form-control" value="0" min="0" max="1000" style="width: 100%" />
                                         </label>
+                                    </div>
+                                    <div class="col-sm-12 form-group">
+                                        <label class="control-label" style="width: 100%">Describers
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of words</span>
+                                            <input type="text" class="input-sm form-control" id="obj-describers" />
+                                        </label>
                                     </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-subType').value = ed.value.subType || 'blunt';
-                                            e.page.querySelector('#obj-quality').value = ed.value.quality || 'average';
+                                            $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'blunt').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-size').value = ed.value.size || '0';
+                                            e.page.querySelector('#obj-describers').value = ed.value.describers || '';
                                         }
                                     }));
                                     //cSpell:enable
@@ -5728,8 +5779,10 @@ export class AreaDesigner extends EditorBase {
                                     const data = e.wizard.data;
                                     let sum = '';
                                     for (const prop in data) {
-                                        if (!data.hasOwnProperty) continue;
-                                        if (typeof data[prop] === 'object')
+                                        if (!data.hasOwnProperty(prop)) continue;
+                                        if (Array.isArray(data[prop]))
+                                            sum += '<div><span style="font-weight:bold">' + capitalize(prop.substr(4)) + ':</span> ' + data[prop].length + '</div>';
+                                        else if (typeof data[prop] === 'object')
                                             sum += '<div><span style="font-weight:bold">' + capitalize(prop.substr(4)) + ':</span> ' + data[prop].display + '</div>';
                                         else
                                             sum += '<div><span style="font-weight:bold">' + capitalize(prop.substr(4)) + ':</span> ' + data[prop] + '</div>';
@@ -5759,8 +5812,8 @@ export class AreaDesigner extends EditorBase {
             else {
                 this.pushUndo(undoAction.delete, undoType.object, {
                     values: e.data.map(r => {
-                        delete this.$area.objects[r.id];
-                        return { id: r.id, value: r.object };
+                        delete this.$area.objects[r.data.id];
+                        return { id: r.data.id, value: r.data.object };
                     })
                 });
                 this.changed = true;
@@ -5769,8 +5822,8 @@ export class AreaDesigner extends EditorBase {
         this.$objectGrid.on('cut', (e) => {
             this.pushUndo(undoAction.delete, undoType.object, {
                 values: e.data.map(r => {
-                    delete this.$area.objects[r.id];
-                    return { id: r.id, value: r.object };
+                    delete this.$area.objects[r.data.id];
+                    return { id: r.data.id, value: r.data.object };
                 })
             });
             this.changed = true;
@@ -7304,24 +7357,24 @@ export class AreaDesigner extends EditorBase {
         }
 
         let cols = this.$propertiesEditor.roomGrid.columns;
-        cols[1].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[1].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[1].editor.options.enterMoveNew = this.$enterMoveNew;
-        cols[2].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[2].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[2].editor.options.enterMoveNew = this.$enterMoveNew;
-        this.$propertiesEditor.roomGrid.columns = cols;
-
-        cols = this.$propertiesEditor.monsterGrid.columns;
-        cols[2].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[2].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[2].editor.options.enterMoveNew = this.$enterMoveNew;
-        this.$propertiesEditor.monsterGrid.columns = cols;
-
-        cols = this.$monsterGrid.columns;
         cols[4].editor.options.enterMoveFirst = this.$enterMoveFirst;
         cols[4].editor.options.enterMoveNext = this.$enterMoveNext;
         cols[4].editor.options.enterMoveNew = this.$enterMoveNew;
+        cols[5].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[5].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[5].editor.options.enterMoveNew = this.$enterMoveNew;
+        this.$propertiesEditor.roomGrid.columns = cols;
+
+        cols = this.$propertiesEditor.monsterGrid.columns;
+        cols[4].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[4].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[4].editor.options.enterMoveNew = this.$enterMoveNew;
+        this.$propertiesEditor.monsterGrid.columns = cols;
+
+        cols = this.$monsterGrid.columns;
+        cols[6].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[6].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[6].editor.options.enterMoveNew = this.$enterMoveNew;
         this.$monsterGrid.columns = cols;
 
         cols = this.$objectGrid.columns;
@@ -8491,6 +8544,9 @@ export class AreaDesigner extends EditorBase {
         this.$propertiesEditor.roomGrid.rows = Object.keys(this.$area.baseRooms).map(r => {
             return {
                 name: r,
+                noBaseMonsters: this.$area.baseRooms[r].noBaseMonsters,
+                noBaseObjects: this.$area.baseRooms[r].noBaseObjects,
+                noBaseItems: this.$area.baseRooms[r].noBaseItems,
                 monsters: this.$area.baseRooms[r].monsters,
                 objects: this.$area.baseRooms[r].objects,
                 room: this.$area.baseRooms[r]
@@ -8532,7 +8588,7 @@ export class AreaDesigner extends EditorBase {
             };
         });
         let cols = this.$propertiesEditor.roomGrid.columns;
-        cols[2].editor.options.columns[0].editor.options.data = data;
+        cols[5].editor.options.columns[0].editor.options.data = data;
         this.$propertiesEditor.roomGrid.columns = cols;
 
         cols = this.$roomEditor.getPropertyOptions('monsters');
@@ -8557,15 +8613,15 @@ export class AreaDesigner extends EditorBase {
             };
         });
         let cols = this.$monsterGrid.columns;
-        cols[4].editor.options.columns[0].editor.options.data = data;
+        cols[6].editor.options.columns[0].editor.options.data = data;
         this.$monsterGrid.columns = cols;
 
         cols = this.$propertiesEditor.monsterGrid.columns;
-        cols[2].editor.options.columns[0].editor.options.data = data;
+        cols[4].editor.options.columns[0].editor.options.data = data;
         this.$propertiesEditor.monsterGrid.columns = cols;
 
         cols = this.$propertiesEditor.roomGrid.columns;
-        cols[1].editor.options.columns[0].editor.options.data = data;
+        cols[4].editor.options.columns[0].editor.options.data = data;
         this.$propertiesEditor.roomGrid.columns = cols;
 
         cols = this.$roomEditor.getPropertyOptions('objects');
@@ -8784,28 +8840,30 @@ export class AreaDesigner extends EditorBase {
                 data['reset body'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
                 data['reset body'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
             });
-            tmp = room.objects.filter(o => this.$area.objects[o.id]);
-            if (tmp.length !== 0) {
+            tmp2 = room.objects.filter(o => this.$area.objects[o.id]);
+            if (tmp2.length !== 0) {
                 data['reset body'] += '   if(!query_property("no clone objects"))\n   {\n';
-                tmp.forEach(o => {
+                tmp2.forEach(o => {
                     tmp = '';
                     if (o.unique)
                         tmp = `      clone_unique(OBJ + "${files[o.id]}.c");\n`;
                     else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1))
                         tmp = `      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
                     else if (o.minAmount > 0 && o.maxAmount > 0)
-                        tmp = `      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}));\n`;
+                        tmp = `      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
                     if (o.random > 0 && tmp.length !== 0)
                         data['reset body'] += `      if(random(${o.random}) <= random(101))\n   `;
                     data['reset body'] += tmp;
                 });
+                if (tmp2.filter(o => this.$area.objects[o.id].type === StdObjectType.chest).length !== 0)
+                    data['create post'] += '      filter(query_item_contents(), (: $1->is_chest() :))->reset_chest();\n';
                 data['reset body'] += '   }\n';
             }
 
-            tmp = room.monsters.filter(o => this.$area.monsters[o.id]);
-            if (tmp.length !== 0) {
+            tmp2 = room.monsters.filter(o => this.$area.monsters[o.id]);
+            if (tmp2.length !== 0) {
                 data['reset body'] += `   //Perform a probably check to allow disabling of default monsters\n   if(query_property("no clone monsters"))\n      return;\n   // If monsters already in room do not create more\n   if(sizeof(filter(query_living_contents(), (: $1->is_${data.area}_monster() :) )))\n      return;\n`;
-                tmp.forEach(o => {
+                tmp2.forEach(o => {
                     const mon = this.$area.monsters[o.id];
                     if (!mon) return;
                     let max = '';
@@ -8823,9 +8881,9 @@ export class AreaDesigner extends EditorBase {
                             tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount});\n`;
                     }
                     else if (max.length !== 0 && o.minAmount > 0 && o.maxAmount > 0)
-                        tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}), ${max});\n`;
+                        tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}), ${max});\n`;
                     else if (o.minAmount > 0 && o.maxAmount > 0)
-                        tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}));\n`;
+                        tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
 
                     if (o.random > 0 && tmp.length !== 0)
                         data['reset body'] += `  if(random(${o.random}) <= random(101))\n   `;
@@ -8841,22 +8899,26 @@ export class AreaDesigner extends EditorBase {
                 data['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
                 data['create post'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
             });
-            if (room.objects.length !== 0) {
-                room.objects.forEach(o => {
+            tmp2 = room.objects.filter(o => this.$area.objects[o.id]);
+            if (tmp2.length !== 0) {
+                tmp2.forEach(o => {
                     tmp = '';
                     if (o.unique)
                         tmp = `   clone_unique(OBJ + "${files[o.id]}.c");\n`;
                     else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
                         tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
                     else if (o.minAmount > 0 && o.maxAmount > 0)
-                        tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}));\n`;
+                        tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
                     if (o.random > 0 && tmp.length !== 0)
                         data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
                     data['create post'] += tmp;
                 });
+                if (tmp2.filter(o => this.$area.objects[o.id].type === StdObjectType.chest).length !== 0)
+                    data['create post'] += '   filter(query_item_contents(), (: $1->is_chest() :))->reset_chest();\n';
             }
-            if (room.monsters.length !== 0) {
-                room.monsters.forEach(o => {
+            tmp2 = room.monsters.filter(o => this.$area.monsters[o.id]);
+            if (tmp2.length !== 0) {
+                tmp2.forEach(o => {
                     const mon = this.$area.monsters[o.id];
                     if (!mon) return;
                     let max = '';
@@ -8874,9 +8936,9 @@ export class AreaDesigner extends EditorBase {
                             tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount});\n`;
                     }
                     else if (max.length !== 0 && o.minAmount > 0 && o.maxAmount > 0)
-                        tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}), ${max});\n`;
+                        tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}), ${max});\n`;
                     else if (o.minAmount > 0 && o.maxAmount > 0)
-                        tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}));\n`;
+                        tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
                     if (o.random > 0 && tmp.length !== 0)
                         data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
                     data['create post'] += tmp;
@@ -9225,7 +9287,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += tmp.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
         }
-        tmp = exits.filter(i => i.hidden).map(i => i.exit);
+        tmp = exits.filter(i => i.hidden).map(i => `"${i.exit}"`);
         if (tmp.length > 0)
             data['create body'] += `   add_invis_exits(${formatArgumentList(tmp.join(', '), 61)});\n`;
         //add climbs
@@ -9901,19 +9963,19 @@ export class AreaDesigner extends EditorBase {
 
         if (monster.objects.length !== 0) {
             tmp2 = '';
-            if (baseMonster)
-            {
+            if (baseMonster) {
                 tmp2 = '   ';
                 data['create body'] += '   if(!query_property("no objects"))\n{\n';
             }
             monster.objects.forEach(o => {
+                if (!this.$area.objects[o.id]) return;
                 tmp = '';
                 if (o.unique)
                     tmp = `   clone_unique(OBJ + "${files[o.id]}.c");\n`;
                 else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
                     tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
                 else if (o.minAmount > 0 && o.maxAmount > 0)
-                    tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} +  random(${o.maxAmount}));\n`;
+                    tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
                 if (o.random > 0 && tmp.length !== 0)
                     data['create body'] += `${tmp2}   if(random(${o.random}) <= random(101))\n   `;
                 data['create body'] += tmp2 + tmp;
@@ -9946,8 +10008,474 @@ export class AreaDesigner extends EditorBase {
 
     public generateObjectCode(obj, files, data) {
         if (!obj) return '';
+        let tmp;
+        let tmp2;
+        let tmp3;
+        const props = [];
         files = files || {};
-        return '';
+        data.doc = [];
+        data.help = [];
+        data.includes = '';
+        data.inherits = '';
+        data['create pre'] = '';
+        data['create body'] = '';
+        data['create post'] = '';
+        data['create pre inherit'] = '';
+        data['create arguments'] = '';
+        data['create arguments comment'] = '';
+
+        data['doc'].push('/doc/build/etc/object');
+        data.help.push('mattypes');
+        const limbs = ['ALLLIMBS', 'OVERALL', 'LIMBONLY', 'TORSO', 'HEAD', 'LEFTARM', 'RIGHTARM', 'LEFTHAND', 'RIGHTHAND', 'LEFTLEG', 'RIGHTLEG', 'LEFTFOOT', 'RIGHTFOOT', 'RIGHTWING', 'LEFTWING', 'LEFTHOOF', 'RIGHTHOOF', 'TAIL', 'ARMS', 'LEGS', 'HANDS', 'FEET', 'WINGS', 'HOOVES', 'LOWERBODY', 'COREBODY', 'UPPERCORE', 'UPPERBODY', 'WINGEDCORE', 'WINGEDUPPER', 'UPPERTRUNK', 'LOWERTRUNK', 'TRUNK', 'WINGEDTRUNK', 'FULLBODY', 'TOTALBODY', 'WINGEDBODY'];
+        switch (obj.type) {
+            case StdObjectType.armor:
+                //#region Armor
+                data.inherits = 'OBJ_ARMOUR';
+                data['doc'].push('/doc/build/armours/tutorial');
+                data.help.push('atypes');
+                data.includes += '\n#include <limbs.h>';
+                data['create arguments'] = `"${obj.subType || 'accessory'}", "${obj.material || 'iron'}", "${obj.quality || 'average'}", `;
+                data['create arguments comment'] = '//Type, Material, Quality, Limbs';
+                tmp = obj.limbs || 'torso';
+                tmp2 = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) === -1);
+                tmp = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) !== -1);
+                tmp = tmp.map(l => {
+                    return l.trim().replace(/ /g, '').toUpperCase();
+                });
+                tmp2 = tmp2.map(l => {
+                    return `"${l.trim()}"`;
+                });
+                tmp = tmp.filter((value, index, self) => self.indexOf(value) === index);
+                tmp2 = tmp.filter((value, index, self) => self.indexOf(value) === index);
+                if (tmp.length === 0 && tmp2.length === 0)
+                    data['create arguments'] += 'TORSO';
+                if (tmp.length !== 0 && tmp2.length !== 0)
+                    data['create arguments'] += `${tmp.join(' | ')} | ({ ${tmp2.join(' | ')} })`;
+                else if (tmp.length !== 0)
+                    data['create arguments'] += tmp.join(' | ');
+                else
+                    data['create arguments'] += tmp2.join(' | ');
+                if (obj.enchantment !== 0) {
+                    data['create arguments'] += `, ${obj.enchantment}`;
+                    data['create arguments comment'] += ', Natural enchantment';
+                }
+                break;
+            //#endregion
+            case StdObjectType.chest:
+                //#region Chest
+                data.inherit = 'OBJ_CHEST';
+                if (obj.material.length > 0)
+                    data['create body'] += `   set_material(${obj.material});\n`;
+                if (obj.blockers && obj.blockers.length !== 0) {
+                    tmp = obj.blockers.split(',').map(b => `present("${b.trim()}", environment(this_object())`);
+                    data['create pre'] += 'int auto_fun(string str, object who)\n{\n';
+                    data['create pre'] += '   //Search for blockers and kepe the first one found\n';
+                    data['create pre'] += `   object mon = ${tmp.join(' || ')};\n`;
+                    data['create pre'] += '   if(mon) //if found attack\n   {\n';
+                    data['create pre'] += '      if(who->query_cloak() && !who->is_found(mon))\n';
+                    data['create pre'] += '         return 0;\n';
+                    data['create pre'] += '       if(!sizeof(mon->query_combat_initiator()) || !mon->force_me(mon->query_combat_initiator()[random(sizeof(mon->query_combat_initiator()))] + " " + who->query_name()))\n';
+                    data['create pre'] += '         mon->force_me("kill " + who->query_name());\n';
+                    data['create pre'] += '      return 1;\n';
+                    data['create pre'] += '   }\n   return 0;\n';
+                    data['create pre'] += '}\n\nint get_fun(object who)\n{\n   return !auto_fun(0, who);\n}\n\n';
+                    data['create body'] += '      set_trap("preunlock", new(TRAP, -1, (: auto_fun :), 0, 0, 1));\n';
+                    data['create body'] += '      set_trap("prepick_lock", new(TRAP, -1, (: auto_fun :), 0, 0, 1));\n';
+                    data['create body'] += '      set_trap("preopen", new(TRAP, -1, (: auto_fun :), 0, 0, 1));\n';
+                    data['create body'] += '      set_prevent_get( (: get_fun :) );;\n';
+                }
+                if (obj.keyID.length > 0)
+                    data['create body'] += `   set_key("${obj.keyID}");\n`;
+
+                if (obj.contents && obj.contents.length > 0) {
+                    tmp = obj.cotents.filter(c => c.item < -4);
+                    tmp2 = obj.cotents.filter(c => c.item >= 0);
+                    tmp3 = obj.cotents.filter(c => c.item >= -4 && c.item < 0);
+                    data['create post'] += '\nvoid reset_chest()\n{\n';
+                    if (tmp.length !== 0)
+                        data['create post'] += '   object money;\n';
+                    if (tmp2.length !== 0)
+                        data['create post'] += '   int gems;\n';
+                    data['create post'] += '   //check if contains contents\n   if(sizeof(query_item_contents()))\n      return;';
+                    data['create post'] += '   set_locked(0);\n';
+                    data['create post'] += '   set_closed(0);\n';
+                    //item, minAmount, maxAmount, random
+                    if (tmp.length !== 0) {
+                        data['create post'] += '   money = new(OBJ_COINS);\n';
+                        let type;
+                        tmp.forEach(o => {
+                            switch (o.item) {
+                                case -5:
+                                    type = '"platinum"';
+                                    break;
+                                case -6:
+                                    type = '"gold"';
+                                    break;
+                                case -7:
+                                    type = '"electrum"';
+                                    break;
+                                case -8:
+                                    type = '"silver"';
+                                    break;
+                                default:
+                                    type = '"copper"';
+                                    break;
+                            }
+                            let c = '';
+                            if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                                c = `   money->add_money(${type}, ${o.minAmount});\n`;
+                            else if (o.minAmount > 0 && o.maxAmount > 0)
+                                c = `   money->add_money(${type}, ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                            if (o.random > 0 && c.length !== 0)
+                                data['create body'] += `   if(random(${o.random}) <= random(101))\n   `;
+                            data['create body'] += c;
+                        });
+                        data['create post'] += '   money->move(this_object())\n';
+                    }
+
+                    if (tmp3.length !== 0) {
+                        tmp3.forEach(o => {
+                            let type;
+                            switch (o.item) {
+                                case -2:
+                                    type = '"uncommon gem"';
+                                    break;
+                                case -3:
+                                    type = '"rare gem"';
+                                    break;
+                                case -4:
+                                    type = '"exceptional gem"';
+                                    break;
+                                default:
+                                    type = '"common gem"';
+                                    break;
+                            }
+                            let c = '';
+                            if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                                c = `   gems = ${o.minAmount < 1 ? 1 : o.minAmount};\n`;
+                            else if (o.minAmount > 0 && o.maxAmount > 0)
+                                c = `   gems = ${o.minAmount} + random(${o.maxAmount - o.minAmount});\n`;
+                            if (o.random > 0 && c.length !== 0) {
+                                data['create body'] += `   if(random(${o.random}) <= random(101))\n{\n   `;
+                                data['create body'] += c;
+                                data['create body'] += '      while(gems--)\n';
+                                data['create body'] += `         GEM_D->clone_gem(${type})->move(this_object())\n`;
+                                data['create body'] += '   }\n';
+                            }
+                            else if (c.length === 0)
+                                data['create body'] += `   GEM_D->clone_gem(${type})->move(this_object())`;
+                            else {
+                                data['create body'] += '   while(gems--)\n';
+                                data['create body'] += `      GEM_D->clone_gem(${type})->move(this_object())`;
+                            }
+                        });
+                    }
+
+                    tmp2.forEach(o => {
+                        if (!this.$area.objects[o.item]) return;
+                        tmp = '';
+                        if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                            tmp = `   clone_max(OBJ + "${files[o.item]}.c", ${o.minAmount});\n`;
+                        else if (o.minAmount > 0 && o.maxAmount > 0)
+                            tmp = `   clone_max(OBJ + "${files[o.item]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                        if (o.random > 0 && tmp.length !== 0)
+                            data['create body'] += `   if(random(${o.random}) <= random(101))\n   `;
+                        data['create body'] += tmp;
+                    });
+
+                    data['create post'] += '   set_closed(1);\n';
+                    data['create post'] += '   set_locked(1);\n';
+                    data['create post'] += '}';
+                }
+                //#endregion
+                break;
+            case StdObjectType.instrument:
+                //#region Instrument
+                data.inherit = 'OBJ_INSTRUMENT';
+                data['doc'].push('/doc/build/weapon/tutorial');
+                data['doc'].push('/doc/build/weapon/types/instrument');
+                data.help.push('instrumenttypes');
+                data.help.push('wtypes');
+                data['create arguments'] = `"${obj.subType || 'bell'}", "${obj.material || 'iron'}", "${obj.quality || 'average'}"`;
+                data['create arguments comment'] = '//Type, Material, Quality';
+                if (obj.wType && obj.wType.length !== 0) {
+                    data['create arguments comment'] += ', Weapon type';
+                    data['create arguments'] += `, ${obj.wType}`;
+                }
+                else if (obj.enchantment !== 0) {
+                    data['create arguments comment'] += ', Weapon type';
+                    data['create arguments'] += `, 0`;
+                }
+                if (obj.enchantment !== 0) {
+                    data['create arguments'] += `, ${obj.enchantment}`;
+                    data['create arguments comment'] += ', Natural enchantment';
+                }
+                //#endregion
+                break;
+            case StdObjectType.material:
+                //#region Material
+                data.inherit = 'OBJ_MATERIAL';
+                data['doc'].push('/doc/build/etc/material');
+                data['create arguments'] = `"${obj.material || 'iron'}", "${obj.size > 1 ? obj.size : 1}", "${obj.quality || 'average'}"`;
+                data['create arguments comment'] = '//Material, size, Quality';
+                if (obj.describers && obj.describers.length > 0)
+                    data['create body'] += `   set_decribers(${formatArgumentList(tmp.join(', '), 63)});\n`;
+                //#endregion
+                break;
+            case StdObjectType.material_weapon:
+                //#region Material weapon
+                data.inherit = 'OBJ_MATERIAL_WEAPON';
+                data['doc'].push('/doc/build/weapon/tutorial');
+                data['doc'].push('/doc/build/weapon/types/material_weapon');
+                data['doc'].push('/doc/build/etc/material');
+                data.help.push('wtypes');
+
+                data['create arguments'] = `"${obj.subType || 'blunt'}", "${obj.material || 'wood'}", "${obj.quality || 'average'}", ${obj.enchantment || 0}, "${obj.size > 1 ? obj.size : 1}"`;
+                data['create arguments comment'] = '//Weapon type, Material, Quality, Natural enchantment, Material size';
+                if (obj.describers && obj.describers.length > 0)
+                    data['create body'] += `   set_decribers(${formatArgumentList(tmp.join(', '), 63)});\n`;
+                //#endregion
+                break;
+            case StdObjectType.ore:
+                //#region Ore
+                data.inherit = 'OBJ_ORE_RAND';
+                data['doc'].push('/doc/build/random_generators#OBJ_ORE_RAND');
+                data['create arguments'] = `"${obj.material || 'iron'}", "${obj.size > 1 ? obj.size : 1}", "${obj.quality || 'average'}"`;
+                data['create arguments comment'] = '//Material. Size, Quality';
+                if (obj.describers && obj.describers.length > 0)
+                    data['create body'] += `   set_decribers(${formatArgumentList(tmp.join(', '), 63)});\n`;
+                //#endregion
+                break;
+            case StdObjectType.rope:
+                //#region Rope
+                data.inherit = 'OBJ_ROPE';
+                data['doc'].push('/doc/build/weapon/tutorial');
+                data['doc'].push('/doc/build/weapon/types/rope');
+                //Name, Material, Quality, Natural enchantment
+                data['create arguments'] = `"${obj.name || 'rope'}", "${obj.material || 'cotton'}", "${obj.quality || 'average'}"`;
+                data['create arguments comment'] = '//Name, Material, Quality';
+                if (obj.enchantment !== 0) {
+                    data['create arguments'] += `, ${obj.enchantment}`;
+                    data['create arguments comment'] += ', Natural enchantment';
+                }
+                //#endregion
+                break;
+            case StdObjectType.sheath:
+                //#region Sheath
+                //string matarm, string qualarm, mixed armlimbs, int charm
+                data.inherit = 'OBJ_SHEATH';
+                data['doc'].push('/doc/build/armours/tutorial');
+                data['doc'].push('/doc/build/armours/types/sheath');
+                data.help.push('atypes');
+                data.includes += '\n#include <limbs.h>';
+                tmp = obj.limbs || 'LEFTLEG';
+                tmp2 = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) === -1);
+                tmp = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) !== -1);
+                tmp = tmp.map(l => {
+                    return l.trim().replace(/ /g, '').toUpperCase();
+                });
+                tmp2 = tmp2.map(l => {
+                    return `"${l.trim()}"`;
+                });
+                tmp = tmp.filter((value, index, self) => self.indexOf(value) === index);
+                tmp2 = tmp.filter((value, index, self) => self.indexOf(value) === index);
+
+                if (!obj.subType || obj.subType.length === 0 || obj.subType === 'sheath') {
+                    data['create arguments'] = `"${obj.material || 'leather'}", "${obj.quality || 'average'}"`;
+                    data['create arguments comment'] = '//Material, Quality, Limbs';
+                    if (tmp.length === 0 && tmp2.length === 0)
+                        data['create arguments'] += 'LEFTLEG';
+                    if (tmp.length !== 0 && tmp2.length !== 0)
+                        data['create arguments'] += `${tmp.join(' | ')} | ({ ${tmp2.join(' | ')} })`;
+                    else if (tmp.length !== 0)
+                        data['create arguments'] += tmp.join(' | ');
+                    else
+                        data['create arguments'] += tmp2.join(' | ');
+                    if (obj.enchantment !== 0) {
+                        data['create arguments'] += `, ${obj.enchantment}`;
+                        data['create arguments comment'] += ', Natural enchantment';
+                    }
+                }
+                else {
+                    let cac = '//Type, Material, Quality, Limbs';
+                    data['create arguments comment'] = `\n   create_armour("${obj.subType}", ${obj.material || 'leather'}", "${obj.quality || 'average'}"`;
+                    if (tmp.length === 0 && tmp2.length === 0)
+                        data['create arguments comment'] += 'LEFTLEG';
+                    if (tmp.length !== 0 && tmp2.length !== 0)
+                        data['create arguments comment'] += `${tmp.join(' | ')} | ({ ${tmp2.join(' | ')} })`;
+                    else if (tmp.length !== 0)
+                        data['create arguments comment'] += tmp.join(' | ');
+                    else
+                        data['create arguments comment'] += tmp2.join(' | ');
+                    if (obj.enchantment !== 0) {
+                        data['create arguments comment'] += `, ${obj.enchantment}`;
+                        cac += ', Natural enchantment';
+                    }
+                    data['create arguments comment'] += ');' + cac;
+                    if (obj.wType.length > 0)
+                        data['create body'] += `   set_weapon_type("${obj.material}");\n`;
+                }
+                //#endregion
+                break;
+            case StdObjectType.weapon:
+                //#region Weapon
+                data['doc'].push('/doc/build/weapon/tutorial');
+                switch (obj.subType || '') {
+                    case 'arrow':
+                        data.inherit = 'OBJ_ARROW';
+                        data['doc'].push('/doc/build/weapon/types/arrow');
+                        data['create arguments'] = `"${obj.material || 'leather'}", "${obj.quality || 'average'}"`;
+                        data['create arguments comment'] = '//Material, Quality';
+                        if (obj.enchantment !== 0) {
+                            data['create arguments'] += ', 0';
+                            data['create arguments comment'] += ', Type';
+                        }
+                        break;
+                    case 'bolas':
+                        data.inherit = 'OBJ_BOLAS';
+                        data['doc'].push('/doc/build/weapon/types/bolas');
+                        data['create arguments'] = `"${obj.material || 'leather'}", "${obj.quality || 'average'}"`;
+                        data['create arguments comment'] = '//Material, Quality';
+                        break;
+                    case 'bow':
+                    case 'long bow':
+                    case 'longbow':
+                    case 'recurve bow':
+                    case 'self bow':
+                    case 'crossbow':
+                        data.inherit = 'OBJ_BOW';
+                        data['doc'].push('/doc/build/weapon/types/bow');
+                        data.help.push('wtypes bow');
+                        data['create arguments'] = `"${obj.subType}", "${obj.material || 'wood'}", "${obj.quality || 'inferior'}"`;
+                        data['create arguments comment'] = '//Type, Material, Quality';
+                        break;
+                    case 'shield':
+                    case 'buckler':
+                    case 'large shield':
+                    case 'small shield':
+                        data.inherit = 'OBJ_SHIELD';
+                        data.help.push('wtypes shield');
+                        data['doc'].push('/doc/build/weapon/types/shield');
+                        data['create arguments'] = `"${obj.subType}", "${obj.material || 'wood'}", "${obj.quality || 'inferior'}"`;
+                        data['create arguments comment'] = '//Type, Material, Quality';
+                        break;
+                    default:
+                        data.help.push('wtypes');
+                        data.inherit = 'OBJ_WEAPON';
+                        data['create arguments'] = `"${obj.subType || 'blunt'}", "${obj.material || 'wood'}", "${obj.quality || 'inferior'}"`;
+                        data['create arguments comment'] = '//Type, Material, Quality';
+                        break;
+                }
+                if (obj.enchantment !== 0) {
+                    data['create arguments'] += `, ${obj.enchantment}`;
+                    data['create arguments comment'] += ', Natural enchantment';
+                }
+                //#endregion
+                break;
+            default:
+                //#region Object
+                data.inherit = 'STD_OBJECT';
+                if (obj.material.length > 0)
+                    data['create body'] += `   set_material(${obj.material});\n`;
+                //#endregion
+                break;
+        }
+
+        if (obj.name.startsWith('"') && obj.name.endsWith('"')) {
+            data.name = obj.name.substr(1, obj.name.length - 2).replace(/"/g, '\\"');
+        }
+        else
+            data.name = obj.name.replace(/"/g, '\\"');
+        obj.short = obj.short.trim();
+        if (obj.short.startsWith('(:')) {
+            data.short = formatFunctionPointer(obj.short);
+            data['create pre'] += createFunction(obj.short, 'string');
+        }
+        else if (obj.short.startsWith('"') && obj.short.endsWith('"'))
+            data.short = `${obj.short}`;
+        else
+            data.short = `"${obj.short.replace(/"/g, '\\"')}"`;
+        obj.long = obj.long.trim();
+        if (obj.long.startsWith('(:')) {
+            data.long = formatFunctionPointer(obj.long);
+            data['create pre'] += createFunction(obj.long, 'string');
+            data.description = obj.long.substr(2);
+            if (data.description.endsWith(':)'))
+                data.description = data.description.substr(0, data.description.length - 2);
+            data.description = data.description.trim();
+        }
+        else {
+            if (!obj.long.startsWith('"') && !obj.long.endsWith('"'))
+                obj.long = obj.long.replace(/"/g, '\\"');
+            if (obj.long.startsWith('"'))
+                obj.long = obj.long.substr(1);
+            if (obj.long.endsWith('"'))
+                obj.long = obj.long.substr(0, obj.long.length - 1);
+            if (obj.long.length > 70) {
+                data.description = formatString(obj.long, 0, 80, ' * ', '');
+                tmp = obj.long.substr(0, 66);
+                let tl = tmp.length;
+                while (tl--) {
+                    if (tmp.charAt(tl) === ' ') {
+                        tmp.substr(0, tl);
+                        break;
+                    }
+                }
+                data.long = `"${tmp}"\n     `;
+                obj.long = obj.long.substr(tmp.length);
+                data.long += `${formatString(obj.long, 5, 73)}`;
+            }
+            else {
+                data.long = `"${obj.long}"`;
+                data.description = ' * ' + obj.long;
+            }
+        }
+
+        if (obj.nouns.length > 0) {
+            obj.nouns = obj.nouns.split(',');
+            obj.nouns = obj.nouns.map(w => {
+                w = w.trim();
+                if (!w.startsWith('"'))
+                    w = '"' + w;
+                if (!w.endsWith('"'))
+                    w += '"';
+                return w;
+            });
+            data['create body'] += '   set_nouns(' + obj.nouns.join(', ') + ');\n';
+        }
+        if (obj.adjectives.length > 0) {
+            obj.adjectives = obj.adjectives.split(',');
+            obj.adjectives = obj.adjectives.map(w => {
+                w = w.trim();
+                if (!w.startsWith('"'))
+                    w = '"' + w;
+                if (!w.endsWith('"'))
+                    w += '"';
+                return w;
+            });
+            data['create body'] += '   set_adjectives(' + obj.adjectives.join(', ') + ');\n';
+        }
+
+        if (obj.keyID.length > 0 && obj.type !== StdObjectType.chest)
+            props.push(`"key" : "${obj.keyID}"`);
+
+        if (obj.mass > 0)
+            data['create body'] += `   set_mass(${obj.mass});\n`;
+
+        if (props.length > 0) {
+            data['create body'] += '   set_properties( ([\n       ';
+            data['create body'] += props.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+
+        //add docs
+        if (data['doc'].length > 0)
+            data['doc'] = ' * @doc' + data['doc'].join('\n * @doc') + '\n';
+        else
+            data['doc'] = '';
+        if (data['help'].length > 0)
+            data['doc'] += ' * @help' + data['help'].join('\n * @help') + '\n';
+        return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'object.c'))), data);
     }
 
     private getExitId(exit, x, y, z) {
