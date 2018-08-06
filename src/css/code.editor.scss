@@ -796,6 +796,12 @@ select.property-grid-editor {
     outline: none;
 }
 
+.datagrid .property-grid-editor-collection input {
+    bottom: initial;
+    padding: 0px 4px;
+    outline: none;
+}
+
 .datagrid input.property-grid-editor, .datagrid select.property-grid-editor {
     border-right: 1px solid #f2cb7f;
 }
@@ -810,7 +816,7 @@ input[type=checkbox].property-grid-editor {
     border: 0px;
     outline: none;
     padding: 0;
-    padding-left: 1px;
+    padding-left: 3px !important;
     padding-right: 1px;
     width: 100%;
     height: 100%;
@@ -819,6 +825,7 @@ input[type=checkbox].property-grid-editor {
     text-overflow: ellipsis;
 }
 
+.property-grid-editor-collection input,
 .property-grid-editor-dropdown input,
 .property-grid-editor-dropdown-fill input,
 .property-grid-editor-flag input {
@@ -836,6 +843,7 @@ input[type=checkbox].property-grid-editor {
     word-wrap: break-word;
 }
 
+.property-grid-editor-collection,
 .property-grid-editor-dropdown,
 .property-grid-editor-dropdown-fill,
 .property-grid-editor-flag {
@@ -852,6 +860,7 @@ input[type=checkbox].property-grid-editor {
     color: black;
 }
 
+.datagrid .property-grid-editor-collection,
 .datagrid .property-grid-editor-dropdown,
 .datagrid .property-grid-editor-dropdown-fill,
 .datagrid .property-grid-editor-flag {
@@ -859,6 +868,7 @@ input[type=checkbox].property-grid-editor {
     border-right: 1px solid #f2cb7f;
 }
 
+.datagrid .property-grid-editor-collection,
 .datagrid .property-grid-editor-dropdown,
 .datagrid .property-grid-editor-flag {
     height: 22px;
@@ -873,6 +883,7 @@ input[type=checkbox].property-grid-editor {
     bottom: 0;
 }
 
+.property-grid-editor-collection button,
 .property-grid-editor-dropdown button,
 .property-grid-editor-dropdown-fill button,
 .property-grid-editor-flag button {

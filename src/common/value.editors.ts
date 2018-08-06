@@ -1090,7 +1090,7 @@ export class CollectionValueEditor extends ValueEditor {
     public create() {
         this.$el = document.createElement('div');
         this.$el.dataset.editor = 'true';
-        this.$el.classList.add('property-grid-editor-dropdown');
+        this.$el.classList.add('property-grid-editor-dropdown', 'property-grid-editor-collection');
         this.$editor = document.createElement('input');
         this.$editor.type = 'text';
         this.$editor.readOnly = true;
