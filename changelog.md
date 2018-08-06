@@ -4,7 +4,7 @@
 
 - **New:**
   - Code editor:
-    - Add go to line for code editing, edit > goto to line or ctrl+g
+    - Add go to line for code editing, edit > go to to line or ctrl+g
     - Add warning and error icons for debug/formatting errors to make it easier to see errors/warnings
     - Room wizard: added temperature property to control temperatures of room
     - Virtual area editor: Room preview long description now supports color code preview
@@ -22,7 +22,7 @@
       - Removed drop encumbered/drop combat encumbered
 - **Fixed:**
   - Code editor:
-    - Fixed formating of case statements when they use parentheses
+    - Fixed formatting of case statements when they use parentheses
     - Clear remote file name for save as... as new file has unknown remote linkage
     - Fixed bug with test button when trying to test unsaved or new files
     - Fixed indenting errors to report correct line #s
@@ -42,7 +42,7 @@
   - Fixed -c command line argument
   - Fixed error logging in low level systems
   - Fixed disconnect dialog count down timer when it is disconnects more then 3 times
-  - Advanced editor: fix bug when inserting pinkfish formated text
+  - Advanced editor: fix bug when inserting pinkfish formatted text
   - Fixed disconnect not fully disconnecting from mud
 
 ## 0.4.60 2018-07-23
