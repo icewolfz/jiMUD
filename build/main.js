@@ -15,10 +15,10 @@ const { TrayClick } = require('./js/types');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, winWho, winMap, winProfiles, winEditor, winChat, winCode;//winHelp
+let win, winWho, winMap, winProfiles, winEditor, winChat, winCode, winProgress;//winHelp
 let set, mapperMax = false, editorMax = false, chatMax = false, codeMax = false;
 let edset;
-let chatReady = false, codeReady = false, editorReady = false;
+let chatReady = false, codeReady = false, editorReady = false, progressReady = false;
 let reload = null;
 let tray = null;
 let overlay = 0;
@@ -1900,8 +1900,6 @@ ipcMain.on('open-editor', (event, file, remote, remoteEdit) => {
 });
 
 function openEditor(file, remote, remoteEdit) {
-  console.log(file);
-  console.log('CodeREady: ' + codeReady);
   if (!codeReady || !winCode) {
     setTimeout(() => {
       openEditor(file, remote, remoteEdit);
@@ -2146,6 +2144,113 @@ ipcMain.on('set-progress-window', (event, window, args) => {
   }
   else if (windows[window] && windows[window].window)
     windows[window].window.setProgressBar(args.value, args.options);
+});
+
+ipcMain.on('progress-show', (event, title) => {
+  if (winProgress != null) {
+    if (!progressReady) return;
+    winProgress.show();
+  }
+  else {
+    var sender = BrowserWindow.fromWebContents(event.sender);
+    var b = sender.getBounds();
+    winProgress = new BrowserWindow({
+      parent: sender,
+      modal: true,
+      x: Math.floor(b.x + b.width / 2 - 100),
+      y: Math.floor(b.y + b.height / 2 - 35),
+      width: 200,
+      height: 70,
+      movable: false,
+      minimizable: false,
+      maximizable: false,
+      skipTaskbar: true,
+      resizable: false,
+      frame: false,
+      title: title,
+      icon: path.join(__dirname, '../assets/icons/png/progress.png'),
+      show: false,
+    });
+    winProgress.setMenu(null);
+    winProgress.on('closed', () => {
+      winProgress = null;
+      progressReady = false;
+    });
+    winProgress.loadURL(url.format({
+      pathname: path.join(__dirname, 'progress.html'),
+      protocol: 'file:',
+      slashes: true
+    }));
+
+    if (global.debug)
+      winProgress.webContents.openDevTools();
+
+    winProgress.once('ready-to-show', () => {
+      progressReady = true;
+      winProgress.show();
+      if (typeof title === 'string')
+        setProgressTitle(title);
+      else if (title)
+        setProgress(title);
+    });
+
+    winProgress.webContents.on('crashed', (event, killed) => {
+      logError(`Progress crashed, killed: ${killed}\n`, true);
+    });
+  }
+});
+
+ipcMain.on('progress', (event, progressObj) => {
+  setProgress(progressObj);
+});
+
+ipcMain.on('progress-close', (event, progressObj) => {
+  if (winProgress)
+    winProgress.webContents.send('progress-close', progressObj);
+  setProgress({ percent: 0 });
+});
+
+function setProgress(progressObj) {
+  if (!progressReady || !winProgress)
+    setTimeout(() => setProgress(progressObj), 100);
+  else {
+    winProgress.webContents.send('progress', progressObj);
+    if (win)
+      win.setProgressBar((progressObj.value || progressObj.percent) / 100, progressObj.options);
+    else if (global.editorOnly && winCode)
+      winCode.setProgressBar((progressObj.value || progressObj.percent) / 100, progressObj.options);
+  }
+}
+
+function setProgressTitle(title) {
+  if (!progressReady || !winProgress)
+    setTimeout(() => setProgressTitle(title), 100);
+  else
+    winProgress.webContents.send('progress-title', title);
+}
+
+ipcMain.on('progress-title', (event, title) => {
+  setProgressTitle(title);
+});
+
+ipcMain.on('progress-closed', () => {
+  if (winMap)
+    winProgress.webContents.send('progress-closed');
+  if (winCode)
+    winCode.webContents.send('progress-closed');
+  if (win)
+    win.webContents.send('progress-closed');
+  setProgress({ percent: 0 });
+});
+
+ipcMain.on('progress-canceled', () => {
+  if (winMap)
+    winMap.webContents.send('progress-canceled');
+  if (winCode)
+    winCode.webContents.send('progress-canceled');
+  if (win)
+    win.webContents.send('progress-canceled');
+  setProgress({ percent: 0 });
 });
 
 ipcMain.on('show-window', (event, window, args) => {
@@ -3372,7 +3477,7 @@ function showCodeEditor(loading) {
     edset.window.show = true;
   edset.save(parseTemplate(path.join('{data}', 'editor.json')));
   if (winCode != null) {
-    if(!codeReady)
+    if (!codeReady)
       return;
     if (codeMax)
       winCode.maximize();

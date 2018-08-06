@@ -4296,6 +4296,17 @@
         return;
     };
 
+    ipcRenderer.on('progress-canceled', () => {
+        if (manager.active && manager.active.editor && manager.active.editor.cancel)
+            manager.active.editor.cancel();
+    });
+
+    ipcRenderer.on('progress-closed', () => {
+        if (manager.active && manager.active.editor && manager.active.editor.cancel)
+            manager.active.editor.cancel();
+            
+    });
+
     ipcRenderer.on('update-progress', (event, progressObj) => {
         if (!$("#update-progress")[0].open) {
             $("#update-progress-title").html("Downloading update&hellip;");
@@ -8163,15 +8174,13 @@
                     logOutput(manager.active.editor.filename + ': Indenting started');
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting started');
-                else if (type === 'designer') {
-                    showProgressDialog('Generating area&hellip;');
-                }
+                else if (type === 'designer')
+                    ipcRenderer.send('progress-show', 'Generating area&hellip;');
             });
             p.editor.on('progress', (pObject) => {
                 if (!pObject) return;
-                if (pObject.type === 'designer') {
-                    setProgressDialogValue(pObject.percent, pObject.title);
-                }
+                if (pObject.type === 'designer')
+                    ipcRenderer.send('progress', pObject);
             });
             p.editor.on('progress-complete', (type) => {
                 if (type === 'indent')
@@ -8179,7 +8188,7 @@
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting finished');
                 else if (type === 'designer')
-                    closeProgressDialog();
+                    ipcRenderer.send('progress-close');
             });
             p.editor.on('output', (msg) => {
                 logOutput(msg, true);

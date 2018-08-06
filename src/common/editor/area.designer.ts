@@ -801,7 +801,7 @@ export class AreaDesigner extends EditorBase {
     private $undoGroup;
     private $redoGroup;
     private $new = { baseRooms: 0, baseMonsters: 0, objects: 0, monsters: 0 };
-
+    private $cancel = false;
     private $label: HTMLElement;
     private $splitterPreview: Splitter;
     private $splitterEditor: Splitter;
@@ -7073,7 +7073,12 @@ export class AreaDesigner extends EditorBase {
         }
     }
 
+    public cancel() {
+        this.$cancel = true;
+    }
+
     public close() {
+        this.$cancel = true;
         const root = path.dirname(this.file);
         this.emit('watch-stop', [root, this.file]);
         window.removeEventListener('mousemove', this._wMove);
@@ -8747,114 +8752,153 @@ export class AreaDesigner extends EditorBase {
     public generateCode(p, data) {
         if (!p) return;
         this.emit('progress-start', 'designer');
-        const files = {};
-        data = data || {};
-        this.emit('progress', { type: 'designer', percent: 0, title: 'Generating file names&hellip;' });
-        //#region Generate file names
-        let counts = {};
-        //generate monster names, count in case they have the same name and store based on unique id for lookup in code generate
-        Object.keys(this.$area.monsters).forEach(m => {
-            const name = this.$area.monsters[m].name.replace(/ /g, '_').toLowerCase();
-            if (!counts[name])
-                counts[name] = 1;
-            else
-                counts[name]++;
-            if (counts[name] === 1)
-                files[m] = name;
-            else
-                files[m] = name + counts[name];
-        });
-        //generate object names, count in case they have the same name and store based on unique id for lookup in code generate
-        counts = {};
-        Object.keys(this.$area.objects).forEach(m => {
-            const name = stripPinkfish(this.$area.objects[m].name).replace(/ /g, '_').toLowerCase();
-            if (!counts[name])
-                counts[name] = 1;
-            else
-                counts[name]++;
-            if (counts[name] === 1)
-                files[m] = name;
-            else
-                files[m] = name + counts[name];
-        });
-        //generate room names and assign to x/y/z as if rooms are empty they will be skipped
-        counts = {};
-        const zl = this.$area.size.depth;
-        const xl = this.$area.size.width;
-        const yl = this.$area.size.height;
-        for (let z = 0; z < zl; z++) {
-            for (let y = 0; y < yl; y++) {
-                for (let x = 0; x < xl; x++) {
-                    const r = this.$area.rooms[z][y][x];
-                    if (r.empty) continue;
-                    const name = (r.subArea && r.subArea.length > 0 ? r.subArea : data.area).toLowerCase();
-                    if (!counts[name])
-                        counts[name] = 1;
-                    else
-                        counts[name]++;
-                    files[`${x},${y},${z}`] = name + counts[name];
+        this.$cancel = false;
+        try {
+            const files = {};
+            data = data || {};
+            if (this.$cancel)
+                throw new Error('Canceled');
+            this.emit('progress', { type: 'designer', percent: 0, title: 'Generating file names&hellip;' });
+            //#region Generate file names
+            let counts = {};
+            //generate monster names, count in case they have the same name and store based on unique id for lookup in code generate
+            Object.keys(this.$area.monsters).forEach(m => {
+                if (this.$cancel)
+                    throw new Error('Canceled');
+                const name = this.$area.monsters[m].name.replace(/ /g, '_').toLowerCase();
+                if (!counts[name])
+                    counts[name] = 1;
+                else
+                    counts[name]++;
+                if (counts[name] === 1)
+                    files[m] = name;
+                else
+                    files[m] = name + counts[name];
+            });
+            if (this.$cancel)
+                throw new Error('Canceled');
+            //generate object names, count in case they have the same name and store based on unique id for lookup in code generate
+            counts = {};
+            Object.keys(this.$area.objects).forEach(m => {
+                if (this.$cancel)
+                    throw new Error('Canceled');
+                const name = stripPinkfish(this.$area.objects[m].name).replace(/ /g, '_').toLowerCase();
+                if (!counts[name])
+                    counts[name] = 1;
+                else
+                    counts[name]++;
+                if (counts[name] === 1)
+                    files[m] = name;
+                else
+                    files[m] = name + counts[name];
+            });
+            if (this.$cancel)
+                throw new Error('Canceled');
+            //generate room names and assign to x/y/z as if rooms are empty they will be skipped
+            counts = {};
+            const zl = this.$area.size.depth;
+            const xl = this.$area.size.width;
+            const yl = this.$area.size.height;
+            for (let z = 0; z < zl; z++) {
+                for (let y = 0; y < yl; y++) {
+                    for (let x = 0; x < xl; x++) {
+                        if (this.$cancel)
+                            throw new Error('Canceled');
+                        const r = this.$area.rooms[z][y][x];
+                        if (r.empty) continue;
+                        const name = (r.subArea && r.subArea.length > 0 ? r.subArea : data.area).toLowerCase();
+                        if (!counts[name])
+                            counts[name] = 1;
+                        else
+                            counts[name]++;
+                        files[`${x},${y},${z}`] = name + counts[name];
+                    }
                 }
             }
-        }
-        Object.keys(this.$area.baseRooms).forEach(r => files[r + 'room'] = r.replace(/ /g, '_').toUpperCase() + 'ROOM');
-        Object.keys(this.$area.baseMonsters).forEach(r => files[r + 'monster'] = r.replace(/ /g, '_').toUpperCase() + 'MONSTER');
-        //#endregion
-        this.emit('progress', { type: 'designer', percent: 10, title: 'Creating paths&hellip;' });
-        //create paths
-        fs.mkdirSync(p);
-        fs.mkdirSync(path.join(p, 'obj'));
-        fs.mkdirSync(path.join(p, 'mon'));
-        fs.mkdirSync(path.join(p, 'std'));
-        this.emit('progress', { type: 'designer', percent: 20, title: 'Creating base files' });
-        //Generate area.h
-        const template = copy(data);
-        const templePath = parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer'));
-        template['area post'] = '\n';
-        template['doc'] = '';
-        let value = fs.readFileSync(path.join(templePath, 'area.h'), 'utf8');
-        template['area post'] += '//Define base room inherits\n';
-        Object.keys(this.$area.baseRooms).forEach(r => template['area post'] += `#define ${files[r + 'room']} (STD + "${files[r + 'room'].toLowerCase()}")\n`);
-        template['area post'] += '//Define base monster inherits\n';
-        Object.keys(this.$area.baseMonsters).forEach(r => template['area post'] += `#define ${files[r + 'monster']} (STD + "${files[r + 'monster'].toLowerCase()}")\n`);
+            Object.keys(this.$area.baseRooms).forEach(r => files[r + 'room'] = r.replace(/ /g, '_').toUpperCase() + 'ROOM');
+            Object.keys(this.$area.baseMonsters).forEach(r => files[r + 'monster'] = r.replace(/ /g, '_').toUpperCase() + 'MONSTER');
+            if (this.$cancel)
+                throw new Error('Canceled');
+            //#endregion
+            this.emit('progress', { type: 'designer', percent: 10, title: 'Creating paths&hellip;' });
+            //create paths
+            fs.mkdirSync(p);
+            fs.mkdirSync(path.join(p, 'obj'));
+            fs.mkdirSync(path.join(p, 'mon'));
+            fs.mkdirSync(path.join(p, 'std'));
+            if (this.$cancel)
+                throw new Error('Canceled');
+            this.emit('progress', { type: 'designer', percent: 20, title: 'Creating base files' });
+            //Generate area.h
+            const template = copy(data);
+            const templePath = parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer'));
+            template['area post'] = '\n';
+            template['doc'] = '';
+            let value = fs.readFileSync(path.join(templePath, 'area.h'), 'utf8');
+            template['area post'] += '//Define base room inherits\n';
+            Object.keys(this.$area.baseRooms).forEach(r => template['area post'] += `#define ${files[r + 'room']} (STD + "${files[r + 'room'].toLowerCase()}")\n`);
+            template['area post'] += '//Define base monster inherits\n';
+            Object.keys(this.$area.baseMonsters).forEach(r => template['area post'] += `#define ${files[r + 'monster']} (STD + "${files[r + 'monster'].toLowerCase()}")\n`);
 
-        const temp = Object.keys(this.$area.baseMonsters).filter(r => this.$area.baseMonsters[r].maxAmount > 0);
-        if (temp.length > 0) {
-            template['area post'] += '//Define monster maxes\n';
-            temp.forEach(r => template['area post'] += `#define MAX${r.replace(/ /g, '_').toUpperCase()} ${this.$area.baseMonsters[r].maxAmount}\n`);
-        }
-        value = this.parseFileTemplate(value, template);
-        this.write(value, path.join(p, 'area.h'));
-        //Generate base rooms
-        this.emit('progress', { type: 'designer', percent: 24, title: 'Creating base files&hellip;' });
-        Object.keys(this.$area.baseRooms).forEach(r => this.write(this.generateRoomCode(this.$area.baseRooms[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'room'].toLowerCase() + '.c')));
-        //generate base monsters
-        this.emit('progress', { type: 'designer', percent: 28, title: 'Creating base files&hellip;' });
-        Object.keys(this.$area.baseMonsters).forEach(r => this.write(this.generateMonsterCode(this.$area.baseMonsters[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'monster'].toLowerCase() + '.c')));
-        //generate monsters
-        this.emit('progress', { type: 'designer', percent: 30, title: 'Creating monster files&hellip;' });
-        Object.keys(this.$area.monsters).forEach(r => this.write(this.generateMonsterCode(this.$area.monsters[r].clone(), files, copy(data)), path.join(p, 'mon', files[r] + '.c')));
-        //generate objects
-        this.emit('progress', { type: 'designer', percent: 40, title: 'Creating object files&hellip;' });
-        Object.keys(this.$area.objects).forEach(r => this.write(this.generateObjectCode(this.$area.objects[r].clone(), files, copy(data)), path.join(p, 'obj', files[r] + '.c')));
-        this.emit('progress', { type: 'designer', percent: 50, title: 'Creating room files&hellip;' });
-        //generate rooms
-        let count = 0;
-        for (let z = 0; z < zl; z++) {
-            for (let y = 0; y < yl; y++) {
-                for (let x = 0; x < xl; x++) {
-                    const r = this.$area.rooms[z][y][x];
-                    if (r.empty) continue;
-                    this.write(this.generateRoomCode(r.clone(), files, copy(data)), path.join(p, files[`${r.x},${r.y},${r.z}`] + '.c'));
-                    count++;
-                    this.emit('progress', { type: 'designer', percent: 50 + Math.round(50 * count / this.$roomCount) });
+            const temp = Object.keys(this.$area.baseMonsters).filter(r => this.$area.baseMonsters[r].maxAmount > 0);
+            if (this.$cancel)
+                throw new Error('Canceled');
+            if (temp.length > 0) {
+                template['area post'] += '//Define monster maxes\n';
+                temp.forEach(r => template['area post'] += `#define MAX${r.replace(/ /g, '_').toUpperCase()} ${this.$area.baseMonsters[r].maxAmount}\n`);
+            }
+            value = this.parseFileTemplate(value, template);
+            this.write(value, path.join(p, 'area.h'));
+            //Generate base rooms
+            if (this.$cancel)
+                throw new Error('Canceled');
+            this.emit('progress', { type: 'designer', percent: 24, title: 'Creating base files&hellip;' });
+            Object.keys(this.$area.baseRooms).forEach(r => this.write(this.generateRoomCode(this.$area.baseRooms[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'room'].toLowerCase() + '.c')));
+            //generate base monsters
+            if (this.$cancel)
+                throw new Error('Canceled');
+            this.emit('progress', { type: 'designer', percent: 28, title: 'Creating base files&hellip;' });
+            Object.keys(this.$area.baseMonsters).forEach(r => this.write(this.generateMonsterCode(this.$area.baseMonsters[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'monster'].toLowerCase() + '.c')));
+            //generate monsters
+            if (this.$cancel)
+                throw new Error('Canceled');
+            this.emit('progress', { type: 'designer', percent: 30, title: 'Creating monster files&hellip;' });
+            Object.keys(this.$area.monsters).forEach(r => this.write(this.generateMonsterCode(this.$area.monsters[r].clone(), files, copy(data)), path.join(p, 'mon', files[r] + '.c')));
+            //generate objects
+            if (this.$cancel)
+                throw new Error('Canceled');
+            this.emit('progress', { type: 'designer', percent: 40, title: 'Creating object files&hellip;' });
+            Object.keys(this.$area.objects).forEach(r => this.write(this.generateObjectCode(this.$area.objects[r].clone(), files, copy(data)), path.join(p, 'obj', files[r] + '.c')));
+            this.emit('progress', { type: 'designer', percent: 50, title: 'Creating room files&hellip;' });
+            //generate rooms
+            let count = 0;
+            for (let z = 0; z < zl; z++) {
+                for (let y = 0; y < yl; y++) {
+                    for (let x = 0; x < xl; x++) {
+                        if (this.$cancel)
+                            throw new Error('Canceled');
+                        const r = this.$area.rooms[z][y][x];
+                        if (r.empty) continue;
+                        this.write(this.generateRoomCode(r.clone(), files, copy(data)), path.join(p, files[`${r.x},${r.y},${r.z}`] + '.c'));
+                        count++;
+                        this.emit('progress', { type: 'designer', percent: 50 + Math.round(50 * count / this.$roomCount) });
+                    }
                 }
             }
+            this.emit('progress-complete', 'designer');
         }
-        this.emit('progress-complete', 'designer');
+        catch (err) {
+            if (typeof err === 'string' && err === 'Canceled')
+                this.emit('progress-canceled', 'designer');
+            else if (err && err.message === 'Canceled')
+                this.emit('progress-canceled', 'designer');
+        }
     }
 
     public generateRoomCode(room: Room, files, data, baseRoom?) {
         if (!room) return '';
+        if (this.$cancel)
+            throw new Error('Canceled');
         files = files || {};
         let tmp;
         let tmp2;
@@ -9557,6 +9601,8 @@ export class AreaDesigner extends EditorBase {
 
     public generateMonsterCode(monster, files, data, baseMonster?) {
         if (!monster) return '';
+        if (this.$cancel)
+            throw new Error('Canceled');
         files = files || {};
         data.doc = [];
         data.includes = '';
@@ -10060,6 +10106,8 @@ export class AreaDesigner extends EditorBase {
 
     public generateObjectCode(obj, files, data) {
         if (!obj) return '';
+        if (this.$cancel)
+            throw new Error('Canceled');
         let tmp;
         let tmp2;
         let tmp3;
