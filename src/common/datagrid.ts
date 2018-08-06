@@ -1044,7 +1044,7 @@ export class DataGrid extends EventEmitter {
         value = value || [];
         this.$rows = value;
         this.emit('rows-changed');
-        this.doUpdate(UpdateType.rows | UpdateType.sort);
+        this.doUpdate(UpdateType.buildRows | UpdateType.sort);
     }
     get columns() { return this.$cols.slice(0); }
     set columns(cols) {
