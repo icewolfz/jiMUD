@@ -1481,8 +1481,11 @@ export class SelectValueEditor extends ValueEditor {
     public openAdvanced() { /**/ }
 
     get value() {
-        if (this.options && Array.isArray(this.options.data))
+        if (this.options && Array.isArray(this.options.data)) {
+            if (this.options.data.length > 0 && typeof this.options.data[0][this.options.value || 'value'] === 'number')
+                return +this.$el.value;
             return this.$el.value;
+        }
         if (this.options && typeof this.options.data === 'object')
             return +this.$el.value;
         return this.$el.value;
