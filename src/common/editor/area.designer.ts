@@ -429,7 +429,7 @@ class Monster {
     public askTopics: MonsterTopic[] = [];
 
     public reputationGroup: string = '';
-    public reputation: MonsterReputation[] = [];
+    public reputations: MonsterReputation[] = [];
 
     constructor(id?, data?, type?) {
         if (typeof id === 'string') {
@@ -530,11 +530,12 @@ class Monster {
         this.reactions = [];
         this.objects = [];
         this.askTopics = [];
-        this.reputation = [];
+        this.reputations = [];
     }
 }
 
 //TODO add food, drink, weapon/armor bonuses, maybe ore bonuses?
+//TODO add armour damage systems
 /*
 food
     strength - number
@@ -555,8 +556,22 @@ drink
 weapon/armor/material/ore bonuses
     data grid
         type - stat, resistance, skill, property, see about capturing the change event to add a custom value drop down, maybe a global list with main/subs?
-        adjust - the stat/resistrance/skill name
+        adjust - the stat/resistance/skill name
         amount - the amount to adjust or set
+
+armor damage systems
+    datagrid for each?
+        limbs
+        description
+    or 1 for all wit ha Type column
+        type - name/short/long/nouns/adj
+        limbs - limbs missing
+        description
+    name - missing limbs, description
+    short - missing limbs, description
+    long - missing limbs, description
+    nouns - missing limbs, nouns
+    adjectives - missing limbs, adjectives
 */
 enum StdObjectType {
     object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument
@@ -5395,7 +5410,6 @@ export class AreaDesigner extends EditorBase {
                                     }));
                                     break;
                                 case StdObjectType.armor:
-                                    //TODO add armour damage systems
                                     wiz.title = 'Edit armor...';
                                     //type, quality, limbs, enchantment
                                     wiz.addPages(new WizardPage({
@@ -5440,7 +5454,7 @@ export class AreaDesigner extends EditorBase {
                                     break;
                                 case StdObjectType.chest:
                                     wiz.defaults = {
-                                        'obj-contents': ed.value.contents || [],
+                                        'obj-contents': copy(ed.value.contents) || [],
                                         'obj-blockers': ''
                                     };
                                     wiz.title = 'Edit chest...';
@@ -5468,6 +5482,7 @@ export class AreaDesigner extends EditorBase {
                                                 width: 150,
                                                 formatter: (data) => {
                                                     if (!data) return '';
+                                                    data.cell = +data.cell;
                                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                                         return stripPinkfish(this.$area.objects[data.cell].short);
                                                     switch (data.cell) {
@@ -5494,6 +5509,7 @@ export class AreaDesigner extends EditorBase {
                                                 },
                                                 tooltipFormatter: (data) => {
                                                     if (!data) return '';
+                                                    data.cell = +data.cell;
                                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                                         return this.$area.objects[data.cell].short;
                                                     switch (data.cell) {
@@ -5564,7 +5580,7 @@ export class AreaDesigner extends EditorBase {
                                         ],
                                         add: (e) => {
                                             e.data = {
-                                                item: '',
+                                                item: 0,
                                                 minAmount: 0,
                                                 maxAmount: 0,
                                                 random: 0
@@ -5612,7 +5628,6 @@ export class AreaDesigner extends EditorBase {
                                     }));
                                     break;
                                 case StdObjectType.ore:
-                                    //TODO add bonuses
                                     wiz.title = 'Edit ore...';
                                     //size, quality, bonuses?
                                     wiz.addPages(new WizardPage({
@@ -5707,7 +5722,6 @@ export class AreaDesigner extends EditorBase {
                                     }));
                                     break;
                                 case StdObjectType.weapon:
-                                    //TODO add bonus systems
                                     wiz.title = 'Edit weapon...';
                                     //type, quality, enchantment
                                     //cSpell:disable
@@ -8350,7 +8364,7 @@ export class AreaDesigner extends EditorBase {
             this.$roomPreview.objects.textContent = '';
         }
         else {
-            const base = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
+            const base: Room = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
 
             this.$roomPreview.short.textContent = room.short || base.short;
             this.$roomPreview.long.textContent = room.long || base.short;
@@ -8513,7 +8527,7 @@ export class AreaDesigner extends EditorBase {
                 this.$roomPreview.objects.style.display = '';
                 if (counts[items[0]] === 1)
                     this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(items[0])) + ' are here.';
-                else
+                else if (counts[items[0]] > 1)
                     this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(consolidate(counts[items[0]], items[0]))) + ' is here.';
             }
             else if (items.length > 0) {
@@ -8812,16 +8826,16 @@ export class AreaDesigner extends EditorBase {
         this.write(value, path.join(p, 'area.h'));
         //Generate base rooms
         this.emit('progress', { type: 'designer', percent: 24, title: 'Creating base files&hellip;' });
-        Object.keys(this.$area.baseRooms).forEach(r => this.write(this.generateRoomCode(this.$area.baseRooms[r], files, copy(data), true), path.join(p, 'std', files[r + 'room'].toLowerCase() + '.c')));
+        Object.keys(this.$area.baseRooms).forEach(r => this.write(this.generateRoomCode(this.$area.baseRooms[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'room'].toLowerCase() + '.c')));
         //generate base monsters
         this.emit('progress', { type: 'designer', percent: 28, title: 'Creating base files&hellip;' });
-        Object.keys(this.$area.baseMonsters).forEach(r => this.write(this.generateMonsterCode(this.$area.baseMonsters[r], files, copy(data), true), path.join(p, 'std', files[r + 'monster'].toLowerCase() + '.c')));
+        Object.keys(this.$area.baseMonsters).forEach(r => this.write(this.generateMonsterCode(this.$area.baseMonsters[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'monster'].toLowerCase() + '.c')));
         //generate monsters
         this.emit('progress', { type: 'designer', percent: 30, title: 'Creating monster files&hellip;' });
-        Object.keys(this.$area.monsters).forEach(r => this.write(this.generateMonsterCode(this.$area.monsters[r], files, copy(data)), path.join(p, 'mon', files[r] + '.c')));
+        Object.keys(this.$area.monsters).forEach(r => this.write(this.generateMonsterCode(this.$area.monsters[r].clone(), files, copy(data)), path.join(p, 'mon', files[r] + '.c')));
         //generate objects
         this.emit('progress', { type: 'designer', percent: 40, title: 'Creating object files&hellip;' });
-        Object.keys(this.$area.objects).forEach(r => this.write(this.generateObjectCode(this.$area.objects[r], files, copy(data)), path.join(p, 'obj', files[r] + '.c')));
+        Object.keys(this.$area.objects).forEach(r => this.write(this.generateObjectCode(this.$area.objects[r].clone(), files, copy(data)), path.join(p, 'obj', files[r] + '.c')));
         this.emit('progress', { type: 'designer', percent: 50, title: 'Creating room files&hellip;' });
         //generate rooms
         let count = 0;
@@ -8830,7 +8844,7 @@ export class AreaDesigner extends EditorBase {
                 for (let x = 0; x < xl; x++) {
                     const r = this.$area.rooms[z][y][x];
                     if (r.empty) continue;
-                    this.write(this.generateRoomCode(r, files, copy(data)), path.join(p, files[`${r.x},${r.y},${r.z}`] + '.c'));
+                    this.write(this.generateRoomCode(r.clone(), files, copy(data)), path.join(p, files[`${r.x},${r.y},${r.z}`] + '.c'));
                     count++;
                     this.emit('progress', { type: 'designer', percent: 50 + Math.round(50 * count / this.$roomCount) });
                 }
@@ -8858,8 +8872,10 @@ export class AreaDesigner extends EditorBase {
         data['create arguments'] = '';
         data['reset body'] = '';
         data['reset post'] = '';
-        const base = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
-        if (baseRoom && (room.forage !== base.forage || doors.length > 0 || room.objects.length !== 0 || room.monsters.length !== 0)) {
+        const base: Room = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
+        tmp2 = room.objects.filter(o => this.$area.objects[o.id] && (o.minAmount > 0 || o.unique));
+        tmp3 = room.monsters.filter(o => this.$area.monsters[o.id] && (o.minAmount > 0 || o.unique));
+        if (baseRoom && (room.forage !== base.forage || doors.length > 0 || tmp2.length !== 0 || tmp3.length !== 0)) {
             data['reset body'] += '\n';
             if (room.forage !== base.forage)
                 data['reset body'] += `   set_property('forage', ${room.forage});\n`;
@@ -8867,7 +8883,6 @@ export class AreaDesigner extends EditorBase {
                 data['reset body'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
                 data['reset body'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
             });
-            tmp2 = room.objects.filter(o => this.$area.objects[o.id]);
             if (tmp2.length !== 0) {
                 data['reset body'] += '   if(!query_property("no clone objects"))\n   {\n';
                 tmp2.forEach(o => {
@@ -8882,15 +8897,14 @@ export class AreaDesigner extends EditorBase {
                         data['reset body'] += `      if(random(${o.random}) <= random(101))\n   `;
                     data['reset body'] += tmp;
                 });
-                if (tmp2.filter(o => this.$area.objects[o.id].type === StdObjectType.chest).length !== 0)
-                    data['create post'] += '      filter(query_item_contents(), (: $1->is_chest() :))->reset_chest();\n';
+                if (tmp2.filter(o => this.$area.objects[o.id].type === StdObjectType.chest && (o.minAmount > 0 || o.unique)).length !== 0)
+                    data['reset body'] += '      filter(query_item_contents(), (: $1->is_chest() :))->reset_chest();\n';
                 data['reset body'] += '   }\n';
             }
 
-            tmp2 = room.monsters.filter(o => this.$area.monsters[o.id]);
-            if (tmp2.length !== 0) {
+            if (tmp3.length !== 0) {
                 data['reset body'] += `   //Perform a probably check to allow disabling of default monsters\n   if(query_property("no clone monsters"))\n      return;\n   // If monsters already in room do not create more\n   if(sizeof(filter(query_living_contents(), (: $1->is_${data.area}_monster() :) )))\n      return;\n`;
-                tmp2.forEach(o => {
+                tmp3.forEach(o => {
                     const mon = this.$area.monsters[o.id];
                     if (!mon) return;
                     let max = '';
@@ -8918,7 +8932,7 @@ export class AreaDesigner extends EditorBase {
                 });
             }
         }
-        else if (!baseRoom && (room.forage !== base.forage || doors.length > 0 || room.objects.length !== 0 || room.monsters.length !== 0)) {
+        else if (!baseRoom && (room.forage !== base.forage || doors.length > 0 || tmp2.length !== 0 || tmp3.length !== 0)) {
             data['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
             if (room.forage !== base.forage)
                 data['create post'] += `   set_property('forage', ${room.forage});\n`;
@@ -8926,7 +8940,6 @@ export class AreaDesigner extends EditorBase {
                 data['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
                 data['create post'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
             });
-            tmp2 = room.objects.filter(o => this.$area.objects[o.id]);
             if (tmp2.length !== 0) {
                 tmp2.forEach(o => {
                     tmp = '';
@@ -8940,12 +8953,11 @@ export class AreaDesigner extends EditorBase {
                         data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
                     data['create post'] += tmp;
                 });
-                if (tmp2.filter(o => this.$area.objects[o.id].type === StdObjectType.chest).length !== 0)
+                if (tmp2.filter(o => this.$area.objects[o.id].type === StdObjectType.chest && (o.minAmount > 0 || o.unique)).length !== 0)
                     data['create post'] += '   filter(query_item_contents(), (: $1->is_chest() :))->reset_chest();\n';
             }
-            tmp2 = room.monsters.filter(o => this.$area.monsters[o.id]);
-            if (tmp2.length !== 0) {
-                tmp2.forEach(o => {
+            if (tmp3.length !== 0) {
+                tmp3.forEach(o => {
                     const mon = this.$area.monsters[o.id];
                     if (!mon) return;
                     let max = '';
@@ -9473,7 +9485,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += '\n     ]) );\n';
         }
         //searches
-        tmp4 = base.sounds.map(s => s.search);
+        tmp4 = base.searches.map(s => s.search);
         tmp = room.searches.map(i => {
             const idx = tmp4.indexOf(i.search);
             if (idx !== -1 && base.searches[idx].message === i.message)
@@ -9530,11 +9542,11 @@ export class AreaDesigner extends EditorBase {
 
         //add docs
         if (data['doc'].length > 0)
-            data['doc'] = ' * @doc' + data['doc'].join('\n * @doc') + '\n';
+            data['doc'] = ' * @doc ' + data['doc'].join('\n * @doc ') + '\n';
         else
             data['doc'] = '';
-        if (room.notes.length > 0) {
-            if (data.description.lenth !== 0)
+        if (room.notes.length !== 0) {
+            if (data.description.length !== 0)
                 data.description += '\n';
             data.description += ' * ' + room.notes.split('\n').join('\n * ') + '\n';
         }
@@ -9556,7 +9568,7 @@ export class AreaDesigner extends EditorBase {
         data['create arguments comment'] = '';
 
         let tmp;
-        const base = this.$area.baseRooms[monster.type] || new Monster();
+        const base: Monster = this.$area.baseMonsters[monster.type] || new Monster();
 
         data.inherit = files[monster.type + 'monster'] || monster.type;
         data.inherits = '';
@@ -9716,9 +9728,9 @@ export class AreaDesigner extends EditorBase {
             }
         }
         else {
-            monster.description = monster.long.trim();
-            if (monster.description.startsWith('(:')) {
-                data.description = formatFunctionPointer(monster.description).substr(2);
+            data.description = monster.long.trim();
+            if (data.description.startsWith('(:')) {
+                data.description = formatFunctionPointer(data.description).substr(2);
                 if (data.description.endsWith(':)'))
                     data.description = data.description.substr(0, data.description.length - 2);
                 data.description = data.description.trim();
@@ -9735,7 +9747,7 @@ export class AreaDesigner extends EditorBase {
             }
         }
         if (monster.nouns !== base.nouns) {
-            monster.nouns = monster.nouns.split(',');
+            monster.nouns = (monster.nouns || '').split(',');
             monster.nouns = monster.nouns.map(w => {
                 w = w.trim();
                 if (!w.startsWith('"'))
@@ -9747,7 +9759,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += '   set_nouns(' + monster.nouns.join(', ') + ');\n';
         }
         if (monster.adjectives !== base.adjectives) {
-            monster.adjectives = monster.adjectives.split(',');
+            monster.adjectives = (monster.adjectives || '').split(',');
             monster.adjectives = monster.adjectives.map(w => {
                 w = w.trim();
                 if (!w.startsWith('"'))
@@ -9825,7 +9837,7 @@ export class AreaDesigner extends EditorBase {
         else if (monster.speed !== base.speed)
             data['create body'] += `   set_speed(${monster.speed}); //Set speed\n`;
 
-        if (monster.noWalkRooms !== base.noWalkrooms)
+        if (monster.noWalkRooms !== base.noWalkRooms)
             data['create body'] += `   set_no_walk(${formatArgumentList(monster.noWalkRooms, 63, 0, 0, true)}); //Set no walk rooms\n`;
         if (monster.attackCommandChance !== base.attackCommandChance)
             data['create body'] += `   set_spell_chance(${monster.attackCommandChance}); //Set the chance an attack command will be used\n`;
@@ -9858,25 +9870,26 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_auto_loot_delay(${monster.autoLoot.time});`;
         if (monster.autoDrop.enabled && !base.autoDrop.enabled)
             data['create body'] += `   set_auto_wear(1);`;
-        if (monster.ed.value.autoWear.time !== base.autoWear.time)
-            data['create body'] += `   set_auto_wear_delay(${monster.ed.value.autoWear.time});`;
+        if (monster.autoWear.time !== base.autoWear.time)
+            data['create body'] += `   set_auto_wear_delay(${monster.autoWear.time});`;
         if (monster.wimpy !== base.wimpy)
             data['create body'] += `   set_wimpy(${monster.wimpy});`;
 
         if ((monster.flags & MonsterFlags.Auto_Stand) !== MonsterFlags.Auto_Stand && (base.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand)
             data['create body'] += `   set_auto_stand(0);`;
 
-        tmp = monster.reactions.filter(r => r.reaction.length > 0);
-        if (tmp.length === 1)
-            data['create body'] += `   set_reaction("${tmp[0].type.length > 0 ? tmp[0].type + ' ' : ''}${tmp[0].reaction}", "${tmp[0].action}");\n`;
-        else if (tmp.length > 1) {
-            data['create body'] += '   set_reactions( ([\n';
-            tmp.forEach(r => {
-                data['create body'] += `       "${r.type.length > 0 ? r.type + ' ' : ''}${r.reaction}" : "${r.action}"\n`;
-            });
-            data['create body'] += '\n     ]) );\n';
+        if (monster.reactions && monster.reactions.length !== 0) {
+            tmp = monster.reactions.filter(r => r.reaction.length > 0);
+            if (tmp.length === 1)
+                data['create body'] += `   set_reaction("${tmp[0].type.length > 0 ? tmp[0].type + ' ' : ''}${tmp[0].reaction}", "${tmp[0].action}");\n`;
+            else if (tmp.length > 1) {
+                data['create body'] += '   set_reactions( ([\n';
+                tmp.forEach(r => {
+                    data['create body'] += `       "${r.type.length > 0 ? r.type + ' ' : ''}${r.reaction}" : "${r.action}"\n`;
+                });
+                data['create body'] += '\n     ]) );\n';
+            }
         }
-
         if (monster.tracking && !base.tracking)
             data['create body'] += `   set_track_attackers(1);\n`;
         if (monster.trackingMessage !== base.trackingMessage)
@@ -9966,31 +9979,33 @@ export class AreaDesigner extends EditorBase {
         if (monster.reputationGroup !== base.reputationGroup)
             data['create body'] += `   set_reputation_area("${monster.reputationGroup.trim()}");\n`;
 
-        tmp4 = base.reputations.map(r => `${r.type}${r.group}${r.amount}`);
-        monster.reputations.forEach(r => {
-            const idx = tmp.indexOf(`${r.type}${r.group}${r.amount}`);
-            if (idx !== -1 || !r.amount) return;
-            r.amount.trim();
-            if (r.amount.length === 0 || r.amount === '0') return;
-            const fun = r.type === 1 ? 'ondie' : 'onattack';
-            r.group = r.group.trim();
-            if (r.group.length !== 0 && !r.group.startsWith('"') && !r.group.endsWith('"'))
-                r.group = `"${r.group.replace(/"/g, '\\"')}", `;
-            else if (r.group.length !== 0)
-                r.group = `${r.group}, `;
+        if (monster.reputations && monster.reputations.length > 0) {
+            tmp4 = (base.reputations || []).map(r => `${r.type}${r.group}${r.amount}`);
+            monster.reputations.forEach(r => {
+                const idx = tmp.indexOf(`${r.type}${r.group}${r.amount}`);
+                if (idx !== -1 || !r.amount) return;
+                r.amount.trim();
+                if (r.amount.length === 0 || r.amount === '0') return;
+                const fun = r.type === 1 ? 'ondie' : 'onattack';
+                r.group = r.group.trim();
+                if (r.group.length !== 0 && !r.group.startsWith('"') && !r.group.endsWith('"'))
+                    r.group = `"${r.group.replace(/"/g, '\\"')}", `;
+                else if (r.group.length !== 0)
+                    r.group = `${r.group}, `;
 
-            if (typeof r.amount === 'string' && parseFloat(r.amount).toString() === r.amount)
-                data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});\n`;
-            else if (r.amount.startsWith('(:')) {
-                tmp3 = formatFunctionPointer(r.amount);
-                data['create body'] += `   set_reputation_${fun}(${r.group}${tmp3});`;
-                data['create pre'] += createFunction(tmp3, 'string', 'object monster, object killer');
-            }
-            else if (!r.amount.startsWith('"') && !r.amount.endsWith('"'))
-                data['create body'] += `   set_reputation_${fun}(${r.group}"${r.amount}");`;
-            else
-                data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});`;
-        });
+                if (typeof r.amount === 'string' && parseFloat(r.amount).toString() === r.amount)
+                    data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});\n`;
+                else if (r.amount.startsWith('(:')) {
+                    tmp3 = formatFunctionPointer(r.amount);
+                    data['create body'] += `   set_reputation_${fun}(${r.group}${tmp3});`;
+                    data['create pre'] += createFunction(tmp3, 'string', 'object monster, object killer');
+                }
+                else if (!r.amount.startsWith('"') && !r.amount.endsWith('"'))
+                    data['create body'] += `   set_reputation_${fun}(${r.group}"${r.amount}");`;
+                else
+                    data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});`;
+            });
+        }
         if (monster.noBaseObjects && !base.noBaseObjects)
             data['create pre inherit'] += '   set_property("no objects", 1);\n';
 
@@ -10030,11 +10045,11 @@ export class AreaDesigner extends EditorBase {
             });
         }
         if (data['doc'].length > 0)
-            data['doc'] = ' * @doc' + data['doc'].join('\n * @doc') + '\n';
+            data['doc'] = ' * @doc ' + data['doc'].join('\n * @doc ') + '\n';
         else
             data['doc'] = '';
-        if (monster.notes.length > 0) {
-            if (data.description.lenth !== 0)
+        if (monster.notes.length !== 0) {
+            if (data.description.length !== 0)
                 data.description += '\n';
             data.description += ' * ' + monster.notes.split('\n').join('\n * ') + '\n';
         }
@@ -10073,14 +10088,14 @@ export class AreaDesigner extends EditorBase {
                 data.includes += '\n#include <limbs.h>';
                 data['create arguments'] = `"${obj.subType || 'accessory'}", "${obj.material || 'iron'}", "${obj.quality || 'average'}", `;
                 data['create arguments comment'] = '//Type, Material, Quality, Limbs';
-                tmp = obj.limbs || 'torso';
+                tmp = (obj.limbs || 'torso').split(',').map(l => l.trim());
                 tmp2 = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) === -1);
                 tmp = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) !== -1);
                 tmp = tmp.map(l => {
-                    return l.trim().replace(/ /g, '').toUpperCase();
+                    return l.replace(/ /g, '').toUpperCase();
                 });
                 tmp2 = tmp2.map(l => {
-                    return `"${l.trim()}"`;
+                    return `"${l}"`;
                 });
                 tmp = tmp.filter((value, index, self) => self.indexOf(value) === index);
                 tmp2 = tmp.filter((value, index, self) => self.indexOf(value) === index);
@@ -10125,15 +10140,15 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += `   set_key("${obj.keyID}");\n`;
 
                 if (obj.contents && obj.contents.length > 0) {
-                    tmp = obj.cotents.filter(c => c.item < -4);
-                    tmp2 = obj.cotents.filter(c => c.item >= 0);
-                    tmp3 = obj.cotents.filter(c => c.item >= -4 && c.item < 0);
-                    data['create post'] += '\nvoid reset_chest()\n{\n';
+                    tmp = obj.contents.filter(c => c.item < -4);
+                    tmp2 = obj.contents.filter(c => c.item >= 0);
+                    tmp3 = obj.contents.filter(c => c.item >= -4 && c.item < 0);
+                    data['create post'] += '\n\nvoid reset_chest()\n{\n';
                     if (tmp.length !== 0)
                         data['create post'] += '   object money;\n';
                     if (tmp2.length !== 0)
                         data['create post'] += '   int gems;\n';
-                    data['create post'] += '   //check if contains contents\n   if(sizeof(query_item_contents()))\n      return;';
+                    data['create post'] += '   //check if contains contents\n   if(sizeof(query_item_contents()))\n      return;\n';
                     data['create post'] += '   set_locked(0);\n';
                     data['create post'] += '   set_closed(0);\n';
                     //item, minAmount, maxAmount, random
@@ -10141,7 +10156,7 @@ export class AreaDesigner extends EditorBase {
                         data['create post'] += '   money = new(OBJ_COINS);\n';
                         let type;
                         tmp.forEach(o => {
-                            switch (o.item) {
+                            switch (+o.item) {
                                 case -5:
                                     type = '"platinum"';
                                     break;
@@ -10164,10 +10179,10 @@ export class AreaDesigner extends EditorBase {
                             else if (o.minAmount > 0 && o.maxAmount > 0)
                                 c = `   money->add_money(${type}, ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
                             if (o.random > 0 && c.length !== 0 && o.random < 100)
-                                data['create body'] += `   if(random(${o.random}) <= random(101))\n   `;
-                            data['create body'] += c;
+                                data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
+                            data['create post'] += c;
                         });
-                        data['create post'] += '   money->move(this_object())\n';
+                        data['create post'] += '   money->move(this_object());\n';
                     }
 
                     if (tmp3.length !== 0) {
@@ -10305,14 +10320,14 @@ export class AreaDesigner extends EditorBase {
                 data['doc'].push('/doc/build/armours/types/sheath');
                 data.help.push('atypes');
                 data.includes += '\n#include <limbs.h>';
-                tmp = obj.limbs || 'LEFTLEG';
+                tmp = (obj.limbs || 'LEFTLEG').split(',').map(l => l.trim());
                 tmp2 = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) === -1);
                 tmp = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) !== -1);
                 tmp = tmp.map(l => {
-                    return l.trim().replace(/ /g, '').toUpperCase();
+                    return l.replace(/ /g, '').toUpperCase();
                 });
                 tmp2 = tmp2.map(l => {
-                    return `"${l.trim()}"`;
+                    return `"${l}"`;
                 });
                 tmp = tmp.filter((value, index, self) => self.indexOf(value) === index);
                 tmp2 = tmp.filter((value, index, self) => self.indexOf(value) === index);
@@ -10507,13 +10522,13 @@ export class AreaDesigner extends EditorBase {
 
         //add docs
         if (data['doc'].length > 0)
-            data['doc'] = ' * @doc' + data['doc'].join('\n * @doc') + '\n';
+            data['doc'] = ' * @doc ' + data['doc'].join('\n * @doc ') + '\n';
         else
             data['doc'] = '';
         if (data['help'].length > 0)
-            data['doc'] += ' * @help' + data['help'].join('\n * @help') + '\n';
-        if (obj.notes.length > 0) {
-            if (data.description.lenth !== 0)
+            data['doc'] += ' * @help ' + data['help'].join('\n * @help ') + '\n';
+        if (obj.notes.length !== 0) {
+            if (data.description.length !== 0)
                 data.description += '\n';
             data.description += ' * ' + obj.notes.split('\n').join('\n * ') + '\n';
         }
