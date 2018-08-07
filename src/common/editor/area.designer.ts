@@ -339,6 +339,8 @@ export class Room {
             if (prop === 'x' || prop === 'y' || prop === 'z' || prop === 'type' || prop === 'forage' || prop === 'flags' || !this.hasOwnProperty(prop)) continue;
             const tp = typeof this[prop];
             const value = <any>this[prop];
+            if (Array.isArray(this[prop]) && (<any>this[prop]).length !== 0)
+                return false;
             if (tp === 'string' && value !== '')
                 return false;
             if (tp === 'number' && value !== 0)
@@ -534,25 +536,9 @@ class Monster {
     }
 }
 
-//TODO add food, drink, weapon/armor bonuses, maybe ore bonuses?
+//TODO add weapon/armor/ore bonuses
 //TODO add armour damage systems
 /*
-food
-    strength - number
-    My eat message - string
-    your eat message - string
-    decay message - string
-    preserved - bool
-drink
-    strength - number
-    quenched strength - number
-    type - enum basic, caffeine, alcoholic
-    drinks - number
-    max drinks - number
-    My drink message - string
-    your drink message - string
-    create empty bottle - bool
-
 weapon/armor/material/ore bonuses
     data grid
         type - stat, resistance, skill, property, see about capturing the change event to add a custom value drop down, maybe a global list with main/subs?
@@ -8710,9 +8696,9 @@ export class AreaDesigner extends EditorBase {
             if (items.length === 1) {
                 this.$roomPreview.objects.style.display = '';
                 if (counts[items[0]] === 1)
-                    this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(items[0])) + ' are here.';
+                    this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(items[0])) + ' is here.';
                 else if (counts[items[0]] > 1)
-                    this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(consolidate(counts[items[0]], items[0]))) + ' is here.';
+                    this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(consolidate(counts[items[0]], items[0]))) + ' are here.';
             }
             else if (items.length > 0) {
                 this.$roomPreview.objects.style.display = '';

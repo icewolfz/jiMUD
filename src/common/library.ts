@@ -1502,7 +1502,7 @@ export function consolidate(amt, str) {
         str[l - 1] = pluralize(str[l - 1]);
     if (amt > 10)
         return 'numerous ' + str.join(' ') + e;
-    return ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][amt] + str.join(' ') + e;
+    return ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][amt] + ' ' + str.join(' ') + e;
 }
 
 export function pluralize(revert) {
