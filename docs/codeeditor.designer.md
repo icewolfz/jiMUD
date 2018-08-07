@@ -50,6 +50,7 @@ The basic properties used to describe the room
 - `Exits` The room exits, allows you to edit exits, external exits, and climbs all in one place
   - `Exit` the exit to create
   - `Destination` the path to where the exit leads to, if blank use default destinations
+    - **Note** You can link to any room in the are by  using x,y,z as the file name, eg 0,0,0 is the very first room and what ever file it ends up named as will replace it
   - `Door` door name if this exit should be a door to open or close
   - `Key ID` a unique key id to link a key object so door can be locked or unlocked
   - `Hidden` is the room visible to players

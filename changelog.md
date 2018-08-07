@@ -6,12 +6,16 @@
   - Area designer:
     - New progress dialog for code generation to allow you to cancel and see progress better
     - Add food and drink objects
+    - All external exits are now defines in area.h per area standard, need to improve the name scheme still
 - **Changed:**
   - Area designer: generated file names will no longer append a number at the end if there is only one matching name
 - **Fixed:**
   - Area designer:
     - Fixed advanced button column for data grids
     - Fixed room editor monster and object drop downs not updating to reflect new monsters/objects or changes to name
+    - Fixed room preview formatting when consolidating same named items or items with mulitples
+    - Fixed empty room checks so rooms that have objects, monsters, smells, items, sounds, and searches, as long as there is one the room will not be considered empty and be generated in code or be drawn in the mapper, this allows you to create shop storage and other misc rooms that may not have exits for what ever reasons
+    - Fixed a bug with door code generation not setting external destination link
 
 ## 0.4.61 2018-08-06
 

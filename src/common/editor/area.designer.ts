@@ -8966,6 +8966,8 @@ export class AreaDesigner extends EditorBase {
             const zl = this.$area.size.depth;
             const xl = this.$area.size.width;
             const yl = this.$area.size.height;
+            const externs = {};
+            let ec = 0;
             for (let z = 0; z < zl; z++) {
                 for (let y = 0; y < yl; y++) {
                     for (let x = 0; x < xl; x++) {
@@ -8978,6 +8980,14 @@ export class AreaDesigner extends EditorBase {
                             counts[name] = 1;
                         else
                             counts[name]++;
+                        Object.values<Exit>(r.exitsDetails).forEach(e => {
+                            if (!e.dest || e.dest.length === 0 || files[e.dest]) return;
+                            if (e.dest.match(/^\d+\s*,\s*\d+\s*,\s*\d+$/) || e.dest.match(/^\d+\s*,\s*\d+$/))
+                                return;
+                            ec++;
+                            externs['DIR_EXTERN' + ec] = e.dest;
+                            files[e.dest] = 'DIR_EXTERN' + ec;
+                        });
                     }
                 }
             }
@@ -9017,7 +9027,7 @@ export class AreaDesigner extends EditorBase {
             const templePath = parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer'));
             template['area post'] = '\n';
             template['doc'] = '';
-            let value = fs.readFileSync(path.join(templePath, 'area.h'), 'utf8');
+
             template['area post'] += '//Define base room inherits\n';
             Object.keys(this.$area.baseRooms).forEach(r => template['area post'] += `#define ${files[r + 'room']} (STD + "${files[r + 'room'].toLowerCase()}")\n`);
             template['area post'] += '//Define base monster inherits\n';
@@ -9030,8 +9040,13 @@ export class AreaDesigner extends EditorBase {
                 template['area post'] += '//Define monster maxes\n';
                 temp.forEach(r => template['area post'] += `#define MAX${r.replace(/ /g, '_').toUpperCase()} ${this.$area.baseMonsters[r].maxAmount}\n`);
             }
-            value = this.parseFileTemplate(value, template);
-            this.write(value, path.join(p, 'area.h'));
+
+            if (ec > 0) {
+                template['area post'] += '//Define external paths\n';
+                Object.keys(externs).forEach(r => template['area post'] += `#define ${externs[r]} ("${externs[r]}")\n`);
+            }
+
+            this.write(this.parseFileTemplate(fs.readFileSync(path.join(templePath, 'area.h'), 'utf8'), template), path.join(p, 'area.h'));
             //Generate base rooms
             if (this.$cancel)
                 throw new Error('Canceled');
@@ -9529,6 +9544,8 @@ export class AreaDesigner extends EditorBase {
                     tmp2 = `RMS + "${files[i.dest.replace(/ /g, '')]}.c"`;
                 else if (i.dest.match(/^\d+\s*,\s*\d+$/) && files[i.dest.replace(/ /g, '') + ',0'])
                     tmp2 = `RMS + "${files[i.dest.replace(/ /g, '') + ',0']}.c"`;
+                else if (files[i.dest])
+                    tmp2 = `"${files[i.dest]}"`;
                 else
                     tmp2 = `"${i.dest}"`;
             }
@@ -9566,6 +9583,8 @@ export class AreaDesigner extends EditorBase {
                     tmp2.push(`"dest" : RMS + "${files[i.dest.replace(/ /g, '')]}.c"`);
                 else if (i.dest.match(/^\d+\s*,\s*\d+$/) && files[i.dest.replace(/ /g, '') + ',0'])
                     tmp2.push(`"dest" : RMS + "${files[i.dest.replace(/ /g, '') + ',0']}.c"`);
+                else if (files[i.dest])
+                    tmp2 = `"${files[i.dest]}"`;
                 else
                     tmp2.push(`"dest" : "${i.dest}"`);
             }
@@ -9596,6 +9615,10 @@ export class AreaDesigner extends EditorBase {
                     tmp = `RMS + "${files[tmp.replace(/ /g, '')]}.c"`;
                 else if (tmp.match(/^\d+\s*,\s*\d+$/) && files[tmp.replace(/ /g, '') + ',0'])
                     tmp = `RMS + "${files[tmp.replace(/ /g, '') + ',0']}.c"`;
+                else if (files[tmp])
+                    tmp = `"${files[tmp]}"`;
+                else
+                    tmp = `"${tmp}"`;
             }
             else {
                 tmp3 = this.getExitId(d.exit, room.x, room.y, room.z);
