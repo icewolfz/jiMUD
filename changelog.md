@@ -5,11 +5,13 @@
 - **New:**
   - Area designer:
     - New progress dialog for code generation to allow you to cancel and see progress better
+    - Add food and drink objects
 - **Changed:**
   - Area designer: generated file names will no longer append a number at the end if there is only one matching name
 - **Fixed:**
   - Area designer:
-    - Fix advanced button column for data grids
+    - Fixed advanced button column for data grids
+    - Fixed room editor monster and object drop downs not updating to reflect new monsters/objects or changes to name
 
 ## 0.4.61 2018-08-06
 

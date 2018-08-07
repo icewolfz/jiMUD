@@ -574,7 +574,7 @@ armor damage systems
     adjectives - missing limbs, adjectives
 */
 enum StdObjectType {
-    object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument
+    object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink
 }
 
 class StdObject {
@@ -633,6 +633,35 @@ class StdObject {
                 return false;
         }
         return true;
+    }
+
+    public getShort() {
+        if (this.type === StdObjectType.food && this['preserved'] && this['preserved'].trim().length !== 0) {
+            switch (this['preserved'].trim().toLowerCase()) {
+                case 'smoked':
+                case 'cooked':
+                    return `${this.short} (%^RESET%^mono11%^${this['preserved'].trim().toLowerCase()}%^DEFAULT%^)`;
+                case 'salted':
+                    return `${this.short} (%^RESET%^BOLD%^${this['preserved'].trim().toLowerCase()}%^DEFAULT%^)`;
+                case 'dehydrated':
+                    return `${this.short} (%^RESET%^RGB320%^${this['preserved'].trim().toLowerCase()}%^DEFAULT%^)`;
+                default:
+                    if (this['preserved'].match(/%\^/g) && !this['preserved'].trim().endsWith('%^DEFAULT%^)'))
+                        return `${this.short} (${this['preserved'].trim()}%^DEFAULT%^)`;
+                    else
+                        return `${this.short} (${this['preserved'].trim()})`;
+            }
+        }
+        else if (this.type === StdObjectType.drink) {
+            const full = ['"%^BOLD%^%^RED%^almost empty%^DEFAULT%^"', '"%^RESET%^%^ORANGE%^fairly empty%^DEFAULT%^"', '"%^YELLOW%^half full%^DEFAULT%^"', '"%^RESET%^%^GREEN%^almost full%^DEFAULT%^"', '"%^BOLD%^%^GREEN%^full%^DEFAULT%^"'];
+            const level = (this['drinks'] / this['maxDrinks'] / full.length) - 1;
+            if (level >= full.length)
+                return `${this.short} (${full[full.length - 1]})`;
+            if (level < 0)
+                return `${this.short} (${full[0]})`;
+            return `${this.short} (${full[level]})`;
+        }
+        return this.short;
     }
 }
 
@@ -3426,13 +3455,13 @@ export class AreaDesigner extends EditorBase {
                                 formatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return stripPinkfish(this.$area.objects[data.cell].short);
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return stripPinkfish(this.$area.objects[data.cell].short);
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 editor: {
@@ -3501,13 +3530,13 @@ export class AreaDesigner extends EditorBase {
                                 formatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.monsters[data.cell])
-                                        return this.$area.monsters[data.cell].short;
+                                        return this.$area.monsters[data.cell].name || this.$area.monsters[data.cell].short;
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.monsters[data.cell])
-                                        return this.$area.monsters[data.cell].short;
+                                        return this.$area.monsters[data.cell].name || this.$area.monsters[data.cell].short;
                                     return '';
                                 },
                                 editor: {
@@ -3988,13 +4017,13 @@ export class AreaDesigner extends EditorBase {
                                 formatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return stripPinkfish(this.$area.objects[data.cell].short);
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return stripPinkfish(this.$area.objects[data.cell].short);
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 editor: {
@@ -4379,13 +4408,13 @@ export class AreaDesigner extends EditorBase {
                                 formatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return stripPinkfish(this.$area.objects[data.cell].short);
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return stripPinkfish(this.$area.objects[data.cell].short);
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 editor: {
@@ -4455,13 +4484,13 @@ export class AreaDesigner extends EditorBase {
                                 formatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.monsters[data.cell])
-                                        return this.$area.monsters[data.cell].short;
+                                        return this.$area.monsters[data.cell].name || this.$area.monsters[data.cell].short;
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.monsters[data.cell])
-                                        return this.$area.monsters[data.cell].short;
+                                        return this.$area.monsters[data.cell].name || this.$area.monsters[data.cell].short;
                                     return '';
                                 },
                                 editor: {
@@ -4816,13 +4845,13 @@ export class AreaDesigner extends EditorBase {
                                 formatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return stripPinkfish(this.$area.objects[data.cell].short);
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return stripPinkfish(this.$area.objects[data.cell].short);
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
                                     return '';
                                 },
                                 editor: {
@@ -5142,6 +5171,7 @@ export class AreaDesigner extends EditorBase {
             newValue.monster.noBaseTopics = newValue.noBaseTopics;
             newValue.monster.noBaseObjects = newValue.noBaseObjects;
             this.$area.monsters[newValue.id] = newValue.monster;
+            this.updateMonsters(true);
             this.changed = true;
         });
         //#endregion
@@ -5216,8 +5246,8 @@ export class AreaDesigner extends EditorBase {
                                         id: 'obj-welcome',
                                         title: 'Welcome',
                                         body: `
-                                        <img src="../assets/icons/png/wiz.obj.logo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 56px;">
-                                        <div style="padding-top:76px">Welcome to the object editor wizard, this will take you through the steps to edit an object quickly and easily. You may finish at any time to save your current selections.</div>
+                                        <img src="../assets/icons/png/wiz.obj.logo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 76px;">
+                                        <div style="padding-top:96px">Welcome to the object editor wizard, this will take you through the steps to edit an object quickly and easily. You may finish at any time to save your current selections.</div>
                                         `
                                     }),
                                     new WizardPage({
@@ -5260,7 +5290,7 @@ export class AreaDesigner extends EditorBase {
                                             <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('obj-long').value, 'editor', true);document.getElementById('obj-long').focus();">
                                                 <i class="fa fa-edit"></i>
                                             </a>
-                                            <textarea class="input-sm form-control" id="obj-long" style="width: 100%;height: 216px;"></textarea>
+                                            <textarea class="input-sm form-control" id="obj-long" style="width: 100%;height: 256px;"></textarea>
                                         </label>
                                     </div>`,
                                         reset: (e) => {
@@ -5307,7 +5337,7 @@ export class AreaDesigner extends EditorBase {
                             });
                             wiz.pages[3].page.querySelector('#obj-material-list').innerHTML = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'material.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
                             initEditDropdown(wiz.pages[3].page.querySelector('#obj-material-list').closest('.edit-dropdown'));
-                            wiz.height = '340px';
+                            wiz.height = '380px';
                             wiz.on('open', () => {
                                 this.emit('dialog-open');
                                 ed.focus();
@@ -5805,6 +5835,152 @@ export class AreaDesigner extends EditorBase {
                                     }));
                                     //cSpell:enable
                                     break;
+                                case StdObjectType.food:
+                                    wiz.title = 'Edit food...';
+                                    wiz.addPages(new WizardPage({
+                                        id: 'obj-food',
+                                        title: 'Food properties',
+                                        body: `
+                                <div class="form-group col-sm-6">
+                                    <label class="control-label">
+                                        Strength
+                                        <input type="number" id="obj-strength" class="input-sm form-control" value="0" min="-500" max="500" style="width: 100%" />
+                                    </label>
+                                </div>
+                                <div class="col-sm-6 form-group">
+                                    <label class="control-label">Preserved
+                                        <div class="input-group edit-dropdown">
+                                            <input type="text" id="obj-preserved" class="input-sm form-control">
+                                            <span class="input-group-btn">
+                                                <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <span class="caret" style="margin-left: -1px;"></span>
+                                                </button>
+                                                <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                    <li><a href="#">Cooked</a></li>
+                                                    <li><a href="#">Smoked</a></li>
+                                                    <li><a href="#">Salted</a></li>
+                                                    <li><a href="#">Dehydrated</a></li>
+                                                </ul>
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label class="control-label">
+                                        Decay
+                                        <input type="number" id="obj-decay" class="input-sm form-control" value="0" min="30" max="1000" style="width: 100%" />
+                                    </label>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label class="control-label">
+                                        Player message
+                                        <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">$N - name, $O - object</span>
+                                        <input type="text" id="obj-my-message" class="input-sm form-control" value="0" min="-500" max="500" style="width: 100%" />
+                                    </label>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label class="control-label">
+                                        Room message
+                                        <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">$N - name, $O - object</span>
+                                        <input type="text" id="obj-your-message" class="input-sm form-control" value="0" min="-500" max="500" style="width: 100%" />
+                                    </label>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label class="control-label">
+                                        Decay message
+                                        <input type="text" id="obj-decay-message" class="input-sm form-control" value="0" min="-500" max="500" style="width: 100%" />
+                                    </label>
+                                </div>
+                                `,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-strength').value = ed.value.strength || '1';
+                                            e.page.querySelector('#obj-preserved').value = ed.value.preserved || '';
+                                            e.page.querySelector('#obj-my-message').value = ed.value.myMessage || '';
+                                            e.page.querySelector('#obj-your-message').value = ed.value.yourMessage || '';
+                                            e.page.querySelector('#obj-decay').value = ed.value.decay || '300';
+                                            e.page.querySelector('#obj-decay-message').value = ed.value.decayMessage || '';
+                                        }
+                                    }));
+                                    break;
+                                case StdObjectType.drink:
+                                    wiz.title = 'Edit drink...';
+                                    wiz.addPages(new WizardPage({
+                                        id: 'obj-drink',
+                                        title: 'Drink properties',
+                                        body: `
+                                <div class="form-group col-sm-6">
+                                    <label class="control-label">
+                                        Strength
+                                        <input type="number" id="obj-strength" class="input-sm form-control" value="0" min="-500" max="500" style="width: 100%" />
+                                    </label>
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label class="control-label">
+                                        Quenched strength
+                                        <input type="number" id="obj-quenched" class="input-sm form-control" value="0" min="-500" max="500" style="width: 100%" />
+                                    </label>
+                                </div>
+                                <div class="form-group col-sm-4">
+                                    <label class="control-label">
+                                        Drinks
+                                        <input type="number" id="obj-drinks" class="input-sm form-control" value="0" min="-500" max="500" style="width: 100%" />
+                                    </label>
+                                </div>
+                                <div class="form-group col-sm-4">
+                                    <label class="control-label">
+                                        Max drinks
+                                        <input type="number" id="obj-max-drinks" class="input-sm form-control" value="0" min="-500" max="500" style="width: 100%" />
+                                    </label>
+                                </div>
+                                <div class="col-sm-4 form-group">
+                                    <label class="control-label" style="width: 100%;">Type
+                                        <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                        <option value="">Normal</option><option value="caffeine">Caffeine</option><option value="alcoholic">Alcoholic</option>
+                                        </select>
+                                    </label>
+                                </div>
+                                <div class="col-sm-6 form-group">
+                                    <label class="control-label">
+                                        <input type="checkbox" id="obj-empty" /> Create empty container
+                                    </label>
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label class="control-label">
+                                        Empty container name
+                                        <input type="text" id="obj-empty-name" class="input-sm form-control" style="width: 100%" />
+                                    </label>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label class="control-label">
+                                        Player message
+                                        <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">$N - name, $O - object</span>
+                                        <input type="text" id="obj-my-message" class="input-sm form-control" value="0" min="-500" max="500" style="width: 100%" />
+                                    </label>
+                                </div>
+                                <div class="form-group col-sm-12">
+                                    <label class="control-label">
+                                        Room message
+                                        <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">$N - name, $O - object</span>
+                                        <input type="text" id="obj-your-message" class="input-sm form-control" value="0" min="-500" max="500" style="width: 100%" />
+                                    </label>
+                                </div>
+                                `,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-strength').value = ed.value.strength || '1';
+                                            $(e.page.querySelector('#obj-subType')).val(ed.value.subType || '').selectpicker('render');
+                                            e.page.querySelector('#obj-quenched').value = ed.value.quenched || '1';
+                                            e.page.querySelector('#obj-drinks').value = ed.value.drinks || '5';
+                                            e.page.querySelector('#obj-max-drinks').value = ed.value.maxDrinks || '5';
+                                            e.page.querySelector('#obj-my-message').value = ed.value.myMessage || '';
+                                            e.page.querySelector('#obj-your-message').value = ed.value.yourMessage || '';
+                                            e.page.querySelector('#obj-empty-name').value = ed.value.emptyName || 'bottle';
+                                            if (!ed.value.hasOwnProperty('empty'))
+                                                e.page.querySelector('#obj-empty').value = true;
+                                            else
+                                                e.page.querySelector('#obj-empty').value = ed.value.empty;
+                                        }
+                                    }));
+                                    break;
                             }
                             if (wiz.pages.length === 5) {
                                 $(wiz.pages[4].page.querySelectorAll('.selectpicker')).selectpicker();
@@ -5813,8 +5989,8 @@ export class AreaDesigner extends EditorBase {
                             wiz.addPages(new WizardPage({
                                 id: 'obj-finish',
                                 title: 'Finish',
-                                body: `<img src="../assets/icons/png/wiz.obj.logo.png" alt="Object editor summary" style="float: left;margin-top: 56px;height: 128px;width:128px;"> To finish your room simply click finished
-                                    <div id="obj-summary" readonly="readonly" class="form-control" style="overflow:auto;height:219px;width:355px;white-space:pre;float: right;"></div>`,
+                                body: `<img src="../assets/icons/png/wiz.obj.logo.png" alt="Object editor summary" style="float: left;margin-top: 76px;height: 128px;width:128px;"> To finish your room simply click finished
+                                    <div id="obj-summary" readonly="readonly" class="form-control" style="overflow:auto;height:259px;width:355px;white-space:pre;float: right;"></div>`,
                                 shown: (e) => {
                                     const summary = e.page.querySelector('#obj-summary');
                                     const data = e.wizard.data;
@@ -5822,11 +5998,11 @@ export class AreaDesigner extends EditorBase {
                                     for (const prop in data) {
                                         if (!data.hasOwnProperty(prop)) continue;
                                         if (Array.isArray(data[prop]))
-                                            sum += '<div><span style="font-weight:bold">' + capitalize(prop.substr(4)) + ':</span> ' + data[prop].length + '</div>';
+                                            sum += '<div><span style="font-weight:bold">' + (prop === 'subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].length + '</div>';
                                         else if (typeof data[prop] === 'object')
-                                            sum += '<div><span style="font-weight:bold">' + capitalize(prop.substr(4)) + ':</span> ' + data[prop].display + '</div>';
+                                            sum += '<div><span style="font-weight:bold">' + (prop === 'subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].display + '</div>';
                                         else
-                                            sum += '<div><span style="font-weight:bold">' + capitalize(prop.substr(4)) + ':</span> ' + data[prop] + '</div>';
+                                            sum += '<div><span style="font-weight:bold">' + (prop === 'subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop] + '</div>';
                                     }
                                     summary.innerHTML = sum;
                                 }
@@ -5929,6 +6105,7 @@ export class AreaDesigner extends EditorBase {
                 newValue.object.short = newValue.short;
             newValue.object.type = newValue.type;
             this.$area.objects[newValue.id] = newValue.object;
+            this.updateObjects(true);
             this.changed = true;
         });
         //#endregion
@@ -8511,21 +8688,23 @@ export class AreaDesigner extends EditorBase {
 
             counts = {};
             room.objects.forEach(i => {
-                if (!counts[this.$area.objects[i.id].short])
-                    counts[this.$area.objects[i.id].short] = 0;
+                const short = this.$area.objects[i.id].getShort();
+                if (!counts[short])
+                    counts[short] = 0;
                 if (i.minAmount > 0)
-                    counts[this.$area.objects[i.id].short] += i.minAmount;
+                    counts[short] += i.minAmount;
                 else if (i.unique)
-                    counts[this.$area.objects[i.id].short]++;
+                    counts[short]++;
             });
             if (!room.noBaseObjects)
                 base.objects.forEach(i => {
-                    if (!counts[this.$area.objects[i.id].short])
-                        counts[this.$area.objects[i.id].short] = 0;
+                    const short = this.$area.objects[i.id].getShort();
+                    if (!counts[short])
+                        counts[short] = 0;
                     if (i.minAmount > 0)
-                        counts[this.$area.objects[i.id].short] += i.minAmount;
+                        counts[short] += i.minAmount;
                     else if (i.unique)
-                        counts[this.$area.objects[i.id].short]++;
+                        counts[short]++;
                 });
             items = Object.keys(counts);
             if (items.length === 1) {
@@ -8613,20 +8792,21 @@ export class AreaDesigner extends EditorBase {
         });
     }
 
-    private updateMonsters() {
-        this.$monsterGrid.rows = Object.keys(this.$area.monsters).map(m => {
-            return {
-                id: m,
-                name: this.$area.monsters[m].name,
-                short: this.$area.monsters[m].short,
-                maxAmount: this.$area.monsters[m].maxAmount,
-                unique: this.$area.monsters[m].unique,
-                noBaseTopics: this.$area.monsters[m].noBaseTopics,
-                noBaseObjects: this.$area.monsters[m].noBaseObjects,
-                objects: this.$area.monsters[m].objects,
-                monster: this.$area.monsters[m]
-            };
-        });
+    private updateMonsters(noRows?) {
+        if (!noRows)
+            this.$monsterGrid.rows = Object.keys(this.$area.monsters).map(m => {
+                return {
+                    id: m,
+                    name: this.$area.monsters[m].name,
+                    short: this.$area.monsters[m].short,
+                    maxAmount: this.$area.monsters[m].maxAmount,
+                    unique: this.$area.monsters[m].unique,
+                    noBaseTopics: this.$area.monsters[m].noBaseTopics,
+                    noBaseObjects: this.$area.monsters[m].noBaseObjects,
+                    objects: this.$area.monsters[m].objects,
+                    monster: this.$area.monsters[m]
+                };
+            });
         const data = Object.values<Monster>(this.$area.monsters).map(o => {
             return {
                 display: o.name || o.short,
@@ -8642,16 +8822,17 @@ export class AreaDesigner extends EditorBase {
         this.$roomEditor.setPropertyOptions('monsters', cols);
     }
 
-    private updateObjects() {
-        this.$objectGrid.rows = Object.keys(this.$area.objects).map(m => {
-            return {
-                id: m,
-                name: this.$area.objects[m].name,
-                short: this.$area.objects[m].short,
-                type: this.$area.objects[m].type,
-                object: this.$area.objects[m]
-            };
-        });
+    private updateObjects(noRows?) {
+        if (!noRows)
+            this.$objectGrid.rows = Object.keys(this.$area.objects).map(m => {
+                return {
+                    id: m,
+                    name: this.$area.objects[m].name,
+                    short: this.$area.objects[m].short,
+                    type: this.$area.objects[m].type,
+                    object: this.$area.objects[m]
+                };
+            });
         const data = Object.values<StdObject>(this.$area.objects).map(o => {
             return {
                 display: stripPinkfish(o.name || o.short),
@@ -10486,6 +10667,68 @@ export class AreaDesigner extends EditorBase {
                     data['create arguments'] += `, ${obj.enchantment}`;
                     data['create arguments comment'] += ', Natural enchantment';
                 }
+                //#endregion
+                break;
+            case StdObjectType.food:
+                //#region Food
+                data.inherit = 'OBJ_FOOD';
+                data['doc'].push('/doc/build/etc/food');
+                if (obj.myMessage && obj.myMessage.trim().length !== 0 && obj.yourMessage && obj.yourMessage.trim().length !== 0)
+                    data['create body'] += `   set_eat("${obj.myMessage.trim()}", "${obj.yourMessage.trim()}");\n`;
+                else if (obj.myMessage && obj.myMessage.trim().length !== 0)
+                    data['create body'] += `   set_eat("${obj.myMessage.trim()}", "$N eats $O.");\n`;
+                else if (obj.yourMessage && obj.yourMessage.trim().length !== 0)
+                    data['create body'] += `   set_eat("You eat $O.", "${obj.yourMessage.trim()}");\n`;
+                data['create body'] += `   set_strength(${obj.strength || 0});\n`;
+                if (obj.decay !== 300)
+                    data['create body'] += `   set_decay(${obj.decay});\n`;
+                if (obj.decayMessage && obj.decayMessage.trim().length !== 0)
+                    data['create body'] += `   set_decay_message("${obj.decayMessage}");\n`;
+                if (obj.preserved && obj.preserved.trim().length !== 0) {
+                    switch (obj.preserved.trim().toLowerCase()) {
+                        case 'smoked':
+                        case 'cooked':
+                            data['create body'] += `   set_preserved(%^RESET%^mono11%^${obj.preserved.trim().toLowerCase()}%^DEFAULT%^");\n`;
+                            break;
+                        case 'salted':
+                            data['create body'] += `   set_preserved(%^RESET%^BOLD%^${obj.preserved.trim().toLowerCase()}%^DEFAULT%^");\n`;
+                            break;
+                        case 'dehydrated':
+                            data['create body'] += `   set_preserved(%^RESET%^RGB320%^${obj.preserved.trim().toLowerCase()}%^DEFAULT%^");\n`;
+                            break;
+                        default:
+                            if (obj.preserved.match(/%\^/g) && !obj.preserved.trim().endsWith('%^DEFAULT%^'))
+                                data['create body'] += `   set_preserved("${obj.preserved.trim()}%^DEFAULT%^");\n`;
+                            else
+                                data['create body'] += `   set_preserved("${obj.preserved.trim()}");\n`;
+                            break;
+                    }
+                }
+                //#endregion
+                break;
+            case StdObjectType.drink:
+                //#region Drink
+                data.inherit = 'OBJ_FOOD';
+                data['doc'].push('/doc/build/etc/drinks');
+                if (obj.myMessage && obj.myMessage.trim().length !== 0 && obj.yourMessage && obj.yourMessage.trim().length !== 0)
+                    data['create body'] += `   set_drink("${obj.myMessage.trim()}", "${obj.yourMessage.trim()}");\n`;
+                else if (obj.myMessage && obj.myMessage.trim().length !== 0)
+                    data['create body'] += `   set_drink("${obj.myMessage.trim()}", "$N drinks $O.");\n`;
+                else if (obj.yourMessage && obj.yourMessage.trim().length !== 0)
+                    data['create body'] += `   set_drink("You drink $O.", "${obj.yourMessage.trim()}");\n`;
+                data['create body'] += `   set_strength(${obj.strength || 0});\n`;
+                if (obj.quenched && obj.quenched !== 0)
+                    data['create body'] += `   set_quenched_strength(${obj.quenched});\n`;
+                if (obj.drinks && obj.drinks !== 5)
+                    data['create body'] += `   set_drinks(${obj.drinks});\n`;
+                if (obj.maxDrinks && obj.maxDrinks !== 5)
+                    data['create body'] += `   set_max_drinks(${obj.maxDrinks});\n`;
+                if (!obj.empty)
+                    data['create body'] += `   set_create_bottle(0);\n`;
+                if (obj.emptyName && obj.emptyName.trim() !== 'bottle')
+                    data['create body'] += `   set_empty_name("${obj.emptyName.trim()}");\n`;
+                if (obj.subType && obj.subType.trim() !== 'alcoholic')
+                    data['create body'] += `   set_drink_type("${obj.subType.trim()}");\n`;
                 //#endregion
                 break;
             default:
