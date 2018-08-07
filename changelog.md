@@ -7,6 +7,9 @@
     - New progress dialog for code generation to allow you to cancel and see progress better
 - **Changed:**
   - Area designer: generated file names will no longer append a number at the end if there is only one matching name
+- **Fixed:**
+  - Area designer:
+    - Fix advanced button column for data grids
 
 ## 0.4.61 2018-08-06
 

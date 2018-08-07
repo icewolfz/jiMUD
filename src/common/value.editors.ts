@@ -1498,6 +1498,7 @@ export class SelectValueEditor extends ValueEditor {
 export class ButtonValueEditor extends ValueEditor {
     private $el: HTMLButtonElement;
     private $val;
+    private $clicked;
 
     public create() {
         this.$el = document.createElement('button');
@@ -1528,7 +1529,15 @@ export class ButtonValueEditor extends ValueEditor {
             return;
         });
         this.$el.addEventListener('blur', (e) => {
-            if (e.currentTarget === this.$el || (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown')) {
+            if (this.$clicked)
+            {
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                this.$clicked = false;
+                return;
+            }
+            if (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown') {
                 e.preventDefault();
                 e.stopPropagation();
                 e.cancelBubble = true;
@@ -1541,6 +1550,7 @@ export class ButtonValueEditor extends ValueEditor {
         this.$el.addEventListener('click', (e) => {
             e.stopPropagation();
             e.cancelBubble = true;
+            this.$clicked = true;
             if (this.options && this.options.click)
                 this.options.click(this);
         });
