@@ -5960,10 +5960,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-my-message').value = ed.value.myMessage || '';
                                             e.page.querySelector('#obj-your-message').value = ed.value.yourMessage || '';
                                             e.page.querySelector('#obj-empty-name').value = ed.value.emptyName || 'bottle';
-                                            if (!ed.value.hasOwnProperty('empty'))
-                                                e.page.querySelector('#obj-empty').value = true;
-                                            else
-                                                e.page.querySelector('#obj-empty').value = ed.value.empty;
+                                            e.page.querySelector('#obj-empty').checked = !ed.value.hasOwnProperty('empty') || ed.value.empty;
                                         }
                                     }));
                                     break;
@@ -8980,6 +8977,7 @@ export class AreaDesigner extends EditorBase {
                             counts[name] = 1;
                         else
                             counts[name]++;
+                        files[`${x},${y},${z}`] = name + counts[name];
                         Object.values<Exit>(r.exitsDetails).forEach(e => {
                             if (!e.dest || e.dest.length === 0 || files[e.dest]) return;
                             if (e.dest.match(/^\d+\s*,\s*\d+\s*,\s*\d+$/) || e.dest.match(/^\d+\s*,\s*\d+$/))
@@ -8993,21 +8991,9 @@ export class AreaDesigner extends EditorBase {
             }
             if (this.$cancel)
                 throw new Error('Canceled');
-            for (let z = 0; z < zl; z++) {
-                for (let y = 0; y < yl; y++) {
-                    for (let x = 0; x < xl; x++) {
-                        if (this.$cancel)
-                            throw new Error('Canceled');
-                        const r = this.$area.rooms[z][y][x];
-                        if (r.empty) continue;
-                        const name = (r.subArea && r.subArea.length > 0 ? r.subArea : data.area).toLowerCase();
-                        if (counts[name] > 1)
-                            files[`${x},${y},${z}`] = name + counts[name];
-                        else
-                            files[`${x},${y},${z}`] = name;
-                    }
-                }
-            }
+            Object.keys(counts).filter(c => counts[c] === 1).forEach(c => {
+                Object.keys(files).filter(f => files[f] === c + '1').forEach(f => files[f] = c);
+            });
             Object.keys(this.$area.baseRooms).forEach(r => files[r + 'room'] = r.replace(/ /g, '_').toUpperCase() + 'ROOM');
             Object.keys(this.$area.baseMonsters).forEach(r => files[r + 'monster'] = r.replace(/ /g, '_').toUpperCase() + 'MONSTER');
             if (this.$cancel)
@@ -9043,7 +9029,7 @@ export class AreaDesigner extends EditorBase {
 
             if (ec > 0) {
                 template['area post'] += '//Define external paths\n';
-                Object.keys(externs).forEach(r => template['area post'] += `#define ${externs[r]} ("${externs[r]}")\n`);
+                Object.keys(externs).forEach(r => template['area post'] += `#define ${r} ("${externs[r]}")\n`);
             }
 
             this.write(this.parseFileTemplate(fs.readFileSync(path.join(templePath, 'area.h'), 'utf8'), template), path.join(p, 'area.h'));
@@ -9545,7 +9531,7 @@ export class AreaDesigner extends EditorBase {
                 else if (i.dest.match(/^\d+\s*,\s*\d+$/) && files[i.dest.replace(/ /g, '') + ',0'])
                     tmp2 = `RMS + "${files[i.dest.replace(/ /g, '') + ',0']}.c"`;
                 else if (files[i.dest])
-                    tmp2 = `"${files[i.dest]}"`;
+                    tmp2 = `${files[i.dest]}`;
                 else
                     tmp2 = `"${i.dest}"`;
             }
@@ -9584,7 +9570,7 @@ export class AreaDesigner extends EditorBase {
                 else if (i.dest.match(/^\d+\s*,\s*\d+$/) && files[i.dest.replace(/ /g, '') + ',0'])
                     tmp2.push(`"dest" : RMS + "${files[i.dest.replace(/ /g, '') + ',0']}.c"`);
                 else if (files[i.dest])
-                    tmp2 = `"${files[i.dest]}"`;
+                    tmp2 = `${files[i.dest]}`;
                 else
                     tmp2.push(`"dest" : "${i.dest}"`);
             }
@@ -10726,7 +10712,7 @@ export class AreaDesigner extends EditorBase {
                 else if (obj.yourMessage && obj.yourMessage.trim().length !== 0)
                     data['create body'] += `   set_drink("You drink $O.", "${obj.yourMessage.trim()}");\n`;
                 data['create body'] += `   set_strength(${obj.strength || 0});\n`;
-                if (obj.quenched && obj.quenched !== 0)
+                if (obj.quenched && obj.quenched !== 0 && obj.quenched !== obj.strength)
                     data['create body'] += `   set_quenched_strength(${obj.quenched});\n`;
                 if (obj.drinks && obj.drinks !== 5)
                     data['create body'] += `   set_drinks(${obj.drinks});\n`;
