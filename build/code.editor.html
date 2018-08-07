@@ -4304,7 +4304,7 @@
     ipcRenderer.on('progress-closed', () => {
         if (manager.active && manager.active.editor && manager.active.editor.cancel)
             manager.active.editor.cancel();
-            
+
     });
 
     ipcRenderer.on('update-progress', (event, progressObj) => {
@@ -4902,7 +4902,7 @@
         return f;
     }
 
-    function roomWizard(dData, finish, closed, title) {
+    function roomWizard(dData, opts) {
         if (!$dialogs.room) {
             $dialogs.roomExitPage = new WizardDataGridPage({
                 title: 'Exits',
@@ -5353,17 +5353,23 @@
             });
             $dialogs.room.on('close', () => {
                 menubar.enabled = true;
-                if ($dialogs.room.closed)
-                    $dialogs.room.closed();
+                if ($dialogs.room.options && $dialogs.room.options.pages)
+                    $dialogs.room.removePages($dialogs.room.options.pages);                
+                if ($dialogs.room.options && $dialogs.room.options.closed)
+                    $dialogs.room.options.closed();
             });
             $dialogs.room.on('cancel', () => {
                 menubar.enabled = true;
-                if ($dialogs.room.closed)
-                    $dialogs.room.closed();
+                if ($dialogs.room.options && $dialogs.room.options.pages)
+                    $dialogs.room.removePages($dialogs.room.options.pages);                
+                if ($dialogs.room.options && $dialogs.room.options.closed)
+                    $dialogs.room.options.closed();
             });
             $dialogs.room.on('finished', (e) => {
-                if ($dialogs.room.finish) {
-                    $dialogs.room.finish(e);
+                if ($dialogs.room.options && $dialogs.room.options.pages)
+                    $dialogs.room.removePages($dialogs.room.options.pages);
+                if ($dialogs.room.options && $dialogs.room.options.finish) {
+                    $dialogs.room.options.finish(e);
                     return;
                 }
                 var value = fs.readFileSync(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'room.c')), 'utf8');
@@ -5857,14 +5863,15 @@
                 newFromValue(parseFileTemplate(value, tmpl), this.$dialogs.room.defaults['room-wiz-file'] || f);
             });
         }
-        $dialogs.room.title = title || 'Create new room...';
+        $dialogs.room.title = opts ? (opts.title || 'Create new room...') : 'Create new room...';
         $dialogs.room.defaults = dData || {};
-        $dialogs.room.finish = finish;
-        $dialogs.room.closed = closed;
+        $dialogs.room.options = opts;
+        if (opts && opts.pages)
+            $dialogs.room.insertPages($dialogs.room.pages.length - 1, opts.pages);
         $dialogs.room.show();
     }
 
-    function monsterWizard(dData, finish, closed, title) {
+    function monsterWizard(dData, opts) {
         if (!$dialogs.monster) {
             var colors = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'color.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
             var races = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'monster-race.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
@@ -6333,17 +6340,17 @@
             });
             $dialogs.monster.on('close', () => {
                 menubar.enabled = true;
-                if ($dialogs.monster.closed)
-                    $dialogs.monster.closed();
+                if ($dialogs.monster.options && $dialogs.monster.options.closed)
+                    $dialogs.monster.options.closed();
             });
             $dialogs.monster.on('cancel', () => {
                 menubar.enabled = true;
-                if ($dialogs.monster.closed)
-                    $dialogs.monster.closed();
+                if ($dialogs.monster.options && $dialogs.monster.options.closed)
+                    $dialogs.monster.options.closed();
             });
             $dialogs.monster.on('finished', (e) => {
-                if ($dialogs.monster.finish) {
-                    $dialogs.monster.finish(e);
+                if ($dialogs.monster.options && $dialogs.monster.options.finish) {
+                    $dialogs.monster.options.finish(e);
                     return;
                 }
                 var value = fs.readFileSync(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'monster.c')), 'utf8');
@@ -6746,10 +6753,9 @@
                 newCounter++;
             });
         }
-        $dialogs.monster.title = title || 'Create new monster...';
+        $dialogs.monster.title = opts ? (opts.title || 'Create new monster...') : 'Create new monster...';
         $dialogs.monster.defaults = dData || {};
-        $dialogs.monster.finish = finish;
-        $dialogs.monster.closed = closed;
+        $dialogs.monster.options = opts;
         $dialogs.monster.show();
     }
 
@@ -7387,10 +7393,10 @@
                 data.options = options.designOptions;
                 p.editor = new AreaDesigner(data);
                 p.editor.on('show-room-wizard', e => {
-                    roomWizard(e.data, e.finish, e.closed, e.title);
+                    roomWizard(e.data, e);
                 });
                 p.editor.on('show-monster-wizard', e => {
-                    monsterWizard(e.data, e.finish, e.closed, e.title);
+                    monsterWizard(e.data, e);
                 });
                 p.editor.on('show-resize', size => {
                     showResizeDialog(size);

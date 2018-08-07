@@ -188,7 +188,6 @@ export class Room {
     //area designer
     public objects: ObjectInfo[] = [];
     public monsters: ObjectInfo[] = [];
-    public forageObjects: ObjectInfo[] = [];
     public subArea: string = '';
     public background: string = '';
 
@@ -197,8 +196,12 @@ export class Room {
     public noBaseObjects: boolean = false;
     public noBaseItems: boolean = false;
     public noBaseForageObjects: boolean = false;
+    public noBaseRummageObjects: boolean = false;
 
     //room wizard supports
+    public forageObjects: ObjectInfo[] = [];
+    public rummageObjects: ObjectInfo[] = [];
+
     public exitsDetails = {};
     public terrain = '';
     public flags: RoomFlags = RoomFlags.None;
@@ -248,6 +251,7 @@ export class Room {
                     if (this.items.filter((v, i) => room.items[i].item !== v.item && room.items[i].description !== v.description).length !== 0)
                         return false;
                     break;
+                case 'rummageObjects':
                 case 'forageObjects':
                 case 'objects':
                 case 'monsters':
@@ -317,6 +321,7 @@ export class Room {
         this.items = [];
         this.objects = [];
         this.forageObjects = [];
+        this.rummageObjects = [];
         this.monsters = [];
     }
 
@@ -536,6 +541,7 @@ class Monster {
 
 //TODO add weapon/armor/ore bonuses
 //TODO add armour damage systems
+//TODO add weapon/armor skill requirement editing
 /*
 weapon/armor/material/ore bonuses
     data grid
@@ -3072,6 +3078,7 @@ export class AreaDesigner extends EditorBase {
                     switch (prop) {
                         case 'monsters':
                         case 'forageObjects':
+                        case 'rummageObjects':
                         case 'objects':
                         case 'sounds':
                         case 'smells':
@@ -3757,8 +3764,73 @@ export class AreaDesigner extends EditorBase {
                 sort: 5
             },
             {
+                property: 'noBaseRummageObjects',
+                label: 'No base rummage',
+                group: 'Advanced',
+                sort: 5
+            },
+            {
                 property: 'forageObjects',
                 label: 'Forage objects',
+                group: 'Advanced',
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        columns: [
+                            {
+                                label: 'Name',
+                                field: 'id',
+                                spring: true,
+                                formatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    return '';
+                                },
+                                tooltipFormatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    return '';
+                                },
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
+                                            return {
+                                                display: o.name || o.short,
+                                                value: o.id
+                                            };
+                                        }) : []
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Random',
+                                field: 'random',
+                                width: 150
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                id: 0,
+                                random: 0
+                            };
+                        },
+                        type: 'object',
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
+                    }
+                },
+                sort: 6
+            },
+            {
+                property: 'rummageObjects',
+                label: 'Rummage objects',
                 group: 'Advanced',
                 formatter: this.formatCollection.bind(this),
                 tooltipFormatter: this.formatCollection.bind(this),
@@ -4447,6 +4519,11 @@ export class AreaDesigner extends EditorBase {
                 width: 125
             },
             {
+                field: 'noBaseRummageObjects',
+                label: 'No base rummage',
+                width: 125
+            },
+            {
                 field: 'objects',
                 label: 'Objects',
                 sortable: false,
@@ -4600,68 +4677,6 @@ export class AreaDesigner extends EditorBase {
                 }
             },
             {
-                field: 'forageObjects',
-                label: 'Forage objects',
-                sortable: false,
-                formatter: this.formatCollection.bind(this),
-                tooltipFormatter: this.formatCollection.bind(this),
-                editor: {
-                    type: EditorType.collection,
-                    options: {
-                        open: true,
-                        columns: [
-                            {
-                                label: 'Name',
-                                field: 'id',
-                                spring: true,
-                                formatter: (data) => {
-                                    if (!data) return '';
-                                    if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
-                                    return '';
-                                },
-                                tooltipFormatter: (data) => {
-                                    if (!data) return '';
-                                    if (data.cell >= 0 && this.$area.objects[data.cell])
-                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
-                                    return '';
-                                },
-                                editor: {
-                                    type: EditorType.select,
-                                    options: {
-                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
-                                            return {
-                                                display: o.name || o.short,
-                                                value: o.id
-                                            };
-                                        }) : []
-                                    }
-                                }
-                            },
-                            {
-                                label: 'Random',
-                                field: 'random',
-                                width: 150
-                            }
-                        ],
-                        onAdd: (e) => {
-                            e.data = {
-                                id: 0,
-                                minAmount: 0,
-                                maxAmount: 0,
-                                random: 0,
-                                unique: false
-                            };
-                        },
-                        type: 'object',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
-                    }
-                },
-                sort: 2
-            },
-            {
                 field: 'room',
                 sortable: false,
                 label: '',
@@ -4712,7 +4727,9 @@ export class AreaDesigner extends EditorBase {
                                     'room-wiz-items': ed.value.items,
                                     'room-wiz-smells': ed.value.smell && ed.value.smell.length > 0 ? [{ smell: 'default', description: ed.value.smell }].concat(...ed.value.smells) : ed.value.smells,
                                     'room-wiz-sounds': ed.value.sound && ed.value.sound.length > 0 ? [{ sound: 'default', description: ed.value.sound }].concat(...ed.value.sounds) : ed.value.sounds,
-                                    'room-wiz-searches': ed.value.searches
+                                    'room-wiz-searches': ed.value.searches,
+                                    'room-wiz-forage-objects': ed.value.forageObjects,
+                                    'room-wiz-rummage-objects': ed.value.rummage
                                 },
                                 finish: e => {
                                     const nRoom = ed.value.clone();
@@ -4757,6 +4774,8 @@ export class AreaDesigner extends EditorBase {
                                     nRoom.secretExit = e.data['room-wiz-secret-exit'];
                                     nRoom.dirtType = e.data['room-wiz-dirt'];
                                     nRoom.temperature = +e.data['room-wiz-temperature'];
+                                    nRoom.forageObjects = e.data['room-wiz-forage-objects'];
+                                    nRoom.rummageObjects = e.data['room-wiz-rummage-objects'];
                                     nRoom.exitsDetails = {};
                                     e.data['room-wiz-exits'].forEach(x => {
                                         nRoom.exitsDetails[x.exit] = x;
@@ -4781,7 +4800,99 @@ export class AreaDesigner extends EditorBase {
                                 },
                                 closed: e => {
                                     ed.focus();
-                                }
+                                },
+                                pages: [
+                                    new WizardDataGridPage({
+                                        title: 'Forage objects',
+                                        id: 'room-wiz-forage-objects',
+                                        columns: [
+                                            {
+                                                label: 'Name',
+                                                field: 'id',
+                                                spring: true,
+                                                formatter: (data) => {
+                                                    if (!data) return '';
+                                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                                    return '';
+                                                },
+                                                tooltipFormatter: (data) => {
+                                                    if (!data) return '';
+                                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                                    return '';
+                                                },
+                                                editor: {
+                                                    type: EditorType.select,
+                                                    options: {
+                                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
+                                                            return {
+                                                                display: o.name || o.short,
+                                                                value: o.id
+                                                            };
+                                                        }) : []
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                label: 'Random',
+                                                field: 'random',
+                                                width: 150
+                                            }
+                                        ],
+                                        add: (e) => {
+                                            e.data = {
+                                                item: 0,
+                                                random: 0
+                                            };
+                                        }
+                                    }),
+                                    new WizardDataGridPage({
+                                        title: 'Rummage objects',
+                                        id: 'room-wiz-rummage-objects',
+                                        columns: [
+                                            {
+                                                label: 'Name',
+                                                field: 'id',
+                                                spring: true,
+                                                formatter: (data) => {
+                                                    if (!data) return '';
+                                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                                    return '';
+                                                },
+                                                tooltipFormatter: (data) => {
+                                                    if (!data) return '';
+                                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                                    return '';
+                                                },
+                                                editor: {
+                                                    type: EditorType.select,
+                                                    options: {
+                                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
+                                                            return {
+                                                                display: o.name || o.short,
+                                                                value: o.id
+                                                            };
+                                                        }) : []
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                label: 'Random',
+                                                field: 'random',
+                                                width: 150
+                                            }
+                                        ],
+                                        add: (e) => {
+                                            e.data = {
+                                                item: 0,
+                                                random: 0
+                                            };
+                                        }
+                                    })
+                                ]
                             });
                         }
                     }
@@ -4799,7 +4910,7 @@ export class AreaDesigner extends EditorBase {
             newValue.room.noBaseObjects = newValue.noBaseObjects;
             newValue.room.noBaseItems = newValue.noBaseItems;
             newValue.room.noBaseForageObjects = newValue.noBaseForageObjects;
-            newValue.room.forageObjects = newValue.forageObjects;
+            newValue.room.noBaseRummageObjects = newValue.noBaseRummageObjects;
             this.$area.baseRooms[newValue.name] = newValue.room;
             this.changed = true;
         });
@@ -4812,9 +4923,9 @@ export class AreaDesigner extends EditorBase {
                 noBaseObjects: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseObjects,
                 noBaseItems: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseItems,
                 noBaseForageObjects: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseForageObjects,
+                noBaseRummageObjects: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseRummageObjects,
                 objects: this.$area.baseRooms['base' + this.$new.baseRooms].objects,
                 monsters: this.$area.baseRooms['base' + this.$new.baseRooms].monsters,
-                forageObjects: this.$area.baseRooms['base' + this.$new.baseRooms].forageObjects,
                 room: this.$area.baseRooms['base' + this.$new.baseRooms]
             };
             this.pushUndo(undoAction.add, undoType.properties, { property: 'baseRooms', name: 'base' + this.$new.baseRooms, value: e.data.room });
@@ -7699,9 +7810,6 @@ export class AreaDesigner extends EditorBase {
         }
 
         let cols = this.$propertiesEditor.roomGrid.columns;
-        cols[5].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[5].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[5].editor.options.enterMoveNew = this.$enterMoveNew;
         cols[6].editor.options.enterMoveFirst = this.$enterMoveFirst;
         cols[6].editor.options.enterMoveNext = this.$enterMoveNext;
         cols[6].editor.options.enterMoveNew = this.$enterMoveNew;
@@ -8895,9 +9003,9 @@ export class AreaDesigner extends EditorBase {
                 noBaseObjects: this.$area.baseRooms[r].noBaseObjects,
                 noBaseItems: this.$area.baseRooms[r].noBaseItems,
                 noBaseForageObjects: this.$area.baseRooms[r].noBaseForageObjects,
+                noBaseRummageObjects: this.$area.baseRooms[r].noBaseRummageObjects,
                 monsters: this.$area.baseRooms[r].monsters,
                 objects: this.$area.baseRooms[r].objects,
-                forageObjects: this.$area.baseRooms[r].forageObjects,
                 room: this.$area.baseRooms[r]
             };
         });
@@ -8938,7 +9046,7 @@ export class AreaDesigner extends EditorBase {
             };
         });
         let cols = this.$propertiesEditor.roomGrid.columns;
-        cols[5].editor.options.columns[0].editor.options.data = data;
+        cols[7].editor.options.columns[0].editor.options.data = data;
         this.$propertiesEditor.roomGrid.columns = cols;
 
         cols = this.$roomEditor.getPropertyOptions('monsters');
@@ -8972,8 +9080,7 @@ export class AreaDesigner extends EditorBase {
         this.$propertiesEditor.monsterGrid.columns = cols;
 
         cols = this.$propertiesEditor.roomGrid.columns;
-        cols[5].editor.options.columns[0].editor.options.data = data;
-        cols[7].editor.options.columns[0].editor.options.data = data;
+        cols[6].editor.options.columns[0].editor.options.data = data;
         this.$propertiesEditor.roomGrid.columns = cols;
 
         cols = this.$roomEditor.getPropertyOptions('objects');
@@ -8982,6 +9089,9 @@ export class AreaDesigner extends EditorBase {
         cols = this.$roomEditor.getPropertyOptions('forageObjects');
         cols.editor.options.columns[0].editor.options.data = data;
         this.$roomEditor.setPropertyOptions('forageObjects', cols);
+        cols = this.$roomEditor.getPropertyOptions('rummageObjects');
+        cols.editor.options.columns[0].editor.options.data = data;
+        this.$roomEditor.setPropertyOptions('rummageObjects', cols);
     }
 
     private BuildAxises() {
@@ -9386,14 +9496,47 @@ export class AreaDesigner extends EditorBase {
             if (data['create post'].length === 0)
                 data['create post'] += '\n';
             data['create post'] += '\nobject query_forage(object player)\n{\n';
+            tmp = false;
             tmp2.forEach((o, i) => {
-                if (o.random > 0 && tmp.length !== 0 && o.random < 100)
+                if (o.random > 0 && o.random < 100)
                     data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
+                else
+                    tmp = true;
                 data['create post'] += `   return new(OBJ + "${files[o.id]}.c");\n`;
             });
             if (!room.noBaseForageObjects && base.forageObjects.filter(o => this.$area.objects[o.id]).length !== 0)
                 data['create post'] += '   return ::query_forage();\n';
-            else
+            else if (!tmp)
+                data['create post'] += '   return 0;\n';
+            data['create post'] += '}\n';
+        }
+
+        tmp2 = room.rummageObjects.filter(o => this.$area.objects[o.id]).sort((a, b) => {
+            if ((a.random === 0 || a.random >= 100) && b.random > 0 && b.random < 100)
+                return 1;
+            if ((b.random === 0 || b.random >= 100) && a.random > 0 && a.random < 100)
+                return -1;
+            if (a.id > b.id)
+                return 1;
+            if (a.id < b.id)
+                return -1;
+            return 0;
+        });
+        if (tmp2.length !== 0) {
+            if (data['create post'].length === 0)
+                data['create post'] += '\n';
+            data['create post'] += '\nobject query_rummage(object player)\n{\n';
+            tmp = false;
+            tmp2.forEach((o, i) => {
+                if (o.random > 0 && o.random < 100)
+                    data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
+                else
+                    tmp = true;
+                data['create post'] += `   return new(OBJ + "${files[o.id]}.c");\n`;
+            });
+            if (!room.noBaseForageObjects && base.forageObjects.filter(o => this.$area.objects[o.id]).length !== 0)
+                data['create post'] += '   return ::query_rummage();\n';
+            else if (!tmp)
                 data['create post'] += '   return 0;\n';
             data['create post'] += '}\n';
         }
