@@ -2,6 +2,12 @@
 
 ## 0.4.62
 
+- **New:**
+  - Area designer:
+    - New progress dialog for code generation to allow you to cancel and see progress better
+- **Changed:**
+  - Area designer: generated file names will no longer append a number at the end if there is only one matching name
+
 ## 0.4.61 2018-08-06
 
 - **New:**

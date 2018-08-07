@@ -8811,7 +8811,23 @@ export class AreaDesigner extends EditorBase {
                             counts[name] = 1;
                         else
                             counts[name]++;
-                        files[`${x},${y},${z}`] = name + counts[name];
+                    }
+                }
+            }
+            if (this.$cancel)
+                throw new Error('Canceled');
+            for (let z = 0; z < zl; z++) {
+                for (let y = 0; y < yl; y++) {
+                    for (let x = 0; x < xl; x++) {
+                        if (this.$cancel)
+                            throw new Error('Canceled');
+                        const r = this.$area.rooms[z][y][x];
+                        if (r.empty) continue;
+                        const name = (r.subArea && r.subArea.length > 0 ? r.subArea : data.area).toLowerCase();
+                        if (counts[name] > 1)
+                            files[`${x},${y},${z}`] = name + counts[name];
+                        else
+                            files[`${x},${y},${z}`] = name;
                     }
                 }
             }
