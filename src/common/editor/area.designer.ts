@@ -188,6 +188,7 @@ export class Room {
     //area designer
     public objects: ObjectInfo[] = [];
     public monsters: ObjectInfo[] = [];
+    public forageObjects: ObjectInfo[] = [];
     public subArea: string = '';
     public background: string = '';
 
@@ -195,6 +196,7 @@ export class Room {
     public noBaseMonsters: boolean = false;
     public noBaseObjects: boolean = false;
     public noBaseItems: boolean = false;
+    public noBaseForageObjects: boolean = false;
 
     //room wizard supports
     public exitsDetails = {};
@@ -246,6 +248,7 @@ export class Room {
                     if (this.items.filter((v, i) => room.items[i].item !== v.item && room.items[i].description !== v.description).length !== 0)
                         return false;
                     break;
+                case 'forageObjects':
                 case 'objects':
                 case 'monsters':
                 case 'sounds':
@@ -296,12 +299,6 @@ export class Room {
             this.nightAdjust = 0;
             this.sound = '';
             this.smell = '';
-            this.sounds = [];
-            this.smells = [];
-            this.searches = [];
-            this.items = [];
-            this.objects = [];
-            this.monsters = [];
             this.subArea = '';
             this.forage = -1;
             this.maxForage = 0;
@@ -319,6 +316,7 @@ export class Room {
         this.searches = [];
         this.items = [];
         this.objects = [];
+        this.forageObjects = [];
         this.monsters = [];
     }
 
@@ -3073,6 +3071,7 @@ export class AreaDesigner extends EditorBase {
                     const old = this.getRoom(curr.x, curr.y, curr.z);
                     switch (prop) {
                         case 'monsters':
+                        case 'forageObjects':
                         case 'objects':
                         case 'sounds':
                         case 'smells':
@@ -3752,11 +3751,76 @@ export class AreaDesigner extends EditorBase {
                 sort: 5
             },
             {
+                property: 'noBaseForageObjects',
+                label: 'No base forage',
+                group: 'Advanced',
+                sort: 5
+            },
+            {
+                property: 'forageObjects',
+                label: 'Forage objects',
+                group: 'Advanced',
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        columns: [
+                            {
+                                label: 'Name',
+                                field: 'id',
+                                spring: true,
+                                formatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    return '';
+                                },
+                                tooltipFormatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    return '';
+                                },
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
+                                            return {
+                                                display: o.name || o.short,
+                                                value: o.id
+                                            };
+                                        }) : []
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Random',
+                                field: 'random',
+                                width: 150
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                id: 0,
+                                random: 0
+                            };
+                        },
+                        type: 'object',
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
+                    }
+                },
+                sort: 6
+            },
+            {
                 property: 'notes',
                 label: 'Notes',
                 group: 'Advanced',
                 visible: false,
-                sort: 6
+                sort: 7
             },
             {
                 property: 'light',
@@ -4378,6 +4442,11 @@ export class AreaDesigner extends EditorBase {
                 width: 125
             },
             {
+                field: 'noBaseForageObjects',
+                label: 'No base forage',
+                width: 125
+            },
+            {
                 field: 'objects',
                 label: 'Objects',
                 sortable: false,
@@ -4531,6 +4600,68 @@ export class AreaDesigner extends EditorBase {
                 }
             },
             {
+                field: 'forageObjects',
+                label: 'Forage objects',
+                sortable: false,
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        columns: [
+                            {
+                                label: 'Name',
+                                field: 'id',
+                                spring: true,
+                                formatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    return '';
+                                },
+                                tooltipFormatter: (data) => {
+                                    if (!data) return '';
+                                    if (data.cell >= 0 && this.$area.objects[data.cell])
+                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    return '';
+                                },
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
+                                            return {
+                                                display: o.name || o.short,
+                                                value: o.id
+                                            };
+                                        }) : []
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Random',
+                                field: 'random',
+                                width: 150
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                id: 0,
+                                minAmount: 0,
+                                maxAmount: 0,
+                                random: 0,
+                                unique: false
+                            };
+                        },
+                        type: 'object',
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
+                    }
+                },
+                sort: 2
+            },
+            {
                 field: 'room',
                 sortable: false,
                 label: '',
@@ -4667,6 +4798,8 @@ export class AreaDesigner extends EditorBase {
             newValue.room.noBaseMonsters = newValue.noBaseMonsters;
             newValue.room.noBaseObjects = newValue.noBaseObjects;
             newValue.room.noBaseItems = newValue.noBaseItems;
+            newValue.room.noBaseForageObjects = newValue.noBaseForageObjects;
+            newValue.room.forageObjects = newValue.forageObjects;
             this.$area.baseRooms[newValue.name] = newValue.room;
             this.changed = true;
         });
@@ -4678,8 +4811,10 @@ export class AreaDesigner extends EditorBase {
                 noBaseMonsters: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseMonsters,
                 noBaseObjects: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseObjects,
                 noBaseItems: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseItems,
+                noBaseForageObjects: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseForageObjects,
                 objects: this.$area.baseRooms['base' + this.$new.baseRooms].objects,
                 monsters: this.$area.baseRooms['base' + this.$new.baseRooms].monsters,
+                forageObjects: this.$area.baseRooms['base' + this.$new.baseRooms].forageObjects,
                 room: this.$area.baseRooms['base' + this.$new.baseRooms]
             };
             this.pushUndo(undoAction.add, undoType.properties, { property: 'baseRooms', name: 'base' + this.$new.baseRooms, value: e.data.room });
@@ -6161,6 +6296,7 @@ export class AreaDesigner extends EditorBase {
         }
         if (!value || value.length === 0) return '';
         switch (prop) {
+            case 'forageObjects':
             case 'objects':
                 return value.map(v => stripPinkfish(this.$area.objects[v.id].name)).join(', ');
             case 'monsters':
@@ -7550,7 +7686,7 @@ export class AreaDesigner extends EditorBase {
         this.$enterMoveNew = value.enterMoveNew;
 
         if (this.$roomEditor) {
-            const props = ['items', 'exitsDetails', 'sounds', 'smells', 'objects', 'monsters', 'searches'];
+            const props = ['items', 'exitsDetails', 'sounds', 'smells', 'objects', 'monsters', 'searches', 'forageObjects'];
             let pl = props.length;
             while (pl--) {
                 const ops = this.$roomEditor.getPropertyOptions(props[pl]);
@@ -7563,12 +7699,15 @@ export class AreaDesigner extends EditorBase {
         }
 
         let cols = this.$propertiesEditor.roomGrid.columns;
-        cols[4].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[4].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[4].editor.options.enterMoveNew = this.$enterMoveNew;
         cols[5].editor.options.enterMoveFirst = this.$enterMoveFirst;
         cols[5].editor.options.enterMoveNext = this.$enterMoveNext;
         cols[5].editor.options.enterMoveNew = this.$enterMoveNew;
+        cols[6].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[6].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[6].editor.options.enterMoveNew = this.$enterMoveNew;
+        cols[7].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[7].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[7].editor.options.enterMoveNew = this.$enterMoveNew;
         this.$propertiesEditor.roomGrid.columns = cols;
 
         cols = this.$propertiesEditor.monsterGrid.columns;
@@ -8495,7 +8634,7 @@ export class AreaDesigner extends EditorBase {
             while (rl--) {
                 const o = rooms[rl].clone();
                 o.exitsDetails = Object.values(o.exitsDetails);
-                ['items', 'exitsDetails', 'sounds', 'smells', 'objects', 'monsters', 'searches'].forEach(v => {
+                ['items', 'exitsDetails', 'sounds', 'smells', 'objects', 'monsters', 'searches', 'forageObjects'].forEach(v => {
                     if (o[v].length === 0)
                         o[v] = ri;
                 });
@@ -8755,8 +8894,10 @@ export class AreaDesigner extends EditorBase {
                 noBaseMonsters: this.$area.baseRooms[r].noBaseMonsters,
                 noBaseObjects: this.$area.baseRooms[r].noBaseObjects,
                 noBaseItems: this.$area.baseRooms[r].noBaseItems,
+                noBaseForageObjects: this.$area.baseRooms[r].noBaseForageObjects,
                 monsters: this.$area.baseRooms[r].monsters,
                 objects: this.$area.baseRooms[r].objects,
+                forageObjects: this.$area.baseRooms[r].forageObjects,
                 room: this.$area.baseRooms[r]
             };
         });
@@ -8831,12 +8972,16 @@ export class AreaDesigner extends EditorBase {
         this.$propertiesEditor.monsterGrid.columns = cols;
 
         cols = this.$propertiesEditor.roomGrid.columns;
-        cols[4].editor.options.columns[0].editor.options.data = data;
+        cols[5].editor.options.columns[0].editor.options.data = data;
+        cols[7].editor.options.columns[0].editor.options.data = data;
         this.$propertiesEditor.roomGrid.columns = cols;
 
         cols = this.$roomEditor.getPropertyOptions('objects');
         cols.editor.options.columns[0].editor.options.data = data;
         this.$roomEditor.setPropertyOptions('objects', cols);
+        cols = this.$roomEditor.getPropertyOptions('forageObjects');
+        cols.editor.options.columns[0].editor.options.data = data;
+        this.$roomEditor.setPropertyOptions('forageObjects', cols);
     }
 
     private BuildAxises() {
@@ -8911,6 +9056,10 @@ export class AreaDesigner extends EditorBase {
 
     public openObjects() {
         this.$roomEditor.beginEdit('objects', true);
+    }
+
+    public openNotes() {
+        this.$roomEditor.beginEdit('notes', true);
     }
 
     public generateCode(p, data) {
@@ -9219,7 +9368,34 @@ export class AreaDesigner extends EditorBase {
                     data['create post'] += tmp;
                 });
             }
-            data['create post'] += '}';
+            data['create post'] += '}\n';
+        }
+
+        tmp2 = room.forageObjects.filter(o => this.$area.objects[o.id]).sort((a, b) => {
+            if ((a.random === 0 || a.random >= 100) && b.random > 0 && b.random < 100)
+                return 1;
+            if ((b.random === 0 || b.random >= 100) && a.random > 0 && a.random < 100)
+                return -1;
+            if (a.id > b.id)
+                return 1;
+            if (a.id < b.id)
+                return -1;
+            return 0;
+        });
+        if (tmp2.length !== 0) {
+            if (data['create post'].length === 0)
+                data['create post'] += '\n';
+            data['create post'] += '\nobject query_forage(object player)\n{\n';
+            tmp2.forEach((o, i) => {
+                if (o.random > 0 && tmp.length !== 0 && o.random < 100)
+                    data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
+                data['create post'] += `   return new(OBJ + "${files[o.id]}.c");\n`;
+            });
+            if (!room.noBaseForageObjects && base.forageObjects.filter(o => this.$area.objects[o.id]).length !== 0)
+                data['create post'] += '   return ::query_forage();\n';
+            else
+                data['create post'] += '   return 0;\n';
+            data['create post'] += '}\n';
         }
 
         if (!room.type)

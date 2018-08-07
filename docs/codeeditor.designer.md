@@ -31,6 +31,8 @@ Advanced options for when creating a room
 - `No Base Items` replace inherited base object items, if false items are merged with base items, and any with the same name are replaced with current
 - `No Base Monsters` disable base inherited monsters
 - `No Base Objects` disable base inherited objects
+- `No Base Forage` do not return inherited forage object function
+- `Forage Objects` objects to return when a player forages for food
 
 ### Description
 
@@ -119,6 +121,7 @@ Allows you to create base room types for rooms to inherit
 - `No base monsters` Do not add monsters from inherited type
 - `No base Objects` Do not add objects from inherited type
 - `No base items` replace items from inherited type else merge and only replace matching names
+- `No base forage` do not return inherited forage object function
 - `Objects` the default objects for the room
   - `Name` the item to add
   - `Min amount` the minimum amount to add
@@ -131,6 +134,9 @@ Allows you to create base room types for rooms to inherit
   - `Max amount` the maximum amount to add
   - `Random` the random chance the object will be added, 0 to 100, 0/100 always
   - `Unique` Only one should ever exist
+- `Forage objects` objects to return when a player forages for food
+  - `Name` the object to return
+  - `Random` the chance it is this object
 - `...` open room editor to allow more fine control of different room properties
   - see [Room wizard](codeeditor.md#newroom) for details
 

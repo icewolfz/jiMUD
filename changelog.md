@@ -7,6 +7,7 @@
     - New progress dialog for code generation to allow you to cancel and see progress better
     - Add food and drink objects
     - All external exits are now defines in area.h per area standard, need to improve the name scheme still
+    - Allow custom forage objects to be returned when players forage for food
 - **Changed:**
   - Area designer: generated file names will no longer append a number at the end if there is only one matching name
 - **Fixed:**
