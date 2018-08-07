@@ -8983,8 +8983,16 @@ export class AreaDesigner extends EditorBase {
                             if (e.dest.match(/^\d+\s*,\s*\d+\s*,\s*\d+$/) || e.dest.match(/^\d+\s*,\s*\d+$/))
                                 return;
                             ec++;
-                            externs['DIR_EXTERN' + ec] = e.dest;
-                            files[e.dest] = 'DIR_EXTERN' + ec;
+                            const parts = e.dest.split('/');
+                            let dest;
+                            if (parts.length === 1)
+                                dest = `DIR_${e.dest.toUpperCase()}`;
+                            else if (parts.length > 1)
+                                dest = `DIR_${parts[parts.length - 2].toUpperCase()}_${parts[parts.length - 1].toUpperCase()}`;
+                            if (externs[dest])
+                                dest += ec;
+                            externs[dest] = e.dest;
+                            files[e.dest] = dest;
                         });
                     }
                 }
