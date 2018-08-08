@@ -338,11 +338,14 @@ export class Status extends EventEmitter {
     public updateXP() {
         $('#xp-value').text(this.info['EXPERIENCE']);
         $('#xp-banked').text(this.info['EXPERIENCE_BANKED']);
-        if (this.info['EXPERIENCE_NEED'] < 0)
+        if (this.info['EXPERIENCE_NEED'] < 0) {
             $('#need-value').text(this.client.options.allowNegativeNumberNeeded ? this.info['EXPERIENCE_NEED'] : 0);
-        else
+            this.updateBar('#need-percent', 100 - this.info['EXPERIENCE_NEED_P'], 100, this.client.options.allowNegativeNumberNeeded ? this.info['EXPERIENCE_NEED'].toString() : '0');
+        }
+        else {
             $('#need-value').text(this.info['EXPERIENCE_NEED']);
-        this.updateBar('#need-percent', 100 - this.info['EXPERIENCE_NEED_P'], 100, this.info['EXPERIENCE_NEED'].toString());
+            this.updateBar('#need-percent', 100 - this.info['EXPERIENCE_NEED_P'], 100, this.info['EXPERIENCE_NEED'].toString());
+        }
         $('#earn-value').text(this.info['EXPERIENCE_EARNED']);
     }
 

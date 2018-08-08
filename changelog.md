@@ -9,6 +9,7 @@
     - All external exits are now defines in area.h per area standard, need to improve the name scheme still
     - Allow custom forage objects to be returned when players forage for food
     - Monsters can now use other monsters as a base to allow you ultimate control and flexibility on how monsters are created
+    - Monsters, rooms, and objects now all contain a note field to allow additional notes or info, this info will also be added to the header when code is generated
 - **Changed:**
   - Area designer: generated file names will no longer append a number at the end if there is only one matching name
 - **Fixed:**
@@ -18,6 +19,9 @@
     - Fixed room preview formatting when consolidating same named items or items with mulitples
     - Fixed empty room checks so rooms that have objects, monsters, smells, items, sounds, and searches, as long as there is one the room will not be considered empty and be generated in code or be drawn in the mapper, this allows you to create shop storage and other misc rooms that may not have exits for what ever reasons
     - Fixed a bug with door code generation not setting external destination link
+  - Refresh status display after settings are changed
+  - Fixed some missing monster icons
+  - Fixed -#s when using show needed xp as progress bar
 
 ## 0.4.61 2018-08-06
 

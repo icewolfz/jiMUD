@@ -2067,6 +2067,7 @@
             });
             buildButtons();
             updateMenu();
+            client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
         });
 
         ipcRenderer.on('debug', (event, msg) => {
