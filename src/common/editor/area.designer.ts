@@ -542,7 +542,6 @@ class Monster {
 //TODO add weapon/armor/ore bonuses
 //TODO add armour damage systems
 //TODO add weapon/armor skill requirement editing
-//TODO add notes field editor, a dialog with a larger editor?
 /*
 weapon/armor/material/ore bonuses
     data grid
@@ -4909,7 +4908,10 @@ export class AreaDesigner extends EditorBase {
                                                 item: 0,
                                                 random: 0
                                             };
-                                        }
+                                        },
+                                        enterMoveFirst: this.$enterMoveFirst,
+                                        enterMoveNext: this.$enterMoveNext,
+                                        enterMoveNew: this.$enterMoveNew
                                     }),
                                     new WizardDataGridPage({
                                         title: 'Rummage objects',
@@ -4954,7 +4956,10 @@ export class AreaDesigner extends EditorBase {
                                                 item: 0,
                                                 random: 0
                                             };
-                                        }
+                                        },
+                                        enterMoveFirst: this.$enterMoveFirst,
+                                        enterMoveNext: this.$enterMoveNext,
+                                        enterMoveNew: this.$enterMoveNew
                                     }),
                                     new WizardPage({
                                         id: 'room-wiz-notes',
@@ -5259,7 +5264,7 @@ export class AreaDesigner extends EditorBase {
                                     })
                                 },
                                 data: {
-                                    'mon-wiz-notes' : ed.value.notes || '',
+                                    'mon-wiz-notes': ed.value.notes || '',
                                     'mon-wiz-welcome-message': 'Welcome to the monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
                                     'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).map(r => {
                                         return {
@@ -5940,7 +5945,10 @@ export class AreaDesigner extends EditorBase {
                                                 maxAmount: 0,
                                                 random: 0
                                             };
-                                        }
+                                        },
+                                        enterMoveFirst: this.$enterMoveFirst,
+                                        enterMoveNext: this.$enterMoveNext,
+                                        enterMoveNew: this.$enterMoveNew
                                     })]);
                                     break;
                                 case StdObjectType.material:
@@ -6331,6 +6339,8 @@ export class AreaDesigner extends EditorBase {
                                             sum += '<div><span style="font-weight:bold">' + (prop === 'subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].length + '</div>';
                                         else if (typeof data[prop] === 'object')
                                             sum += '<div><span style="font-weight:bold">' + (prop === 'subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].display + '</div>';
+                                        else if (typeof data[prop] === 'string')
+                                            sum += '<div><span style="font-weight:bold">' + (prop === 'subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + ellipse(data[prop]) + '</div>';
                                         else
                                             sum += '<div><span style="font-weight:bold">' + (prop === 'subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop] + '</div>';
                                     }
@@ -11441,4 +11451,10 @@ export class AreaDesigner extends EditorBase {
         }
     }
 
+}
+
+function ellipse(text, len?) {
+    if (!len || len < 1) len = 15;
+    if (!text || text.lengt <= len) return text || '';
+    return text.substr(0, len) + '&hellip;';
 }

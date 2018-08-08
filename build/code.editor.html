@@ -1220,7 +1220,7 @@
             </div>
         </div>
         <div id="mon-wizard-finish">
-            <img src="../assets/icons/png/wizmonlogo.png" alt="Monster finish summary" style="float: left;padding-top: 56px;"> To finish your monster simply click finished
+            <img src="../assets/icons/png/wizmonlogo.png" alt="Monster finish summary" style="float: left;padding-top: 84px;"> To finish your monster simply click finished
             <div id="mon-wiz-summary" readonly="readonly" class="form-control" style="overflow:auto;height:280px;width:355px;white-space:pre;float: right;"></div>
         </div>
         <div id="mon-wizard-combat">
@@ -6814,7 +6814,7 @@
     function ellipse(text, len) {
         if (!len || len < 1) len = 15;
         if (!text || text.lengt <= len) return text || '';
-        return text.substr(0, len) + '...';
+        return text.substr(0, len) + '&hellip;';
     }
 
     function writeFile(file, data) {
