@@ -74,3 +74,9 @@ enableDebug                 | boolean | false
 editorPersistent            | boolean | false
 askonclose                  | boolean | true
 dev                         | boolean | false
+chat.captureLines           | boolean | false
+chat.captureAllLines        | boolean | false
+chat.captureReviews         | boolean | false
+chat.captureTells           | boolean | false
+chat.captureTalk            | boolean | false
+chat.gag                    | boolean | false

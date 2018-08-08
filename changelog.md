@@ -10,6 +10,7 @@
     - Allow custom forage objects to be returned when players forage for food
     - Monsters can now use other monsters as a base to allow you ultimate control and flexibility on how monsters are created
     - Monsters, rooms, and objects now all contain a note field to allow additional notes or info, this info will also be added to the header when code is generated
+  - Add #setsetting options for chat, see [faq](docs/faq.md) for list of all supported settings
 - **Changed:**
   - Area designer: generated file names will no longer append a number at the end if there is only one matching name
 - **Fixed:**

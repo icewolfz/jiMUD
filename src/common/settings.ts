@@ -132,7 +132,13 @@ export let SettingList: any[] = [
     ['enableDebug', 0, 1, false],
     ['editorPersistent', 0, 1, false],
     ['askonclose', 0, 1, true],
-    ['dev', 0, 1, false]
+    ['dev', 0, 1, false],
+    ['chat.captureLines', 0, 1, false],
+    ['chat.captureAllLines', 0, 1, false],
+    ['chat.captureReviews', 0, 1, false],
+    ['chat.captureTells', 0, 1, false],
+    ['chat.captureTalk', 0, 1, false],
+    ['chat.gag', 0, 1, false]
 ];
 
 export class Settings {
