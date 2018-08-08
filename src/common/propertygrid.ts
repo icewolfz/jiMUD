@@ -277,7 +277,8 @@ export class PropertyGrid extends EventEmitter {
                     name: this.$options[prop].label || prop,
                     value: same ? this.formattedValue(prop) : '',
                     property: prop,
-                    readonly: this.isReadonly(prop)
+                    readonly: this.isReadonly(prop),
+                    align: this.$options[prop].align
                 });
             }
             else if (!this.hideUnSetProperties) {
@@ -342,6 +343,8 @@ export class PropertyGrid extends EventEmitter {
                 el.appendChild(lbl);
                 lbl = document.createElement('div');
                 lbl.classList.add('property-grid-item-value');
+                if (layout[group][c].align && layout[group][c].align.length !== 0)
+                    lbl.style.textAlign = layout[group][c].align;
                 if (layout[group][c].readonly)
                     lbl.classList.add('readonly');
                 if (layout[group][c].value === this.defaultFormattedValue(layout[group][c].property))
