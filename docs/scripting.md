@@ -49,6 +49,7 @@ To use scripting you just have to select script as the type from the type dropdo
 - `client.show()` show client
 - `client.hide()` hide client
 - `client.toggle()` toggle hide and show
+- `client.sendChat(text)` send text to chat window
 
 ### **WARNING**: you can effect the client if you access the wrong function, so any function used other then this list may caused unknown results and could cause the client to stop working
 

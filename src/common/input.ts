@@ -552,6 +552,18 @@ export class Input extends EventEmitter {
         let p;
         let reload;
         switch (fun.toLowerCase()) {
+            case 'chatprompt':
+            case 'chatp':
+                args = this.parseOutgoing(args.join(' '), false);
+                if ((<any>this.client).sendChat)
+                    (<any>this.client).sendChat(args);
+                return null;
+            case 'chat':
+            case 'ch':
+                args = this.parseOutgoing(args.join(' ') + '\n', false);
+                if ((<any>this.client).sendChat)
+                    (<any>this.client).sendChat(args);
+                return null;
             case 'untrigger':
             case 'unt':
                 profile = null;

@@ -77,6 +77,8 @@
 - `#untrigger {id|pattern} profile` or `#unt {id|pattern} profile` remove a trigger
   - `id|pattern` the id or pattern of the trigger to be removed
   - `profile` is optional and when set will create alarm in that profile, if profile not found fails to create, if omitted it will only search enabled profiles
+- `#chat text` or `#ch` send text to chat window
+- `#chatprompt text` or `#chatp` same chat but does not append a newline
 
 ## Test commands
 

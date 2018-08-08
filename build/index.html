@@ -615,6 +615,8 @@
             };
             client = new Client($("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
 
+            client.sendChat = (text) => ipcRenderer.send('chat', text);
+
             window.$selectedurl = '';
             window.$selectedline = '';
 
