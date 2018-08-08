@@ -827,7 +827,7 @@
 
                 if (_noCapture || _noCaptureStore > 0) return;
 
-                if (!chatWin)
+                if (!chatWin || chatWin.isDestroyed())
                 {
                     chatWin = remote.BrowserWindow.getAllWindows().filter(w => w.getTitle() === 'Chat');
                     chatWin = chatWin.length !== 0 ? chatWin[0] : null;
