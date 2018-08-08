@@ -2006,20 +2006,22 @@ ipcMain.on('reload-profiles', (event) => {
 });
 
 ipcMain.on('chat', (event, text) => {
-  if (!winChat) {
-    createChat();
-    setTimeout(() => { winChat.webContents.send('chat', text); }, 100);
-  }
-  else if (!chatReady)
-    setTimeout(() => { winChat.webContents.send('chat', text); }, 100);
-  else
-    winChat.webContents.send('chat', text);
+  sendChat(text);
   for (var name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
     windows[name].window.webContents.send('chat', text);
   }
 });
+
+function sendChat(text) {
+  if (!chatReady || !winChat) {
+    setTimeout(() => { sendChat(text); }, 100);
+    return;
+  }
+  else
+    winChat.webContents.send('chat', text);
+}
 
 ipcMain.on('setting-changed', (event, data) => {
   if (data.type === "mapper" && data.name === "alwaysOnTopClient") {
@@ -2875,6 +2877,8 @@ function showEditor(loading) {
   set.showEditor = true;
   set.save(global.settingsFile);
   if (winEditor != null) {
+    if (!editorReady)
+      return;
     if (editorMax)
       winEditor.maximize();
     winEditor.show();
@@ -2985,6 +2989,8 @@ function showChat(loading) {
   set.showChat = true;
   set.save(global.settingsFile);
   if (winChat != null) {
+    if (!chatReady)
+      return;
     if (chatMax)
       winChat.maximize();
     winChat.show();
