@@ -542,6 +542,8 @@ class Monster {
 //TODO add weapon/armor/ore bonuses
 //TODO add armour damage systems
 //TODO add weapon/armor skill requirement editing
+//TODO allow monsters to inherit from other monsters as well not just base / core types
+//TODO add notes field editor, a dialog with a larger editor?
 /*
 weapon/armor/material/ore bonuses
     data grid
@@ -5166,9 +5168,18 @@ export class AreaDesigner extends EditorBase {
                     options: {
                         click: ed => {
                             this.emit('show-monster-wizard', {
-                                title: 'Edit base monster',
+                                title: 'Edit monster',
+                                groups: {
+                                    'Area monsters': Object.keys(this.$area.monsters || {}).filter(r => +r !== +ed.value.id).map(r => {
+                                        return {
+                                            value: r,
+                                            display: capitalize(this.$area.monsters[r].name || this.$area.monsters[r].short),
+                                            group: 'Area monsters'
+                                        };
+                                    })
+                                },
                                 data: {
-                                    'mon-wiz-welcome-message': 'Welcome to the base monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
+                                    'mon-wiz-welcome-message': 'Welcome to the monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
                                     'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).map(r => {
                                         return {
                                             value: r,
@@ -10133,9 +10144,12 @@ export class AreaDesigner extends EditorBase {
         data['create arguments comment'] = '';
 
         let tmp;
-        const base: Monster = this.$area.baseMonsters[monster.type] || new Monster();
+        const base: Monster = this.$area.monsters[monster.type] || this.$area.baseMonsters[monster.type] || new Monster();
 
-        data.inherit = files[monster.type + 'monster'] || monster.type;
+        if (files[monster.type])
+            data.inherit = `(MON + ${files[monster.type]})`;
+        else
+            data.inherit = files[monster.type + 'monster'] || monster.type;
         data.inherits = '';
 
         data.doc.push('/doc/build/areas/tutorial');

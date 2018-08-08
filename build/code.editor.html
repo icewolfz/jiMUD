@@ -5354,14 +5354,14 @@
             $dialogs.room.on('close', () => {
                 menubar.enabled = true;
                 if ($dialogs.room.options && $dialogs.room.options.pages)
-                    $dialogs.room.removePages($dialogs.room.options.pages);                
+                    $dialogs.room.removePages($dialogs.room.options.pages);
                 if ($dialogs.room.options && $dialogs.room.options.closed)
                     $dialogs.room.options.closed();
             });
             $dialogs.room.on('cancel', () => {
                 menubar.enabled = true;
                 if ($dialogs.room.options && $dialogs.room.options.pages)
-                    $dialogs.room.removePages($dialogs.room.options.pages);                
+                    $dialogs.room.removePages($dialogs.room.options.pages);
                 if ($dialogs.room.options && $dialogs.room.options.closed)
                     $dialogs.room.options.closed();
             });
@@ -5862,6 +5862,10 @@
                 f.toLowerCase();
                 newFromValue(parseFileTemplate(value, tmpl), this.$dialogs.room.defaults['room-wiz-file'] || f);
             });
+            $('#room-wiz-type').addEventListener('change', (e) => {
+                if ($dialogs.room.options && $dialogs.monster.room.typeChange)
+                    $dialogs.room.options.typeChange(e);
+            });        
         }
         $dialogs.room.title = opts ? (opts.title || 'Create new room...') : 'Create new room...';
         $dialogs.room.defaults = dData || {};
@@ -5974,6 +5978,18 @@
                             }
                             else
                                 aTypes.innerHTML = '<option value="BASEMONSTER">Base</option>';
+
+                            if ($dialogs.monster.options && $dialogs.monster.options.groups) {
+                                var groups = Object.keys($dialogs.monster.options.groups);
+                                groups.forEach(g => {
+                                    var el = document.createElement('optgroup');
+                                    el.label = g;
+                                    el.id = g.replace(/ /g, '');
+                                    el.innerHTML = $dialogs.monster.options.groups[g].map(r => `<option value="${r.value || r.display}">${r.display || r.value}</option>`).join('');
+                                    aTypes.parentNode.insertBefore(el, aTypes.nextSibling);
+                                });
+                                $('#mon-wiz-type', e.page).selectpicker('refresh');
+                            }
                             $('#mon-wiz-type', e.page).val(e.wizard.defaults['mon-wiz-type'] || 'STD_MONSTER').selectpicker('render');
                             e.page.querySelector('#mon-wiz-level').value = e.wizard.defaults['mon-wiz-level'] || '1';
                             e.page.querySelector('#mon-wiz-alignment').value = e.wizard.defaults['mon-wiz-alignment'] || '';
@@ -6334,21 +6350,55 @@
                     })
                 ]
             });
+            $('#mon-wiz-type').on('change', (e) => {
+                if ($dialogs.monster.options && $dialogs.monster.options.typeChange)
+                    $dialogs.monster.options.typeChange(e);
+            });
             $dialogs.monster.height = '402px';
             $dialogs.monster.on('open', () => {
                 menubar.enabled = false;
             });
             $dialogs.monster.on('close', () => {
                 menubar.enabled = true;
+                if ($dialogs.monster.options && $dialogs.monster.options.groups) {
+                    var groups = Object.keys($dialogs.monster.options.groups);
+                    groups.forEach(g => {
+                        var el = document.getElementById(g.replace(/ /g, ''));
+                        el.remove();
+                    });
+                    $('#mon-wiz-type').selectpicker('refresh');
+                }
+                if ($dialogs.monster.options && $dialogs.monster.options.pages)
+                    $dialogs.monster.removePages($dialogs.monster.options.pages);
                 if ($dialogs.monster.options && $dialogs.monster.options.closed)
                     $dialogs.monster.options.closed();
             });
             $dialogs.monster.on('cancel', () => {
                 menubar.enabled = true;
+                if ($dialogs.monster.options && $dialogs.monster.options.groups) {
+                    var groups = Object.keys($dialogs.monster.options.groups);
+                    groups.forEach(g => {
+                        var el = document.getElementById(g.replace(/ /g, ''));
+                        el.remove();
+                    });
+                    $('#mon-wiz-type').selectpicker('refresh');
+                }
+                if ($dialogs.monster.options && $dialogs.monster.options.pages)
+                    $dialogs.monster.removePages($dialogs.monster.options.pages);
                 if ($dialogs.monster.options && $dialogs.monster.options.closed)
                     $dialogs.monster.options.closed();
             });
             $dialogs.monster.on('finished', (e) => {
+                if ($dialogs.monster.options && $dialogs.monster.options.groups) {
+                    var groups = Object.keys($dialogs.monster.options.groups);
+                    groups.forEach(g => {
+                        var el = document.getElementById(g.replace(/ /g, ''));
+                        el.remove();
+                    });
+                    $('#mon-wiz-type').selectpicker('refresh');
+                }
+                if ($dialogs.monster.options && $dialogs.monster.options.pages)
+                    $dialogs.monster.removePages($dialogs.monster.options.pages);
                 if ($dialogs.monster.options && $dialogs.monster.options.finish) {
                     $dialogs.monster.options.finish(e);
                     return;
@@ -6756,6 +6806,8 @@
         $dialogs.monster.title = opts ? (opts.title || 'Create new monster...') : 'Create new monster...';
         $dialogs.monster.defaults = dData || {};
         $dialogs.monster.options = opts;
+        if (opts && opts.pages)
+            $dialogs.monster.insertPages($dialogs.monster.pages.length - 1, opts.pages);
         $dialogs.monster.show();
     }
 

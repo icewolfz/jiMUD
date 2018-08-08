@@ -8,6 +8,7 @@
     - Add food and drink objects
     - All external exits are now defines in area.h per area standard, need to improve the name scheme still
     - Allow custom forage objects to be returned when players forage for food
+    - Monsters can now use other monsters as a base to allow you ultimate control and flexibility on how monsters are created
 - **Changed:**
   - Area designer: generated file names will no longer append a number at the end if there is only one matching name
 - **Fixed:**
