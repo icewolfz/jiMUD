@@ -497,7 +497,8 @@ export class Wizard extends EventEmitter {
         let idx;
         while (pl--) {
             idx = this.$pages.indexOf(pages[pl]);
-            this.$pages.splice(idx, 1);
+            if (idx !== -1)
+                this.$pages.splice(idx, 1);
         }
         this.unbindEvents(pages);
         this.doUpdate(UpdateType.rebuildNav | UpdateType.refresh);
@@ -508,7 +509,7 @@ export class Wizard extends EventEmitter {
         if (!Array.isArray(pages))
             pages = [pages];
         this.$pages.splice(idx, 0, ...pages);
-        this.$pages.forEach(p => p.wizard = this);
+        this.pages.forEach(p => p.wizard = this);
         this.bindEvents(pages);
         this.doUpdate(UpdateType.rebuildNav | UpdateType.refresh);
     }
@@ -646,7 +647,8 @@ export class Wizard extends EventEmitter {
             dest = 0;
         if (this.$current === dest && !force) return;
         this.emit('hidden', this.$current);
-        this.$pages[this.$current].emit('hidden', this.$pages[this.$current]);
+        if (this.$pages[this.$current])
+            this.$pages[this.$current].emit('hidden', this.$pages[this.$current]);
         this.$current = dest;
         this.refresh();
         this.$pages[this.$current].emit('shown', this.$pages[this.$current]);
@@ -663,7 +665,7 @@ export class Wizard extends EventEmitter {
         while (this.$body.firstChild) {
             this.$body.removeChild(this.$body.firstChild);
         }
-        if (this.$pages.length > 0 && this.$current < this.$pages.length - 1 && this.$pages[this.$current])
+        if (this.$pages.length > 0 && this.$current < this.$pages.length && this.$pages[this.$current])
             this.$body.appendChild(this.$pages[this.$current].page);
         this.$nav.selectedIndex = this.$current;
         $(this.$nav).val('' + this.$current);
