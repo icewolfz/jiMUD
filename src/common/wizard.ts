@@ -24,6 +24,9 @@ export interface DataGridPageOptions extends PageOptions {
     add?: Function;
     edit?: Function;
     delete?: Function;
+    enterMoveFirst?: boolean;
+    enterMoveNext?: boolean;
+    enterMoveNew?: boolean;
 }
 
 export class WizardPage extends EventEmitter {
@@ -193,6 +196,12 @@ export class WizardDataGridPage extends WizardPage {
         el.style.top = '33px';
         this.page.appendChild(el);
         this.dataGrid = new DataGrid(el);
+        if (options && options.hasOwnProperty('enterMoveFirst'))
+            this.dataGrid.enterMoveFirst = options.enterMoveFirst;
+        if (options && options.hasOwnProperty('enterMoveNext'))
+            this.dataGrid.enterMoveNext = options.enterMoveNext;
+        if (options && options.hasOwnProperty('enterMoveNew'))
+            this.dataGrid.enterMoveNew = options.enterMoveNew;
         this.dataGrid.clipboardPrefix = 'wizard/';
         this.dataGrid.on('selection-changed', () => {
             if (this.dataGrid.selectedCount) {
@@ -646,9 +655,13 @@ export class Wizard extends EventEmitter {
         if (dest < 0)
             dest = 0;
         if (this.$current === dest && !force) return;
-        this.emit('hidden', this.$current);
-        if (this.$pages[this.$current])
-            this.$pages[this.$current].emit('hidden', this.$pages[this.$current]);
+        const e = { destIndex: dest, destPage: this.$pages[dest], index: this.$current, page: this.$pages[this.$current], preventDefault: false };
+        this.emit('hidden', e);
+        if (e.preventDefault) return;
+        if (this.$pages[this.$current]) {
+            this.$pages[this.$current].emit('hidden', e);
+            if (e.preventDefault) return;
+        }
         this.$current = dest;
         this.refresh();
         this.$pages[this.$current].emit('shown', this.$pages[this.$current]);
