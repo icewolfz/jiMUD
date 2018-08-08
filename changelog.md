@@ -13,6 +13,7 @@
   - Add [#setsetting](docs/commands.md) options for chat, see [faq](docs/faq.md) for list of all supported settings
   - Add [#chat](docs/commands.md) command to send test to chat window and append newline
   - Add [#chatprompt](docs/commands.md) command to send test to chat window with no newline
+  - Chat capture: add option to disable capture as long as the chat window is hidden/closed
 - **Changed:**
   - Area designer: generated file names will no longer append a number at the end if there is only one matching name
 - **Fixed:**
@@ -25,6 +26,7 @@
   - Refresh status display after settings are changed
   - Fixed some missing monster icons
   - Fixed -#s when using show needed xp as progress bar
+  - Chat capture: Fix bug when using persistent window setting
 
 ## 0.4.61 2018-08-06
 

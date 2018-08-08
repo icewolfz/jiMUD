@@ -211,6 +211,11 @@
             webFrame.setZoomFactor(z);
             ipcRenderer.send('setting-changed', { chat: 'chat', name: 'zoom', value: z });
         }
+
+        // eslint-disable-next-line no-unused-vars
+        function closeHidden() {
+            remote.getCurrentWindow().hide();
+        }
     </script>
 </head>
 

@@ -117,6 +117,7 @@ Controls what is captured into the chat window
   - `All` capture all chat lines
   - `Selective` capture only those provided in the selective lines list
 - `Selective lines` A comma delimited list of lines to selectively capture, For example: Chat,Rp,Mudinfo will capture Chat, Rp, and Mudinfo lines.
+- `Do not capture when window hidden` Do not capture lines when window is closed, hidden, or minimized
 
 **Note:** line names are case sensitive.
 
