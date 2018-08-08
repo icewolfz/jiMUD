@@ -146,7 +146,16 @@
         }
 
         ipcRenderer.on('chat', (event, data) => {
-            display.addParserLine(data);
+            if (typeof data === 'string') {
+                display.append(data);
+                data = {
+                    line: data,
+                    formats: [{ formatType: 0 }],
+                    raw: data
+                };
+            }
+            else
+                display.addParserLine(data);
             if (!options)
                 loadOptions();
             _logger.postMessage({ action: 'add-line', args: data });
