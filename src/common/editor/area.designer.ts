@@ -542,7 +542,6 @@ class Monster {
 //TODO add weapon/armor/ore bonuses
 //TODO add armour damage systems
 //TODO add weapon/armor skill requirement editing
-//TODO allow monsters to inherit from other monsters as well not just base / core types
 //TODO add notes field editor, a dialog with a larger editor?
 /*
 weapon/armor/material/ore bonuses
@@ -3893,8 +3892,57 @@ export class AreaDesigner extends EditorBase {
                 property: 'notes',
                 label: 'Notes',
                 group: 'Advanced',
-                visible: false,
-                sort: 7
+                formatter: () => '',
+                visible: true,
+                align: 'center',
+                sort: 7,
+                editor: {
+                    type: EditorType.button,
+                    options: {
+                        open: true,
+                        click: ed => {
+                            const notes: HTMLDialogElement = <HTMLDialogElement>document.createElement('dialog');
+                            notes.id = 'notes-' + new Date().getTime();
+                            notes.addEventListener('open', () => this.emit('dialog-open'));
+                            notes.addEventListener('close', () => {
+                                if (notes.open)
+                                    notes.close();
+                                notes.remove();
+                                this.emit('dialog-close');
+                            });
+                            notes.addEventListener('cancel', () => {
+                                if (notes.open)
+                                    notes.close();
+                                notes.remove();
+                                this.emit('dialog-cancel');
+                            });
+
+                            notes.style.width = '400px';
+                            notes.style.height = '450px';
+                            notes.style.padding = '0px';
+                            notes.innerHTML = `
+                            <div class="dialog-header" style="font-weight: bold">
+                                <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('${notes.id}').close();">&times;</button>
+                                <div style="padding-top: 2px;">Room notes...</div>
+                            </div>
+                            <div class="dialog-body" style="padding-top:33px">
+                                <div class="form-group"><label class="control-label" style="padding: 10px;width: 100%"><textarea class="input-sm form-control" id="${notes.id}-value" style="width: 100%;height: 338px;">${ed.value || ''}</textarea></label></div>
+                            </div>
+                            <div class="dialog-footer">
+                                <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('${notes.id}').close();">Cancel</button>
+                                <button style="float: right" type="button" class="btn btn-primary">Ok</button>
+                            </div>`;
+                            document.body.appendChild(notes);
+                            notes.lastElementChild.lastElementChild.addEventListener('click', () => {
+                                ed.value = notes.children[1].querySelector('textarea').value;
+                                if (notes.open)
+                                    notes.close();
+                                notes.remove();
+                            });
+                            notes.showModal();
+                        }
+                    }
+                }
             },
             {
                 property: 'light',
@@ -4229,7 +4277,18 @@ export class AreaDesigner extends EditorBase {
                         click: ed => {
                             this.emit('show-monster-wizard', {
                                 title: 'Edit base monster',
+                                pages: [
+                                    new WizardPage({
+                                        id: 'mon-wiz-notes',
+                                        title: 'Notes',
+                                        body: `<div class="col-sm-12 form-group"><label class="control-label" style="width: 100%">Notes<textarea class="input-sm form-control" id="mon-wiz-notes" style="width: 100%;height: 273px;"></textarea></label></div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#mon-wiz-notes').value = e.wizard.defaults['mon-wiz-notes'] || '';
+                                        }
+                                    })
+                                ],
                                 data: {
+                                    'mon-wiz-notes': ed.value.notes || '',
                                     'mon-wiz-welcome-message': 'Welcome to the base monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
                                     'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).filter(r => r !== ed.value.type).map(r => {
                                         return {
@@ -4299,6 +4358,7 @@ export class AreaDesigner extends EditorBase {
                                 },
                                 finish: e => {
                                     const nMonster = ed.value.clone();
+                                    nMonster.notes = e.data['mon-wiz-notes'];
                                     nMonster.flags = RoomFlags.None;
                                     nMonster.type = e.data['mon-wiz-type'].value;
                                     nMonster.level = +e.data['mon-wiz-level'];
@@ -4691,6 +4751,7 @@ export class AreaDesigner extends EditorBase {
                             this.emit('show-room-wizard', {
                                 title: 'Edit base room',
                                 data: {
+                                    'room-wiz-notes': ed.value.notes || '',
                                     'room-wiz-welcome-message': 'Welcome to the base room editor, this will take you through the steps to edit a base room quickly and easily. You may finish at any time to save your current selections.',
                                     'room-wiz-area-types': Object.keys(this.$area.baseRooms || { base: null }).filter(r => r !== ed.value.type).map(r => {
                                         return {
@@ -4735,6 +4796,7 @@ export class AreaDesigner extends EditorBase {
                                 },
                                 finish: e => {
                                     const nRoom = ed.value.clone();
+                                    nRoom.notes = e.data['room-wiz-notes'];
                                     nRoom.flags = RoomFlags.None;
                                     nRoom.type = e.data['room-wiz-type'].value;
                                     nRoom.terrain = e.data['room-wiz-terrain'];
@@ -4892,6 +4954,14 @@ export class AreaDesigner extends EditorBase {
                                                 item: 0,
                                                 random: 0
                                             };
+                                        }
+                                    }),
+                                    new WizardPage({
+                                        id: 'room-wiz-notes',
+                                        title: 'Notes',
+                                        body: `<div class="col-sm-12 form-group"><label class="control-label" style="width: 100%">Notes<textarea class="input-sm form-control" id="room-wiz-notes" style="width: 100%;height: 216px;"></textarea></label></div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#room-wiz-notes').value = e.wizard.defaults['room-wiz-notes'] || '';
                                         }
                                     })
                                 ]
@@ -5169,6 +5239,16 @@ export class AreaDesigner extends EditorBase {
                         click: ed => {
                             this.emit('show-monster-wizard', {
                                 title: 'Edit monster',
+                                pages: [
+                                    new WizardPage({
+                                        id: 'mon-wiz-notes',
+                                        title: 'Notes',
+                                        body: `<div class="col-sm-12 form-group"><label class="control-label" style="width: 100%">Notes<textarea class="input-sm form-control" id="mon-wiz-notes" style="width: 100%;height: 273px;"></textarea></label></div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#mon-wiz-notes').value = e.wizard.defaults['mon-wiz-notes'] || '';
+                                        }
+                                    })
+                                ],
                                 groups: {
                                     'Area monsters': Object.keys(this.$area.monsters || {}).filter(r => +r !== +ed.value.id).map(r => {
                                         return {
@@ -5179,6 +5259,7 @@ export class AreaDesigner extends EditorBase {
                                     })
                                 },
                                 data: {
+                                    'mon-wiz-notes' : ed.value.notes || '',
                                     'mon-wiz-welcome-message': 'Welcome to the monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
                                     'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).map(r => {
                                         return {
@@ -5241,6 +5322,7 @@ export class AreaDesigner extends EditorBase {
                                         ed.editors[1].editor.value = e.data['mon-wiz-short'];
                                     }
                                     const nMonster = ed.value.clone();
+                                    nMonster.notes = e.data['mon-wiz-notes'];
                                     nMonster.flags = RoomFlags.None;
                                     nMonster.type = e.data['mon-wiz-type'].value;
                                     nMonster.level = +e.data['mon-wiz-level'];
@@ -6226,6 +6308,14 @@ export class AreaDesigner extends EditorBase {
                                 $(wiz.pages[4].page.querySelectorAll('.selectpicker')).selectpicker();
                                 Array.from(wiz.pages[4].page.querySelectorAll('.edit-dropdown')).forEach(initEditDropdown);
                             }
+                            wiz.addPages(new WizardPage({
+                                id: 'obj-wiz-notes',
+                                title: 'Notes',
+                                body: `<div class="col-sm-12 form-group"><label class="control-label" style="width: 100%">Notes<textarea class="input-sm form-control" id="obj-notes" style="width: 100%;height: 256px;"></textarea></label></div>`,
+                                reset: (e) => {
+                                    e.page.querySelector('#obj-notes').value = ed.value.notes || '';
+                                }
+                            }));
                             wiz.addPages(new WizardPage({
                                 id: 'obj-finish',
                                 title: 'Finish',
@@ -10122,7 +10212,7 @@ export class AreaDesigner extends EditorBase {
         if (room.notes.length !== 0) {
             if (data.description.length !== 0)
                 data.description += '\n';
-            data.description += ' * ' + room.notes.split('\n').join('\n * ') + '\n';
+            data.description += ' * Notes:\n * ' + room.notes.split('\n').join('\n * ') + '\n';
         }
         if (baseRoom)
             return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'baseroom.c'))), data);
@@ -10630,7 +10720,7 @@ export class AreaDesigner extends EditorBase {
         if (monster.notes.length !== 0) {
             if (data.description.length !== 0)
                 data.description += '\n';
-            data.description += ' * ' + monster.notes.split('\n').join('\n * ') + '\n';
+            data.description += ' * Notes:\n * ' + monster.notes.split('\n').join('\n * ') + '\n';
         }
         if (baseMonster)
             return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'basemonster.c'))), data);
@@ -11173,7 +11263,7 @@ export class AreaDesigner extends EditorBase {
         if (obj.notes.length !== 0) {
             if (data.description.length !== 0)
                 data.description += '\n';
-            data.description += ' * ' + obj.notes.split('\n').join('\n * ') + '\n';
+            data.description += ' * Notes:\n * ' + obj.notes.split('\n').join('\n * ') + '\n';
         }
         return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'object.c'))), data);
     }

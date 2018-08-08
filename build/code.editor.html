@@ -5862,7 +5862,7 @@
                 f.toLowerCase();
                 newFromValue(parseFileTemplate(value, tmpl), this.$dialogs.room.defaults['room-wiz-file'] || f);
             });
-            $('#room-wiz-type').addEventListener('change', (e) => {
+            $('#room-wiz-type').on('change', (e) => {
                 if ($dialogs.room.options && $dialogs.monster.room.typeChange)
                     $dialogs.room.options.typeChange(e);
             });        
@@ -6364,7 +6364,7 @@
                     var groups = Object.keys($dialogs.monster.options.groups);
                     groups.forEach(g => {
                         var el = document.getElementById(g.replace(/ /g, ''));
-                        el.remove();
+                        if (el) el.remove();
                     });
                     $('#mon-wiz-type').selectpicker('refresh');
                 }
@@ -6379,7 +6379,7 @@
                     var groups = Object.keys($dialogs.monster.options.groups);
                     groups.forEach(g => {
                         var el = document.getElementById(g.replace(/ /g, ''));
-                        el.remove();
+                        if (el) el.remove();
                     });
                     $('#mon-wiz-type').selectpicker('refresh');
                 }
@@ -6393,7 +6393,7 @@
                     var groups = Object.keys($dialogs.monster.options.groups);
                     groups.forEach(g => {
                         var el = document.getElementById(g.replace(/ /g, ''));
-                        el.remove();
+                        if (el) el.remove();
                     });
                     $('#mon-wiz-type').selectpicker('refresh');
                 }
