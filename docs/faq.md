@@ -80,3 +80,4 @@ chat.captureReviews         | boolean | false
 chat.captureTells           | boolean | false
 chat.captureTalk            | boolean | false
 chat.gag                    | boolean | false
+chat.CaptureOnlyOpen        | boolean | false

@@ -56,7 +56,7 @@ export class Chat {
     //list of lines to capture
     public lines: string[] = [];
     //dont capture when window hidden
-    public noCaptureHidden: boolean = false;
+    public CaptureOnlyOpen: boolean = false;
     public alwaysOnTop: boolean = false;
     public alwaysOnTopClient: boolean = true;
     public log: boolean = false;
@@ -141,7 +141,7 @@ export let SettingList: any[] = [
     ['chat.captureTells', 0, 1, false],
     ['chat.captureTalk', 0, 1, false],
     ['chat.gag', 0, 1, false],
-    ['chat.noCaptureHidden', 0, 1, false]
+    ['chat.CaptureOnlyOpen', 0, 1, false]
 ];
 
 export class Settings {

@@ -833,7 +833,7 @@
                     chatWin = chatWin.length !== 0 ? chatWin[0] : null;
                 }
                 var shown = chatWin ? chatWin.isVisible() && !chatWin.isMinimized() : false;
-                if(!shown && client.options.chat.noCaptureHidden) return;
+                if(!shown && client.options.chat.CaptureOnlyOpen) return;
 
                 //capture indented text
                 if (capture > 0 && data.line.startsWith("    ")) {
