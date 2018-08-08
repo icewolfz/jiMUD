@@ -663,7 +663,7 @@ export class Wizard extends EventEmitter {
         while (this.$body.firstChild) {
             this.$body.removeChild(this.$body.firstChild);
         }
-        if (this.$pages.length > 0)
+        if (this.$pages.length > 0 && this.$current < this.$pages.length - 1 && this.$pages[this.$current])
             this.$body.appendChild(this.$pages[this.$current].page);
         this.$nav.selectedIndex = this.$current;
         $(this.$nav).val('' + this.$current);
