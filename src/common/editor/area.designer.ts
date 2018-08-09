@@ -5604,9 +5604,11 @@ export class AreaDesigner extends EditorBase {
                                                     switch (e.value) {
                                                         case 0:
                                                             e.editors[1].editor.options.data = ['sight', 'scry bonus', 'double vision', 'sickness', 'force vision', 'night vision', 'faith protection', 'magic protection', 'waterbreathing', 'melee attack bonus'];
+                                                            e.editors[2].editor.options.data = ['true', 'false'];
                                                             break;
                                                         case 1:
                                                             e.editors[1].editor.options.data = ['charisma', 'constitution', 'dexterity', 'intelligence', 'strength', 'wisdom'];
+                                                            e.editors[2].editor.options.data = ['small', 'respectable', 'large'];
                                                             break;
                                                         case 2:
                                                             e.editors[1].editor.options.data = [{
@@ -5705,6 +5707,7 @@ export class AreaDesigner extends EditorBase {
                                                                     { value: 'protection' }
                                                                 ]
                                                             }];
+                                                            e.editors[2].editor.options.data = ['small', 'respectable', 'large'];
                                                             break;
                                                         case 3:
                                                             e.editors[1].editor.options.data = ['air',
@@ -5716,6 +5719,7 @@ export class AreaDesigner extends EditorBase {
                                                                 'rock',
                                                                 'water',
                                                                 'poison'];
+                                                            e.editors[2].editor.options.data = ['small', 'respectable', 'large'];
                                                             break;
                                                     }
                                                 },
@@ -5883,11 +5887,13 @@ export class AreaDesigner extends EditorBase {
                                         editor: {
                                             type: EditorType.dropdown,
                                             options: {
+                                                /*
                                                 data: [
                                                     'small',
                                                     'respectable',
                                                     'large'
                                                 ]
+                                                */
                                             }
                                         }
                                     }
@@ -11658,10 +11664,12 @@ export class AreaDesigner extends EditorBase {
         }
 
         if (bonuses && obj.bonuses && obj.bonuses.length !== 0) {
-            tmp = obj.bonus.filter(b => b.type === 0 && b.amount && b.adjust.length !== 0);
+            tmp = obj.bonus.filter(b => b.type === 0 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
             tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
                     return `"${b.adjust}" : ${b.amount}`;
+                else if (b.amount === true || b.amount === 'true')
+                    return `"${b.adjust}" : 1`;
                 return `"${b.adjust}" : "${b.amount}"`;
             });
             if (tmp.length === 1)
@@ -11671,10 +11679,12 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += tmp.join(',\n       ');
                 data['create body'] += '\n     ]) );\n';
             }
-            tmp = obj.bonus.filter(b => b.type === 1 && b.amount && b.adjust.length !== 0);
+            tmp = obj.bonus.filter(b => b.type === 1 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
             tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
                     return `"${b.adjust}" : ${b.amount}`;
+                else if (b.amount === true || b.amount === 'true')
+                    return `"${b.adjust}" : 1`;
                 return `"${b.adjust}" : "${b.amount}"`;
             });
             if (tmp.length === 1)
@@ -11684,10 +11694,12 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += tmp.join(',\n       ');
                 data['create body'] += '\n     ]) );\n';
             }
-            tmp = obj.bonus.filter(b => b.type === 2 && b.amount && b.adjust.length !== 0);
+            tmp = obj.bonus.filter(b => b.type === 2 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
             tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
                     return `"${b.adjust}" : ${b.amount}`;
+                else if (b.amount === true || b.amount === 'true')
+                    return `"${b.adjust}" : 1`;
                 return `"${b.adjust}" : "${b.amount}"`;
             });
             if (tmp.length === 1)
@@ -11697,10 +11709,12 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += tmp.join(',\n       ');
                 data['create body'] += '\n     ]) );\n';
             }
-            tmp = obj.bonus.filter(b => b.type === 3 && b.amount && b.adjust.length !== 0);
+            tmp = obj.bonus.filter(b => b.type === 3 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
             tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
                     return `"${b.adjust}" : ${b.amount}`;
+                else if (b.amount === true || b.amount === 'true')
+                    return `"${b.adjust}" : 1`;
                 return `"${b.adjust}" : "${b.amount}"`;
             });
             if (tmp.length === 1)

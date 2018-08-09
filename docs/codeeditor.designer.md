@@ -148,6 +148,7 @@ Allows you to create base room types for rooms to inherit
     - `Name` the object to return
     - `Random` the chance it is this object  
   - see [Room wizard](codeeditor.md#newroom) for more details
+  - `Notes` optional notes about the monster, included in the header comments when code generated
 
 ### Base monsters
 
@@ -166,6 +167,7 @@ Allows you to create base monsters for monsters to inherit
   - `Action` an action to do with the item
 - `...` open monster editor to allow more fine control of different monster properties
   - see [Monster wizard](codeeditor.md#newmonster) for details
+  - `Notes` optional notes about the monster, included in the header comments when code generated
 
 ## Monster editor
 
@@ -185,6 +187,7 @@ Create monsters for your area
   - `Action` an action to do with the item
 - `...` open monster editor to allow more fine control of different monster properties
   see [Monster wizard](codeeditor.md#newmonster) for details
+  - `Notes` optional notes about the monster, included in the header comments when code generated
 
 ## Object editor
 
@@ -214,6 +217,17 @@ Create objects for your area
     - `KeyID` a unique key id to turn an object into a key to unlock doors/chest, if object type is chest this is used to assign a key to chest
     - `Mass` the mass of the object, only objects that are weapons or armors have default mass
     - `Material` what the object is made from, must be a valid material or alloy, may select from list of supported materials
+  - `Bonuses` get bonuses granted by object or used for crafting, not all objects allow bonuses
+    - `Type` the type of bonus
+      - `Property` a generic bonus
+      - `Stat` a stat bonus
+      - `Skill` a skill bonus
+      - `Resistance` a resistance to a type of damage
+    - `Adjust` what to adjust, can be any value, predefined list are provided for quick selection based on type
+    - `Amount` the amount to adjust can be any number or string value
+      - `small` only supported with skills, stats, or resistance types
+      - `respectable` only supported with skills, stats, or resistance types
+      - `large` only supported with skills, stats, or resistance types
   - `Type properties` these pages contain properties and settings that only apply based on the selected object type
     - `Armor`
       - `Type` the type of armor, select from the supported list
