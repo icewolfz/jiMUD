@@ -6300,13 +6300,13 @@ export class AreaDesigner extends EditorBase {
                                             </div>
                                         </label>
                                     </div>${qualities}
-                                    <div class="form-group col-sm-12">
+                                    <div class="form-group col-sm-6">
                                         <label class="control-label">
                                             Enchantment
                                             <input type="number" id="obj-enchantment" class="input-sm form-control" value="0" min="0" max="1000" style="width: 100%" />
                                         </label>
                                     </div>
-                                    <div class="col-sm-12 form-group">
+                                    <div class="col-sm-6 form-group">
                                         <label class="control-label">
                                             Max wearable
                                             <input type="number" id="obj-maxWearable" class="input-sm form-control" min="0" value="10" />
@@ -6975,13 +6975,13 @@ export class AreaDesigner extends EditorBase {
                                     for (const prop in data) {
                                         if (!data.hasOwnProperty(prop)) continue;
                                         if (Array.isArray(data[prop]))
-                                            sum += '<div><span style="font-weight:bold">' + (prop === 'subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].length + '</div>';
+                                            sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].length + '</div>';
                                         else if (typeof data[prop] === 'object')
-                                            sum += '<div><span style="font-weight:bold">' + (prop === 'subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].display + '</div>';
+                                            sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].display + '</div>';
                                         else if (typeof data[prop] === 'string')
-                                            sum += '<div><span style="font-weight:bold">' + (prop === 'subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + ellipse(data[prop]) + '</div>';
+                                            sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + ellipse(data[prop]) + '</div>';
                                         else
-                                            sum += '<div><span style="font-weight:bold">' + (prop === 'subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop] + '</div>';
+                                            sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop] + '</div>';
                                     }
                                     summary.innerHTML = sum;
                                 }
