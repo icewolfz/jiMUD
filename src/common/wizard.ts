@@ -272,7 +272,7 @@ export class WizardDataGridPage extends WizardPage {
         }
         this.on('reset', e => {
             if (!this.wizard.data[this.id])
-                this.wizard.data[this.id] = this.wizard.defaults[this.id] || [];
+                this.wizard.data[this.id] = [];
             else if (this.wizard.defaults[this.id])
                 this.wizard.data[this.id] = this.wizard.defaults[this.id] || [];
             else
