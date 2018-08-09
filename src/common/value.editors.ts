@@ -962,12 +962,43 @@ export class DropDownEditValueEditor extends ValueEditor {
             while (tl--) {
                 const el = document.createElement('div');
                 el.classList.add('property-grid-editor-flag-dropdown-item');
-                el.textContent = capitalize(data[tl]);
-                el.addEventListener('click', (e2) => {
-                    this.value = (<HTMLElement>e2.currentTarget).textContent.toLowerCase();
-                    this.focus();
-                    this.$editor.dataset.aOpen = null;
-                });
+                if (typeof data[tl] === 'object') {
+                    if (data[tl].type === 'group') {
+                        el.classList.add('property-grid-editor-flag-dropdown-item-group');
+                        if (data[tl].items) {
+                            const f = document.createDocumentFragment();
+                            data[tl].items.forEach(i => {
+                                const el2 = document.createElement('div');
+                                el2.classList.add('property-grid-editor-flag-dropdown-item-group-item');
+                                el2.textContent = capitalize(i.display || i.value);
+                                el2.dataset.value = i.value;
+                                el2.addEventListener('click', (e2) => {
+                                    this.value = (<HTMLElement>e2.currentTarget).dataset.value || (<HTMLElement>e2.currentTarget).textContent.toLowerCase();
+                                    this.focus();
+                                    this.$editor.dataset.aOpen = null;
+                                });
+                                f.appendChild(el2);
+                            });
+                            this.$dropdown.insertBefore(f, this.$dropdown.firstChild);
+                        }
+                        if (data[tl].value)
+                            el.addEventListener('click', (e2) => {
+                                this.value = (<HTMLElement>e2.currentTarget).dataset.value;
+                                this.focus();
+                                this.$editor.dataset.aOpen = null;
+                            });
+                    }
+                    el.textContent = capitalize(data[tl].display || data[tl].value);
+                    el.dataset.value = data[tl].value;
+                }
+                else
+                    el.textContent = capitalize(data[tl]);
+                if (typeof data[tl] !== 'object' || (typeof data[tl] === 'object' && data[tl].type !== 'group'))
+                    el.addEventListener('click', (e2) => {
+                        this.value = (<HTMLElement>e2.currentTarget).dataset.value || (<HTMLElement>e2.currentTarget).textContent.toLowerCase();
+                        this.focus();
+                        this.$editor.dataset.aOpen = null;
+                    });
                 this.$dropdown.insertBefore(el, this.$dropdown.firstChild);
             }
             if (height < 160) {
@@ -1465,6 +1496,10 @@ export class SelectValueEditor extends ValueEditor {
         this.$el.addEventListener('blur', (e) => {
             setTimeout(() => this.control.clearEditor(e));
         });
+        this.$el.addEventListener('change', e => {
+            if (this.options && this.options.change)
+                this.options.change(this);
+        });
         this.parent.appendChild(this.$el);
     }
     public focus() {
@@ -1529,8 +1564,7 @@ export class ButtonValueEditor extends ValueEditor {
             return;
         });
         this.$el.addEventListener('blur', (e) => {
-            if (this.$clicked)
-            {
+            if (this.$clicked) {
                 e.preventDefault();
                 e.stopPropagation();
                 e.cancelBubble = true;

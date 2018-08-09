@@ -944,6 +944,10 @@ input[type=checkbox].property-grid-editor {
     width: 100%;
 }
 
+.property-grid-editor-flag-dropdown div.property-grid-editor-flag-dropdown-item-group-item {
+    padding-left: 20px !important;
+}
+
 .panel-heading .control-label {
     width: 100%;
     margin: 0px;
@@ -1070,7 +1074,7 @@ input[type=checkbox].property-grid-editor {
     background-repeat: repeat-x;
 }
 
-.dropdown-menu > li > a.main {
+.dropdown-menu > li > a.main, .property-grid-editor-flag-dropdown-item-group {
     font-weight: bold;
 }
 

@@ -1851,7 +1851,7 @@ export class DataGrid extends EventEmitter {
     }
 
     private resize() {
-        const style = window.getComputedStyle(this.$parent, null);
+        //const style = window.getComputedStyle(this.$parent, null);
         //let h = parseInt(style.getPropertyValue('height'), 10);
         //let w = parseInt(style.getPropertyValue('width'), 10);
         let h = this.$parent.clientHeight;
