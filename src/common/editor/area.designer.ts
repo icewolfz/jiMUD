@@ -539,16 +539,9 @@ class Monster {
     }
 }
 
-//TODO add weapon/armor/ore bonuses
 //TODO add armour damage systems
 //TODO add weapon/armor skill requirement editing
 /*
-weapon/armor/material/ore bonuses
-    data grid
-        type - stat, resistance, skill, property, see about capturing the change event to add a custom value drop down, maybe a global list with main/subs?
-        adjust - the stat/resistance/skill name
-        amount - the amount to adjust or set
-
 armor damage systems
     datagrid for each?
         limbs
@@ -5568,6 +5561,374 @@ export class AreaDesigner extends EditorBase {
                                 sh = ed.editors[1].editor.value;
                                 ty = ed.editors[2].editor.value;
                             }
+                            const wizBonuses = new WizardDataGridPage({
+                                title: 'Bonuses',
+                                id: 'obj-bonuses',
+                                columns: [
+                                    {
+                                        label: 'Type',
+                                        field: 'type',
+                                        width: 150,
+                                        formatter: (data) => {
+                                            if (!data) return '';
+                                            switch (+data.cell) {
+                                                case 0:
+                                                    return 'Property';
+                                                case 1:
+                                                    return 'Stat';
+                                                case 2:
+                                                    return 'Skill';
+                                                case 3:
+                                                    return 'Resistance';
+                                            }
+                                            return '';
+                                        },
+                                        tooltipFormatter: (data) => {
+                                            if (!data) return '';
+                                            switch (+data.cell) {
+                                                case 0:
+                                                    return 'Property';
+                                                case 1:
+                                                    return 'Stat';
+                                                case 2:
+                                                    return 'Skill';
+                                                case 3:
+                                                    return 'Resistance';
+                                            }
+                                            return '';
+                                        },
+                                        editor: {
+                                            type: EditorType.select,
+                                            options: {
+                                                change: e => {
+                                                    switch (e.value) {
+                                                        case 0:
+                                                            e.editors[1].editor.options.data = ['sight', 'scry bonus', 'double vision', 'sickness', 'force vision', 'night vision', 'faith protection', 'magic protection', 'waterbreathing', 'melee attack bonus'];
+                                                            break;
+                                                        case 1:
+                                                            e.editors[1].editor.options.data = ['charisma', 'constitution', 'dexterity', 'intelligence', 'strength', 'wisdom'];
+                                                            break;
+                                                        case 2:
+                                                            e.editors[1].editor.options.data = [{
+                                                                display: 'Weapon skills', type: 'group', items: [
+                                                                    { value: 'axe' },
+                                                                    { value: 'blunt' },
+                                                                    { value: 'flail' },
+                                                                    { value: 'knife' },
+                                                                    { value: 'large sword' },
+                                                                    { value: 'melee' },
+                                                                    { value: 'miscellaneous' },
+                                                                    { value: 'missile' },
+                                                                    { value: 'polearm' },
+                                                                    { value: 'small sword' },
+                                                                    { value: 'spear' },
+                                                                    { value: 'staff' }
+                                                                ]
+                                                            },
+                                                            {
+                                                                display: 'General skills', type: 'group', items: [
+                                                                    { value: 'climbing' },
+                                                                    { value: 'fishing' },
+                                                                    { value: 'mining' },
+                                                                    { value: 'riding' },
+                                                                    { value: 'survival' }
+                                                                ]
+                                                            },
+                                                            {
+                                                                display: 'Magic skills', type: 'group', items: [
+                                                                    { value: 'conjuring' },
+                                                                    { value: 'elementals' },
+                                                                    { value: 'magic' },
+                                                                    { value: 'necromancy' },
+                                                                    { value: 'planes' },
+                                                                    { value: 'sorcery' }
+                                                                ]
+                                                            },
+                                                            {
+                                                                display: 'Deception skills', type: 'group', items: [
+                                                                    { value: 'acrobatics' },
+                                                                    { value: 'devices' },
+                                                                    { value: 'murder' },
+                                                                    { value: 'performance' },
+                                                                    { value: 'stealth' },
+                                                                    { value: 'streetwise' },
+                                                                    { value: 'subterfuge' }
+                                                                ]
+                                                            },
+                                                            {
+                                                                display: 'Crafting skills', type: 'group', items: [
+                                                                    { value: 'artistry' },
+                                                                    { value: 'blacksmithing' },
+                                                                    { value: 'brewing' },
+                                                                    { value: 'cooking' },
+                                                                    { value: 'crafting' },
+                                                                    { value: 'glasssmithing' },
+                                                                    { value: 'leathering' },
+                                                                    { value: 'sewing' },
+                                                                    { value: 'stonemasonry' },
+                                                                    { value: 'woodworking' }
+                                                                ]
+                                                            },
+                                                            {
+                                                                display: 'Discipline skills', type: 'group', items: [
+                                                                    { value: 'discipline' },
+                                                                    { value: 'kicks' },
+                                                                    { value: 'mind' },
+                                                                    { value: 'punches' },
+                                                                    { value: 'sweeps' },
+                                                                    { value: 'throws' }
+                                                                ]
+                                                            },
+                                                            {
+                                                                display: 'Combat skills', type: 'group', items: [
+                                                                    { value: 'archery' },
+                                                                    { value: 'armour' },
+                                                                    { value: 'attack' },
+                                                                    { value: 'defense' },
+                                                                    { value: 'double wielding' },
+                                                                    { value: 'shield' },
+                                                                    { value: 'tactics' },
+                                                                    { value: 'thrown' },
+                                                                    { value: 'two-handed' },
+                                                                    { value: 'weapons' }
+                                                                ]
+                                                            },
+                                                            {
+                                                                display: 'Faith skills', type: 'group', items: [
+                                                                    { value: 'combat' },
+                                                                    { value: 'death' },
+                                                                    { value: 'elements' },
+                                                                    { value: 'faith' },
+                                                                    { value: 'knowledge' },
+                                                                    { value: 'life' },
+                                                                    { value: 'nature' },
+                                                                    { value: 'protection' }
+                                                                ]
+                                                            }];
+                                                            break;
+                                                        case 3:
+                                                            e.editors[1].editor.options.data = ['air',
+                                                                'acid',
+                                                                'fire',
+                                                                'ice',
+                                                                'cold',
+                                                                'lightning',
+                                                                'rock',
+                                                                'water',
+                                                                'poison'];
+                                                            break;
+                                                    }
+                                                },
+                                                data: [
+                                                    { display: 'Property', value: 0 },
+                                                    { display: 'Stat', value: 1 },
+                                                    { display: 'Skill', value: 2 },
+                                                    { display: 'Resistance', value: 3 }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        label: 'Adjust',
+                                        field: 'adjust',
+                                        width: 150,
+                                        editor: {
+                                            type: EditorType.dropdown,
+                                            options: {
+                                                data: ['sight']
+                                                /*
+                                                data: [
+                                                    {
+                                                        display: 'Properties',
+                                                        type: 'group',
+                                                        items: [
+                                                            {
+                                                                value: 'sight'
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        display: 'Stats',
+                                                        type: 'group',
+                                                        items: [
+                                                            { value: 'charisma' },
+                                                            { value: 'constitution' },
+                                                            { value: 'dexterity' },
+                                                            { value: 'intelligence' },
+                                                            { value: 'strength' },
+                                                            { value: 'wisdom' }
+                                                        ]
+                                                    },
+                                                    {
+                                                        display: 'Weapon skills', type: 'group', items: [
+                                                            { value: 'axe' },
+                                                            { value: 'blunt' },
+                                                            { value: 'flail' },
+                                                            { value: 'knife' },
+                                                            { value: 'large sword' },
+                                                            { value: 'melee' },
+                                                            { value: 'miscellaneous' },
+                                                            { value: 'missile' },
+                                                            { value: 'polearm' },
+                                                            { value: 'small sword' },
+                                                            { value: 'spear' },
+                                                            { value: 'staff' }
+                                                        ]
+                                                    },
+                                                    {
+                                                        display: 'General skills', type: 'group', items: [
+                                                            { value: 'climbing' },
+                                                            { value: 'fishing' },
+                                                            { value: 'mining' },
+                                                            { value: 'riding' },
+                                                            { value: 'survival' }
+                                                        ]
+                                                    },
+                                                    {
+                                                        display: 'Magic skills', type: 'group', items: [
+                                                            { value: 'conjuring' },
+                                                            { value: 'elementals' },
+                                                            { value: 'magic' },
+                                                            { value: 'necromancy' },
+                                                            { value: 'planes' },
+                                                            { value: 'sorcery' }
+                                                        ]
+                                                    },
+                                                    {
+                                                        display: 'Deception skills', type: 'group', items: [
+                                                            { value: 'acrobatics' },
+                                                            { value: 'devices' },
+                                                            { value: 'murder' },
+                                                            { value: 'performance' },
+                                                            { value: 'stealth' },
+                                                            { value: 'streetwise' },
+                                                            { value: 'subterfuge' }
+                                                        ]
+                                                    },
+                                                    {
+                                                        display: 'Crafting skills', type: 'group', items: [
+                                                            { value: 'artistry' },
+                                                            { value: 'blacksmithing' },
+                                                            { value: 'brewing' },
+                                                            { value: 'cooking' },
+                                                            { value: 'crafting' },
+                                                            { value: 'glasssmithing' },
+                                                            { value: 'leathering' },
+                                                            { value: 'sewing' },
+                                                            { value: 'stonemasonry' },
+                                                            { value: 'woodworking' }
+                                                        ]
+                                                    },
+                                                    {
+                                                        display: 'Discipline skills', type: 'group', items: [
+                                                            { value: 'discipline' },
+                                                            { value: 'kicks' },
+                                                            { value: 'mind' },
+                                                            { value: 'punches' },
+                                                            { value: 'sweeps' },
+                                                            { value: 'throws' }
+                                                        ]
+                                                    },
+                                                    {
+                                                        display: 'Combat skills', type: 'group', items: [
+                                                            { value: 'archery' },
+                                                            { value: 'armour' },
+                                                            { value: 'attack' },
+                                                            { value: 'defense' },
+                                                            { value: 'double wielding' },
+                                                            { value: 'shield' },
+                                                            { value: 'tactics' },
+                                                            { value: 'thrown' },
+                                                            { value: 'two-handed' },
+                                                            { value: 'weapons' }
+                                                        ]
+                                                    },
+                                                    {
+                                                        display: 'Faith skills', type: 'group', items: [
+                                                            { value: 'combat' },
+                                                            { value: 'death' },
+                                                            { value: 'elements' },
+                                                            { value: 'faith' },
+                                                            { value: 'knowledge' },
+                                                            { value: 'life' },
+                                                            { value: 'nature' },
+                                                            { value: 'protection' }
+                                                        ]
+                                                    },
+                                                    {
+                                                        display: 'Resistances',
+                                                        type: 'group',
+                                                        items: [
+                                                            { value: 'air' },
+                                                            { value: 'acid' },
+                                                            { value: 'fire' },
+                                                            { value: 'ice' },
+                                                            { value: 'cold' },
+                                                            { value: 'lightning' },
+                                                            { value: 'rock' },
+                                                            { value: 'water' },
+                                                            { value: 'poison' }
+                                                        ]
+                                                    }
+                                                ]
+                                                */
+                                            }
+                                        }
+                                    },
+                                    {
+                                        label: 'Amount',
+                                        field: 'amount',
+                                        width: 150,
+                                        spring: true,
+                                        editor: {
+                                            type: EditorType.dropdown,
+                                            options: {
+                                                data: [
+                                                    'small',
+                                                    'respectable',
+                                                    'large'
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ],
+                                add: (e) => {
+                                    e.data = {
+                                        type: 0,
+                                        adjust: '',
+                                        amount: ''
+                                    };
+                                },
+                                hidden: e => {
+                                    /*
+                                    const stats = ['charisma', 'constitution', 'dexterity', 'intelligence', 'strength', 'wisdom'];
+                                    const skills = ['axe', 'blunt', 'flail', 'knife', 'largesword', 'melee', 'miscellaneous', 'missile', 'polearm', 'smallsword', 'spear', 'staff', 'climbing', 'fishing', 'mining', 'riding', 'survival', 'conjuring', 'elementals', 'magic', 'necromancy', 'planes', 'sorcery', 'acrobatics', 'devices', 'murder', 'performance', 'stealth', 'streetwise', 'subterfuge', 'artistry', 'blacksmithing', 'brewing', 'cooking', 'crafting', 'glasssmithing', 'leathering', 'sewing', 'stonemasonry', 'woodworking', 'discipline', 'kicks', 'mind', 'punches', 'sweeps', 'throws', 'archery', 'armour', 'attack', 'defense', 'doublewielding', 'shield', 'tactics', 'thrown', 'two-handed', 'weapons', 'combat', 'death', 'elements', 'faith', 'knowledge', 'life', 'nature', 'protection'];
+                                    e.page.dataGrid.rows.forEach((r, i) => {
+                                        if (r.type === 1) {
+                                            if (r.adjust && r.adjust.length !== 0 && stats.indexOf(r.adjust) === -1) {
+                                                (<HTMLElement>$(`[data-data-index=${i}]`, e.page.dataGrid.parent)[0].children[1]).title = 'Invalid stat';
+                                                $($(`[data-data-index=${i}]`, e.page.dataGrid.parent)[0].children[1]).tooltip({ container: '#object-wizard .dialog-body', delay: { show: 100, hide: 250 } }).tooltip('show');
+                                                e.preventDefault = true;
+                                            }
+                                            else
+                                                (<HTMLElement>$(`[data-data-index=${i}]`, e.page.dataGrid.parent)[0].children[1]).title = r.adjust;
+                                        }
+                                        else if (r.type === 2) {
+                                            if (r.adjust && r.adjust.length !== 0 && skills.indexOf(r.adjust) === -1) {
+                                                (<HTMLElement>$(`[data-data-index=${i}]`, e.page.dataGrid.parent)[0].children[1]).title = 'Invalid skill';
+                                                $($(`[data-data-index=${i}]`, e.page.dataGrid.parent)[0].children[1]).tooltip({ container: '#object-wizard .dialog-body', delay: { show: 100, hide: 250 } }).tooltip('show');
+                                                e.preventDefault = true;
+                                            }
+                                            else
+                                                (<HTMLElement>$(`[data-data-index=${i}]`, e.page.dataGrid.parent)[0].children[1]).title = r.adjust;
+                                        }
+                                    });
+                                    */
+                                },
+                                enterMoveFirst: this.$enterMoveFirst,
+                                enterMoveNext: this.$enterMoveNext,
+                                enterMoveNew: this.$enterMoveNew
+                            });
                             const wiz = new Wizard({
                                 id: 'object-wizard',
                                 title: 'Edit object...',
@@ -5719,9 +6080,12 @@ export class AreaDesigner extends EditorBase {
                         </div>`;
                             switch (ty) {
                                 case StdObjectType.sheath:
+                                    wiz.defaults = {
+                                        'obj-bonuses': ed.value.bonuses || []
+                                    };
                                     wiz.title = 'Edit sheath...';
                                     //type, quality, limbs, enchantment
-                                    wiz.addPages(new WizardPage({
+                                    wiz.addPages([new WizardPage({
                                         id: 'obj-armor',
                                         title: 'Sheath properties',
                                         body: `<div class="col-sm-12 form-group">
@@ -5767,12 +6131,15 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-limbs').value = ed.value.limbs || '';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
-                                    }));
+                                    }), wizBonuses]);
                                     break;
                                 case StdObjectType.armor:
+                                    wiz.defaults = {
+                                        'obj-bonuses': ed.value.bonuses || []
+                                    };
                                     wiz.title = 'Edit armor...';
                                     //type, quality, limbs, enchantment
-                                    wiz.addPages(new WizardPage({
+                                    wiz.addPages([new WizardPage({
                                         id: 'obj-armor',
                                         title: 'Armor properties',
                                         body: `<div class="col-sm-12 form-group">
@@ -5810,7 +6177,7 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
-                                    }));
+                                    }), wizBonuses]);
                                     break;
                                 case StdObjectType.chest:
                                     wiz.defaults = {
@@ -5952,9 +6319,12 @@ export class AreaDesigner extends EditorBase {
                                     })]);
                                     break;
                                 case StdObjectType.material:
+                                    wiz.defaults = {
+                                        'obj-bonuses': ed.value.bonuses || []
+                                    };
                                     wiz.title = 'Edit material...';
                                     //size, quality, describers
-                                    wiz.addPages(new WizardPage({
+                                    wiz.addPages([new WizardPage({
                                         id: 'obj-ore',
                                         title: 'Ore properties',
                                         body: ` <div class="col-sm-12 form-group">
@@ -5988,12 +6358,15 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-size').value = ed.value.size || '0';
                                             e.page.querySelector('#obj-describers').value = ed.value.describers || '';
                                         }
-                                    }));
+                                    }), wizBonuses]);
                                     break;
                                 case StdObjectType.ore:
+                                    wiz.defaults = {
+                                        'obj-bonuses': ed.value.bonuses || []
+                                    };
                                     wiz.title = 'Edit ore...';
                                     //size, quality, bonuses?
-                                    wiz.addPages(new WizardPage({
+                                    wiz.addPages([new WizardPage({
                                         id: 'obj-ore',
                                         title: 'Ore properties',
                                         body: `<div class="col-sm-12 form-group">
@@ -6027,13 +6400,16 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-size').value = ed.value.size || '1';
                                             e.page.querySelector('#obj-describers').value = ed.value.describers || '';
                                         }
-                                    }));
+                                    }), wizBonuses]);
                                     break;
                                 case StdObjectType.instrument:
+                                    wiz.defaults = {
+                                        'obj-bonuses': ed.value.bonuses || []
+                                    };
                                     wiz.title = 'Edit instrument...';
                                     //type, quality, enchantment
                                     //cSpell:disable
-                                    wiz.addPages(new WizardPage({
+                                    wiz.addPages([new WizardPage({
                                         id: 'obj-instrument',
                                         title: 'Instrument properties',
                                         body: `<div class="col-sm-12 form-group">
@@ -6062,13 +6438,16 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
-                                    }));
+                                    }), wizBonuses]);
                                     //cSpell:enable
                                     break;
                                 case StdObjectType.rope:
+                                    wiz.defaults = {
+                                        'obj-bonuses': ed.value.bonuses || []
+                                    };
                                     wiz.title = 'Edit rope...';
                                     //quality, enchantment
-                                    wiz.addPages(new WizardPage({
+                                    wiz.addPages([new WizardPage({
                                         id: 'obj-weapon',
                                         title: 'Rope properties',
                                         body: `${qualities}
@@ -6082,13 +6461,16 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
-                                    }));
+                                    }), wizBonuses]);
                                     break;
                                 case StdObjectType.weapon:
+                                    wiz.defaults = {
+                                        'obj-bonuses': ed.value.bonuses || []
+                                    };
                                     wiz.title = 'Edit weapon...';
                                     //type, quality, enchantment
                                     //cSpell:disable
-                                    wiz.addPages(new WizardPage({
+                                    wiz.addPages([new WizardPage({
                                         id: 'obj-weapon',
                                         title: 'Weapon properties',
                                         body: `<div class="col-sm-12 form-group">
@@ -6109,14 +6491,17 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
-                                    }));
+                                    }), wizBonuses]);
                                     //cSpell:enable
                                     break;
                                 case StdObjectType.material_weapon:
+                                    wiz.defaults = {
+                                        'obj-bonuses': ed.value.bonuses || []
+                                    };
                                     wiz.title = 'Edit material weapon...';
                                     //type, quality, enchantment
                                     //cSpell:disable
-                                    wiz.addPages(new WizardPage({
+                                    wiz.addPages([new WizardPage({
                                         id: 'obj-weapon',
                                         title: 'Material weapon properties',
                                         body: `<div class="col-sm-12 form-group">
@@ -6165,7 +6550,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-size').value = ed.value.size || '0';
                                             e.page.querySelector('#obj-describers').value = ed.value.describers || '';
                                         }
-                                    }));
+                                    }), wizBonuses]);
                                     //cSpell:enable
                                     break;
                                 case StdObjectType.food:
@@ -10744,6 +11129,7 @@ export class AreaDesigner extends EditorBase {
         let tmp;
         let tmp2;
         let tmp3;
+        let bonuses = false;
         const props = [];
         files = files || {};
         data.doc = [];
@@ -10763,6 +11149,7 @@ export class AreaDesigner extends EditorBase {
         switch (obj.type) {
             case StdObjectType.armor:
                 //#region Armor
+                bonuses = true;
                 data.inherits = 'OBJ_ARMOUR';
                 data['doc'].push('/doc/build/armours/tutorial');
                 data.help.push('atypes');
@@ -10924,6 +11311,7 @@ export class AreaDesigner extends EditorBase {
                 break;
             case StdObjectType.instrument:
                 //#region Instrument
+                bonuses = true;
                 data.inherit = 'OBJ_INSTRUMENT';
                 data['doc'].push('/doc/build/weapon/tutorial');
                 data['doc'].push('/doc/build/weapon/types/instrument');
@@ -10947,6 +11335,7 @@ export class AreaDesigner extends EditorBase {
                 break;
             case StdObjectType.material:
                 //#region Material
+                bonuses = true;
                 data.inherit = 'OBJ_MATERIAL';
                 data['doc'].push('/doc/build/etc/material');
                 data['create arguments'] = `"${obj.material || 'iron'}", "${obj.size > 1 ? obj.size : 1}", "${obj.quality || 'average'}"`;
@@ -10957,6 +11346,7 @@ export class AreaDesigner extends EditorBase {
                 break;
             case StdObjectType.material_weapon:
                 //#region Material weapon
+                bonuses = true;
                 data.inherit = 'OBJ_MATERIAL_WEAPON';
                 data['doc'].push('/doc/build/weapon/tutorial');
                 data['doc'].push('/doc/build/weapon/types/material_weapon');
@@ -10971,6 +11361,7 @@ export class AreaDesigner extends EditorBase {
                 break;
             case StdObjectType.ore:
                 //#region Ore
+                bonuses = true;
                 data.inherit = 'OBJ_ORE_RAND';
                 data['doc'].push('/doc/build/random_generators#OBJ_ORE_RAND');
                 data['create arguments'] = `"${obj.material || 'iron'}", "${obj.size > 1 ? obj.size : 1}", "${obj.quality || 'average'}"`;
@@ -10981,6 +11372,7 @@ export class AreaDesigner extends EditorBase {
                 break;
             case StdObjectType.rope:
                 //#region Rope
+                bonuses = true;
                 data.inherit = 'OBJ_ROPE';
                 data['doc'].push('/doc/build/weapon/tutorial');
                 data['doc'].push('/doc/build/weapon/types/rope');
@@ -10995,6 +11387,7 @@ export class AreaDesigner extends EditorBase {
                 break;
             case StdObjectType.sheath:
                 //#region Sheath
+                bonuses = true;
                 //string matarm, string qualarm, mixed armlimbs, int charm
                 data.inherit = 'OBJ_SHEATH';
                 data['doc'].push('/doc/build/armours/tutorial');
@@ -11052,6 +11445,7 @@ export class AreaDesigner extends EditorBase {
                 break;
             case StdObjectType.weapon:
                 //#region Weapon
+                bonuses = true;
                 data['doc'].push('/doc/build/weapon/tutorial');
                 switch (obj.subType || '') {
                     case 'arrow':
@@ -11261,6 +11655,53 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += '   set_properties( ([\n       ';
             data['create body'] += props.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
+        }
+
+        if (bonuses && obj.bonuses && obj.bonuses.length !== 0) {
+            tmp = obj.bonus.filter(b => b.type === 0 && b.amount && b.adjust.length !== 0);
+            tmp.map(b => {
+                if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
+                    return `"${b.adjust}", ${b.amount}`;
+                return `"${b.adjust}", "${b.amount}"`;
+            });
+            if (tmp.length > 0) {
+                data['create body'] += '   add_temp_bonuses( ([\n       ';
+                data['create body'] += tmp.join(',\n       ');
+                data['create body'] += '\n     ]) );\n';
+            }
+            tmp = obj.bonus.filter(b => b.type === 1 && b.amount && b.adjust.length !== 0);
+            tmp.map(b => {
+                if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
+                    return `"${b.adjust}", ${b.amount}`;
+                return `"${b.adjust}", "${b.amount}"`;
+            });
+            if (tmp.length > 0) {
+                data['create body'] += '   add_temp_stat_bonuses( ([\n       ';
+                data['create body'] += tmp.join(',\n       ');
+                data['create body'] += '\n     ]) );\n';
+            }
+            tmp = obj.bonus.filter(b => b.type === 2 && b.amount && b.adjust.length !== 0);
+            tmp.map(b => {
+                if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
+                    return `"${b.adjust}", ${b.amount}`;
+                return `"${b.adjust}", "${b.amount}"`;
+            });
+            if (tmp.length > 0) {
+                data['create body'] += '   add_temp_skill_bonuses( ([\n       ';
+                data['create body'] += tmp.join(',\n       ');
+                data['create body'] += '\n     ]) );\n';
+            }
+            tmp = obj.bonus.filter(b => b.type === 3 && b.amount && b.adjust.length !== 0);
+            tmp.map(b => {
+                if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
+                    return `"${b.adjust}", ${b.amount}`;
+                return `"${b.adjust}", "${b.amount}"`;
+            });
+            if (tmp.length > 0) {
+                data['create body'] += '   add_temp_resistance_bonuses( ([\n       ';
+                data['create body'] += tmp.join(',\n       ');
+                data['create body'] += '\n     ]) );\n';
+            }
         }
 
         //add docs
