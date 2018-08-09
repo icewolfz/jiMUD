@@ -130,6 +130,7 @@ export class TextValueEditor extends ValueEditor {
     private $ignore = false;
     private $dBlur;
     private $cancel = false;
+    private $clicked = false;
 
     public create() {
         this.$el = document.createElement('div');
@@ -158,6 +159,13 @@ export class TextValueEditor extends ValueEditor {
         });
         this.$editor.addEventListener('blur', (e) => {
             if (this.$ignore) return;
+            if (this.$clicked) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
+                this.$clicked = false;
+                return;
+            }
             if (e.relatedTarget && ((<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown')) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -248,6 +256,53 @@ export class TextValueEditor extends ValueEditor {
         vl.innerHTML = '<span class="caret"></span>';
         vl.dataset.editor = 'dropdown';
         vl.addEventListener('click', (e) => {
+            if (this.options && this.options.dialog) {
+                e.stopPropagation();
+                e.cancelBubble = true;
+                this.$clicked = true;
+                const notes: HTMLDialogElement = <HTMLDialogElement>document.createElement('dialog');
+                notes.id = 'text-' + new Date().getTime();
+                notes.addEventListener('open', () => this.control.emit('dialog-open'));
+                notes.addEventListener('close', () => {
+                    if (notes.open)
+                        notes.close();
+                    notes.remove();
+                    this.control.emit('dialog-close');
+                });
+                notes.addEventListener('cancel', () => {
+                    if (notes.open)
+                        notes.close();
+                    notes.remove();
+                    this.control.emit('dialog-cancel');
+                });
+
+                notes.style.width = '400px';
+                notes.style.height = '450px';
+                notes.style.padding = '0px';
+                notes.innerHTML = `
+                <div class="dialog-header" style="font-weight: bold">
+                    <button title="close" type="button" class="close" data-dismiss="modal" onclick="document.getElementById('${notes.id}').close();">&times;</button>
+                    <button title="Open advanced editor..." type="button" class="close" style="font-size: 16px;padding-top: 3px;padding-right: 4px;" onclick="ipcRenderer.send('send-editor', document.getElementById('${notes.id}-value').value, 'editor', true);document.getElementById('${notes.id}-value').focus();"><i class="fa fa-edit"></i></button>
+                    <div style="padding-top: 2px;">${this.options ? this.options.title || 'Edit&hellip;' : 'Edit&hellip;'}</div>
+                </div>
+                <div class="dialog-body" style="padding-top:33px">
+                    <div class="form-group"><label class="control-label" style="padding: 10px;width: 100%">
+                    <textarea class="input-sm form-control" id="${notes.id}-value" style="width: 100%;height: 338px;">${this.value || ''}</textarea></label></div>
+                </div>
+                <div class="dialog-footer">
+                    <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('${notes.id}').close();">Cancel</button>
+                    <button style="float: right" type="button" class="btn btn-primary">Ok</button>
+                </div>`;
+                document.body.appendChild(notes);
+                notes.lastElementChild.lastElementChild.addEventListener('click', () => {
+                    this.value = notes.children[1].querySelector('textarea').value;
+                    if (notes.open)
+                        notes.close();
+                    notes.remove();
+                });
+                notes.showModal();
+                return;
+            }
             this.$cancel = false;
             if (this.$editor.dataset.aOpen === 'true') {
                 this.$editor.dataset.aOpen = null;
@@ -394,7 +449,9 @@ export class TextValueEditor extends ValueEditor {
             this.positionDropdown();
     }
 
-    public openAdvanced() { /**/ }
+    public openAdvanced() {
+        (<HTMLButtonElement>this.parent.lastChild.lastChild).click();
+    }
 
     private positionDropdown() {
         const b = this.parent.getBoundingClientRect();

@@ -3363,6 +3363,8 @@ export class AreaDesigner extends EditorBase {
                 sort: 1,
                 editor: {
                     options: {
+                        dialog: true,
+                        title: 'Edit long&hellip;',
                         singleLine: true,
                         container: document.body
                     }
