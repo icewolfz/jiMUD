@@ -11661,10 +11661,12 @@ export class AreaDesigner extends EditorBase {
             tmp = obj.bonus.filter(b => b.type === 0 && b.amount && b.adjust.length !== 0);
             tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
-                    return `"${b.adjust}", ${b.amount}`;
-                return `"${b.adjust}", "${b.amount}"`;
+                    return `"${b.adjust}" : ${b.amount}`;
+                return `"${b.adjust}" : "${b.amount}"`;
             });
-            if (tmp.length > 0) {
+            if (tmp.length === 1)
+                data['create body'] += `   add_temp_bonus(${tmp[0].replace(/ :/, ',')})`;
+            else if (tmp.length > 0) {
                 data['create body'] += '   add_temp_bonuses( ([\n       ';
                 data['create body'] += tmp.join(',\n       ');
                 data['create body'] += '\n     ]) );\n';
@@ -11672,10 +11674,12 @@ export class AreaDesigner extends EditorBase {
             tmp = obj.bonus.filter(b => b.type === 1 && b.amount && b.adjust.length !== 0);
             tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
-                    return `"${b.adjust}", ${b.amount}`;
-                return `"${b.adjust}", "${b.amount}"`;
+                    return `"${b.adjust}" : ${b.amount}`;
+                return `"${b.adjust}" : "${b.amount}"`;
             });
-            if (tmp.length > 0) {
+            if (tmp.length === 1)
+                data['create body'] += `   add_temp_stat_bonus(${tmp[0].replace(/ :/, ',')})`;
+            else if (tmp.length > 0) {
                 data['create body'] += '   add_temp_stat_bonuses( ([\n       ';
                 data['create body'] += tmp.join(',\n       ');
                 data['create body'] += '\n     ]) );\n';
@@ -11683,10 +11687,12 @@ export class AreaDesigner extends EditorBase {
             tmp = obj.bonus.filter(b => b.type === 2 && b.amount && b.adjust.length !== 0);
             tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
-                    return `"${b.adjust}", ${b.amount}`;
-                return `"${b.adjust}", "${b.amount}"`;
+                    return `"${b.adjust}" : ${b.amount}`;
+                return `"${b.adjust}" : "${b.amount}"`;
             });
-            if (tmp.length > 0) {
+            if (tmp.length === 1)
+                data['create body'] += `   add_temp_skill_bonus(${tmp[0].replace(/ :/, ',')})`;
+            else if (tmp.length > 0) {
                 data['create body'] += '   add_temp_skill_bonuses( ([\n       ';
                 data['create body'] += tmp.join(',\n       ');
                 data['create body'] += '\n     ]) );\n';
@@ -11694,10 +11700,12 @@ export class AreaDesigner extends EditorBase {
             tmp = obj.bonus.filter(b => b.type === 3 && b.amount && b.adjust.length !== 0);
             tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
-                    return `"${b.adjust}", ${b.amount}`;
-                return `"${b.adjust}", "${b.amount}"`;
+                    return `"${b.adjust}" : ${b.amount}`;
+                return `"${b.adjust}" : "${b.amount}"`;
             });
-            if (tmp.length > 0) {
+            if (tmp.length === 1)
+                data['create body'] += `   add_temp_resistance_bonus(${tmp[0].replace(/ :/, ',')})`;
+            else if (tmp.length > 0) {
                 data['create body'] += '   add_temp_resistance_bonuses( ([\n       ';
                 data['create body'] += tmp.join(',\n       ');
                 data['create body'] += '\n     ]) );\n';
