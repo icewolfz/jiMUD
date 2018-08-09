@@ -539,23 +539,10 @@ class Monster {
     }
 }
 
-//TODO add armour damage systems
 //TODO add weapon/armor skill requirement editing
+//TODO add fishing pole, back packs, and bags of holding to object types
+//TODO fishing bait settings for food and maybe generic objects
 /*
-armor damage systems
-    datagrid for each?
-        limbs
-        description
-    or 1 for all wit ha Type column
-        type - name/short/long/nouns/adj
-        limbs - limbs missing
-        description
-    name - missing limbs, description
-    short - missing limbs, description
-    long - missing limbs, description
-    nouns - missing limbs, nouns
-    adjectives - missing limbs, adjectives
-
 weapon/armor - skills
     check skill requirement
     check level requirement
@@ -3365,7 +3352,6 @@ export class AreaDesigner extends EditorBase {
                     options: {
                         dialog: true,
                         title: 'Edit long&hellip;',
-                        singleLine: true,
                         container: document.body
                     }
                 }
@@ -6104,7 +6090,8 @@ export class AreaDesigner extends EditorBase {
                             switch (ty) {
                                 case StdObjectType.sheath:
                                     wiz.defaults = {
-                                        'obj-bonuses': ed.value.bonuses || []
+                                        'obj-bonuses': ed.value.bonuses || [],
+                                        'obj-damaged': ed.value.damaged || []
                                     };
                                     wiz.title = 'Edit sheath...';
                                     //type, quality, limbs, enchantment
@@ -6162,11 +6149,128 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-maxWearable').value = ed.value.maxWearable || '0';
                                         }
+                                    }), new WizardDataGridPage({
+                                        title: 'Damaged armor descriptions',
+                                        id: 'obj-damaged',
+                                        columns: [
+                                            {
+                                                label: 'Type',
+                                                field: 'type',
+                                                width: 75,
+                                                formatter: (data) => {
+                                                    if (!data) return '';
+                                                    switch (+data.cell) {
+                                                        case 0:
+                                                            return 'Name';
+                                                        case 1:
+                                                            return 'Short';
+                                                        case 2:
+                                                            return 'Long';
+                                                        case 3:
+                                                            return 'Nouns';
+                                                        case 4:
+                                                            return 'Adjectives';
+                                                        case 5:
+                                                            return 'ID';
+                                                    }
+                                                    return '';
+                                                },
+                                                tooltipFormatter: (data) => {
+                                                    if (!data) return '';
+                                                    switch (+data.cell) {
+                                                        case 0:
+                                                            return 'Name';
+                                                        case 1:
+                                                            return 'Short';
+                                                        case 2:
+                                                            return 'Long';
+                                                        case 3:
+                                                            return 'Nouns';
+                                                        case 4:
+                                                            return 'Adjectives';
+                                                        case 5:
+                                                            return 'ID';
+                                                    }
+                                                    return '';
+                                                },
+                                                editor: {
+                                                    type: EditorType.select,
+                                                    options: {
+                                                        data: [
+                                                            { display: 'name', value: 0 },
+                                                            { display: 'short', value: 1 },
+                                                            { display: 'long', value: 2 },
+                                                            { display: 'nouns', value: 3 },
+                                                            { display: 'adjectives', value: 4 },
+                                                            { display: 'id', value: 5 }
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                label: 'Limbs',
+                                                field: 'limbs',
+                                                width: 150,
+                                                spring: true,
+                                                editor: {
+                                                    type: EditorType.dropdown,
+                                                    options: {
+                                                        data: [
+                                                            'both arms and legs',
+                                                            'both arms',
+                                                            'both legs',
+                                                            'right arm',
+                                                            'left arm',
+                                                            'right leg',
+                                                            'left leg',
+                                                            'both hands and feet',
+                                                            'left hand',
+                                                            'right hand',
+                                                            'both feet',
+                                                            'left foot',
+                                                            'right foot',
+                                                            'head',
+                                                            'both hooves',
+                                                            'left hoof',
+                                                            'right hoof',
+                                                            'both wings',
+                                                            'right wing',
+                                                            'left wing',
+                                                            'tail'
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                label: 'Description',
+                                                field: 'description',
+                                                width: 150,
+                                                editor: {
+                                                    options: {
+                                                        dialog: true,
+                                                        title: 'Edit description&hellip;',
+                                                        singleLine: true,
+                                                        container: '#object-wizard'
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        add: (e) => {
+                                            e.data = {
+                                                type: 0,
+                                                limbs: '',
+                                                description: ''
+                                            };
+                                        },
+                                        enterMoveFirst: this.$enterMoveFirst,
+                                        enterMoveNext: this.$enterMoveNext,
+                                        enterMoveNew: this.$enterMoveNew
                                     }), wizBonuses]);
                                     break;
                                 case StdObjectType.armor:
                                     wiz.defaults = {
-                                        'obj-bonuses': ed.value.bonuses || []
+                                        'obj-bonuses': ed.value.bonuses || [],
+                                        'obj-damaged': ed.value.damaged || []
                                     };
                                     wiz.title = 'Edit armor...';
                                     //type, quality, limbs, enchantment
@@ -6216,6 +6320,117 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-maxWearable').value = ed.value.maxWearable || '0';
                                         }
+                                    }), new WizardDataGridPage({
+                                        title: 'Damaged armor descriptions',
+                                        id: 'obj-damaged',
+                                        columns: [
+                                            {
+                                                label: 'Type',
+                                                field: 'type',
+                                                width: 75,
+                                                formatter: (data) => {
+                                                    if (!data) return '';
+                                                    switch (+data.cell) {
+                                                        case 0:
+                                                            return 'name';
+                                                        case 1:
+                                                            return 'short';
+                                                        case 2:
+                                                            return 'long';
+                                                        case 3:
+                                                            return 'nouns';
+                                                        case 4:
+                                                            return 'adjectives';
+                                                    }
+                                                    return '';
+                                                },
+                                                tooltipFormatter: (data) => {
+                                                    if (!data) return '';
+                                                    switch (+data.cell) {
+                                                        case 0:
+                                                            return 'name';
+                                                        case 1:
+                                                            return 'short';
+                                                        case 2:
+                                                            return 'long';
+                                                        case 3:
+                                                            return 'nouns';
+                                                        case 4:
+                                                            return 'adjectives';
+                                                    }
+                                                    return '';
+                                                },
+                                                editor: {
+                                                    type: EditorType.select,
+                                                    options: {
+                                                        data: [
+                                                            { display: 'name', value: 0 },
+                                                            { display: 'short', value: 1 },
+                                                            { display: 'long', value: 2 },
+                                                            { display: 'nouns', value: 3 },
+                                                            { display: 'adjectives', value: 4 }
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                label: 'Limbs',
+                                                field: 'limbs',
+                                                width: 150,
+                                                spring: true,
+                                                editor: {
+                                                    type: EditorType.dropdown,
+                                                    options: {
+                                                        data: [
+                                                            'both arms and legs',
+                                                            'both arms',
+                                                            'both legs',
+                                                            'right arm',
+                                                            'left arm',
+                                                            'right leg',
+                                                            'left leg',
+                                                            'both hands and feet',
+                                                            'left hand',
+                                                            'right hand',
+                                                            'both feet',
+                                                            'left foot',
+                                                            'right foot',
+                                                            'head',
+                                                            'both hooves',
+                                                            'left hoof',
+                                                            'right hoof',
+                                                            'both wings',
+                                                            'right wing',
+                                                            'left wing',
+                                                            'tail'
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                label: 'Description',
+                                                field: 'description',
+                                                width: 150,
+                                                editor: {
+                                                    options: {
+                                                        dialog: true,
+                                                        title: 'Edit description&hellip;',
+                                                        singleLine: true,
+                                                        container: '#object-wizard'
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        add: (e) => {
+                                            e.data = {
+                                                type: 0,
+                                                limbs: '',
+                                                description: ''
+                                            };
+                                        },
+                                        enterMoveFirst: this.$enterMoveFirst,
+                                        enterMoveNext: this.$enterMoveNext,
+                                        enterMoveNew: this.$enterMoveNew
                                     }), wizBonuses]);
                                     break;
                                 case StdObjectType.chest:
@@ -11170,6 +11385,28 @@ export class AreaDesigner extends EditorBase {
         let tmp3;
         let bonuses = false;
         const props = [];
+        const limbsDamaged = {};
+        limbsDamaged['both arms and legs'] = 'ARMSLEGS_DAM';
+        limbsDamaged['both arms'] = 'ARMS_DAM';
+        limbsDamaged['both legs'] = 'LEGS_DAM';
+        limbsDamaged['right arm'] = 'RIGHTARM_DAM';
+        limbsDamaged['left arm'] = 'LEFTARM_DAM';
+        limbsDamaged['right leg'] = 'RIGHTLEG_DAM';
+        limbsDamaged['left leg'] = 'LEFTLEG_DAM';
+        limbsDamaged['both hands and feet'] = 'HANDSFEET_DAM';
+        limbsDamaged['left hand'] = 'LEFTHAND_DAM';
+        limbsDamaged['right hand'] = 'RIGHTHAND_DAM';
+        limbsDamaged['both feet'] = 'FEET_DAM';
+        limbsDamaged['left foot'] = 'LEFTFOOT_DAM';
+        limbsDamaged['right foot'] = 'RIGHTFOOT_DAM';
+        limbsDamaged['head'] = 'HEAD_DAM';
+        limbsDamaged['both hooves'] = 'HOOVES_DAM';
+        limbsDamaged['left hoof'] = 'LEFTHOOF_DAM';
+        limbsDamaged['right hoof'] = 'RIGHTHOOF_DAM';
+        limbsDamaged['both wings'] = 'WINGS_DAM';
+        limbsDamaged['right wing'] = 'RIGHTWING_DAM';
+        limbsDamaged['left wing'] = 'LEFTWING_DAM';
+        limbsDamaged['tail'] = 'TAIL_DAM';
         files = files || {};
         data.doc = [];
         data.help = [];
@@ -11220,6 +11457,94 @@ export class AreaDesigner extends EditorBase {
                 }
                 if (obj.maxWearable !== 0)
                     data['create body'] += `   set_temp_property("max_wearable", ${obj.maxWearable});\n`;
+
+                if (obj.damaged && obj.damaged.length !== 0) {
+                    data.includes += '\n#include <limbsdamaged.h>';
+                    //name
+                    tmp = obj.damaged.filter(d => d.type === 0).sort((a, b) => a.limbs.localeCompare(b));
+                    tmp.map(d => {
+                        if (limbsDamaged[d.limbs.trim()])
+                            return `${limbsDamaged[d.limbs.trim()]} : "${d.description}"`;
+                        return `LIMBS_DAM( ({ ${d.limbs.split(',').map(l => `"${l.trim()}"`).join(', ')} }) ) : "${d.description}"`;
+                    });
+                    if (tmp.length === 1)
+                        data['create body'] += `   set_damaged_name(${tmp[0].replace(/ :/, ',')})`;
+                    else if (tmp.length > 0) {
+                        data['create body'] += '   set_damaged_name( ([\n       ';
+                        data['create body'] += tmp.join(',\n       ');
+                        data['create body'] += '\n     ]) );\n';
+                    }
+                    //short
+                    tmp = obj.damaged.filter(d => d.type === 1).sort((a, b) => a.limbs.localeCompare(b));
+                    tmp.map(d => {
+                        if (limbsDamaged[d.limbs.trim()])
+                            return `${limbsDamaged[d.limbs.trim()]} : "${d.description}"`;
+                        return `LIMBS_DAM( ({ ${d.limbs.split(',').map(l => `"${l.trim()}"`).join(', ')} }) ) : "${d.description}"`;
+                    });
+                    if (tmp.length === 1)
+                        data['create body'] += `   set_damaged_short(${tmp[0].replace(/ :/, ',')})`;
+                    else if (tmp.length > 0) {
+                        data['create body'] += '   set_damaged_short( ([\n       ';
+                        data['create body'] += tmp.join(',\n       ');
+                        data['create body'] += '\n     ]) );\n';
+                    }
+                    //long
+                    tmp = obj.damaged.filter(d => d.type === 2).sort((a, b) => a.limbs.localeCompare(b));
+                    tmp.map(d => {
+                        if (limbsDamaged[d.limbs.trim()])
+                            return `${limbsDamaged[d.limbs.trim()]} : "${d.description}"`;
+                        return `LIMBS_DAM( ({ ${d.limbs.split(',').map(l => `"${l.trim()}"`).join(', ')} }) ) : "${d.description}"`;
+                    });
+                    if (tmp.length === 1)
+                        data['create body'] += `   set_damaged_long(${tmp[0].replace(/ :/, ',')})`;
+                    else if (tmp.length > 0) {
+                        data['create body'] += '   set_damaged_long( ([\n       ';
+                        data['create body'] += tmp.join(',\n       ');
+                        data['create body'] += '\n     ]) );\n';
+                    }
+                    //nouns
+                    tmp = obj.damaged.filter(d => d.type === 3).sort((a, b) => a.limbs.localeCompare(b));
+                    tmp.map(d => {
+                        if (limbsDamaged[d.limbs.trim()])
+                            return `${limbsDamaged[d.limbs.trim()]} : ${d.description.split(',').map(l => `({ ${l.trim()}"`).join(', ')} }) `;
+                        return `LIMBS_DAM( ({ ${d.limbs.split(',').map(l => `"${l.trim()}"`).join(', ')} }) ) : ({ ${d.description.split(',').map(l => `"${l.trim()}"`).join(', ')} }) `;
+                    });
+                    if (tmp.length === 1)
+                        data['create body'] += `   set_damaged_nouns(${tmp[0].replace(/ :/, ',')})`;
+                    else if (tmp.length > 0) {
+                        data['create body'] += '   set_damaged_nouns( ([\n       ';
+                        data['create body'] += tmp.join(',\n       ');
+                        data['create body'] += '\n     ]) );\n';
+                    }
+                    //adjectives
+                    tmp = obj.damaged.filter(d => d.type === 4).sort((a, b) => a.limbs.localeCompare(b));
+                    tmp.map(d => {
+                        if (limbsDamaged[d.limbs.trim()])
+                            return `${limbsDamaged[d.limbs.trim()]} : ${d.description.split(',').map(l => `({ ${l.trim()}"`).join(', ')} }) `;
+                        return `LIMBS_DAM( ({ ${d.limbs.split(',').map(l => `"${l.trim()}"`).join(', ')} }) ) : ({ ${d.description.split(',').map(l => `"${l.trim()}"`).join(', ')} }) `;
+                    });
+                    if (tmp.length === 1)
+                        data['create body'] += `   set_damaged_adjectives(${tmp[0].replace(/ :/, ',')})`;
+                    else if (tmp.length > 0) {
+                        data['create body'] += '   set_damaged_adjectives( ([\n       ';
+                        data['create body'] += tmp.join(',\n       ');
+                        data['create body'] += '\n     ]) );\n';
+                    }
+                    //id
+                    tmp = obj.damaged.filter(d => d.type === 5).sort((a, b) => a.limbs.localeCompare(b));
+                    tmp.map(d => {
+                        if (limbsDamaged[d.limbs.trim()])
+                            return `${limbsDamaged[d.limbs.trim()]} : ${d.description.split(',').map(l => `({ ${l.trim()}"`).join(', ')} }) `;
+                        return `LIMBS_DAM( ({ ${d.limbs.split(',').map(l => `"${l.trim()}"`).join(', ')} }) ) : ({ ${d.description.split(',').map(l => `"${l.trim()}"`).join(', ')} }) `;
+                    });
+                    if (tmp.length === 1)
+                        data['create body'] += `   set_damaged_id(${tmp[0].replace(/ :/, ',')})`;
+                    else if (tmp.length > 0) {
+                        data['create body'] += '   set_damaged_id( ([\n       ';
+                        data['create body'] += tmp.join(',\n       ');
+                        data['create body'] += '\n     ]) );\n';
+                    }
+                }
                 break;
             //#endregion
             case StdObjectType.chest:

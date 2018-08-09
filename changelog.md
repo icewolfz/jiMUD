@@ -11,7 +11,7 @@
     - Monsters can now use other monsters as a base to allow you ultimate control and flexibility on how monsters are created
     - Monsters, rooms, and objects now all contain a note field to allow additional notes or info, this info will also be added to the header when code is generated
     - Objects that support bonuses can now be set, depending on the object bonuses are used differently
-    - Armor and sheaths now support max wearable property
+    - Armor and sheaths now support max wearable property and damaged systems
   - Add [#setsetting](docs/commands.md) options for chat, see [faq](docs/faq.md) for list of all supported settings
   - Add [#chat](docs/commands.md) command to send test to chat window and append newline
   - Add [#chatprompt](docs/commands.md) command to send test to chat window with no newline

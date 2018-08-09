@@ -234,8 +234,19 @@ Create objects for your area
       - `Limbs` a comma delimited list of limbs the armor is for
       - `Quality` the quality of the armor
       - `Enchantment` the natural enchantment of the armor
+      - `Damaged armor descriptions` list of descriptions for an armor that has limbs that have broken off
+        - `Type` the type of description
+          - `Name` the name of the armor
+          - `Short` the short of the armor
+          - `Long` the long description of the armor
+          - `Nouns` a comma delimited list of nouns
+          - `Adjectives` a comma delimited list of adjectives
+          - `ID` a comma delimitied list of ids, not needed of nouns/adjectives are enough
+        - `Limbs` the missing limbs, can be from a predefined list, or a comma delimited list of limbs to match
+        - `Description` the description to use for the type and if the missing limbs match
     - `Sheath` has all the same properties as armor but for weapon type
       - `Weapon type` the type of weapon the sheath is for
+      - `Damaged armor descriptions` see armor
     - `Chest`
       - `Blockers` a comma delimited list of monster names that will attack when trying to open, get or unlock the chest
       - `Contents` the contents of the chest that if empty will be restored every room reset
