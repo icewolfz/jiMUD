@@ -12368,6 +12368,7 @@ export class AreaDesigner extends EditorBase {
         if (skills && obj.skills && obj.skills.length !== 0) {
             tmp = obj.skills.filter(s => s.amount !== 0);
             if (tmp.length !== 0) {
+                let amt = 0;
                 data['create post'] += '\n\nvoid check_skill(object player)\n{\n   if(!player)\n   return 0;\n';
                 let skill;
                 tmp.forEach(s => {
@@ -12375,6 +12376,8 @@ export class AreaDesigner extends EditorBase {
                     if (s.message && s.message.length === 0)
                         s.message = 0;
                     if (s.type === 1) {
+                        if (s.amount * 5 > amt)
+                            amt = s.amount * 5;
                         if (obj.type === StdObjectType.armor)
                             message = s.message || 'You do not have the experiance to wear this armor.';
                         else if (obj.type === StdObjectType.sheath)
@@ -12415,6 +12418,8 @@ export class AreaDesigner extends EditorBase {
                         skill = 'WEAPON_D->query_skill(this_object())';
                         message = s.message || 'You do not have the skill to wield this weapon.';
                     }
+                    if (s.amount > amt)
+                        amt = s.amount;
                     switch (s.class) {
                         case 1:
                             data['create post'] += `   if(player->query_skill(${skill}) < ${s.amount} && player->query_class() == "fighter")\n      return "${message}";\n`;
@@ -12437,6 +12442,8 @@ export class AreaDesigner extends EditorBase {
                     }
                 });
                 data['create post'] += '   return 1;\n}\n';
+                if (amt !== 0)
+                    data['create body'] += `   set_skill_title(SKILLS_D->query_skill_title(${amt}));\n`;
             }
         }
         //add docs
