@@ -45,6 +45,22 @@ export enum RoomFlags {
     None = 0
 }
 
+enum RoomBaseFlags {
+    Default = 0,
+    No_Items = 1 << 0,
+    No_Monsters = 1 << 1,
+    No_Objects = 1 << 2,
+    No_Forage_Objects = 1 << 3,
+    No_Rummage_Objects = 1 << 4,
+    No_Reads = 1 << 5
+}
+
+enum MonsterBaseFlags {
+    Default = 0,
+    No_Topics = 1 << 0,
+    No_Objects = 1 << 1
+}
+
 export enum MonsterFlags {
     None = 0,
     Ridable = 1 << 0,
@@ -198,11 +214,7 @@ export class Room {
     public background: string = '';
 
     public type: string = 'base';
-    public noBaseMonsters: boolean = false;
-    public noBaseObjects: boolean = false;
-    public noBaseItems: boolean = false;
-    public noBaseForageObjects: boolean = false;
-    public noBaseRummageObjects: boolean = false;
+    public baseFlags: RoomBaseFlags = RoomBaseFlags.Default;
 
     //room wizard supports
     public forageObjects: ObjectInfo[] = [];
@@ -347,8 +359,9 @@ export class Room {
         //if (this.type !== 'base') return false;
         if (this.forage !== -1) return false;
         if (this.flags !== RoomFlags.None) return false;
+        if (this.baseFlags !== RoomBaseFlags.Default) return false;
         for (const prop in this) {
-            if (prop === 'x' || prop === 'y' || prop === 'z' || prop === 'type' || prop === 'forage' || prop === 'flags' || !this.hasOwnProperty(prop)) continue;
+            if (prop === 'baseFlags' || prop === 'x' || prop === 'y' || prop === 'z' || prop === 'type' || prop === 'forage' || prop === 'flags' || !this.hasOwnProperty(prop)) continue;
             const tp = typeof this[prop];
             const value = <any>this[prop];
             if (Array.isArray(this[prop]) && (<any>this[prop]).length !== 0)
@@ -391,8 +404,7 @@ class Monster {
     public maxAmount: number = -1;
     public unique: boolean = false;
     public objects: ObjectInfo[] = [];
-    public noBaseObjects: boolean = false;
-    public noBaseTopics: boolean = false;
+    public baseFlags: MonsterBaseFlags = MonsterBaseFlags.Default;
 
     public type: string = 'base';
 
@@ -536,8 +548,7 @@ class Monster {
             this.askEnabled = false;
             this.askNoTopic = '';
             this.askResponseType = MonsterResponseType.say;
-            this.noBaseTopics = false;
-            this.noBaseObjects = false;
+            this.baseFlags = MonsterBaseFlags.Default;
             this.reputationGroup = '';
         }
         this.type = type || 'base';
@@ -556,7 +567,7 @@ fishing pole - OBJ_FISHING_POLE - create(weapon args);
     pole class - set_pole_class(#)
 
 back pack - OBJ_BACKPACK -- armor - create(string mat, string qual, int charm)
-    all armor properites, copy sheath
+    all armor properities, copy sheath
     back type - pack - set_backpack_type(string) - "backpack", "bag", "pouch", "sack", "haversack", "pack", "purse", "rucksack", "duffel bag", "bindle", "satchel", "shoulder strap", "shoulder sling", "dilly bag", "carpet bag"
     max encumbrance - 4000 - set_max_encumbrance(#)
     reduce mass to - 0.75 - set_reduce_item_mass(float)
@@ -3803,34 +3814,17 @@ export class AreaDesigner extends EditorBase {
                 }
             },
             {
-                property: 'noBaseMonsters',
-                label: 'No base monsters',
+                label: 'Base properties',
+                sort: 2,
+                property: 'baseFlags',
                 group: 'Advanced',
-                sort: 5
-            },
-            {
-                property: 'noBaseObjects',
-                label: 'No base objects',
-                group: 'Advanced',
-                sort: 5
-            },
-            {
-                property: 'noBaseItems',
-                label: 'No base items',
-                group: 'Advanced',
-                sort: 5
-            },
-            {
-                property: 'noBaseForageObjects',
-                label: 'No base forage',
-                group: 'Advanced',
-                sort: 5
-            },
-            {
-                property: 'noBaseRummageObjects',
-                label: 'No base rummage',
-                group: 'Advanced',
-                sort: 5
+                editor: {
+                    type: EditorType.flag,
+                    options: {
+                        enum: RoomBaseFlags,
+                        container: document.body
+                    }
+                }
             },
             {
                 property: 'forageObjects',
@@ -4225,14 +4219,18 @@ export class AreaDesigner extends EditorBase {
                 width: 150
             },
             {
-                field: 'noBaseObjects',
-                label: 'No base objects',
-                width: 125
-            },
-            {
-                field: 'noBaseTopics',
-                label: 'No base topics',
-                width: 125
+                label: 'Base properties',
+                field: 'baseFlags',
+                width: 150,
+                formatter: this.formatMonsterBaseFlags,
+                tooltipFormatter: this.formatMonsterBaseFlags,
+                editor: {
+                    type: EditorType.flag,
+                    options: {
+                        enum: MonsterBaseFlags,
+                        container: document.body
+                    }
+                }
             },
             {
                 field: 'objects',
@@ -4511,8 +4509,7 @@ export class AreaDesigner extends EditorBase {
                 delete this.$area.baseMonsters[oldValue.name];
             newValue.monster.maxAmount = newValue.maxAmount;
             newValue.monster.objects = newValue.objects;
-            newValue.monster.noBaseTopics = newValue.noBaseTopics;
-            newValue.monster.noBaseObjects = newValue.noBaseObjects;
+            newValue.monster.baseFlags = newValue.baseFlags;
             this.$area.baseMonsters[newValue.name] = newValue.monster;
             this.changed = true;
         });
@@ -4522,8 +4519,7 @@ export class AreaDesigner extends EditorBase {
             e.data = {
                 name: 'base' + this.$new.baseMonsters,
                 maxAmount: this.$area.baseMonsters['base' + this.$new.baseMonsters].maxAmount,
-                noBaseObjects: this.$area.baseMonsters['base' + this.$new.baseMonsters].noBaseObjects,
-                noBaseTopics: this.$area.baseMonsters['base' + this.$new.baseMonsters].noBaseTopics,
+                baseFlags: this.$area.baseMonsters['base' + this.$new.baseMonsters].baseFlags,
                 objects: this.$area.baseMonsters['base' + this.$new.baseMonsters].objects,
                 monster: this.$area.baseMonsters['base' + this.$new.baseMonsters]
             };
@@ -4623,29 +4619,18 @@ export class AreaDesigner extends EditorBase {
                 }
             },
             {
-                field: 'noBaseMonsters',
-                label: 'No base monsters',
-                width: 125
-            },
-            {
-                field: 'noBaseObjects',
-                label: 'No base objects',
-                width: 125
-            },
-            {
-                field: 'noBaseItems',
-                label: 'No base items',
-                width: 125
-            },
-            {
-                field: 'noBaseForageObjects',
-                label: 'No base forage',
-                width: 125
-            },
-            {
-                field: 'noBaseRummageObjects',
-                label: 'No base rummage',
-                width: 125
+                label: 'Base properties',
+                field: 'baseFlags',
+                width: 150,
+                formatter: this.formatRoomBaseFlags,
+                tooltipFormatter: this.formatRoomBaseFlags,
+                editor: {
+                    type: EditorType.flag,
+                    options: {
+                        enum: RoomBaseFlags,
+                        container: document.body
+                    }
+                }
             },
             {
                 field: 'objects',
@@ -5048,11 +5033,7 @@ export class AreaDesigner extends EditorBase {
                 delete this.$area.baseRooms[oldValue.name];
             newValue.room.monsters = newValue.monsters;
             newValue.room.objects = newValue.objects;
-            newValue.room.noBaseMonsters = newValue.noBaseMonsters;
-            newValue.room.noBaseObjects = newValue.noBaseObjects;
-            newValue.room.noBaseItems = newValue.noBaseItems;
-            newValue.room.noBaseForageObjects = newValue.noBaseForageObjects;
-            newValue.room.noBaseRummageObjects = newValue.noBaseRummageObjects;
+            newValue.room.baseFlags = newValue.baseFlags;
             this.$area.baseRooms[newValue.name] = newValue.room;
             this.changed = true;
         });
@@ -5061,11 +5042,7 @@ export class AreaDesigner extends EditorBase {
             this.$area.baseRooms['base' + this.$new.baseRooms] = new Room(0, 0, 0, null, 'STD_ROOM');
             e.data = {
                 name: 'base' + this.$new.baseRooms,
-                noBaseMonsters: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseMonsters,
-                noBaseObjects: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseObjects,
-                noBaseItems: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseItems,
-                noBaseForageObjects: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseForageObjects,
-                noBaseRummageObjects: this.$area.baseRooms['base' + this.$new.baseRooms].noBaseRummageObjects,
+                baseFlags: this.$area.baseRooms['base' + this.$new.baseRooms].baseFlags,
                 objects: this.$area.baseRooms['base' + this.$new.baseRooms].objects,
                 monsters: this.$area.baseRooms['base' + this.$new.baseRooms].monsters,
                 room: this.$area.baseRooms['base' + this.$new.baseRooms]
@@ -5193,14 +5170,18 @@ export class AreaDesigner extends EditorBase {
                 width: 125
             },
             {
-                field: 'noBaseObjects',
-                label: 'No base objects',
-                width: 125
-            },
-            {
-                field: 'noBaseTopics',
-                label: 'No base topics',
-                width: 125
+                label: 'Base properties',
+                field: 'baseFlags',
+                width: 150,
+                formatter: this.formatMonsterBaseFlags,
+                tooltipFormatter: this.formatMonsterBaseFlags,
+                editor: {
+                    type: EditorType.flag,
+                    options: {
+                        enum: MonsterBaseFlags,
+                        container: document.body
+                    }
+                }
             },
             {
                 field: 'objects',
@@ -5528,8 +5509,7 @@ export class AreaDesigner extends EditorBase {
                 short: m.short,
                 maxAmount: m.maxAmount,
                 unique: m.unique,
-                noBaseTopics: m.noBaseTopics,
-                noBaseObjects: m.noBaseObjects,
+                baseFlags: m.baseFlags,
                 objects: m.objects,
                 monster: m
             };
@@ -5563,8 +5543,7 @@ export class AreaDesigner extends EditorBase {
             newValue.monster.maxAmount = newValue.maxAmount;
             newValue.monster.unique = newValue.unique;
             newValue.monster.objects = newValue.objects;
-            newValue.monster.noBaseTopics = newValue.noBaseTopics;
-            newValue.monster.noBaseObjects = newValue.noBaseObjects;
+            newValue.monster.baseFlags = newValue.baseFlags;
             this.$area.monsters[newValue.id] = newValue.monster;
             this.updateMonsters(true);
             this.changed = true;
@@ -7458,6 +7437,32 @@ export class AreaDesigner extends EditorBase {
         return bGroup;
     }
 
+    private formatRoomBaseFlags(data) {
+        if (!data || !data.cell) return 'Default';
+        const states = Object.keys(RoomExit).filter(key => !isNaN(Number(RoomBaseFlags[key])));
+        const f = [];
+        let state = states.length;
+        while (state--) {
+            if (states[state] === 'None') continue;
+            if ((data.cell & RoomBaseFlags[states[state]]) === RoomBaseFlags[states[state]])
+                f.push(capitalize(states[state]));
+        }
+        return f.join(', ');
+    }
+
+    private formatMonsterBaseFlags(data) {
+        if (!data || !data.cell) return 'Default';
+        const states = Object.keys(RoomExit).filter(key => !isNaN(Number(MonsterBaseFlags[key])));
+        const f = [];
+        let state = states.length;
+        while (state--) {
+            if (states[state] === 'None') continue;
+            if ((data.cell & MonsterBaseFlags[states[state]]) === MonsterBaseFlags[states[state]])
+                f.push(capitalize(states[state]));
+        }
+        return f.join(', ');
+    }
+
     private formatExits(prop, value) {
         if (value === 0)
             return 'None';
@@ -8891,24 +8896,24 @@ export class AreaDesigner extends EditorBase {
         }
 
         let cols = this.$propertiesEditor.roomGrid.columns;
-        cols[6].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[6].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[6].editor.options.enterMoveNew = this.$enterMoveNew;
-        cols[7].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[7].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[7].editor.options.enterMoveNew = this.$enterMoveNew;
+        cols[2].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[2].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[2].editor.options.enterMoveNew = this.$enterMoveNew;
+        cols[3].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[3].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[3].editor.options.enterMoveNew = this.$enterMoveNew;
         this.$propertiesEditor.roomGrid.columns = cols;
 
         cols = this.$propertiesEditor.monsterGrid.columns;
-        cols[4].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[4].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[4].editor.options.enterMoveNew = this.$enterMoveNew;
+        cols[3].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[3].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[3].editor.options.enterMoveNew = this.$enterMoveNew;
         this.$propertiesEditor.monsterGrid.columns = cols;
 
         cols = this.$monsterGrid.columns;
-        cols[6].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[6].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[6].editor.options.enterMoveNew = this.$enterMoveNew;
+        cols[5].editor.options.enterMoveFirst = this.$enterMoveFirst;
+        cols[5].editor.options.enterMoveNext = this.$enterMoveNext;
+        cols[5].editor.options.enterMoveNew = this.$enterMoveNew;
         this.$monsterGrid.columns = cols;
 
         cols = this.$objectGrid.columns;
@@ -9863,10 +9868,11 @@ export class AreaDesigner extends EditorBase {
             this.$roomPreview.long.textContent = room.long || base.short;
             str = this.$roomPreview.long.innerHTML;
 
-            if (!room.noBaseItems)
-                items = room.items.concat(...base.items);
-            else
+            if ((room.baseFlags & RoomBaseFlags.No_Items) === RoomBaseFlags.No_Items)
                 items = room.items || [];
+            else
+                items = room.items.concat(...base.items);
+
             if (items.length > 0) {
                 items = items.slice().sort((a, b) => { return b.item.length - a.item.length; });
                 for (c = 0, cl = items.length; c < cl; c++)
@@ -9980,7 +9986,7 @@ export class AreaDesigner extends EditorBase {
                 else if (i.unique)
                     counts[this.$area.monsters[i.id].short]++;
             });
-            if (!room.noBaseMonsters)
+            if ((room.baseFlags & RoomBaseFlags.No_Monsters) !== RoomBaseFlags.No_Monsters)
                 base.monsters.forEach(i => {
                     if (!counts[this.$area.monsters[i.id].short])
                         counts[this.$area.monsters[i.id].short] = 0;
@@ -10007,7 +10013,7 @@ export class AreaDesigner extends EditorBase {
                 else if (i.unique)
                     counts[short]++;
             });
-            if (!room.noBaseObjects)
+            if ((room.baseFlags & RoomBaseFlags.No_Objects) !== RoomBaseFlags.No_Objects)
                 base.objects.forEach(i => {
                     const short = this.$area.objects[i.id].getShort();
                     if (!counts[short])
@@ -10080,11 +10086,7 @@ export class AreaDesigner extends EditorBase {
         this.$propertiesEditor.roomGrid.rows = Object.keys(this.$area.baseRooms).map(r => {
             return {
                 name: r,
-                noBaseMonsters: this.$area.baseRooms[r].noBaseMonsters,
-                noBaseObjects: this.$area.baseRooms[r].noBaseObjects,
-                noBaseItems: this.$area.baseRooms[r].noBaseItems,
-                noBaseForageObjects: this.$area.baseRooms[r].noBaseForageObjects,
-                noBaseRummageObjects: this.$area.baseRooms[r].noBaseRummageObjects,
+                baseFlags: this.$area.baseRooms[r].baseFlags,
                 monsters: this.$area.baseRooms[r].monsters,
                 objects: this.$area.baseRooms[r].objects,
                 room: this.$area.baseRooms[r]
@@ -10097,8 +10099,7 @@ export class AreaDesigner extends EditorBase {
             return {
                 name: r,
                 maxAmount: this.$area.baseMonsters[r].maxAmount,
-                noBaseTopics: this.$area.baseMonsters[r].noBaseTopics,
-                noBaseObjects: this.$area.baseMonsters[r].noBaseObjects,
+                baseFlags: this.$area.baseMonsters[r].baseFlags,
                 objects: this.$area.baseMonsters[r].objects,
                 monster: this.$area.baseMonsters[r]
             };
@@ -10114,8 +10115,7 @@ export class AreaDesigner extends EditorBase {
                     short: this.$area.monsters[m].short,
                     maxAmount: this.$area.monsters[m].maxAmount,
                     unique: this.$area.monsters[m].unique,
-                    noBaseTopics: this.$area.monsters[m].noBaseTopics,
-                    noBaseObjects: this.$area.monsters[m].noBaseObjects,
+                    baseFlags: this.$area.monsters[m].baseFlags,
                     objects: this.$area.monsters[m].objects,
                     monster: this.$area.monsters[m]
                 };
@@ -10127,7 +10127,7 @@ export class AreaDesigner extends EditorBase {
             };
         });
         let cols = this.$propertiesEditor.roomGrid.columns;
-        cols[7].editor.options.columns[0].editor.options.data = data;
+        cols[3].editor.options.columns[0].editor.options.data = data;
         this.$propertiesEditor.roomGrid.columns = cols;
 
         cols = this.$roomEditor.getPropertyOptions('monsters');
@@ -10153,15 +10153,15 @@ export class AreaDesigner extends EditorBase {
             };
         });
         let cols = this.$monsterGrid.columns;
-        cols[6].editor.options.columns[0].editor.options.data = data;
+        cols[5].editor.options.columns[0].editor.options.data = data;
         this.$monsterGrid.columns = cols;
 
         cols = this.$propertiesEditor.monsterGrid.columns;
-        cols[4].editor.options.columns[0].editor.options.data = data;
+        cols[3].editor.options.columns[0].editor.options.data = data;
         this.$propertiesEditor.monsterGrid.columns = cols;
 
         cols = this.$propertiesEditor.roomGrid.columns;
-        cols[6].editor.options.columns[0].editor.options.data = data;
+        cols[2].editor.options.columns[0].editor.options.data = data;
         this.$propertiesEditor.roomGrid.columns = cols;
 
         cols = this.$roomEditor.getPropertyOptions('objects');
@@ -10585,7 +10585,8 @@ export class AreaDesigner extends EditorBase {
                     tmp = true;
                 data['create post'] += `   return new(OBJ + "${files[o.id]}.c");\n`;
             });
-            if (!room.noBaseForageObjects && base.forageObjects.filter(o => this.$area.objects[o.id]).length !== 0)
+
+            if ((room.baseFlags & RoomBaseFlags.No_Forage_Objects) !== RoomBaseFlags.No_Forage_Objects && base.forageObjects.filter(o => this.$area.objects[o.id]).length !== 0)
                 data['create post'] += '   return ::query_forage();\n';
             else if (!tmp)
                 data['create post'] += '   return 0;\n';
@@ -10615,7 +10616,7 @@ export class AreaDesigner extends EditorBase {
                     tmp = true;
                 data['create post'] += `   return new(OBJ + "${files[o.id]}.c");\n`;
             });
-            if (!room.noBaseForageObjects && base.forageObjects.filter(o => this.$area.objects[o.id]).length !== 0)
+            if ((room.baseFlags & RoomBaseFlags.No_Rummage_Objects) !== RoomBaseFlags.No_Rummage_Objects && base.forageObjects.filter(o => this.$area.objects[o.id]).length !== 0)
                 data['create post'] += '   return ::query_rummage();\n';
             else if (!tmp)
                 data['create post'] += '   return 0;\n';
@@ -10838,9 +10839,10 @@ export class AreaDesigner extends EditorBase {
             tmp.push('"no dirt" : 1');
         if (room.dirtType !== base.dirtType)
             tmp.push(`"dirt type" : "${room.dirtType}"`);
-        if (room.noBaseMonsters && !base.noBaseItems)
+
+        if ((room.baseFlags & RoomBaseFlags.No_Monsters) === RoomBaseFlags.No_Monsters && (base.baseFlags & RoomBaseFlags.No_Monsters) !== RoomBaseFlags.No_Monsters)
             tmp.push(`"no clone monsters" : 1`);
-        if (room.noBaseObjects && !base.noBaseObjects)
+        if ((room.baseFlags & RoomBaseFlags.No_Objects) === RoomBaseFlags.No_Objects && (base.baseFlags & RoomBaseFlags.No_Objects) !== RoomBaseFlags.No_Objects)
             tmp.push(`"no clone objects" : 1`);
 
         room.secretExit = room.secretExit.trim();
@@ -10922,7 +10924,7 @@ export class AreaDesigner extends EditorBase {
             return `${tmp2} : ${tmp3}`;
         });
         if (tmp.length > 0) {
-            if (base.items.length !== 0 && !room.noBaseItems)
+            if (base.items.length !== 0 && (room.baseFlags & RoomBaseFlags.No_Items) !== RoomBaseFlags.No_Items)
                 data['create body'] += '   add_items( ([\n       ';
             else
                 data['create body'] += '   set_items( ([\n       ';
@@ -11202,6 +11204,10 @@ export class AreaDesigner extends EditorBase {
 
         if (tmp.length === 1) {
             tmp = room.reads[0];
+            if ((room.baseFlags & RoomBaseFlags.No_Reads) === RoomBaseFlags.No_Reads)
+                tmp4 = 'set_read';
+            else
+                tmp4 = 'add_read';
             tmp2 = tmp.read.split(',').map(t => {
                 t.trim();
                 if (!t.startsWith('"') && !t.endsWith('"'))
@@ -11223,14 +11229,14 @@ export class AreaDesigner extends EditorBase {
             if (tmp.language.length !== 0)
                 tmp3 = `, "${tmp.language}"`;
             if (tmp.description.startsWith('(:'))
-                data['create body'] += `   set_read(${tmp2}${formatFunctionPointer(tmp.description)}${tmp3});\n`;
+                data['create body'] += `   ${tmp4}(${tmp2}${formatFunctionPointer(tmp.description)}${tmp3});\n`;
             else if (!tmp.description.startsWith('"') && !tmp.description.endsWith('"'))
-                data['create body'] += `   set_read(${tmp2}"${tmp.description}"${tmp3});\n`;
+                data['create body'] += `   ${tmp4}(${tmp2}"${tmp.description}"${tmp3});\n`;
             else
-                data['create body'] += `   set_read(${tmp2}${tmp.description}${tmp3});\n`;
+                data['create body'] += `   ${tmp4}(${tmp2}${tmp.description}${tmp3});\n`;
         }
         else if (tmp.length > 0) {
-            data['create body'] += '   set_read( ([\n       ';
+            data['create body'] += `   ${tmp4}( ([\n       `;
             data['create body'] += tmp.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
         }
@@ -11609,7 +11615,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_track_enter_message_type("${monster.trackingType.trim()}");\n`;
         if (monster.trackingAggressively !== base.trackingAggressively)
             data['create body'] += `   set_track_aggressively_only(1);\n`;
-        if (monster.noBaseTopics) {
+        if ((monster.baseFlags & MonsterBaseFlags.No_Topics) === MonsterBaseFlags.No_Topics) {
             if (monster.askEnabled && monster.askTopics.length === 0)
                 data['create body'] += `   set_enable_ask(1);\n`;
         }
@@ -11679,7 +11685,7 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += `   set_topic(${tmp}, ${monster.askTopics[0].message});`;
         }
         else if (tmp.length > 0) {
-            if (monster.noBaseTopics)
+            if ((monster.baseFlags & MonsterBaseFlags.No_Topics) === MonsterBaseFlags.No_Topics)
                 data['create body'] += '   set_topics( ([\n       ';
             else
                 data['create body'] += '   add_topics( ([\n       ';
@@ -11717,7 +11723,8 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});`;
             });
         }
-        if (monster.noBaseObjects && !base.noBaseObjects)
+
+        if ((monster.baseFlags & MonsterBaseFlags.No_Objects) === RoomBaseFlags.No_Objects && (base.baseFlags & MonsterBaseFlags.No_Topics) !== MonsterBaseFlags.No_Topics)
             data['create pre inherit'] += '   set_property("no objects", 1);\n';
 
         if (monster.objects.length !== 0) {

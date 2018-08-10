@@ -28,11 +28,12 @@ Advanced options for when creating a room
   - `search` what to search
   - `Message` if a string will be displayed to player
   - `function` if in the format of (:name:) it will generate a function stub to later fill in with more advanced search code
-- `No Base Items` replace inherited base object items, if false items are merged with base items, and any with the same name are replaced with current
-- `No Base Monsters` disable base inherited monsters
-- `No Base Objects` disable base inherited objects
-- `No Base Forage` do not return inherited forage object function
-- `No Base rummage` do not return inherited rummage object function
+- `Base properties` settings that effect how the base inherit object is handled
+  - `No Items` replace inherited base object items, if false items are merged with base items, and any with the same name are replaced with current
+  - `No Monsters` disable base inherited monsters
+  - `No objects` disable base inherited objects
+  - `No forage` do not return inherited forage object function
+  - `No rummage` do not return inherited rummage object function
 - `Forage Objects` objects to return when a player forages for food
   - `Name` the object to return
   - `Random` the chance it is this object  
@@ -124,10 +125,12 @@ The general properties for the area design
 Allows you to create base room types for rooms to inherit
 
 - `Name` A unique name, used to create a define in area.h of NAMEROOM
-- `No base monsters` Do not add monsters from inherited type
-- `No base Objects` Do not add objects from inherited type
-- `No base items` replace items from inherited type else merge and only replace matching names
-- `No base forage` do not return inherited forage object function
+- `Base properties` how base inherits are handled
+  - `No monsters` Do not add monsters from inherited type
+  - `No objects` Do not add objects from inherited type
+  - `No items` replace items from inherited type else merge and only replace matching names
+  - `No forage` do not return inherited forage object function
+  - `No rummage` do not return inherited rummage object function
 - `Objects` the default objects for the room
   - `Name` the item to add
   - `Min amount` the minimum amount to add
@@ -156,8 +159,9 @@ Allows you to create base monsters for monsters to inherit
 
 - `Name` A unique name, used to create a define in area.h of NAMEMONSTER
 - `Max amount` the max amount of this type of monster, ignored if -1 or 0, or overridden by monster
-- `No base objects` do not add inherited objects from base type
-- `No base topics` do not ask topics from base type else merge and replace same named
+- `Base properties` determine how inherited base properties are handled
+  - `No objects` do not add inherited objects from base type
+  - `No topics` do not ask topics from base type else merge and replace same named
 - `Objects` the default objects for the monster
   - `Name` the item to add
   - `Min amount` the minimum amount to add
@@ -176,8 +180,9 @@ Create monsters for your area
 - `Name` The name of the monster
 - `Short` the short description of the monster
 - `Max amount` the max amount of this monster that should be created in the area
-- `No base objects` do not add inherited objects from base type
-- `No base topics` do not ask topics from base type else merge and replace same named
+- `Base properties` determine how inherited base properties are handled
+  - `No objects` do not add inherited objects from base type
+  - `No topics` do not ask topics from base type else merge and replace same named
 - `Objects` the default objects for the monster
   - `Name` the item to add
   - `Min amount` the minimum amount to add
