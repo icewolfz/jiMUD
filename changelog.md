@@ -5,14 +5,16 @@
 - **New:**
   - Area designer:
     - New progress dialog for code generation to allow you to cancel and see progress better
-    - Add food and drink objects
+    - Add food, drink, fishing poles, backpacks, and bags of holding objects
+    - Add value property for all objects
     - All external exits are now defines in area.h per area standard, need to improve the name scheme still
     - Allow custom forage objects to be returned when players forage for food
+    - Allow custom rummage objects to be returned when players rummage for materials
     - Monsters can now use other monsters as a base to allow you ultimate control and flexibility on how monsters are created
     - Monsters, rooms, and objects now all contain a note field to allow additional notes or info, this info will also be added to the header when code is generated
     - Objects that support bonuses can now be set, depending on the object bonuses are used differently
     - Armor and sheaths now support max wearable property and damaged systems
-    - Add max encumbrance, lock strength, and item reduction propreties to chest
+    - Add max encumbrance, lock strength, and item reduction properties to chest
     - Add prevent actions for all objects to control how certain actions work with objects
     - All armor and weapon objects can now have custom skill requirements set for all or per different classes
     - Food and generic objects can be turned into fishing bait
@@ -34,6 +36,7 @@
     - Fixed room preview formatting when consolidating same named items or items with mulitples
     - Fixed empty room checks so rooms that have objects, monsters, smells, items, sounds, and searches, as long as there is one the room will not be considered empty and be generated in code or be drawn in the mapper, this allows you to create shop storage and other misc rooms that may not have exits for what ever reasons
     - Fixed a bug with door code generation not setting external destination link
+    - Fixed an issue when editing sheaths that quality and weapon where wrong
   - Refresh status display after settings are changed
   - Fixed some missing monster icons
   - Fixed -#s when using show needed xp as progress bar
