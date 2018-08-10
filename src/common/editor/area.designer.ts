@@ -540,17 +540,7 @@ class Monster {
 }
 
 //TODO add fishing pole, back packs, and bags of holding to object types
-//TODO fishing bait settings for food and maybe generic objects
 /*
-edible
-fishing bait - OBJ_BAIT -- food as well, create(string name, int strength, int uses
-    strength - set_bait_strength
-    uses - set_uses
-
-non-edible STD_OBJECT + OBJ_FISHING_BAIT
-    strength - set_bait_strength
-    uses - set_uses
-
 fishing pole - OBJ_FISHING_POLE - create();
     can bait - set_can_bait(1)
     pole class - set_pole_class(#)
@@ -6142,7 +6132,7 @@ export class AreaDesigner extends EditorBase {
                                     <div class="col-sm-6 form-group">
                                         <label class="control-label">
                                             Mass
-                                            <input type="number" id="obj-mass" class="input-sm form-control" min="0" value="0" />
+                                            <input type="number" id="obj-mass" class="input-sm form-control" min="0" value="1000" />
                                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A mass of 0 will use default mass</span>
                                         </label>
                                     </div>
@@ -6160,11 +6150,47 @@ export class AreaDesigner extends EditorBase {
                                             </div>
                                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Required for all but basic object</span>
                                         </label>
+                                    </div>
+                                    <div class="col-sm-12 form-group">
+                                        <label class="control-label">
+                                            <input type="checkbox" id="obj-bait" /> Is fishing bait <hr style="width: 72%;float: right;margin-top: 12px;margin-bottom: 0px;">
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Bait strength
+                                            <input type="number" id="obj-baitStrength" class="input-sm form-control" min="0" value="200" disabled="disabled"/>
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Bait uses
+                                            <input type="number" id="obj-baitUses" class="input-sm form-control" min="0" value="100"  disabled="disabled"/>
+                                        </label>
                                     </div>`,
                                         reset: (e) => {
                                             e.page.querySelector('#obj-keyID').value = ed.value.keyID || '';
                                             e.page.querySelector('#obj-mass').value = ed.value.mass || '0';
                                             e.page.querySelector('#obj-material').value = ed.value.material || '';
+                                            if (ed.value.type === StdObjectType.food || ed.value.type === StdObjectType.object) {
+                                                e.page.querySelector('#obj-bait').parentElement.parentElement.style.display = '';
+                                                e.page.querySelector('#obj-baitStrength').parentElement.parentElement.style.display = '';
+                                                e.page.querySelector('#obj-baitUses').parentElement.parentElement.style.display = '';
+                                            }
+                                            else {
+                                                e.page.querySelector('#obj-bait').parentElement.parentElement.style.display = 'none';
+                                                e.page.querySelector('#obj-baitStrength').parentElement.parentElement.style.display = 'none';
+                                                e.page.querySelector('#obj-baitUses').parentElement.parentElement.style.display = 'none';
+                                            }
+                                            e.page.querySelector('#obj-bait').checked = ed.value.bait || false;
+                                            e.page.querySelector('#obj-baitStrength').value = ed.value.baitStrength || '1';
+                                            e.page.querySelector('#obj-baitUses').value = ed.value.baitUses || '5';
+                                            e.page.querySelector('#obj-baitStrength').disabled = !ed.value.bait;
+                                            e.page.querySelector('#obj-baitUses').disabled = !ed.value.bait;
+                                            e.page.querySelector('#obj-bait').addEventListener('change', e2 => {
+                                                e.page.querySelector('#obj-baitStrength').disabled = !e.page.querySelector('#obj-bait').checked;
+                                                e.page.querySelector('#obj-baitUses').disabled = !e.page.querySelector('#obj-bait').checked;
+                                            });
                                         }
                                     }),
                                     new WizardPage({
@@ -6172,36 +6198,36 @@ export class AreaDesigner extends EditorBase {
                                         title: 'Prevent actions',
                                         body: `<div class="col-sm-12 form-group">
                                             <label class="control-label" style="width: 100%">Prevent offer
-                                                <input type="text" class="input-sm form-control" id="obj-prevent-offer" placeholder="1, true, a string to display, or a function pointer"/>
+                                                <input type="text" class="input-sm form-control" id="obj-preventOffer" placeholder="1, true, a string to display, or a function pointer"/>
                                             </label>
                                         </div>
                                         <div class="col-sm-12 form-group">
                                             <label class="control-label" style="width: 100%">Prevent get
-                                                <input type="text" class="input-sm form-control" id="obj-prevent-get" placeholder="1, true, a string to display, or a function pointer"/>
+                                                <input type="text" class="input-sm form-control" id="obj-preventGet" placeholder="1, true, a string to display, or a function pointer"/>
                                             </label>
                                         </div>
                                         <div class="col-sm-12 form-group">
                                             <label class="control-label" style="width: 100%">Prevent drop
-                                                <input type="text" class="input-sm form-control" id="obj-prevent-drop" placeholder="1, true, a string to display, or a function pointer"/>
+                                                <input type="text" class="input-sm form-control" id="obj-preventDrop" placeholder="1, true, a string to display, or a function pointer"/>
                                             </label>
                                         </div>
                                         <div class="col-sm-12 form-group">
                                             <label class="control-label" style="width: 100%">Prevent put
-                                                <input type="text" class="input-sm form-control" id="obj-prevent-put" placeholder="1, true, a string to display, or a function pointer"/>
+                                                <input type="text" class="input-sm form-control" id="obj-preventPut" placeholder="1, true, a string to display, or a function pointer"/>
                                             </label>
                                         </div>
                                         <div class="col-sm-12 form-group">
                                             <label class="control-label" style="width: 100%">Prevent steal
-                                                <input type="text" class="input-sm form-control" id="obj-prevent-steal" placeholder="1, true, a string to display, or a function pointer"/>
+                                                <input type="text" class="input-sm form-control" id="obj-preventSteal" placeholder="1, true, a string to display, or a function pointer"/>
                                             </label>
                                         </div>
                                     `,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-prevent-offer').value = ed.value.preventOffer || '';
-                                            e.page.querySelector('#obj-prevent-get').value = ed.value.preventGet || '';
-                                            e.page.querySelector('#obj-prevent-drop').value = ed.value.preventDrop || '';
-                                            e.page.querySelector('#obj-prevent-put').value = ed.value.preventPut || '';
-                                            e.page.querySelector('#obj-prevent-steal').value = ed.value.preventSteal || '';
+                                            e.page.querySelector('#obj-preventOffer').value = ed.value.preventOffer || '';
+                                            e.page.querySelector('#obj-preventGet').value = ed.value.preventGet || '';
+                                            e.page.querySelector('#obj-preventDrop').value = ed.value.preventDrop || '';
+                                            e.page.querySelector('#obj-preventPut').value = ed.value.preventPut || '';
+                                            e.page.querySelector('#obj-preventSteal').value = ed.value.preventSteal || '';
                                         }
                                     })
                                 ]
@@ -12088,6 +12114,8 @@ export class AreaDesigner extends EditorBase {
             case StdObjectType.food:
                 //#region Food
                 data.inherit = 'OBJ_FOOD';
+                if (obj.bait)
+                    data.inherits = '\ninherit OBJ_FISHING_BAIT;';
                 data['doc'].push('/doc/build/etc/food');
                 if (obj.myMessage && obj.myMessage.trim().length !== 0 && obj.yourMessage && obj.yourMessage.trim().length !== 0)
                     data['create body'] += `   set_eat("${obj.myMessage.trim()}", "${obj.yourMessage.trim()}");\n`;
@@ -12150,6 +12178,8 @@ export class AreaDesigner extends EditorBase {
             default:
                 //#region Object
                 data.inherit = 'STD_OBJECT';
+                if (obj.bait)
+                    data.inherits = '\ninherit OBJ_FISHING_BAIT;';
                 if (obj.material.length > 0)
                     data['create body'] += `   set_material("${obj.material}");\n`;
                 //#endregion
@@ -12241,6 +12271,12 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += '   set_properties( ([\n       ';
             data['create body'] += props.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
+        }
+        if (obj.bait && (obj.type === StdObjectType.object || obj.type === StdObjectType.food)) {
+            if (obj.baitStrength !== 0)
+                data['create body'] += `   set_bait_strength(${obj.baitStrength});\n`;
+            if (obj.baitUses !== 0)
+                data['create body'] += `   set_uses(${obj.baitUses});\n`;
         }
         //#region prevent actions
         obj.preventOffer = obj.preventOffer.trim();
