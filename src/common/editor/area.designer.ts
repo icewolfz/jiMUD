@@ -12443,7 +12443,7 @@ export class AreaDesigner extends EditorBase {
                 });
                 data['create post'] += '   return 1;\n}\n';
                 if (amt !== 0)
-                    data['create body'] += `   set_skill_title(SKILLS_D->query_skill_title(${amt}));\n`;
+                    data['create body'] += `   set_skill_level(${amt});\n`;
             }
         }
         //add docs
