@@ -550,11 +550,13 @@ class Monster {
 
 //TODO add fishing pole, back packs, and bags of holding to object types
 /*
-fishing pole - OBJ_FISHING_POLE - create();
+fishing pole - OBJ_FISHING_POLE - create(weapon args);
+    all weapon properties +
     can bait - set_can_bait(1)
     pole class - set_pole_class(#)
 
 back pack - OBJ_BACKPACK -- armor - create(string mat, string qual, int charm)
+    all armor properites, copy sheath
     back type - pack - set_backpack_type(string) - "backpack", "bag", "pouch", "sack", "haversack", "pack", "purse", "rucksack", "duffel bag", "bindle", "satchel", "shoulder strap", "shoulder sling", "dilly bag", "carpet bag"
     max encumbrance - 4000 - set_max_encumbrance(#)
     reduce mass to - 0.75 - set_reduce_item_mass(float)
@@ -11071,11 +11073,11 @@ export class AreaDesigner extends EditorBase {
         if (tmp.length === 1 && room.smell.length !== 0 && room.smell !== base.smell) {
             room.smell = room.smell.trim();
             if (room.smell.startsWith('(:'))
-                data['create body'] += `   set_smell(${formatFunctionPointer(room.smell)});`;
+                data['create body'] += `   set_smell(${formatFunctionPointer(room.smell)});\n`;
             else if (!room.smell.startsWith('"') && !room.smell.endsWith('"'))
-                data['create body'] += `   set_smell("${room.smell}");`;
+                data['create body'] += `   set_smell("${room.smell}");\n`;
             else
-                data['create body'] += `   set_smell(${room.smell});`;
+                data['create body'] += `   set_smell(${room.smell});\n`;
         }
         else if (tmp.length > 0) {
             data['create body'] += '   set_smells( ([\n       ';
@@ -11115,11 +11117,11 @@ export class AreaDesigner extends EditorBase {
         if (tmp.length === 1 && room.sound.length !== 0 && room.sound !== base.sound) {
             room.sound = room.sound.trim();
             if (room.sound.startsWith('(:'))
-                data['create body'] += `   set_listen(${formatFunctionPointer(room.sound)});`;
+                data['create body'] += `   set_listen(${formatFunctionPointer(room.sound)});\n`;
             else if (!room.sound.startsWith('"') && !room.sound.endsWith('"'))
-                data['create body'] += `   set_listen("${room.sound}");`;
+                data['create body'] += `   set_listen("${room.sound}");\n`;
             else
-                data['create body'] += `   set_listen(${room.sound});`;
+                data['create body'] += `   set_listen(${room.sound});\n`;
         }
         else if (tmp.length > 0) {
             data['create body'] += '   set_listens( ([\n       ';
@@ -11158,11 +11160,11 @@ export class AreaDesigner extends EditorBase {
                 room.searches[0].search = `"${room.searches[0].search.trim()}"`;
             room.searches[0].message = room.searches[0].message.trim();
             if (room.searches[0].message.startsWith('(:'))
-                data['create body'] += `   set_search(${room.searches[0].search},${formatFunctionPointer(room.searches[0].message)});`;
+                data['create body'] += `   set_search(${room.searches[0].search},${formatFunctionPointer(room.searches[0].message)});\n`;
             else if (!room.searches[0].message.startsWith('"') && !room.searches[0].message.endsWith('"'))
-                data['create body'] += `   set_search(${room.searches[0].search}, "${room.searches[0].message}");`;
+                data['create body'] += `   set_search(${room.searches[0].search}, "${room.searches[0].message}");\n`;
             else
-                data['create body'] += `   set_search(${room.searches[0].search}, ${room.searches[0].message});`;
+                data['create body'] += `   set_search(${room.searches[0].search}, ${room.searches[0].message});\n`;
         }
         else if (tmp.length > 0) {
             data['create body'] += '   set_search( ([\n       ';
@@ -11221,11 +11223,11 @@ export class AreaDesigner extends EditorBase {
             if (tmp.language.length !== 0)
                 tmp3 = `, "${tmp.language}"`;
             if (tmp.description.startsWith('(:'))
-                data['create body'] += `   set_read(${tmp2}${formatFunctionPointer(tmp.description)}${tmp3});`;
+                data['create body'] += `   set_read(${tmp2}${formatFunctionPointer(tmp.description)}${tmp3});\n`;
             else if (!tmp.description.startsWith('"') && !tmp.description.endsWith('"'))
-                data['create body'] += `   set_read(${tmp2}"${tmp.description}"${tmp3});`;
+                data['create body'] += `   set_read(${tmp2}"${tmp.description}"${tmp3});\n`;
             else
-                data['create body'] += `   set_read(${tmp2}${tmp.description}${tmp3});`;
+                data['create body'] += `   set_read(${tmp2}${tmp.description}${tmp3});\n`;
         }
         else if (tmp.length > 0) {
             data['create body'] += '   set_read( ([\n       ';

@@ -5810,11 +5810,11 @@
                 if (tmp.length === 1 && data['room-wiz-smells'][0].smell === 'default') {
                     data['room-wiz-smells'][0].description = data['room-wiz-smells'][0].description.trim();
                     if (data['room-wiz-smells'][0].description.startsWith('(:'))
-                        tmpl['create body'] += `   set_smell(${formatFunctionPointer(data['room-wiz-smells'][0].description)});`;
+                        tmpl['create body'] += `   set_smell(${formatFunctionPointer(data['room-wiz-smells'][0].description)});\n`;
                     else if (!data['room-wiz-smells'][0].description.startsWith('"') && !data['room-wiz-smells'][0].description.endsWith('"'))
-                        tmpl['create body'] += `   set_smell("${data['room-wiz-smells'][0].description}");`;
+                        tmpl['create body'] += `   set_smell("${data['room-wiz-smells'][0].description}");\n`;
                     else
-                        tmpl['create body'] += `   set_smell(${data['room-wiz-smells'][0].description});`;
+                        tmpl['create body'] += `   set_smell(${data['room-wiz-smells'][0].description});\n`;
                 }
                 else if (tmp.length > 0) {
                     tmpl['create body'] += '   set_smells( ([\n       ';
@@ -5846,11 +5846,11 @@
                 if (tmp.length === 1 && data['room-wiz-sounds'][0].sound === 'default') {
                     data['room-wiz-sounds'][0].description = data['room-wiz-sounds'][0].description.trim();
                     if (data['room-wiz-sounds'][0].description.startsWith('(:'))
-                        tmpl['create body'] += `   set_listen(${formatFunctionPointer(data['room-wiz-sounds'][0].description)});`;
+                        tmpl['create body'] += `   set_listen(${formatFunctionPointer(data['room-wiz-sounds'][0].description)});\n`;
                     else if (!data['room-wiz-sounds'][0].description.startsWith('"') && !data['room-wiz-sounds'][0].description.endsWith('"'))
-                        tmpl['create body'] += `   set_listen("${data['room-wiz-sounds'][0].description}");`;
+                        tmpl['create body'] += `   set_listen("${data['room-wiz-sounds'][0].description}");\n`;
                     else
-                        tmpl['create body'] += `   set_listen(${data['room-wiz-sounds'][0].description});`;
+                        tmpl['create body'] += `   set_listen(${data['room-wiz-sounds'][0].description});\n`;
                 }
                 else if (tmp.length > 0) {
                     tmpl['create body'] += '   set_listens( ([\n       ';
@@ -5893,11 +5893,11 @@
                         tmp2 = `({ ${tmp2.join(', ')} })`;
                     tmp.message = tmp.message.trim();
                     if (tmp.message.startsWith('(:'))
-                        tmpl['create body'] += `   set_search(${tmp2}, ${formatFunctionPointer(tmp.message)});`;
+                        tmpl['create body'] += `   set_search(${tmp2}, ${formatFunctionPointer(tmp.message)});\n`;
                     else if (!tmp.message.startsWith('"') && !tmp.message.endsWith('"'))
-                        tmpl['create body'] += `   set_search(${tmp2}, "${tmp.message}");`;
+                        tmpl['create body'] += `   set_search(${tmp2}, "${tmp.message}");\n`;
                     else
-                        tmpl['create body'] += `   set_search(${tmp2}, ${tmp.message});`;
+                        tmpl['create body'] += `   set_search(${tmp2}, ${tmp.message});\n`;
                 }
                 else if (tmp.length > 0) {
                     tmpl['create body'] += '   set_search( ([\n       ';
@@ -5956,11 +5956,11 @@
                     if (tmp.language.length !== 0)
                         tmp3 = `, "${tmp.language}"`;
                     if (tmp.description.startsWith('(:'))
-                        tmpl['create body'] += `   set_read(${tmp2}${formatFunctionPointer(tmp.description)}${tmp3});`;
+                        tmpl['create body'] += `   set_read(${tmp2}${formatFunctionPointer(tmp.description)}${tmp3});\n`;
                     else if (!tmp.description.startsWith('"') && !tmp.description.endsWith('"'))
-                        tmpl['create body'] += `   set_read(${tmp2}"${tmp.description}"${tmp3});`;
+                        tmpl['create body'] += `   set_read(${tmp2}"${tmp.description}"${tmp3});\n`;
                     else
-                        tmpl['create body'] += `   set_read(${tmp2}${tmp.description}${tmp3});`;
+                        tmpl['create body'] += `   set_read(${tmp2}${tmp.description}${tmp3});\n`;
                 }
                 else if (tmp.length > 0) {
                     tmpl['create body'] += '   set_read( ([\n       ';
