@@ -572,6 +572,14 @@ back pack - OBJ_BACKPACK -- armor - create(string mat, string qual, int charm)
 
 bag of holding - OBJ_BAGOFHOLDING - create()
     max encumbrance - 40000 - set_max_encumbrance(#)
+
+object read - set_read(mixed val, mixed val2, string lang)
+            - set_read(description) - default
+            - set_read(item, description)
+            - set_read(item, description, lang)
+    item - default,
+    description
+    lang
 */
 enum StdObjectType {
     object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink
@@ -6046,6 +6054,43 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-keyID').value = ed.value.keyID || '';
                                             e.page.querySelector('#obj-mass').value = ed.value.mass || '0';
                                             e.page.querySelector('#obj-material').value = ed.value.material || '';
+                                        }
+                                    }),
+                                    new WizardPage({
+                                        id: 'obj-prevent-actions',
+                                        title: 'Prevent actions',
+                                        body: `<div class="col-sm-12 form-group">
+                                            <label class="control-label" style="width: 100%">Prevent offer
+                                                <input type="text" class="input-sm form-control" id="obj-prevent-offer" placeholder="1, true, a string to display, or a function pointer"/>
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-12 form-group">
+                                            <label class="control-label" style="width: 100%">Prevent get
+                                                <input type="text" class="input-sm form-control" id="obj-prevent-get" placeholder="1, true, a string to display, or a function pointer"/>
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-12 form-group">
+                                            <label class="control-label" style="width: 100%">Prevent drop
+                                                <input type="text" class="input-sm form-control" id="obj-prevent-drop" placeholder="1, true, a string to display, or a function pointer"/>
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-12 form-group">
+                                            <label class="control-label" style="width: 100%">Prevent put
+                                                <input type="text" class="input-sm form-control" id="obj-prevent-put" placeholder="1, true, a string to display, or a function pointer"/>
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-12 form-group">
+                                            <label class="control-label" style="width: 100%">Prevent steal
+                                                <input type="text" class="input-sm form-control" id="obj-prevent-steal" placeholder="1, true, a string to display, or a function pointer"/>
+                                            </label>
+                                        </div>
+                                    `,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-prevent-offer').value = ed.value.preventOffer || '';
+                                            e.page.querySelector('#obj-prevent-get').value = ed.value.preventGet || '';
+                                            e.page.querySelector('#obj-prevent-drop').value = ed.value.preventDrop || '';
+                                            e.page.querySelector('#obj-prevent-put').value = ed.value.preventPut || '';
+                                            e.page.querySelector('#obj-prevent-steal').value = ed.value.preventSteal || '';
                                         }
                                     })
                                 ]
@@ -11621,7 +11666,7 @@ export class AreaDesigner extends EditorBase {
                 }
                 else if (obj.lock !== 0)
                     data['create body'] += `   set_can_lock(1);\n`;
-                    
+
                 if (obj.contents && obj.contents.length > 0) {
                     tmp = obj.contents.filter(c => c.item < -4);
                     tmp2 = obj.contents.filter(c => c.item >= 0);
@@ -12073,7 +12118,67 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += props.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
         }
+        //#region prevent actions
+        obj.preventOffer = obj.preventOffer.trim();
+        if (obj.preventOffer.startsWith('(:')) {
+            data['create body'] += `   set_prevent_offer(${formatFunctionPointer(obj.preventOffer)});\n`;
+            data['create pre'] += createFunction(obj.preventOffer, 'string');
+        }
+        else if (obj.preventOffer.startsWith('"') && obj.preventOffer.endsWith('"'))
+            data['create body'] += `   set_prevent_offer(${obj.preventOffer});\n`;
+        else if (obj.preventOffer === 'true' || obj.preventOffer === 1 || obj.preventOffer === '1')
+            data['create body'] += `   set_prevent_offer(1);\n`;
+        else
+            data['create body'] += `   set_prevent_offer("${obj.preventOffer.replace(/"/g, '\\"')}");\n`;
 
+        obj.preventGet = obj.preventGet.trim();
+        if (obj.preventGet.startsWith('(:')) {
+            data['create body'] += `   set_prevent_get(${formatFunctionPointer(obj.preventGet)});\n`;
+            data['create pre'] += createFunction(obj.preventGet, 'string');
+        }
+        else if (obj.preventGet.startsWith('"') && obj.preventGet.endsWith('"'))
+            data['create body'] += `   set_prevent_get(${obj.preventGet});\n`;
+        else if (obj.preventGet === 'true' || obj.preventGet === 1 || obj.preventGet === '1')
+            data['create body'] += `   set_prevent_get(1);\n`;
+        else
+            data['create body'] += `   set_prevent_get("${obj.preventGet.replace(/"/g, '\\"')}");\n`;
+
+        obj.preventDrop = obj.preventDrop.trim();
+        if (obj.preventDrop.startsWith('(:')) {
+            data['create body'] += `   set_prevent_drop(${formatFunctionPointer(obj.preventDrop)});\n`;
+            data['create pre'] += createFunction(obj.preventDrop, 'string');
+        }
+        else if (obj.preventDrop.startsWith('"') && obj.preventDrop.endsWith('"'))
+            data['create body'] += `   set_prevent_drop(${obj.preventDrop});\n`;
+        else if (obj.preventDrop === 'true' || obj.preventDrop === 1 || obj.preventDrop === '1')
+            data['create body'] += `   set_prevent_drop(1);\n`;
+        else
+            data['create body'] += `   set_prevent_drop("${obj.preventDrop.replace(/"/g, '\\"')}");\n`;
+
+        obj.preventPut = obj.preventPut.trim();
+        if (obj.preventPut.startsWith('(:')) {
+            data['create body'] += `   set_prevent_put(${formatFunctionPointer(obj.preventPut)});\n`;
+            data['create pre'] += createFunction(obj.preventPut, 'string');
+        }
+        else if (obj.preventPut.startsWith('"') && obj.preventPut.endsWith('"'))
+            data['create body'] += `   set_prevent_put(${obj.preventPut});\n`;
+        else if (obj.preventPut === 'true' || obj.preventPut === 1 || obj.preventPut === '1')
+            data['create body'] += `   set_prevent_put(1);\n`;
+        else
+            data['create body'] += `   set_prevent_put("${obj.preventPut.replace(/"/g, '\\"')}");\n`;
+
+        obj.preventSteal = obj.preventSteal.trim();
+        if (obj.preventSteal.startsWith('(:')) {
+            data['create body'] += `   set_prevent_steal(${formatFunctionPointer(obj.preventSteal)});\n`;
+            data['create pre'] += createFunction(obj.preventSteal, 'string');
+        }
+        else if (obj.preventSteal.startsWith('"') && obj.preventSteal.endsWith('"'))
+            data['create body'] += `   set_prevent_steal(${obj.preventSteal});\n`;
+        else if (obj.preventSteal === 'true' || obj.preventSteal === 1 || obj.preventSteal === '1')
+            data['create body'] += `   set_prevent_steal(1);\n`;
+        else
+            data['create body'] += `   set_prevent_steal("${obj.preventSteal.replace(/"/g, '\\"')}");\n`;
+        //#endregion
         if (bonuses && obj.bonuses && obj.bonuses.length !== 0) {
             tmp = obj.bonus.filter(b => b.type === 0 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
             tmp.map(b => {
