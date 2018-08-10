@@ -539,25 +539,15 @@ class Monster {
     }
 }
 
-//TODO add weapon/armor skill requirement editing
 //TODO add fishing pole, back packs, and bags of holding to object types
 //TODO fishing bait settings for food and maybe generic objects
 /*
-weapon/armor - skills
-    check skill requirement
-    check level requirement
-    skill requirement 0 default?
-    level requirement 0 default?
-
-    type
-        level
-        skill
-    class
-        all
-        rogue/fighter/mage/cleric/monk
-    amount
-
+edible
 fishing bait - OBJ_BAIT -- food as well, create(string name, int strength, int uses
+    strength - set_bait_strength
+    uses - set_uses
+
+non-edible STD_OBJECT + OBJ_FISHING_BAIT
     strength - set_bait_strength
     uses - set_uses
 
@@ -5961,6 +5951,127 @@ export class AreaDesigner extends EditorBase {
                                 enterMoveNext: this.$enterMoveNext,
                                 enterMoveNew: this.$enterMoveNew
                             });
+                            const wizSkills = new WizardDataGridPage({
+                                title: 'Skill requirements',
+                                id: 'obj-skills',
+                                columns: [
+                                    {
+                                        label: 'Type',
+                                        field: 'type',
+                                        width: 150,
+                                        formatter: (data) => {
+                                            if (!data) return '';
+                                            switch (+data.cell) {
+                                                case 0:
+                                                    return 'Skill';
+                                                case 1:
+                                                    return 'Level';
+                                            }
+                                            return '';
+                                        },
+                                        tooltipFormatter: (data) => {
+                                            if (!data) return '';
+                                            switch (+data.cell) {
+                                                case 0:
+                                                    return 'Skill';
+                                                case 1:
+                                                    return 'Level';
+                                            }
+                                            return '';
+                                        },
+                                        editor: {
+                                            type: EditorType.select,
+                                            options: {
+                                                data: [
+                                                    { display: 'Skill', value: 0 },
+                                                    { display: 'Level', value: 1 }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        label: 'Class',
+                                        field: 'class',
+                                        width: 150,
+                                        formatter: (data) => {
+                                            if (!data) return '';
+                                            switch (+data.cell) {
+                                                case 0:
+                                                    return 'All';
+                                                case 1:
+                                                    return 'Fighter';
+                                                case 2:
+                                                    return 'Monk';
+                                                case 3:
+                                                    return 'Mage';
+                                                case 4:
+                                                    return 'Rogue';
+                                                case 5:
+                                                    return 'Cleric';
+                                            }
+                                            return '';
+                                        },
+                                        tooltipFormatter: (data) => {
+                                            if (!data) return '';
+                                            switch (+data.cell) {
+                                                case 0:
+                                                    return 'All';
+                                                case 1:
+                                                    return 'Fighter';
+                                                case 2:
+                                                    return 'Monk';
+                                                case 3:
+                                                    return 'Mage';
+                                                case 4:
+                                                    return 'Rogue';
+                                                case 5:
+                                                    return 'Cleric';
+                                            }
+                                            return '';
+                                        },
+                                        editor: {
+                                            type: EditorType.select,
+                                            options: {
+                                                data: [
+                                                    { display: 'All', value: 0 },
+                                                    { display: 'Fighter', value: 1 },
+                                                    { display: 'Monk', value: 2 },
+                                                    { display: 'Mage', value: 3 },
+                                                    { display: 'Rogue', value: 4 },
+                                                    { display: 'Cleric', value: 5 }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        label: 'Amount',
+                                        field: 'amount',
+                                        width: 150
+                                    },
+                                    {
+                                        label: 'Message',
+                                        field: 'message',
+                                        width: 150,
+                                        spring: true,
+                                        editor: {
+                                            options: {
+                                                singleLine: true
+                                            }
+                                        }
+                                    }
+                                ],
+                                add: (e) => {
+                                    e.data = {
+                                        type: 0,
+                                        class: 0,
+                                        amount: 0,
+                                        message: ''
+                                    };
+                                },
+                                enterMoveFirst: this.$enterMoveFirst,
+                                enterMoveNext: this.$enterMoveNext,
+                                enterMoveNew: this.$enterMoveNew
+                            });
                             const wiz = new Wizard({
                                 id: 'object-wizard',
                                 title: 'Edit object...',
@@ -6151,7 +6262,8 @@ export class AreaDesigner extends EditorBase {
                                 case StdObjectType.sheath:
                                     wiz.defaults = {
                                         'obj-bonuses': ed.value.bonuses || [],
-                                        'obj-damaged': ed.value.damaged || []
+                                        'obj-damaged': ed.value.damaged || [],
+                                        'obj-skills': ed.value.skills || []
                                     };
                                     wiz.title = 'Edit sheath...';
                                     //type, quality, limbs, enchantment
@@ -6325,12 +6437,13 @@ export class AreaDesigner extends EditorBase {
                                         enterMoveFirst: this.$enterMoveFirst,
                                         enterMoveNext: this.$enterMoveNext,
                                         enterMoveNew: this.$enterMoveNew
-                                    }), wizBonuses]);
+                                    }), wizSkills, wizBonuses]);
                                     break;
                                 case StdObjectType.armor:
                                     wiz.defaults = {
                                         'obj-bonuses': ed.value.bonuses || [],
-                                        'obj-damaged': ed.value.damaged || []
+                                        'obj-damaged': ed.value.damaged || [],
+                                        'obj-skills': ed.value.skills || []
                                     };
                                     wiz.title = 'Edit armor...';
                                     //type, quality, limbs, enchantment
@@ -6491,7 +6604,7 @@ export class AreaDesigner extends EditorBase {
                                         enterMoveFirst: this.$enterMoveFirst,
                                         enterMoveNext: this.$enterMoveNext,
                                         enterMoveNew: this.$enterMoveNew
-                                    }), wizBonuses]);
+                                    }), wizSkills, wizBonuses]);
                                     break;
                                 case StdObjectType.chest:
                                     wiz.defaults = {
@@ -6499,7 +6612,8 @@ export class AreaDesigner extends EditorBase {
                                         'obj-blockers': ''
                                     };
                                     wiz.title = 'Edit chest...';
-                                    const props = new WizardPage({
+                                    //objects, money
+                                    wiz.addPages([new WizardPage({
                                         title: 'Chest properties',
                                         id: 'obj-chest',
                                         body: `<div class="form-group col-sm-12">
@@ -6533,9 +6647,8 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-lock').value = ed.value.lock || '0';
                                             e.page.querySelector('#obj-reduce').value = ed.value.reduce || '1.0';
                                         }
-                                    });
-                                    //objects, money
-                                    wiz.addPages([props, new WizardDataGridPage({
+                                    }),
+                                    new WizardDataGridPage({
                                         title: 'Chest contents',
                                         id: 'obj-contents',
                                         columns: [
@@ -6740,7 +6853,8 @@ export class AreaDesigner extends EditorBase {
                                     break;
                                 case StdObjectType.instrument:
                                     wiz.defaults = {
-                                        'obj-bonuses': ed.value.bonuses || []
+                                        'obj-bonuses': ed.value.bonuses || [],
+                                        'obj-skills': ed.value.skills || []
                                     };
                                     wiz.title = 'Edit instrument...';
                                     //type, quality, enchantment
@@ -6774,12 +6888,13 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
-                                    }), wizBonuses]);
+                                    }), wizSkills, wizBonuses]);
                                     //cSpell:enable
                                     break;
                                 case StdObjectType.rope:
                                     wiz.defaults = {
-                                        'obj-bonuses': ed.value.bonuses || []
+                                        'obj-bonuses': ed.value.bonuses || [],
+                                        'obj-skills': ed.value.skills || []
                                     };
                                     wiz.title = 'Edit rope...';
                                     //quality, enchantment
@@ -6797,11 +6912,12 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
-                                    }), wizBonuses]);
+                                    }), wizSkills, wizBonuses]);
                                     break;
                                 case StdObjectType.weapon:
                                     wiz.defaults = {
-                                        'obj-bonuses': ed.value.bonuses || []
+                                        'obj-bonuses': ed.value.bonuses || [],
+                                        'obj-skills': ed.value.skills || []
                                     };
                                     wiz.title = 'Edit weapon...';
                                     //type, quality, enchantment
@@ -6827,12 +6943,13 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
-                                    }), wizBonuses]);
+                                    }), wizSkills, wizBonuses]);
                                     //cSpell:enable
                                     break;
                                 case StdObjectType.material_weapon:
                                     wiz.defaults = {
-                                        'obj-bonuses': ed.value.bonuses || []
+                                        'obj-bonuses': ed.value.bonuses || [],
+                                        'obj-skills': ed.value.skills || []
                                     };
                                     wiz.title = 'Edit material weapon...';
                                     //type, quality, enchantment
@@ -6886,7 +7003,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-size').value = ed.value.size || '0';
                                             e.page.querySelector('#obj-describers').value = ed.value.describers || '';
                                         }
-                                    }), wizBonuses]);
+                                    }), wizSkills, wizBonuses]);
                                     //cSpell:enable
                                     break;
                                 case StdObjectType.food:
@@ -11466,6 +11583,7 @@ export class AreaDesigner extends EditorBase {
         let tmp2;
         let tmp3;
         let bonuses = false;
+        let skills = false;
         const props = [];
         const limbsDamaged = {};
         limbsDamaged['both arms and legs'] = 'ARMSLEGS_DAM';
@@ -11508,6 +11626,7 @@ export class AreaDesigner extends EditorBase {
             case StdObjectType.armor:
                 //#region Armor
                 bonuses = true;
+                skills = true;
                 data.inherits = 'OBJ_ARMOUR';
                 data['doc'].push('/doc/build/armours/tutorial');
                 data.help.push('atypes');
@@ -11772,8 +11891,9 @@ export class AreaDesigner extends EditorBase {
             case StdObjectType.instrument:
                 //#region Instrument
                 bonuses = true;
+                skills = true;
                 data.inherit = 'OBJ_INSTRUMENT';
-                data['doc'].push('/doc/build/weapon/tutorial');
+                data['doc'].push('/skdoc/build/weapon/tutorial');
                 data['doc'].push('/doc/build/weapon/types/instrument');
                 data.help.push('instrumenttypes');
                 data.help.push('wtypes');
@@ -11807,6 +11927,7 @@ export class AreaDesigner extends EditorBase {
             case StdObjectType.material_weapon:
                 //#region Material weapon
                 bonuses = true;
+                skills = true;
                 data.inherit = 'OBJ_MATERIAL_WEAPON';
                 data['doc'].push('/doc/build/weapon/tutorial');
                 data['doc'].push('/doc/build/weapon/types/material_weapon');
@@ -11833,6 +11954,7 @@ export class AreaDesigner extends EditorBase {
             case StdObjectType.rope:
                 //#region Rope
                 bonuses = true;
+                skills = true;
                 data.inherit = 'OBJ_ROPE';
                 data['doc'].push('/doc/build/weapon/tutorial');
                 data['doc'].push('/doc/build/weapon/types/rope');
@@ -11848,6 +11970,7 @@ export class AreaDesigner extends EditorBase {
             case StdObjectType.sheath:
                 //#region Sheath
                 bonuses = true;
+                skills = true;
                 //string matarm, string qualarm, mixed armlimbs, int charm
                 data.inherit = 'OBJ_SHEATH';
                 data['doc'].push('/doc/build/armours/tutorial');
@@ -11908,6 +12031,7 @@ export class AreaDesigner extends EditorBase {
             case StdObjectType.weapon:
                 //#region Weapon
                 bonuses = true;
+                skills = true;
                 data['doc'].push('/doc/build/weapon/tutorial');
                 switch (obj.subType || '') {
                     case 'arrow':
@@ -12241,7 +12365,80 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += '\n     ]) );\n';
             }
         }
-
+        if (skills && obj.skills && obj.skills.length !== 0) {
+            tmp = obj.skills.filter(s => s.amount !== 0);
+            if (tmp.length !== 0) {
+                data['create post'] += '\n\nvoid check_skill(object player)\n{\n   if(!player)\n   return 0;\n';
+                let skill;
+                tmp.forEach(s => {
+                    let message;
+                    if (s.message && s.message.length === 0)
+                        s.message = 0;
+                    if (s.type === 1) {
+                        if (obj.type === StdObjectType.armor)
+                            message = s.message || 'You do not have the experiance to wear this armor.';
+                        else if (obj.type === StdObjectType.sheath)
+                            message = s.message || 'You do not have the experiance to wear this sheath.';
+                        else
+                            message = s.message || 'You do not have the experiance to wield this weapon.';
+                        switch (s.class) {
+                            case 1:
+                                data['create post'] += `   if(player->query_level() < ${s.amount} && player->query_class() == "fighter")\n      return "${message}";\n`;
+                                break;
+                            case 2:
+                                data['create post'] += `   if(player->query_level() < ${s.amount} && player->query_class() == "monk")\n      return "${message}";\n`;
+                                break;
+                            case 3:
+                                data['create post'] += `   if(player->query_level() < ${s.amount} && player->query_class() == "mage")\n      return "${message}";\n`;
+                                break;
+                            case 4:
+                                data['create post'] += `   if(player->query_level() < ${s.amount} && player->query_class() == "rogue")\n      return "${message}";\n`;
+                                break;
+                            case 5:
+                                data['create post'] += `   if(player->query_level() < ${s.amount} && player->query_class() == "cleric")\n      return "${message}";\n`;
+                                break;
+                            default:
+                                data['create post'] += `   if(player->query_level() < ${s.amount})\n      return "${message}";\n`;
+                                break;
+                        }
+                        return;
+                    }
+                    if (obj.type === StdObjectType.armor) {
+                        skill = s.skill || '"armour"';
+                        message = s.message || 'You do not have the skill to wear this armor.';
+                    }
+                    else if (obj.type === StdObjectType.sheath) {
+                        skill = s.skill || '"armour"';
+                        message = s.message || 'You do not have the skill to wear this sheath.';
+                    }
+                    else {
+                        skill = 'WEAPON_D->query_skill(this_object())';
+                        message = s.message || 'You do not have the skill to wield this weapon.';
+                    }
+                    switch (s.class) {
+                        case 1:
+                            data['create post'] += `   if(player->query_skill(${skill}) < ${s.amount} && player->query_class() == "fighter")\n      return "${message}";\n`;
+                            break;
+                        case 2:
+                            data['create post'] += `   if(player->query_skill(${skill}) < ${s.amount} && player->query_class() == "monk")\n      return "${message}";\n`;
+                            break;
+                        case 3:
+                            data['create post'] += `   if(player->query_skill(${skill}) < ${s.amount} && player->query_class() == "mage")\n      return "${message}";\n`;
+                            break;
+                        case 4:
+                            data['create post'] += `   if(player->query_skill(${skill}) < ${s.amount} && player->query_class() == "rogue")\n      return "${message}";\n`;
+                            break;
+                        case 5:
+                            data['create post'] += `   if(player->query_skill(${skill}) < ${s.amount} && player->query_class() == "cleric")\n      return "${message}";\n`;
+                            break;
+                        default:
+                            data['create post'] += `   if(player->query_skill(${skill}) < ${s.amount})\n      return "${message}";\n`;
+                            break;
+                    }
+                });
+                data['create post'] += '   return 1;\n}\n';
+            }
+        }
         //add docs
         if (data['doc'].length > 0)
             data['doc'] = ' * @doc ' + data['doc'].join('\n * @doc ') + '\n';

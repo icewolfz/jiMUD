@@ -217,6 +217,12 @@ Create objects for your area
     - `KeyID` a unique key id to turn an object into a key to unlock doors/chest, if object type is chest this is used to assign a key to chest
     - `Mass` the mass of the object, only objects that are weapons or armors have default mass
     - `Material` what the object is made from, must be a valid material or alloy, may select from list of supported materials
+  - `Prevent actions` prevent certain action from working
+    - `Prevent offer` do not allow offering object
+    - `Prevent get` can not get object
+    - `Prevent drop` can not drop object
+    - `Prevent put` can not put object in storage items
+    - `Prevent steal` can not steal item
   - `Bonuses` get bonuses granted by object or used for crafting, not all objects allow bonuses
     - `Type` the type of bonus
       - `Property` a generic bonus
@@ -228,6 +234,13 @@ Create objects for your area
       - `small` only supported with skills, stats, or resistance types
       - `respectable` only supported with skills, stats, or resistance types
       - `large` only supported with skills, stats, or resistance types
+  - `Skill requirements` skill requirements to wield or wear weapons/sheaths/armors
+    - `Type` the type of requirement
+      - `Skill` test weapon or armor skill
+      - `Level` test the players level
+    - `Class` the class to test, either all or picked class
+    - `Amount` the amount of skill or level to check for
+    - `Message` the message to display to the player when check fails
   - `Type properties` these pages contain properties and settings that only apply based on the selected object type
     - `Armor`
       - `Type` the type of armor, select from the supported list
@@ -244,11 +257,16 @@ Create objects for your area
           - `ID` a comma delimitied list of ids, not needed of nouns/adjectives are enough
         - `Limbs` the missing limbs, can be from a predefined list, or a comma delimited list of limbs to match
         - `Description` the description to use for the type and if the missing limbs match
+        - `Max wearable` the maximum amount of this armor that can be worn at one time
     - `Sheath` has all the same properties as armor but for weapon type
       - `Weapon type` the type of weapon the sheath is for
       - `Damaged armor descriptions` see armor
+      - `Max wearable` the maximum amount of this sheath that can be worn at one time
     - `Chest`
       - `Blockers` a comma delimited list of monster names that will attack when trying to open, get or unlock the chest
+      - `Lock strength` how strong a lock is when being picked
+      - `Max encumbrance` the max mass the chest can hold
+      - `Reduce mass` adjust the mass of an item put in a chest, mass * reduct = final mass
       - `Contents` the contents of the chest that if empty will be restored every room reset
         - `Item` the item to add, can be an object, money, or type of gem
         - `Min amount` the minimum amount to add
