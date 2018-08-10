@@ -559,24 +559,8 @@ class Monster {
     }
 }
 
-//TODO add fishing pole, back packs, and bags of holding to object types
-/*
-fishing pole - OBJ_FISHING_POLE - create(weapon args);
-    all weapon properties +
-    can bait - set_can_bait(1)
-    pole class - set_pole_class(#)
-
-back pack - OBJ_BACKPACK -- armor - create(string mat, string qual, int charm)
-    all armor properities, copy sheath
-    back type - pack - set_backpack_type(string) - "backpack", "bag", "pouch", "sack", "haversack", "pack", "purse", "rucksack", "duffel bag", "bindle", "satchel", "shoulder strap", "shoulder sling", "dilly bag", "carpet bag"
-    max encumbrance - 4000 - set_max_encumbrance(#)
-    reduce mass to - 0.75 - set_reduce_item_mass(float)
-
-bag of holding - OBJ_BAGOFHOLDING - create()
-    max encumbrance - 40000 - set_max_encumbrance(#)
-*/
-enum StdObjectType {
-    object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink
+export enum StdObjectType {
+    object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink, fishing_pole, backpack, bag_of_holding
 }
 
 class StdObject {
@@ -6115,7 +6099,7 @@ export class AreaDesigner extends EditorBase {
                                         id: 'obj-welcome',
                                         title: 'Welcome',
                                         body: `
-                                        <img src="../assets/icons/png/wiz.obj.logo.png" alt="Welcome to the monster wizard" style="float: left;padding-top: 76px;">
+                                        <img src="../assets/icons/png/wiz.obj.logo.png" alt="Welcome to the object wizard" style="float: left;padding-top: 76px;">
                                         <div style="padding-top:96px">Welcome to the object editor wizard, this will take you through the steps to edit an object quickly and easily. You may finish at any time to save your current selections.</div>
                                         `
                                     }),
@@ -6196,6 +6180,13 @@ export class AreaDesigner extends EditorBase {
                                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Required for all but basic object</span>
                                         </label>
                                     </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Value
+                                            <input type="number" id="obj-value" class="input-sm form-control" min="0" value="1000000000" />
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A value of 0 will use default value</span>
+                                        </label>
+                                    </div>
                                     <div class="col-sm-12 form-group">
                                         <label class="control-label">
                                             <input type="checkbox" id="obj-bait" /> Is fishing bait <hr style="width: 72%;float: right;margin-top: 12px;margin-bottom: 0px;">
@@ -6216,6 +6207,7 @@ export class AreaDesigner extends EditorBase {
                                         reset: (e) => {
                                             e.page.querySelector('#obj-keyID').value = ed.value.keyID || '';
                                             e.page.querySelector('#obj-mass').value = ed.value.mass || '0';
+                                            e.page.querySelector('#obj-value').value = ed.value.value || '0';
                                             e.page.querySelector('#obj-material').value = ed.value.material || '';
                                             if (ed.value.type === StdObjectType.food || ed.value.type === StdObjectType.object) {
                                                 e.page.querySelector('#obj-bait').parentElement.parentElement.style.display = '';
@@ -6441,8 +6433,8 @@ export class AreaDesigner extends EditorBase {
                                         </div>`,
                                         reset: (e) => {
                                             $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'sheath').selectpicker('render');
-                                            $(e.page.querySelector('#obj-wType')).val(ed.value.subType || 'knife').selectpicker('render');
-                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
+                                            $(e.page.querySelector('#obj-wType')).val(ed.value.wType || 'knife').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-limbs').value = ed.value.limbs || '';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-maxWearable').value = ed.value.maxWearable || '0';
@@ -6895,7 +6887,7 @@ export class AreaDesigner extends EditorBase {
                                     wiz.addPages([new WizardPage({
                                         id: 'obj-ore',
                                         title: 'Ore properties',
-                                        body: ` <div class="col-sm-12 form-group">
+                                        body: `<div class="col-sm-12 form-group">
                                         <label class="control-label">Size
                                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A number or predefined string</span>
                                             <div class="input-group edit-dropdown">
@@ -7257,6 +7249,112 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-your-message').value = ed.value.yourMessage || '';
                                             e.page.querySelector('#obj-empty-name').value = ed.value.emptyName || 'bottle';
                                             e.page.querySelector('#obj-empty').checked = !ed.value.hasOwnProperty('empty') || ed.value.empty;
+                                        }
+                                    }));
+                                    break;
+                                case StdObjectType.fishing_pole:
+                                    wiz.defaults = {
+                                        'obj-bonuses': ed.value.bonuses || [],
+                                        'obj-skills': ed.value.skills || []
+                                    };
+                                    wiz.title = 'Edit fishing pole...';
+                                    //type, quality, enchantment
+                                    //cSpell:disable
+                                    wiz.addPages([new WizardPage({
+                                        id: 'obj-fishing-pole',
+                                        title: 'Fishing pole properties',
+                                        body: `<div class="col-sm-12 form-group">
+                                        <label class="control-label" style="width: 100%;">Type
+                                            <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                                <optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
+                                            </select>
+                                        </label>
+                                    </div>${qualities}
+                                    <div class="form-group col-sm-12">
+                                        <label class="control-label">
+                                            Enchantment
+                                            <input type="number" id="obj-enchantment" class="input-sm form-control" value="0" min="0" max="1000" style="width: 100%" />
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            <input type="checkbox" id="obj-canBait" /> Can bait
+                                        </label>
+                                    </div>
+                                    <div class="form-group col-sm-12">
+                                        <label class="control-label">
+                                            Pole class
+                                            <input type="number" id="obj-class" class="input-sm form-control" value="1" min="1" max="1000" style="width: 100%" />
+                                        </label>
+                                    </div>`,
+                                        reset: (e) => {
+                                            $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'staff').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
+                                            e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
+                                            e.page.querySelector('#obj-class').value = ed.value.class || '1';
+                                            e.page.querySelector('#obj-canBait').checked = !ed.value.hasOwnProperty('canBait') || ed.value.canBait;
+                                        }
+                                    }), wizSkills, wizBonuses]);
+                                    //cSpell:enable
+                                    break;
+                                case StdObjectType.backpack:
+                                    wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];
+                                    wiz.defaults['obj-skills'] = ed.value.skills || [];
+                                    wiz.title = 'Edit Backpack...';
+                                    //type, quality, enchantment
+                                    wiz.addPages([new WizardPage({
+                                        id: 'obj-armor',
+                                        title: 'Backpack properties',
+                                        body: `<div class="col-sm-12 form-group">
+                                            <label class="control-label" style="width: 100%;">Type
+                                                <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                                    <option value="backpack">backpack</option><option value="bag">bag</option><option value="pouch">pouch</option><option value="sack">sack</option><option value="haversack">haversack</option><option value="pack">pack</option><option value="purse">purse</option><option value="rucksack">rucksack</option><option value="duffel bag">duffel bag</option><option value="bindle">bindle</option><option value="satchel">satchel</option><option value="shoulder strap">shoulder strap</option><option value="shoulder sling">shoulder sling</option><option value="dilly bag">dilly bag</option><option value="carpet bag">carpet bag</option>
+                                                </select>
+                                            </label>
+                                        </div>
+                                        ${qualities.replace('col-sm-12', 'col-sm-6')}
+                                        <div class="form-group col-sm-6">
+                                            <label class="control-label">
+                                                Enchantment
+                                                <input type="number" id="obj-enchantment" class="input-sm form-control" value="0" min="0" max="1000" style="width: 100%" />
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 form-group">
+                                            <label class="control-label">
+                                                Max encumbrance
+                                                <input type="number" id="obj-encumbrance" class="input-sm form-control" min="0" value="100000000" />
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 form-group">
+                                            <label class="control-label">
+                                                Reduce mass
+                                                <input type="number" step="0.01" id="obj-reduce" class="input-sm form-control" min="0.0" value="2.0" />
+                                                <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">Reduction formula: item mass * reduce</span>
+                                            </label>
+                                        </div>`,
+                                        reset: (e) => {
+                                            $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'pack').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
+                                            e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
+                                            e.page.querySelector('#obj-encumbrance').value = ed.value.maxWearable || '4000';
+                                            e.page.querySelector('#obj-reduce').value = ed.value.reduce || '1.0';
+                                        }
+                                    }), wizSkills, wizBonuses]);
+                                    break;
+                                case StdObjectType.bag_of_holding:
+                                    wiz.title = 'Edit bag of holding...';
+                                    //quality, enchantment
+                                    wiz.addPages(new WizardPage({
+                                        id: 'obj-weapon',
+                                        title: 'Bag of holding properties',
+                                        body: ` <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Max encumbrance
+                                            <input type="number" id="obj-encumbrance" class="input-sm form-control" min="0" value="100000000" />
+                                        </label>
+                                    </div>`,
+                                        reset: (e) => {
+                                            e.page.querySelector('#obj-encumbrance').value = ed.value.maxWearable || '40000';
                                         }
                                     }));
                                     break;
@@ -11973,12 +12071,12 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += '      set_prevent_get( (: get_fun :) );\n';
                 }
                 if (obj.encumbrance !== 10000)
-                    data['create body'] += `      set_max_encumbrance(${obj.encumbrance});\n`;
+                    data['create body'] += `   set_max_encumbrance(${obj.encumbrance});\n`;
                 if (obj.lock !== 0)
-                    data['create body'] += `      set_lock_strength(${obj.lock});\n`;
+                    data['create body'] += `   set_lock_strength(${obj.lock});\n`;
 
                 if (obj.reduce > 0 && obj.reduce !== 1 || obj.reduce !== 1.0)
-                    data['create body'] += `      set_reduce_item_mass(${obj.reduce});\n`;
+                    data['create body'] += `    set_reduce_item_mass(${obj.reduce});\n`;
 
                 if (obj.keyID.length > 0) {
                     data['create body'] += `   set_key("${obj.keyID}");\n`;
@@ -12350,6 +12448,57 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += `   set_drink_type("${obj.subType.trim()}");\n`;
                 //#endregion
                 break;
+            case StdObjectType.fishing_pole:
+                //#region fishing pole
+                bonuses = true;
+                skills = true;
+                data['doc'].push('/doc/build/weapon/tutorial');
+                data.help.push('wtypes');
+                data.inherit = 'OBJ_FISHING_POLE';
+                data['create arguments'] = `"${obj.subType || 'staff'}", "${obj.material || 'wood'}", "${obj.quality || 'average'}"`;
+                data['create arguments comment'] = '//Type, Material, Quality';
+                break;
+                if (obj.enchantment !== 0) {
+                    data['create arguments'] += `, ${obj.enchantment}`;
+                    data['create arguments comment'] += ', Natural enchantment';
+                }
+                if (!obj.canBait)
+                    data['create body'] += `   set_can_bait(0);\n`;
+                if (obj.class !== 0)
+                    data['create body'] += `   set_pole_class("${obj.class}");\n`;
+                //#endregion
+                break;
+            case StdObjectType.backpack:
+                //#region backpack
+                bonuses = true;
+                skills = true;
+                //string matarm, string qualarm, mixed armlimbs, int charm
+                data.inherit = 'OBJ_BACKPACK';
+                data['doc'].push('/doc/build/armours/tutorial');
+                data['doc'].push('/doc/build/armours/types/backpacks');
+                data.help.push('atypes');
+
+                data['create arguments'] = `"${obj.material || 'heavy cloth'}", "${obj.quality || 'average'}"`;
+                data['create arguments comment'] = '//Material, Quality';
+                if (obj.enchantment !== 0) {
+                    data['create arguments'] += `, ${obj.enchantment}`;
+                    data['create arguments comment'] += ', Natural enchantment';
+                }
+                if (obj.subType !== 'pack')
+                    data['create body'] += `   set_backpack_type("${obj.subType}");\n`;
+                if (obj.encumbrance !== 4000)
+                    data['create body'] += `   set_max_encumbrance(${obj.encumbrance});\n`;
+                if (obj.reduce > 0 && obj.reduce !== 1 || obj.reduce !== 1.0)
+                    data['create body'] += `   set_reduce_item_mass(${obj.reduce});\n`;
+                //#endregion
+                break;
+            case StdObjectType.bag_of_holding:
+                //#region bag_of_holding
+                data.inherit = 'OBJ_BAGOFHOLDING';
+                if (obj.encumbrance !== 40000)
+                    data['create body'] += `   set_max_encumbrance(${obj.encumbrance});\n`;
+                //#endregion
+                break;
             default:
                 //#region Object
                 data.inherit = 'STD_OBJECT';
@@ -12441,6 +12590,8 @@ export class AreaDesigner extends EditorBase {
 
         if (obj.mass > 0)
             data['create body'] += `   set_mass(${obj.mass});\n`;
+        if (obj.value > 0)
+            data['create body'] += `   set_value("${obj.value}");\n`;
 
         if (props.length > 0) {
             data['create body'] += '   set_properties( ([\n       ';
