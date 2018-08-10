@@ -557,6 +557,21 @@ weapon/armor - skills
         rogue/fighter/mage/cleric/monk
     amount
 
+fishing bait - OBJ_BAIT -- food as well, create(string name, int strength, int uses
+    strength - set_bait_strength
+    uses - set_uses
+
+fishing pole - OBJ_FISHING_POLE - create();
+    can bait - set_can_bait(1)
+    pole class - set_pole_class(#)
+
+back pack - OBJ_BACKPACK -- armor - create(string mat, string qual, int charm)
+    back type - pack - set_backpack_type(string) - "backpack", "bag", "pouch", "sack", "haversack", "pack", "purse", "rucksack", "duffel bag", "bindle", "satchel", "shoulder strap", "shoulder sling", "dilly bag", "carpet bag"
+    max encumbrance - 4000 - set_max_encumbrance(#)
+    reduce mass to - 0.75 - set_reduce_item_mass(float)
+
+bag of holding - OBJ_BAGOFHOLDING - create()
+    max encumbrance - 40000 - set_max_encumbrance(#)
 */
 enum StdObjectType {
     object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink
@@ -6447,9 +6462,31 @@ export class AreaDesigner extends EditorBase {
                                             Blockers
                                             <input type="text" id="obj-blockers" class="input-sm form-control"/>
                                         </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Max encumbrance
+                                            <input type="number" id="obj-encumbrance" class="input-sm form-control" min="0" value="100000000" />
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Lock strength
+                                            <input type="number" id="obj-lock" class="input-sm form-control" min="0" value="100" />
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Reduce mass
+                                            <input type="number" step="0.01" id="obj-reduce" class="input-sm form-control" min="0.0" value="2.0" />
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">Reduction formula: item mass * reduce</span>
+                                        </label>
                                     </div>`,
                                         reset: (e) => {
                                             e.page.querySelector('#obj-blockers').value = ed.value.blockers || '';
+                                            e.page.querySelector('#obj-encumbrance').value = ed.value.blockers || '10000';
+                                            e.page.querySelector('#obj-lock').value = ed.value.lock || '0';
+                                            e.page.querySelector('#obj-reduce').value = ed.value.reduce || '1.0';
                                         }
                                     });
                                     //objects, money
@@ -11550,8 +11587,8 @@ export class AreaDesigner extends EditorBase {
             case StdObjectType.chest:
                 //#region Chest
                 data.inherit = 'OBJ_CHEST';
-                if (obj.material.length > 0)
-                    data['create body'] += `   set_material(${obj.material});\n`;
+                if (obj.material.length > 0 && obj.material !== 'wood')
+                    data['create body'] += `   set_material("${obj.material}");\n`;
                 if (obj.blockers && obj.blockers.length !== 0) {
                     tmp = obj.blockers.split(',').map(b => `present("${b.trim()}", environment(this_object())`);
                     data['create pre'] += 'int auto_fun(string str, object who)\n{\n';
@@ -11570,9 +11607,21 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += '      set_trap("preopen", new(TRAP, -1, (: auto_fun :), 0, 0, 1));\n';
                     data['create body'] += '      set_prevent_get( (: get_fun :) );\n';
                 }
-                if (obj.keyID.length > 0)
-                    data['create body'] += `   set_key("${obj.keyID}");\n`;
+                if (obj.encumbrance !== 10000)
+                    data['create body'] += `      set_max_encumbrance(${obj.encumbrance});\n`;
+                if (obj.lock !== 0)
+                    data['create body'] += `      set_lock_strength(${obj.lock});\n`;
 
+                if (obj.reduce > 0 && obj.reduce !== 1 || obj.reduce !== 1.0)
+                    data['create body'] += `      set_reduce_item_mass(${obj.reduce});\n`;
+
+                if (obj.keyID.length > 0) {
+                    data['create body'] += `   set_key("${obj.keyID}");\n`;
+                    data['create body'] += `   set_can_lock(1);\n`;
+                }
+                else if (obj.lock !== 0)
+                    data['create body'] += `   set_can_lock(1);\n`;
+                    
                 if (obj.contents && obj.contents.length > 0) {
                     tmp = obj.contents.filter(c => c.item < -4);
                     tmp2 = obj.contents.filter(c => c.item >= 0);
@@ -11933,7 +11982,7 @@ export class AreaDesigner extends EditorBase {
                 //#region Object
                 data.inherit = 'STD_OBJECT';
                 if (obj.material.length > 0)
-                    data['create body'] += `   set_material(${obj.material});\n`;
+                    data['create body'] += `   set_material("${obj.material}");\n`;
                 //#endregion
                 break;
         }
