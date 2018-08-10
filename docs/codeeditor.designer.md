@@ -222,6 +222,10 @@ Create objects for your area
     - `KeyID` a unique key id to turn an object into a key to unlock doors/chest, if object type is chest this is used to assign a key to chest
     - `Mass` the mass of the object, only objects that are weapons or armors have default mass
     - `Material` what the object is made from, must be a valid material or alloy, may select from list of supported materials
+    - `Value` the value of the object, 0 for defaults
+    - `Bait` food/generic object only, can object be used as fishing bait
+    - `Bait strength` how good the bait is
+    - `Bait uses` how many uses the bait last
   - `Prevent actions` prevent certain action from working
     - `Prevent offer` do not allow offering object
     - `Prevent get` can not get object
@@ -301,3 +305,11 @@ Create objects for your area
     - `Material weapon` the same as weapon but for size and describers
       - `Size` the size of material, can pick from a quick word list or use raw #s
       - `Describers` a comma delimited list of words that describe the material
+    - `Fishing pole` same as weapon
+      - `Can bait` can the fishing pole be baited
+      - `Pole class` how good the pole is
+    - `Backpack` same as armor but for limbs
+      - `Max encumbrance` the max mass the pack can hold
+      - `Reduce mass` adjust the mass of an item put in a pack, mass * reduct = final mass
+    - `Bag of holding`
+      - `Max encumbrance` the max mass the bag can hold
