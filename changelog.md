@@ -16,6 +16,7 @@
     - Add prevent actions for all objects to control how certain actions work with objects
     - All armor and weapon objects can now have custom skill requirements set for all or per different classes
     - Food and generic objects can be turned into fishing bait
+    - Add room and object read support
   - Add [#setsetting](docs/commands.md) options for chat, see [faq](docs/faq.md) for list of all supported settings
   - Add [#chat](docs/commands.md) command to send test to chat window and append newline
   - Add [#chatprompt](docs/commands.md) command to send test to chat window with no newline

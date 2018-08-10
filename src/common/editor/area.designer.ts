@@ -176,6 +176,12 @@ interface MonsterReputation {
     amount: string;
 }
 
+interface Read {
+    read: string;
+    description: string;
+    language: string;
+}
+
 export class Room {
     //readonly
     public x = 0;
@@ -222,6 +228,7 @@ export class Room {
     public preventPeer: string = '';
     public temperature: number = 0;
     public notes: string = '';
+    public reads: Read[] = [];
 
     constructor(x, y, z, data?, type?) {
         if (data)
@@ -251,6 +258,7 @@ export class Room {
                     if (this.items.filter((v, i) => room.items[i].item !== v.item && room.items[i].description !== v.description).length !== 0)
                         return false;
                     break;
+                case 'read':
                 case 'rummageObjects':
                 case 'forageObjects':
                 case 'objects':
@@ -323,6 +331,7 @@ export class Room {
         this.forageObjects = [];
         this.rummageObjects = [];
         this.monsters = [];
+        this.reads = [];
     }
 
     public at(x, y, z?) {
@@ -552,14 +561,6 @@ back pack - OBJ_BACKPACK -- armor - create(string mat, string qual, int charm)
 
 bag of holding - OBJ_BAGOFHOLDING - create()
     max encumbrance - 40000 - set_max_encumbrance(#)
-
-object read - set_read(mixed val, mixed val2, string lang)
-            - set_read(description) - default
-            - set_read(item, description)
-            - set_read(item, description, lang)
-    item - default,
-    description
-    lang
 */
 enum StdObjectType {
     object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink
@@ -577,6 +578,7 @@ class StdObject {
     public adjectives: string = '';
     public material: string = '';
     public notes: string = '';
+    public reads: Read[] = [];
     /*
     weapon - type, quality, enchantment
     armor - type, quality, limbs, enchantment
@@ -3715,6 +3717,66 @@ export class AreaDesigner extends EditorBase {
                 }
             },
             {
+                property: 'reads',
+                group: 'Advanced',
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
+                sort: 4,
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        columns: [
+                            {
+                                label: 'Read',
+                                field: 'read',
+                                width: 150,
+                                editor: {
+                                    options: {
+                                        singleLine: true
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Description',
+                                field: 'description',
+                                spring: true,
+                                width: 200
+                            },
+                            {
+                                label: 'Language',
+                                field: 'language',
+                                width: 150,
+                                editor: {
+                                    type: EditorType.dropdown,
+                                    options: {
+                                        data: [
+                                            //spellchecker:disable
+                                            'eltherian', 'ersi', 'jhlorim', 'malkierien', 'common',
+                                            'draconic', 'elcharean', 'tangetto', 'terrakarn', 'gobbledegook',
+                                            'malkierien', 'loyavenku', 'caninen', 'draconic', 'nibelungen',
+                                            'wulinaxin', 'shangtai', 'farsi', 'nymal'
+                                            //spellchecker:enable
+                                        ]
+                                    }
+                                }
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                read: '',
+                                description: '',
+                                language: ''
+                            };
+                        },
+                        type: 'read',
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
+                    }
+                }
+            },
+            {
                 property: 'subArea',
                 label: 'Sub area',
                 group: 'Advanced',
@@ -4790,11 +4852,13 @@ export class AreaDesigner extends EditorBase {
                                     'room-wiz-sounds': ed.value.sound && ed.value.sound.length > 0 ? [{ sound: 'default', description: ed.value.sound }].concat(...ed.value.sounds) : ed.value.sounds,
                                     'room-wiz-searches': ed.value.searches,
                                     'room-wiz-forage-objects': ed.value.forageObjects,
-                                    'room-wiz-rummage-objects': ed.value.rummage
+                                    'room-wiz-rummage-objects': ed.value.rummage,
+                                    'room-wiz-reads': ed.value.reads
                                 },
                                 finish: e => {
                                     const nRoom = ed.value.clone();
                                     nRoom.notes = e.data['room-wiz-notes'];
+                                    nRoom.reads = e.data['room-wiz-reads'];
                                     nRoom.flags = RoomFlags.None;
                                     nRoom.type = e.data['room-wiz-type'].value;
                                     nRoom.terrain = e.data['room-wiz-terrain'];
@@ -6229,9 +6293,66 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-preventPut').value = ed.value.preventPut || '';
                                             e.page.querySelector('#obj-preventSteal').value = ed.value.preventSteal || '';
                                         }
+                                    }),
+                                    new WizardDataGridPage({
+                                        title: 'Reads',
+                                        id: 'obj-reads',
+                                        columns: [
+                                            {
+                                                label: 'Read',
+                                                field: 'read',
+                                                width: 150,
+                                                editor: {
+                                                    options: {
+                                                        container: '#object-wizard',
+                                                        singleLine: true
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                label: 'Description',
+                                                field: 'description',
+                                                spring: true,
+                                                width: 200,
+                                                editor: {
+                                                    options: {
+                                                        container: '#object-wizard'
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                label: 'Language',
+                                                field: 'language',
+                                                width: 200,
+                                                editor: {
+                                                    type: EditorType.dropdown,
+                                                    options: {
+                                                        container: '#object-wizard',
+                                                        data: [
+                                                            //spellchecker:disable
+                                                            'eltherian', 'ersi', 'jhlorim', 'malkierien', 'common',
+                                                            'draconic', 'elcharean', 'tangetto', 'terrakarn', 'gobbledegook',
+                                                            'malkierien', 'loyavenku', 'caninen', 'draconic', 'nibelungen',
+                                                            'wulinaxin', 'shangtai', 'farsi', 'nymal'
+                                                            //spellchecker:enable
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        add: (e) => {
+                                            e.data = {
+                                                read: '',
+                                                description: '',
+                                                language: ''
+                                            };
+                                        }
                                     })
                                 ]
                             });
+                            wiz.defaults = {
+                                'obj-reads': ed.value.reads
+                            };
                             wiz.pages[3].page.querySelector('#obj-material-list').innerHTML = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'material.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
                             initEditDropdown(wiz.pages[3].page.querySelector('#obj-material-list').closest('.edit-dropdown'));
                             wiz.height = '380px';
@@ -6286,11 +6407,9 @@ export class AreaDesigner extends EditorBase {
                         </div>`;
                             switch (ty) {
                                 case StdObjectType.sheath:
-                                    wiz.defaults = {
-                                        'obj-bonuses': ed.value.bonuses || [],
-                                        'obj-damaged': ed.value.damaged || [],
-                                        'obj-skills': ed.value.skills || []
-                                    };
+                                    wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];
+                                    wiz.defaults['obj-damaged'] = ed.value.damaged || [];
+                                    wiz.defaults['obj-skills'] = ed.value.skills || [];
                                     wiz.title = 'Edit sheath...';
                                     //type, quality, limbs, enchantment
                                     wiz.addPages([new WizardPage({
@@ -6466,11 +6585,9 @@ export class AreaDesigner extends EditorBase {
                                     }), wizSkills, wizBonuses]);
                                     break;
                                 case StdObjectType.armor:
-                                    wiz.defaults = {
-                                        'obj-bonuses': ed.value.bonuses || [],
-                                        'obj-damaged': ed.value.damaged || [],
-                                        'obj-skills': ed.value.skills || []
-                                    };
+                                    wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];
+                                    wiz.defaults['obj-damaged'] = ed.value.damaged || [];
+                                    wiz.defaults['obj-skills'] = ed.value.skills || [];
                                     wiz.title = 'Edit armor...';
                                     //type, quality, limbs, enchantment
                                     wiz.addPages([new WizardPage({
@@ -6633,10 +6750,7 @@ export class AreaDesigner extends EditorBase {
                                     }), wizSkills, wizBonuses]);
                                     break;
                                 case StdObjectType.chest:
-                                    wiz.defaults = {
-                                        'obj-contents': copy(ed.value.contents) || [],
-                                        'obj-blockers': ''
-                                    };
+                                    wiz.defaults['obj-contents'] = ed.value.contents || [];
                                     wiz.title = 'Edit chest...';
                                     //objects, money
                                     wiz.addPages([new WizardPage({
@@ -6794,9 +6908,7 @@ export class AreaDesigner extends EditorBase {
                                     })]);
                                     break;
                                 case StdObjectType.material:
-                                    wiz.defaults = {
-                                        'obj-bonuses': ed.value.bonuses || []
-                                    };
+                                    wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];
                                     wiz.title = 'Edit material...';
                                     //size, quality, describers
                                     wiz.addPages([new WizardPage({
@@ -6836,9 +6948,7 @@ export class AreaDesigner extends EditorBase {
                                     }), wizBonuses]);
                                     break;
                                 case StdObjectType.ore:
-                                    wiz.defaults = {
-                                        'obj-bonuses': ed.value.bonuses || []
-                                    };
+                                    wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];
                                     wiz.title = 'Edit ore...';
                                     //size, quality, bonuses?
                                     wiz.addPages([new WizardPage({
@@ -6878,10 +6988,8 @@ export class AreaDesigner extends EditorBase {
                                     }), wizBonuses]);
                                     break;
                                 case StdObjectType.instrument:
-                                    wiz.defaults = {
-                                        'obj-bonuses': ed.value.bonuses || [],
-                                        'obj-skills': ed.value.skills || []
-                                    };
+                                    wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];
+                                    wiz.defaults['obj-skills'] = ed.value.skills || [];
                                     wiz.title = 'Edit instrument...';
                                     //type, quality, enchantment
                                     //cSpell:disable
@@ -6918,10 +7026,8 @@ export class AreaDesigner extends EditorBase {
                                     //cSpell:enable
                                     break;
                                 case StdObjectType.rope:
-                                    wiz.defaults = {
-                                        'obj-bonuses': ed.value.bonuses || [],
-                                        'obj-skills': ed.value.skills || []
-                                    };
+                                    wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];
+                                    wiz.defaults['obj-skills'] = ed.value.skills || [];
                                     wiz.title = 'Edit rope...';
                                     //quality, enchantment
                                     wiz.addPages([new WizardPage({
@@ -6973,10 +7079,8 @@ export class AreaDesigner extends EditorBase {
                                     //cSpell:enable
                                     break;
                                 case StdObjectType.material_weapon:
-                                    wiz.defaults = {
-                                        'obj-bonuses': ed.value.bonuses || [],
-                                        'obj-skills': ed.value.skills || []
-                                    };
+                                    wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];
+                                    wiz.defaults['obj-skills'] = ed.value.skills || [];
                                     wiz.title = 'Edit material weapon...';
                                     //type, quality, enchantment
                                     //cSpell:disable
@@ -11068,6 +11172,68 @@ export class AreaDesigner extends EditorBase {
         if (room.temperature !== base.temperature)
             data['create body'] += `   set_temperature(${room.temperature});\n`;
 
+        //#region reads
+        tmp = room.reads.map(i => {
+            tmp2 = i.read.split(',').map(t => {
+                t.trim();
+                if (!t.startsWith('"') && !t.endsWith('"'))
+                    t = '"' + t + '"';
+                return t;
+            });
+            if (tmp2.length === 1)
+                tmp2 = tmp2[0];
+            else
+                tmp2 = `({ ${tmp2.join(', ')} })`;
+            tmp3 = i.description.trim();
+            if (tmp3.startsWith('(:')) {
+                tmp3 = formatFunctionPointer(tmp3, true);
+                data['create pre'] += createFunction(tmp3, 'string', 'string id');
+            }
+            else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                tmp3 = '"' + tmp3 + '"';
+            if (tmp2.length === 0)
+                tmp2 = 'default';
+            if (i.language.length !== 0)
+                return `${tmp2} : ([ "value" : ${tmp3}, "lang" : "${i.language}" ]) `;
+            return `${tmp2} : ${tmp3}`;
+        });
+
+        if (tmp.length === 1) {
+            tmp = room.reads[0];
+            tmp2 = tmp.read.split(',').map(t => {
+                t.trim();
+                if (!t.startsWith('"') && !t.endsWith('"'))
+                    t = '"' + t + '"';
+                return t;
+            });
+            if (tmp2.length === 1)
+                tmp2 = tmp2[0];
+            else
+                tmp2 = `({ ${tmp2.join(', ')} })`;
+            if ((tmp2 === 'default' || tmp2.length === 0) && tmp.language.length === 0)
+                tmp2 = '';
+            else if (tmp2.length === 0)
+                tmp2 = '"default", ';
+            else
+                tmp2 += ', ';
+            tmp.description = tmp.description.trim();
+            tmp3 = '';
+            if (tmp.language.length !== 0)
+                tmp3 = `, "${tmp.language}"`;
+            if (tmp.description.startsWith('(:'))
+                data['create body'] += `   set_read(${tmp2}${formatFunctionPointer(tmp.description)}${tmp3});`;
+            else if (!tmp.description.startsWith('"') && !tmp.description.endsWith('"'))
+                data['create body'] += `   set_read(${tmp2}"${tmp.description}"${tmp3});`;
+            else
+                data['create body'] += `   set_read(${tmp2}${tmp.description}${tmp3});`;
+        }
+        else if (tmp.length > 0) {
+            data['create body'] += '   set_read( ([\n       ';
+            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+        //#endregion
+
         tmp = this.getExitId('up', room.x, room.y, room.z);
         tmp2 = this.getExitId('down', room.x, room.y, room.z);
 
@@ -12482,6 +12648,67 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += `   set_skill_level(${amt});\n`;
             }
         }
+        //#region reads
+        tmp = obj.reads.map(i => {
+            tmp2 = i.read.split(',').map(t => {
+                t.trim();
+                if (!t.startsWith('"') && !t.endsWith('"'))
+                    t = '"' + t + '"';
+                return t;
+            });
+            if (tmp2.length === 1)
+                tmp2 = tmp2[0];
+            else
+                tmp2 = `({ ${tmp2.join(', ')} })`;
+            tmp3 = i.description.trim();
+            if (tmp3.startsWith('(:')) {
+                tmp3 = formatFunctionPointer(tmp3, true);
+                data['create pre'] += createFunction(tmp3, 'string', 'string id');
+            }
+            else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                tmp3 = '"' + tmp3 + '"';
+            if (tmp2.length === 0)
+                tmp2 = 'default';
+            if (i.language.length !== 0)
+                return `${tmp2} : ([ "value" : ${tmp3}, "lang" : "${i.language}" ]) `;
+            return `${tmp2} : ${tmp3}`;
+        });
+
+        if (tmp.length === 1) {
+            tmp = obj.reads[0];
+            tmp2 = tmp.read.split(',').map(t => {
+                t.trim();
+                if (!t.startsWith('"') && !t.endsWith('"'))
+                    t = '"' + t + '"';
+                return t;
+            });
+            if (tmp2.length === 1)
+                tmp2 = tmp2[0];
+            else
+                tmp2 = `({ ${tmp2.join(', ')} })`;
+            if ((tmp2 === 'default' || tmp2.length === 0) && tmp.language.length === 0)
+                tmp2 = '';
+            else if (tmp2.length === 0)
+                tmp2 = '"default", ';
+            else
+                tmp2 += ', ';
+            tmp.description = tmp.description.trim();
+            tmp3 = '';
+            if (tmp.language.length !== 0)
+                tmp3 = `, "${tmp.language}"`;
+            if (tmp.description.startsWith('(:'))
+                data['create body'] += `   set_read(${tmp2}${formatFunctionPointer(tmp.description)}${tmp3});`;
+            else if (!tmp.description.startsWith('"') && !tmp.description.endsWith('"'))
+                data['create body'] += `   set_read(${tmp2}"${tmp.description}"${tmp3});`;
+            else
+                data['create body'] += `   set_read(${tmp2}${tmp.description}${tmp3});`;
+        }
+        else if (tmp.length > 0) {
+            data['create body'] += '   set_read( ([\n       ';
+            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+        //#endregion
         //add docs
         if (data['doc'].length > 0)
             data['doc'] = ' * @doc ' + data['doc'].join('\n * @doc ') + '\n';

@@ -223,6 +223,10 @@ Create objects for your area
     - `Prevent drop` can not drop object
     - `Prevent put` can not put object in storage items
     - `Prevent steal` can not steal item
+  - `Reads` things can be read on the object, **Note** they must be included as an noun to be readable
+    - `Read` the id to match
+    - `Description` the description to display to the user
+    - `Language` the language the description is in
   - `Bonuses` get bonuses granted by object or used for crafting, not all objects allow bonuses
     - `Type` the type of bonus
       - `Property` a generic bonus

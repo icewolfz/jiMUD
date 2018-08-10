@@ -5180,6 +5180,60 @@
                             };
                         }
                     }),
+                    new WizardDataGridPage({
+                        title: 'Reads',
+                        id: 'room-wiz-reads',
+                        columns: [
+                            {
+                                label: 'Read',
+                                field: 'read',
+                                width: 150,
+                                editor: {
+                                    options: {
+                                        container: '#room-wizard',
+                                        singleLine: true
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Description',
+                                field: 'description',
+                                spring: true,
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        container: '#room-wizard'
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Language',
+                                field: 'language',
+                                width: 200,
+                                editor: {
+                                    type: EditorType.dropdown,
+                                    options: {
+                                        container: '#room-wizard',
+                                        data: [
+                                            //spellchecker:disable
+                                            'eltherian', 'ersi', 'jhlorim', 'malkierien', 'common',
+                                            'draconic', 'elcharean', 'tangetto', 'terrakarn', 'gobbledegook',
+                                            'malkierien', 'loyavenku', 'caninen', 'draconic', 'nibelungen',
+                                            'wulinaxin', 'shangtai', 'farsi', 'nymal'
+                                            //spellchecker:enable
+                                        ]
+                                    }
+                                }
+                            }
+                        ],
+                        add: (e) => {
+                            e.data = {
+                                read: '',
+                                description: '',
+                                language: ''
+                            };
+                        }
+                    }),
                     $dialogs.roomExitPage,
                     new WizardDataGridPage({
                         title: 'Smells',
@@ -5826,15 +5880,24 @@
                 });
 
                 if (tmp.length === 1) {
-                    if (!data['room-wiz-searches'][0].search.trim().startsWith('"') && !data['room-wiz-searches'][0].search.trim().endsWith('"'))
-                        data['room-wiz-searches'][0].search = `"${data['room-wiz-searches'][0].search.trim()}"`;
-                    data['room-wiz-searches'][0].message = data['room-wiz-searches'][0].message.trim();
-                    if (data['room-wiz-searches'][0].message.startsWith('(:'))
-                        tmpl['create body'] += `   set_search(${data['room-wiz-searches'][0].search},${formatFunctionPointer(data['room-wiz-searches'][0].message)});`;
-                    else if (!data['room-wiz-searches'][0].message.startsWith('"') && !data['room-wiz-searches'][0].message.endsWith('"'))
-                        tmpl['create body'] += `   set_search(${data['room-wiz-searches'][0].search}, "${data['room-wiz-searches'][0].message}");`;
+                    tmp = data['room-wiz-searches'][0];
+                    tmp2 = tmp.search.split(',').map(t => {
+                        t.trim();
+                        if (!t.startsWith('"') && !t.endsWith('"'))
+                            t = '"' + t + '"';
+                        return t;
+                    });
+                    if (tmp2.length === 1)
+                        tmp2 = tmp2[0];
                     else
-                        tmpl['create body'] += `   set_search(${data['room-wiz-searches'][0].search}, ${data['room-wiz-searches'][0].message});`;
+                        tmp2 = `({ ${tmp2.join(', ')} })`;
+                    tmp.message = tmp.message.trim();
+                    if (tmp.message.startsWith('(:'))
+                        tmpl['create body'] += `   set_search(${tmp2}, ${formatFunctionPointer(tmp.message)});`;
+                    else if (!tmp.message.startsWith('"') && !tmp.message.endsWith('"'))
+                        tmpl['create body'] += `   set_search(${tmp2}, "${tmp.message}");`;
+                    else
+                        tmpl['create body'] += `   set_search(${tmp2}, ${tmp.message});`;
                 }
                 else if (tmp.length > 0) {
                     tmpl['create body'] += '   set_search( ([\n       ';
@@ -5844,9 +5907,71 @@
                 if (data['room-wiz-temperature'] !== 0)
                     tmpl['create body'] += `   set_temperature(${data['room-wiz-temperature']});\n`;
 
+                //#region reads
+                tmp = data['room-wiz-reads'].map(i => {
+                    tmp2 = i.read.split(',').map(t => {
+                        t.trim();
+                        if (!t.startsWith('"') && !t.endsWith('"'))
+                            t = '"' + t + '"';
+                        return t;
+                    });
+                    if (tmp2.length === 1)
+                        tmp2 = tmp2[0];
+                    else
+                        tmp2 = `({ ${tmp2.join(', ')} })`;
+                    tmp3 = i.description.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmpl['create pre'] += createFunction(tmp3, 'string', 'string id');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    if (tmp2.length === 0)
+                        tmp2 = 'default';
+                    if (i.language.length !== 0)
+                        return `${tmp2} : ([ "value" : ${tmp3}, "lang" : "${i.language}" ]) `;
+                    return `${tmp2} : ${tmp3}`;
+                });
+
+                if (tmp.length === 1) {
+                    tmp = data['room-wiz-reads'][0];
+                    tmp2 = tmp.read.split(',').map(t => {
+                        t.trim();
+                        if (!t.startsWith('"') && !t.endsWith('"'))
+                            t = '"' + t + '"';
+                        return t;
+                    });
+                    if (tmp2.length === 1)
+                        tmp2 = tmp2[0];
+                    else
+                        tmp2 = `({ ${tmp2.join(', ')} })`;
+                    if ((tmp2 === 'default' || tmp2.length === 0) && tmp.language.length === 0)
+                        tmp2 = '';
+                    else if (tmp2.length === 0)
+                        tmp2 = '"default", ';
+                    else
+                        tmp2 += ', ';
+                    tmp.description = tmp.description.trim();
+                    tmp3 = '';
+                    if (tmp.language.length !== 0)
+                        tmp3 = `, "${tmp.language}"`;
+                    if (tmp.description.startsWith('(:'))
+                        tmpl['create body'] += `   set_read(${tmp2}${formatFunctionPointer(tmp.description)}${tmp3});`;
+                    else if (!tmp.description.startsWith('"') && !tmp.description.endsWith('"'))
+                        tmpl['create body'] += `   set_read(${tmp2}"${tmp.description}"${tmp3});`;
+                    else
+                        tmpl['create body'] += `   set_read(${tmp2}${tmp.description}${tmp3});`;
+                }
+                else if (tmp.length > 0) {
+                    tmpl['create body'] += '   set_read( ([\n       ';
+                    tmpl['create body'] += tmp.join(',\n       ');
+                    tmpl['create body'] += '\n     ]) );\n';
+                }
+                //#endregion
+
                 if (data['room-wiz-create-body'] && data['room-wiz-create-body'].length > 0)
                     tmpl['create body'] += data['room-wiz-create-body'];
-                //ad docs
+                //add docs
                 if (tmpl['doc'].length > 0)
                     tmpl['doc'] = ' * @doc ' + tmpl['doc'].join('\n * @doc ') + '\n';
                 else
@@ -5865,7 +5990,7 @@
             $('#room-wiz-type').on('change', (e) => {
                 if ($dialogs.room.options && $dialogs.monster.room.typeChange)
                     $dialogs.room.options.typeChange(e);
-            });        
+            });
         }
         $dialogs.room.title = opts ? (opts.title || 'Create new room...') : 'Create new room...';
         $dialogs.room.defaults = dData || {};

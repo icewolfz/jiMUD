@@ -72,6 +72,10 @@ See [Area designer](codeeditor.designer.md) for area designer docs
 - `Items` the items you can look at in the room, there should be one for each noun from the description
   - `Item` the item name
   - `Description` the item description, you should also add any looks for nouns in descriptions of other items
+- `Reads` things can be read in the room, **Note** they must be included as an item to be readable
+  - `Read` the id to match
+  - `Description` the description to display to the user
+  - `Language` the language the description is in
 - `Exits` Exits from the room, can be standard, doors, or climbs, **Note** climbs are only supported with standard, base (see area if supported), and climb types.
   - `Exit` the exit name, a list predefined list of standard exits is provided to pick from or you can enter a custom one
   - `Door` is this exit a door
