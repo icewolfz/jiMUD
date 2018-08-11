@@ -458,6 +458,11 @@ class Monster {
 
     public reputationGroup: string = '';
     public reputations: MonsterReputation[] = [];
+    public emotes = [];
+    public emotesChance = 0;
+    public speechChance = 0;
+    public emotesChanceCombat = 0;
+    public speechChanceCombat = 0;
 
     constructor(id?, data?, type?) {
         if (typeof id === 'string') {
@@ -552,12 +557,17 @@ class Monster {
             this.askResponseType = MonsterResponseType.say;
             this.baseFlags = MonsterBaseFlags.Default;
             this.reputationGroup = '';
+            this.emotesChance = 0;
+            this.speechChance = 0;
+            this.emotesChanceCombat = 0;
+            this.speechChanceCombat = 0;
         }
         this.type = type || 'base';
         this.reactions = [];
         this.objects = [];
         this.askTopics = [];
         this.reputations = [];
+        this.emotes = [];
     }
 }
 
@@ -4336,10 +4346,10 @@ export class AreaDesigner extends EditorBase {
                                 data: {
                                     'mon-wiz-notes': ed.value.notes || '',
                                     'mon-wiz-emotes': ed.value.emotes || [],
-                                    'mon-wiz-emotes-chance': ('' + ed.value.emotesChance) || '0',
-                                    'mon-wiz-speech-chance': ('' + ed.value.speechChance) || '0',
-                                    'mon-wiz-emotes-chance-combat': ('' + ed.value.emotesChanceCombat) || '0',
-                                    'mon-wiz-speech-chance-combat': ('' + ed.value.speechChanceCombat) || '0',
+                                    'mon-wiz-emotes-chance': '' + ed.value.emotesChance,
+                                    'mon-wiz-speech-chance': '' + ed.value.speechChance,
+                                    'mon-wiz-emotes-chance-combat': '' + ed.value.emotesChanceCombat,
+                                    'mon-wiz-speech-chance-combat': '' + ed.value.speechChanceCombat,
                                     'mon-wiz-welcome-message': 'Welcome to the base monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
                                     'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).filter(r => r !== ed.value.type).map(r => {
                                         return {
@@ -5307,10 +5317,11 @@ export class AreaDesigner extends EditorBase {
                                 },
                                 data: {
                                     'mon-wiz-notes': ed.value.notes || '',
-                                    'mon-wiz-emotes-chance': ('' + ed.value.emotesChance) || '0',
-                                    'mon-wiz-speech-chance': ('' + ed.value.speechChance) || '0',
-                                    'mon-wiz-emotes-chance-combat': ('' + ed.value.emotesChanceCombat) || '0',
-                                    'mon-wiz-speech-chance-combat': ('' + ed.value.speechChanceCombat) || '0',
+                                    'mon-wiz-emotes': ed.value.emotes || [],
+                                    'mon-wiz-emotes-chance': '' + ed.value.emotesChance,
+                                    'mon-wiz-speech-chance': '' + ed.value.speechChance,
+                                    'mon-wiz-emotes-chance-combat': '' + ed.value.emotesChanceCombat,
+                                    'mon-wiz-speech-chance-combat': '' + ed.value.speechChanceCombat,
                                     'mon-wiz-welcome-message': 'Welcome to the monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
                                     'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).map(r => {
                                         return {
