@@ -28,6 +28,7 @@
   - Add [#chat](docs/commands.md) command to send test to chat window and append newline
   - Add [#chatprompt](docs/commands.md) command to send test to chat window with no newline
   - Chat capture: add option to disable capture as long as the chat window is hidden/closed
+  - Immortal tools: added close button to queue/log panel
 - **Changed:**
   - Area designer:
     - Generated file names will no longer append a number at the end if there is only one matching name
