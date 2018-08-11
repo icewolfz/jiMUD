@@ -8,6 +8,7 @@ badger
 bat
 bear
 bird
+black dwarf
 bovine
 buck
 bug
@@ -29,7 +30,9 @@ dog
 donkey
 dragon
 drake
+dwarf
 elephant
+elf
 elk
 emu
 equine
@@ -40,8 +43,15 @@ fish
 frog
 gazelle
 gnoll
+gnome
 goat
+goblin
+half-elf
+half-ogre
+half-orc
+halfling
 hippogriff
+hobbit
 horse
 human
 humanoid
@@ -64,6 +74,9 @@ moose
 mule
 musteline
 naga
+nymph
+ogre
+orc
 ostridge
 otter
 owl
@@ -80,6 +93,7 @@ reindeer
 reptile
 rodent
 satyr
+satyr
 scorpion
 seal
 serpant
@@ -95,6 +109,7 @@ tree
 turtle
 unicorn
 ursine
+wild elf
 wolf
 wolverine
 worm
