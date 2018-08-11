@@ -99,6 +99,7 @@ export const MonsterTypes = [
     { value: 'STD_MONSTER', display: 'Standard', group: 'Standard' },
     { value: 'MONTYPE_ARMOR_REPAIR', display: 'Armor Repair', group: 'Standard' },
     { value: 'MONTYPE_BARKEEP', display: 'Barkeep', group: 'Standard' },
+    { value: 'MONTYPE_CRAFTER', display: 'Crafter', group: 'Standard' },
     { value: 'MONTYPE_CLERIC_TRAINER', display: 'Cleric Trainer', group: 'Standard' },
     { value: 'MONTYPE_SUBCLASSER', display: 'Command Trainer', group: 'Standard' },
     { value: 'MONTYPE_HEALER', display: 'Healer', group: 'Standard' },
@@ -110,6 +111,7 @@ export const MonsterTypes = [
     { value: 'MONTYPE_SKILL_TRAINER', display: 'Skill Trainer', group: 'Standard' },
     { value: 'MONTYPE_SMITH', display: 'Smith', group: 'Standard' },
     { value: 'MONTYPE_SUMMON_MOB', display: 'Summon Monster', group: 'Standard' },
+    { value: 'MONTYPE_SHIPWRIGHT', display: 'Shipwright', group: 'Standard' },
     { value: 'MONTYPE_TATTOOIST', display: 'Tattooist', group: 'Standard' },
     { value: 'MONTYPE_CMD_TRAIN_NPC', display: 'Trainer', group: 'Standard' },
     { value: 'MONTYPE_VENDOR', display: 'Vendor', group: 'Standard' },
@@ -11445,6 +11447,16 @@ export class AreaDesigner extends EditorBase {
                 data.doc.push('/doc/build/monster/types/vendor');
                 break;
             case 'MONTYPE_WEAPON_REPAIR':
+                data.doc.push('/doc/build/monster/types/smith');
+                data.doc.push('/doc/build/monster/types/vendor');
+                break;
+            case 'MONTYPE_SHIPWRIGHT':
+                data.doc.push('/doc/build/monster/haggle');
+                data.doc.push('/doc/build/monster/types/shipwright');
+                break;
+            case 'MONTYPE_CRAFTER':
+                data.doc.push('/doc/build/monster/types/crafter');
+                data.doc.push('/doc/build/monster/types/skill_trainer');
                 data.doc.push('/doc/build/monster/types/smith');
                 data.doc.push('/doc/build/monster/types/vendor');
                 break;

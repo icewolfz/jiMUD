@@ -741,6 +741,7 @@
                             <option value='STD_MONSTER'>Standard</option>
                             <option value='MONTYPE_ARMOR_REPAIR'>Armor Repair</option>
                             <option value='MONTYPE_BARKEEP'>Barkeep</option>
+                            <option value='MONTYPE_CRAFTER'>Crafter</option>
                             <option value='MONTYPE_CLERIC_TRAINER'>Cleric Trainer</option>
                             <option value='MONTYPE_SUBCLASSER'>Command Trainer</option>
                             <option value='MONTYPE_HEALER'>Healer</option>
@@ -752,6 +753,7 @@
                             <option value='MONTYPE_SKILL_TRAINER'>Skill Trainer</option>
                             <option value='MONTYPE_SMITH'>Smith</option>
                             <option value='MONTYPE_SUMMON_MOB'>Summon Monster</option>
+                            <option value='MONTYPE_SHIPWRIGHT'>Shipwright</option>
                             <option value='MONTYPE_TATTOOIST'>Tattooist</option>
                             <option value='MONTYPE_CMD_TRAIN_NPC'>Trainer</option>
                             <option value='MONTYPE_VENDOR'>Vendor</option>
@@ -6595,6 +6597,16 @@
                         tmpl.doc.push('/doc/build/monster/types/vendor');
                         break;
                     case 'Weapon Repair':
+                        tmpl.doc.push('/doc/build/monster/types/smith');
+                        tmpl.doc.push('/doc/build/monster/types/vendor');
+                        break;
+                    case 'Shipwright':
+                        tmpl.doc.push('/doc/build/monster/haggle');
+                        tmpl.doc.push('/doc/build/monster/types/shipwright');
+                        break;
+                    case 'Crafter':
+                        tmpl.doc.push('/doc/build/monster/types/crafter');
+                        tmpl.doc.push('/doc/build/monster/types/skill_trainer');
                         tmpl.doc.push('/doc/build/monster/types/smith');
                         tmpl.doc.push('/doc/build/monster/types/vendor');
                         break;
