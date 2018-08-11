@@ -6082,6 +6082,101 @@
                 e.page.querySelector('#mon-wiz-reputation-group').value = e.wizard.defaults['mon-wiz-reputation-group'] || '';
             });
 
+            const emotes = new WizardDataGridPage({
+                title: 'Emotes and speeches',
+                id: 'mon-wiz-emotes',
+                columns: [
+                    {
+                        label: 'Type',
+                        field: 'type',
+                        width: 200,
+                        editor: {
+                            type: EditorType.select,
+                            options: {
+                                data: [
+                                    { value: 0, display: 'emote' },
+                                    { value: 1, display: 'combat emote' },
+                                    { value: 2, display: 'speech' },
+                                    { value: 3, display: 'combat speech' }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        label: 'Message',
+                        field: 'message',
+                        spring: true,
+                        width: 200,
+                        editor: {
+                            options: {
+                                container: '#monster-wizard',
+                                singleLine: true
+                            }
+                        }
+                    },
+                    {
+                        label: 'Language',
+                        field: 'language',
+                        width: 200,
+                        editor: {
+                            type: EditorType.dropdown,
+                            options: {
+                                container: '#room-wizard',
+                                data: [
+                                    //spellchecker:disable
+                                    'eltherian', 'ersi', 'jhlorim', 'malkierien', 'common',
+                                    'draconic', 'elcharean', 'tangetto', 'terrakarn', 'gobbledegook',
+                                    'malkierien', 'loyavenku', 'caninen', 'draconic', 'nibelungen',
+                                    'wulinaxin', 'shangtai', 'farsi', 'nymal'
+                                    //spellchecker:enable
+                                ]
+                            }
+                        }
+                    }
+                ],
+                add: (e) => {
+                    e.data = {
+                        type: 0,
+                        message: '',
+                        language: ''
+                    };
+                }
+            });
+
+            emotes.page.lastChild.style.top = '90px';
+            emotes.page.firstChild.textContent = 'Emotes and speeches';
+            el = document.createElement('div');
+            el.classList.add('col-sm-6', 'form-group');
+            el.style.padding = '0';
+            el.style.paddingLeft = '10px';
+            el.innerHTML = '<label class="control-label">Speech combat<input type="number" class="input-sm form-control" min="0" max="101" id="mon-wiz-speech-chance-combat" /></label>';
+            emotes.page.insertBefore(el, emotes.page.firstChild);
+            el = document.createElement('div');
+            el.classList.add('col-sm-6', 'form-group');
+            el.style.padding = '0';
+            el.style.paddingLeft = '10px';
+            el.innerHTML = '<label class="control-label">Speech chance<input type="number" class="input-sm form-control" min="0" max="101" id="mon-wiz-speech-chance" /></label>';
+            emotes.page.insertBefore(el, emotes.page.firstChild);
+            el = document.createElement('div');
+            el.classList.add('col-sm-6', 'form-group');
+            el.style.padding = '0';
+            el.style.paddingRight = '10px';
+            el.innerHTML = '<label class="control-label">Emote combat<input type="number" class="input-sm form-control" min="0" max="101" id="mon-wiz-emotes-chance-combat" /></label>';
+            el = document.createElement('div');
+            el.classList.add('col-sm-6', 'form-group');
+            el.style.padding = '0';
+            el.style.paddingRight = '10px';
+            el.innerHTML = '<label class="control-label">Emote chance<input type="number" class="input-sm form-control" min="0" max="101" id="mon-wiz-emotes-chance" /></label>';
+            emotes.page.insertBefore(el, emotes.page.firstChild);
+
+            emotes.on('reset', (e) => {
+                e.page.querySelector('#mon-wiz-emotes-chance').value = e.wizard.defaults['mon-wiz-emotes-chance'] || '0';
+                e.page.querySelector('#mon-wiz-speech-chance').value = e.wizard.defaults['mon-wiz-speech-chance'] || '0';
+                e.page.querySelector('#mon-wiz-emotes-chance-combat').value = e.wizard.defaults['mon-wiz-emotes-chance-combat'] || '0';
+                e.page.querySelector('#mon-wiz-speech-chance-combat').value = e.wizard.defaults['mon-wiz-speech-chance-combat'] || '0';
+            });
+
+
             $dialogs.monster = new Wizard({
                 id: 'monster-wizard',
                 title: 'Create new monster...',
@@ -6220,6 +6315,7 @@
                             e.page.querySelector('#mon-wiz-no-walk').value = e.wizard.defaults['mon-wiz-no-walk'] || '';
                         }
                     }),
+                    emotes,
                     new WizardPage({
                         title: 'Combat',
                         body: document.getElementById('mon-wizard-combat'),
@@ -6434,12 +6530,12 @@
                             if (data['mon-wiz-initiators'] && data['mon-wiz-initiators'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Attack initiators:</span> ' + ellipse(data['mon-wiz-initiators'].replace(/\n/g, '')) + '</div>';
 
-                            sum += '<div><span style="font-weight:bold">Enable attacker tracking:</span> ' + data['mon-wiz-tracking'] ? 'Yes' : 'No' + '</div>';
+                            sum += '<div><span style="font-weight:bold">Enable attacker tracking:</span> ' + (data['mon-wiz-tracking'] ? 'Yes' : 'No') + '</div>';
                             if (data['mon-wiz-tracking-message'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Enter message:</span> ' + ellipse(data['mon-wiz-tracking-message']) + '</div>';
                             if (data['mon-wiz-tracking-type'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Enter message action:</span> ' + ellipse(data['mon-wiz-tracking-type']) + '</div>';
-                            sum += '<div><span style="font-weight:bold">Aggressive:</span> ' + data['mon-wiz-tracking-aggressively'] ? 'Yes' : 'No' + '</div>';
+                            sum += '<div><span style="font-weight:bold">Aggressive:</span> ' + (data['mon-wiz-tracking-aggressively'] ? 'Yes' : 'No') + '</div>';
 
                             if (data['mon-wiz-aggressive'] && data['mon-wiz-aggressive'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Aggressive:</span> ' + ellipse(data['mon-wiz-aggressive']) + '</div>';
@@ -6887,7 +6983,68 @@
 
                 if (data['mon-wiz-reputation-group'].length !== 0)
                     tmpl['create body'] += `   set_reputation_area("${data['mon-wiz-reputation-group'].trim()}");\n`;
-
+                //#region emotes
+                tmp = data['mon-wiz-emotes'].filter(s => s.type === 0).map(i => {
+                    tmp3 = i.message.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    return tmp3;
+                });
+                if (tmp.length !== 0)
+                    tmpl['create body'] += `   set_emotes(${data['mon-wiz-emotes-chance']}, ({\n     ${tmp.join(',\n     ')}\n     }) );`;
+                tmp = data['mon-wiz-emotes'].filter(s => s.type === 1).map(i => {
+                    tmp3 = i.message.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    return tmp3;
+                });
+                if (tmp.length !== 0)
+                    tmpl['create body'] += `   set_emotes(${data['mon-wiz-emotes-chance-combat']}, ({\n     ${tmp.join(',\n     ')}\n     }), 1);`;
+                //#endregion
+                //#region speeches
+                tmp = {};
+                data['mon-wiz-emotes'].filter(s => s.type === 2 && s.language.length !== 0).forEach(i => {
+                    tmp3 = i.message.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    if(!tmp[i.language])
+                        tmp[i.language] = [tmp3];
+                    else
+                        tmp[i.language].push(tmp3);
+                });
+                Object.keys(tmp).forEach(k => {
+                    tmpl['create body'] += `   set_speech(${data['mon-wiz-speech-chance']}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }) );`;
+                });
+                tmp = {};
+                data['mon-wiz-emotes'].filter(s => s.type === 3 && s.language.length !== 0).forEach(i => {
+                    tmp3 = i.message.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    if(!tmp[i.language])
+                        tmp[i.language] = [tmp3];
+                    else
+                        tmp[i.language].push(tmp3);
+                });
+                Object.keys(tmp).forEach(k => {
+                    tmpl['create body'] += `   set_speech(${data['mon-wiz-speech-chance-combat']}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }), 1);`;
+                });
+                //#endregion
                 data['mon-wiz-reputations'].forEach(r => {
                     if (!r.amount) return;
                     r.amount.trim();

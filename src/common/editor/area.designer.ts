@@ -4335,6 +4335,11 @@ export class AreaDesigner extends EditorBase {
                                 ],
                                 data: {
                                     'mon-wiz-notes': ed.value.notes || '',
+                                    'mon-wiz-emotes': ed.value.emotes || [],
+                                    'mon-wiz-emotes-chance': '' + ed.value.emotesChance || '0',
+                                    'mon-wiz-speech-chance': '' + ed.value.speechChance || '0',
+                                    'mon-wiz-emotes-chance-combat': '' + ed.value.emotesChanceCombat || '0',
+                                    'mon-wiz-speech-chance-combat': '' + ed.value.speechChanceCombat || '0',
                                     'mon-wiz-welcome-message': 'Welcome to the base monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
                                     'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).filter(r => r !== ed.value.type).map(r => {
                                         return {
@@ -4474,6 +4479,11 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.askNoTopic = e.data['mon-wiz-ask-no-topic'];
                                     nMonster.askResponseType = +e.data['mon-wiz-ask-response'];
                                     nMonster.askTopics = e.data['mon-wiz-ask-topics'];
+                                    nMonster.emotes = e.data['mon-wiz-emotes'];
+                                    nMonster.emotesChance = e.data['mon-wiz-emotes-chance'];
+                                    nMonster.speechChance = e.data['mon-wiz-speech-chance'];
+                                    nMonster.emotesChanceCombat = e.data['mon-wiz-emotes-chance-combat'];
+                                    nMonster.speechChanceCombat = e.data['mon-wiz-speech-chance-combat'];
 
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;
@@ -11833,6 +11843,69 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});`;
             });
         }
+
+                //#region emotes
+                tmp = monster.emotes.filter(s => s.type === 0).map(i => {
+                    tmp3 = i.message.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        data['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    return tmp3;
+                });
+                if (tmp.length !== 0)
+                    data['create body'] += `   set_emotes(${monster.emotesChance}, ({\n     ${tmp.join(',\n     ')}\n     }) );`;
+                tmp = monster.emotes.filter(s => s.type === 1).map(i => {
+                    tmp3 = i.message.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        data['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    return tmp3;
+                });
+                if (tmp.length !== 0)
+                    data['create body'] += `   set_emotes(${monster.emotesChanceCombat}, ({\n     ${tmp.join(',\n     ')}\n     }), 1);`;
+                //#endregion
+                //#region speeches
+                tmp = {};
+                monster.emotes.filter(s => s.type === 2 && s.language.length !== 0).forEach(i => {
+                    tmp3 = i.message.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        data['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    if (!tmp[i.language])
+                        tmp[i.language] = [tmp3];
+                    else
+                        tmp[i.language].push(tmp3);
+                });
+                Object.keys(tmp).forEach(k => {
+                    data['create body'] += `   set_speech(${monster.speechChance}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }) );`;
+                });
+                tmp = {};
+                monster.emotes.filter(s => s.type === 3 && s.language.length !== 0).forEach(i => {
+                    tmp3 = i.message.trim();
+                    if (tmp3.startsWith('(:')) {
+                        tmp3 = formatFunctionPointer(tmp3, true);
+                        data['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
+                    }
+                    else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
+                        tmp3 = '"' + tmp3 + '"';
+                    if (!tmp[i.language])
+                        tmp[i.language] = [tmp3];
+                    else
+                        tmp[i.language].push(tmp3);
+                });
+                Object.keys(tmp).forEach(k => {
+                    data['create body'] += `   set_speech(${monster.speechChanceCombat}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }), 1);`;
+                });
+                //#endregion
 
         if ((monster.baseFlags & MonsterBaseFlags.No_Objects) === RoomBaseFlags.No_Objects && (base.baseFlags & MonsterBaseFlags.No_Topics) !== MonsterBaseFlags.No_Topics)
             data['create pre inherit'] += '   set_property("no objects", 1);\n';

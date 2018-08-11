@@ -137,6 +137,19 @@ Create a new monster using a wizard for easy option selection
   - `Speed` he speed the monster moves in heartbeats, must be set to enable movement
   - `Patrol route` a set list of exits the monster will attempt to follow
   - `No walk rooms` a list of room file names that the monster can no enter, allows containment of monster to a general area, **Note** filenames should always include the trailing `.c`
+- `Emotes and speeches` random emote or speech when players are in the room
+  - `Emote chance` the chance a normal emote will display
+  - `Emote combat` the chance a combat emote will display during combat
+  - `Speech chance` the chance a monster will speak
+  - `Speech combat` the chance a monster will speak during combat
+  - `Emotes and speeches`
+    - `Type` the type of emote or speech
+      - `emote` a normal emote
+      - `emote combat` an emote during combat
+      - `speech` a normal speak
+      - `speech combat` speak during combat
+    - `message` the emote to display or speech to say
+    - `language` the language to speak in, **Note** for speech or speech combat only
 - `Combat` combat related options
   - `Attack commands` a list of comma delimited abilities or commands the monster will randomly do during combat
   - `Attack command chance` the chance a command will be used, from 0 to 101, 0 never, 100/101 always
