@@ -6758,7 +6758,7 @@ export class AreaDesigner extends EditorBase {
                                     </div>`,
                                         reset: (e) => {
                                             e.page.querySelector('#obj-blockers').value = ed.value.blockers || '';
-                                            e.page.querySelector('#obj-encumbrance').value = ed.value.blockers || '10000';
+                                            e.page.querySelector('#obj-encumbrance').value = ed.value.encumbrance || '10000';
                                             e.page.querySelector('#obj-lock').value = ed.value.lock || '0';
                                             e.page.querySelector('#obj-reduce').value = ed.value.reduce || '1.0';
                                         }
