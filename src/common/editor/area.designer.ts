@@ -4480,10 +4480,10 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.askResponseType = +e.data['mon-wiz-ask-response'];
                                     nMonster.askTopics = e.data['mon-wiz-ask-topics'];
                                     nMonster.emotes = e.data['mon-wiz-emotes'];
-                                    nMonster.emotesChance = e.data['mon-wiz-emotes-chance'];
-                                    nMonster.speechChance = e.data['mon-wiz-speech-chance'];
-                                    nMonster.emotesChanceCombat = e.data['mon-wiz-emotes-chance-combat'];
-                                    nMonster.speechChanceCombat = e.data['mon-wiz-speech-chance-combat'];
+                                    nMonster.emotesChance = +e.data['mon-wiz-emotes-chance'];
+                                    nMonster.speechChance = +e.data['mon-wiz-speech-chance'];
+                                    nMonster.emotesChanceCombat = +e.data['mon-wiz-emotes-chance-combat'];
+                                    nMonster.speechChanceCombat = +e.data['mon-wiz-speech-chance-combat'];
 
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;

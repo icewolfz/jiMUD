@@ -6083,7 +6083,7 @@
             });
 
             const emotes = new WizardDataGridPage({
-                title: 'Emotes and speeches',
+                title: 'Emotes and speaks',
                 id: 'mon-wiz-emotes',
                 columns: [
                     {
@@ -6096,8 +6096,8 @@
                                 data: [
                                     { value: 0, display: 'emote' },
                                     { value: 1, display: 'combat emote' },
-                                    { value: 2, display: 'speech' },
-                                    { value: 3, display: 'combat speech' }
+                                    { value: 2, display: 'speak' },
+                                    { value: 3, display: 'combat speak' }
                                 ]
                             }
                         }
@@ -6144,28 +6144,28 @@
             });
 
             emotes.page.lastChild.style.top = '90px';
-            emotes.page.firstChild.textContent = 'Emotes and speeches';
+            emotes.page.firstChild.textContent = 'Emotes and speaks';
             el = document.createElement('div');
-            el.classList.add('col-sm-6', 'form-group');
+            el.classList.add('col-sm-3', 'form-group');
             el.style.padding = '0';
-            el.style.paddingLeft = '10px';
-            el.innerHTML = '<label class="control-label">Speech combat<input type="number" class="input-sm form-control" min="0" max="101" id="mon-wiz-speech-chance-combat" /></label>';
+            el.innerHTML = '<label class="control-label">Speak combat<input type="number" class="input-sm form-control" min="0" max="101" id="mon-wiz-speech-chance-combat" /></label>';
             emotes.page.insertBefore(el, emotes.page.firstChild);
             el = document.createElement('div');
-            el.classList.add('col-sm-6', 'form-group');
+            el.classList.add('col-sm-3', 'form-group');
             el.style.padding = '0';
-            el.style.paddingLeft = '10px';
-            el.innerHTML = '<label class="control-label">Speech chance<input type="number" class="input-sm form-control" min="0" max="101" id="mon-wiz-speech-chance" /></label>';
+            el.style.paddingRight = '5px';
+            el.innerHTML = '<label class="control-label">Speak chance<input type="number" class="input-sm form-control" min="0" max="101" id="mon-wiz-speech-chance" /></label>';
             emotes.page.insertBefore(el, emotes.page.firstChild);
             el = document.createElement('div');
-            el.classList.add('col-sm-6', 'form-group');
+            el.classList.add('col-sm-3', 'form-group');
             el.style.padding = '0';
-            el.style.paddingRight = '10px';
+            el.style.paddingRight = '5px';
             el.innerHTML = '<label class="control-label">Emote combat<input type="number" class="input-sm form-control" min="0" max="101" id="mon-wiz-emotes-chance-combat" /></label>';
+            emotes.page.insertBefore(el, emotes.page.firstChild);
             el = document.createElement('div');
-            el.classList.add('col-sm-6', 'form-group');
+            el.classList.add('col-sm-3', 'form-group');
             el.style.padding = '0';
-            el.style.paddingRight = '10px';
+            el.style.paddingRight = '5px';
             el.innerHTML = '<label class="control-label">Emote chance<input type="number" class="input-sm form-control" min="0" max="101" id="mon-wiz-emotes-chance" /></label>';
             emotes.page.insertBefore(el, emotes.page.firstChild);
 
