@@ -7338,7 +7338,7 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'pack').selectpicker('render');
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
-                                            e.page.querySelector('#obj-encumbrance').value = ed.value.maxWearable || '4000';
+                                            e.page.querySelector('#obj-encumbrance').value = ed.value.encumbrance || '4000';
                                             e.page.querySelector('#obj-reduce').value = ed.value.reduce || '1.0';
                                         }
                                     }), wizSkills, wizBonuses]);
@@ -7356,7 +7356,7 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            e.page.querySelector('#obj-encumbrance').value = ed.value.maxWearable || '40000';
+                                            e.page.querySelector('#obj-encumbrance').value = ed.value.encumbrance || '40000';
                                         }
                                     }));
                                     break;
