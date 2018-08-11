@@ -10867,7 +10867,7 @@ export class AreaDesigner extends EditorBase {
                 if (room.long.endsWith('"'))
                     room.long = room.long.substr(0, room.long.length - 1);
                 if (room.long.length > 70) {
-                    data.description = formatString(room.long, 0, 80, ' * ', '');
+                    data.description = formatString(room.long, 0, 77, ' * ', '');
                     tmp = room.long.substr(0, 66);
                     let tl = tmp.length;
                     while (tl--) {
@@ -10900,7 +10900,7 @@ export class AreaDesigner extends EditorBase {
                 if (data.description.endsWith('"'))
                     data.description = data.description.substr(0, data.description.length - 1);
                 if (data.description.length > 70)
-                    data.description = formatString(data.description, 0, 80, ' * ', '');
+                    data.description = formatString(data.description, 0, 77, ' * ', '');
                 else
                     data.description = ' * ' + data.description;
             }
@@ -11535,7 +11535,7 @@ export class AreaDesigner extends EditorBase {
                 if (monster.long.endsWith('"'))
                     monster.long = monster.long.substr(0, monster.long.length - 1);
                 if (monster.long.length > 70) {
-                    data.description = formatString(monster.long, 0, 80, ' * ', '');
+                    data.description = formatString(monster.long, 0, 77, ' * ', '');
                     tmp = monster.long.substr(0, 66);
                     let tl = tmp.length;
                     while (tl--) {
@@ -11568,7 +11568,7 @@ export class AreaDesigner extends EditorBase {
                 if (data.description.endsWith('"'))
                     data.description = data.description.substr(0, data.description.length - 1);
                 if (data.description.length > 70)
-                    data.description = formatString(data.description, 0, 80, ' * ', '');
+                    data.description = formatString(data.description, 0, 77, ' * ', '');
                 else
                     data.description = ' * ' + data.description;
             }
@@ -11862,7 +11862,7 @@ export class AreaDesigner extends EditorBase {
 
         if (monster.actions !== base.actions) {
             monster.actions = monster.actions.split(',');
-            monster.actions.forEachh(w => {
+            monster.actions.forEach(w => {
                 w = w.trim();
                 if (w.length === 0) return;
                 if (!w.startsWith('"'))
@@ -12553,7 +12553,7 @@ export class AreaDesigner extends EditorBase {
             if (obj.long.endsWith('"'))
                 obj.long = obj.long.substr(0, obj.long.length - 1);
             if (obj.long.length > 70) {
-                data.description = formatString(obj.long, 0, 80, ' * ', '');
+                data.description = formatString(obj.long, 0, 77, ' * ', '');
                 tmp = obj.long.substr(0, 66);
                 let tl = tmp.length;
                 while (tl--) {

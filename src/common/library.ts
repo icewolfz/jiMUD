@@ -1447,8 +1447,13 @@ export function formatString(str, indent, width?, prefix?, postFix?, preIdent?) 
     if (!str || str.length === 0) return '';
     width = width || 66;
     if (width < 40) width = 40;
+    if (typeof prefix !== 'string')
+        prefix = '"';
+    if (typeof postFix !== 'string')
+        postFix = '"';
+    preIdent = preIdent || '';
     if (str.length <= width)
-        return str;
+        return prefix + str + postFix;
     const list = [];
     let wBreak = wordBreak(str, 0, width);
     list.push(str.substr(0, wBreak));
@@ -1462,9 +1467,6 @@ export function formatString(str, indent, width?, prefix?, postFix?, preIdent?) 
     }
     if (len > 0) // left over
         list.push(str.substr(tmp, len));
-    prefix = prefix || '"';
-    postFix = postFix || '"';
-    preIdent = preIdent || '';
     return prefix + list.join(postFix + '\n' + preIdent + ' '.repeat(indent) + prefix) + postFix;
 }
 

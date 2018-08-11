@@ -5587,7 +5587,7 @@
                     if (data['room-wiz-long'].endsWith('"'))
                         data['room-wiz-long'] = data['room-wiz-long'].substr(0, data['room-wiz-long'].length - 1);
                     if (data['room-wiz-long'].length > 70) {
-                        tmpl['description'] = formatString(data['room-wiz-long'], 0, 80, ' * ', '');
+                        tmpl['description'] = formatString(data['room-wiz-long'], 0, 77, ' * ', '');
                         tmp = data['room-wiz-long'].substr(0, 66);
                         let tl = tmp.length;
                         while (tl--) {
@@ -6643,7 +6643,7 @@
                     if (data['mon-wiz-long'].endsWith('"'))
                         data['mon-wiz-long'] = data['mon-wiz-long'].substr(0, data['mon-wiz-long'].length - 1);
                     if (data['mon-wiz-long'].length > 70) {
-                        tmpl['description'] = formatString(data['mon-wiz-long'], 0, 80, ' * ', '');
+                        tmpl['description'] = formatString(data['mon-wiz-long'], 0, 77, ' * ', '');
                         tmp = data['mon-wiz-long'].substr(0, 66);
                         let tl = tmp.length;
                         while (tl--) {
@@ -6912,7 +6912,7 @@
 
                 if (data['mon-wiz-actions'].length > 0) {
                     data['mon-wiz-actions'] = data['mon-wiz-actions'].split(',');
-                    data['mon-wiz-actions'].forEachh(w => {
+                    data['mon-wiz-actions'].forEach(w => {
                         w = w.trim();
                         if (w.length === 0) return;
                         if (!w.startsWith('"'))
@@ -6927,7 +6927,7 @@
                 else
                     tmpl['doc'] = '';
 
-                var f = data['mon-wiz-name'].replace(/\s/g, '_');
+                var f = data['mon-wiz-name'].replace(/\s/g, '_').toLowerCase();
                 if (!f || f.length === 0) {
                     if (data['mon-wiz-type'].display === 'Standard' || data['mon-wiz-type'].display === 'Base')
                         f = ('new_monster_' + newCounter);

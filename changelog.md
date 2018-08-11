@@ -40,6 +40,8 @@
     - Fixed empty room checks so rooms that have objects, monsters, smells, items, sounds, and searches, as long as there is one the room will not be considered empty and be generated in code or be drawn in the mapper, this allows you to create shop storage and other misc rooms that may not have exits for what ever reasons
     - Fixed a bug with door code generation not setting external destination link
     - Fixed an issue when editing sheaths that quality and weapon where wrong
+  - Code editor:
+    - Fixed string formats for code generation
   - Refresh status display after settings are changed
   - Fixed some missing monster icons
   - Fixed -#s when using show needed xp as progress bar
