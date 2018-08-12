@@ -741,6 +741,7 @@ export class VirtualEditor extends EditorBase {
                 wrap: true,
                 editor: {
                     options: {
+                        dialog: true,
                         wrap: true,
                         singleLine: true
                     }
