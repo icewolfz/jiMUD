@@ -1799,6 +1799,8 @@ export class VirtualEditor extends EditorBase {
                     height = Math.ceil(Math.max(this.$mouseDown.y, (this.selectedRoom.y * 32) + 17) / 32);
                     this.setFocusedRoom(this.selectedRoom);
                 }
+                this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mousePrevious.x - this.$mouseDown.x, this.$mousePrevious.y - this.$mouseDown.y);
+                this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mouse.x - this.$mouseDown.x, this.$mouse.y - this.$mouseDown.y);
                 this.setSelection(x, y, width, height);
                 this.$mouseSelect = false;
             }
