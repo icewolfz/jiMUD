@@ -6592,6 +6592,7 @@ export class AreaDesigner extends EditorBase {
                                                 editor: {
                                                     options: {
                                                         dialog: true,
+                                                        fancy: true,
                                                         title: 'Edit description&hellip;',
                                                         singleLine: true,
                                                         container: '#object-wizard'
@@ -6757,6 +6758,7 @@ export class AreaDesigner extends EditorBase {
                                                 editor: {
                                                     options: {
                                                         dialog: true,
+                                                        fancy: true,
                                                         title: 'Edit description&hellip;',
                                                         singleLine: true,
                                                         container: '#object-wizard'

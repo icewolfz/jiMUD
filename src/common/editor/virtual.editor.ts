@@ -742,6 +742,7 @@ export class VirtualEditor extends EditorBase {
                 editor: {
                     options: {
                         dialog: true,
+                        fancy: true,
                         wrap: true,
                         singleLine: true
                     }
@@ -3845,6 +3846,8 @@ export class VirtualEditor extends EditorBase {
                 sort: 1,
                 editor: {
                     options: {
+                        dialog: true,
+                        fancy: true,
                         singleLine: true,
                         container: document.body
                     }
