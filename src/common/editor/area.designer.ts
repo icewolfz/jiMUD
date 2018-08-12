@@ -1251,7 +1251,7 @@ export class AreaDesigner extends EditorBase {
         this._wUp = (e) => {
             this._lastMouse = e;
             this.$mouse = this.getMousePosFromWindow(e);
-            if ((this.$focusedRoom || this.$selectedRooms.length > 0) && e.shiftKey) {
+            if (this.$focused && (this.$focusedRoom || this.$selectedRooms.length > 0) && e.shiftKey) {
                 let x;
                 let y;
                 let height;

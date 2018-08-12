@@ -44,6 +44,7 @@
     - Fixed an issue when editing sheaths that quality and weapon where wrong
   - Code editor:
     - Fixed string formats for code generation
+    - Fixed issue with virtual editor and area designer selection rooms when not focused
   - Refresh status display after settings are changed
   - Fixed some missing monster icons
   - Fixed -#s when using show needed xp as progress bar
