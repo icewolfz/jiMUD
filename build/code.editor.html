@@ -145,7 +145,7 @@
                 editor.onDidChangeCursorPosition(() => {
                     doUpdate(64);
                 });
-                editor.onDidFocusEditor(() => {
+                editor.onDidFocusEditorWidget(() => {
                     doUpdate(32);
                 });
             }
@@ -168,7 +168,7 @@
                 editor.getOriginalEditor().onDidChangeCursorPosition(() => {
                     doUpdate(64);
                 });
-                editor.getOriginalEditor().onDidFocusEditor(() => {
+                editor.getOriginalEditor().onDidFocusEditorWidget(() => {
                     doUpdate(32);
                 });
                 editor.getModifiedEditor().onContextMenu((e) => {
@@ -182,7 +182,7 @@
                 editor.getModifiedEditor().onDidChangeCursorPosition(() => {
                     doUpdate(64);
                 });
-                editor.getModifiedEditor().onDidFocusEditor(() => {
+                editor.getModifiedEditor().onDidFocusEditorWidget(() => {
                     doUpdate(32);
                 });
             }

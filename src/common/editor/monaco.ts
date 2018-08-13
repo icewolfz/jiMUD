@@ -359,7 +359,7 @@ export class MonacoCodeEditor extends EditorBase {
 
     public get selected() {
         let s;
-        if (this.$oEditor && this.$oEditor.isFocused()) {
+        if (this.$oEditor && this.$oEditor.hasTextFocus()) {
             s = this.$oEditor.getSelection();
             if (!s) return '';
             return this.$diffModel.getValueInRange(s) || '';
@@ -371,7 +371,7 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public selectAll() {
-        if (this.$oEditor && this.$oEditor.isFocused())
+        if (this.$oEditor && this.$oEditor.hasTextFocus())
             this.$oEditor.setSelection({
                 startLineNumber: 1,
                 startColumn: 1,
@@ -391,7 +391,7 @@ export class MonacoCodeEditor extends EditorBase {
         this.$editor.getAction('editor.action.clipboardCutAction').run();
     }
     public copy() {
-        if (this.$oEditor && this.$oEditor.isFocused())
+        if (this.$oEditor && this.$oEditor.hasTextFocus())
             this.$oEditor.getAction('editor.action.clipboardCopyAction').run();
         else if (this.$editor) return;
         this.$editor.getAction('editor.action.clipboardCopyAction').run();
@@ -435,13 +435,13 @@ export class MonacoCodeEditor extends EditorBase {
     }
     public set spellcheck(value: boolean) { /**/ }
     public find() {
-        if (this.$oEditor && this.$oEditor.isFocused())
+        if (this.$oEditor && this.$oEditor.hasTextFocus())
             this.$oEditor.getAction('actions.find').run();
         else if (this.$editor)
             this.$editor.getAction('actions.find').run();
     }
     public replace() {
-        if (this.$oEditor && this.$oEditor.isFocused())
+        if (this.$oEditor && this.$oEditor.hasTextFocus())
             this.$oEditor.getAction('editor.action.find').run();
         else if (this.$editor)
             this.$editor.getAction('editor.action.startFindReplaceAction').run();
@@ -452,7 +452,7 @@ export class MonacoCodeEditor extends EditorBase {
             case 'delete':
             case 'pasteadvanced':
             case 'paste-advanced':
-                if (this.$oEditor && this.$oEditor.isFocused())
+                if (this.$oEditor && this.$oEditor.hasTextFocus())
                     return false;
                 return this.selected.length > 0;
             case 'copy':
@@ -460,7 +460,7 @@ export class MonacoCodeEditor extends EditorBase {
             case 'paste':
             case 'undo':
             case 'redo':
-                if (this.$oEditor && this.$oEditor.isFocused())
+                if (this.$oEditor && this.$oEditor.hasTextFocus())
                     return false;
                 return true;
             case 'indent':
@@ -506,7 +506,7 @@ export class MonacoCodeEditor extends EditorBase {
 
     public menu(menu) {
         if (menu === 'edit') {
-            const selected = this.$oEditor && this.$oEditor.isFocused() ? false : this.selected.length > 0;
+            const selected = this.$oEditor && this.$oEditor.hasTextFocus() ? false : this.selected.length > 0;
             return [
                 {
                     label: 'F&ormatting',
@@ -607,7 +607,7 @@ export class MonacoCodeEditor extends EditorBase {
         }
         else if (menu === 'context') {
             const selected = this.selected.length > 0;
-            if (this.$oEditor && this.$oEditor.isFocused())
+            if (this.$oEditor && this.$oEditor.hasTextFocus())
                 return [
                     {
                         label: 'Expand All',
@@ -734,7 +734,7 @@ export class MonacoCodeEditor extends EditorBase {
                             label: '&Expand All',
                             accelerator: 'CmdOrCtrl+>',
                             click: () => {
-                                if (this.$oEditor && this.$oEditor.isFocused())
+                                if (this.$oEditor && this.$oEditor.hasTextFocus())
                                     this.$oEditor.getAction('editor.unfoldAll').run();
                                 else
                                     this.$editor.getAction('editor.unfoldAll').run();
@@ -744,7 +744,7 @@ export class MonacoCodeEditor extends EditorBase {
                             label: '&Collapse All',
                             accelerator: 'CmdOrCtrl+<',
                             click: () => {
-                                if (this.$oEditor && this.$oEditor.isFocused())
+                                if (this.$oEditor && this.$oEditor.hasTextFocus())
                                     this.$oEditor.getAction('editor.foldAll').run();
                                 else
                                     this.$editor.getAction('editor.foldAll').run();
@@ -807,7 +807,7 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public get location() {
-        if (this.$oEditor && this.$oEditor.isFocused()) {
+        if (this.$oEditor && this.$oEditor.hasTextFocus()) {
             if (!this.$oEditor.getPosition())
                 return [0, 0];
             return [this.$oEditor.getPosition().column, this.$oEditor.getPosition().lineNumber];

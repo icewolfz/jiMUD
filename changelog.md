@@ -34,6 +34,7 @@
     - Generated file names will no longer append a number at the end if there is only one matching name
     - Long description editor now opens a dialog with more space and an option to open the advanced editor for easier color editing
   - Update tinymce to 4.8.1
+  - Update monaco-editor to 0.14.2
 - **Fixed:**
   - Area designer:
     - Fixed advanced button column for data grids

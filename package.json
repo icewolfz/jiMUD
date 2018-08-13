@@ -108,7 +108,7 @@
     "lz-string": "^1.4.4",
     "mathjs-expression-parser": "^1.0.0",
     "moment": "^2.22.2",
-    "monaco-editor": "^0.13.1",
+    "monaco-editor": "^0.14.2",
     "resize-observer-polyfill": "^1.5.0",
     "rgbcolor": "^1.0.1",
     "spellchecker": "^3.4.4",
