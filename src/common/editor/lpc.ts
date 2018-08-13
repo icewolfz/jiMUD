@@ -39,8 +39,8 @@ export const conf: IRichLanguageConfiguration = {
     ],
     folding: {
         markers: {
-            start: new RegExp('^\\s*//\\s+[rR]egion\\b'),
-            end: new RegExp('^\\s*//\\s+[eE]nd[rR]egion\\b')
+            start: new RegExp(/^\s*\/\/#[rR]egion\b/),
+            end: new RegExp(/^\s*\/\/#[eE]nd[rR]egion\b/)
         }
     }
 };
