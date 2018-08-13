@@ -16,7 +16,7 @@
     <link href="css/editorcontent.css" rel="stylesheet" type="text/css" />
     <script>
         // eslint-disable-next-line no-unused-vars
-        /* global _ready, doUpdate, manager, inverse, capitalize, options, monaco, initEditor, shell */
+        /* global _ready, doUpdate, manager, inverse, capitalize, options, monaco, initEditor, shell, setViewState */
         // eslint-disable-next-line no-unused-vars
         var _ready = false;
         const { SetupEditor } = require('./js/editor/code.editor');
@@ -146,6 +146,9 @@
                 editor.onDidFocusEditorWidget(() => {
                     doUpdate(32);
                 });
+                editor.onDidChangeModelDecorations(() => {
+                    setViewState(manager.active.editor.file, editor.saveViewState());
+                });
             }
             else {
                 let m = monaco.editor.createModel('', 'lpc');
@@ -182,6 +185,9 @@
                 });
                 editor.getModifiedEditor().onDidFocusEditorWidget(() => {
                     doUpdate(32);
+                });
+                editor.getModifiedEditor().onDidChangeModelDecorations(() => {
+
                 });
             }
 
@@ -2396,6 +2402,12 @@
                     window.$editors[pane].domElement.style.display = 'block';
                     window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
                     e.panel.editor.activate(window.$editors[pane]);
+                    if (!e.panel.restored) {
+                        var state = getViewState(e.panel.editor.file);
+                        if (state)
+                            window.$editors[pane].restoreViewState(state);
+                        e.panel.restored = true;
+                    }
                     window.$editors[pane].layout();
                     toggleDiffNav(false);
                 }
@@ -2422,8 +2434,10 @@
         if (e.panel.editor.type === 1) {
             if (e.panel.editor.diff)
                 e.panel.editor.deactivate(window.$dEditors[pane]);
-            else
+            else {
+                //setViewState(e.panel.editor.file, window.$editors[pane].saveViewState());
                 e.panel.editor.deactivate(window.$editors[pane]);
+            }
             toggleDiffNav(false);
         }
         else
@@ -7017,7 +7031,7 @@
                     }
                     else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                         tmp3 = '"' + tmp3 + '"';
-                    if(!tmp[i.language])
+                    if (!tmp[i.language])
                         tmp[i.language] = [tmp3];
                     else
                         tmp[i.language].push(tmp3);
@@ -7034,7 +7048,7 @@
                     }
                     else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                         tmp3 = '"' + tmp3 + '"';
-                    if(!tmp[i.language])
+                    if (!tmp[i.language])
                         tmp[i.language] = [tmp3];
                     else
                         tmp[i.language].push(tmp3);
@@ -7256,6 +7270,29 @@
         let name = path.join(parseTemplate('{data}'), 'editor', krypto.createHash('md5').update(file).digest('hex'));
         if (!existsSync(name)) return null;
         return fs.readFileSync(name, 'utf8');
+    }
+
+    function getViewState(file) {
+        if (!options.viewState || !file || file.length === 0) return null;
+        krypto = krypto || require('crypto');
+        let name = path.join(parseTemplate('{data}'), 'editor', krypto.createHash('md5').update(file).digest('hex') + '.state');
+        if (!existsSync(name)) return null;
+        try {
+            return JSON.parse(fs.readFileSync(name, 'utf8'));
+        }
+        catch (err) {
+            return null;
+        }
+    }
+
+    function setViewState(file, state) {
+        if (!options.viewState || !file || !state) return;
+        let p = path.join(parseTemplate('{data}'), 'editor');
+        if (!existsSync(p))
+            fs.mkdirSync(p);
+        krypto = krypto || require('crypto');
+        let name = krypto.createHash('md5').update(file).digest('hex') + '.state';
+        fs.writeFileSync(path.join(p, name), JSON.stringify(state));
     }
 
     function addToRecent(file, remoteFile) {

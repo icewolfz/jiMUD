@@ -7,6 +7,7 @@ export class EditorSettings {
     public opened = [];
     public layout = [1];
     public cacheRemote = true;
+    public viewState = true;
     public maxRecent = 15;
     public reopen = true;
     public lastActive = '';

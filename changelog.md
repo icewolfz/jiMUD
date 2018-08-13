@@ -7,6 +7,7 @@
     - Add crafter and shipwright templates and to monster wizard
     - Add basic races to monster race list in monster wizard
     - Add monster random emote and speech support to monster wizard
+    - View state caching, will remember the view state of files to restore them when reopened, eg folding should be remembered
   - Area designer:
     - New progress dialog for code generation to allow you to cancel and see progress better
     - Add food, drink, fishing poles, backpacks, and bags of holding objects
