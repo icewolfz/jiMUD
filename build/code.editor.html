@@ -33,8 +33,6 @@
             }
             else
                 editor.getContribution('editor.linkDetector').openerService.open = (url) => {
-                    console.log(url);
-                    console.log(url.toString());
                     shell.openExternal(url.toString());
                 };
             editor.addAction({
