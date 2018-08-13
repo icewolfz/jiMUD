@@ -40,7 +40,7 @@
   - Area designer:
     - Fixed advanced button column for data grids
     - Fixed room editor monster and object drop downs not updating to reflect new monsters/objects or changes to name
-    - Fixed room preview formatting when consolidating same named items or items with mulitples
+    - Fixed room preview formatting when consolidating same named items or items with multiples
     - Fixed empty room checks so rooms that have objects, monsters, smells, items, sounds, and searches, as long as there is one the room will not be considered empty and be generated in code or be drawn in the mapper, this allows you to create shop storage and other misc rooms that may not have exits for what ever reasons
     - Fixed a bug with door code generation not setting external destination link
     - Fixed an issue when editing sheaths that quality and weapon where wrong
