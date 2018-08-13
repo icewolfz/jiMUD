@@ -82,7 +82,7 @@
         //cSpell:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
         const { parseTemplate, isDirSync } = require("./js/library.js");
         const { remote, ipcRenderer, shell } = require('electron');
-        const { dialog } = remote;
+        const { dialog, Menu, MenuItem } = remote;
         const path = require('path');
         const fs = require('fs-extra');
         const EditorSettings = require('./js/editor/code.editor.settings').EditorSettings;
@@ -246,6 +246,35 @@
             $('.selectpicker').change(function () {
                 setValue($(this).attr('id'), $(this).val());
             });
+
+            $('#btn-clear-dropdown').click(function () {
+                $(this).addClass('open');
+                const pos = $(this).offset();
+                const x = Math.floor(pos.left);
+                const y = Math.floor(pos.top + $(this).outerHeight() + 2);
+                const addMenu = new Menu();
+                addMenu.append(new MenuItem({
+                    label: 'All', click() {
+                        clearButton('#btn-clear-dropdown');
+                        clearCache();
+                    }
+                }));
+                addMenu.append(new MenuItem({ type: 'separator' }));
+                addMenu.append(new MenuItem({
+                    label: 'Remote', click() {
+                        clearButton('#btn-clear-dropdown');
+                        clearCache(1);
+                    }
+                }));
+                addMenu.append(new MenuItem({
+                    label: 'State', click() {
+                        clearButton('#btn-clear-dropdown');
+                        clearCache(2);
+                    }
+                }));
+                addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
+            });
+
         });
 
         function setValue(option, value) {
@@ -352,6 +381,11 @@
 
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
+        }
+
+        function clearButton(id) {
+            $(id).removeClass('open');
+            $(id).blur();
         }
 
         function resetSettings() {
@@ -989,9 +1023,10 @@
         <div class="dialog-footer">
             <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
             <div class="btn-group" role="group">
-                <button style="float: left" type="button" class="btn btn-danger" onclick="clearCache(1)">Clear remote cache</button>
-                <button style="float: left" type="button" class="btn btn-danger" onclick="clearCache(2)">Clear states</button>
-                <button style="float: left" type="button" class="btn btn-danger" onclick="clearCache()">Clear all</button>
+                <button style="float: left" type="button" class="btn btn-danger" onclick="clearCache()">Clear cache</button>
+                <button id="btn-clear-dropdown" type="button" class="btn btn-danger" title="Clear...">
+                    <span class="caret"></span>
+                </button>
             </div>
             <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
             <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
