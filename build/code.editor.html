@@ -147,7 +147,10 @@
                     doUpdate(32);
                 });
                 editor.onDidChangeModelDecorations(() => {
-                    setViewState(manager.active.editor.file, editor.saveViewState());
+                    setViewState(manager.active.editor);
+                });
+                editor.onDidScrollChange(() => {
+                    setViewState(manager.active.editor);
                 });
             }
             else {
@@ -383,7 +386,7 @@
                 </label>
             </div>
             <div class="col-sm-12 form-group">
-                <label class="control-label" style="width: 100%;">Vertial anchor
+                <label class="control-label" style="width: 100%;">Vertical anchor
                     <select id="map-resize-vertical-anchor" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
                         <option value='2'>Left</option>
                         <option value='0'>Center</option>
@@ -7285,7 +7288,11 @@
         }
     }
 
-    function setViewState(file, state) {
+    // eslint-disable-next-line no-unused-vars
+    function setViewState(editor) {
+        if (!editor || editor.new) return;
+        var file = editor.file;
+        var state = editor.saveViewState();
         if (!options.viewState || !file || !state) return;
         let p = path.join(parseTemplate('{data}'), 'editor');
         if (!existsSync(p))

@@ -5,6 +5,9 @@
 - **New:**
   - Code editor:
     - Add library functions to code complete
+- **Fixed:**
+  - Code editor:
+    - Save scroll view state
 
 ## 0.4.62 2018-08-13
 
