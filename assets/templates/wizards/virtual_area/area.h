@@ -15,5 +15,7 @@
 #define VIR (RMS+"virtual/") //the path to the virtual area
 #define CMDS (RMS+"std") //the path to custom commands
 
+#define SERVER (VIR+"server") //the virtual server
+
 #define BASEMONSTER (STD+"basemonster") //the path to the base monster object
 #define BASEROOM (STD+"baseroom") //the path to the base room object
