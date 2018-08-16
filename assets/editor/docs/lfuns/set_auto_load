@@ -1,0 +1,28 @@
+void set_auto_load(mixed i);
+
+Sets if an object can be saved for a player and restored for them where needed
+
+int - a simple flag to enable basic autoloading
+        0: do not autoload
+        1: auto load for everything
+function - a function test if object will auto load for target
+        returns 0 if can not autoload or 1 if it can
+
+examples:
+    set_auto_load(1);
+or
+    set_auto_load( (: $2 && $2->is_player() && $2->query_guild() != "thisguild" ? 0 : 1 :) );
+or
+    int guildmember(object ob, object target) 
+    {
+        if(target && target->is_player() && target->query_guild() != "thisguild")
+            return 0;
+        return 1;
+    }
+
+    set_auto_load( (:guildmember:) );
+
+SEE ALSO:
+query_auto_load
+        
+

@@ -1,0 +1,33 @@
+%^BOLD%^varargs int do_damage(int damage, string type, mixed limb, mixed attacker, mixed comfile, object weapon, int limbonly, int multiarmour, int fullprotection)%^RESET%^
+
+This function is in living objects.  It causes "damage" hit points of damage
+to the "limb" specified, and also to the general hit points of the living 
+object as well as any armor worn on targed limb as needed.  
+
+Also causes the status report to be displayed to the target living.
+
+%^CYAN%^type:%^RESET%^ is the type of damage done, eg cutting, puncture, fire, cold, etc...
+%^CYAN%^attacker:%^RESET%^ is who is attacking current living, could be an object or string if string it was a none living attack, for example falling to death would return attacker as "falling"
+%^CYAN%^comfile:%^RESET%^ is a file path or object with 2 function calls supported
+    %^BOLD%^void query_com_message(damage, target, attacker, limb, weapon, type)%^RESET%^
+        %^CYAN%^damage:%^RESET%^ the amount of damage dealt to target
+        %^CYAN%^target:%^RESET%^ the target being dealt damage and caller of function
+        %^CYAN%^attacker:%^RESET%^ the one doing the damage
+        %^CYAN%^limb:%^RESET%^ the limb being damaged, limb could be a string or an array of strings see limbs.h for any valid limb string
+        %^CYAN%^weapon:%^RESET%^ the weapon doing the damage
+        %^CYAN%^type:%^RESET%^ the type of damage
+    %^BOLD%^varargs float query_current_protection(object target, mixed target_thing, string type, int full, int armoronly)%^RESET%^
+    	  %^CYAN%^target:%^RESET%^ the target to calculation protection for
+    	  %^CYAN%^target_thing:%^RESET%^ the limbs being targeted, can be a string or an array of strings determing limbs effected
+    	  %^CYAN%^type:%^RESET%^ damage type
+       %^CYAN%^full:%^RESET%^ the amount of protection to provide
+       %^CYAN%^armoronly:%^RESET%^ does protection only effect damaging armor or not   
+%^CYAN%^weapon:%^RESET%^ the weapon used to cause the damage
+%^CYAN%^limbonly:%^RESET%^ does damage to the target limb and not to the players hp
+%^CYAN%^multiarmour:%^RESET%^ armour damage multiplier
+%^CYAN%^fullprotection:%^RESET%^ determins how armor protection is factored in, 
+    0 means it will factor in based on a 0 to 50% reduction formulas while normally for more advanced attacks, 
+    1 means 0 to 100% protection basic melee uses 100% and more simple attacks
+
+%^CYAN%^See also:%^RESET%^ add_hp()
+Defined in /std/living/body.c

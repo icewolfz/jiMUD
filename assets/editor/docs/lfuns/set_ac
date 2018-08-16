@@ -1,0 +1,31 @@
+Nightmare mudlib living lfun: set_ac()
+
+void set_ac(string limb_name, int ac)
+
+This sets the armour class of a limb, "limb_name", to "ac".
+
+varargs void set_ac(mixed type, string matarm, string qualarm)
+
+See also: query_ac(), set_overall_ac()
+Defined in /std/living/body.c
+
+Armour set_ac:
+
+varargs void set_ac(mixed type, string matarm, string qualarm)
+    This sets the armour class for each limb, based on the set_coverage of each limb
+
+mixed type
+    the type of armor or a #
+        if this is a # it will set all limbs to this ac factoring any in coverage
+        if not set it will attempt to use query_type()
+    see help atypes
+
+string matarm
+    the material for armor, if not set it will attempt to use query_material()
+    see help mattypes
+
+string qualarm
+    the quality of the armor, if not set will attempt to use query_quality()
+    see help mattypes
+
+Defined in /std/armour.c

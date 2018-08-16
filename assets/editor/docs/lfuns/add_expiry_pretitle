@@ -1,0 +1,27 @@
+varargs void add_expiry_pretitle(string str, int expire, mixed msg)
+
+This adds a new expirable pretitle for a user forever.
+
+    string pretitle - the pretitle adding to player, must be set
+    int expire - time when the pretitle expires in seconds, use time() + seconds
+    mixed msg - optional message to display
+                if empty string it will display no message
+                if function it will evaluate the function with the argumetns of pretitle, player
+                if a string is returned it will be displayed.
+
+examples to add a pretitle for 15 mins:
+player->add_expiry_pretitle("Adventurer", time()+900); 
+player->add_expiry_pretitle("Adventurer", time()+900, ""); //display no message
+player->add_expiry_pretitle("Adventurer", time()+900, "You are now earned Adventurer!");
+
+string display_pretitle_message(string pretitle, object player)
+{
+    if(player->query_class() == "rogue")
+        return "You rogishly gain " + pretitle + "!";
+    return "You gain " + pretitle + "!";
+}
+
+player->add_expiry_pretitle("Adventurer", time()+900, (: display_pretitle_message :));
+
+See also: remove_earned_pretitle, add_earned_pretitle, remove_expiry_pretitle
+Defined in /std/user/titles.c

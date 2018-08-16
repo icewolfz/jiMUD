@@ -2,6 +2,10 @@
 
 ## 0.4.63
 
+- **New:**
+  - Code editor:
+    - Add library functions to code complete
+
 ## 0.4.62 2018-08-13
 
 - **New:**

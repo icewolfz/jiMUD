@@ -1,0 +1,26 @@
+varargs void remove_earned_pretitle(string pretitle, mixed msg)
+
+This removes a pretitle for a user.
+
+    string pretitle - the pretitle to remove from player, must be set
+    mixed msg - optional message to display
+                if empty string it will display no message
+                if function it will evaluate the function with the argumetns of pretitle, player
+                if a string is returned it will be displayed.
+
+examples:
+player->remove_earned_pretitle("Adventurer");
+player->remove_earned_pretitle("Adventurer", ""); //display no message
+player->remove_earned_pretitle("Adventurer", "You are no longer an Adventurer!");
+
+string display_pretitle_message(string pretitle, object player)
+{
+    if(player->query_class() == "rogue")
+        return "You rogishly lost " + pretitle + "!";
+    return "You lost " + pretitle + "!";
+}
+
+player->remove_earned_pretitle("Adventurer", (: display_pretitle_message :));
+
+See also: add_earned_pretitle, add_expiry_pretitle, remove_expiry_pretitle
+Defined in /std/user/titles.c

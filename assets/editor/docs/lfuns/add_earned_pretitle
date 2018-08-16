@@ -1,0 +1,26 @@
+varargs void add_earned_pretitle(string pretitle, mixed msg)
+
+This adds a new pretitle for a user forever.
+
+    string pretitle - the pretitle adding to player, must be set
+    mixed msg - optional message to display
+                if empty string it will display no message
+                if function it will evaluate the function with the argumetns of pretitle, player
+                if a string is returned it will be displayed.
+
+examples:
+player->add_earned_pretitle("Adventurer");
+player->add_earned_pretitle("Adventurer", ""); //display no message
+player->add_earned_pretitle("Adventurer", "You are now earned Adventurer!");
+
+string display_pretitle_message(string pretitle, object player)
+{
+    if(player->query_class() == "rogue")
+        return "You rogishly gain " + pretitle + "!";
+    return "You gain " + pretitle + "!";
+}
+
+player->add_earned_pretitle("Adventurer", (: display_pretitle_message :));
+
+See also: remove_earned_pretitle, add_expiry_pretitle, remove_expiry_pretitle
+Defined in /std/user/titles.c

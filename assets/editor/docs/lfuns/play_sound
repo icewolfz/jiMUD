@@ -1,0 +1,23 @@
+varargs void play_sound(mixed sound, string msg, int vol, int repeats, int priority, string msgcls)
+
+This plays a sound effect for the player object.
+    sound -
+        string - file name, can include a subfolder to better group sounds
+                if yo use Off as the file name it will stop playing all current sounds
+        int - a predefined index that is set in USER_D->get_sound_file(sound);
+    msg - a message to be displayed after sound     
+    vol - the volume to play the sound at, 1 to 100, any # less then 0 is a volume of 0,
+          if 0 will be default volume of 100
+    repeats - how many times to repeat this sound, must be 1 or higher
+              -1 - loop sound until next sound replaces it
+    priority - the sounds priority, this determines how it will replace the currently playing sound
+                if priority is higher then current sound's priority it will stop current and begin playing this one
+                if lower or equal it will continue playing current sound
+                if no sounds is playing will play the new sound.    
+    msgcls - the message class for the message to display
+
+Example:
+    this_player()->play_sound("explode.m4a"); //this will play the explode.m4a if possible
+
+See also: play_music, music, sound
+Defined in /std/user/msp.c

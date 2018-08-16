@@ -1,0 +1,18 @@
+varargs mixed *query_auto_load(object target);
+
+This function is called in places that need to save objects for a player
+for storaging and restoring. The function returns a mixed array in the form:
+    ({ "path/file_name", ({([ key:value, ...]), ...}), (["function":data,... })
+   
+Where element 1 of the array is a string representing the file name of the
+item to be created. The second element mixed array with the first element as a 
+mapping of properties from query_properties that are restored and replace any 
+existing ones, with remaining elements in 2nd element as custom data
+the 3rd element is optional and is part of the function save system: 
+    add_saves, set_saves, query_saves, restore_saves, save_saves
+
+The save system allows you to add addtional functions to be saved as long 
+as they exist in a paired set_NAME/query_NAME
+
+SEE ALSO:
+set_auto_load
