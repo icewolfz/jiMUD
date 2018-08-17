@@ -6782,6 +6782,7 @@ export class VirtualEditor extends EditorBase {
     }
 
     private DrawRoom(ctx, room, c, h?) {
+        if (room) return;
         //var clr = "black";
         const x = room.x * 32;
         const y = room.y * 32;
@@ -8063,6 +8064,10 @@ export class VirtualEditor extends EditorBase {
             else
                 mLines[0] = `${width} ${height}`;
         }
+        else if (this.$mapSize.depth > 1)
+            mLines[0] = `${this.$mapSize.width} ${this.$mapSize.height} ${this.$mapSize.depth}`;
+        else
+            mLines[0] = `${this.$mapSize.width} ${this.$mapSize.height}`;
         while (mLines.length < maxLines)
             mLines.push('');
 
