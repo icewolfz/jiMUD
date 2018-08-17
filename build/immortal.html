@@ -3763,12 +3763,13 @@
         }
 
         function openWithEditor() {
-            var selected = localTable.rows({ selected: true }).data().pluck('path');
+            var selected = localTable.rows({ selected: true }).data();
             for (var d = 0, dl = selected.length; d < dl; d++) {
-                if (_remote[path.basename(selected[d])])
-                    ipcRenderer.send('open-editor', selected[d], options.remote + '/' + path.basename(selected[d]));
+                if (selected[d].size === -2) continue;
+                if (_remote[path.basename(selected[d].path)])
+                    ipcRenderer.send('open-editor', selected[d].path, options.remote + '/' + path.basename(selected[d].path));
                 else
-                    ipcRenderer.send('open-editor', selected[d]);
+                    ipcRenderer.send('open-editor', selected[d].path);
             }
         }
 

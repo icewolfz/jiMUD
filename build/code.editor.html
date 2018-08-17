@@ -147,11 +147,11 @@
                     doUpdate(32);
                 });
                 editor.onDidChangeModelDecorations(() => {
-                    if(manager.active && manager.active.editor)
+                    if (manager.active && manager.active.editor)
                         setViewState(manager.active.editor, editor);
                 });
                 editor.onDidScrollChange(() => {
-                    if(manager.active && manager.active.editor)
+                    if (manager.active && manager.active.editor)
                         setViewState(manager.active.editor, editor);
                 });
             }
@@ -7204,6 +7204,13 @@
                         openFiles(fileNames.map((l) => { return { file: l }; }), true, dock);
                     });
         }
+        else if (isDirSync(file)) {
+            dialog.showMessageBox(remote.getCurrentWindow(), {
+                type: 'info',
+                title: 'Can not open folders',
+                message: '\'' + file + '\' is a folder not a file.'
+            });
+        }
         else {
             _opening[file] = 1;
             if (!remoteFile || remoteFile.length === 0)
@@ -7222,6 +7229,14 @@
         if (files.length === 0) return;
         var panels = [];
         for (var f = 0, fl = files.length; f < fl; f++) {
+            if (isDirSync(files[f].file)) {
+                dialog.showMessageBox(remote.getCurrentWindow(), {
+                    type: 'info',
+                    title: 'Can not open folders',
+                    message: '\'' + files[f].file + '\' is a folder not a file.'
+                });
+                continue;
+            }
             if (!existsSync(files[f].file)) {
                 if (exists)
                     dialog.showMessageBox(remote.getCurrentWindow(), {

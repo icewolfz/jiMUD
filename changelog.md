@@ -8,6 +8,7 @@
 - **Fixed:**
   - Code editor:
     - Save scroll view state
+  - Immortal tools: do not attempt to open paths in code editor
 
 ## 0.4.62 2018-08-13
 
