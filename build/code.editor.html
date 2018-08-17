@@ -147,10 +147,12 @@
                     doUpdate(32);
                 });
                 editor.onDidChangeModelDecorations(() => {
-                    setViewState(manager.active.editor);
+                    if(manager.active && manager.active.editor)
+                        setViewState(manager.active.editor, editor);
                 });
                 editor.onDidScrollChange(() => {
-                    setViewState(manager.active.editor);
+                    if(manager.active && manager.active.editor)
+                        setViewState(manager.active.editor, editor);
                 });
             }
             else {
@@ -7289,10 +7291,10 @@
     }
 
     // eslint-disable-next-line no-unused-vars
-    function setViewState(editor) {
+    function setViewState(editor, codeEditor) {
         if (!editor || editor.new) return;
         var file = editor.file;
-        var state = editor.saveViewState();
+        var state = codeEditor.saveViewState();
         if (!options.viewState || !file || !state) return;
         let p = path.join(parseTemplate('{data}'), 'editor');
         if (!existsSync(p))
