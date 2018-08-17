@@ -8678,7 +8678,7 @@
                 _updating &= ~16;
             }
             if ((_updating & 32) === 32) {
-                if (manager.active.editor.selectionChanged)
+                if (manager.active && manager.active.editor && manager.active.editor.selectionChanged)
                     manager.active.editor.selectionChanged();
                 _updating &= ~32;
             }
