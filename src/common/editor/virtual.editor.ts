@@ -6782,7 +6782,7 @@ export class VirtualEditor extends EditorBase {
     }
 
     private DrawRoom(ctx, room, c, h?) {
-        if (room) return;
+        if (!room) return;
         //var clr = "black";
         const x = room.x * 32;
         const y = room.y * 32;
