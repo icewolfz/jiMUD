@@ -7308,6 +7308,7 @@ export class VirtualEditor extends EditorBase {
         r.exits = 0;
         r.terrain = '';
         r.item = -1;
+        r.items = [];
         r.ee = 0;
         r.state = 0;
         let exit;
@@ -7667,9 +7668,11 @@ export class VirtualEditor extends EditorBase {
                                     idx = idx2;
                                 }
                                 break;
-                            case 'add_items':
                             case 'set_items':
+                            case 'add_items':
                                 idx++;
+                                if (ident === 'set_items' || !r.items)
+                                    r.items = [];
                                 while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
                                     idx++;
                                 for (idx2 = idx; idx2 < len; idx2++) {
@@ -7684,7 +7687,6 @@ export class VirtualEditor extends EditorBase {
                                 }
                                 block = code.substring(idx, idx2 - 1).trim();
                                 const items = this.parseMapping(block);
-                                if (!r.items) r.items = [];
                                 let item;
                                 for (item in items) {
                                     if (item.length === 0 || !items.hasOwnProperty(item)) continue;
