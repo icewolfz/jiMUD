@@ -3619,14 +3619,19 @@ export class VirtualEditor extends EditorBase {
                         break;
                     case 'items':
                         this.pushUndo(undoAction.edit, undoType.item, { index: first.item, items: oldValue });
-                        if (!this.$items[first.item])
-                            this.$items[first.item] = {
-                                idx: first.item,
-                                items: '',
-                                description: '',
-                                tag: first.item,
-                                children : []
-                            };
+                        if (!this.$items[first.item]) {
+                            let cnt = first.item;
+                            while (cnt && !this.$items[cnt]) {
+                                this.$items[cnt] = {
+                                    idx: cnt,
+                                    items: '',
+                                    description: '',
+                                    tag: cnt,
+                                    children: []
+                                };
+                                cnt--;
+                            }
+                        }
                         else if (!this.$items[first.item].children)
                             this.$items[first.item].children = [];
                         this.$items[first.item].children = newValue;

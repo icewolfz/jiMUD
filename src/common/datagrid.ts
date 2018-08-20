@@ -1254,7 +1254,7 @@ export class DataGrid extends EventEmitter {
         //sort children
         const rl = rows.length;
         for (let r = 0; r < rl; r++) {
-            if (!rows[r].children)
+            if (!rows[r] || !rows[r].children)
                 this.$sortedChildren[r] = [];
             else
                 this.$sortedChildren[r] = [...rows[r].children.keys()].sort((a, b) => {
