@@ -5642,20 +5642,24 @@ export class VirtualEditor extends EditorBase {
     public watch(action: string, file: string, details?) {
         if (this.new)
             return;
+        const root = path.dirname(this.file);
+        //only update if file is in virtual area root
+        if (path.dirname(file) !== root)
+            return;
         const base = path.basename(file);
         if (file === this.file || this.$files[base]) {
             switch (action) {
                 case 'add':
                 case 'change':
                 case 'unlink':
-                    if (!this.$saving[path.basename(file)]) {
+                    if (!this.$saving[base]) {
                         if (details && details.mtimeMs < this.$opened[base])
                             return;
                         this.emit('reload', action, file);
                     }
                     else {
-                        this.$opened[path.basename(file)] = new Date().getTime();
-                        this.$saving[path.basename(file)] = false;
+                        this.$opened[base] = new Date().getTime();
+                        this.$saving[base] = false;
                     }
                     break;
             }

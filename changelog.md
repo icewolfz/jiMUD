@@ -12,6 +12,7 @@
       - Fix losing map dimensions after deleting or cutting room descriptions from the description editor
       - Fix item editing when item index is greater then items created
       - Fix parsing external rooms when changed and how set_items is parsed
+      - Watch only files in the virtual map root path
   - Immortal tools: do not attempt to open paths in code editor
 
 ## 0.4.62 2018-08-13
