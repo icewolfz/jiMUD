@@ -3619,6 +3619,16 @@ export class VirtualEditor extends EditorBase {
                         break;
                     case 'items':
                         this.pushUndo(undoAction.edit, undoType.item, { index: first.item, items: oldValue });
+                        if (!this.$items[first.item])
+                            this.$items[first.item] = {
+                                idx: first.item,
+                                items: '',
+                                description: '',
+                                tag: first.item,
+                                children : []
+                            };
+                        else if (!this.$items[first.item].children)
+                            this.$items[first.item].children = [];
                         this.$items[first.item].children = newValue;
                         this.$itemGrid.rows = this.$items;
                         this.updateRaw(this.$itemRaw, first.item * 2, [
