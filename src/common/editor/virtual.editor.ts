@@ -8967,7 +8967,7 @@ export class VirtualEditor extends EditorBase {
                 d += '\n     ]) );\n';
             }
             d += '   set_short("' + data.short + '");\n';
-            d += '   set_long("';
+            d += '   set_long(';
             if (data.long.length > 70) {
                 t = data.long.substr(0, 66);
                 let tl = t.length;
@@ -8981,7 +8981,8 @@ export class VirtualEditor extends EditorBase {
                 d += formatString(data.long.substr(t.length), 5, 73);
             }
             else
-                d += data.long + '");\n';
+                d += `"${data.long}"`;
+            d += ');\n';
             if (data.terrain.length > 0 && data.terrain !== '0')
                 d += '   set_terrain("' + data.terrain + '");\n';
             else if ((r.state & RoomStates.Water) === RoomStates.Water)
