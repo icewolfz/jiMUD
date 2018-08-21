@@ -8989,12 +8989,12 @@ export class VirtualEditor extends EditorBase {
                 d += '   set_terrain("water");\n';
 
             if (this.$items.length > 0 && r.item >= 0 && r.item < this.$items.length && this.$items[r.item] && this.$items[r.item].children.length > 0) {
-                d += '   set_items( ([\n       ';
+                d += '   set_items( ([\n';
                 const items = this.$items[r.item].children;
                 d += items.map(i => {
-                    return `"${i.item}" : "${i.description}"`;
+                    return `       "${i.item}" : "${i.description}"\n`;
                 });
-                d += '\n     ]) );\n';
+                d += '     ]) );\n';
             }
             if (data.smell.length > 0 && data.smell !== '0')
                 d += '   set_smell("' + data.smell + '");\n';
