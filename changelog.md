@@ -14,6 +14,7 @@
       - Fix parsing external rooms when changed and how set_items is parsed
       - Watch only files in the virtual map root path
       - Fix external set_long formatting
+      - Double clicking text in a data grid field editor did not always work and do native word text selection and would instead focus on first editor in row
   - Immortal tools: do not attempt to open paths in code editor
 
 ## 0.4.62 2018-08-13

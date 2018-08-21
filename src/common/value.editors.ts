@@ -185,6 +185,10 @@ export class TextValueEditor extends ValueEditor {
             e.stopPropagation();
             e.cancelBubble = true;
         });
+        this.$editor.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
+        });
         this.$editor.addEventListener('mouseup', (e) => {
             e.stopPropagation();
             e.cancelBubble = true;
@@ -413,6 +417,10 @@ export class TextValueEditor extends ValueEditor {
                 e2.stopPropagation();
                 e2.cancelBubble = true;
             });
+            this.$dropdown.addEventListener('dblclick', (e2) => {
+                e2.stopPropagation();
+                e2.cancelBubble = true;
+            });
             this.$dropdown.addEventListener('mousedown', (e2) => {
                 e2.stopPropagation();
                 e2.cancelBubble = true;
@@ -599,6 +607,10 @@ export class NumberValueEditor extends ValueEditor {
             e.stopPropagation();
             e.cancelBubble = true;
         });
+        this.$el.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
+        });
         this.$el.addEventListener('mousedown', (e) => {
             e.stopPropagation();
             e.cancelBubble = true;
@@ -676,7 +688,7 @@ export class FlagValueEditor extends ValueEditor {
                 return false;
             }
         });
-        this.$editor.addEventListener('click', (e) => {
+        this.$editor.addEventListener('db;click', (e) => {
             e.stopPropagation();
             e.cancelBubble = true;
         });
@@ -807,6 +819,10 @@ export class FlagValueEditor extends ValueEditor {
             else
                 this.$dropdown.style.height = '154px';
             this.$dropdown.addEventListener('click', (e2) => {
+                e2.stopPropagation();
+                e2.cancelBubble = true;
+            });
+            this.$dropdown.addEventListener('dblclick', (e2) => {
                 e2.stopPropagation();
                 e2.cancelBubble = true;
             });
@@ -941,6 +957,10 @@ export class DropDownEditValueEditor extends ValueEditor {
             e.stopPropagation();
             e.cancelBubble = true;
         });
+        this.$editor.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            e.cancelBubble = true;
+        });
         this.$editor.addEventListener('keyup', (e) => {
             if (e.keyCode === 13) {
                 setTimeout(() => this.control.clearEditor(e, this));
@@ -1065,6 +1085,10 @@ export class DropDownEditValueEditor extends ValueEditor {
             else
                 this.$dropdown.style.height = '160px';
             this.$dropdown.addEventListener('click', (e2) => {
+                e2.stopPropagation();
+                e2.cancelBubble = true;
+            });
+            this.$dropdown.addEventListener('dblclick', (e2) => {
                 e2.stopPropagation();
                 e2.cancelBubble = true;
             });
