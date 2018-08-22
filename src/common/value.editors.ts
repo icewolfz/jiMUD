@@ -1256,15 +1256,21 @@ export class CollectionValueEditor extends ValueEditor {
             this.$dialog.style.width = '500px';
             this.$dialog.style.height = '300px';
             this.$dialog.style.padding = '5px';
-            this.$dialog.addEventListener('close', () => {
-                this.control.emit('dialog-close');
+            this.$dialog.cleanUp = () => {
+                this.options.columns.forEach(c => {
+                    if (c.editor && c.editor.options && c.editor.options.container === this.$dialog)
+                        delete c.editor.options.container;
+                });
                 this.$dialog.remove();
                 this.focus();
+            };
+            this.$dialog.addEventListener('close', () => {
+                this.control.emit('dialog-close');
+                this.$dialog.cleanUp();
             });
             this.$dialog.addEventListener('cancel', () => {
                 this.control.emit('dialog-cancel');
-                this.$dialog.remove();
-                this.focus();
+                this.$dialog.cleanUp();
             });
             let header = document.createElement('div');
             header.classList.add('dialog-header');
@@ -1275,8 +1281,7 @@ export class CollectionValueEditor extends ValueEditor {
             button.dataset.dismiss = 'modal';
             button.addEventListener('click', () => {
                 this.$dialog.close();
-                this.$dialog.remove();
-                this.focus();
+                this.$dialog.cleanUp();
             });
             button.innerHTML = '&times;';
             header.appendChild(button);
@@ -1374,8 +1379,7 @@ export class CollectionValueEditor extends ValueEditor {
             button.classList.add('btn', 'btn-default');
             button.addEventListener('click', () => {
                 this.$dialog.close();
-                this.$dialog.remove();
-                this.focus();
+                this.$dialog.cleanUp();
             });
             button.textContent = 'Cancel';
             header.appendChild(button);
@@ -1386,8 +1390,7 @@ export class CollectionValueEditor extends ValueEditor {
             button.addEventListener('click', () => {
                 this.value = dg.rows;
                 this.$dialog.close();
-                this.$dialog.remove();
-                this.focus();
+                this.$dialog.cleanUp();
             });
             button.textContent = 'Ok';
             header.appendChild(button);

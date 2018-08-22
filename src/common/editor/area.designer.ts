@@ -1115,8 +1115,10 @@ export class AreaDesigner extends EditorBase {
                 const old = this.$selectedRooms.slice();
                 let ol = old.length;
                 this.$selectedRooms.length = 0;
-                while (ol--)
+                while (ol--) {
+                    if (!old[ol]) continue;
                     this.$selectedRooms.push(this.getRoom(old[ol].x, old[ol].y, this.$depth));
+                }
                 this.ChangeSelection();
                 this.setFocusedRoom(null);
             }
@@ -3193,7 +3195,10 @@ export class AreaDesigner extends EditorBase {
                                     type: EditorType.custom,
                                     editor: FileBrowseValueEditor,
                                     options: {
-                                        placeholder: 'Input file path to create external exit'
+                                        placeholder: 'Input file path to create external exit',
+                                        browse: e => {
+                                            this.emit('browse-file', e);
+                                        }
                                     },
                                     show: (prop, value) => {
                                         return value;
@@ -9314,8 +9319,10 @@ export class AreaDesigner extends EditorBase {
         if (this.$focused === value) return;
         this.$focused = value;
         let sl = this.$selectedRooms.length;
-        while (sl--)
+        while (sl--) {
+            if (!this.$selectedRooms[sl]) continue;
             this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, this.$selectedRooms[sl].at(this.$mouse.rx, this.$mouse.ry));
+        }
         if (this.$mouse.rx >= 0 && this.$mouse.ry > 0) {
             const r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
             if (r) this.DrawRoom(this.$mapContext, r, true, true);
@@ -10143,11 +10150,10 @@ export class AreaDesigner extends EditorBase {
             this.$depthToolbar.value = '' + this.selectedFocusedRoom.z;
         const objects = [];
         let type;
-        if (rooms && rooms.length !== 0) {
+        if (rooms && rooms.length !== 0 && rooms[0]) {
             type = rooms[0].type || 'base';
             let rl = rooms.length;
             const ri = [];
-            const re = {};
             while (rl--) {
                 const o = rooms[rl].clone();
                 o.exitsDetails = Object.values(o.exitsDetails);
@@ -10396,6 +10402,26 @@ export class AreaDesigner extends EditorBase {
         }
         else
             this.doUpdate(UpdateType.drawMap);
+        if (this.$area.size.depth < 2) {
+            this.$depth = 0;
+            this.$roomEditor.setPropertyOptions({
+                property: 'z',
+                group: 'Location',
+                readonly: true,
+                visible: false
+            });
+        }
+        else {
+            this.$depthToolbar.value = '' + this.$depth;
+            this.$depthToolbar.max = '' + (this.$area.size.depth - 1);
+            this.$depthToolbar.min = '' + 0;
+            this.$roomEditor.setPropertyOptions({
+                property: 'z',
+                group: 'Location',
+                readonly: true,
+                visible: true
+            });
+        }
         this.loadTypes();
         this.updateBaseRooms();
         this.updateBaseMonsters();

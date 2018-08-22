@@ -23,6 +23,9 @@
     - Area designer:
       - Re-coded drawing system to use sprites as larger maps where slow drawing
       - Fix up, down, enter, and out exit colors when hidden
+      - Fix browsing for external exits
+      - Fix depth toolbar min/max
+      - Fix collection dialog editor and drop down sub editors
   - Immortal tools: do not attempt to open paths in code editor
 
 ## 0.4.62 2018-08-13

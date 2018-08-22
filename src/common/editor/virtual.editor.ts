@@ -9339,6 +9339,16 @@ export class FileOpenValueEditor extends ValueEditor {
                 return false;
             }
         });
+
+        this.$editor.addEventListener('click', (e2) => {
+            e2.stopPropagation();
+            e2.cancelBubble = true;
+        });
+
+        this.$editor.addEventListener('dblclick', (e2) => {
+            e2.stopPropagation();
+            e2.cancelBubble = true;
+        });
         this.$el.appendChild(this.$editor);
 
         const vl = document.createElement('button');
@@ -9434,6 +9444,16 @@ export class FileBrowseValueEditor extends ValueEditor {
                 return false;
             }
         });
+
+        this.$editor.addEventListener('click', (e2) => {
+            e2.stopPropagation();
+            e2.cancelBubble = true;
+        });
+
+        this.$editor.addEventListener('dblclick', (e2) => {
+            e2.stopPropagation();
+            e2.cancelBubble = true;
+        });
         this.$el.appendChild(this.$editor);
 
         const vl = document.createElement('button');
@@ -9443,6 +9463,8 @@ export class FileBrowseValueEditor extends ValueEditor {
         vl.addEventListener('click', (e) => {
             const arg = { file: this.$editor.value, property: this.property, editor: this };
             this.control.emit('browse-file', arg);
+            if (this.options && this.options.browse)
+                this.options.browse(arg);
             if (arg.file !== this.$editor.value)
                 this.value = arg.file;
         });
