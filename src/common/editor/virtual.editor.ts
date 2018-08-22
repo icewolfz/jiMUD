@@ -6814,7 +6814,7 @@ export class VirtualEditor extends EditorBase {
         let f = false;
         if (!this.$drawCache)
             this.$drawCache = {};
-        const key = room.terrain + ',' + ee + ',' + ex;
+        const key = indoors + ',' + room.terrain + ',' + ee + ',' + (room.exits | room.climbs);
         //ctx.save();
         if (c) {
             ctx.fillStyle = 'white';

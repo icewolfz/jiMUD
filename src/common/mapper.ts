@@ -537,6 +537,7 @@ export class Mapper extends EventEmitter {
             }, (err, rows) => {
                 if (err) this.emit('error', err);
                 context.save();
+                //const s = new Date().getTime();
                 if (ex) {
                     context.fillStyle = '#eae4d6';
                     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -573,6 +574,7 @@ export class Mapper extends EventEmitter {
                         this.DrawRoom(context, (room.X - x) * 32 + ox, (room.Y - y) * 32 + oy, room, false);
                     }
                 }
+                //console.log('Draw time: ' + (new Date().getTime() - s));
                 context.restore();
                 this.DrawLegend(context, 1, -4, 0);
                 if (callback) callback();
@@ -591,6 +593,7 @@ export class Mapper extends EventEmitter {
             }, (err, rows) => {
                 if (err) this.emit('error', err);
                 context.save();
+                //const s = new Date().getTime();
                 if (ex) {
                     context.fillStyle = '#eae4d6';
                     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -627,6 +630,7 @@ export class Mapper extends EventEmitter {
                         this.DrawRoom(context, (room.X - x) * 32 + ox, (room.Y - y) * 32 + oy, room, ex);
                     }
                 }
+                //console.log('Draw time: ' + (new Date().getTime() - s));
                 context.restore();
                 this.DrawLegend(context, 1, -4, 0);
                 if (callback) callback();
