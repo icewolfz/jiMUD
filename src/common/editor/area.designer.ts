@@ -1423,7 +1423,7 @@ export class AreaDesigner extends EditorBase {
             return false;
         });
         this.$mapContainer.appendChild(this.$map);
-        this.$mapContext = this.$map.getContext('2d');
+        this.$mapContext = this.$map.getContext('2d', { alpha: false });
 
         this.$mapContext.mozImageSmoothingEnabled = false;
         //this.$mapContext.imageSmoothingQuality = 'Medium';
