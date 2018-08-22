@@ -5,6 +5,9 @@
 - **New:**
   - Code editor:
     - Add library functions to code complete
+- **Changed:**
+  - Code editor:
+    - Area designer: changed hidden exit color to orange to make it easier to see on white background
 - **Fixed:**
   - Code editor:
     - Save scroll view state
@@ -15,6 +18,8 @@
       - Watch only files in the virtual map root path
       - Fix external set_long formatting
       - Double clicking text in a data grid field editor did not always work and do native word text selection and would instead focus on first editor in row
+    - Area designer:
+      - Re-coded drawing system to use sprites as larger maps where slow drawing
   - Immortal tools: do not attempt to open paths in code editor
 
 ## 0.4.62 2018-08-13

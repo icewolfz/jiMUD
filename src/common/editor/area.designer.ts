@@ -19,6 +19,13 @@ import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit } 
 
 import RGBColor = require('rgbcolor');
 
+declare global {
+    interface Window {
+        $roomImg2: HTMLImageElement;
+        $roomImg2Loaded: boolean;
+    }
+}
+
 interface AreaDesignerOptions extends EditorOptions {
     width?: number;
     height?: number;
@@ -1085,6 +1092,13 @@ export class AreaDesigner extends EditorBase {
     }
 
     public createControl() {
+        if (!window.$roomImg2) {
+            window.$roomImg2 = new Image();
+            window.$roomImg2.src = './../assets/editor/rooms2.png';
+            window.$roomImg2.addEventListener('load', () => {
+                window.$roomImg2Loaded = true;
+            });
+        }
         //#region depth
         this.$depth = 0;
         this.$depthToolbar = document.createElement('input');
@@ -9521,46 +9535,170 @@ export class AreaDesigner extends EditorBase {
         }
         ctx.closePath();
         ctx.beginPath();
-        if (room.exitsDetails.north)
-            this.drawLine(ctx, x + 16, y, x + 16, y + 8, room.exitsDetails.north.dest.length ? 255 : 0, room.exitsDetails.north.hidden ? 255 : 0);
-        if (room.exitsDetails.northwest) {
-            if (!indoors)
-                this.drawLine(ctx, x, y, x + 10, y + 10, room.exitsDetails.northwest.dest.length ? 255 : 0, room.exitsDetails.northwest.hidden ? 255 : 0);
+        let ox = 0;
+        let ow = 8;
+        let oh = 0;
+        if (!indoors) {
+            ow = 10;
+            oh = -2;
+        }
+        if (room.exitsDetails.north) {
+            if (room.exitsDetails.north.dest.length && room.exitsDetails.north.hidden)
+                ox = 48;
+            else if (room.exitsDetails.north.dest.length)
+                ox = 16;
+            else if (room.exitsDetails.north.hidden)
+                ox = 32;
             else
-                this.drawLine(ctx, x, y, x + 8, y + 8, room.exitsDetails.northwest.dest.length ? 255 : 0, room.exitsDetails.northwest.hidden ? 255 : 0);
+                ox = 0;
+            ctx.drawImage(window.$roomImg2, 111 + ox, 0,
+                1,
+                8,
+                x + 16,
+                y,
+                1,
+                8
+            );
+        }
+        if (room.exitsDetails.northwest) {
+            if (room.exitsDetails.northwest.dest.length && room.exitsDetails.northwest.hidden)
+                ox = 48;
+            else if (room.exitsDetails.northwest.dest.length)
+                ox = 16;
+            else if (room.exitsDetails.northwest.hidden)
+                ox = 32;
+            else
+                ox = 0;
+            ctx.drawImage(window.$roomImg2, 96 + ox, 0,
+                ow,
+                ow,
+                x,
+                y,
+                ow,
+                ow
+            );
         }
         if (room.exitsDetails.northeast) {
-            if (!indoors)
-                this.drawLine(ctx, x + 32, y, x + 22, y + 10, room.exitsDetails.northeast.dest.length ? 255 : 0, room.exitsDetails.northeast.hidden ? 255 : 0);
+            if (room.exitsDetails.northeast.dest.length && room.exitsDetails.northeast.hidden)
+                ox = 48;
+            else if (room.exitsDetails.northeast.dest.length)
+                ox = 16;
+            else if (room.exitsDetails.northeast.hidden)
+                ox = 32;
             else
-                this.drawLine(ctx, x + 32, y, x + 24, y + 8, room.exitsDetails.northeast.dest.length ? 255 : 0, room.exitsDetails.northeast.hidden ? 255 : 0);
+                ox = 0;
+            ctx.drawImage(window.$roomImg2, 96 + ox, 24 + oh,
+                ow,
+                ow,
+                x + 25 + oh,
+                y,
+                ow,
+                ow
+            );
         }
-        if (room.exitsDetails.east)
-            this.drawLine(ctx, x + 24, y + 16, x + 32, y + 16, room.exitsDetails.east.dest.length ? 255 : 0, room.exitsDetails.east.hidden ? 255 : 0);
-
-        if (room.exitsDetails.west)
-            this.drawLine(ctx, x, y + 16, x + 8, y + 16, room.exitsDetails.west.dest.length ? 255 : 0, room.exitsDetails.west.hidden ? 255 : 0);
-
-        if (room.exitsDetails.south)
-            this.drawLine(ctx, x + 16, y + 24, x + 16, y + 32, room.exitsDetails.south.dest.length ? 255 : 0, room.exitsDetails.south.hidden ? 255 : 0);
-
-        if (room.exitsDetails.southeast) {
-            if (!indoors)
-                this.drawLine(ctx, x + 32, y + 32, x + 22, y + 22, room.exitsDetails.southeast.dest.length ? 255 : 0, room.exitsDetails.southeast.hidden ? 255 : 0);
+        if (room.exitsDetails.east) {
+            if (room.exitsDetails.east.dest.length && room.exitsDetails.east.hidden)
+                ox = 48;
+            else if (room.exitsDetails.east.dest.length)
+                ox = 16;
+            else if (room.exitsDetails.east.hidden)
+                ox = 32;
             else
-                this.drawLine(ctx, x + 32, y + 32, x + 24, y + 24, room.exitsDetails.southeast.dest.length ? 255 : 0, room.exitsDetails.southeast.hidden ? 255 : 0);
+                ox = 0;
+            ctx.drawImage(window.$roomImg2, 96 + ox, 15,
+                8,
+                1,
+                x + 25,
+                y + 16,
+                8,
+                1
+            );
+        }
+        if (room.exitsDetails.west) {
+            if (room.exitsDetails.west.dest.length && room.exitsDetails.west.hidden)
+                ox = 48;
+            else if (room.exitsDetails.west.dest.length)
+                ox = 16;
+            else if (room.exitsDetails.west.hidden)
+                ox = 32;
+            else
+                ox = 0;
+            ctx.drawImage(window.$roomImg2, 96 + ox, 15,
+                8,
+                1,
+                x,
+                y + 16,
+                8,
+                1
+            );
+        }
+        if (room.exitsDetails.south) {
+            if (room.exitsDetails.south.dest.length && room.exitsDetails.south.hidden)
+                ox = 48;
+            else if (room.exitsDetails.south.dest.length)
+                ox = 16;
+            else if (room.exitsDetails.south.hidden)
+                ox = 32;
+            else
+                ox = 0;
+            ctx.drawImage(window.$roomImg2, 111 + ox, 0,
+                1,
+                8,
+                x + 16,
+                y + 25,
+                1,
+                8
+            );
+        }
+        if (room.exitsDetails.southeast) {
+            if (room.exitsDetails.southeast.dest.length && room.exitsDetails.southeast.hidden)
+                ox = 48;
+            else if (room.exitsDetails.southeast.dest.length)
+                ox = 16;
+            else if (room.exitsDetails.southeast.hidden)
+                ox = 32;
+            else
+                ox = 0;
+            ctx.drawImage(window.$roomImg2, 96 + ox, 0,
+                ow,
+                ow,
+                x + 25 + oh,
+                y + 25 + oh,
+                ow,
+                ow
+            );
         }
         if (room.exitsDetails.southwest) {
-            if (!indoors)
-                this.drawLine(ctx, x, y + 32, x + 10, y + 22, room.exitsDetails.southwest.dest.length ? 255 : 0, room.exitsDetails.southwest.hidden ? 255 : 0);
+            if (room.exitsDetails.southwest.dest.length && room.exitsDetails.southwest.hidden)
+                ox = 48;
+            else if (room.exitsDetails.southwest.dest.length)
+                ox = 16;
+            else if (room.exitsDetails.southwest.hidden)
+                ox = 32;
             else
-                this.drawLine(ctx, x, y + 32, x + 8, y + 24, room.exitsDetails.southwest.dest.length ? 255 : 0, room.exitsDetails.southwest.hidden ? 255 : 0);
+                ox = 0;
+            ctx.drawImage(window.$roomImg2, 96 + ox, 24 + oh,
+                ow,
+                ow,
+                x,
+                y + 25 + oh,
+                ow,
+                ow
+            );
         }
+
         ctx.closePath();
 
         ctx.strokeStyle = 'black';
         if (room.exitsDetails.up) {
-            ctx.fillStyle = room.exitsDetails.up.dest.length ? 'red' : 'black';
+            if (room.exitsDetails.up.dest.length && room.exitsDetails.up.hidden)
+                ctx.fillStyle = '#FFD800';
+            else if (room.exitsDetails.up.dest.length)
+                ctx.fillStyle = 'red';
+            else if (room.exitsDetails.up.hidden)
+                ctx.fillStyle = '#00FF00';
+            else
+                ctx.fillStyle = 'black';
             ctx.beginPath();
             ctx.moveTo(x + 1, y + 11);
             ctx.lineTo(x + 7, y + 11);
@@ -9569,7 +9707,14 @@ export class AreaDesigner extends EditorBase {
             ctx.fill();
         }
         if (room.exitsDetails.down) {
-            ctx.fillStyle = room.exitsDetails.down.dest.length ? 'red' : 'black';
+            if (room.exitsDetails.down.dest.length && room.exitsDetails.down.hidden)
+                ctx.fillStyle = '#FFD800';
+            else if (room.exitsDetails.down.dest.length)
+                ctx.fillStyle = 'red';
+            else if (room.exitsDetails.down.hidden)
+                ctx.fillStyle = '#00FF00';
+            else
+                ctx.fillStyle = 'black';
             ctx.beginPath();
             ctx.moveTo(x + 1, y + 21);
             ctx.lineTo(x + 7, y + 21);
@@ -9578,7 +9723,14 @@ export class AreaDesigner extends EditorBase {
             ctx.fill();
         }
         if (room.exitsDetails.out) {
-            ctx.fillStyle = room.exitsDetails.out.dest.length ? 'red' : 'black';
+            if (room.exitsDetails.out.dest.length && room.exitsDetails.out.hidden)
+                ctx.fillStyle = '#FFD800';
+            else if (room.exitsDetails.out.dest.length)
+                ctx.fillStyle = 'red';
+            else if (room.exitsDetails.out.hidden)
+                ctx.fillStyle = '#00FF00';
+            else
+                ctx.fillStyle = 'black';
             ctx.beginPath();
             ctx.moveTo(x + 26, y + 8);
             ctx.lineTo(x + 29, y + 11);
@@ -9587,7 +9739,14 @@ export class AreaDesigner extends EditorBase {
             ctx.fill();
         }
         if (room.exitsDetails.enter) {
-            ctx.fillStyle = room.exitsDetails.enter.dest.length ? 'red' : 'black';
+            if (room.exitsDetails.enter.dest.length && room.exitsDetails.enter.hidden)
+                ctx.fillStyle = '#FFD800';
+            else if (room.exitsDetails.enter.dest.length)
+                ctx.fillStyle = 'red';
+            else if (room.exitsDetails.enter.hidden)
+                ctx.fillStyle = '#00FF00';
+            else
+                ctx.fillStyle = 'black';
             ctx.beginPath();
             ctx.moveTo(x + 29, y + 19);
             ctx.lineTo(x + 26, y + 22);
@@ -9672,6 +9831,10 @@ export class AreaDesigner extends EditorBase {
         this.$mapContext.lineWidth = 0.6;
         if (!this.$area.rooms) {
             this.$mapContext.restore();
+            return;
+        }
+        if (!window.$roomImg2Loaded) {
+            this.doUpdate(UpdateType.drawMap);
             return;
         }
         yl = this.$area.size.height;
@@ -9773,6 +9936,10 @@ export class AreaDesigner extends EditorBase {
         this.$mapContext.lineWidth = 0.6;
         if (!this.$area.rooms) {
             this.$mapContext.restore();
+            return;
+        }
+        if (!window.$roomImg2Loaded) {
+            setTimeout(() => { this.drawRegion(sX, sY, sWidth, sHeight); }, 10);
             return;
         }
         this.$mapContext.strokeStyle = 'black';
