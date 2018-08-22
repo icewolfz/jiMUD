@@ -7851,25 +7851,25 @@ export class VirtualEditor extends EditorBase {
                 (<any>room).light = +value;
                 break;
             case 'indoors':
-                if (value.trim() === '1')
+                if (value.trim() !== '0')
                     room.state |= RoomStates.Indoors;
                 else
                     room.state &= ~RoomStates.Indoors;
                 break;
             case 'no attack':
-                if (value.trim() === '1')
+                if (value.trim() !== '0')
                     room.state |= RoomStates.NoAttack;
                 else
                     room.state &= ~RoomStates.NoAttack;
                 break;
             case 'no magic':
-                if (value.trim() === '1')
+                if (value.trim() !== '0')
                     room.state |= RoomStates.NoMagic;
                 else
                     room.state &= ~RoomStates.NoMagic;
                 break;
             case 'council':
-                if (value.trim() === '1')
+                if (value.trim() !== '0')
                     room.state |= RoomStates.Council;
                 else
                     room.state &= ~RoomStates.Council;
