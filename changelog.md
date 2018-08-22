@@ -5,10 +5,12 @@
 - **New:**
   - Code editor:
     - Add library functions to code complete
+    - Area designer:
+      - Added hidden exit display to room editor, displays a list of hidden exits in a read only field
 - **Changed:**
   - Code editor:
     - Area designer: changed hidden exit color to orange to make it easier to see on white background
-    - Virtual area editor: chnged drawing system to use the same as area designer to offer indoor/outdoor room styles
+    - Virtual area editor: changed drawing system to use the same as area designer to offer indoor/outdoor room styles
 - **Fixed:**
   - Code editor:
     - Save scroll view state

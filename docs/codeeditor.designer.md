@@ -72,6 +72,7 @@ The basic properties used to describe the room
   - `Climb difficulty` if climb how hard is it
 - `External` A simple read only field to display if current selection has external exits
 - `Climbs` A simple read only field to display if current selection has climbs
+- `Hidden` A simple read only field to display if current selection has hidden exits
 
 ### Location
 

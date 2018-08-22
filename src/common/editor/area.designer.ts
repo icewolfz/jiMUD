@@ -215,6 +215,7 @@ export class Room {
     public external: RoomExit = 0;
     public climbs: RoomExit = 0;
     public exits: RoomExit = 0;
+    public hidden: RoomExit = 0;
 
     //area designer
     public objects: ObjectInfo[] = [];
@@ -326,6 +327,7 @@ export class Room {
             this.terrain = '';
             this.flags = RoomFlags.None;
             this.climbs = 0;
+            this.hidden = 0;
             this.short = '';
             this.long = '';
             this.light = 0;
@@ -385,14 +387,27 @@ export class Room {
 
     public removeExit(exit) {
         this.exits &= ~exit;
-        if (this.exitsDetails[RoomExit[exit].toLowerCase()])
+        if (this.exitsDetails[RoomExit[exit].toLowerCase()]) {
+            if (this.exitsDetails[RoomExit[exit].toLowerCase()].climb)
+                this.climbs &= ~exit;
+            if (this.exitsDetails[RoomExit[exit].toLowerCase()].dest.length > 0)
+                this.external &= ~exit;
+            if (this.exitsDetails[RoomExit[exit].toLowerCase()].hidden)
+                this.hidden &= ~exit;
             delete this.exitsDetails[RoomExit[exit].toLowerCase()];
+        }
     }
 
     public addExit(exit, details?) {
         this.exits |= exit;
         if (!this.exitsDetails[RoomExit[exit].toLowerCase()])
             this.exitsDetails[RoomExit[exit].toLowerCase()] = details || new Exit(RoomExit[exit].toLowerCase());
+        if (this.exitsDetails[RoomExit[exit].toLowerCase()].climb)
+            this.climbs |= exit;
+        if (this.exitsDetails[RoomExit[exit].toLowerCase()].dest.length > 0)
+            this.external |= exit;
+        if (this.exitsDetails[RoomExit[exit].toLowerCase()].hidden)
+            this.hidden |= exit;
     }
 }
 
@@ -692,7 +707,7 @@ class Size {
 }
 
 class Area {
-    public version = 1;
+    public version = 2;
     public name: string;
     public rooms: Room[][][];
     public monsters;
@@ -782,6 +797,15 @@ class Area {
                         for (prop in data.rooms[z][y][x]) {
                             if (!data.rooms[z][y][x].hasOwnProperty(prop)) continue;
                             area.rooms[z][y][x][prop] = data.rooms[z][y][x][prop];
+                        }
+                        if (data.version === 1)
+                        {
+                            let hidden = 0;
+                            Object.keys(area.rooms[z][y][x].exitsDetails).forEach(e => {
+                                if (area.rooms[z][y][x].exitsDetails[e].hidden)
+                                    hidden |= RoomExits[e];
+                            });
+                            area.rooms[z][y][x].hidden = hidden;
                         }
                     }
                 }
@@ -3023,17 +3047,21 @@ export class AreaDesigner extends EditorBase {
                 this.startUndoGroup();
                 const oldEE = [];
                 const oldClimb = [];
+                const oldHidden = [];
                 const oldExits = [];
                 const ed = {};
                 let exits = 0;
                 let ee = 0;
                 let climbs = 0;
+                let hidden = 0;
 
                 sl = newValue.length;
                 while (sl--) {
                     ed[newValue[sl].exit] = newValue[sl];
                     if (newValue[sl].climb)
                         climbs |= RoomExits[newValue[sl].exit];
+                    if (newValue[sl].hidden)
+                        hidden |= RoomExits[newValue[sl].exit];
                     if (newValue[sl].dest.length > 0)
                         ee |= RoomExits[newValue[sl].exit];
                     else
@@ -3047,11 +3075,13 @@ export class AreaDesigner extends EditorBase {
                     oldValues[sl] = old['exitsDetails'];
                     oldEE[sl] = old['external'];
                     oldClimb[sl] = old['climbs'];
+                    oldHidden[sl] = old['hidden'];
                     oldExits[sl] = old['exits'];
 
                     curr['exitsDetails'] = ed;
                     curr['external'] = ee;
                     curr['climbs'] = climbs;
+                    curr['hidden'] = hidden;
                     curr['exits'] = exits;
 
                     this.RoomChanged(curr, old, true);
@@ -3059,6 +3089,7 @@ export class AreaDesigner extends EditorBase {
                     old['exitsDetails'] = ed;
                     old['external'] = ee;
                     old['climbs'] = climbs;
+                    old['hidden'] = hidden;
                     old['exits'] = exits;
                     this.DrawRoom(this.$mapContext, old, true, old.at(mx, my));
                 }
@@ -3067,6 +3098,7 @@ export class AreaDesigner extends EditorBase {
                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: oldExits, rooms: rooms });
                 this.pushUndo(undoAction.edit, undoType.room, { property: 'external', values: oldEE, rooms: rooms });
                 this.pushUndo(undoAction.edit, undoType.room, { property: 'climbs', values: oldClimb, rooms: rooms });
+                this.pushUndo(undoAction.edit, undoType.room, { property: 'hidden', values: oldHidden, rooms: rooms });
                 this.stopUndoGroup();
 
             }
@@ -3319,11 +3351,18 @@ export class AreaDesigner extends EditorBase {
                 sort: 3
             },
             {
+                property: 'hidden',
+                group: 'Exits',
+                formatter: this.formatExits,
+                readonly: true,
+                sort: 4
+            },
+            {
                 property: 'exits',
                 group: 'Exits',
                 formatter: this.formatExits,
                 visible: false,
-                sort: 4
+                sort: 5
             },
             {
                 property: 'items',
