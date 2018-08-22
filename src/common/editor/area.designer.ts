@@ -1426,12 +1426,10 @@ export class AreaDesigner extends EditorBase {
         });
         this.$mapContainer.appendChild(this.$map);
         this.$mapContext = this.$map.getContext('2d', { alpha: false });
-
         this.$mapContext.mozImageSmoothingEnabled = false;
-        //this.$mapContext.imageSmoothingQuality = 'Medium';
         this.$mapContext.webkitImageSmoothingEnabled = false;
-        //this.$mapContext.msImageSmoothingEnabled = false;
         this.$mapContext.imageSmoothingEnabled = false;
+        this.$mapContext.lineWidth = 0.6;
 
         this.$mapParent.appendChild(this.$mapContainer);
 
@@ -9413,7 +9411,7 @@ export class AreaDesigner extends EditorBase {
         let f = false;
 
         //if(ex === RoomExit.None) clr = "#E6E6E6";
-        ctx.save();
+        //ctx.save();
         if (c) {
             ctx.fillStyle = 'white';
             ctx.fillRect(x + 0.5, y + 0.5, 32, 32);
@@ -9783,7 +9781,7 @@ export class AreaDesigner extends EditorBase {
             ctx.fillRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
             ctx.strokeRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
         }
-        ctx.restore();
+        //ctx.restore();
     }
 
     public DrawDoor(ctx, x, y, w, h, exit) {
@@ -9835,7 +9833,6 @@ export class AreaDesigner extends EditorBase {
         this.$mapContext.save();
         this.$mapContext.fillStyle = 'white';
         this.$mapContext.fillRect(0, 0, this.$area.size.right, this.$area.size.bottom);
-        this.$mapContext.lineWidth = 0.6;
         if (!this.$area.rooms) {
             this.$mapContext.restore();
             return;
@@ -9940,7 +9937,7 @@ export class AreaDesigner extends EditorBase {
         this.$mapContext.save();
         this.$mapContext.fillStyle = 'white';
         this.$mapContext.fillRect(x * 32, y * 32, (width - x) * 32, (height - y) * 32);
-        this.$mapContext.lineWidth = 0.6;
+
         if (!this.$area.rooms) {
             this.$mapContext.restore();
             return;

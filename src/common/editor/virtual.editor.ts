@@ -278,7 +278,6 @@ export class VirtualEditor extends EditorBase {
     private $mouseSelect;
 
     private $colorCache;
-    private $measure;
 
     private $depth;
     private $rcount;
@@ -1982,7 +1981,10 @@ export class VirtualEditor extends EditorBase {
         this.$mapContainer.appendChild(this.$map);
         this.$mapContext = this.$map.getContext('2d', { alpha: false });
         this.$mapContext.mozImageSmoothingEnabled = false;
+        this.$mapContext.webkitImageSmoothingEnabled = false;
         this.$mapContext.imageSmoothingEnabled = false;
+        this.$mapContext.lineWidth = 0.6;
+
         this.$mapParent.appendChild(this.$mapContainer);
 
         this.$roomPreview = {};
@@ -6807,7 +6809,7 @@ export class VirtualEditor extends EditorBase {
         const ee = room.ee;
         const ex = room.exits | room.climbs | ee;
         let f = false;
-        ctx.save();
+        //ctx.save();
         if (c) {
             ctx.fillStyle = 'white';
             ctx.fillRect(x + 0.5, y + 0.5, 32, 32);
@@ -6874,14 +6876,8 @@ export class VirtualEditor extends EditorBase {
                 ctx.fillStyle = this.ContrastColor(ctx.fillStyle);
             else
                 ctx.fillStyle = 'black';
-            let m;
-            if (this.$measure && this.$measure[room.terrain])
-                m = this.$measure[room.terrain];
-            else {
-                if (!this.$measure) this.$measure = {};
-                m = (this.$measure[room.terrain] = ctx.measureText(room.terrain).width / 2);
-            }
-            ctx.fillText(room.terrain, x + 16 - m, y + 20);
+            ctx.textAlign = 'center';
+            ctx.fillText(room.terrain, x + 16, y + 20);
         }
 
         ctx.closePath();
@@ -7056,7 +7052,7 @@ export class VirtualEditor extends EditorBase {
             ctx.fillRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
             ctx.strokeRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
         }
-        ctx.restore();
+        //ctx.restore();
     }
 
     private DrawMap() {
@@ -7069,7 +7065,6 @@ export class VirtualEditor extends EditorBase {
         this.$mapContext.save();
         this.$mapContext.fillStyle = 'white';
         this.$mapContext.fillRect(0, 0, this.$mapSize.right, this.$mapSize.bottom);
-        this.$mapContext.lineWidth = 0.6;
         if (!this.$rooms) {
             this.$mapContext.restore();
             return;
@@ -7110,7 +7105,6 @@ export class VirtualEditor extends EditorBase {
         this.$mapContext.save();
         this.$mapContext.fillStyle = 'white';
         this.$mapContext.fillRect(x * 32, y * 32, (width - x) * 32, (height - y) * 32);
-        this.$mapContext.lineWidth = 0.6;
         if (!this.$rooms) {
             this.$mapContext.restore();
             return;
