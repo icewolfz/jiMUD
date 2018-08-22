@@ -9595,7 +9595,7 @@ export class AreaDesigner extends EditorBase {
             ctx.drawImage(window.$roomImg, 96 + ox, 24 + oh,
                 ow,
                 ow,
-                x + 25 + oh,
+                x + 24 + oh,
                 y,
                 ow,
                 ow
@@ -9686,7 +9686,7 @@ export class AreaDesigner extends EditorBase {
                 ow,
                 ow,
                 x,
-                y + 25 + oh,
+                y + 24 + oh,
                 ow,
                 ow
             );

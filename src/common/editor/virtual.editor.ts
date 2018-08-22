@@ -278,6 +278,7 @@ export class VirtualEditor extends EditorBase {
     private $mouseSelect;
 
     private $colorCache;
+    private $drawCache;
 
     private $depth;
     private $rcount;
@@ -417,6 +418,7 @@ export class VirtualEditor extends EditorBase {
     public set ShowTerrain(value) {
         if (value === this.$showTerrain) return;
         this.$showTerrain = value;
+        this.$drawCache = null;
         this.emit('menu-update', 'view|show terrain', { checked: value });
         if (document.getElementById('btn-terrain')) {
             if (value)
@@ -435,6 +437,7 @@ export class VirtualEditor extends EditorBase {
     public set ShowColors(value) {
         if (value === this.$showColors) return;
         this.$showColors = value;
+        this.$drawCache = null;
         this.emit('menu-update', 'view|show colors', { checked: value });
         if (document.getElementById('btn-colors')) {
             if (value)
@@ -6809,10 +6812,13 @@ export class VirtualEditor extends EditorBase {
         const ee = room.ee;
         const ex = room.exits | room.climbs | ee;
         let f = false;
+        if (!this.$drawCache)
+            this.$drawCache = {};
+        const key = room.terrain + ',' + ee + ',' + ex;
         //ctx.save();
         if (c) {
             ctx.fillStyle = 'white';
-            ctx.fillRect(x + 0.5, y + 0.5, 32, 32);
+            ctx.fillRect(x, y, 32, 32);
         }
 
         ///ctx.translate(0.5,0.5);
@@ -6868,145 +6874,234 @@ export class VirtualEditor extends EditorBase {
             if (f) ctx.fillRect(x + 8.5, y + 8.5, 16, 16);
             ctx.strokeRect(x + 8.5, y + 8.5, 16, 16);
         }
-
-        if (this.$showTerrain && !room.ef) {
-            if (ee === RoomExit.None && ex === RoomExit.None)
-                ctx.fillStyle = 'rgb(234, 233, 233)';
-            else if (this.$showColors)
-                ctx.fillStyle = this.ContrastColor(ctx.fillStyle);
-            else
-                ctx.fillStyle = 'black';
-            ctx.textAlign = 'center';
-            ctx.fillText(room.terrain, x + 16, y + 20);
-        }
-
         ctx.closePath();
-        ctx.beginPath();
-        let ow = 8;
-        let oh = 0;
-        if (!indoors) {
-            ow = 10;
-            oh = -2;
-        }
-        if (ex & RoomExit.North) {
-            ctx.drawImage(window.$roomImg, 111 + ((ee & RoomExit.North) ? 16 : 0), 0,
-                1,
-                8,
-                x + 16,
-                y,
-                1,
-                8
-            );
-        }
-        if (ex & RoomExit.NorthWest) {
-            ctx.drawImage(window.$roomImg, 96 + ((ee & RoomExit.NorthWest) ? 16 : 0), 0,
-                ow,
-                ow,
-                x,
-                y,
-                ow,
-                ow
-            );
-        }
-        if (ex & RoomExit.NorthEast) {
-            ctx.drawImage(window.$roomImg, 96 + ((ee & RoomExit.NorthEast) ? 16 : 0), 24 + oh,
-                ow,
-                ow,
-                x + 25 + oh,
-                y,
-                ow,
-                ow
-            );
-        }
-        if (ex & RoomExit.East) {
-            ctx.drawImage(window.$roomImg, 96 + ((ee & RoomExit.East) ? 16 : 0), 15,
-                8,
-                1,
-                x + 25,
-                y + 16,
-                8,
-                1
-            );
-        }
-        if (ex & RoomExit.West) {
-            ctx.drawImage(window.$roomImg, 96 + ((ee & RoomExit.West) ? 16 : 0), 15,
-                8,
-                1,
-                x,
-                y + 16,
-                8,
-                1
-            );
-        }
-        if (ex & RoomExit.South) {
-            ctx.drawImage(window.$roomImg, 111 + ((ee & RoomExit.South) ? 16 : 0), 0,
-                1,
-                8,
-                x + 16,
-                y + 25,
-                1,
-                8
-            );
-        }
-        if (ex & RoomExit.SouthEast) {
-            ctx.drawImage(window.$roomImg, 96 + ((ee & RoomExit.SouthEast) ? 16 : 0), 0,
-                ow,
-                ow,
-                x + 25 + oh,
-                y + 25 + oh,
-                ow,
-                ow
-            );
-        }
-        if (ex & RoomExit.SouthWest) {
-            ctx.drawImage(window.$roomImg, 96 + ((ee & RoomExit.SouthWest) ? 16 : 0), 24 + oh,
-                ow,
-                ow,
-                x,
-                y + 25 + oh,
-                ow,
-                ow
-            );
-        }
-        ctx.closePath();
-        ctx.strokeStyle = 'black';
-        if ((ex & RoomExit.Up) === RoomExit.Up) {
-            ctx.fillStyle = (ee & RoomExit.Up) === RoomExit.Up ? 'red' : 'black';
-            ctx.beginPath();
-            ctx.moveTo(x + 1, y + 11);
-            ctx.lineTo(x + 7, y + 11);
-            ctx.lineTo(x + 4, y + 8);
-            ctx.closePath();
-            ctx.fill();
-        }
-        if ((ex & RoomExit.Down) === RoomExit.Down) {
-            ctx.fillStyle = (ee & RoomExit.Down) === RoomExit.Down ? 'red' : 'black';
-            ctx.beginPath();
-            ctx.moveTo(x + 1, y + 21);
-            ctx.lineTo(x + 7, y + 21);
-            ctx.lineTo(x + 4, y + 24);
-            ctx.closePath();
-            ctx.fill();
-        }
-        if ((ex & RoomExit.Out) === RoomExit.Out) {
-            ctx.fillStyle = (ee & RoomExit.Out) === RoomExit.Out ? 'red' : 'black';
-            ctx.beginPath();
-            ctx.moveTo(x + 26, y + 8);
-            ctx.lineTo(x + 29, y + 11);
-            ctx.lineTo(x + 26, y + 14);
-            ctx.closePath();
-            ctx.fill();
-        }
-        if ((ex & RoomExit.Enter) === RoomExit.Enter) {
-            ctx.fillStyle = (ee & RoomExit.Enter) === RoomExit.Enter ? 'red' : 'black';
-            ctx.beginPath();
-            ctx.moveTo(x + 29, y + 19);
-            ctx.lineTo(x + 26, y + 22);
-            ctx.lineTo(x + 29, y + 25);
-            ctx.closePath();
-            ctx.fill();
-        }
 
+        if (!this.$drawCache[key]) {
+            this.$drawCache[key] = document.createElement('canvas');
+            this.$drawCache[key].classList.add('map-canvas');
+            this.$drawCache[key].height = 33;
+            this.$drawCache[key].width = 33;
+            const tx = this.$drawCache[key].getContext('2d');
+
+            if (this.$showTerrain && !room.ef) {
+                if (ee === RoomExit.None && ex === RoomExit.None)
+                    tx.fillStyle = 'rgb(234, 233, 233)';
+                else if (this.$showColors)
+                    tx.fillStyle = this.ContrastColor(ctx.fillStyle);
+                else
+                    tx.fillStyle = 'black';
+                tx.textAlign = 'center';
+                tx.fillText(room.terrain, 16, 20);
+            }
+
+            tx.mozImageSmoothingEnabled = false;
+            tx.webkitImageSmoothingEnabled = false;
+            tx.imageSmoothingEnabled = false;
+            tx.beginPath();
+            let ow = 8;
+            let oh = 0;
+            if (!indoors) {
+                ow = 10;
+                oh = -2;
+            }
+            if (ee & RoomExit.North)
+                tx.drawImage(window.$roomImg, 127, 0,
+                    1,
+                    8,
+                    16,
+                    0,
+                    1,
+                    8
+                );
+            else if (ex & RoomExit.North)
+                tx.drawImage(window.$roomImg, 111, 0,
+                    1,
+                    8,
+                    16,
+                    0,
+                    1,
+                    8
+                );
+            if (ee & RoomExit.NorthWest) {
+                tx.drawImage(window.$roomImg, 112, 0,
+                    ow,
+                    ow,
+                    0,
+                    0,
+                    ow,
+                    ow
+                );
+            }
+            else if (ex & RoomExit.NorthWest) {
+                tx.drawImage(window.$roomImg, 96, 0,
+                    ow,
+                    ow,
+                    0,
+                    0,
+                    ow,
+                    ow
+                );
+            }
+            if (ee & RoomExit.NorthEast) {
+                tx.drawImage(window.$roomImg, 112, 24 + oh,
+                    ow,
+                    ow,
+                    24 + oh,
+                    0,
+                    ow,
+                    ow
+                );
+            }
+            else if (ex & RoomExit.NorthEast) {
+                tx.drawImage(window.$roomImg, 96, 24 + oh,
+                    ow,
+                    ow,
+                    24 + oh,
+                    0,
+                    ow,
+                    ow
+                );
+            }
+            if (ee & RoomExit.East) {
+                tx.drawImage(window.$roomImg, 112, 15,
+                    8,
+                    1,
+                    25,
+                    16,
+                    8,
+                    1
+                );
+            }
+            else if (ex & RoomExit.East) {
+                tx.drawImage(window.$roomImg, 96, 15,
+                    8,
+                    1,
+                    25,
+                    16,
+                    8,
+                    1
+                );
+            }
+            if (ee & RoomExit.West) {
+                tx.drawImage(window.$roomImg, 112, 15,
+                    8,
+                    1,
+                    0,
+                    16,
+                    8,
+                    1
+                );
+            }
+            else if (ex & RoomExit.West) {
+                tx.drawImage(window.$roomImg, 96, 15,
+                    8,
+                    1,
+                    0,
+                    16,
+                    8,
+                    1
+                );
+            }
+            if (ee & RoomExit.South) {
+                tx.drawImage(window.$roomImg, 127, 0,
+                    1,
+                    8,
+                    16,
+                    25,
+                    1,
+                    8
+                );
+            }
+            else if (ex & RoomExit.South) {
+                tx.drawImage(window.$roomImg, 111, 0,
+                    1,
+                    8,
+                    16,
+                    25,
+                    1,
+                    8
+                );
+            }
+            if (ee & RoomExit.SouthEast) {
+                tx.drawImage(window.$roomImg, 112, 0,
+                    ow,
+                    ow,
+                    25 + oh,
+                    25 + oh,
+                    ow,
+                    ow
+                );
+            }
+            else if (ex & RoomExit.SouthEast) {
+                tx.drawImage(window.$roomImg, 96, 0,
+                    ow,
+                    ow,
+                    25 + oh,
+                    25 + oh,
+                    ow,
+                    ow
+                );
+            }
+            if (ee & RoomExit.SouthWest) {
+                tx.drawImage(window.$roomImg, 112, 24 + oh,
+                    ow,
+                    ow,
+                    0,
+                    24 + oh,
+                    ow,
+                    ow
+                );
+            }
+            else if (ex & RoomExit.SouthWest) {
+                tx.drawImage(window.$roomImg, 96, 24 + oh,
+                    ow,
+                    ow,
+                    0,
+                    24 + oh,
+                    ow,
+                    ow
+                );
+            }
+            tx.closePath();
+            tx.strokeStyle = 'black';
+            if ((ex & RoomExit.Up) === RoomExit.Up) {
+                tx.fillStyle = (ee & RoomExit.Up) === RoomExit.Up ? 'red' : 'black';
+                tx.beginPath();
+                tx.moveTo(1, 11);
+                tx.lineTo(7, 11);
+                tx.lineTo(4, 8);
+                tx.closePath();
+                tx.fill();
+            }
+            if ((ex & RoomExit.Down) === RoomExit.Down) {
+                tx.fillStyle = (ee & RoomExit.Down) === RoomExit.Down ? 'red' : 'black';
+                tx.beginPath();
+                tx.moveTo(1, 21);
+                tx.lineTo(7, 21);
+                tx.lineTo(4, 24);
+                tx.closePath();
+                tx.fill();
+            }
+            if ((ex & RoomExit.Out) === RoomExit.Out) {
+                tx.fillStyle = (ee & RoomExit.Out) === RoomExit.Out ? 'red' : 'black';
+                tx.beginPath();
+                tx.moveTo(26, 8);
+                tx.lineTo(29, 11);
+                tx.lineTo(26, 14);
+                tx.closePath();
+                tx.fill();
+            }
+            if ((ex & RoomExit.Enter) === RoomExit.Enter) {
+                tx.fillStyle = (ee & RoomExit.Enter) === RoomExit.Enter ? 'red' : 'black';
+                tx.beginPath();
+                tx.moveTo(29, 19);
+                tx.lineTo(26, 22);
+                tx.lineTo(29, 25);
+                tx.closePath();
+                tx.fill();
+            }
+        }
+        ctx.drawImage(this.$drawCache[key], x, y);
         if (h) {
             if (this.$focused) {
                 ctx.fillStyle = 'rgba(135, 206, 250, 0.5)';
@@ -8567,6 +8662,7 @@ export class VirtualEditor extends EditorBase {
         this.$rcount = 0;
         this.$maxTerrain = 0;
         this.$colorCache = 0;
+        this.$drawCache = null;
         if (edata.length > 0) {
             for (x = 0, xl = edata.length; x < xl; x++) {
                 line = edata[x].split(':');
@@ -9117,6 +9213,7 @@ export class VirtualEditor extends EditorBase {
         if (t > this.$maxTerrain) {
             this.$maxTerrain = t;
             this.$colorCache = null;
+            this.$drawCache = null;
             this.doUpdate(UpdateType.drawMap);
         }
     }
