@@ -21,8 +21,8 @@ import RGBColor = require('rgbcolor');
 
 declare global {
     interface Window {
-        $roomImg2: HTMLImageElement;
-        $roomImg2Loaded: boolean;
+        $roomImg: HTMLImageElement;
+        $roomImgLoaded: boolean;
     }
 }
 
@@ -1092,11 +1092,11 @@ export class AreaDesigner extends EditorBase {
     }
 
     public createControl() {
-        if (!window.$roomImg2) {
-            window.$roomImg2 = new Image();
-            window.$roomImg2.src = './../assets/editor/rooms2.png';
-            window.$roomImg2.addEventListener('load', () => {
-                window.$roomImg2Loaded = true;
+        if (!window.$roomImg) {
+            window.$roomImg = new Image();
+            window.$roomImg.src = './../assets/editor/rooms2.png';
+            window.$roomImg.addEventListener('load', () => {
+                window.$roomImgLoaded = true;
             });
         }
         //#region depth
@@ -9551,7 +9551,7 @@ export class AreaDesigner extends EditorBase {
                 ox = 32;
             else
                 ox = 0;
-            ctx.drawImage(window.$roomImg2, 111 + ox, 0,
+            ctx.drawImage(window.$roomImg, 111 + ox, 0,
                 1,
                 8,
                 x + 16,
@@ -9569,7 +9569,7 @@ export class AreaDesigner extends EditorBase {
                 ox = 32;
             else
                 ox = 0;
-            ctx.drawImage(window.$roomImg2, 96 + ox, 0,
+            ctx.drawImage(window.$roomImg, 96 + ox, 0,
                 ow,
                 ow,
                 x,
@@ -9587,7 +9587,7 @@ export class AreaDesigner extends EditorBase {
                 ox = 32;
             else
                 ox = 0;
-            ctx.drawImage(window.$roomImg2, 96 + ox, 24 + oh,
+            ctx.drawImage(window.$roomImg, 96 + ox, 24 + oh,
                 ow,
                 ow,
                 x + 25 + oh,
@@ -9605,7 +9605,7 @@ export class AreaDesigner extends EditorBase {
                 ox = 32;
             else
                 ox = 0;
-            ctx.drawImage(window.$roomImg2, 96 + ox, 15,
+            ctx.drawImage(window.$roomImg, 96 + ox, 15,
                 8,
                 1,
                 x + 25,
@@ -9623,7 +9623,7 @@ export class AreaDesigner extends EditorBase {
                 ox = 32;
             else
                 ox = 0;
-            ctx.drawImage(window.$roomImg2, 96 + ox, 15,
+            ctx.drawImage(window.$roomImg, 96 + ox, 15,
                 8,
                 1,
                 x,
@@ -9641,7 +9641,7 @@ export class AreaDesigner extends EditorBase {
                 ox = 32;
             else
                 ox = 0;
-            ctx.drawImage(window.$roomImg2, 111 + ox, 0,
+            ctx.drawImage(window.$roomImg, 111 + ox, 0,
                 1,
                 8,
                 x + 16,
@@ -9659,7 +9659,7 @@ export class AreaDesigner extends EditorBase {
                 ox = 32;
             else
                 ox = 0;
-            ctx.drawImage(window.$roomImg2, 96 + ox, 0,
+            ctx.drawImage(window.$roomImg, 96 + ox, 0,
                 ow,
                 ow,
                 x + 25 + oh,
@@ -9677,7 +9677,7 @@ export class AreaDesigner extends EditorBase {
                 ox = 32;
             else
                 ox = 0;
-            ctx.drawImage(window.$roomImg2, 96 + ox, 24 + oh,
+            ctx.drawImage(window.$roomImg, 96 + ox, 24 + oh,
                 ow,
                 ow,
                 x,
@@ -9833,7 +9833,7 @@ export class AreaDesigner extends EditorBase {
             this.$mapContext.restore();
             return;
         }
-        if (!window.$roomImg2Loaded) {
+        if (!window.$roomImgLoaded) {
             this.doUpdate(UpdateType.drawMap);
             return;
         }
@@ -9938,7 +9938,7 @@ export class AreaDesigner extends EditorBase {
             this.$mapContext.restore();
             return;
         }
-        if (!window.$roomImg2Loaded) {
+        if (!window.$roomImgLoaded) {
             setTimeout(() => { this.drawRegion(sX, sY, sWidth, sHeight); }, 10);
             return;
         }

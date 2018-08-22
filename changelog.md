@@ -8,6 +8,7 @@
 - **Changed:**
   - Code editor:
     - Area designer: changed hidden exit color to orange to make it easier to see on white background
+    - Virtual area editor: chnged drawing system to use the same as area designer to offer indoor/outdoor room styles
 - **Fixed:**
   - Code editor:
     - Save scroll view state
@@ -18,6 +19,7 @@
       - Watch only files in the virtual map root path
       - Fix external set_long formatting
       - Double clicking text in a data grid field editor did not always work and do native word text selection and would instead focus on first editor in row
+      - External room parsing now correctly sets states to know the external room states that are supported in the editor
     - Area designer:
       - Re-coded drawing system to use sprites as larger maps where slow drawing
       - Fix up, down, enter, and out exit colors when hidden
