@@ -6882,7 +6882,6 @@ export class VirtualEditor extends EditorBase {
 
         ctx.closePath();
         ctx.beginPath();
-        let ox = 0;
         let ow = 8;
         let oh = 0;
         if (!indoors) {
@@ -6890,11 +6889,7 @@ export class VirtualEditor extends EditorBase {
             oh = -2;
         }
         if (ex & RoomExit.North) {
-            if (ee & RoomExit.North)
-                ox = 16;
-            else
-                ox = 0;
-            ctx.drawImage(window.$roomImg, 111 + ox, 0,
+            ctx.drawImage(window.$roomImg, 111 + ((ee & RoomExit.North) ? 16 : 0), 0,
                 1,
                 8,
                 x + 16,
@@ -6904,11 +6899,7 @@ export class VirtualEditor extends EditorBase {
             );
         }
         if (ex & RoomExit.NorthWest) {
-            if (ee & RoomExit.NorthWest)
-                ox = 16;
-            else
-                ox = 0;
-            ctx.drawImage(window.$roomImg, 96 + ox, 0,
+            ctx.drawImage(window.$roomImg, 96 + ((ee & RoomExit.NorthWest) ? 16 : 0), 0,
                 ow,
                 ow,
                 x,
@@ -6918,11 +6909,7 @@ export class VirtualEditor extends EditorBase {
             );
         }
         if (ex & RoomExit.NorthEast) {
-            if (ee & RoomExit.NorthEast)
-                ox = 16;
-            else
-                ox = 0;
-            ctx.drawImage(window.$roomImg, 96 + ox, 24 + oh,
+            ctx.drawImage(window.$roomImg, 96 + ((ee & RoomExit.NorthEast) ? 16 : 0), 24 + oh,
                 ow,
                 ow,
                 x + 25 + oh,
@@ -6932,11 +6919,7 @@ export class VirtualEditor extends EditorBase {
             );
         }
         if (ex & RoomExit.East) {
-            if (ee & RoomExit.East)
-                ox = 16;
-            else
-                ox = 0;
-            ctx.drawImage(window.$roomImg, 96 + ox, 15,
+            ctx.drawImage(window.$roomImg, 96 + ((ee & RoomExit.East) ? 16 : 0), 15,
                 8,
                 1,
                 x + 25,
@@ -6946,11 +6929,7 @@ export class VirtualEditor extends EditorBase {
             );
         }
         if (ex & RoomExit.West) {
-            if (ee & RoomExit.West)
-                ox = 16;
-            else
-                ox = 0;
-            ctx.drawImage(window.$roomImg, 96 + ox, 15,
+            ctx.drawImage(window.$roomImg, 96 + ((ee & RoomExit.West) ? 16 : 0), 15,
                 8,
                 1,
                 x,
@@ -6960,11 +6939,7 @@ export class VirtualEditor extends EditorBase {
             );
         }
         if (ex & RoomExit.South) {
-            if (ee & RoomExit.South)
-                ox = 16;
-            else
-                ox = 0;
-            ctx.drawImage(window.$roomImg, 111 + ox, 0,
+            ctx.drawImage(window.$roomImg, 111 + ((ee & RoomExit.South) ? 16 : 0), 0,
                 1,
                 8,
                 x + 16,
@@ -6974,11 +6949,7 @@ export class VirtualEditor extends EditorBase {
             );
         }
         if (ex & RoomExit.SouthEast) {
-            if (ee & RoomExit.SouthEast)
-                ox = 16;
-            else
-                ox = 0;
-            ctx.drawImage(window.$roomImg, 96 + ox, 0,
+            ctx.drawImage(window.$roomImg, 96 + ((ee & RoomExit.SouthEast) ? 16 : 0), 0,
                 ow,
                 ow,
                 x + 25 + oh,
@@ -6988,11 +6959,7 @@ export class VirtualEditor extends EditorBase {
             );
         }
         if (ex & RoomExit.SouthWest) {
-            if (ee & RoomExit.SouthWest)
-                ox = 16;
-            else
-                ox = 0;
-            ctx.drawImage(window.$roomImg, 96 + ox, 24 + oh,
+            ctx.drawImage(window.$roomImg, 96 + ((ee & RoomExit.SouthWest) ? 16 : 0), 24 + oh,
                 ow,
                 ow,
                 x,
