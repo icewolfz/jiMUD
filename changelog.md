@@ -20,6 +20,7 @@
       - Double clicking text in a data grid field editor did not always work and do native word text selection and would instead focus on first editor in row
     - Area designer:
       - Re-coded drawing system to use sprites as larger maps where slow drawing
+      - Fix up, down, enter, and out exit colors when hidden
   - Immortal tools: do not attempt to open paths in code editor
 
 ## 0.4.62 2018-08-13
