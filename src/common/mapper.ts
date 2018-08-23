@@ -528,9 +528,10 @@ export class Mapper extends EventEmitter {
         if (canvas.height % 2 !== 0)
             oy = 15;
         context.font = '8pt Arial';
-        //this._db.serialize(() => {
+        //this._db.parallelize();
         if (this._splitArea) {
-            this._db.all('Select X, Y, Rooms.ID as ID, Details, IsDoor, Indoors, IsClosed, Exit, Env, Background FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))', {
+            const s = new Date().getTime();
+            this._db.all('Select X, Y, Rooms.ID as ID, Details, IsDoor, Indoors, IsClosed, Exit, Env, Background FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone AND  ((0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h) OR (0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h))', {
                 $area: area,
                 $zone: zone,
                 $x: x,
@@ -542,8 +543,7 @@ export class Mapper extends EventEmitter {
                 $h: canvas.height
             }, (err, rows) => {
                 if (err) this.emit('error', err);
-                context.save();
-                const s = new Date().getTime();
+                //context.save();
                 if (ex) {
                     context.fillStyle = '#eae4d6';
                     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -552,23 +552,25 @@ export class Mapper extends EventEmitter {
                     context.clearRect(0, 0, canvas.width, canvas.height);
                 const rooms = {};
                 if (rows) {
+                    this.emit('debug', 'Draw room query time: ' + (new Date().getTime() - s));
                     const rl = rows.length;
                     for (let r = 0; r < rl; r++) {
-                        if (rooms[rows[r].ID]) {
+                        const ID = rows[r].ID;
+                        if (rooms[ID]) {
                             if (!rows[r].Exit) continue;
-                            rooms[rows[r].ID].exitsID |= RoomExits[rows[r].Exit];
-                            rooms[rows[r].ID].exits[rows[r].Exit] = {
+                            rooms[ID].exitsID |= RoomExits[rows[r].Exit];
+                            rooms[ID].exits[rows[r].Exit] = {
                                 isdoor: rows[r].IsDoor,
                                 isclosed: rows[r].IsClosed
                             };
                         }
                         else {
-                            rooms[rows[r].ID] = rows[r];
-                            rooms[rows[r].ID].exits = {};
-                            rooms[rows[r].ID].exitsID = 0;
+                            rooms[ID] = rows[r];
+                            rooms[ID].exits = {};
+                            rooms[ID].exitsID = 0;
                             if (!rows[r].Exit) continue;
-                            rooms[rows[r].ID].exitsID |= RoomExits[rows[r].Exit];
-                            rooms[rows[r].ID].exits[rows[r].Exit] = {
+                            rooms[ID].exitsID |= RoomExits[rows[r].Exit];
+                            rooms[ID].exits[rows[r].Exit] = {
                                 isdoor: rows[r].IsDoor,
                                 isclosed: rows[r].IsClosed
                             };
@@ -583,25 +585,23 @@ export class Mapper extends EventEmitter {
                     }
                 }
                 this.emit('debug', 'Draw time: ' + (new Date().getTime() - s));
-                context.restore();
+                //context.restore();
                 this.DrawLegend(context, 1, -4, 0);
                 if (callback) callback();
             });
         }
         else {
-            this._db.all('Select X, Y, Rooms.ID as ID, Details, IsDoor, Indoors, IsClosed, Exit, Env, Background FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone AND ((0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h) OR (0 <= ((X - $x) * 32 + $ox) AND ((X - $x) * 32 + $ox) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy + 32) AND ((Y - $y) * 32 + $oy + 32) <= $h) OR (0 <= ((X - $x) * 32 + $ox + 32) AND ((X - $x) * 32 + $ox + 32) <= $w) AND (0 <= ((Y - $y) * 32 + $oy) AND ((Y - $y) * 32 + $oy) <= $h))', {
+            const s = new Date().getTime();
+            this._db.all('Select X, Y, Rooms.ID as ID, Details, IsDoor, Indoors, IsClosed, Exit, Env, Background FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone AND ((0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h) OR (0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h))', {
                 $zone: zone,
                 $x: x,
                 $y: y,
                 $z: z,
-                $ox: ox,
-                $oy: oy,
-                $w: canvas.width,
-                $h: canvas.height
+                $w: canvas.width / 32,
+                $h: canvas.height / 32
             }, (err, rows) => {
                 if (err) this.emit('error', err);
-                context.save();
-                const s = new Date().getTime();
+                //context.save();
                 if (ex) {
                     context.fillStyle = '#eae4d6';
                     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -610,23 +610,25 @@ export class Mapper extends EventEmitter {
                     context.clearRect(0, 0, canvas.width, canvas.height);
                 const rooms = {};
                 if (rows) {
+                    this.emit('debug', 'Draw room query time: ' + (new Date().getTime() - s));
                     const rl = rows.length;
                     for (let r = 0; r < rl; r++) {
-                        if (rooms[rows[r].ID]) {
+                        const ID = rows[r].ID;
+                        if (rooms[ID]) {
                             if (!rows[r].Exit) continue;
-                            rooms[rows[r].ID].exitsID |= RoomExits[rows[r].Exit];
-                            rooms[rows[r].ID].exits[rows[r].Exit] = {
+                            rooms[ID].exitsID |= RoomExits[rows[r].Exit];
+                            rooms[ID].exits[rows[r].Exit] = {
                                 isdoor: rows[r].IsDoor,
                                 isclosed: rows[r].IsClosed
                             };
                         }
                         else {
-                            rooms[rows[r].ID] = rows[r];
-                            rooms[rows[r].ID].exits = {};
-                            rooms[rows[r].ID].exitsID = 0;
+                            rooms[ID] = rows[r];
+                            rooms[ID].exits = {};
+                            rooms[ID].exitsID = 0;
                             if (!rows[r].Exit) continue;
-                            rooms[rows[r].ID].exitsID |= RoomExits[rows[r].Exit];
-                            rooms[rows[r].ID].exits[rows[r].Exit] = {
+                            rooms[ID].exitsID |= RoomExits[rows[r].Exit];
+                            rooms[ID].exits[rows[r].Exit] = {
                                 isdoor: rows[r].IsDoor,
                                 isclosed: rows[r].IsClosed
                             };
@@ -641,7 +643,7 @@ export class Mapper extends EventEmitter {
                     }
                 }
                 this.emit('debug', 'Draw time: ' + (new Date().getTime() - s));
-                context.restore();
+                //context.restore();
                 this.DrawLegend(context, 1, -4, 0);
                 if (callback) callback();
             });
