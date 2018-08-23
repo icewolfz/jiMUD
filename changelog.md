@@ -13,6 +13,7 @@
   - Code editor:
     - Area designer: changed hidden exit color to orange to make it easier to see on white background
     - Virtual area editor: changed drawing system to use the same as area designer to offer indoor/outdoor room styles
+  - Update electron from 2.0.6 to 2.0.8
 - **Fixed:**
   - Code editor:
     - Save scroll view state

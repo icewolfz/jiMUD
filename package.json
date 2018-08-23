@@ -9,7 +9,7 @@
   "main": "build/main.js",
   "description": "MUD client coded in javascript.",
   "author": "Icewolfz",
-  "electronVersion": "2.0.6",
+  "electronVersion": "2.0.8",
   "email": "icewolfz@users.noreply.github.com",
   "license": "UNLICENSED",
   "repository": {
@@ -51,7 +51,7 @@
     "@types/node": "^7.0.67",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^2.0.6",
+    "electron": "^2.0.8",
     "electron-builder": "^20.25.0",
     "electron-installer-dmg": "^0.2.1",
     "electron-packager": "^12.1.0",
