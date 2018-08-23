@@ -27,6 +27,7 @@
 
     var roomEditor = false;
     var importType = ImportType.Replace;
+    var _import;
 
     var menubar = new Menubar([
       {
@@ -252,7 +253,6 @@
       $("#mapper-room button").prop("disabled", true);
 
       $("#mapProgress")[0].addEventListener('close', () => {
-        mapper.cancelImport();
       });
 
       var options = Settings.load(remote.getGlobal('settingsFile'));
@@ -434,8 +434,19 @@
       });
 
       mapper.on('import-progress', (value) => {
-        if (this._cancelImport)
-          return;
+        if (value != -1) {
+          ipcRenderer.send('progress', { percent: value });
+          ipcRenderer.send('set-progress-window', 'mapper', { value: value / 100.0 });
+        }
+      });
+
+      mapper.on('import-complete', (value) => {
+        updateAreas();
+        ipcRenderer.send('progress-close');
+        ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
+        ipcRenderer.send('send-gmcp', 'Room.Info');
+      });
+      mapper.on('export-progress', (value) => {
         if (value != -1) {
           $("#mapProgress progress").val(value);
           ipcRenderer.send('set-progress', { value: value / 100.0 });
@@ -662,6 +673,20 @@
       processGMCP(data);
     });
 
+    ipcRenderer.on('progress-canceled', () => {
+      mapper.cancelImport();
+    });
+
+    ipcRenderer.on('progress-closed', () => {
+      mapper.cancelImport();
+    });
+
+    ipcRenderer.on('progress-loaded', () => {
+      mapper.import(_import.data, _import.type);
+      if (_import.room)
+        ipcRenderer.send('send-gmcp', 'Room.Info');
+    });
+
     function processGMCP(data) {
       if (!mapper || !mapper.ready)
         setTimeout(() => {
@@ -701,13 +726,9 @@
 
     ipcRenderer.on('import', (event, data) => {
       ipcRenderer.send('show-window', 'mapper');
-      $("#mapProgressbar").html('<progress max="100"></progress>');
-      $("#mapProgressTitle").html("Importing map data&hellip;");
-      $("#mapProgress")[0].showModal();
-      ipcRenderer.send('set-progress', { value: 0 });
       ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-      mapper.import(data, importType);
-      ipcRenderer.send('send-gmcp', 'Room.Info');
+      _import = { data: data, type: importType, room: true };
+      ipcRenderer.send('progress-show', 'Importing map data&hellip;');
     });
 
     ipcRenderer.on('flush', (event, sender) => {
@@ -724,16 +745,16 @@
         return;
       }
       let rows = mapper._db.prepare("SELECT DISTINCT Area from Rooms order by Area").all();
-        if (rows && rows.length > 0) {
-          for (var a = 0; a < rows.length; a++) {
-            $("#select-area").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
-            $("#reArea").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
-          }
-          if (mapper.active.area)
-            $("#select-area").val(mapper.active.area);
-          else
-            mapper.active.area = $("#select-area option:first").val();
+      if (rows && rows.length > 0) {
+        for (var a = 0; a < rows.length; a++) {
+          $("#select-area").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
+          $("#reArea").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
         }
+        if (mapper.active.area)
+          $("#select-area").val(mapper.active.area);
+        else
+          mapper.active.area = $("#select-area option:first").val();
+      }
     }
     function compact() {
       $("#mapProgressbar").html('<progress max="100"></progress>');
@@ -1026,12 +1047,9 @@
                 });
                 return;
               }
-              ipcRenderer.send('set-progress', { value: 0 });
               ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-              $("#mapProgressbar").html('<progress max="100"></progress>');
-              $("#mapProgressTitle").html("Importing map data&hellip;");
-              $("#mapProgress")[0].showModal();
-              mapper.import(data, ImportType.Merge);
+              _import = { data: data, type: ImportType.Merge };
+              ipcRenderer.send('progress-show', 'Importing map data&hellip;');
             });
         });
     }
@@ -1061,12 +1079,9 @@
                 });
                 return;
               }
-              ipcRenderer.send('set-progress', { value: 0 });
               ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-              $("#mapProgressbar").html('<progress max="100"></progress>');
-              $("#mapProgressTitle").html("Importing map data&hellip;");
-              $("#mapProgress")[0].showModal();
-              mapper.import(data, ImportType.Replace);
+              ipcRenderer.send('progress-show', 'Importing map data&hellip;');
+              _import = { data: data, type: ImportType.Replace };
             });
         });
     }

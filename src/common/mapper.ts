@@ -2137,83 +2137,73 @@ export class Mapper extends EventEmitter {
             this._db.prepare('DELETE FROM Rooms').run();
             this.emit('clear-done');
             this.reset();
-            this.import(data, ImportType.Merge);
-            this._changed = true;
         }
-        else {
-            this._cancelImport = false;
-            let idx;
-            let r;
-            let rl;
-            let tl;
-            this._db.serialize(() => {
-                this._db.prepare('BEGIN').run();
-                this.emit('import-progress', 0);
-                const stmt2 = this._db.prepare('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-                const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
-                if (!Array.isArray(data))
-                    data = Object.values(data);
-                rl = data.length;
-                tl = data.length;
-                idx = 1;
-                let room;
-                for (r = 0; r < rl; r++) {
-                    if (this._cancelImport) {
-                        this.finishImport();
-                        return;
-                    }
-                    room = data[r];
-                    if (!room) continue;
-                    tl += Object.keys(room.exits).length;
-                    room = this.normalizeRoom(room);
-                    stmt2.run([
-                        room.ID,
-                        room.area,
-                        room.details,
-                        room.name,
-                        room.env,
-                        room.x,
-                        room.y,
-                        room.z,
-                        room.zone,
-                        room.indoors,
-                        room.background
-                    ],
-                        (err) => {
-                            if (this._cancelImport) {
-                                this.finishImport();
-                                return;
-                            }
-                            this.emit('import-progress', Math.floor(idx / tl * 100));
-                            idx++;
-                            if (idx >= rl) {
-                                this.finishImport();
-                            }
-                        });
-                    let exit;
-                    const exits = room.exits;
-                    for (exit in exits) {
-                        if (!exits.hasOwnProperty(exit)) continue;
-                        stmt.run([room.ID, exit, exits[exit].num, exits[exit].isdoor, exits[exit].isclosed],
-                            () => {
-                                if (this._cancelImport) {
-                                    this.finishImport();
-                                    return;
-                                }
-                                this.emit('import-progress', Math.floor(idx / tl * 100));
-                                idx++;
-                                if (idx >= tl) {
-                                    this.finishImport();
-                                }
-                            });
-                    }
+        this._cancelImport = false;
+        let idx;
+        let r;
+        let rl;
+        let tl;
+        this._db.prepare('BEGIN').run();
+        this.emit('import-progress', 0);
+        const stmt2 = this._db.prepare('INSERT OR REPLACE INTO Rooms (ID, Area, Details, Name, Env, X, Y, Z, Zone, Indoors, Background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
+        if (!Array.isArray(data))
+            data = Object.values(data);
+        rl = data.length;
+        tl = data.length;
+        idx = 1;
+        let room;
+        for (r = 0; r < rl; r++) {
+            if (this._cancelImport) {
+                this._db.prepare('ROLLBACK').run();
+                this.finishImport();
+                this.emit('import-complete');
+                return;
+            }
+            room = data[r];
+            if (!room) continue;
+            tl += Object.keys(room.exits).length;
+            room = this.normalizeRoom(room);
+            stmt2.run([
+                room.ID,
+                room.area,
+                room.details,
+                room.name,
+                room.env,
+                room.x,
+                room.y,
+                room.z,
+                room.zone,
+                room.indoors,
+                room.background
+            ]);
+            if (this._cancelImport) {
+                this._db.prepare('ROLLBACK').run();
+                this.finishImport();
+                this.emit('import-complete');
+                return;
+            }
+            this.emit('import-progress', Math.floor(idx / tl * 100));
+            idx++;
+            let exit;
+            const exits = room.exits;
+            for (exit in exits) {
+                if (!exits.hasOwnProperty(exit)) continue;
+                stmt.run([room.ID, exit, exits[exit].num, exits[exit].isdoor, exits[exit].isclosed]);
+                if (this._cancelImport) {
+                    this._db.prepare('ROLLBACK').run();
+                    this.finishImport();
+                    this.emit('import-complete');
+                    return;
                 }
-                this._db.prepare('COMMIT').run();
-                if (tl === 0)
-                    this.emit('import-progress', 100);
-                this._changed = true;
-            });
+                this.emit('import-progress', Math.floor(idx / tl * 100));
+                idx++;
+            }
         }
+        this._cancelImport = true;
+        this._db.prepare('COMMIT').run();
+        this.finishImport();
+        this.emit('import-complete');
     }
 
     private finishImport() {
@@ -2229,7 +2219,7 @@ export class Mapper extends EventEmitter {
         const rooms = {};
         if (rows) {
             const rl = rows.length;
-            this.emit('import-progress', 0);
+            this.emit('export-progress', 0);
             for (let r = 0; r < rl; r++) {
                 rows[r].ID = parseInt(rows[r].ID, 10);
                 if (rooms[rows[r].ID]) {
@@ -2259,7 +2249,7 @@ export class Mapper extends EventEmitter {
                         isclosed: rows[r].IsClosed
                     };
                 }
-                this.emit('import-progress', Math.floor(r / rl * 100));
+                this.emit('export-progress', Math.floor(r / rl * 100));
             }
             this.exportRooms(file, rooms);
         }
@@ -2270,7 +2260,7 @@ export class Mapper extends EventEmitter {
         const rooms = {};
         if (rows) {
             const rl = rows.length;
-            this.emit('import-progress', 0);
+            this.emit('export-progress', 0);
             for (let r = 0; r < rl; r++) {
                 rows[r].ID = parseInt(rows[r].ID, 10);
                 if (rooms[rows[r].ID]) {
@@ -2300,7 +2290,7 @@ export class Mapper extends EventEmitter {
                         isclosed: rows[r].IsClosed
                     };
                 }
-                this.emit('import-progress', Math.floor(r / rl * 100));
+                this.emit('export-progress', Math.floor(r / rl * 100));
             }
             this.exportRooms(file, rooms);
         }
@@ -2308,22 +2298,24 @@ export class Mapper extends EventEmitter {
 
     public exportRooms(file: string, rooms) {
         if (!rooms) {
-            this.emit('import-progress', 100);
+            this.emit('export-progress', 100);
             return;
         }
         fs.writeFileSync(file, JSON.stringify(rooms));
-        this.emit('import-progress', 100);
+        this.emit('export-progress', 100);
     }
 
     public cancelImport() {
+        if (this._cancelImport)
+            return;
         this._cancelImport = true;
         this.emit('import-progress', 101);
     }
 
     public compact() {
-        this.emit('import-progress', 0);
+        this.emit('export-progress', 0);
         this._db.exec('VACUUM;');
-        this.emit('import-progress', 100);
+        this.emit('export-progress', 100);
     }
 
     public executeCommand(cmd: string, callback?) {
