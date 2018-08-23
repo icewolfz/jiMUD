@@ -27,7 +27,7 @@
 
     var roomEditor = false;
     var importType = ImportType.Replace;
-    var _import;
+    var _progress;
 
     var menubar = new Menubar([
       {
@@ -252,9 +252,6 @@
       $("#mapper-room select").prop("disabled", true);
       $("#mapper-room button").prop("disabled", true);
 
-      $("#mapProgress")[0].addEventListener('close', () => {
-      });
-
       var options = Settings.load(remote.getGlobal('settingsFile'));
       mapper = new Mapper(document.getElementById("MapperCanvas"), options.mapper.memory, options.mapper.memorySavePeriod, remote.getGlobal('mapFile'));
 
@@ -445,22 +442,6 @@
         ipcRenderer.send('progress-close');
         ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
         ipcRenderer.send('send-gmcp', 'Room.Info');
-      });
-      mapper.on('export-progress', (value) => {
-        if (value != -1) {
-          $("#mapProgress progress").val(value);
-          ipcRenderer.send('set-progress', { value: value / 100.0 });
-          ipcRenderer.send('set-progress-window', 'mapper', { value: value / 100.0 });
-        }
-        if (value >= 100) {
-          //setTimeout(updateAreas, 1);
-          updateAreas();
-          if ($("#mapProgress")[0].open)
-            $("#mapProgress")[0].close();
-          ipcRenderer.send('set-progress', { value: -1 });
-          ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
-          ipcRenderer.send('send-gmcp', 'Room.Info');
-        }
       });
 
       mapper.on('setting-changed', (setting, value) => {
@@ -682,9 +663,15 @@
     });
 
     ipcRenderer.on('progress-loaded', () => {
-      mapper.import(_import.data, _import.type);
-      if (_import.room)
-        ipcRenderer.send('send-gmcp', 'Room.Info');
+      if (_progress.action === 0) {
+        mapper.import(_progress.data, _progress.type);
+        if (_progress.room)
+          ipcRenderer.send('send-gmcp', 'Room.Info');
+      }
+      else if (_progress.action === 1)
+        mapper.exportArea(_progress.file);
+      else if (_progress.action === 2)
+        mapper.exportAll(_progress.file);
     });
 
     function processGMCP(data) {
@@ -727,7 +714,7 @@
     ipcRenderer.on('import', (event, data) => {
       ipcRenderer.send('show-window', 'mapper');
       ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-      _import = { data: data, type: importType, room: true };
+      _progress = { action: 0, data: data, type: importType, room: true };
       ipcRenderer.send('progress-show', 'Importing map data&hellip;');
     });
 
@@ -757,12 +744,9 @@
       }
     }
     function compact() {
-      $("#mapProgressbar").html('<progress max="100"></progress>');
-      $("#mapProgressTitle").html("Compacting map data&hellip;");
-      $("#mapProgress")[0].showModal();
-      ipcRenderer.send('set-progress', { value: 0, options: { mode: 'indeterminate' } });
-      ipcRenderer.send('set-progress-window', 'mapper', { value: 0, options: { mode: 'indeterminate' } });
+      showProgress('Compacting map data&hellip;');
       mapper.compact();
+      closeProgress();
     }
 
     function toggleEnabled() {
@@ -843,7 +827,7 @@
     function exportImage() {
       clearButton("#export");
       dialog.showSaveDialog(remote.getCurrentWindow(), {
-        title: 'Export clipped view',
+        title: 'Export image',
         defaultPath: 'jiMUD' + (!mapper.SplitArea ? '' : "." + mapper.active.area) + '.png',
         filters: [
 
@@ -855,8 +839,10 @@
           if (fileName === undefined) {
             return;
           }
+          showProgress('Exporting image&hellip;');
           mapper.getRooms(mapper.active.area, mapper.active.z, mapper.active.zone, (rooms) => {
             if (!rooms || rooms.length === 0) {
+              closeProgress();
               dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'error',
                 title: 'Error generating',
@@ -941,8 +927,8 @@
             ctx.stroke();
             ctx.restore();
             mapper.DrawLegend(ctx, rectWidth - 185, -10, 1);
-
             fs.writeFileSync(fileName, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG());
+            closeProgress();
           });
         });
 
@@ -963,6 +949,7 @@
           if (fileName === undefined) {
             return;
           }
+          showProgress('Exporting image&hellip;');
           var oldCanvas = document.getElementById("MapperCanvas");
           var newCanvas = document.createElement('canvas');
           var context = newCanvas.getContext('2d');
@@ -970,6 +957,7 @@
           newCanvas.height = oldCanvas.height;
           mapper.draw(newCanvas, context, true, () => {
             fs.writeFileSync(fileName, nativeImage.createFromDataURL(newCanvas.toDataURL('image/png')).toPNG());
+            closeProgress();
           });
         });
     }
@@ -980,7 +968,6 @@
         title: 'Export current area',
         defaultPath: 'jiMUD.' + mapper.active.area + '.txt',
         filters: [
-
           { name: 'Text files (*.txt)', extensions: ['txt'] },
           { name: 'All files (*.*)', extensions: ['*'] },
         ]
@@ -991,10 +978,8 @@
           }
           ipcRenderer.send('set-progress', { value: 0 });
           ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-          $("#mapProgressbar").html('<progress max="100"></progress>');
-          $("#mapProgressTitle").html("Exporting '" + mapper.active.area + "' map data&hellip;");
-          $("#mapProgress")[0].showModal();
-          mapper.exportArea(fileName);
+          _progress = { action: 1, file: fileName };
+          ipcRenderer.send('progress-show', `Exporting area data&hellip;`);
         });
     }
 
@@ -1004,7 +989,6 @@
         title: 'Export all',
         defaultPath: 'jiMUD.txt',
         filters: [
-
           { name: 'Text files (*.txt)', extensions: ['txt'] },
           { name: 'All files (*.*)', extensions: ['*'] },
         ]
@@ -1013,12 +997,10 @@
           if (fileName === undefined) {
             return;
           }
-          $("#mapProgressbar").html('<progress max="100"></progress>');
-          $("#mapProgressTitle").html("Exporting map data&hellip;");
           ipcRenderer.send('set-progress', { value: 0 });
           ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-          $("#mapProgress")[0].showModal();
-          mapper.exportAll(fileName);
+          _progress = { action: 2, file: fileName };
+          ipcRenderer.send('progress-show', `Exporting map data&hellip;`);
         });
     }
 
@@ -1048,7 +1030,7 @@
                 return;
               }
               ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-              _import = { data: data, type: ImportType.Merge };
+              _progress = { action: 0, data: data, type: ImportType.Merge };
               ipcRenderer.send('progress-show', 'Importing map data&hellip;');
             });
         });
@@ -1081,7 +1063,7 @@
               }
               ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
               ipcRenderer.send('progress-show', 'Importing map data&hellip;');
-              _import = { data: data, type: ImportType.Replace };
+              _progress = { action: 0, data: data, type: ImportType.Replace };
             });
         });
     }
@@ -1140,6 +1122,21 @@
         if (response === 0)
           mapper.clearAll();
       });
+    }
+
+    function showProgress(title) {
+      ipcRenderer.send('set-progress', { value: 0 });
+      ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+      $("#mapProgressbar").html('<progress max="100"></progress>');
+      $("#mapProgressTitle").html(title);
+      $("#mapProgress")[0].showModal();
+    }
+
+    function closeProgress() {
+      if ($("#mapProgress")[0].open)
+        $("#mapProgress")[0].close();
+      ipcRenderer.send('set-progress', { value: -1 });
+      ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
     }
   </script>
 </head>
@@ -1407,11 +1404,13 @@
     <div id="mapProgressbar">
       <progress max="100"></progress>
     </div>
+    <!--
     <div>
       <button onclick="mapper.cancelImport();">
         Cancel
       </button>
     </div>
+    -->
   </dialog>
 </body>
 

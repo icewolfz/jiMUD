@@ -2218,9 +2218,14 @@ export class Mapper extends EventEmitter {
         });
         const rooms = {};
         if (rows) {
+            this._cancelImport = false;
             const rl = rows.length;
-            this.emit('export-progress', 0);
+            this.emit('import-progress', 0);
             for (let r = 0; r < rl; r++) {
+                if (this._cancelImport) {
+                    this.emit('import-complete');
+                    return;
+                }
                 rows[r].ID = parseInt(rows[r].ID, 10);
                 if (rooms[rows[r].ID]) {
                     if (!rows[r].Exit) continue;
@@ -2249,19 +2254,26 @@ export class Mapper extends EventEmitter {
                         isclosed: rows[r].IsClosed
                     };
                 }
-                this.emit('export-progress', Math.floor(r / rl * 100));
+                this.emit('import-progress', Math.floor(r / rl * 100));
             }
             this.exportRooms(file, rooms);
         }
+        this._cancelImport = false;
+        this.emit('import-complete');
     }
 
     public exportAll(file: string) {
         const rows = this._db.prepare('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID').all();
         const rooms = {};
+        this._cancelImport = false;
         if (rows) {
             const rl = rows.length;
-            this.emit('export-progress', 0);
+            this.emit('import-progress', 0);
             for (let r = 0; r < rl; r++) {
+                if (this._cancelImport) {
+                    this.emit('import-complete');
+                    return;
+                }
                 rows[r].ID = parseInt(rows[r].ID, 10);
                 if (rooms[rows[r].ID]) {
                     if (!rows[r].Exit) continue;
@@ -2290,19 +2302,21 @@ export class Mapper extends EventEmitter {
                         isclosed: rows[r].IsClosed
                     };
                 }
-                this.emit('export-progress', Math.floor(r / rl * 100));
+                this.emit('import-progress', Math.floor(r / rl * 100));
             }
             this.exportRooms(file, rooms);
         }
+        this._cancelImport = false;
+        this.emit('import-complete');
     }
 
     public exportRooms(file: string, rooms) {
         if (!rooms) {
-            this.emit('export-progress', 100);
+            this.emit('import-progress', 100);
             return;
         }
         fs.writeFileSync(file, JSON.stringify(rooms));
-        this.emit('export-progress', 100);
+        this.emit('import-progress', 100);
     }
 
     public cancelImport() {
