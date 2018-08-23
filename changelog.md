@@ -12,6 +12,7 @@
   - Code editor:
     - Area designer: changed hidden exit color to orange to make it easier to see on white background
     - Virtual area editor: changed drawing system to use the same as area designer to offer indoor/outdoor room styles
+  - Move from node-sqlite3 to better-sqlite3 4.1.4 as it offers better performance with mapper
 - **Fixed:**
   - Code editor:
     - Save scroll view state
