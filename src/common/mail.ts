@@ -14,7 +14,7 @@ import { parseTemplate, isFileSync } from './library';
 import { MailStatus, MailAction, MailReadFormat, MailFolders } from './types';
 const fs = require('fs');
 const path = require('path');
-const sqlite3 = require('sqlite3');
+const sqlite3 = require('better-sqlite3');
 
 const { ipcRenderer } = require('electron');
 
@@ -57,11 +57,10 @@ export class Mail extends EventEmitter {
                 callback();
         }
         else
-            this._db.close(() => {
-                this.initializeDatabase();
-                if (callback)
-                    callback();
-            });
+            this._db.close();
+        this.initializeDatabase();
+        if (callback)
+            callback();
     }
 
     public close(callback?) {
@@ -70,24 +69,22 @@ export class Mail extends EventEmitter {
                 callback();
         }
         else
-            this._db.close(() => {
-                /*
-                try {
-                    fs.unlinkSync(this._file + '.lock');
-                }
-                catch (err) {
-                    this.emit('error', err);
-                }
-                */
-                if (callback)
-                    callback();
-            });
+            this._db.close();
+        /*
+        try {
+            fs.unlinkSync(this._file + '.lock');
+        }
+        catch (err) {
+            this.emit('error', err);
+        }
+        */
+        if (callback)
+            callback();
     }
 
     public initializeDatabase() {
-        this._db = new sqlite3.Database(this._file);
+        this._db = new sqlite3(this._file);
         this.createDatabase();
-        this._db.serialize();
         /*
         try {
             fs.writeFileSync(this._file + '.lock', Date.now());
@@ -102,19 +99,17 @@ export class Mail extends EventEmitter {
             prefix += '.';
         else
             prefix = '';
-        this._db.serialize(() => {
-            //this._db.run("PRAGMA synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA journal_mode = TRUNCATE;PRAGMA optimize;PRAGMA read_uncommitted = 1;PRAGMA threads = 4;");
-            this._db.run('PRAGMA ' + prefix + 'synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;');
-            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Mail (MailID TEXT PRIMARY KEY ASC, [From] INTEGER, [Date] INTEGER, Subject TEXT, Raw TEXT, Ansi TEXT, HTML TEXT, Folder INTEGER, Read INTEGER)');
-            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'CC (MailID TEXT, NameID INTEGER, FOREIGN KEY(MailID) REFERENCES Mail(MailID), FOREIGN KEY(NameID) REFERENCES Names(NameID))');
-            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + '[To] (MailID TEXT, NameID INTEGER, FOREIGN KEY(MailID) REFERENCES Mail(MailID), FOREIGN KEY(NameID) REFERENCES Names(NameID))');
-            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Names (NameID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)');
-            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'Groups (GroupID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)');
-            this._db.run('CREATE TABLE IF NOT EXISTS ' + prefix + 'GroupMembers (GroupID INTEGER, NameID INTEGER, FOREIGN KEY(GroupID) REFERENCES Groups(GroupID), FOREIGN KEY(NameID) REFERENCES Names(NameID))');
-            this._db.run('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_mailid on Mail (MailID);');
-            this._db.run('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_nameid on Names (NameID);');
-            this._db.run('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_groupid on Groups (GroupID);');
-        });
+        //this._db.run("PRAGMA synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA journal_mode = TRUNCATE;PRAGMA optimize;PRAGMA read_uncommitted = 1;PRAGMA threads = 4;");
+        this._db.exec('PRAGMA ' + prefix + 'synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;');
+        this._db.exec('CREATE TABLE IF NOT EXISTS ' + prefix + 'Mail (MailID TEXT PRIMARY KEY ASC, [From] INTEGER, [Date] INTEGER, Subject TEXT, Raw TEXT, Ansi TEXT, HTML TEXT, Folder INTEGER, Read INTEGER)');
+        this._db.exec('CREATE TABLE IF NOT EXISTS ' + prefix + 'CC (MailID TEXT, NameID INTEGER, FOREIGN KEY(MailID) REFERENCES Mail(MailID), FOREIGN KEY(NameID) REFERENCES Names(NameID))');
+        this._db.exec('CREATE TABLE IF NOT EXISTS ' + prefix + '[To] (MailID TEXT, NameID INTEGER, FOREIGN KEY(MailID) REFERENCES Mail(MailID), FOREIGN KEY(NameID) REFERENCES Names(NameID))');
+        this._db.exec('CREATE TABLE IF NOT EXISTS ' + prefix + 'Names (NameID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)');
+        this._db.exec('CREATE TABLE IF NOT EXISTS ' + prefix + 'Groups (GroupID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)');
+        this._db.exec('CREATE TABLE IF NOT EXISTS ' + prefix + 'GroupMembers (GroupID INTEGER, NameID INTEGER, FOREIGN KEY(GroupID) REFERENCES Groups(GroupID), FOREIGN KEY(NameID) REFERENCES Names(NameID))');
+        this._db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_mailid on Mail (MailID);');
+        this._db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_nameid on Names (NameID);');
+        this._db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_groupid on Groups (GroupID);');
     }
 
     public processGMCP(mod: string, obj) {
@@ -143,12 +138,8 @@ export class Mail extends EventEmitter {
                 switch (obj.action) {
                     case MailAction.mark:
                         if (obj.code === MailStatus.SUCCESS) {
-                            this._db.run('Update Mail SET Read = ? WHERE MailID = ?', [obj.read, obj.id], (err) => {
-                                if (err)
-                                    this.emit('error', err);
-                                else
-                                    this.emit('mark-changed', obj.id);
-                            });
+                            this._db.prepare('Update Mail SET Read = ? WHERE MailID = ?', [obj.read, obj.id]).run();
+                            this.emit('mark-changed', obj.id);
                         }
                         else {
                             switch (obj.code) {
@@ -220,7 +211,7 @@ export class Mail extends EventEmitter {
 
     public addOrUpdateLetter(letter, callback?) {
         if (!letter) return;
-        this._db.run('INSERT OR REPLACE INTO Mail (MailID, Date, Subject, Read, Folder, Raw, Ansi) VALUES (?, ?, ?, ?, ?, (SELECT Raw FROM Mail WHERE MailID = ?), (SELECT Ansi FROM Mail WHERE MailID = ?)) ',
+        this._db.prepare('INSERT OR REPLACE INTO Mail (MailID, Date, Subject, Read, Folder, Raw, Ansi) VALUES (?, ?, ?, ?, ?, (SELECT Raw FROM Mail WHERE MailID = ?), (SELECT Ansi FROM Mail WHERE MailID = ?))').run(
             [
                 letter.id,
                 letter.date,
@@ -229,52 +220,34 @@ export class Mail extends EventEmitter {
                 letter.folder || MailFolders.inbox,
                 letter.id,
                 letter.id
-            ], (err) => {
-                if (err)
-                    this.emit('error', err);
-                else {
-                    this._db.run('DELETE FROM CC WHERE MailID = ?', [letter.id], () => {
-                        this._db.run('DELETE FROM [To] WHERE MailID = ?', [letter.id], () => {
-                            let n;
-                            let nl;
-                            const stmt = this._db.prepare(`INSERT INTO Names(Name) SELECT $from WHERE NOT EXISTS(SELECT 1 FROM Names WHERE Name = $from);`);
-                            stmt.run({ $from: letter.from }, (err2) => {
-                                if (err2)
-                                    this.emit('error', err2);
-                                this._db.get('SELECT NameID from Names WHERE Name = ?', [letter.from], (err3, row) => {
-                                    if (err3)
-                                        this.emit('error', err3);
-                                    this._db.run('Update Mail SET [From] = ? WHERE MailID = ?', [row.NameID, letter.id]);
-                                });
-                            });
-                            nl = letter.cc.length;
-                            for (n = 0; n < nl; n++) {
-                                stmt.run({ $from: letter.cc[n] }, (err2) => {
-                                    if (err2)
-                                        this.emit('error', err2);
-                                    this._db.get('SELECT NameID from Names WHERE Name = ?', [letter.from], (err3, row) => {
-                                        this._db.run('INSERT INTO CC (MailID, NameID) VALUES (?, ?)', [letter.id, row.NameID]);
-                                    });
-                                });
-                            }
-                            nl = letter.to.length;
-                            for (n = 0; n < nl; n++) {
-                                stmt.run({ $from: letter.to[n] }, (err2) => {
-                                    if (err2)
-                                        this.emit('error', err2);
-                                    this._db.get('SELECT NameID from Names WHERE Name = ?', [letter.from], (err3, row) => {
-                                        this._db.run('INSERT INTO [To] (MailID, NameID) VALUES (?, ?)', [letter.id, row.NameID]);
-                                    });
-                                });
-                            }
-                            stmt.finalize();
-                            if (callback) callback();
-                        });
-                    });
-                }
-                this._changed = true;
-                this.emit('letter-add', letter);
-            });
+            ]);
+        this._db.prepare('DELETE FROM CC WHERE MailID = ?', [letter.id]).run();
+        this._db.prepare('DELETE FROM [To] WHERE MailID = ?', [letter.id]).run();
+        let n;
+        let nl;
+        let row;
+        const stmt = this._db.prepare(`INSERT INTO Names(Name) SELECT $from WHERE NOT EXISTS(SELECT 1 FROM Names WHERE Name = $from);`);
+        stmt.run({ $from: letter.from });
+        row = this._db.prepare('SELECT NameID from Names WHERE Name = ?').get([letter.from]);
+        this._db.prepare('Update Mail SET [From] = ? WHERE MailID = ?').run([row.NameID, letter.id]);
+
+        nl = letter.cc.length;
+        for (n = 0; n < nl; n++) {
+            stmt.run({ $from: letter.cc[n] }).run();
+            row = this._db.prepare('SELECT NameID from Names WHERE Name = ?').get([letter.from]);
+            this._db.prepare('INSERT INTO CC (MailID, NameID) VALUES (?, ?)').run([letter.id, row.NameID]);
+        }
+        nl = letter.to.length;
+        for (n = 0; n < nl; n++) {
+            stmt.run({ $from: letter.to[n] });
+            row = this._db.prepare('SELECT NameID from Names WHERE Name = ?').get([letter.from]);
+            this._db.run('INSERT INTO [To] (MailID, NameID) VALUES (?, ?)').run([letter.id, row.NameID]);
+        }
+        stmt.finalize();
+        if (callback) callback();
+        this._changed = true;
+        this.emit('letter-add', letter);
+
     }
 
     public updateMessage(letter, callback?) {
@@ -287,61 +260,40 @@ export class Mail extends EventEmitter {
                 sql = 'Update Mail SET HTML = ? WHERE MailID = ?';
             else
                 sql = 'Update Mail SET Raw = ? WHERE MailID = ?';
-            this._db.run(sql, [letter.message, letter.id], (err) => {
-                if (err)
-                    this.emit('error', err);
-                if (callback)
-                    callback();
-            });
+            this._db.prepare(sql).run([letter.message, letter.id]);
+            if (callback)
+                callback();
         });
     }
 
     public getLetters(folder, callback) {
-        this._db.all('SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE Folder = ?', [folder], (err, rows) => {
-            if (err)
-                this.emit('error', err);
-            else {
-                this._db.all('SELECT Names.Name FROM [To] INNER JOIN Names on Names.NameID = [To].NameID WHERE [To].MailID = ?', [rows.id], (err2, rows2) => {
-                    if (err2)
-                        this.emit('error', err2);
-                    else if (callback) {
-                        rows.to = rows2.map((obj) => {
-                            return obj.Name;
-                        });
-                        callback(rows || []);
-                    }
-                });
-            }
-        });
+        const rows = this._db.prepare('SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE Folder = ?').all([folder]);
+        const rows2 = this._db.prepare('SELECT Names.Name FROM [To] INNER JOIN Names on Names.NameID = [To].NameID WHERE [To].MailID = ?').all([rows.id]);
+
+        if (callback) {
+            rows.to = rows2.map((obj) => {
+                return obj.Name;
+            });
+            callback(rows || []);
+        }
     }
 
     public getLetterList(folder, callback) {
-        this._db.all('SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE Folder = ?', [folder], (err, rows) => {
-            if (err)
-                this.emit('error', err);
-            else if (callback)
-                callback(rows || []);
-        });
+        const rows = this._db.prepare('SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE Folder = ?').all([folder]);
+        if (callback)
+            callback(rows || []);
     }
 
     public getLetter(id, callback) {
-        this._db.get('SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE Mail.MailID = ?', [id], (err, row) => {
-            if (err)
-                this.emit('error', err);
-            else {
-                this._db.all('SELECT Names.Name FROM [To] INNER JOIN Names on Names.NameID = [To].NameID WHERE [To].MailID = ?', [id], (err2, rows) => {
-                    if (err2)
-                        this.emit('error', err2);
-                    else if (callback) {
-                        if (row)
-                            row.to = rows.map((obj) => {
-                                return obj.Name;
-                            });
-                        callback(row);
-                    }
-                });
-            }
-        });
+        const row = this._db.prepare('SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE Mail.MailID = ?').get([id]);
+        const rows = this._db.prepare('SELECT Names.Name FROM [To] INNER JOIN Names on Names.NameID = [To].NameID WHERE [To].MailID = ?').all([id]);
+
+        if (row)
+            row.to = rows.map((obj) => {
+                return obj.Name;
+            });
+        callback(row);
+
     }
 
     public getMail(date?: (number | Date)) {
@@ -362,55 +314,38 @@ export class Mail extends EventEmitter {
             sql = 'SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read, HTML as message FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE MailID = ?';
         else
             sql = 'SELECT MailID as id, Names.Name as [from], [Date] as [date], Subject as subject, Read as read, Raw as message FROM Mail INNER JOIN Names on Names.NameID = Mail.[From] WHERE MailID = ?';
-        this._db.get(sql, [id], (err, row) => {
-            if (err) {
-                this.emit('error', err);
-                if (callback)
-                    callback(0);
+        const row = this._db.prepare(sql).get([id]);
+        if (!row) {
+            if (callback)
+                callback(0);
+        }
+        else if (!row.message) {
+            if (callback)
+                this._read[id + '-' + format] = callback;
+            ipcRenderer.send('send-gmcp', `Post.read {id:"${id}", format:${format}}`);
+        }
+        else {
+            const rows = this._db.prepare('SELECT Names.Name FROM CC INNER JOIN Names on Names.NameID = CC.NameID WHERE CC.MailID = ?').all([id]);
+            if (callback) {
+                row.cc = rows.map((obj) => {
+                    return obj.Name;
+                });
+                callback(row);
             }
-            else if (!row) {
-                if (callback)
-                    callback(0);
-            }
-            else {
-                if (!row.message) {
-                    if (callback)
-                        this._read[id + '-' + format] = callback;
-                    ipcRenderer.send('send-gmcp', `Post.read {id:"${id}", format:${format}}`);
-                }
-                else
-                    this._db.all('SELECT Names.Name FROM CC INNER JOIN Names on Names.NameID = CC.NameID WHERE CC.MailID = ?', [id], (err2, rows) => {
-                        if (err2)
-                            this.emit('error', err2);
-                        else if (callback) {
-                            row.cc = rows.map((obj) => {
-                                return obj.Name;
-                            });
-                            callback(row);
-                        }
-                    });
-            }
-        });
+        }
     }
 
     public mark(id, mark: number, local?) {
         if (!local)
             ipcRenderer.send('send-gmcp', `Post.mark {id:"${id}", read:${mark}}`);
-        this._db.run('Update Mail SET Read = ? WHERE MailID = ?', [mark, id], (err) => {
-            if (err)
-                this.emit('error', err);
-            else
-                this.emit('mark-changed', id);
-        });
+        this._db.prepare('Update Mail SET Read = ? WHERE MailID = ?').run([mark, id]);
+        this.emit('mark-changed', id);
     }
 
     public newCount(folder, callback) {
-        this._db.get('SELECT Count(Read) as count FROM Mail WHERE Read = 0 AND Folder = ?', [folder], (err, row) => {
-            if (err)
-                this.emit('error', err);
-            if (callback)
-                callback(row ? row.count : 0);
-        });
+        const row = this._db.prepare('SELECT Count(Read) as count FROM Mail WHERE Read = 0 AND Folder = ?').get([folder]);
+        if (callback)
+            callback(row ? row.count : 0);
     }
 
     public send(letter, save?, callback?) {
@@ -476,8 +411,7 @@ export class Mail extends EventEmitter {
         });
     }
 
-    public sendCancel(id)
-    {
+    public sendCancel(id) {
         delete this._data['send' + id];
         ipcRenderer.send('send-gmcp', `Post.send.reset "${id}"`);
     }
