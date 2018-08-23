@@ -9458,7 +9458,7 @@ export class AreaDesigner extends EditorBase {
         //ctx.save();
         if (c) {
             ctx.fillStyle = 'white';
-            ctx.fillRect(x + 0.5, y + 0.5, 32, 32);
+            ctx.fillRect(x + 0, y + 0, 32, 32);
         }
 
         ///ctx.translate(0.5,0.5);
@@ -9587,8 +9587,8 @@ export class AreaDesigner extends EditorBase {
         if (!this.$drawCache[key]) {
             this.$drawCache[key] = document.createElement('canvas');
             this.$drawCache[key].classList.add('map-canvas');
-            this.$drawCache[key].height = 33;
-            this.$drawCache[key].width = 33;
+            this.$drawCache[key].height = 32;
+            this.$drawCache[key].width = 32;
             const tx = this.$drawCache[key].getContext('2d');
             tx.beginPath();
             let ox = 0;

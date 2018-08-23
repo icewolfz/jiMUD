@@ -6879,8 +6879,8 @@ export class VirtualEditor extends EditorBase {
         if (!this.$drawCache[key]) {
             this.$drawCache[key] = document.createElement('canvas');
             this.$drawCache[key].classList.add('map-canvas');
-            this.$drawCache[key].height = 33;
-            this.$drawCache[key].width = 33;
+            this.$drawCache[key].height = 32;
+            this.$drawCache[key].width = 32;
             const tx = this.$drawCache[key].getContext('2d');
 
             if (this.$showTerrain && !room.ef) {
