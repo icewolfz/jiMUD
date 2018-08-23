@@ -2236,22 +2236,20 @@ ipcMain.on('progress-title', (event, title) => {
 });
 
 ipcMain.on('progress-closed', () => {
-  if (winMap)
-    winProgress.webContents.send('progress-closed');
-  if (winCode)
-    winCode.webContents.send('progress-closed');
-  if (win)
-    win.webContents.send('progress-closed');
+  if (winProgress.getParentWindow())
+    winProgress.getParentWindow().webContents.send('progress-closed');
   setProgress({ percent: 0 });
 });
 
 ipcMain.on('progress-canceled', () => {
-  if (winMap)
-    winMap.webContents.send('progress-canceled');
-  if (winCode)
-    winCode.webContents.send('progress-canceled');
-  if (win)
-    win.webContents.send('progress-canceled');
+  if (winProgress.getParentWindow())
+    winProgress.getParentWindow().webContents.send('progress-canceled');
+  setProgress({ percent: 0 });
+});
+
+ipcMain.on('progress-loaded', () => {
+  if (winProgress.getParentWindow())
+    winProgress.getParentWindow().webContents.send('progress-loaded');
   setProgress({ percent: 0 });
 });
 
