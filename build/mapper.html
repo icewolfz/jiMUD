@@ -42,7 +42,7 @@
           {
             label: '&Export',
             submenu: [
-              { label: 'Export as image', click: ()=> save(exportImage) },
+              { label: 'Export as image', click: () => save(exportImage) },
               { label: 'Export current view as image', click: exportCurrentImage },
               { type: 'separator' },
               { label: 'Export current area', click: exportCurrentArea },
@@ -267,6 +267,11 @@
       $("#MapZone").val(options.mapper.active.zone);
       if (options.mapper.room)
         toggleRooms();
+
+      mapper.on('debug', msg => {
+        if (options.enableDebug)
+          console.log(msg);
+      });
 
       mapper.on('path-shown', () => {
         $("#btn-clear").prop('disabled', false);
@@ -1204,7 +1209,7 @@
     <div class="MapperNavButton" title="Scroll southwest" style="bottom:4px;left:4px;background-position: 0px -44px;" data-x="-1" data-y="1"></div>
     <div class="MapperNavButton" title="Scroll south" style="bottom:4px;left:50%;background-position: -22px -44px;margin-left:-11px;" data-x="0" data-y="1"></div>
     <div class="MapperNavButton" title="Scroll southeast" style="bottom:4px;left:100%;background-position: -44px -44px;margin-left:-26px;" data-x="1" data-y="1"></div>
-    <canvas id="MapperCanvas"></canvas>
+    <canvas id="MapperCanvas" class="map-canvas"></canvas>
   </div>
   <div id="mapper-room">
     <div class="panel-group" id="accordion" role="tablist" style="overflow: auto;bottom: 20px;position: absolute;top: 0px;width: 100%;">

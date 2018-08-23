@@ -7,6 +7,7 @@
     - Add library functions to code complete
     - Area designer:
       - Added hidden exit display to room editor, displays a list of hidden exits in a read only field
+  - Mapper: optimize drawing systems to increase performance and scrolling speeds
 - **Changed:**
   - Code editor:
     - Area designer: changed hidden exit color to orange to make it easier to see on white background
