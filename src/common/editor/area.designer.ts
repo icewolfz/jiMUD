@@ -9547,17 +9547,29 @@ export class AreaDesigner extends EditorBase {
                 case 'bog':
                 case 'city':
                 case 'cliff':
-                case 'cobble':
-                case 'farmland':
                 case 'highmountain':
                 case 'hills':
                 case 'mountain':
-                case 'pavedroad':
-                case 'rockdesert':
-                case 'rocky':
-                case 'stone':
                 case 'swamp':
                     f = false;
+                    break;
+                case 'farmland':
+                    f = true;
+                    ctx.fillStyle = '#A9DFBF';
+                    break;
+                case 'rockdesert':
+                    ctx.fillStyle = '#6E2C00';
+                    f = true;
+                    break;
+                case 'pavedroad':
+                    ctx.fillStyle = '#D0D3D4';
+                    f = true;
+                    break;
+                case 'cobble':
+                case 'rocky':
+                case 'stone':
+                    ctx.fillStyle = '#D5DBDB';
+                    f = true;
                     break;
                 default:
                     f = false;
