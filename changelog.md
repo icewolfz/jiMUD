@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.63
+## 0.5.0
 
 - **New:**
   - Code editor:
@@ -8,11 +8,11 @@
     - Area designer:
       - Added hidden exit display to room editor, displays a list of hidden exits in a read only field
   - Mapper: optimize drawing systems to increase performance and scrolling speeds
+  - Move from node-sqlite3 to better-sqlite3 4.1.4 as it offers better performance
 - **Changed:**
   - Code editor:
     - Area designer: changed hidden exit color to orange to make it easier to see on white background
     - Virtual area editor: changed drawing system to use the same as area designer to offer indoor/outdoor room styles
-  - Move from node-sqlite3 to better-sqlite3 4.1.4 as it offers better performance with mapper
 - **Fixed:**
   - Code editor:
     - Save scroll view state
