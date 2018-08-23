@@ -723,7 +723,7 @@
         setTimeout(updateAreas, 10);
         return;
       }
-      mapper._db.all("SELECT DISTINCT Area from Rooms order by Area", (err, rows) => {
+      let rows = mapper._db.prepare("SELECT DISTINCT Area from Rooms order by Area").all();
         if (rows && rows.length > 0) {
           for (var a = 0; a < rows.length; a++) {
             $("#select-area").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
@@ -734,7 +734,6 @@
           else
             mapper.active.area = $("#select-area option:first").val();
         }
-      });
     }
     function compact() {
       $("#mapProgressbar").html('<progress max="100"></progress>');
