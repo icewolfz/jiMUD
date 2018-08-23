@@ -32,6 +32,7 @@
       - Fix depth toolbar min/max
       - Fix collection dialog editor and drop down sub editors
   - Immortal tools: do not attempt to open paths in code editor
+  - Mapper: Fix some issues with reloading preferences after they have been changed
 
 ## 0.4.62 2018-08-13
 

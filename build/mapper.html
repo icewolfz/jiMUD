@@ -28,6 +28,7 @@
     var roomEditor = false;
     var importType = ImportType.Replace;
     var _progress;
+    var _enableDebug = false;
 
     var menubar = new Menubar([
       {
@@ -259,14 +260,14 @@
       mapper.commandDelay = options.commandDelay;
       mapper.commandDelayCount = options.commandDelayCount;
       importType = options.mapper.importType;
-
+      _enableDebug = options.enableDebug;
       $("#MapLevel").val(options.mapper.active.z);
       $("#MapZone").val(options.mapper.active.zone);
       if (options.mapper.room)
         toggleRooms();
 
       mapper.on('debug', msg => {
-        if (options.enableDebug)
+        if (_enableDebug)
           console.log(msg);
       });
 
@@ -707,7 +708,16 @@
 
     ipcRenderer.on('reload-options', () => {
       save(function () {
-        remote.getCurrentWindow().reload();
+        var options = Settings.load(remote.getGlobal('settingsFile'));
+        mapper.memorySavePeriod = options.mapper.memorySavePeriod;
+        mapper.memory = options.mapper.memory;
+        mapper.mapFile = remote.getGlobal('mapFile');
+
+        mapper.commandDelay = options.commandDelay;
+        mapper.commandDelayCount = options.commandDelayCount;
+        importType = options.mapper.importType;
+        _enableDebug = options.enableDebug;
+        //remote.getCurrentWindow().reload();
       });
     });
 
