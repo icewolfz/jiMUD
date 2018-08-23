@@ -6,7 +6,7 @@ import { BackupSelection, Log } from './types';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context } from './profile';
 const fs = require('fs');
 const path = require('path');
-const sqlite3 = require('sqlite3');
+const sqlite3 = require('better-sqlite3');
 const LZString = require('lz-string');
 
 export class Backup extends EventEmitter {
@@ -76,156 +76,155 @@ export class Backup extends EventEmitter {
 
     public save(version?: number) {
         this.client.debug('Map file: ' + this.mapFile);
-        const _db = new sqlite3.Database(this.mapFile);
-        _db.all('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID', (err, rows) => {
-            const data = {
-                version: version,
-                profiles: {},
-                settings: {
-                    mapEnabled: this.client.options.mapper.enabled,
-                    mapFollow: this.client.options.mapper.follow,
-                    legend: this.client.options.mapper.legend,
-                    MapperSplitArea: this.client.options.mapper.split,
-                    MapperFillWalls: this.client.options.mapper.fill,
-                    vscroll: this.client.options.mapper.vscroll,
-                    hscroll: this.client.options.mapper.hscroll,
-                    mapperMemory: this.client.options.mapper.memory,
-                    showScriptErrors: this.client.options.showScriptErrors,
-                    title: this.client.options.title,
-                    flashing: this.client.options.flashing,
-                    lagMeter: this.client.options.lagMeter,
-                    enablePing: this.client.options.enablePing,
-                    parseSingleQuotes: this.client.options.parseSingleQuotes,
-                    logEnabled: this.client.options.logEnabled,
-                    logOffline: this.client.options.logOffline,
-                    logPrepend: this.client.options.logPrepend,
-                    notifyMSPPlay: this.client.options.notifyMSPPlay,
-                    bufferSize: this.client.options.bufferSize,
-                    commandHistorySize: this.client.options.commandHistorySize,
-                    enableEcho: this.client.options.enableEcho,
-                    autoConnect: this.client.options.autoConnect,
-                    autoConnectDelay: this.client.options.autoConnectDelay,
-                    commandEcho: this.client.options.commandEcho,
-                    commandStacking: this.client.options.commandStacking,
-                    htmlLog: (this.client.options.logWhat & Log.Html) === Log.Html,
-                    keepLastCommand: this.client.options.keepLastCommand,
-                    enableMXP: this.client.options.enableMXP,
-                    enableMSP: this.client.options.enableMSP,
-                    enableMCCP: this.client.options.enableMCCP,
-                    enableUTF8: this.client.options.enableUTF8,
-                    enableDebug: this.client.options.enableDebug,
-                    parseCommands: this.client.options.parseCommands,
-                    enableSpeedpaths: this.client.options.enableSpeedpaths,
-                    parseSpeedpaths: this.client.options.parseSpeedpaths,
-                    parseDoubleQuotes: this.client.options.parseDoubleQuotes,
-                    logUniqueOnConnect: this.client.options.logUniqueOnConnect,
-                    enableURLDetection: this.client.options.enableURLDetection,
-                    CommandonClick: this.client.options.CommandonClick,
-                    cmdfontSize: this.client.options.cmdfontSize,
-                    fontSize: this.client.options.fontSize,
-                    cmdfont: this.client.options.cmdfont,
-                    font: this.client.options.font,
-                    commandStackingChar: this.client.options.commandStackingChar,
-                    speedpathsChar: this.client.options.speedpathsChar,
-                    commandDelay: this.client.options.commandDelay,
-                    commandDelayCount: this.client.options.commandDelayCount,
-                    soundPath: this.client.options.soundPath,
-                    logPath: this.client.options.logPath,
-                    scrollLocked: this.client.options.scrollLocked,
-                    showStatus: this.client.options.showStatus,
-                    MapperOpen: this.client.options.showMapper,
-                    showCharacterManager: this.client.options.showCharacterManager,
-                    logErrors: this.client.options.logErrors,
-                    showErrorsExtended: this.client.options.showErrorsExtended
-                },
-                map: {}
-            };
+        const _db = new sqlite3(this.mapFile);
+        const rows = _db.prepare('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID').all();
+        _db.close();
+        const data = {
+            version: version,
+            profiles: {},
+            settings: {
+                mapEnabled: this.client.options.mapper.enabled,
+                mapFollow: this.client.options.mapper.follow,
+                legend: this.client.options.mapper.legend,
+                MapperSplitArea: this.client.options.mapper.split,
+                MapperFillWalls: this.client.options.mapper.fill,
+                vscroll: this.client.options.mapper.vscroll,
+                hscroll: this.client.options.mapper.hscroll,
+                mapperMemory: this.client.options.mapper.memory,
+                showScriptErrors: this.client.options.showScriptErrors,
+                title: this.client.options.title,
+                flashing: this.client.options.flashing,
+                lagMeter: this.client.options.lagMeter,
+                enablePing: this.client.options.enablePing,
+                parseSingleQuotes: this.client.options.parseSingleQuotes,
+                logEnabled: this.client.options.logEnabled,
+                logOffline: this.client.options.logOffline,
+                logPrepend: this.client.options.logPrepend,
+                notifyMSPPlay: this.client.options.notifyMSPPlay,
+                bufferSize: this.client.options.bufferSize,
+                commandHistorySize: this.client.options.commandHistorySize,
+                enableEcho: this.client.options.enableEcho,
+                autoConnect: this.client.options.autoConnect,
+                autoConnectDelay: this.client.options.autoConnectDelay,
+                commandEcho: this.client.options.commandEcho,
+                commandStacking: this.client.options.commandStacking,
+                htmlLog: (this.client.options.logWhat & Log.Html) === Log.Html,
+                keepLastCommand: this.client.options.keepLastCommand,
+                enableMXP: this.client.options.enableMXP,
+                enableMSP: this.client.options.enableMSP,
+                enableMCCP: this.client.options.enableMCCP,
+                enableUTF8: this.client.options.enableUTF8,
+                enableDebug: this.client.options.enableDebug,
+                parseCommands: this.client.options.parseCommands,
+                enableSpeedpaths: this.client.options.enableSpeedpaths,
+                parseSpeedpaths: this.client.options.parseSpeedpaths,
+                parseDoubleQuotes: this.client.options.parseDoubleQuotes,
+                logUniqueOnConnect: this.client.options.logUniqueOnConnect,
+                enableURLDetection: this.client.options.enableURLDetection,
+                CommandonClick: this.client.options.CommandonClick,
+                cmdfontSize: this.client.options.cmdfontSize,
+                fontSize: this.client.options.fontSize,
+                cmdfont: this.client.options.cmdfont,
+                font: this.client.options.font,
+                commandStackingChar: this.client.options.commandStackingChar,
+                speedpathsChar: this.client.options.speedpathsChar,
+                commandDelay: this.client.options.commandDelay,
+                commandDelayCount: this.client.options.commandDelayCount,
+                soundPath: this.client.options.soundPath,
+                logPath: this.client.options.logPath,
+                scrollLocked: this.client.options.scrollLocked,
+                showStatus: this.client.options.showStatus,
+                MapperOpen: this.client.options.showMapper,
+                showCharacterManager: this.client.options.showCharacterManager,
+                logErrors: this.client.options.logErrors,
+                showErrorsExtended: this.client.options.showErrorsExtended
+            },
+            map: {}
+        };
 
-            let prop;
-            let prop2;
+        let prop;
+        let prop2;
 
-            if (this.client.options.backupAllProfiles) {
-                const profiles = new ProfileCollection();
-                profiles.loadPath(path.join(parseTemplate('{data}'), 'profiles'));
-                data.profiles = profiles.clone(2);
+        if (this.client.options.backupAllProfiles) {
+            const profiles = new ProfileCollection();
+            profiles.loadPath(path.join(parseTemplate('{data}'), 'profiles'));
+            data.profiles = profiles.clone(2);
+        }
+        else
+            data.profiles = this.client.profiles.clone(2);
+
+        for (prop in this.client.options) {
+            if (!this.client.options.hasOwnProperty(prop)) {
+                continue;
+            }
+            if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
+                if (!data.settings[prop]) data.settings[prop] = {};
+                for (prop2 in this.client.options[prop]) {
+                    if (!this.client.options[prop].hasOwnProperty(prop2)) {
+                        continue;
+                    }
+                    data.settings[prop][prop2] = this.client.options[prop][prop2];
+                }
             }
             else
-                data.profiles = this.client.profiles.clone(2);
+                data.settings[prop] = this.client.options[prop];
+        }
 
-            for (prop in this.client.options) {
-                if (!this.client.options.hasOwnProperty(prop)) {
-                    continue;
+        const rooms = {};
+        if (rows) {
+            const rl = rows.length;
+            for (let r = 0; r < rl; r++) {
+                if (!rows[r].ID || rows[r].ID.length === 0) continue;
+                rows[r].ID = parseInt(rows[r].ID, 10);
+                if (rooms[rows[r].ID]) {
+                    rooms[rows[r].ID].exits[rows[r].Exit] = {
+                        num: parseInt(rows[r].DestID, 10),
+                        isdoor: rows[r].IsDoor,
+                        isclosed: rows[r].IsClosed
+                    };
                 }
-                if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
-                    if (!data.settings[prop]) data.settings[prop] = {};
-                    for (prop2 in this.client.options[prop]) {
-                        if (!this.client.options[prop].hasOwnProperty(prop2)) {
+                else {
+                    rooms[rows[r].ID] = { num: rows[r].ID };
+                    for (prop in rows[r]) {
+                        if (prop === 'ID')
+                            continue;
+                        if (!rows[r].hasOwnProperty(prop)) {
                             continue;
                         }
-                        data.settings[prop][prop2] = this.client.options[prop][prop2];
+                        rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
                     }
-                }
-                else
-                    data.settings[prop] = this.client.options[prop];
-            }
-
-            const rooms = {};
-            if (rows) {
-                const rl = rows.length;
-                for (let r = 0; r < rl; r++) {
-                    if (!rows[r].ID || rows[r].ID.length === 0) continue;
-                    rows[r].ID = parseInt(rows[r].ID, 10);
-                    if (rooms[rows[r].ID]) {
+                    rooms[rows[r].ID].exits = {};
+                    if (rows[r].Exit) {
                         rooms[rows[r].ID].exits[rows[r].Exit] = {
                             num: parseInt(rows[r].DestID, 10),
                             isdoor: rows[r].IsDoor,
                             isclosed: rows[r].IsClosed
                         };
                     }
-                    else {
-                        rooms[rows[r].ID] = { num: rows[r].ID };
-                        for (prop in rows[r]) {
-                            if (prop === 'ID')
-                                continue;
-                            if (!rows[r].hasOwnProperty(prop)) {
-                                continue;
-                            }
-                            rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
-                        }
-                        rooms[rows[r].ID].exits = {};
-                        if (rows[r].Exit) {
-                            rooms[rows[r].ID].exits[rows[r].Exit] = {
-                                num: parseInt(rows[r].DestID, 10),
-                                isdoor: rows[r].IsDoor,
-                                isclosed: rows[r].IsClosed
-                            };
-                        }
-                    }
                 }
-                this.client.debug('Total mapper room/exits: ' + rows.length);
             }
-            else
-                this.client.debug('No mapper data to save.');
-            data.map = rooms;
-            if ((this.saveSelection & BackupSelection.Map) !== BackupSelection.Map) {
-                delete data.map;
-                this.client.debug('Setting for no mapper data enabled.');
-            }
-            if ((this.saveSelection & BackupSelection.Profiles) !== BackupSelection.Profiles) {
-                delete data.profiles;
-                this.client.debug('Setting for no profiles enabled.');
-            }
-            if ((this.saveSelection & BackupSelection.Settings) !== BackupSelection.Settings) {
-                delete data.settings;
-                this.client.debug('Setting for no settings data enabled.');
-            }
-            let jData = JSON.stringify(data);
-            jData = LZString.compressToEncodedURIComponent(jData);
-            this._save = [jData.match(/((\S|\s|.){1,20000})/g), 0, 0];
-            this._save[3] = this._save[0].length;
-            this.saveChunk();
-
-        });
+            this.client.debug('Total mapper room/exits: ' + rows.length);
+        }
+        else
+            this.client.debug('No mapper data to save.');
+        data.map = rooms;
+        if ((this.saveSelection & BackupSelection.Map) !== BackupSelection.Map) {
+            delete data.map;
+            this.client.debug('Setting for no mapper data enabled.');
+        }
+        if ((this.saveSelection & BackupSelection.Profiles) !== BackupSelection.Profiles) {
+            delete data.profiles;
+            this.client.debug('Setting for no profiles enabled.');
+        }
+        if ((this.saveSelection & BackupSelection.Settings) !== BackupSelection.Settings) {
+            delete data.settings;
+            this.client.debug('Setting for no settings data enabled.');
+        }
+        let jData = JSON.stringify(data);
+        jData = LZString.compressToEncodedURIComponent(jData);
+        this._save = [jData.match(/((\S|\s|.){1,20000})/g), 0, 0];
+        this._save[3] = this._save[0].length;
+        this.saveChunk();
     }
 
     public abort(err?) {
