@@ -74,6 +74,14 @@
       "./package.json"
     ],
     "extends": null,
+    "asar": {
+      "smartUnpack": true
+    },
+    "asarUnpack": [
+      "./node_modules/spellchecker/vendor/**",
+      "**/*.node",
+      "./assets/icons/win/code.ico"
+    ],
     "win": {
       "icon": "./assets/icons/win/app.ico"
     },
@@ -88,14 +96,7 @@
       "maintainer": "icewolfz",
       "icon": "./assets/icons/png/",
       "category": "Game;Network;",
-      "synopsis": "MUD client coded in javascript.",
-      "extraResources": [
-        {
-          "from": "node_modules/spellchecker/vendor",
-          "to": "app.asar.unpacked/node_modules/spellchecker/vendor",
-          "filter": "**/*"
-        }
-      ]
+      "synopsis": "MUD client coded in javascript."
     }
   },
   "dependencies": {

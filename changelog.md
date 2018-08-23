@@ -9,6 +9,7 @@
       - Added hidden exit display to room editor, displays a list of hidden exits in a read only field
   - Mapper: optimize drawing systems to increase performance and scrolling speeds
   - Move from node-sqlite3 to better-sqlite3 4.1.4 as it offers better performance
+  - Change how native node modules are packaged, they are no longer packed should prevent them from having to be unpacked every time the client loads giving a small speed boost and prevent creating temporary files
 - **Changed:**
   - Code editor:
     - Area designer: changed hidden exit color to orange to make it easier to see on white background
