@@ -99,6 +99,7 @@
     }
   },
   "dependencies": {
+    "better-sqlite3": "^4.1.4",
     "buzz": "^1.2.1",
     "chokidar": "^2.0.4",
     "drivelist": "^6.3.0",
