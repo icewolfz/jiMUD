@@ -13,15 +13,21 @@
   - `amount` the amount of milliseconds to wait before executing remaining commands command block, must be greater then 0
 - `#sayprompt text` or `#sayp` same as echoprompt
 - `#alias name value` or `#al` create or alter and alias from command line
-  - name argument can be either a quoted string, a number or a string
+  - `name` can be either a quoted string, a number or a string
     - quoted string - if a quoted string the quotes are removed and all text between are used as the alias name
     - number - if a number it access the aliases as an array instead of by name, it is 0 to aliases count - 1,
     - string - works like quoted string but allows no spaces
-  - value argument can be any text
+  - `value` can be any text
     - quoted string - quotes are removed and this is set as value
     - text - all text quoted or unquoted is set as value
+- `#alias name {value} profile` or `#al` create or alter and alias from command line
+  - `name` or `{value}` see above
+  - `profile` the profile to remove the alias from
 - `#unalias name` or `#una` delete an alias from command line
-  - name argument is the same as #alias
+  - `name` the same as #alias
+- `#unalias {name} profile` or `#una` delete an alias from command line
+  - `name` the same as #alias  
+  - `profile` the profile to remove the alias from
 - `#setsetting name value` or `#sets` alter a setting from command line, [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
   - name argument is the same as #alias
   - value same as #alias`

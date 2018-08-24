@@ -572,7 +572,7 @@ export class Input extends EventEmitter {
                 reload = true;
                 p = path.join(parseTemplate('{data}'), 'profiles');
                 if (args.length < 1 || args.length > 2)
-                    throw new Error('Invalid syntax use \x1b[4m#unt\x1b[0;-11;-12mrigger pattern|name \x1b[3mprofile\x1b[0;-11;-12m\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m#unt\x1b[0;-11;-12mrigger {pattern|name} \x1b[3mprofile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
                     throw new Error('Invalid name or pattern');
                 //{pattern} {commands} profile
@@ -1440,13 +1440,38 @@ export class Input extends EventEmitter {
             case 'alias':
             case 'al':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use \x1b[4m#al\x1b[0;-11;-12mias name value');
+                    throw new Error('Invalid syntax use \x1b[4m#al\x1b[0;-11;-12mias name value or \x1b[4m#al\x1b[0;-11;-12mias name {value} \x1b[3mprofile\x1b[0;-11;-12m');
                 else if (args.length === 1)
                     throw new Error('Must supply an alias value');
                 else {
-                    items = this.client.activeProfile.aliases;
-                    n = this.parseOutgoing(args[0], false);
-                    args = args.slice(1).join(' ');
+                    n = this.parseOutgoing(args.shift(), false);
+                    reload = true;
+                    profile = null;
+                    p = path.join(parseTemplate('{data}'), 'profiles');
+                    if (args[0].match(/^\{.*\}$/g)) {
+                        if (args.length > 2)
+                            throw new Error('Invalid syntax use \x1b[4m#al\x1b[0;-11;-12mias name value or \x1b[4m#al\x1b[0;-11;-12mias name {value} \x1b[3mprofile\x1b[0;-11;-12m');
+                        if (args.length === 2) {
+                            profile = this.stripQuotes(args[1]);
+                            profile = this.parseOutgoing(profile, false);
+                            if (this.client.profiles.contains(profile))
+                                profile = this.client.profiles.items[profile];
+                            else {
+                                name = profile;
+                                reload = false;
+                                profile = Profile.load(path.join(p, profile + '.json'));
+                                if (!profile)
+                                    throw new Error('Profile not found: ' + name);
+                            }
+                        }
+                        args = this.parseOutgoing(args[0].substr(1, args[0].length - 2), false);
+                    }
+                    else {
+                        args = args.join(' ');
+                        profile = this.client.activeProfile;
+                    }
+                    items = profile.aliases;
+
                     if (/^"(.*)"$/.exec(args) !== null || /^'(.*)'$/.exec(args) !== null)
                         args = args.substring(1, args.length - 1);
                     if (/^\d+$/.exec(n)) {
@@ -1456,8 +1481,6 @@ export class Input extends EventEmitter {
                         else {
                             items[n].value = args;
                             this.client.echo('Alias \'' + items[n].pattern + '\' updated.', -7, -8, true, true);
-                            this.client.activeProfile.aliases = items;
-                            this.client.saveProfile(this.client.activeProfile.name);
                         }
                     }
                     else {
@@ -1477,18 +1500,45 @@ export class Input extends EventEmitter {
                             this.emit('item-added', 'alias', this.client.activeProfile.name, tmp);
                             this.client.echo('Alias \'' + n + '\' added.', -7, -8, true, true);
                         }
-                        this.client.activeProfile.aliases = items;
-                        this.client.saveProfile(this.client.activeProfile.name);
                     }
+                    profile.aliases = items;
+                    profile.save(p);
+                    if (reload)
+                        this.client.clearCache();
                 }
                 return null;
             case 'unalias':
             case 'una':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use \x1b[4m#una\x1b[0;-11;-12mlias name');
+                    throw new Error('Invalid syntax use \x1b[4m#una\x1b[0;-11;-12mlias name or \x1b[4m#una\x1b[0;-11;-12mlias {name} \x1b[3mprofile\x1b[0;-11;-12m');
                 else {
-                    items = this.client.activeProfile.aliases;
-                    n = this.parseOutgoing(args.join(' '), false);
+                    reload = true;
+                    profile = null;
+                    p = path.join(parseTemplate('{data}'), 'profiles');
+                    if (args[0].match(/^\{.*\}$/g) || args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g)) {
+                        if (args.length > 2)
+                            throw new Error('Invalid syntax use \x1b[4m#una\x1b[0;-11;-12mlias name or \x1b[4m#una\x1b[0;-11;-12mlias {name} \x1b[3mprofile\x1b[0;-11;-12m');
+                        if (args.length === 2) {
+                            profile = this.stripQuotes(args[1]);
+                            profile = this.parseOutgoing(profile, false);
+                            if (this.client.profiles.contains(profile))
+                                profile = this.client.profiles.items[profile];
+                            else {
+                                name = profile;
+                                reload = false;
+                                profile = Profile.load(path.join(p, profile + '.json'));
+                                if (!profile)
+                                    throw new Error('Profile not found: ' + name);
+                            }
+                        }
+                        n = this.parseOutgoing(args[0].substr(1, args[0].length - 2), false);
+                    }
+                    else {
+                        n = this.parseOutgoing(args.join(' '), false);
+                        profile = this.client.activeProfile;
+                    }
+
+                    items = profile.aliases;
                     if (/^\d+$/.exec(n)) {
                         tmp = n;
                         n = parseInt(n, 10);
@@ -1514,9 +1564,12 @@ export class Input extends EventEmitter {
                     else {
                         this.client.echo('Alias \'' + items[n].pattern + '\' removed.', -7, -8, true, true);
                         items.splice(n, 1);
-                        this.emit('item-removed', 'alias', this.client.activeProfile.name, n);
-                        this.client.activeProfile.aliases = items;
-                        this.client.saveProfile(this.client.activeProfile.name);
+                        profile.aliases = items;
+                        profile.save(p);
+                        if (reload)
+                            this.client.clearCache();
+                        profile = null;
+                        this.emit('item-removed', 'alias', profile.name, n);
                     }
                 }
                 return null;
