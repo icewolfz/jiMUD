@@ -13,6 +13,7 @@
   - Add case sensitive option to triggers to control if casing should be matched or ignored
   - Add [#event](docs/commands.md) add or update event
   - Add [#trigger](docs/commands.md) add or update trigger
+  - Add profile argument support for [#alias](docs/commands.md) and [#unalias](docs/commands.md)
 - **Changed:**
   - Code editor:
     - Area designer: changed hidden exit color to orange to make it easier to see on white background
