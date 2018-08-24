@@ -717,18 +717,18 @@ export class Input extends EventEmitter {
                     item.pattern = this.parseOutgoing(item.pattern.substr(1, item.pattern.length - 2), false);
                 }
                 else {
-                    item.name = this.stripQuotes(args.unshift());
+                    item.name = this.stripQuotes(args.shift());
                     if (!item.name || item.name.length === 0)
                         throw new Error('Invalid trigger name');
                     if (args[0].pattern.match(/^\{.*\}$/g)) {
-                        item.pattern = args.unshift();
+                        item.pattern = args.shift();
                         item.pattern = item.pattern.substr(1, item.pattern.length - 2);
                         item.pattern = this.parseOutgoing(item.pattern, false);
                     }
                 }
                 if (args.length !== 0) {
                     if (args[0].match(/^\{.*\}$/g)) {
-                        item.commands = args.unshift();
+                        item.commands = args.shift();
                         item.commands = item.commands.substr(1, item.commands.length - 2);
                     }
                     if (args.length === 1) {
@@ -844,15 +844,15 @@ export class Input extends EventEmitter {
                 }
                 if (!trigger) {
                     if (!item.pattern)
-                        throw new Error(`Trigger '${item.name}' not found`);
+                        throw new Error(`Trigger '${item.name || ''}' not found`);
                     trigger = new Trigger();
-                    trigger.name = item.name;
+                    trigger.name = item.name || '';
                     trigger.pattern = item.pattern;
                     profile.triggers.push(trigger);
-                    this.client.echo('Trigger \'' + trigger.name + '\' added.', -7, -8, true, true);
+                    this.client.echo('Trigger \'' + (trigger.name || trigger.pattern) + '\' added.', -7, -8, true, true);
                 }
                 else
-                    this.client.echo('Trigger \'' + trigger.name + '\' updated.', -7, -8, true, true);
+                    this.client.echo('Trigger \'' + (trigger.name || trigger.pattern) + '\' updated.', -7, -8, true, true);
                 if (item.pattern !== null)
                     trigger.pattern = item.pattern;
                 if (item.commands !== null)
@@ -894,14 +894,14 @@ export class Input extends EventEmitter {
                 if (args[0].length === 0)
                     throw new Error('Invalid event name');
 
-                item.name = this.stripQuotes(args.unshift());
+                item.name = this.stripQuotes(args.shift());
                 if (!item.name || item.name.length === 0)
                     throw new Error('Invalid event name');
                 if (args.length === 0)
                     throw new Error('Missing commands or options');
 
                 if (args[0].match(/^\{.*\}$/g)) {
-                    item.commands = args[0];
+                    item.commands = args.shift();
                     item.commands = item.commands.substr(1, item.commands.length - 2);
                 }
                 else
