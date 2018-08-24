@@ -93,9 +93,10 @@
     - `cmd` command input trigger
     - `priority=#` set the priority of trigger
   - `profile` is optional and when set will create trigger in that profile, if profile not found fails to create, if omitted it will only search enabled profiles and default to active profile
+- `#trigger name options profile` update options for trigger, see above for argument details
 - `#event name {commands} options profile` create or update trigger, `#ev` is short hand version
   - `name` event
-  - `{commands}` the commands the event executes
+  - `{commands}` the commands the event executes, if commands are left out it will update options only
   - `options` optional argument to enable or disable different event options, if you want a profile but no options just use a double space, eg `#event {pattern} {commands}  profile`
     - `nocr` disable event on newline
     - `prompt` enable event on prompt

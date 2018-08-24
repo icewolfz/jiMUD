@@ -720,10 +720,11 @@ export class Input extends EventEmitter {
                     item.name = this.stripQuotes(args.unshift());
                     if (!item.name || item.name.length === 0)
                         throw new Error('Invalid trigger name');
-                    item.pattern = args.unshift();
-                    if (item.pattern.match(/^\{.*\}$/g))
+                    if (args[0].pattern.match(/^\{.*\}$/g)) {
+                        item.pattern = args.unshift();
                         item.pattern = item.pattern.substr(1, item.pattern.length - 2);
-                    item.pattern = this.parseOutgoing(item.pattern, false);
+                        item.pattern = this.parseOutgoing(item.pattern, false);
+                    }
                 }
                 if (args.length !== 0) {
                     if (args[0].match(/^\{.*\}$/g)) {
@@ -842,15 +843,20 @@ export class Input extends EventEmitter {
                     }
                 }
                 if (!trigger) {
+                    if (!item.pattern)
+                        throw new Error(`Trigger '${item.name}' not found`);
                     trigger = new Trigger();
                     trigger.name = item.name;
+                    trigger.pattern = item.pattern;
                     profile.triggers.push(trigger);
                     this.client.echo('Trigger \'' + trigger.name + '\' added.', -7, -8, true, true);
                 }
                 else
                     this.client.echo('Trigger \'' + trigger.name + '\' updated.', -7, -8, true, true);
-                trigger.pattern = item.pattern;
-                trigger.value = item.commands || '';
+                if (item.pattern !== null)
+                    trigger.pattern = item.pattern;
+                if (item.commands !== null)
+                    trigger.value = item.commands;
                 if (item.options.cmd)
                     trigger.type = TriggerType.CommandInputRegular;
                 if (item.options.prompt)
@@ -1017,7 +1023,8 @@ export class Input extends EventEmitter {
                 else
                     this.client.echo('Event \'' + trigger.name + '\' updated.', -7, -8, true, true);
                 trigger.pattern = item.name;
-                trigger.value = item.commands || '';
+                if (item.commands !== null)
+                    trigger.value = item.commands;
                 trigger.type = TriggerType.Event;
                 if (item.options.prompt)
                     trigger.triggerPrompt = true;
