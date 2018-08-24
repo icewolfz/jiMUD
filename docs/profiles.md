@@ -66,7 +66,7 @@
 - `Type` the type of trigger
   - `Regular Expression` use javascript regular expressions when matching the pattern against text.
   - `Command Input Regular Expression` same as Regular Expression but only triggered against text sent from the command input.
-  - `Event` fired when pattern matches an event name, either a custom name or build in:
+  - `Event` fired when pattern matches an event name, either a custom name or built in:
     - `opened` fired when client has finished opening
     - `closed` fired when client is closing
     - `connected` fired when client has been connected

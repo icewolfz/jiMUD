@@ -3,7 +3,7 @@
 //cSpell:ignore keycode
 import EventEmitter = require('events');
 import { MacroModifiers } from './profile';
-import { getTimeSpan, FilterArrayByKeyValue, SortArrayByPriority, clone, parseTemplate } from './library';
+import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Macro, Profile, TriggerType } from './profile';
@@ -551,6 +551,7 @@ export class Input extends EventEmitter {
         let item;
         let p;
         let reload;
+        let trigger;
         switch (fun.toLowerCase()) {
             case 'chatprompt':
             case 'chatp':
@@ -694,11 +695,352 @@ export class Input extends EventEmitter {
                     default:
                         throw new Error('Invalid syntax use \x1b[4m#resu\x1b[0;-11;-12mme id \x1b[3mprofile\x1b[0;-11;-12m or \x1b[4m#resu\x1b[0;-11;-12mme');
                 }
+            case 'trigger':
+            case 'tr':
+                //#region trigger
+                profile = null;
+                item = {
+                    profile: null,
+                    name: null,
+                    pattern: null,
+                    commands: null,
+                    options: { priority: 0 }
+                };
+                p = path.join(parseTemplate('{data}'), 'profiles');
+                if (args.length < 2 || args.length > 5)
+                    throw new Error('Invalid syntax use \x1b[4m#tr\x1b[0;-11;-12migger name {pattern} {commands} \x1b[3moptions profile\x1b[0;-11;-12m or \x1b[4m#tr\x1b[0;-11;-12migger {pattern} {commands} \x1b[3m{options} profile\x1b[0;-11;-12m');
+                if (args[0].length === 0)
+                    throw new Error('Invalid trigger name or pattern');
+
+                if (args[0].match(/^\{.*\}$/g)) {
+                    item.pattern = args.shift();
+                    item.pattern = this.parseOutgoing(item.pattern.substr(1, item.pattern.length - 2), false);
+                }
+                else {
+                    item.name = this.stripQuotes(args.unshift());
+                    if (!item.name || item.name.length === 0)
+                        throw new Error('Invalid trigger name');
+                    item.pattern = args.unshift();
+                    if (item.pattern.match(/^\{.*\}$/g))
+                        item.pattern = item.pattern.substr(1, item.pattern.length - 2);
+                    item.pattern = this.parseOutgoing(item.pattern, false);
+                }
+                if (args.length !== 0) {
+                    if (args[0].match(/^\{.*\}$/g)) {
+                        item.commands = args.unshift();
+                        item.commands = item.commands.substr(1, item.commands.length - 2);
+                    }
+                    if (args.length === 1) {
+                        args[0] = args[0].substr(1, args[0].length - 2);
+                        if (args[0].length !== 0) {
+                            this.parseOutgoing(args[0], false).split(',').forEach(o => {
+                                switch (o.trim()) {
+                                    case 'nocr':
+                                    case 'prompt':
+                                    case 'case':
+                                    case 'verbatim':
+                                    case 'disable':
+                                    case 'cmd':
+                                    case 'temporary':
+                                        item.option[o.trim()] = true;
+                                        break;
+                                    default:
+                                        if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid priority '${o.trim()}'`);
+                                            i = parseInt(tmp[1], 10);
+                                            if (isNaN(i))
+                                                throw new Error('Invalid number \'' + tmp[1] + '\'');
+                                            item.option['priority'] = i;
+                                        }
+                                        else
+                                            throw new Error(`Invalid option '${o.trim()}'`);
+                                }
+                            });
+                        }
+                        else
+                            throw new Error('Invalid options');
+                    }
+                    else if (args.length === 2) {
+                        if (args[0].match(/^\{.*\}$/g))
+                            args[0] = args[0].substr(1, args[0].length - 2);
+                        if (args[0].length !== 0) {
+                            this.parseOutgoing(args[0], false).split(',').forEach(o => {
+                                switch (o.trim()) {
+                                    case 'nocr':
+                                    case 'prompt':
+                                    case 'case':
+                                    case 'verbatim':
+                                    case 'disable':
+                                    case 'cmd':
+                                    case 'temporary':
+                                        item.option[o.trim()] = true;
+                                        break;
+                                    default:
+                                        if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid priority '${o.trim()}'`);
+                                            i = parseInt(tmp[1], 10);
+                                            if (isNaN(i))
+                                                throw new Error('Invalid number \'' + tmp[1] + '\'');
+                                            item.option['priority'] = i;
+                                        }
+                                        else
+                                            throw new Error(`Invalid option '${o.trim()}'`);
+                                }
+                            });
+                        }
+                        else
+                            throw new Error('Invalid options');
+                        item.profile = this.stripQuotes(args[1]);
+                        if (item.profile.length !== 0)
+                            tmp = this.parseOutgoing(item.profile, false);
+                    }
+                }
+                if (!item.profile || item.profile.length === 0) {
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0)
+                        return;
+                    if (kl === 1) {
+                        if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                            throw Error('No enabled profiles found!');
+                        profile = this.client.profiles.items[keys[0]];
+                        trigger = this.client.profiles.items[keys[k]].find('triggers', 'type', TriggerType.Event);
+                        if (item.name !== null)
+                            trigger = this.client.profiles.items[keys[k]].find('triggers', 'name', item.name);
+                        else
+                            trigger = this.client.profiles.items[keys[k]].find('triggers', 'pattern', item.pattern);
+                    }
+                    else {
+                        for (; k < kl; k++) {
+                            if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                continue;
+                            if (item.name !== null)
+                                trigger = this.client.profiles.items[keys[k]].find('triggers', 'name', item.name);
+                            else
+                                trigger = this.client.profiles.items[keys[k]].find('triggers', 'pattern', item.pattern);
+                            if (trigger) {
+                                profile = this.client.profiles.items[keys[k]];
+                                break;
+                            }
+                        }
+                        if (!profile)
+                            profile = this.client.activeProfile;
+                    }
+                }
+                else {
+                    if (this.client.profiles.contains(item.profile))
+                        profile = this.client.profiles.items[item.profile];
+                    else {
+                        profile = Profile.load(path.join(p, item.profile + '.json'));
+                        if (!profile)
+                            throw new Error('Profile not found: ' + item.profile);
+                    }
+                }
+                if (!trigger) {
+                    trigger = new Trigger();
+                    trigger.name = item.name;
+                    profile.triggers.push(trigger);
+                    this.client.echo('Trigger \'' + trigger.name + '\' added.', -7, -8, true, true);
+                }
+                else
+                    this.client.echo('Trigger \'' + trigger.name + '\' updated.', -7, -8, true, true);
+                trigger.pattern = item.pattern;
+                trigger.value = item.commands || '';
+                if (item.options.cmd)
+                    trigger.type = TriggerType.CommandInputRegular;
+                if (item.options.prompt)
+                    trigger.triggerPrompt = true;
+                if (item.options.nocr)
+                    trigger.triggerNewline = false;
+                if (item.options.case)
+                    trigger.caseSensitive = true;
+
+                if (item.options.verbatim)
+                    trigger.verbatim = true;
+                if (item.options.disable)
+                    trigger.notes = false;
+                if (item.options.temporary)
+                    trigger.temp = true;
+                trigger.priority = item.options.priority;
+                profile.save(p);
+                profile = null;
+                //#endregion
+                return null;
+            case 'event':
+            case 'ev':
+                //#region event
+                profile = null;
+                item = {
+                    profile: null,
+                    name: null,
+                    pattern: null,
+                    commands: null,
+                    options: { priority: 0 }
+                };
+                p = path.join(parseTemplate('{data}'), 'profiles');
+                if (args.length < 2 || args.length > 4)
+                    throw new Error('Invalid syntax use \x1b[4m#ev\x1b[0;-11;-12ment name {commands} \x1b[3moptions profile\x1b[0;-11;-12m');
+                if (args[0].length === 0)
+                    throw new Error('Invalid event name');
+
+                item.name = this.stripQuotes(args.unshift());
+                if (!item.name || item.name.length === 0)
+                    throw new Error('Invalid event name');
+                if (args.length === 0)
+                    throw new Error('Missing commands or options');
+
+                if (args[0].match(/^\{.*\}$/g)) {
+                    item.commands = args[0];
+                    item.commands = item.commands.substr(1, item.commands.length - 2);
+                }
+                else
+                    throw new Error('Missing commands');
+                if (args.length === 1) {
+                    args[0] = args[0].substr(1, args[0].length - 2);
+                    if (args[0].length !== 0) {
+                        this.parseOutgoing(args[0], false).split(',').forEach(o => {
+                            switch (o.trim()) {
+                                case 'nocr':
+                                case 'prompt':
+                                case 'case':
+                                case 'verbatim':
+                                case 'disable':
+                                case 'temporary':
+                                    item.option[o.trim()] = true;
+                                    break;
+                                default:
+                                    if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                        tmp = o.trim().split('=');
+                                        if (tmp.length !== 2)
+                                            throw new Error(`Invalid priority '${o.trim()}'`);
+                                        i = parseInt(tmp[1], 10);
+                                        if (isNaN(i))
+                                            throw new Error('Invalid number \'' + tmp[1] + '\'');
+                                        item.option['priority'] = i;
+                                    }
+                                    else
+                                        throw new Error(`Invalid option '${o.trim()}'`);
+                            }
+                        });
+                    }
+                    else
+                        throw new Error('Invalid options');
+                }
+                else if (args.length === 2) {
+                    if (args[0].match(/^\{.*\}$/g))
+                        args[0] = args[0].substr(1, args[0].length - 2);
+                    if (args[0].length !== 0) {
+                        this.parseOutgoing(args[0], false).split(',').forEach(o => {
+                            switch (o.trim()) {
+                                case 'nocr':
+                                case 'prompt':
+                                case 'case':
+                                case 'verbatim':
+                                case 'disable':
+                                case 'temporary':
+                                    item.option[o.trim()] = true;
+                                    break;
+                                default:
+                                    if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                        tmp = o.trim().split('=');
+                                        if (tmp.length !== 2)
+                                            throw new Error(`Invalid priority '${o.trim()}'`);
+                                        i = parseInt(tmp[1], 10);
+                                        if (isNaN(i))
+                                            throw new Error('Invalid number \'' + tmp[1] + '\'');
+                                        item.option['priority'] = i;
+                                    }
+                                    else
+                                        throw new Error(`Invalid option '${o.trim()}'`);
+                            }
+                        });
+                    }
+                    else
+                        throw new Error('Invalid options');
+                    item.profile = this.stripQuotes(args[1]);
+                    if (item.profile.length !== 0)
+                        tmp = this.parseOutgoing(item.profile, false);
+                }
+
+                if (!item.profile || item.profile.length === 0) {
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0)
+                        return;
+                    if (kl === 1) {
+                        if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                            throw Error('No enabled profiles found!');
+                        profile = this.client.profiles.items[keys[0]];
+                        tmp = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers.filter(t => t.type === TriggerType.Event));
+                        trigger = tmp.find(t => {
+                            return t.name === item.name || t.pattern === item.name;
+                        });
+                    }
+                    else {
+                        for (; k < kl; k++) {
+                            if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                continue;
+                            tmp = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers.filter(t => t.type === TriggerType.Event));
+                            trigger = tmp.find(t => {
+                                return t.name === item.name || t.pattern === item.name;
+                            });
+                            if (trigger) {
+                                profile = this.client.profiles.items[keys[k]];
+                                break;
+                            }
+                        }
+                        if (!profile)
+                            profile = this.client.activeProfile;
+                    }
+                }
+                else {
+                    if (this.client.profiles.contains(item.profile))
+                        profile = this.client.profiles.items[item.profile];
+                    else {
+                        profile = Profile.load(path.join(p, item.profile + '.json'));
+                        if (!profile)
+                            throw new Error('Profile not found: ' + item.profile);
+                    }
+                }
+                if (!trigger) {
+                    trigger = new Trigger();
+                    trigger.name = item.name;
+                    profile.triggers.push(trigger);
+                    this.client.echo('Event \'' + trigger.name + '\' added.', -7, -8, true, true);
+                }
+                else
+                    this.client.echo('Event \'' + trigger.name + '\' updated.', -7, -8, true, true);
+                trigger.pattern = item.name;
+                trigger.value = item.commands || '';
+                trigger.type = TriggerType.Event;
+                if (item.options.prompt)
+                    trigger.triggerPrompt = true;
+                if (item.options.nocr)
+                    trigger.triggerNewline = false;
+                if (item.options.case)
+                    trigger.caseSensitive = true;
+
+                if (item.options.verbatim)
+                    trigger.verbatim = true;
+                if (item.options.disable)
+                    trigger.notes = false;
+                if (item.options.temporary)
+                    trigger.temp = true;
+                trigger.priority = item.options.priority;
+                profile.save(p);
+                profile = null;
+                //#endregion
+                return null;
             case 'alarm':
             case 'ala':
                 profile = null;
                 name = null;
-                let trigger;
                 reload = true;
                 p = path.join(parseTemplate('{data}'), 'profiles');
                 if (args.length < 2 || args.length > 4)
@@ -2752,7 +3094,8 @@ export class Input extends EventEmitter {
         const tl = this._TriggerCache.length;
         for (; t < tl; t++) {
             if (this._TriggerCache[t].type !== TriggerType.Event) continue;
-            if (event !== this._TriggerCache[t].pattern) continue;
+            if (this._TriggerCache[t].caseSensitive && event !== this._TriggerCache[t].pattern) continue;
+            if (!this._TriggerCache[t].caseSensitive && event.toLowerCase() !== this._TriggerCache[t].pattern.toLowerCase()) continue;
             this.ExecuteTrigger(this._TriggerCache[t], args, false, t);
         }
     }

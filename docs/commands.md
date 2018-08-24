@@ -79,6 +79,32 @@
   - `profile` is optional and when set will create alarm in that profile, if profile not found fails to create, if omitted it will only search enabled profiles
 - `#chat text` or `#ch` send text to chat window
 - `#chatprompt text` or `#chatp` same chat but does not append a newline
+- `#trigger name {pattern} {commands} options profile`, `#trigger {pattern} {commands} options profile`, `#trigger name {pattern} options profile` create or update trigger, `#tr` is short hand version
+  - `name` trigger name, optional
+  - `{pattern}` the trigger pattern
+  - `{commands}` the commands the trigger executes
+  - `options` optional argument to enable or disable different trigger options, if you want a profile but no options just use a double space, eg `#trigger {pattern} {commands}  profile`
+    - `nocr` disable trigger on newline
+    - `prompt` enable trigger on prompt
+    - `case` enable case sensitive
+    - `verbatim` enable verbatim
+    - `disable` disable trigger
+    - `temporary` temporary trigger
+    - `cmd` command input trigger
+    - `priority=#` set the priority of trigger
+  - `profile` is optional and when set will create trigger in that profile, if profile not found fails to create, if omitted it will only search enabled profiles and default to active profile
+- `#event name {commands} options profile` create or update trigger, `#ev` is short hand version
+  - `name` event
+  - `{commands}` the commands the event executes
+  - `options` optional argument to enable or disable different event options, if you want a profile but no options just use a double space, eg `#event {pattern} {commands}  profile`
+    - `nocr` disable event on newline
+    - `prompt` enable event on prompt
+    - `case` enable case sensitive
+    - `verbatim` enable verbatim
+    - `disable` disable event
+    - `temporary` temporary event
+    - `priority=#` set the priority of event
+  - `profile` is optional and when set will create event in that profile, if profile not found fails to create, if omitted it will only search enabled profiles and default to active profile
 
 ## Test commands
 

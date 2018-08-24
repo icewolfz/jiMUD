@@ -11,6 +11,8 @@
   - Move from node-sqlite3 to better-sqlite3 4.1.4 as it offers better performance
   - Change how native node modules are packaged, they are no longer packed should prevent them from having to be unpacked every time the client loads giving a small speed boost and prevent creating temporary files
   - Add case sensitive option to triggers to control if casing should be matched or ignored
+  - Add [#event](docs/commands.md) add or update event
+  - Add [#trigger](docs/commands.md) add or update trigger
 - **Changed:**
   - Code editor:
     - Area designer: changed hidden exit color to orange to make it easier to see on white background
