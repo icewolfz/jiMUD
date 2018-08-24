@@ -580,6 +580,8 @@ export class Input extends EventEmitter {
                     args[0] = args[0].substr(1, args[0].length - 2);
                     args[0] = this.parseOutgoing(args[0], false);
                 }
+                else if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
+                    args[0] = this.parseOutgoing(this.stripQuotes(args[0]), false);
                 if (args.length === 2) {
                     profile = this.stripQuotes(args[2]);
                     profile = this.parseOutgoing(profile, false);
@@ -810,7 +812,6 @@ export class Input extends EventEmitter {
                         if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
                             throw Error('No enabled profiles found!');
                         profile = this.client.profiles.items[keys[0]];
-                        trigger = this.client.profiles.items[keys[k]].find('triggers', 'type', TriggerType.Event);
                         if (item.name !== null)
                             trigger = this.client.profiles.items[keys[k]].find('triggers', 'name', item.name);
                         else
@@ -1043,6 +1044,67 @@ export class Input extends EventEmitter {
                 profile.save(p);
                 profile = null;
                 //#endregion
+                return null;
+            case 'unevent':
+            case 'une':
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use \x1b[4m#une\x1b[0;-11;-12mvent name or \x1b[4m#une\x1b[0;-11;-12mvent {name} \x1b[3mprofile\x1b[0;-11;-12m');
+                else {
+                    reload = true;
+                    profile = null;
+                    p = path.join(parseTemplate('{data}'), 'profiles');
+                    if (args[0].match(/^\{.*\}$/g) || args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g)) {
+                        if (args.length > 2)
+                            throw new Error('Invalid syntax use \x1b[4m#une\x1b[0;-11;-12mvent name or \x1b[4m#une\x1b[0;-11;-12mvent {name} \x1b[3mprofile\x1b[0;-11;-12m');
+                        if (args.length === 2) {
+                            profile = this.stripQuotes(args[1]);
+                            profile = this.parseOutgoing(profile, false);
+                            if (this.client.profiles.contains(profile))
+                                profile = this.client.profiles.items[profile];
+                            else {
+                                name = profile;
+                                reload = false;
+                                profile = Profile.load(path.join(p, profile + '.json'));
+                                if (!profile)
+                                    throw new Error('Profile not found: ' + name);
+                            }
+                        }
+                        if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
+                            n = this.parseOutgoing(this.stripQuotes(args[0]), false);
+                        else
+                            n = this.parseOutgoing(args[0].substr(1, args[0].length - 2), false);
+                    }
+                    else {
+                        n = this.parseOutgoing(args.join(' '), false);
+                        profile = this.client.activeProfile;
+                    }
+                    n = this.stripQuotes(n);
+                    items = SortItemArrayByPriority(profile.triggers.filter(t => t.type === TriggerType.Event));
+                    trigger = tmp.find(t => {
+                        return t.name === item.name || t.pattern === item.name;
+                    });
+                    n = this.stripQuotes(n);
+                    tmp = n;
+                    for (i = 0, al = items.length; i < al; i++) {
+                        if (items[i].name === n || items[i]['pattern'] === n) {
+                            n = i;
+                            f = true;
+                            break;
+                        }
+                    }
+                    if (!f)
+                        this.client.echo('Event \'' + tmp + '\' not found.', -7, -8, true, true);
+                    else {
+                        this.client.echo('Event \'' + (items[n].name || items[n].pattern) + '\' removed.', -7, -8, true, true);
+                        items.splice(n, 1);
+                        profile.aliases = items;
+                        profile.save(p);
+                        if (reload)
+                            this.client.clearCache();
+                        profile = null;
+                        this.emit('item-removed', 'alias', profile.name, n);
+                    }
+                }
                 return null;
             case 'alarm':
             case 'ala':
@@ -1448,7 +1510,7 @@ export class Input extends EventEmitter {
                     reload = true;
                     profile = null;
                     p = path.join(parseTemplate('{data}'), 'profiles');
-                    if (args[0].match(/^\{.*\}$/g)) {
+                    if (args[0].match(/^\{.*\}$/g) || args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g)) {
                         if (args.length > 2)
                             throw new Error('Invalid syntax use \x1b[4m#al\x1b[0;-11;-12mias name value or \x1b[4m#al\x1b[0;-11;-12mias name {value} \x1b[3mprofile\x1b[0;-11;-12m');
                         if (args.length === 2) {
@@ -1464,16 +1526,18 @@ export class Input extends EventEmitter {
                                     throw new Error('Profile not found: ' + name);
                             }
                         }
-                        args = this.parseOutgoing(args[0].substr(1, args[0].length - 2), false);
+                        if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
+                            args = this.parseOutgoing(this.stripQuotes(args[0]), false);
+                        else
+                            args = this.parseOutgoing(args[0].substr(1, args[0].length - 2), false);
                     }
                     else {
                         args = args.join(' ');
                         profile = this.client.activeProfile;
                     }
                     items = profile.aliases;
-
-                    if (/^"(.*)"$/.exec(args) !== null || /^'(.*)'$/.exec(args) !== null)
-                        args = args.substring(1, args.length - 1);
+                    args = this.stripQuotes(args);
+                    n = this.stripQuotes(n);
                     if (/^\d+$/.exec(n)) {
                         n = parseInt(n, 10);
                         if (n < 0 || n >= items.length)
@@ -1484,8 +1548,6 @@ export class Input extends EventEmitter {
                         }
                     }
                     else {
-                        if (/^"(.*)"$/.exec(n) !== null || /^'(.*)'$/.exec(n) !== null)
-                            n = n.substring(1, n.length - 1);
                         for (i = 0, al = items.length; i < al; i++) {
                             if (items[i]['pattern'] === n) {
                                 items[i].value = args;
@@ -1531,14 +1593,17 @@ export class Input extends EventEmitter {
                                     throw new Error('Profile not found: ' + name);
                             }
                         }
-                        n = this.parseOutgoing(args[0].substr(1, args[0].length - 2), false);
+                        if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
+                            n = this.parseOutgoing(this.stripQuotes(args[0]), false);
+                        else
+                            n = this.parseOutgoing(args[0].substr(1, args[0].length - 2), false);
                     }
                     else {
                         n = this.parseOutgoing(args.join(' '), false);
                         profile = this.client.activeProfile;
                     }
-
                     items = profile.aliases;
+                    n = this.stripQuotes(n);
                     if (/^\d+$/.exec(n)) {
                         tmp = n;
                         n = parseInt(n, 10);
@@ -1548,8 +1613,6 @@ export class Input extends EventEmitter {
                             f = true;
                     }
                     else {
-                        if (/^"(.*)"$/.exec(n) !== null || /^'(.*)'$/.exec(n) !== null)
-                            n = n.substring(1, n.length - 1);
                         tmp = n;
                         for (i = 0, al = items.length; i < al; i++) {
                             if (items[i]['pattern'] === n) {
@@ -1580,10 +1643,8 @@ export class Input extends EventEmitter {
                 else if (args.length === 1)
                     throw new Error('Must supply a setsetting value');
                 else {
-                    n = this.parseOutgoing(args[0], false);
-                    args = this.parseOutgoing(args.slice(1).join(' '), false);
-                    if (/^"(.*)"$/.exec(args) !== null || /^'(.*)'$/.exec(args) !== null)
-                        args = args.substring(1, args.length - 1);
+                    n = this.stripQuotes(this.parseOutgoing(args[0], false));
+                    args = this.stripQuotes(this.parseOutgoing(args.slice(1).join(' '), false));
                     if (/^\d+$/.exec(n)) {
                         tmp = n;
                         n = parseInt(n, 10);
@@ -1592,8 +1653,6 @@ export class Input extends EventEmitter {
                         f = true;
                     }
                     else {
-                        if (/^"(.*)"$/.exec(n) !== null || /^'(.*)'$/.exec(n) !== null)
-                            n = n.substring(1, n.length - 1);
                         n = n.toLowerCase();
                         for (i = 0, al = SettingList.length; i < al; i++) {
                             if (SettingList[i][0].toLowerCase() === n) {
@@ -1665,7 +1724,7 @@ export class Input extends EventEmitter {
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m#gets\x1b[0;-11;-12metting name');
                 else {
-                    n = this.parseOutgoing(args.join(' '), false);
+                    n = this.stripQuotes(this.parseOutgoing(args.join(' '), false));
                     if (/^\d+$/.exec(n)) {
                         n = parseInt(n, 10);
                         if (n < 0 || n >= SettingList.length)
@@ -1674,8 +1733,7 @@ export class Input extends EventEmitter {
                             f = true;
                     }
                     else {
-                        if (/^"(.*)"$/.exec(n) !== null || /^'(.*)'$/.exec(n) !== null)
-                            n = n.substring(1, n.length - 1);
+
                         tmp = n;
                         n = n.toLowerCase();
                         if (n !== 'all') {

@@ -112,6 +112,11 @@
     - `temporary` temporary event
     - `priority=#` set the priority of event
   - `profile` is optional and when set will create event in that profile, if profile not found fails to create, if omitted it will only search enabled profiles and default to active profile
+- `#unevent name` or `#une` delete an alias from command line
+  - `name` the same as #alias
+- `#unevent {name} profile` or `#une` delete an alias from command line
+  - `name` the same as #alias  
+  - `profile` the profile to remove the alias from
 
 ## Test commands
 

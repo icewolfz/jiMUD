@@ -9,9 +9,10 @@
       - Added hidden exit display to room editor, displays a list of hidden exits in a read only field
   - Mapper: optimize drawing systems to increase performance and scrolling speeds
   - Move from node-sqlite3 to better-sqlite3 4.1.4 as it offers better performance
-  - Change how native node modules are packaged, they are no longer packed should prevent them from having to be unpacked every time the client loads giving a small speed boost and prevent creating temporary files
+  - Change how native node modules are packaged, they are no longer packed and should prevent them from having to be unpacked every time the client loads giving a small speed boost and prevent creating temporary files
   - Add case sensitive option to triggers to control if casing should be matched or ignored
   - Add [#event](docs/commands.md) add or update event
+  - Add [#unevent](docs/commands.md) delete event
   - Add [#trigger](docs/commands.md) add or update trigger
   - Add profile argument support for [#alias](docs/commands.md) and [#unalias](docs/commands.md)
 - **Changed:**
@@ -38,6 +39,7 @@
       - Fix collection dialog editor and drop down sub editors
   - Immortal tools: do not attempt to open paths in code editor
   - Mapper: Fix some issues with reloading preferences after they have been changed
+  - Fix quote parsing for several #commands so that they strip based on quote settings
 
 ## 0.4.62 2018-08-13
 
