@@ -506,7 +506,8 @@ export class Mapper extends EventEmitter {
                 w: canvas.width / 32,
                 h: canvas.height / 32
             });
-        this.emit('debug', 'Draw room query time: ' + (new Date().getTime() - s));
+        this.emit('debug', 'Draw - room query time: ' + (new Date().getTime() - s));
+        const d = new Date().getTime();
         if (ex) {
             context.fillStyle = '#eae4d6';
             context.fillRect(0, 0, canvas.width, canvas.height);
@@ -546,7 +547,8 @@ export class Mapper extends EventEmitter {
                 this.DrawRoom(context, (room.X - x) * 32 + ox, (room.Y - y) * 32 + oy, room, ex);
             }
         }
-        this.emit('debug', 'Draw time: ' + (new Date().getTime() - s));
+        this.emit('debug', 'Draw - display time: ' + (new Date().getTime() - d));
+        this.emit('debug', 'Draw - final time: ' + (new Date().getTime() - s));
         //context.restore();
         this.DrawLegend(context, 1, -4, 0);
         if (callback) callback();
