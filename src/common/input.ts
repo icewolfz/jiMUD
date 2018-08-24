@@ -2650,8 +2650,8 @@ export class Input extends EventEmitter {
             if (!frag && !this._TriggerCache[t].triggerNewline && (this._TriggerCache[t].triggerNewline !== undefined))
                 continue;
             if (this._TriggerCache[t].verbatim) {
-                if (this._TriggerCache[t].caseSensitive && raw.toLowerCase() !== this._TriggerCache[t].pattern.toLowerCase()) continue;
-                else if (!this._TriggerCache[t].caseSensitive && raw !== this._TriggerCache[t].pattern) continue;
+                if (!this._TriggerCache[t].caseSensitive && raw.toLowerCase() !== this._TriggerCache[t].pattern.toLowerCase()) continue;
+                else if (this._TriggerCache[t].caseSensitive && raw !== this._TriggerCache[t].pattern) continue;
                 if (ret)
                     return this.ExecuteTrigger(this._TriggerCache[t], [raw], true, t);
                 this.ExecuteTrigger(this._TriggerCache[t], [raw], false, t);

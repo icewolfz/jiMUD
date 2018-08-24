@@ -372,9 +372,9 @@ export function RunTester() {
     }
     try {
         if ($('#trigger-verbatim').prop('checked')) {
-            if ($('#trigger-caseSensitive').prop('checked') && $('#trigger-pattern').val().toLowerCase() !== $('#trigger-test-text').val().toLowerCase())
+            if (!$('#trigger-caseSensitive').prop('checked') && $('#trigger-pattern').val().toLowerCase() !== $('#trigger-test-text').val().toLowerCase())
                 $('#trigger-test-results').val('Pattern doesn\'t Match!');
-            else if (!$('#trigger-caseSensitive').prop('checked') && $('#trigger-pattern').val() !== $('#trigger-test-text').val())
+            else if ($('#trigger-caseSensitive').prop('checked') && $('#trigger-pattern').val() !== $('#trigger-test-text').val())
                 $('#trigger-test-results').val('Pattern doesn\'t Match!');
             else
                 $('#trigger-test-results').val('%0 : ' + $('#trigger-test-text').val() + '\n');
