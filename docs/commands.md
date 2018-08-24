@@ -1,71 +1,82 @@
 # Commands
 
-- `#nnn commands` repeat commands NNN number of times
-  - `commands` the commands you want repeated
-- `#beep` play standard system beep
-- `#version` or `#ver` show version information
-- `#show text` or `#sh` process text as if it came from the mud and appends a newline
-- `#showprompt text` or `#showp` same show but does not append a newline
-- `#echo text` or `#ec` display text to the screen
-- `#echoprompt text` or `#echop` same as echo but doesn't append newline
-- `#say text` same as echo
-- `#wait amount` or `#wa` pause current block for number of milliseconds
-  - `amount` the amount of milliseconds to wait before executing remaining commands command block, must be greater then 0
-- `#sayprompt text` or `#sayp` same as echoprompt
-- `#alias name value` or `#al` create or alter and alias from command line
-  - `name` can be either a quoted string, a number or a string
-    - quoted string - if a quoted string the quotes are removed and all text between are used as the alias name
-    - number - if a number it access the aliases as an array instead of by name, it is 0 to aliases count - 1,
-    - string - works like quoted string but allows no spaces
-  - `value` can be any text
-    - quoted string - quotes are removed and this is set as value
-    - text - all text quoted or unquoted is set as value
-- `#alias name {value} profile` or `#al` create or alter and alias from command line
-  - `name` or `{value}` see above
-  - `profile` the profile to remove the alias from
-- `#unalias name` or `#una` delete an alias from command line
-  - `name` the same as #alias
-- `#unalias {name} profile` or `#una` delete an alias from command line
-  - `name` the same as #alias  
-  - `profile` the profile to remove the alias from
-- `#setsetting name value` or `#sets` alter a setting from command line, [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
-  - name argument is the same as #alias
-  - value same as #alias`
-    - toggle - if type is boolean this special value allows you toggle the setting the opposite of the current value.
-- `#getsetting name` or `#gets` display a setting value from command line, [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
-  - name argument is the same as #alias, if name is all it will list all settings and current value
-- `#profile name enable/disable` or `#pro` enable or disable a profile
-  - name - the name of the profile to enable or disable
-  - enable/disable - optional state to turn profile to, if left off it will toggle profile state
-- `#profilelist` display a list of all profiles and current state
-- `#stopsound` or `#stops` stop the current sound effect
-- `#stopmusic` or `#stopm` stop the current background music
-- `#stopallsound` or `#stopa` stop all sound effects and background music
-- `#playsound soundfile` or `#plays` play a sound effect, argument is local sound file for server or a full url to a sound file, **Note:** due to security checks some sites may not allow access to files from other sites.
-- `#playmusic soundfile` or `#playm` play a sound effect, argument is local sound file for server or a full url to a sound file, **Note:** due to security checks some sites may not allow access to files from other sites.
-- `#musicinfo` display currently playing music, current position, and total length
-- `#soundinfo` display currently playing sound, current position, and total length
-- `#idletime` or `#idle` display time send a command was last sent to the mud
-- `#connecttime` or `#connect` display time since connected
-- `#notify 'title' message` or `#not` display a notification window
-  - `title` the title of the notification, if more then one word it must be in single quotes
-  - `message` the main message of the notification, this is optional
-- `#raiseevent "name" arguments` or `#raise` fire a custom event, arguments is a space delimited format supported with quoted grouping
-  - Example: `#raiseevent "test" 1 2 3 "4 5"` will fire an event named test with arguments 1, 2, 3, and 4 5
-- `#raisedelayed milliseconds "name" arguments` or `#raisede` fire a custom event with a delay, arguments is a space delimited format supported with quoted grouping
-  - Example: `#raisedelayed 3000 "test" 1 2 3 "4 5"` will fire and event named test with arguments 1, 2, 3, and 4 5 after waiting 3 seconds
-- `#showclient` or `#showcl` show client
-- `#hideclient` or `#hidecl` hide client
-- `#toggleclient` or `#togglecl` toggle show and hide client
-- `#gag number` or `#ga` gag the current or multiple lines of incoming or previous lines, if no arguments gags current line
-  - `number` if >= 0 it will gag current line and that number of incoming lines, if negative it will gag the # of lines before current line
-- `#ungag` or `#ung` clear previous #gag command settings
-- `#alarm name {time pattern} {commands} profile`, `#ala name {time pattern} {commands} profile`, `#alarm {time pattern} {commands} profile`, or `#ala {time pattern} {commands} profile` create an alarm trigger
-  - `name` is an optional and when used will update the first matching timer found with name or create a new one
-  time
-  - `{time pattern}` the time pattern to match
-    ```
-    When using alarm type pattern is in the format of hours:minutes:seconds, where hours and minutes are optional. A asterisk (*) is a wildcard to match any value for that place, if minutes or hours are missing a * is assumed. If pattern is preceded with a minus (-) the connection time is used instead of current time.
+|Command|Short|Arguments||Example|
+|---|---|---|---|---
+|#nnn||commands|repeat commands NNN number of times|
+|#beep||| play standard system beep
+|#version|#ver||display version information
+|#show|#sh|text|process text as if it came from the mud and append a new line
+|#showprompt|#showp|text|same as show but does not append new line
+|#echo|#ec|text|display text to the screen and append newline
+|#echoprompt|#echop|text|same as echo but does not append new line
+|#say||text|same as echo
+|#sayprompt|#sayp|text|same as echoprompt
+|#wait|#wa|amount|pause current block for number of milliseconds
+|#alias|#al|<nobr>name {commands} *profile*</nobr>|create or alter and alias
+|#alias|#al|<nobr>index {commands} *profile*</nobr>|create or alter and alias
+|#unalias|#una|name *profile*|delete and alias
+|#setsetting|#sets|name value|alter a setting value see: [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
+|#getsetting|#gets|name|display a setting value, [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
+|#profile|#pro|name *enable\|disable*|enable or disable a profile
+|#profilelist|||display a list of all profiles and current state
+|#stopsound|#stops||Stop the current sound effect
+|#stopmusic|#stopm||Stop the current background music
+|#stopallsound|#stopa||stop all sound effects and background music
+|#playsound|#plays|soundfile|Play a sound effect
+|#playmusic|#playm|soundfile|Play background music
+|#musiciinfo|||display currently playing background music, current position, and total length
+|#soundinfo|||display currently playing sound effect, current position, and total length
+|#idletime|#idle||Display time a command was last sent
+|#connecttime|#connect||display time since connected
+|#notify|#not|title message|display a notification popup
+|#raiseevent|#raise|name arguments|fire a custom event|`#raiseevent "test" 1 2 3 "4 5"` will fire an event named test with arguments 1, 2, 3, and 4 5
+|#raisedelayed|#raisede|amount name arguments|fire a custom event with a delay|`#raisedelayed 3000 "test" 1 2 3 "4 5"` will fire and event named test with arguments 1, 2, 3, and 4 5 after waiting 3 seconds
+|#showclient|#showcl||Show client window
+|#hideclient|#hidecl||Hide client window
+|#toggleclient|#togglecl||Toggle show and hide of client window
+|#gag|#ga|*number*|gag the current or multiple lines of incoming or previous lines, if no arguments gags current line
+|#ungag|#ung||clear previous #gag command settings
+|#alarm|#ala| <nobr>*name* {time pattern} {commands} *profile*</nobr>|create an alarm trigger
+|#suspend|#sus|*name\|pattern*|disable an alarm, id arguments omitted will attempt to suspend last added alarm
+|#resume|#resu|*name\|pattern*|enable an alarm, id arguments omitted will attempt to suspend last suspended alarm
+|#untrigger|#unt|{name\|pattern} *profile*|remove a trigger
+|#chat|#ch|text|Send text to chat window and append a new line
+|#chatprompt|#chatp|text|same as #chat but does not append a new line
+|#trigger|#tr|*name* {pattern} *{commands} options profile*|create or update trigger
+|#trigger|#tr| name options *profile*|Update options for a trigger
+|#event|#ev|name {commands} *options profile*|create or update event
+|#unevent|#une|name *profile*|Delete an event
+
+**Note:** All italic arguments are optional and can be left out
+
+## Arguments
+
+Explain what each argument does and if it is optional
+
+|Argument|Optional||
+|---|---|---|
+|text|| Text to display or process by a command
+|amount||The amount of milliseconds to wait, must be greater then 0
+|name|Sometimes| The name for an item or [setting](faq.md#setting-keys-value-type-and-default-value)
+|index|| an index of an item from 0 to max items - 1
+|{commands}|| Commands to set for command, the {} are required and will be stripped when processed
+|profile|Yes| Which profile to search
+|value|| the value to set for a command, if toggle will and boolean type it will toggle between true and false
+|enable|Yes|send enable to command, if left off will toggle
+|disable|Yes|send disable to command, if left off will toggle
+|soundfile||A sound file from the mud or a full url to a sound file, **Note:** due to security checks some sites may not allow access to files from other sites.
+|title|| the text to display for title, quote text to include spaces
+|message|| the text to display as message
+|arguments|| Space delimited format grouped based on [scripting quote preference](preferences.md#scripting)
+|number|Yes| if >= 0 it will gag current line and that number of incoming lines, if negative it will gag the # of lines before current line
+|{time pattern}||A valid time pattern <sup>1</sup>
+|{pattern}|Sometimes| A valid trigger pattern
+
+**Note** All quoted arguments will be processed based on [scripting quote preference](preferences.md#scripting) when required
+
+1.Alarm time pattern
+```
+   When using alarm type pattern is in the format of hours:minutes:seconds, where hours and minutes are optional. A asterisk (*) is a wildcard to match any value for that place, if minutes or hours are missing a * is assumed. If pattern is preceded with a minus (-) the connection time is used instead of current time.
 
     You can also define a temporary, one time alarm if pattern is preceded with a plus (+), the trigger alarm is executed then deleted.
 
@@ -73,68 +84,38 @@
     If seconds are > 59 and the only pattern it will be considered the same as adding a wildcard (*) in front of the number.
 
     Hours, minutes, and seconds can use a special wildcard format of *value which will match when the time MOD is zero, eg: *10 matches 10, 20, ...
-    ```
-  - `{commands}` the commands to be executed for alarm
-  - `profile` is optional and when set will create alarm in that profile, if profile not found fails to create, if omitted it will only search enabled profiles
-- `#suspend id`, `#suspend`, `#sus id`, `#sus` disable a trigger
-  - `id` the id or pattern of the trigger to disable, if omitted it will attempt to suspend the last added alarm
-- `#resume id`, `#resume`, `#resu id`, `#resu` enable a trigger
-  - `id` the id or pattern of the trigger to disable, if omitted it will attempt to resume the last suspended
-- `#untrigger {id|pattern} profile` or `#unt {id|pattern} profile` remove a trigger
-  - `id|pattern` the id or pattern of the trigger to be removed
-  - `profile` is optional and when set will create alarm in that profile, if profile not found fails to create, if omitted it will only search enabled profiles
-- `#chat text` or `#ch` send text to chat window
-- `#chatprompt text` or `#chatp` same chat but does not append a newline
-- `#trigger name {pattern} {commands} options profile`, `#trigger {pattern} {commands} options profile`, `#trigger name {pattern} options profile` create or update trigger, `#tr` is short hand version
-  - `name` trigger name, optional
-  - `{pattern}` the trigger pattern
-  - `{commands}` the commands the trigger executes
-  - `options` optional argument to enable or disable different trigger options, if you want a profile but no options just use a double space, eg `#trigger {pattern} {commands}  profile`
-    - `nocr` disable trigger on newline
-    - `prompt` enable trigger on prompt
-    - `case` enable case sensitive
-    - `verbatim` enable verbatim
-    - `disable` disable trigger
-    - `temporary` temporary trigger
-    - `cmd` command input trigger
-    - `priority=#` set the priority of trigger
-  - `profile` is optional and when set will create trigger in that profile, if profile not found fails to create, if omitted it will only search enabled profiles and default to active profile
-- `#trigger name options profile` update options for trigger, see above for argument details
-- `#event name {commands} options profile` create or update trigger, `#ev` is short hand version
-  - `name` event
-  - `{commands}` the commands the event executes, if commands are left out it will update options only
-  - `options` optional argument to enable or disable different event options, if you want a profile but no options just use a double space, eg `#event {pattern} {commands}  profile`
-    - `nocr` disable event on newline
-    - `prompt` enable event on prompt
-    - `case` enable case sensitive
-    - `verbatim` enable verbatim
-    - `disable` disable event
-    - `temporary` temporary event
-    - `priority=#` set the priority of event
-  - `profile` is optional and when set will create event in that profile, if profile not found fails to create, if omitted it will only search enabled profiles and default to active profile
-- `#unevent name` or `#une` delete an alias from command line
-  - `name` the same as #alias
-- `#unevent {name} profile` or `#une` delete an alias from command line
-  - `name` the same as #alias  
-  - `profile` the profile to remove the alias from
+```
+
+2.Trigger and event options
+
+- `nocr` disable trigger on newline
+- `prompt` enable trigger on prompt
+- `case` enable case sensitive
+- `verbatim` enable verbatim
+- `disable` disable trigger
+- `temporary` temporary trigger
+- `cmd` command input trigger, invalid for events
+- `priority=#` set the priority of trigger
 
 ## Test commands
 
 Test commands allow you to debug or test features of the client
 
-- `#TestList` List all test commands
-- `#TestColors` Display a basic ANSI color table
-- `#TestColorsDetails` Display a more detailed ANSI color table
-- `#TestXTerm` Display an XTerm test pattern
-- `#TestMXP` Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) support by displaying several [MXP](https://www.gammon.com.au/mushclient/mxp.htm) tags
-- `#TestMXP2` Test custom elements
-- `#TestMXPExpire` Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) link expiring
-- `#TestMXPColors` Display a full list of all supported [MXP](https://www.gammon.com.au/mushclient/mxp.htm) color names
-- `#TestMXPElements` Test more [MXP](https://www.gammon.com.au/mushclient/mxp.htm) custom elements
-- `#TestMXPLines` Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) line tagging support
-- `#TestMapper` Test mapper by generating a test area named `Doc Build Samples Area`, with 3 x 3 room square with different settings set for each room.
-- `#TestFANSI` Test [FANSI](http://fansi.org/Index.aspx) support
-- `#TestURLDetect` Test auto url detection by displaying random urls and formats
-- `#TestXTermRGB` Display a more detailed XTerm color pattern
-- `#TestSize` Test the current width and height of the client in characters by repeating `w` for # of columns as line 0 and displaying the numbers 1 to height - 1
-- `#TestSpeed` Test the speed of the client by running the commands #TestMXPColors, #TestMXP, #TestColors, #TestColorsDetails, #TestXTerm, #TestXTermRGB 10 times taking the time it took to parse, then display. After all test have been ran it will display 0 to 9 and each time and an avg time. **Note** this will cause the client to become unresponsive or locked while running this test, either wait til done or close.
+|Command||
+|---|---|
+|#TestList|List all test commands
+|#TestColors|Display a basic ANSI color table
+|#TestColorsDetails|Display a more detailed ANSI color table
+|#TestXTerm|Display an XTerm test pattern
+|#TestMXP|Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) support by displaying several [MXP](https://www.gammon.com.au/mushclient/mxp.htm) tags
+|#TestMXP2|Test custom elements
+|#TestMXPExpire|Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) link expiring
+|#TestMXPColors|Display a full list of all supported [MXP](https://www.gammon.com.au/mushclient/mxp.htm) color names
+|#TestMXPElements|Test more [MXP](https://www.gammon.com.au/mushclient/mxp.htm) custom elements
+|#TestMXPLines|Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) line tagging support
+|#TestMapper|Test mapper by generating a test area named `Doc Build Samples Area`, with 3 x 3 room square with different settings set for each room.
+|#TestFANSI|Test [FANSI](http://fansi.org/Index.aspx) support
+|#TestURLDetect|Test auto url detection by displaying random urls and formats
+|#TestXTermRGB|Display a more detailed XTerm color pattern
+|#TestSize|Test the current width and height of the client in characters by repeating `w` for # of columns as line 0 and displaying the numbers 1 to height - 1
+|#TestSpeed|Test the speed of the client by running the commands `#TestMXPColors`, `#TestMXP`, `#TestColors`, `#TestColorsDetails`, `#TestXTerm`, `#TestXTermRGB` 10 times taking the time it took to parse, then display. After all test have been ran it will display 0 to 9 and each time and an avg time. **Note** this will cause the client to become unresponsive or locked while running this test, either wait til done or close.

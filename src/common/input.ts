@@ -1354,7 +1354,7 @@ export class Input extends EventEmitter {
             case 'raisede':
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m#raisede\x1b[0;-11;-12mlayed milliseconds name or \x1b[4m#raisede\x1b[0;-11;-12mlayed milliseconds name arguments');
-                i = parseInt(args[0], 10);
+                i = parseInt(this.stripQuotes(args[0]), 10);
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\'');
                 if (i < 1)
@@ -1381,16 +1381,9 @@ export class Input extends EventEmitter {
             case 'notify':
             case 'not':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use \x1b[4m#not\x1b[0;-11;-12mify \'title\' message');
+                    throw new Error('Invalid syntax use \x1b[4m#not\x1b[0;-11;-12mify title message');
                 else {
-                    if (this.client.options.parseDoubleQuotes)
-                        args[0] = args[0].replace(/^\"(.*)\"$/g, (v, e, w) => {
-                            return e.replace(/\\\"/g, '"');
-                        });
-                    if (this.client.options.parseSingleQuotes)
-                        args[0] = args[0].replace(/^\'(.*)\'$/g, (v, e, w) => {
-                            return e.replace(/\\\'/g, '"');
-                        });
+                    args[0] = this.stripQuotes(args[0]);
                     if (args.length === 1)
                         this.client.notify(this.parseOutgoing(args[0], false), null);
                     else
