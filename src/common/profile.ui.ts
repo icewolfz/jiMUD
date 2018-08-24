@@ -372,13 +372,19 @@ export function RunTester() {
     }
     try {
         if ($('#trigger-verbatim').prop('checked')) {
-            if ($('#trigger-pattern').val() !== $('#trigger-test-text').val())
+            if ($('#trigger-caseSensitive').prop('checked') && $('#trigger-pattern').val().toLowerCase() !== $('#trigger-test-text').val().toLowerCase())
+                $('#trigger-test-results').val('Pattern doesn\'t Match!');
+            else if (!$('#trigger-caseSensitive').prop('checked') && $('#trigger-pattern').val() !== $('#trigger-test-text').val())
                 $('#trigger-test-results').val('Pattern doesn\'t Match!');
             else
                 $('#trigger-test-results').val('%0 : ' + $('#trigger-test-text').val() + '\n');
         }
         else {
-            const re = new RegExp($('#trigger-pattern').val(), 'g');
+            let re;
+            if ($('#trigger-caseSensitive').prop('checked'))
+                re = new RegExp($('#trigger-pattern').val(), 'g');
+            else
+                re = new RegExp($('#trigger-pattern').val(), 'gi');
             const res = re.exec($('#trigger-test-text').val());
             if (res == null || res.length === 0)
                 $('#trigger-test-results').val('Pattern doesn\'t Match!');
@@ -3097,6 +3103,7 @@ function importProfiles() {
                                     item.priority = data.profiles[keys[k]].triggers[m].priority;
                                     item.triggerNewline = data.profiles[keys[k]].triggers[m].triggernewline;
                                     item.triggerPrompt = data.profiles[keys[k]].triggers[m].triggerprompt;
+                                    item.caseSensitive = data.profiles[keys[k]].triggers[m].caseSensitive;
                                     item.temp = data.profiles[keys[k]].triggers[m].temp;
                                     item.type = data.profiles[keys[k]].triggers[m].type;
                                     item.notes = data.profiles[keys[k]].triggers[m].notes || '';

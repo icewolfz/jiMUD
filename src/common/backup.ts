@@ -413,6 +413,7 @@ export class Backup extends EventEmitter {
                             item.enabled = data.profiles[keys[k]].triggers[m].enabled ? true : false;
                             item.priority = data.profiles[keys[k]].triggers[m].priority;
                             item.triggerNewline = data.profiles[keys[k]].triggers[m].triggernewline ? true : false;
+                            item.caseSensitive = data.profiles[keys[k]].triggers[m].caseSensitive ? true : false;
                             item.triggerPrompt = data.profiles[keys[k]].triggers[m].triggerprompt ? true : false;
                             item.temp = data.profiles[keys[k]].triggers[m].temp ? true : false;
                             item.type = data.profiles[keys[k]].triggers[m].type;

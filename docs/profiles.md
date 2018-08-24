@@ -91,6 +91,7 @@
 - `Priority` the sort order of triggers
 - `Verbatim` the text is compared exactly how it is, including case
 - `Temporary` the trigger will be deleted on first execution
+- `Case sensitive` causes trigger to make sure letter cases are matched, eg A equal A and not a, off A equal a or A
 - `Trigger on Newline` this causes the trigger to execute if it is a full line of text
 - `Trigger on Prompt` this causes the trigger to execute if prompt/partial line of text.
 

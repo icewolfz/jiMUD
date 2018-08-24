@@ -324,6 +324,7 @@ export class Trigger extends Item {
     public triggerPrompt: boolean = false;
     public type: TriggerType = TriggerType.Regular;
     public temp: boolean = false;
+    public caseSensitive : boolean = false;
 
     constructor(data?) {
         super(data);
@@ -695,6 +696,7 @@ export class Profile {
                         enabled: this.triggers[i].enabled,
                         display: this.triggers[i].display,
                         triggernewline: this.triggers[i].triggerNewline,
+                        caseSensitive: this.triggers[i].caseSensitive,
                         triggerprompt: this.triggers[i].triggerPrompt,
                         type: this.triggers[i].type,
                         notes: this.triggers[i].notes || ''
