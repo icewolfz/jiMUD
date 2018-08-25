@@ -2311,6 +2311,11 @@ ipcMain.on('profile-item-added', (event, type, profile, item) => {
     winProfiles.webContents.send('profile-item-added', type, profile, item);
 });
 
+ipcMain.on('profile-item-updated', (event, type, profile, idx, item) => {
+  if (winProfiles)
+    winProfiles.webContents.send('profile-item-updated', type, profile, idx, item);
+});
+
 ipcMain.on('profile-item-removed', (event, type, profile, idx) => {
   if (winProfiles)
     winProfiles.webContents.send('profile-item-removed', type, profile, idx);

@@ -202,6 +202,7 @@ export class Client extends EventEmitter {
             }
         }
         this.saveProfile(keys[k]);
+        this.emit('item-removed', 'trigger', keys[k], idx);
     }
 
     get alarms(): Trigger[] {
@@ -528,6 +529,10 @@ export class Client extends EventEmitter {
 
         this._input.on('item-added', (type, profile, item) => {
             this.emit('item-added', type, profile, item);
+        });
+
+        this._input.on('item-updated', (type, profile, idx, item) => {
+            this.emit('item-updated', type, profile, idx, item);
         });
 
         this._input.on('item-removed', (type, profile, idx) => {

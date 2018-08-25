@@ -14,6 +14,8 @@
   - Add [#event](docs/commands.md) add or update event
   - Add [#unevent](docs/commands.md) delete event
   - Add [#trigger](docs/commands.md) add or update trigger
+  - Add [#button](docs/commands.md) add or update button
+  - Add [#unbutton](docs/commands.md) delete button
   - Add profile argument support for [#alias](docs/commands.md) and [#unalias](docs/commands.md)
   - Add all supported settings for [#setsetting](docs/commands.md) and [#getsetting](docs/commands.md), see [faq](docs/faq.md) for list of supported settings and value types
 - **Changed:**
@@ -43,6 +45,7 @@
   - Mapper: Fix some issues with reloading preferences after they have been changed
   - Fix quote parsing for several #commands so that they strip based on quote settings
   - Fix an issue where activeprofile was returning null breaking any #command that tried to access profiles
+  - Fix alarm and untrigger not sending notification that a trigger was removed or added to profile manager
 
 ## 0.4.62 2018-08-13
 

@@ -46,6 +46,9 @@
 |#trigger|#tr| name options *profile*|Update options for a trigger
 |#event|#ev|name {commands} *options profile*|create or update event
 |#unevent|#une|name *profile*|Delete an event
+|#button|#bu|name\|index|Cause a button to react as if it was clicked, if index it is the poiston from top down starting at 0
+|#button|#bu|*name caption* {commands} *{icon} options profile*|Update or create a button
+|#unbutton|#unb|name\|index\|caption| remove a button, if index it is the postion in order of buttons in profile manager
 
 **Note:** All italic arguments are optional and can be left out
 
@@ -71,6 +74,7 @@ Explain what each argument does and if it is optional
 |number|Yes| if >= 0 it will gag current line and that number of incoming lines, if negative it will gag the # of lines before current line
 |{time pattern}||A valid time pattern <sup>1</sup>
 |{pattern}|Sometimes| A valid trigger pattern
+|caption|the caption to display when mouse hovers over button
 
 **Note** All quoted arguments will be processed based on [scripting quote preference](preferences.md#scripting) when required
 

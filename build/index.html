@@ -827,13 +827,12 @@
 
                 if (_noCapture || _noCaptureStore > 0) return;
 
-                if (!chatWin || chatWin.isDestroyed())
-                {
+                if (!chatWin || chatWin.isDestroyed()) {
                     chatWin = remote.BrowserWindow.getAllWindows().filter(w => w.getTitle() === 'Chat');
                     chatWin = chatWin.length !== 0 ? chatWin[0] : null;
                 }
                 var shown = chatWin ? chatWin.isVisible() && !chatWin.isMinimized() : false;
-                if(!shown && client.options.chat.CaptureOnlyOpen) return;
+                if (!shown && client.options.chat.CaptureOnlyOpen) return;
 
                 //capture indented text
                 if (capture > 0 && data.line.startsWith("    ")) {
@@ -1154,10 +1153,20 @@
             });
 
             client.on('item-added', (type, profile, item) => {
+                if (type === 'button')
+                    buildButtons();
                 ipcRenderer.send('profile-item-added', type, profile, item);
             });
 
+            client.on('item-updated', (type, profile, item) => {
+                if (type === 'button')
+                    buildButtons();
+                ipcRenderer.send('profile-item-updated', type, profile, item);
+            });
+
             client.on('item-removed', (type, profile, idx) => {
+                if (type === 'button')
+                    buildButtons();
                 ipcRenderer.send('profile-item-removed', type, profile, idx);
             });
 

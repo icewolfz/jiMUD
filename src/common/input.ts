@@ -7,7 +7,7 @@ import { MacroModifiers } from './profile';
 import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate } from './library';
 import { Client } from './client';
 import { Tests } from './test';
-import { Alias, Trigger, Macro, Profile, TriggerType } from './profile';
+import { Alias, Trigger, Button, Profile, TriggerType } from './profile';
 import { NewLineType } from './types';
 import { SettingList } from './settings';
 const mathjs = require('mathjs-expression-parser');
@@ -630,7 +630,6 @@ export class Input extends EventEmitter {
                     }
                     else {
                         name = profile;
-                        reload = false;
                         profile = Profile.load(path.join(p, profile + '.json'));
                         if (!profile)
                             throw new Error('Profile not found: ' + name);
@@ -641,6 +640,7 @@ export class Input extends EventEmitter {
                         profile.save(p);
                         profile = null;
                         this.client.echo('Trigger \'' + args[0] + '\' removed from \'' + profile.name + '\'.', -7, -8, true, true);
+                        this.emit('item-removed', 'trigger', profile.name, item);
                     }
                 }
                 return null;
@@ -765,12 +765,12 @@ export class Input extends EventEmitter {
                                             item.options['priority'] = i;
                                         }
                                         else
-                                        throw new Error(`Invalid trigger option '${o.trim()}'`);
+                                            throw new Error(`Invalid trigger option '${o.trim()}'`);
                                 }
                             });
                         }
                         else
-                        throw new Error('Invalid trigger options');
+                            throw new Error('Invalid trigger options');
                     }
                     else if (args.length === 2) {
                         if (args[0].match(/^\{.*\}$/g))
@@ -799,12 +799,12 @@ export class Input extends EventEmitter {
                                             item.options['priority'] = i;
                                         }
                                         else
-                                        throw new Error(`Invalid trigger option '${o.trim()}'`);
+                                            throw new Error(`Invalid trigger option '${o.trim()}'`);
                                 }
                             });
                         }
                         else
-                        throw new Error('Invalid trigger options');
+                            throw new Error('Invalid trigger options');
                         item.profile = this.stripQuotes(args[1]);
                         if (item.profile.length !== 0)
                             tmp = this.parseOutgoing(item.profile, false);
@@ -859,6 +859,7 @@ export class Input extends EventEmitter {
                     trigger.pattern = item.pattern;
                     profile.triggers.push(trigger);
                     this.client.echo('Trigger \'' + (trigger.name || trigger.pattern) + '\' added.', -7, -8, true, true);
+                    item.new = true;
                 }
                 else
                     this.client.echo('Trigger \'' + (trigger.name || trigger.pattern) + '\' updated.', -7, -8, true, true);
@@ -885,6 +886,10 @@ export class Input extends EventEmitter {
                     trigger.temp = true;
                 trigger.priority = item.options.priority;
                 profile.save(p);
+                if (item.new)
+                    this.emit('item-added', 'trigger', profile.name, trigger);
+                else
+                    this.emit('item-updated', 'trigger', profile.name, profile.triggers.indexOf(trigger), trigger);
                 profile = null;
                 //#endregion
                 return null;
@@ -1030,6 +1035,7 @@ export class Input extends EventEmitter {
                     trigger.name = item.name;
                     profile.triggers.push(trigger);
                     this.client.echo('Event \'' + trigger.name + '\' added.', -7, -8, true, true);
+                    item.new = true;
                 }
                 else
                     this.client.echo('Event \'' + trigger.name + '\' updated.', -7, -8, true, true);
@@ -1054,6 +1060,10 @@ export class Input extends EventEmitter {
                     trigger.temp = true;
                 trigger.priority = item.options.priority;
                 profile.save(p);
+                if (item.new)
+                    this.emit('item-added', 'trigger', profile.name, trigger);
+                else
+                    this.emit('item-updated', 'trigger', profile.name, profile.triggers.indexOf(trigger), trigger);
                 profile = null;
                 //#endregion
                 return null;
@@ -1092,11 +1102,7 @@ export class Input extends EventEmitter {
                         n = this.parseOutgoing(args.join(' '), false);
                         profile = this.client.activeProfile;
                     }
-                    n = this.stripQuotes(n);
                     items = SortItemArrayByPriority(profile.triggers.filter(t => t.type === TriggerType.Event));
-                    trigger = tmp.find(t => {
-                        return t.name === item.name || t.pattern === item.name;
-                    });
                     n = this.stripQuotes(n);
                     tmp = n;
                     for (i = 0, al = items.length; i < al; i++) {
@@ -1110,13 +1116,299 @@ export class Input extends EventEmitter {
                         this.client.echo('Event \'' + tmp + '\' not found.', -7, -8, true, true);
                     else {
                         this.client.echo('Event \'' + (items[n].name || items[n].pattern) + '\' removed.', -7, -8, true, true);
-                        items.splice(n, 1);
-                        profile.aliases = items;
+                        if (reload)
+                            this.client.removeTrigger(items[n]);
+                        else {
+                            n = profile.triggers.indexOf(items[n]);
+                            profile.triggers.splice(n, 1);
+                            profile.save(p);
+                            this.emit('item-removed', 'trigger', profile.name, n);
+                        }
+                        profile = null;
+                    }
+                }
+                return null;
+            case 'button':
+            case 'bu':
+                //#region button
+                //#button name caption {commands} {icon} options profile
+                //#button name|index
+                //Options: enable, disable, nosend, chain, append, stretch, priority=#
+                if (args.length === 1) {
+                    n = this.stripQuotes(args[0]);
+                    n = this.parseOutgoing(n, false);
+                    items = document.getElementById('user-buttons').children;
+                    if (/^\d+$/.exec(n)) {
+                        n = parseInt(n, 10);
+                        if (n < 0 || n >= items.length)
+                            throw new Error('Button index must be >= 0 and < ' + items.length);
+                        else
+                            items[n].click();
+                    }
+                    else if (items[n])
+                        items[n].click();
+                    else
+                        throw new Error(`Button '${n}' not found`);
+                    return null;
+                }
+                profile = null;
+                item = {
+                    profile: null,
+                    name: null,
+                    caption: null,
+                    commands: null,
+                    icon: null,
+                    options: { priority: 0 }
+                };
+                p = path.join(parseTemplate('{data}'), 'profiles');
+                if (args.length < 2 || args.length > 5)
+                    throw new Error('Invalid syntax use \x1b[4m#bu\x1b[0;-11;-12mtton name|index or \x1b[4m#bu\x1b[0;-11;-12mtton name \x1b[3mcaption\x1b[0;-11;-12m {commands} \x1b[3m{icon} options profile\x1b[0;-11;-12m or \x1b[4m#by\x1b[0;-11;-12mutton \x1b[3mcaption\x1b[0;-11;-12m {commands} \x1b[3m{icon} {options} profile\x1b[0;-11;-12m');
+                if (args[0].length === 0)
+                    throw new Error('Invalid button name, caption or commands');
+
+                if (args[0].match(/^\{.*\}$/g)) {
+                    item.commands = args.shift();
+                    item.commands = item.commands.substr(1, item.commands.length - 2);
+                }
+                else {
+                    item.name = this.stripQuotes(args.shift());
+                    if (!item.name || item.name.length === 0)
+                        throw new Error('Invalid button name or caption');
+                    if (args[0].match(/^\{.*\}$/g)) {
+                        item.commands = args.shift();
+                        item.commands = item.commands.substr(1, item.commands.length - 2);
+                    }
+                    else {
+                        item.caption = this.stripQuotes(args.shift());
+                        if (!args[0].match(/^\{.*\}$/g))
+                            throw new Error('Missing commands');
+                    }
+                }
+
+                if (args.length !== 0) {
+                    if (args[0].match(/^\{.*\}$/g)) {
+                        item.icon = args.shift();
+                        item.icon = item.icon.substr(1, item.icon.length - 2);
+                    }
+                    if (args.length === 1) {
+                        if (args[0].match(/^\{.*\}$/g))
+                            args[0] = args[0].substr(1, args[0].length - 2);
+                        else
+                            args[0] = this.stripQuotes(args[0]);
+                        if (args[0].length !== 0) {
+                            this.parseOutgoing(args[0], false).split(',').forEach(o => {
+                                switch (o.trim()) {
+                                    case 'nosend':
+                                    case 'chain':
+                                    case 'append':
+                                    case 'stretch':
+                                    case 'disable':
+                                    case 'enable':
+                                        item.options[o.trim()] = true;
+                                        break;
+                                    default:
+                                        if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid button priority option '${o.trim()}'`);
+                                            i = parseInt(tmp[1], 10);
+                                            if (isNaN(i))
+                                                throw new Error('Invalid button priority value \'' + tmp[1] + '\' must be a number');
+                                            item.options['priority'] = i;
+                                        }
+                                        else
+                                            throw new Error(`Invalid button option '${o.trim()}'`);
+                                }
+                            });
+                        }
+                        else
+                            throw new Error('Invalid button options');
+                    }
+                    else if (args.length === 2) {
+                        if (args[0].match(/^\{.*\}$/g))
+                            args[0] = args[0].substr(1, args[0].length - 2);
+                        if (args[0].length !== 0) {
+                            this.parseOutgoing(args[0], false).split(',').forEach(o => {
+                                switch (o.trim()) {
+                                    case 'nosend':
+                                    case 'chain':
+                                    case 'append':
+                                    case 'stretch':
+                                    case 'disable':
+                                    case 'enable':
+                                        item.options[o.trim()] = true;
+                                        break;
+                                    default:
+                                        if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid button priority option '${o.trim()}'`);
+                                            i = parseInt(tmp[1], 10);
+                                            if (isNaN(i))
+                                                throw new Error('Invalid button priority value \'' + tmp[1] + '\' must be a number');
+                                            item.options['priority'] = i;
+                                        }
+                                        else
+                                            throw new Error(`Invalid button option '${o.trim()}'`);
+                                }
+                            });
+                        }
+                        else
+                            throw new Error('Invalid button options');
+                        item.profile = this.stripQuotes(args[1]);
+                        if (item.profile.length !== 0)
+                            tmp = this.parseOutgoing(item.profile, false);
+                    }
+                }
+                if (!item.profile || item.profile.length === 0) {
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0)
+                        return;
+                    if (kl === 1) {
+                        if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                            throw Error('No enabled profiles found!');
+                        profile = this.client.profiles.items[keys[0]];
+                        if (item.name !== null)
+                            trigger = this.client.profiles.items[keys[k]].find('buttons', 'name', item.name);
+                        else
+                            trigger = this.client.profiles.items[keys[k]].find('buttons', 'caption', item.caption);
+                    }
+                    else {
+                        for (; k < kl; k++) {
+                            if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                continue;
+                            if (item.name !== null)
+                                trigger = this.client.profiles.items[keys[k]].find('buttons', 'name', item.name);
+                            else
+                                trigger = this.client.profiles.items[keys[k]].find('buttons', 'caption', item.caption);
+                            if (trigger) {
+                                profile = this.client.profiles.items[keys[k]];
+                                break;
+                            }
+                        }
+                        if (!profile)
+                            profile = this.client.activeProfile;
+                    }
+                }
+                else {
+                    if (this.client.profiles.contains(item.profile))
+                        profile = this.client.profiles.items[item.profile];
+                    else {
+                        profile = Profile.load(path.join(p, item.profile + '.json'));
+                        if (!profile)
+                            throw new Error('Profile not found: ' + item.profile);
+                    }
+                }
+                if (!trigger) {
+                    trigger = new Button();
+                    trigger.name = item.name || '';
+                    trigger.caption = item.caption || '';
+                    profile.buttons.push(trigger);
+                    if (!item.name && !item.caption)
+                        this.client.echo('Button added.', -7, -8, true, true);
+                    else
+                        this.client.echo('Button \'' + (trigger.name || trigger.caption || '') + '\' added.', -7, -8, true, true);
+                    item.new = true;
+                }
+                else
+                    this.client.echo('Button \'' + (trigger.name || trigger.caption || '') + '\' updated.', -7, -8, true, true);
+                if (item.caption !== null)
+                    trigger.caption = item.caption;
+                if (item.commands !== null)
+                    trigger.value = item.commands;
+
+                if (item.options.icon)
+                    trigger.icon = item.options.icon;
+                if (item.options.nosend)
+                    trigger.send = false;
+                if (item.options.chain)
+                    trigger.chain = true;
+                if (item.options.append)
+                    trigger.append = true;
+                if (item.options.stretch)
+                    trigger.stretch = true;
+                if (item.options.disable)
+                    trigger.enabled = false;
+                else if (item.options.enable)
+                    trigger.enabled = true;
+                trigger.priority = item.options.priority;
+                profile.save(p);
+                if (item.new)
+                    this.emit('item-added', 'button', profile.name, trigger);
+                else
+                    this.emit('item-updated', 'button', profile.name, profile.buttons.indexOf(trigger), trigger);
+                profile = null;
+                //#endregion
+                return null;
+            case 'unbutton':
+            case 'unb':
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use \x1b[4m#unb\x1b[0;-11;-12mtton name or \x1b[4m#unb\x1b[0;-11;-12mtton {name} \x1b[3mprofile\x1b[0;-11;-12m');
+                else {
+                    reload = true;
+                    profile = null;
+                    p = path.join(parseTemplate('{data}'), 'profiles');
+                    if (args[0].match(/^\{.*\}$/g) || args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g)) {
+                        if (args.length > 2)
+                            throw new Error('Invalid syntax use \x1b[4m#unb\x1b[0;-11;-12mtton name or \x1b[4m#unb\x1b[0;-11;-12mtton {name} \x1b[3mprofile\x1b[0;-11;-12m');
+                        if (args.length === 2) {
+                            profile = this.stripQuotes(args[1]);
+                            profile = this.parseOutgoing(profile, false);
+                            if (this.client.profiles.contains(profile))
+                                profile = this.client.profiles.items[profile];
+                            else {
+                                name = profile;
+                                reload = false;
+                                profile = Profile.load(path.join(p, profile + '.json'));
+                                if (!profile)
+                                    throw new Error('Profile not found: ' + name);
+                            }
+                        }
+                        else
+                            profile = this.client.activeProfile;
+                        if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
+                            n = this.parseOutgoing(this.stripQuotes(args[0]), false);
+                        else
+                            n = this.parseOutgoing(args[0].substr(1, args[0].length - 2), false);
+                    }
+                    else {
+                        n = this.parseOutgoing(args.join(' '), false);
+                        profile = this.client.activeProfile;
+                    }
+                    items = SortItemArrayByPriority(profile.buttons);
+                    tmp = n;
+                    if (/^\d+$/.exec(n)) {
+                        n = parseInt(n, 10);
+                        if (n < 0 || n >= items.length)
+                            throw new Error('Button index must be >= 0 and < ' + items.length);
+                        f = true;
+                    }
+                    else {
+                        n = this.stripQuotes(n);
+                        for (i = 0, al = items.length; i < al; i++) {
+                            if (items[i].name === n || items[i]['caption'] === n) {
+                                n = i;
+                                f = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!f)
+                        this.client.echo('Button \'' + tmp + '\' not found.', -7, -8, true, true);
+                    else {
+                        if (items[n].name.length === 0 && items[n].caption.length === 0)
+                            this.client.echo('Button \'' + tmp + '\' removed.', -7, -8, true, true);
+                        else
+                            this.client.echo('Button \'' + (items[n].name || items[n].caption) + '\' removed.', -7, -8, true, true);
+                        n = profile.buttons.indexOf(items[n]);
+                        profile.buttons.splice(n, 1);
                         profile.save(p);
                         if (reload)
                             this.client.clearCache();
                         profile = null;
-                        this.emit('item-removed', 'alias', profile.name, n);
+                        this.emit('item-removed', 'button', profile.name, n);
                     }
                 }
                 return null;
@@ -1126,6 +1418,7 @@ export class Input extends EventEmitter {
                 profile = null;
                 name = null;
                 reload = true;
+                n = false;
                 p = path.join(parseTemplate('{data}'), 'profiles');
                 if (args.length < 2 || args.length > 4)
                     throw new Error('Invalid syntax use \x1b[4m#ala\x1b[0;-11;-12mrm name {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m, \x1b[4m#ala\x1b[0;-11;-12mrm name {timepattern} \x1b[3mprofile\x1b[0;-11;-12m, or \x1b[4m#ala\x1b[0;-11;-12mrm {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m');
@@ -1163,12 +1456,13 @@ export class Input extends EventEmitter {
                     trigger.type = TriggerType.Alarm;
                     profile.triggers.push(trigger);
                     profile.save(p);
-                    profile = null;
                     if (reload) {
                         this._lastSuspend = -1;
                         this.client.updateAlarms();
                     }
                     this.client.echo('Alarm \'' + trigger.pattern + '\' added.', -7, -8, true, true);
+                    this.emit('item-added', 'trigger', profile.name, trigger);
+                    profile = null;
                     return null;
                 }
                 name = this.stripQuotes(args[0]);
@@ -1210,6 +1504,7 @@ export class Input extends EventEmitter {
                             trigger.name = name;
                             profile.triggers.push(trigger);
                             this.client.echo('Alarm \'' + trigger.name + '\' added.', -7, -8, true, true);
+                            n = true;
                         }
                         else
                             this.client.echo('Alarm \'' + trigger.name + '\' updated.', -7, -8, true, true);
@@ -1230,6 +1525,7 @@ export class Input extends EventEmitter {
                             profile = this.client.activeProfile;
                         if (!trigger) {
                             trigger = new Trigger();
+                            n = true;
                             trigger.name = name;
                             profile.triggers.push(trigger);
                             this.client.echo('Alarm \'' + trigger.name + '\' added.', -7, -8, true, true);
@@ -1256,6 +1552,7 @@ export class Input extends EventEmitter {
                         trigger = new Trigger();
                         trigger.name = name;
                         profile.triggers.push(trigger);
+                        n = true;
                         this.client.echo('Alarm \'' + trigger.name + '\' added.', -7, -8, true, true);
                     }
                     else
@@ -1266,6 +1563,10 @@ export class Input extends EventEmitter {
                 if (commands)
                     trigger.value = commands;
                 profile.save(p);
+                if (n)
+                    this.emit('item-added', 'trigger', profile.name, trigger);
+                else
+                    this.emit('item-updated', 'trigger', profile.name, profile.triggers.indexOf(trigger), trigger);
                 profile = null;
                 if (reload) {
                     this._lastSuspend = -1;
@@ -1514,7 +1815,8 @@ export class Input extends EventEmitter {
                 else if (args.length === 1)
                     throw new Error('Must supply an alias value');
                 else {
-                    n = this.parseOutgoing(args.shift(), false);
+                    n = this.stripQuotes(args.shift());
+                    n = this.parseOutgoing(n, false);
                     reload = true;
                     profile = null;
                     p = path.join(parseTemplate('{data}'), 'profiles');
@@ -1547,7 +1849,6 @@ export class Input extends EventEmitter {
                     }
                     items = profile.aliases;
                     args = this.stripQuotes(args);
-                    n = this.stripQuotes(n);
                     if (/^\d+$/.exec(n)) {
                         n = parseInt(n, 10);
                         if (n < 0 || n >= items.length)
@@ -1562,6 +1863,7 @@ export class Input extends EventEmitter {
                             if (items[i]['pattern'] === n) {
                                 items[i].value = args;
                                 this.client.echo('Alias \'' + n + '\' updated.', -7, -8, true, true);
+                                this.emit('item-updated', 'alias', profile.name, i, tmp);
                                 f = true;
                                 break;
                             }
@@ -1569,12 +1871,13 @@ export class Input extends EventEmitter {
                         if (!f) {
                             tmp = new Alias(n, args);
                             items.push(tmp);
-                            this.emit('item-added', 'alias', this.client.activeProfile.name, tmp);
+                            this.emit('item-added', 'alias', profile.name, tmp);
                             this.client.echo('Alias \'' + n + '\' added.', -7, -8, true, true);
                         }
                     }
                     profile.aliases = items;
                     profile.save(p);
+                    profile = null;
                     if (reload)
                         this.client.clearCache();
                 }
