@@ -1,4 +1,4 @@
-//cSpell:ignore fname
+//spell-checker:ignore fname
 const buzz = require('buzz');
 const path = require('path');
 const fs = require('fs');

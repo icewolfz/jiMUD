@@ -1,5 +1,5 @@
-//cSpell:ignore pathfinding, vscroll, hscroll, AUTOINCREMENT, Arial, isdoor, isclosed, prevroom, islocked, cmds
-//cSpell:ignore watersource, dirtroad, sanddesert, icesheet, highmountain, pavedroad, rockdesert
+//spell-checker:ignore pathfinding, vscroll, hscroll, AUTOINCREMENT, Arial, isdoor, isclosed, prevroom, islocked, cmds
+//spell-checker:ignore watersource, dirtroad, sanddesert, icesheet, highmountain, pavedroad, rockdesert
 import EventEmitter = require('events');
 import { Size } from './types';
 import { parseTemplate, clone, copy } from './library';

@@ -1,7 +1,7 @@
-//cSpell:ignore MONTYPE ROOMTYPE datagrid propertygrid dropdown polyfill rgbcolor, MODROOM, SUBCLASSER LOCKPICK selectall waterbreathing
-//cSpell:ignore consolas lucida bitstream tabbable varargs
-//cSpell:ignore dirtroad highmountain icesheet pavedroad rockdesert sanddesert
-//cSpell:ignore bandedmail splintmail chainmail ringmail scalemail overclothing
+//spell-checker:ignore MONTYPE ROOMTYPE datagrid propertygrid dropdown polyfill rgbcolor, MODROOM, SUBCLASSER LOCKPICK selectall waterbreathing
+//spell-checker:ignore consolas lucida bitstream tabbable varargs
+//spell-checker:ignore dirtroad highmountain icesheet pavedroad rockdesert sanddesert
+//spell-checker:ignore bandedmail splintmail chainmail ringmail scalemail overclothing
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { createFunction, formatFunctionPointer, formatArgumentList } from './lpc';
 import { Splitter, Orientation } from '../splitter';
@@ -7080,7 +7080,7 @@ export class AreaDesigner extends EditorBase {
                                     wiz.defaults['obj-skills'] = ed.value.skills || [];
                                     wiz.title = 'Edit instrument...';
                                     //type, quality, enchantment
-                                    //cSpell:disable
+                                    //spell-checker:disable
                                     wiz.addPages([new WizardPage({
                                         id: 'obj-instrument',
                                         title: 'Instrument properties',
@@ -7111,7 +7111,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
                                     }), wizSkills, wizBonuses]);
-                                    //cSpell:enable
+                                    //spell-checker:enable
                                     break;
                                 case StdObjectType.rope:
                                     wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];
@@ -7141,7 +7141,7 @@ export class AreaDesigner extends EditorBase {
                                     };
                                     wiz.title = 'Edit weapon...';
                                     //type, quality, enchantment
-                                    //cSpell:disable
+                                    //spell-checker:disable
                                     wiz.addPages([new WizardPage({
                                         id: 'obj-weapon',
                                         title: 'Weapon properties',
@@ -7164,14 +7164,14 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
                                     }), wizSkills, wizBonuses]);
-                                    //cSpell:enable
+                                    //spell-checker:enable
                                     break;
                                 case StdObjectType.material_weapon:
                                     wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];
                                     wiz.defaults['obj-skills'] = ed.value.skills || [];
                                     wiz.title = 'Edit material weapon...';
                                     //type, quality, enchantment
-                                    //cSpell:disable
+                                    //spell-checker:disable
                                     wiz.addPages([new WizardPage({
                                         id: 'obj-weapon',
                                         title: 'Material weapon properties',
@@ -7222,7 +7222,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-describers').value = ed.value.describers || '';
                                         }
                                     }), wizSkills, wizBonuses]);
-                                    //cSpell:enable
+                                    //spell-checker:enable
                                     break;
                                 case StdObjectType.food:
                                     wiz.title = 'Edit food...';
@@ -7374,7 +7374,7 @@ export class AreaDesigner extends EditorBase {
                                     };
                                     wiz.title = 'Edit fishing pole...';
                                     //type, quality, enchantment
-                                    //cSpell:disable
+                                    //spell-checker:disable
                                     wiz.addPages([new WizardPage({
                                         id: 'obj-fishing-pole',
                                         title: 'Fishing pole properties',
@@ -7410,7 +7410,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-canBait').checked = !ed.value.hasOwnProperty('canBait') || ed.value.canBait;
                                         }
                                     }), wizSkills, wizBonuses]);
-                                    //cSpell:enable
+                                    //spell-checker:enable
                                     break;
                                 case StdObjectType.backpack:
                                     wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];

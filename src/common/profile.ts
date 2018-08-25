@@ -1,4 +1,4 @@
-//cSpell:ignore displaytype, submenu, triggernewline, triggerprompt
+//spell-checker:ignore displaytype, submenu, triggernewline, triggerprompt
 import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority } from './library';
 const path = require('path');
 const fs = require('fs');

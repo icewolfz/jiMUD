@@ -1,5 +1,5 @@
-//cSpell:words submenu, pasteandmatchstyle, statusvisible, taskbar
-//cSpell:ignore prefs, partyhealth, combathealth
+//spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar
+//spell-checker:ignore prefs, partyhealth, combathealth
 const { app, BrowserWindow, shell } = require('electron');
 const { Tray, dialog, Menu } = require('electron');
 const ipcMain = require('electron').ipcMain;
@@ -420,7 +420,7 @@ var menuTemp = [
         id: 'buttons',
         /*
         type: 'checkbox',
-        checked: true,        
+        checked: true,
         click: () => {
           win.webContents.executeJavaScript('toggleView("buttons")');
         },
@@ -875,7 +875,7 @@ function createMenu() {
             type: 'checkbox',
             checked: false,
             id: path.basename(files[i], ".json").toLowerCase(),
-            click: (menuItem, browserWindow, event) => {
+            click: (menuItem) => {
               win.webContents.executeJavaScript('client.toggleProfile("' + menuItem.label.toLowerCase() + '")');
             }
           });
@@ -1281,7 +1281,7 @@ function createWindow() {
     logError(`Client crashed, killed: ${killed}\n`, true);
   });
 
-  win.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
+  win.webContents.on('new-window', (event, url, frameName, disposition, options) => {
     event.preventDefault();
     if (frameName === 'modal') {
       // open window as modal
@@ -1604,7 +1604,7 @@ ipcMain.on('reload', (event, char) => {
   win.close();
 });
 
-ipcMain.on('load-default', (event) => {
+ipcMain.on('load-default', () => {
   var name;
   var cWin;
   //already loaded so no need to switch
@@ -1769,7 +1769,7 @@ ipcMain.on('load-char', (event, char) => {
   }
 });
 
-ipcMain.on('options-changed', (event, save) => {
+ipcMain.on('options-changed', () => {
   set = settings.Settings.load(global.settingsFile);
 });
 
@@ -1844,7 +1844,7 @@ ipcMain.on('set-title', (event, title) => {
   updateTray();
 });
 
-ipcMain.on('closed', (event) => {
+ipcMain.on('closed', () => {
   global.connected = false;
   if (winChat)
     winChat.webContents.send('closed');
@@ -1863,7 +1863,7 @@ ipcMain.on('closed', (event) => {
   }
 });
 
-ipcMain.on('connected', (event) => {
+ipcMain.on('connected', () => {
   global.connected = true;
   if (winChat)
     winChat.webContents.send('connected');
@@ -1983,7 +1983,7 @@ ipcMain.on('error', (event, err) => {
     win.webContents.send('error', err);
 });
 
-ipcMain.on('reload-mail', (event) => {
+ipcMain.on('reload-mail', () => {
   createMenu();
   if (win && win.webContents)
     win.webContents.send('reload-mail');
@@ -1994,7 +1994,7 @@ ipcMain.on('reload-mail', (event) => {
   }
 });
 
-ipcMain.on('reload-profiles', (event) => {
+ipcMain.on('reload-profiles', () => {
   createMenu();
   if (win && win.webContents)
     win.webContents.send('reload-profiles');
@@ -2091,7 +2091,7 @@ ipcMain.on('editor-setting-changed', (event, data) => {
     createCodeEditor();
 });
 
-ipcMain.on('editor-settings-saved', (event) => {
+ipcMain.on('editor-settings-saved', () => {
   edset = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
 });
 
@@ -2300,7 +2300,7 @@ ipcMain.on('flush-end', (event, sender) => {
     win.webContents.send('flush-end', sender);
 });
 
-ipcMain.on('reload-characters', (event) => {
+ipcMain.on('reload-characters', () => {
   loadCharacters(true);
   if (global.character)
     loadCharacter(global.character);
@@ -2754,7 +2754,7 @@ function showProfiles() {
     winProfiles.show();
   });
 
-  winProfiles.on('close', (e) => {
+  winProfiles.on('close', () => {
     set = settings.Settings.load(global.settingsFile);
     set.windows['profiles'] = getWindowState('profiles', winProfiles);
     set.save(global.settingsFile);
@@ -3065,7 +3065,7 @@ function createNewWindow(name, options) {
     states[name].maximized = false;
   });
 
-  windows[name].window.webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
+  windows[name].window.webContents.on('new-window', (event, url, frameName, disposition, options) => {
     event.preventDefault();
     if (frameName === 'modal') {
       // open window as modal
@@ -3281,12 +3281,11 @@ function loadWindowScripts(window, name) {
   }
 }
 
-function closeWindows(save, clear, force) {
+function closeWindows(save, clear) {
   if (!set)
     set = settings.Settings.load(global.settingsFile);
   var name;
   var cWin;
-  var ce = false;
   for (name in windows) {
     if (!windows.hasOwnProperty(name) || !windows[name].window)
       continue;
@@ -3427,7 +3426,7 @@ function createCodeEditor(show, loading, loaded) {
     }
   });
 
-  winCode.webContents.on('new-window', (event, URL, frameName, disposition, options, additionalFeatures) => {
+  winCode.webContents.on('new-window', (event, URL, frameName, disposition, options) => {
     event.preventDefault();
     var u = new url.URL(URL);
     if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {

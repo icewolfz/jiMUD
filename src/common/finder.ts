@@ -1,4 +1,4 @@
-//cSpell:words keycode
+//spell-checker:words keycode
 import EventEmitter = require('events');
 import { Display } from './display';
 import { OverlayRange } from './types';

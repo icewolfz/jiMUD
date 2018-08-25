@@ -1,4 +1,4 @@
-//cSpell:ignore rgbcolor, Fraktur, aixterm, FNAME, ismap, ATTLIST, windowname, cmds, apos
+//spell-checker:ignore rgbcolor, Fraktur, aixterm, FNAME, ismap, ATTLIST, windowname, cmds, apos
 import EventEmitter = require('events');
 import RGBColor = require('rgbcolor');
 import { ParserLine, FormatType, ParserOptions, FontStyle, LineFormat, LinkFormat, ImageFormat, Size } from './types';

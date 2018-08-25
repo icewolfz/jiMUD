@@ -1,4 +1,4 @@
-// cSpell:words TELOP, TERMINALTYPE, NEWENVIRON, Achaea, Webdings, ENDOFRECORD, USERVAR
+// spell-checker:words TELOP, TERMINALTYPE, NEWENVIRON, Achaea, Webdings, ENDOFRECORD, USERVAR
 import EventEmitter = require('events');
 import net = require('net');
 

@@ -1,4 +1,4 @@
-//cSpell:ignore Xred
+//spell-checker:ignore Xred
 /**
  *
  *

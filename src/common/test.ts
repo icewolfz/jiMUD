@@ -1,4 +1,4 @@
-//cSpell:ignore memberof, webdings, redbu, ismap, isdoor
+//spell-checker:ignore memberof, webdings, redbu, ismap, isdoor
 import EventEmitter = require('events');
 import { Client } from './client';
 import { AnsiColorCode, Ansi } from './ansi';

@@ -1,4 +1,4 @@
-//cSpell:words vscroll, hscroll, Commandon, cmdfont, isdoor, isclosed, triggernewline, triggerprompt
+//spell-checker:words vscroll, hscroll, Commandon, cmdfont, isdoor, isclosed, triggernewline, triggerprompt
 import EventEmitter = require('events');
 import { Client } from './client';
 import { parseTemplate, existsSync } from './library';

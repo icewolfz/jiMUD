@@ -7,7 +7,7 @@
  * @created 2018-01-05
  * @change 2018-01-09 William Set file in constructor
  */
-//cSpell:words fswin, chunksize
+//spell-checker:words fswin, chunksize
 import EventEmitter = require('events');
 import { Client } from './client';
 import { parseTemplate, isFileSync } from './library';

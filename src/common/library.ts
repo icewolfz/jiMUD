@@ -1,5 +1,5 @@
-//cSpell:ignore Eisu, Junja, Hanja, Nonconvert, Modechange, printscreen, jisho, Masshou, Touroku, loya, roya
-//cSpell:ignore Wsctrl, Cusel, Enlw, Backtab, Crsel, Exsel,  Ereof
+//spell-checker:ignore Eisu, Junja, Hanja, Nonconvert, Modechange, printscreen, jisho, Masshou, Touroku, loya, roya
+//spell-checker:ignore Wsctrl, Cusel, Enlw, Backtab, Crsel, Exsel,  Ereof
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');

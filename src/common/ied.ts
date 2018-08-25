@@ -4,7 +4,7 @@
  * send and receive IED gmcp protocol
  * @arthur William
  */
-//cSpell:words fswin, chunksize
+//spell-checker:words fswin, chunksize
 import EventEmitter = require('events');
 import { isDirSync, existsSync } from './library';
 import { FileInfo, IEDError, IEDCmdStatus, TempType } from './types';

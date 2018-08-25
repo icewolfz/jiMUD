@@ -1,6 +1,7 @@
-//cSpell:ignore triggerprompt, idletime, connecttime, soundinfo, musicinfo, playmusic, playm, playsound, stopmusic, stopm, stopsound
-//cSpell:ignore stopallsound, stopa, showprompt, showp, sayprompt, sayp, echoprompt, echop, unalias, setsetting, getsetting, profilelist
-//cSpell:ignore keycode
+//spell-checker:ignore triggerprompt, idletime, connecttime, soundinfo, musicinfo, playmusic, playm, playsound, stopmusic, stopm, stopsound
+//spell-checker:ignore stopallsound, stopa, showprompt, showp, sayprompt, sayp, echoprompt, echop, unalias, setsetting, getsetting, profilelist
+//spell-checker:ignore keycode repeatnum chatp chatprompt untrigger unevent nocr timepattern ungag showclient showcl hideclient hidecl toggleclient
+//spell-checker:ignore togglecl raiseevent raisedelayed raisede diceavg dicemin dicemax zdicedev dicedev zmud
 import EventEmitter = require('events');
 import { MacroModifiers } from './profile';
 import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate } from './library';
@@ -269,11 +270,11 @@ export class Input extends EventEmitter {
         }).keypress((event) => {
             return true;
         });
-
+        //spell-checker:ignore gamepadconnected gamepaddisconnected
         window.addEventListener('gamepadconnected', (e) => {
             if (!this._gamepadCaches)
                 this._gamepadCaches = [];
-            this._controllers[e.gamepad.index] = { pad: e.gamepad, axes: clone(e.gamepad.axes), state: { axes: [], buttons: [] }, pstate: { axes: [], buttons: [] } };
+            this._controllers[e.gamepad.index] = { pad: e.gamepad, axes: clone(e.gamepad.axes), state: { axes: [], buttons: [] }, pState: { axes: [], buttons: [] } };
             this._controllersCount++;
             this.updatePads();
         });
@@ -288,7 +289,7 @@ export class Input extends EventEmitter {
         const cl = controllers.length;
         for (; ct < cl; ct++) {
             if (!controllers[ct]) continue;
-            this._controllers[controllers[ct].index] = { pad: controllers[ct], axes: clone(controllers[ct].axes), state: { axes: [], buttons: [] }, pstate: { axes: [], buttons: [] } };
+            this._controllers[controllers[ct].index] = { pad: controllers[ct], axes: clone(controllers[ct].axes), state: { axes: [], buttons: [] }, pState: { axes: [], buttons: [] } };
             this._controllersCount++;
         }
         this.updatePads();
@@ -553,6 +554,7 @@ export class Input extends EventEmitter {
         let reload;
         let trigger;
         switch (fun.toLowerCase()) {
+            //spell-checker:ignore chatprompt chatp
             case 'chatprompt':
             case 'chatp':
                 args = this.parseOutgoing(args.join(' '), false);
@@ -565,6 +567,7 @@ export class Input extends EventEmitter {
                 if ((<any>this.client).sendChat)
                     (<any>this.client).sendChat(args);
                 return null;
+            //spell-checker:ignore untrigger
             case 'untrigger':
             case 'unt':
                 profile = null;
@@ -1117,6 +1120,7 @@ export class Input extends EventEmitter {
                 return null;
             case 'alarm':
             case 'ala':
+                //spell-checker:ignore timepattern
                 profile = null;
                 name = null;
                 reload = true;
@@ -2874,7 +2878,7 @@ export class Input extends EventEmitter {
                         mod = args[2].trim();
                 }
                 else
-                    throw new Error('Too many aguments');
+                    throw new Error('Too many arguments');
 
                 if (sides === 'F' || sides === 'f')
                     max = 6;
@@ -2883,7 +2887,7 @@ export class Input extends EventEmitter {
                 else
                     max = parseInt(sides);
 
-                //zmud formual seems to be 0 index based
+                //zmud formula seems to be 0 index based
                 if (fun === 'zdicedev')
                     max--;
                 if (mod)

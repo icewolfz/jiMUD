@@ -1,4 +1,4 @@
-//cSpell:words keycode
+//spell-checker:words keycode
 import EventEmitter = require('events');
 
 export class Search extends EventEmitter {

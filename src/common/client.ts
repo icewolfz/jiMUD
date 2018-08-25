@@ -1,5 +1,5 @@
-// cSpell:words cmdfont
-// cSpell:ignore endof, Commandon
+// spell-checker:words cmdfont
+// spell-checker:ignore endof, Commandon
 
 import EventEmitter = require('events');
 import { Telnet, TelnetOption } from './telnet';
