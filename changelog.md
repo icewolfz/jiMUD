@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.0
+## 0.5.0 2018-08-25
 
 - **New:**
   - Code editor:
@@ -44,7 +44,7 @@
   - Immortal tools: do not attempt to open paths in code editor
   - Mapper: Fix some issues with reloading preferences after they have been changed
   - Fix quote parsing for several #commands so that they strip based on quote settings
-  - Fix an issue where activeprofile was returning null breaking any #command that tried to access profiles
+  - Fix an issue where active profile was returning null breaking any #command that tried to access profiles
   - Fix alarm and untrigger not sending notification that a trigger was removed or added to profile manager
   - Profile manager: Fix deleting selected items by context menu not clearing the current item editor correctly
 
