@@ -2002,7 +2002,7 @@ export function doDelete(node?) {
         if (!node) return;
     }
     resetClip();
-    node.state.selected = false;
+    //node.state.selected = false;
     t = 'profile';
     if (!node.dataAttr.type)
         t = node.text.toLowerCase();

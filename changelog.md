@@ -46,6 +46,7 @@
   - Fix quote parsing for several #commands so that they strip based on quote settings
   - Fix an issue where activeprofile was returning null breaking any #command that tried to access profiles
   - Fix alarm and untrigger not sending notification that a trigger was removed or added to profile manager
+  - Profile manager: Fix deleting selected items by context menu not clearing the current item editor correctly
 
 ## 0.4.62 2018-08-13
 
