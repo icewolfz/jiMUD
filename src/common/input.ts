@@ -722,7 +722,7 @@ export class Input extends EventEmitter {
                     item.name = this.stripQuotes(args.shift());
                     if (!item.name || item.name.length === 0)
                         throw new Error('Invalid trigger name');
-                    if (args[0].pattern.match(/^\{.*\}$/g)) {
+                    if (args[0].match(/^\{.*\}$/g)) {
                         item.pattern = args.shift();
                         item.pattern = item.pattern.substr(1, item.pattern.length - 2);
                         item.pattern = this.parseOutgoing(item.pattern, false);
@@ -734,7 +734,10 @@ export class Input extends EventEmitter {
                         item.commands = item.commands.substr(1, item.commands.length - 2);
                     }
                     if (args.length === 1) {
-                        args[0] = args[0].substr(1, args[0].length - 2);
+                        if (args[0].match(/^\{.*\}$/g))
+                            args[0] = args[0].substr(1, args[0].length - 2);
+                        else
+                            args[0] = this.stripQuotes(args[0]);
                         if (args[0].length !== 0) {
                             this.parseOutgoing(args[0], false).split(',').forEach(o => {
                                 switch (o.trim()) {
@@ -746,25 +749,25 @@ export class Input extends EventEmitter {
                                     case 'enable':
                                     case 'cmd':
                                     case 'temporary':
-                                        item.option[o.trim()] = true;
+                                        item.options[o.trim()] = true;
                                         break;
                                     default:
                                         if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
-                                                throw new Error(`Invalid priority '${o.trim()}'`);
+                                                throw new Error(`Invalid trigger priority option '${o.trim()}'`);
                                             i = parseInt(tmp[1], 10);
                                             if (isNaN(i))
-                                                throw new Error('Invalid number \'' + tmp[1] + '\'');
-                                            item.option['priority'] = i;
+                                                throw new Error('Invalid trigger priority value \'' + tmp[1] + '\' must be a number');
+                                            item.options['priority'] = i;
                                         }
                                         else
-                                            throw new Error(`Invalid option '${o.trim()}'`);
+                                        throw new Error(`Invalid trigger option '${o.trim()}'`);
                                 }
                             });
                         }
                         else
-                            throw new Error('Invalid options');
+                        throw new Error('Invalid trigger options');
                     }
                     else if (args.length === 2) {
                         if (args[0].match(/^\{.*\}$/g))
@@ -780,25 +783,25 @@ export class Input extends EventEmitter {
                                     case 'enable':
                                     case 'cmd':
                                     case 'temporary':
-                                        item.option[o.trim()] = true;
+                                        item.options[o.trim()] = true;
                                         break;
                                     default:
                                         if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
-                                                throw new Error(`Invalid priority '${o.trim()}'`);
+                                                throw new Error(`Invalid trigger priority option '${o.trim()}'`);
                                             i = parseInt(tmp[1], 10);
                                             if (isNaN(i))
-                                                throw new Error('Invalid number \'' + tmp[1] + '\'');
-                                            item.option['priority'] = i;
+                                                throw new Error('Invalid trigger priority value \'' + tmp[1] + '\' must be a number');
+                                            item.options['priority'] = i;
                                         }
                                         else
-                                            throw new Error(`Invalid option '${o.trim()}'`);
+                                        throw new Error(`Invalid trigger option '${o.trim()}'`);
                                 }
                             });
                         }
                         else
-                            throw new Error('Invalid options');
+                        throw new Error('Invalid trigger options');
                         item.profile = this.stripQuotes(args[1]);
                         if (item.profile.length !== 0)
                             tmp = this.parseOutgoing(item.profile, false);
@@ -922,25 +925,25 @@ export class Input extends EventEmitter {
                                 case 'verbatim':
                                 case 'disable':
                                 case 'temporary':
-                                    item.option[o.trim()] = true;
+                                    item.options[o.trim()] = true;
                                     break;
                                 default:
                                     if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
                                         tmp = o.trim().split('=');
                                         if (tmp.length !== 2)
-                                            throw new Error(`Invalid priority '${o.trim()}'`);
+                                            throw new Error(`Invalid event priority option '${o.trim()}'`);
                                         i = parseInt(tmp[1], 10);
                                         if (isNaN(i))
-                                            throw new Error('Invalid number \'' + tmp[1] + '\'');
-                                        item.option['priority'] = i;
+                                            throw new Error('Invalid event priority value \'' + tmp[1] + '\' must be a number');
+                                        item.options['priority'] = i;
                                     }
                                     else
-                                        throw new Error(`Invalid option '${o.trim()}'`);
+                                        throw new Error(`Invalid event option '${o.trim()}'`);
                             }
                         });
                     }
                     else
-                        throw new Error('Invalid options');
+                        throw new Error('Invalid event options');
                 }
                 else if (args.length === 2) {
                     if (args[0].match(/^\{.*\}$/g))
@@ -954,25 +957,25 @@ export class Input extends EventEmitter {
                                 case 'verbatim':
                                 case 'disable':
                                 case 'temporary':
-                                    item.option[o.trim()] = true;
+                                    item.options[o.trim()] = true;
                                     break;
                                 default:
                                     if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
                                         tmp = o.trim().split('=');
                                         if (tmp.length !== 2)
-                                            throw new Error(`Invalid priority '${o.trim()}'`);
+                                            throw new Error(`Invalid event priority option '${o.trim()}'`);
                                         i = parseInt(tmp[1], 10);
                                         if (isNaN(i))
-                                            throw new Error('Invalid number \'' + tmp[1] + '\'');
-                                        item.option['priority'] = i;
+                                            throw new Error('Invalid event priority value \'' + tmp[1] + '\' must be a number');
+                                        item.options['priority'] = i;
                                     }
                                     else
-                                        throw new Error(`Invalid option '${o.trim()}'`);
+                                        throw new Error(`Invalid event option '${o.trim()}'`);
                             }
                         });
                     }
                     else
-                        throw new Error('Invalid options');
+                        throw new Error('Invalid event options');
                     item.profile = this.stripQuotes(args[1]);
                     if (item.profile.length !== 0)
                         tmp = this.parseOutgoing(item.profile, false);
