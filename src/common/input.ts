@@ -1081,6 +1081,8 @@ export class Input extends EventEmitter {
                                     throw new Error('Profile not found: ' + name);
                             }
                         }
+                        else
+                            profile = this.client.activeProfile;
                         if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
                             n = this.parseOutgoing(this.stripQuotes(args[0]), false);
                         else
@@ -1532,6 +1534,8 @@ export class Input extends EventEmitter {
                                     throw new Error('Profile not found: ' + name);
                             }
                         }
+                        else
+                            profile = this.client.activeProfile;
                         if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
                             args = this.parseOutgoing(this.stripQuotes(args[0]), false);
                         else
@@ -1599,6 +1603,8 @@ export class Input extends EventEmitter {
                                     throw new Error('Profile not found: ' + name);
                             }
                         }
+                        else
+                            profile = this.client.activeProfile;
                         if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
                             n = this.parseOutgoing(this.stripQuotes(args[0]), false);
                         else
