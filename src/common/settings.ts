@@ -1,5 +1,5 @@
 //spell-checker:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
-//spell-checker:ignore emoteto, emotetos
+//spell-checker:ignore emoteto, emotetos askonchildren YYYYMMDD Hmmss
 import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect } from './types';
 const path = require('path');
 const fs = require('fs');

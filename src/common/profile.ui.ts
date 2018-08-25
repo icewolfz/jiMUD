@@ -1,4 +1,5 @@
 //spell-checker:ignore dropdown, selectall, treeview, displaytype, uncheck, selectpicker, Profiledefault, askoncancel, triggernewline, triggerprompt, exportmenu
+//spell-checker:ignore gamepadconnected gamepaddisconnected
 import { shell, remote, ipcRenderer } from 'electron';
 const { dialog, Menu, MenuItem, nativeImage } = remote;
 import { FilterArrayByKeyValue, parseTemplate, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode } from './library';

@@ -1,5 +1,5 @@
 // spell-checker:words cmdfont
-// spell-checker:ignore endof, Commandon
+// spell-checker:ignore endof, Commandon errored
 
 import EventEmitter = require('events');
 import { Telnet, TelnetOption } from './telnet';
@@ -28,10 +28,8 @@ interface ItemCache {
 }
 
 export class Client extends EventEmitter {
-    private lineID = '.line';
     private _enableDebug: boolean = false;
     private _input: Input;
-    private _auto: NodeJS.Timer = null;
     public errored: boolean = false;
     private _settingsFile: string = parseTemplate(path.join('{data}', 'settings.json'));
     private _itemCache: ItemCache = {

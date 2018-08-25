@@ -1,5 +1,5 @@
 //spell-checker:ignore Eisu, Junja, Hanja, Nonconvert, Modechange, printscreen, jisho, Masshou, Touroku, loya, roya
-//spell-checker:ignore Wsctrl, Cusel, Enlw, Backtab, Crsel, Exsel,  Ereof
+//spell-checker:ignore Wsctrl, Cusel, Enlw, Backtab, Crsel, Exsel, Ereof rtrim ltrim rgbcolor Dropdown DBLUNDERLINE noflash
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
@@ -909,7 +909,7 @@ export function isFileSync(aPath) {
 
 export function encrypt(text, key, iv, algorithm, input_encoding, output_encoding) {
     let cipher;
-    let crypted;
+    let encrypted;
     if (algorithm == null) {
         algorithm = 'aes-256-cbc';
     }
@@ -920,12 +920,12 @@ export function encrypt(text, key, iv, algorithm, input_encoding, output_encodin
         output_encoding = 'hex';
     }
     cipher = crypto.createCipheriv(algorithm, key, iv);
-    crypted = cipher.update(text, input_encoding, output_encoding);
-    crypted += cipher.final(output_encoding);
-    return crypted;
+    encrypted = cipher.update(text, input_encoding, output_encoding);
+    encrypted += cipher.final(output_encoding);
+    return encrypted;
 }
 
-export function decrypt(crypted, key, iv, algorithm, input_encoding, output_encoding) {
+export function decrypt(encrypted, key, iv, algorithm, input_encoding, output_encoding) {
     let decipher;
     let decrypted;
     if (algorithm == null) {
@@ -938,7 +938,7 @@ export function decrypt(crypted, key, iv, algorithm, input_encoding, output_enco
         output_encoding = 'utf-8';
     }
     decipher = crypto.createDecipheriv(algorithm, key, iv);
-    decrypted = decipher.update(crypted, input_encoding, output_encoding);
+    decrypted = decipher.update(encrypted, input_encoding, output_encoding);
     decrypted += decipher.final(output_encoding);
     return decrypted;
 }
@@ -1283,7 +1283,7 @@ export function splitQuoted(str, sep, t, e) {
     sep = sep.split('');
     let q = false;
     let sq = false;
-    const strs = [];
+    const strings = [];
     let ps = 0;
     let s = 0;
     const sl = str.length;
@@ -1311,23 +1311,23 @@ export function splitQuoted(str, sep, t, e) {
             for (let sp = 0; sp < spl; sp++) {
                 if (c === sep[sp]) {
                     if (s > ps || s === 0) {
-                        strs.push(str.substring(ps, s));
+                        strings.push(str.substring(ps, s));
                         ps = s + 1;
                         break;
                     }
                     else if (s === (sl - 1))
-                        strs.push('');
+                        strings.push('');
                 }
             }
         }
     }
     if (s === sl && s === ps && sep.indexOf(str.charAt(s - 1)) > -1) {
-        strs.push('');
+        strings.push('');
         ps = s + 1;
     }
     if (s > ps)
-        strs.push(str.substring(ps, s));
-    return strs;
+        strings.push(str.substring(ps, s));
+    return strings;
 }
 
 export function leadingZeros(num, totalChars: number, padWith: string, trim?: boolean) {
@@ -1507,6 +1507,7 @@ export function consolidate(amt, str) {
     return ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'][amt] + ' ' + str.join(' ') + e;
 }
 
+//spell-checker:disable
 export function pluralize(revert) {
     const plural = {
         '(quiz)$': '$1zes',
@@ -1619,6 +1620,7 @@ export function pluralize(revert) {
 
     return revert;
 }
+//spell-checker:enable
 
 export function stripPinkfish(text) {
     text = text || '';

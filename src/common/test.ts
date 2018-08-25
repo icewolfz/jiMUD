@@ -1,4 +1,4 @@
-//spell-checker:ignore memberof, webdings, redbu, ismap, isdoor
+//spell-checker:ignore memberof, webdings, redbu, ismap, isdoor Cornsilk Gainsboro prevroom
 import EventEmitter = require('events');
 import { Client } from './client';
 import { AnsiColorCode, Ansi } from './ansi';
@@ -178,7 +178,7 @@ export class Tests extends EventEmitter {
             sample += '\x1B[0m\n';
             this.Client.print(sample, true);
         };
-
+        //spell-checker:disable
         this.TestFunctions['TestMXP'] = function () {
             let sample = 'Text Formatting\n';
             sample += '\t\x1B[6z';
@@ -259,7 +259,7 @@ export class Tests extends EventEmitter {
 
         this.TestFunctions['TestMXP2'] = function () {
             let sample = '\x1B[6z';
-            sample += '<!-- Elements to support the Automapper -->';
+            sample += '<!-- Elements to support the Auto mapper -->';
             sample += '<!ELEMENT RName \'<FONT COLOR=Red><B>\' FLAG="RoomName">';
             sample += '<!ELEMENT RDesc FLAG=\'RoomDesc\'>';
             sample += '<!ELEMENT RExits \'<FONT COLOR=Blue>\' FLAG=\'RoomExit\'>';
@@ -293,7 +293,7 @@ export class Tests extends EventEmitter {
             sample += '\x1B[0z';
             this.Client.print(sample, true);
         };
-
+        //spell-checker:enable
         this.TestFunctions['TestMXPExpire'] = function () {
             this.Client.print('\t\x1B[6z<SEND "sample" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND "sample" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt>\x1B[0z\n', true);
         };
@@ -573,6 +573,7 @@ export class Tests extends EventEmitter {
             this.Client.display.displayControlCodes = dcc;
         };
 
+        //spell-checker:disable
         this.TestFunctions['TestURLDetect'] = function () {
             let sample = '\x1B[0mhttp://www.google.com\n';
             sample += '\thttp://www.google.com\x1B[44m\n';
@@ -596,6 +597,7 @@ export class Tests extends EventEmitter {
             sample += 'www.google.com www.google.com\x1B[0m';
             this.Client.print(sample, true);
         };
+        //spell-checker:enable
 
         this.TestFunctions['TestXTermRGB'] = function () {
             let sample = '';

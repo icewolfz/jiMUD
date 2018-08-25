@@ -1,4 +1,4 @@
-// spell-checker:words TELOP, TERMINALTYPE, NEWENVIRON, Achaea, Webdings, ENDOFRECORD, USERVAR
+// spell-checker:words TELOP, TERMINALTYPE, NEWENVIRON, Achaea, Webdings, ENDOFRECORD, USERVAR keepalive
 import EventEmitter = require('events');
 import net = require('net');
 
@@ -410,7 +410,7 @@ export class Telnet extends EventEmitter {
             return data;
         //get buffer
         _sb = this._splitBuffer;
-        //clear globaln
+        //clear split buffer
         this._splitBuffer = [];
         if (_sb.length > 0) {
             if (this.enableDebug) this.emit('debug', 'Split buffer length: ' + _sb.length, 1);

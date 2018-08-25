@@ -99,6 +99,7 @@ export class Mail extends EventEmitter {
             prefix += '.';
         else
             prefix = '';
+        //spell-checker:disable
         //this._db.run("PRAGMA synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA journal_mode = TRUNCATE;PRAGMA optimize;PRAGMA read_uncommitted = 1;PRAGMA threads = 4;");
         this._db.exec('PRAGMA ' + prefix + 'synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;');
         this._db.exec('CREATE TABLE IF NOT EXISTS ' + prefix + 'Mail (MailID TEXT PRIMARY KEY ASC, [From] INTEGER, [Date] INTEGER, Subject TEXT, Raw TEXT, Ansi TEXT, HTML TEXT, Folder INTEGER, Read INTEGER)');
@@ -110,6 +111,7 @@ export class Mail extends EventEmitter {
         this._db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_mailid on Mail (MailID);');
         this._db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_nameid on Names (NameID);');
         this._db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_groupid on Groups (GroupID);');
+        //spell-checker:enable
     }
 
     public processGMCP(mod: string, obj) {
