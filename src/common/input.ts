@@ -704,6 +704,7 @@ export class Input extends EventEmitter {
             case 'tr':
                 //#region trigger
                 profile = null;
+                reload = true;
                 item = {
                     profile: null,
                     name: null,
@@ -846,6 +847,7 @@ export class Input extends EventEmitter {
                     if (this.client.profiles.contains(item.profile))
                         profile = this.client.profiles.items[item.profile];
                     else {
+                        reload = false;
                         profile = Profile.load(path.join(p, item.profile + '.json'));
                         if (!profile)
                             throw new Error('Profile not found: ' + item.profile);
@@ -886,6 +888,8 @@ export class Input extends EventEmitter {
                     trigger.temp = true;
                 trigger.priority = item.options.priority;
                 profile.save(p);
+                if (reload)
+                    this.client.clearCache();
                 if (item.new)
                     this.emit('item-added', 'trigger', profile.name, trigger);
                 else
@@ -897,6 +901,7 @@ export class Input extends EventEmitter {
             case 'ev':
                 //#region event
                 profile = null;
+                reload = true;
                 item = {
                     profile: null,
                     name: null,
@@ -1026,6 +1031,7 @@ export class Input extends EventEmitter {
                         profile = this.client.profiles.items[item.profile];
                     else {
                         profile = Profile.load(path.join(p, item.profile + '.json'));
+                        reload = false;
                         if (!profile)
                             throw new Error('Profile not found: ' + item.profile);
                     }
@@ -1060,6 +1066,8 @@ export class Input extends EventEmitter {
                     trigger.temp = true;
                 trigger.priority = item.options.priority;
                 profile.save(p);
+                if (reload)
+                    this.client.clearCache();
                 if (item.new)
                     this.emit('item-added', 'trigger', profile.name, trigger);
                 else
@@ -1152,6 +1160,7 @@ export class Input extends EventEmitter {
                     return null;
                 }
                 profile = null;
+                reload = true;
                 item = {
                     profile: null,
                     name: null,
@@ -1296,6 +1305,7 @@ export class Input extends EventEmitter {
                     if (this.client.profiles.contains(item.profile))
                         profile = this.client.profiles.items[item.profile];
                     else {
+                        reload = false;
                         profile = Profile.load(path.join(p, item.profile + '.json'));
                         if (!profile)
                             throw new Error('Profile not found: ' + item.profile);
@@ -1335,6 +1345,8 @@ export class Input extends EventEmitter {
                     trigger.enabled = true;
                 trigger.priority = item.options.priority;
                 profile.save(p);
+                if (reload)
+                    this.client.clearCache();
                 if (item.new)
                     this.emit('item-added', 'button', profile.name, trigger);
                 else
