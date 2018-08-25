@@ -1419,8 +1419,8 @@ export class Input extends EventEmitter {
                         profile.save(p);
                         if (reload)
                             this.client.clearCache();
-                        profile = null;
                         this.emit('item-removed', 'button', profile.name, n);
+                        profile = null;
                     }
                 }
                 return null;
