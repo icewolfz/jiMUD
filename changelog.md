@@ -15,6 +15,7 @@
   - Add [#unevent](docs/commands.md) delete event
   - Add [#trigger](docs/commands.md) add or update trigger
   - Add profile argument support for [#alias](docs/commands.md) and [#unalias](docs/commands.md)
+  - Add all supported settings for [#setsetting](docs/commands.md) and [#getsetting](docs/commands.md), see [faq](docs/faq.md) for list of supported settings and value types
 - **Changed:**
   - Code editor:
     - Area designer: changed hidden exit color to orange to make it easier to see on white background

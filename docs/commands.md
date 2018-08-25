@@ -93,6 +93,7 @@ Explain what each argument does and if it is optional
 - `case` enable case sensitive
 - `verbatim` enable verbatim
 - `disable` disable trigger
+- `enable` enable trigger
 - `temporary` temporary trigger
 - `cmd` command input trigger, invalid for events
 - `priority=#` set the priority of trigger

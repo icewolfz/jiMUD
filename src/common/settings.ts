@@ -76,6 +76,37 @@ types:
 3 raw setting
 4 custom
 5 combo-box
+
+list = [];
+var fmt = (arr, obj, prefix) => {
+	arr.forEach(p => {
+		if(prefix && prefix.length !== 0)
+			key = prefix + '.' + p;
+		else
+			key = p;
+		if(SettingList.SettingList.filter(s => s[0] === key || s[1] === key).length) return;
+		var i = [key, 0, 0, obj[p]];
+		switch(typeof(obj[p]))
+		{
+			case 'boolean':
+				i[2] = 1;
+				break;
+			case 'number':
+				i[2] = 2;
+				break;
+			case 'object':
+				if(obj[p]) {
+					fmt(Object.keys(obj[p]), obj[p], key);
+					return;
+				}
+				else
+					i =[key, 0, 0, null];
+				break;
+		}
+		list.push(i);
+	});
+}
+fmt(props, s);
 */
 export let SettingList: any[] = [
     ['bufferSize', 0, 2, 5000],
@@ -135,13 +166,122 @@ export let SettingList: any[] = [
     ['editorPersistent', 0, 1, false],
     ['askonclose', 0, 1, true],
     ['dev', 0, 1, false],
+    //New settings
     ['chat.captureLines', 0, 1, false],
     ['chat.captureAllLines', 0, 1, false],
     ['chat.captureReviews', 0, 1, false],
     ['chat.captureTells', 0, 1, false],
     ['chat.captureTalk', 0, 1, false],
     ['chat.gag', 0, 1, false],
-    ['chat.CaptureOnlyOpen', 0, 1, false]
+    ['chat.CaptureOnlyOpen', 0, 1, false],
+    ['checkForUpdates', 0, 1, false],
+    ['autoCreateCharacter', 0, 1, false],
+    ['askonchildren', 0, 1, true],
+    ['mapper.legend', 0, 1, false],
+    ['mapper.room', 0, 1, false],
+    ['mapper.importType', 0, 2, 1],
+    ['mapper.vscroll', 0, 2, 0],
+    ['mapper.hscroll', 0, 2, 0],
+    ['mapper.alwaysOnTop', 0, 1, false],
+    ['mapper.alwaysOnTopClient', 0, 1, true],
+    ['mapper.memory', 0, 1, false],
+    ['mapper.memorySavePeriod', 0, 2, 900000],
+    ['mapper.active.ID', 0, 0, null],
+    ['mapper.active.x', 0, 2, 0],
+    ['mapper.active.y', 0, 2, 0],
+    ['mapper.active.z', 0, 2, 0],
+    ['mapper.active.area', 0, 0, null],
+    ['mapper.active.zone', 0, 2, 0],
+    ['mapper.persistent', 0, 1, true],
+    ['profiles.split', 0, 2, -1],
+    ['profiles.askoncancel', 0, 1, true],
+    ['profiles.triggersAdvanced', 0, 1, false],
+    ['profiles.aliasesAdvanced', 0, 1, false],
+    ['profiles.buttonsAdvanced', 0, 1, false],
+    ['profiles.macrosAdvanced', 0, 1, false],
+    ['profiles.contextsAdvanced', 0, 1, false],
+    ['profiles.codeEditor', 0, 1, true],
+    ['profiles.watchFiles', 0, 1, true],
+    ['chat.alwaysOnTop', 0, 1, false],
+    ['chat.alwaysOnTopClient', 0, 1, true],
+    ['chat.log', 0, 1, false],
+    ['chat.persistent', 0, 1, false],
+    ['chat.zoom', 0, 2, 1],
+    ['chat.font', 0, 5, '\'Courier New\', Courier, monospace'],
+    ['chat.fontSize', 0, 0, '1em'],
+    ['title', 0, 0, '$t'],
+    ['logGagged', 0, 1, false],
+    ['logTimeFormat', 0, 0, 'YYYYMMDD-HHmmss'],
+    ['autoConnectDelay', 0, 2, 600],
+    ['autoLogin', 0, 1, true],
+    ['onDisconnect', 0, 2, OnDisconnect.ReconnectDialog],
+    ['enableKeepAlive', 0, 1, false],
+    ['keepAliveDelay', 0, 2, 0],
+    ['newlineShortcut', 0, 2, NewLineType.Ctrl],
+    ['logWhat', 0, 2, Log.Html],
+    ['logErrors', 0, 1, true],
+    ['showErrorsExtended', 0, 1, false],
+    ['reportCrashes', 0, 1, false],
+    ['enableCommands', 0, 1, true],
+    ['commandChar', 0, 0, '#', 1],
+    ['escapeChar', 0, 0, '\\', 1],
+    ['enableVerbatim', 0, 1, true],
+    ['verbatimChar', 0, 0, '`'],
+    ['soundPath', 0, 0, '{data}\\sounds'],
+    ['logPath', 0, 0, '{data}\\logs'],
+    ['theme', 0, 0, '{themes}\\default'],
+    ['gamepads', 0, 1, false],
+    ['buttons.connect', 0, 1, true],
+    ['buttons.characters', 0, 1, true],
+    ['buttons.preferences', 0, 1, true],
+    ['buttons.log', 0, 1, true],
+    ['buttons.clear', 0, 1, true],
+    ['buttons.lock', 0, 1, true],
+    ['buttons.map', 0, 1, true],
+    ['buttons.user', 0, 1, true],
+    ['buttons.mail', 0, 1, true],
+    ['buttons.compose', 0, 1, true],
+    ['buttons.immortal', 0, 1, true],
+    ['buttons.codeEditor', 0, 1, false],
+    ['find.case', 0, 1, false],
+    ['find.word', 0, 1, false],
+    ['find.reverse', 0, 1, false],
+    ['find.regex', 0, 1, false],
+    ['find.selection', 0, 1, false],
+    ['find.show', 0, 1, false],
+    ['display.split', 0, 1, false],
+    ['display.splitHeight', 0, 2, -1],
+    ['display.splitLive', 0, 1, true],
+    ['display.roundedOverlays', 0, 1, true],
+    ['backupLoad', 0, 2, BackupSelection.All],
+    ['backupSave', 0, 2, BackupSelection.All],
+    ['backupAllProfiles', 0, 1, false],
+    ['scrollLocked', 0, 1, false],
+    ['showStatus', 0, 1, true],
+    ['showCharacterManager', 0, 1, false],
+    ['showChat', 0, 1, false],
+    ['showEditor', 0, 1, false],
+    ['showArmor', 0, 1, false],
+    ['showStatusWeather', 0, 1, true],
+    ['showStatusLimbs', 0, 1, true],
+    ['showStatusHealth', 0, 1, true],
+    ['showStatusExperience', 0, 1, true],
+    ['showStatusPartyHealth', 0, 1, true],
+    ['showStatusCombatHealth', 0, 1, true],
+    ['showButtonBar', 0, 1, true],
+    ['allowNegativeNumberNeeded', 0, 1, false],
+    ['spellchecking', 0, 1, true],
+    ['hideOnMinimize', 0, 1, false],
+    ['showTrayIcon', 0, 1, false],
+    ['statusExperienceNeededProgressbar', 0, 1, false],
+    ['trayClick', 0, 2, TrayClick.show],
+    ['trayDblClick', 0, 2, TrayClick.none],
+    ['pasteSpecialPrefix', 0, 0, ''],
+    ['pasteSpecialPostfix', 0, 0, ''],
+    ['pasteSpecialReplace', 0, 0, ''],
+    ['pasteSpecialPrefixEnabled', 0, 1, true],
+    ['pasteSpecialPostfixEnabled', 0, 1, true],
+    ['pasteSpecialReplaceEnabled', 0, 1, true]
 ];
 
 export class Settings {

@@ -743,6 +743,7 @@ export class Input extends EventEmitter {
                                     case 'case':
                                     case 'verbatim':
                                     case 'disable':
+                                    case 'enable':
                                     case 'cmd':
                                     case 'temporary':
                                         item.option[o.trim()] = true;
@@ -776,6 +777,7 @@ export class Input extends EventEmitter {
                                     case 'case':
                                     case 'verbatim':
                                     case 'disable':
+                                    case 'enable':
                                     case 'cmd':
                                     case 'temporary':
                                         item.option[o.trim()] = true;
@@ -870,7 +872,9 @@ export class Input extends EventEmitter {
                 if (item.options.verbatim)
                     trigger.verbatim = true;
                 if (item.options.disable)
-                    trigger.notes = false;
+                    trigger.enabled = false;
+                else if (item.options.enable)
+                    trigger.enabled = true;
                 if (item.options.temporary)
                     trigger.temp = true;
                 trigger.priority = item.options.priority;
@@ -1037,7 +1041,9 @@ export class Input extends EventEmitter {
                 if (item.options.verbatim)
                     trigger.verbatim = true;
                 if (item.options.disable)
-                    trigger.notes = false;
+                    trigger.enabled = false;
+                else if (item.options.enable)
+                    trigger.enabled = true;
                 if (item.options.temporary)
                     trigger.temp = true;
                 trigger.priority = item.options.priority;
