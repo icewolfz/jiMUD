@@ -42,6 +42,7 @@
   - Immortal tools: do not attempt to open paths in code editor
   - Mapper: Fix some issues with reloading preferences after they have been changed
   - Fix quote parsing for several #commands so that they strip based on quote settings
+  - Fix an issue where activeprofile was returning null breaking any #command that tried to access profiles
 
 ## 0.4.62 2018-08-13
 
