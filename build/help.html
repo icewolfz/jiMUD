@@ -47,9 +47,8 @@
 
         // eslint-disable-next-line no-unused-vars
         function openLink(url) {
-            console.log(url);
-            console.log(url.substr(0, url.length - 3));
-            contents.val(url.substr(0, url.length - 3)).selectpicker('render');
+            url = url.split('#');
+            contents.val(url[0].substr(0, url[0].length - 3)).selectpicker('render');
             contents.change();
         }
 

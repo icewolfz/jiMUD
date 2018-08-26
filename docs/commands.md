@@ -36,18 +36,18 @@
 |#toggleclient|#togglecl||Toggle show and hide of client window
 |#gag|#ga|*number*|gag the current or multiple lines of incoming or previous lines, if no arguments gags current line
 |#ungag|#ung||clear previous #gag command settings
-|#alarm|#ala| <nobr>*name* {time pattern} {commands} *profile*</nobr>|create an alarm trigger
+|#alarm|#ala| <nobr>*name* {time pattern}<sup>1</sup> {commands} *profile*</nobr>|create an alarm trigger
 |#suspend|#sus|*name\|pattern*|disable an alarm, id arguments omitted will attempt to suspend last added alarm
 |#resume|#resu|*name\|pattern*|enable an alarm, id arguments omitted will attempt to suspend last suspended alarm
 |#untrigger|#unt|{name\|pattern} *profile*|remove a trigger
 |#chat|#ch|text|Send text to chat window and append a new line
 |#chatprompt|#chatp|text|same as #chat but does not append a new line
-|#trigger|#tr|*name* {pattern} *{commands} options profile*|create or update trigger
-|#trigger|#tr| name options *profile*|Update options for a trigger
-|#event|#ev|name {commands} *options profile*|create or update event
+|#trigger|#tr|*name* {pattern} *{commands} options<sup>2</sup> profile*|create or update trigger
+|#trigger|#tr| name options<sup>2</sup> *profile*|Update options<sup>2</sup> for a trigger
+|#event|#ev|name {commands} *options<sup>2</sup> profile*|create or update event
 |#unevent|#une|name *profile*|Delete an event
 |#button|#bu|name\|index|Cause a button to react as if it was clicked, if index it is the poiston from top down starting at 0
-|#button|#bu|*name caption* {commands} *{icon} options profile*|Update or create a button
+|#button|#bu|*name caption* {commands} *{icon} options<sup>2</sup> profile*|Update or create a button
 |#unbutton|#unb|name\|index\|caption| remove a button, if index it is the postion in order of buttons in profile manager
 
 **Note:** All italic arguments are optional and can be left out
@@ -63,6 +63,7 @@ Explain what each argument does and if it is optional
 |name|Sometimes| The name for an item or [setting](faq.md#setting-keys-value-type-and-default-value)
 |index|| an index of an item from 0 to max items - 1
 |{commands}|| Commands to set for command, the {} are required and will be stripped when processed
+|options|Yes|comma delimited list of options to set<sup>2</sup>
 |profile|Yes| Which profile to search
 |value|| the value to set for a command, if toggle will and boolean type it will toggle between true and false
 |enable|Yes|send enable to command, if left off will toggle
