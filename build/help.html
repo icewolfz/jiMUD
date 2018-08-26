@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <title>jiMUD Help</title>
+    <link rel="shortcut icon" href="../assets/icons/png/help.png" />
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/help.css" rel="stylesheet" type="text/css" />
+    <link href="css/form.css" rel="stylesheet" type="text/css" />
+    <script>
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js" type="text/javascript"></script>
+    <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
+    <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
+    <script>
+        const { remote } = require('electron');
+        const { Menu } = remote;
+        const path = require('path');
+        const fs = require('fs');
+        const md = require('markdown-it')({ html: true, typographer: true });
+        //Override link render to open all link in a new window
+        var old_render = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
+            return self.renderToken(tokens, idx, options);
+        };
+        md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
+            var ref = tokens[idx].attrGet('href');
+            if (ref) {
+                if (ref.startsWith('https:') || ref.startsWith('http:') || ref.startsWith('mailto:'))
+                    tokens[idx].attrPush(['target', '_blank']);
+                else {
+                    tokens[idx].attrs[tokens[idx].attrIndex('href')][1] = '#';
+                    tokens[idx].attrPush(['onclick', `openLink('${ref}')`]);
+                }
+            }
+            return old_render(tokens, idx, options, env, self);
+        };
+
+        var container;
+        var contents;
+        var _history = [];
+        var _current = 0;
+
+        // eslint-disable-next-line no-unused-vars
+        function openLink(url) {
+            console.log(url);
+            console.log(url.substr(0, url.length - 3));
+            contents.val(url.substr(0, url.length - 3)).selectpicker('render');
+            contents.change();
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function navigate(direction) {
+            _current += direction;
+            if (_current < 0)
+                _current = 0;
+            if (_current >= _history.length)
+                _current = _history.length;
+            updateButtons();
+            contents.val(_history[_current]).selectpicker('render');
+            loadContents(_history[_current]);
+        }
+
+        function updateButtons() {
+            if (_current === 0 || _history.length === 0)
+                $("#btn-back").prop('disabled', true);
+            else
+                $("#btn-back").prop('disabled', false);
+            if (_current === _history.length - 1 || _history.length === 0)
+                $("#btn-forward").prop('disabled', true);
+            else
+                $("#btn-forward").prop('disabled', false);
+        }
+
+        function loadContents(url) {
+            container[0].scrollTop = 0;
+            var data = fs.readFileSync(path.join(__dirname, '..', 'docs', contents.val() + '.md'), 'utf8');
+            container.html(md.render(data));
+        }
+
+        $(document).ready(() => {
+            container = $("#container");
+            contents = $('#contents');
+            contents.on('change', (e) => {
+                loadContents(contents.val());
+                if (_history.length !== 0)
+                    _history.length = _current + 1;
+                _history.push(contents.val());
+                _current = _history.length - 1;
+                updateButtons();
+            });
+            contents.val('readme').selectpicker('render');
+            contents.change();
+            container[0].addEventListener('contextmenu', e => {
+                e.preventDefault();
+                const sel = getSelection();
+                let inputMenu;
+                if (!sel.isCollapsed && sel.type === 'Range' && container[0].contains(sel.anchorNode)) {
+                    inputMenu = Menu.buildFromTemplate([
+                        { role: 'copy' },
+                        { type: 'separator' },
+                        { role: 'selectall' }
+                    ]);
+                }
+                else
+                    inputMenu = Menu.buildFromTemplate([
+                        { role: 'selectall' }
+                    ]);
+                inputMenu.popup({ window: remote.getCurrentWindow() });
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <span class="path-buttons">
+                <button id="btn-back" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Back" onclick="navigate(-1)">
+                    <i class="fa fa-arrow-left"></i>
+                </button>
+                <button id="btn-forward" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Forward" onclick="navigate(1)">
+                    <i class="fa fa-arrow-right"></i>
+                </button>
+            </span>
+            <span class="path-container">
+                <select id="contents" class="form-control selectpicker" data-container="body" data-style="btn-default btn-xs" data-width="100%">
+                    <option value="readme">Main</option>
+                    <option value="faq">Frequently asked questions</option>
+                    <option value="profiles">Profiles</option>
+                    <option value="speedpaths">Speedpaths</option>
+                    <option value="commands">Commands</option>
+                    <option value="functions">Functions</option>
+                    <option value="preferences">Preferences</option>
+                    <option value="scripting">Scripting</option>
+                    <option value="customizing">Customizing</option>
+                    <option value="assets">Assets</option>
+                    <option value="mapper">Mapper</option>
+                    <option value="immortal">Immortal Tools</option>
+                    <option value="codeeditor">Code editor</option>
+                    <option value="codeeditor.designer" style="padding-left: 40px">Area designer</option>
+                </select>
+            </span>
+        </div>
+        <div id="container" class="panel-body"></div>
+    </div>
+</body>
+
+</html>

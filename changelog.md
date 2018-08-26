@@ -4,6 +4,8 @@
 
 - **New:**
   - Add tool tips to weapon icons displaying weapon type being held
+  - Basic jiMUD help viewer, lets you read the jiMUD help docs with out having to load a website, help > jiMUD
+  - Added jiMUD website to help drop down as jiMUD now opens new jiMUD help viewer
 - **Changed:**
   - Mapper: switch image-rendering to crisp-edges instead of pixelated
 - **Fixed:**

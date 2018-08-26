@@ -15,7 +15,7 @@ const { TrayClick } = require('./js/types');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, winWho, winMap, winProfiles, winEditor, winChat, winCode, winProgress;//winHelp
+let win, winWho, winMap, winProfiles, winEditor, winChat, winCode, winProgress;
 let set, mapperMax = false, editorMax = false, chatMax = false, codeMax = false;
 let edset;
 let chatReady = false, codeReady = false, editorReady = false, progressReady = false;
@@ -87,7 +87,6 @@ global.connected = false;
 
 let states = {
   'main': { x: 0, y: 0, width: 800, height: 600 },
-  'help': { x: 0, y: 0, width: 800, height: 600 },
   'mapper': { x: 0, y: 0, width: 800, height: 600 },
   'profiles': { x: 0, y: 0, width: 800, height: 600 },
   'editor': { x: 0, y: 0, width: 300, height: 225 },
@@ -639,13 +638,17 @@ var menuTemp = [
       {
         label: '&ShadowMUD',
         click: () => {
-          //showHelpWindow('http://www.shadowmud.com:1130/help', 'ShadowMUD Help');
-          //showHelpWindow('http://www.shadowmud.com/OoMUD/smhelp.php', 'ShadowMUD Help');
           shell.openExternal("http://www.shadowmud.com/help.php", '_blank');
         }
       },
       {
         label: '&jiMUD',
+        click: () => {
+          win.webContents.executeJavaScript('showHelp()');
+        }
+      },
+      {
+        label: '&jiMUD website',
         click: () => {
           shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
         }
@@ -771,76 +774,6 @@ function addInputContext(window) {
     }
   });
 }
-
-/*
-function showHelpWindow(url, title) {
-  if (winHelp != null) {
-    winHelp.title = title;
-    winHelp.loadURL(url);
-    winHelp.show();
-    return;
-  }
-  var s = loadWindowState('help');
-  if (!title || title.length === 0)
-    title = "Help";
-  winHelp = new BrowserWindow({
-    parent: win,
-    title: title,
-    x: s.x,
-    y: s.y,
-    width: s.width,
-    height: s.height,
-    backgroundColor: '#000',
-    show: false, skipTaskbar: false
-  });
-
-  winHelp.webContents.on('crashed', (event, killed) => {
-    logError(`Help crashed, killed: ${killed}\n`, true);
-  });
-
-
-  if (s.fullscreen)
-    winHelp.setFullScreen(s.fullscreen);
-
-  winHelp.setMenu(null);
-  winHelp.loadURL(url);
-  winHelp.on('closed', () => {
-    winHelp = null;
-  });
-
-  winHelp.on('resize', () => {
-    if (!winHelp.isMaximized() && !winHelp.isFullScreen())
-      trackWindowState('help', winHelp);
-  });
-
-  winHelp.on('move', () => {
-    trackWindowState('help', winHelp);
-  });
-
-  winHelp.on('unmaximize', () => {
-    trackWindowState('help', winHelp);
-  });
-
-  if (s.devTools)
-    winHelp.webContents.openDevTools();
-
-  winHelp.once('ready-to-show', () => {
-    addInputContext(winHelp);
-    if (url != null && url.length != 0) {
-      if (s.maximized)
-        winHelp.maximize();
-      else
-        winHelp.show();
-    }
-  });
-
-  winHelp.on('close', () => {
-    set = settings.Settings.load(global.settingsFile);
-    set.windows['help'] = getWindowState('help', winHelp);
-    set.save(global.settingsFile);
-  });
-}
-*/
 
 function createMenu() {
   var profiles;
@@ -978,6 +911,12 @@ function createTray() {
         },
         {
           label: '&jiMUD',
+          click: () => {
+            win.webContents.executeJavaScript('showHelp()');
+          }
+        },        
+        {
+          label: '&jiMUD website',
           click: () => {
             shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
           }
@@ -3070,8 +3009,13 @@ function createNewWindow(name, options) {
     states[name].maximized = false;
   });
 
-  windows[name].window.webContents.on('new-window', (event, url, frameName, disposition, options) => {
+  windows[name].window.webContents.on('new-window', (event, URL, frameName, disposition, options) => {
     event.preventDefault();
+    var u = new url.URL(URL);
+    if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
+      shell.openExternal(URL);
+      return;
+    }    
     if (frameName === 'modal') {
       // open window as modal
       Object.assign(options, {
@@ -3099,16 +3043,16 @@ function createNewWindow(name, options) {
       w.show();
     });
     w.webContents.on('crashed', (event, killed) => {
-      logError(`${url} crashed, killed: ${killed}\n`, true);
+      logError(`${URL} crashed, killed: ${killed}\n`, true);
     });
 
     w.on('close', () => {
       if (w && w.getParentWindow()) {
-        w.getParentWindow().webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
+        w.getParentWindow().webContents.executeJavaScript(`childClosed('${URL}', '${frameName}');`);
       }
     });
 
-    w.loadURL(url);
+    w.loadURL(URL);
     event.newGuest = w;
   });
 

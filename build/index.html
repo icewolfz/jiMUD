@@ -19,7 +19,7 @@
     <script src="../lib/jquery.min.js"></script>
     <script src="js/jquery.ext.js"></script>
     <script>
-        //spell-checker:ignore ismap hellip selectall lagmeter
+        //spell-checker:ignore ismap hellip selectall lagmeter repeatnum buttonvisible statusvisible limbsmenu partyhealth combathealth limb armor limbhealth
         if (window.module) module.module;
 
         ['repeatnum'].map((a) => {
@@ -886,20 +886,20 @@
                     capture--;
             });
 
+            /*
             client.on('MXP-tag-reply', (e) => {
-                /*
                 if (client.options.autoLogin && e.tag === 'USER' && remote.getGlobal('character') && remote.getGlobal('character').length > 0)
-                  client.send(remote.getGlobal('character') + '\r\n');
+                    client.send(remote.getGlobal('character') + '\r\n');
                 else if (client.options.autoLogin && e.tag === 'PASSWORD') {
-                  var pass = remote.getGlobal('characterPass');
-                  if (pass && pass.length > 0) {
+                    var pass = remote.getGlobal('characterPass');
+                    if (pass && pass.length > 0) {
                     pass = pass.split(':');
                     pass = decrypt(pass[0], pass[1], pass[2]);
                     client.send(pass + '\r\n');
-                  }
+                    }
                 }
-                */
             });
+            */
 
             client.on('show', () => {
                 remote.getCurrentWindow().show();
@@ -2121,6 +2121,16 @@
             else
                 ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
         }
+
+        // eslint-disable-next-line no-unused-vars
+        function showHelp() {
+            if (client.options.windows['help'] && client.options.windows['help'].options) {
+                client.options.windows['help'].options.show = true;
+                ipcRenderer.send('show-window', 'help', client.options.windows['help'].options);
+            }
+            else
+                ipcRenderer.send('show-window', 'help', { show: true, file: 'help.html', icon: 'help', alwaysOnTopClient: true });
+        }        
 
         // eslint-disable-next-line no-unused-vars
         function showLogViewer() {
