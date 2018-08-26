@@ -74,11 +74,12 @@
                 $("#btn-forward").prop('disabled', true);
             else
                 $("#btn-forward").prop('disabled', false);
+            $("#btn-history-dropdown").prop('disabled', _history.length <= 1);
         }
 
         function loadContents(url) {
             container[0].scrollTop = 0;
-            var data = fs.readFileSync(path.join(__dirname, '..', 'docs', contents.val() + '.md'), 'utf8');
+            var data = fs.readFileSync(path.join(__dirname, '..', 'docs', url + '.md'), 'utf8');
             container.html(md.render(data));
         }
 
@@ -89,6 +90,11 @@
             }
             contents.val(url).selectpicker('render');
             contents.change();
+        }
+
+        function clearButton(id) {
+            $(id).removeClass('open');
+            $(id).blur();
         }
 
         $(document).ready(() => {
@@ -120,6 +126,32 @@
                     ]);
                 inputMenu.popup({ window: remote.getCurrentWindow() });
             });
+
+
+            $('#btn-history-dropdown').click(function () {
+                $(this).addClass('open');
+                const pos = $(this).offset();
+                const x = Math.floor(pos.left);
+                const y = Math.floor(pos.top + $(this).outerHeight() + 2);
+                const addMenu = [];
+                _history.forEach((h, i) => {
+                    addMenu.push({
+                        label: document.querySelector('option[value="' + h + '"]').textContent,
+                        url: h,
+                        index: i,
+                        type: i === _current ? 'radio' : 'normal',
+                        checked: i === _current,
+                        click: (item) => {
+                            _current = i;
+                            contents.val(item.url).selectpicker('render');
+                            loadContents(item.url);
+                            updateButtons();
+                        }
+                    });
+                });
+                Menu.buildFromTemplate(addMenu).popup({ window: remote.getCurrentWindow(), x: x, y: y });
+            });
+
         });
     </script>
 </head>
@@ -128,12 +160,17 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <span class="path-buttons">
-                <button id="btn-back" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Back" onclick="navigate(-1)">
-                    <i class="fa fa-arrow-left"></i>
-                </button>
-                <button id="btn-forward" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Forward" onclick="navigate(1)">
-                    <i class="fa fa-arrow-right"></i>
-                </button>
+                <div class="btn-group" role="group">
+                    <button id="btn-back" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Back" onclick="navigate(-1)">
+                        <i class="fa fa-arrow-left"></i>
+                    </button>
+                    <button id="btn-forward" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Forward" onclick="navigate(1)">
+                        <i class="fa fa-arrow-right"></i>
+                    </button>
+                    <button id="btn-history-dropdown" disabled="disabled" type="button" class="btn btn-default btn-xs" title="History...">
+                        <span class="caret"></span>
+                    </button>
+                </div>
             </span>
             <span class="path-container">
                 <select id="contents" class="form-control selectpicker" data-container="body" data-style="btn-default btn-xs" data-width="100%">
