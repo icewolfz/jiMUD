@@ -7,6 +7,7 @@ import IRichLanguageConfiguration = monaco.languages.LanguageConfiguration;
 import ILanguage = monaco.languages.IMonarchLanguage;
 import { DebugTimer } from './editor.base';
 
+//https://github.com/Microsoft/vscode/blob/master/extensions/typescript-language-features/src/features/languageConfiguration.ts
 export const conf: IRichLanguageConfiguration = {
     comments: {
         lineComment: '//',
@@ -43,7 +44,32 @@ export const conf: IRichLanguageConfiguration = {
             start: new RegExp(/^\s*\/\/#[rR]egion\b/),
             end: new RegExp(/^\s*\/\/#[eE]nd[rR]egion\b/)
         }
-    }
+    },
+    onEnterRules: [
+        {
+            // e.g. /** | */
+            beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
+            afterText: /^\s*\*\/$/,
+            action: { indentAction:  2, appendText: ' * ' }
+        }, {
+            // e.g. /** ...|
+            beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
+            action: { indentAction:  0, appendText: ' * ' }
+        }, {
+            // e.g.  * ...|
+            beforeText: /^(\t|[ ])*[ ]\*([ ]([^\*]|\*(?!\/))*)?$/,
+            action: { indentAction:  0, appendText: '* ' }
+        }, {
+            // e.g.  */|
+            beforeText: /^(\t|[ ])*[ ]\*\/\s*$/,
+            action: { indentAction:  0, removeText: 1 }
+        },
+        {
+            // e.g.  *-----*/|
+            beforeText: /^(\t|[ ])*[ ]\*[^/]*\*\/\s*$/,
+            action: { indentAction:  0, removeText: 1 }
+        }
+    ]
 };
 
 export const language = <ILanguage>{
