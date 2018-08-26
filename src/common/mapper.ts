@@ -751,23 +751,25 @@ export class Mapper extends EventEmitter {
                     room.z += this.current.z;
                 }
                 if (data.area === this.current.area) {
+                    if (this.roomAreaExists(room.x, room.y, room.z, this.current.zone, this.current.area) || data.prevroom.zone) {
+                        room.zone = this.getFreeZone(room.x, room.y, room.z, this.current.zone);
+                        this.updateCurrent(room, data);
+                        this._changed = true;
+                    }
+                    else {
+                        this.updateCurrent(room, data);
+                        this._changed = true;
+                    }
+                }
+                else if (this.roomExists(room.x, room.y, room.z, this.current.zone) || data.prevroom.zone) {
+                    room.zone = this.getFreeZone(room.x, room.y, room.z, this.current.zone);
                     this.updateCurrent(room, data);
                     this._changed = true;
                 }
-                else
-                    this.roomExists(room.x, room.y, room.z, this.current.zone, (exist) => {
-                        if (exist || data.prevroom.zone) {
-                            this.getFreeZone(room.x, room.y, room.z, this.current.zone, (zone) => {
-                                room.zone = zone;
-                                this.updateCurrent(room, data);
-                                this._changed = true;
-                            });
-                        }
-                        else {
-                            this.updateCurrent(room, data);
-                            this._changed = true;
-                        }
-                    });
+                else {
+                    this.updateCurrent(room, data);
+                    this._changed = true;
+                }
             }
             else {
                 this.updateCurrent(rows[0], data);
@@ -843,26 +845,28 @@ export class Mapper extends EventEmitter {
         this.refresh();
     }
 
-    public getFreeZone(x, y, z, zone, callback) {
+    public getFreeZone(x, y, z, zone) {
         if (!zone) zone = 0;
         const row = this._db.prepare('SELECT DISTINCT Zone FROM Rooms ORDER BY Zone DESC LIMIT 1').get();
-        if (!row) {
-            if (callback)
-                callback(zone);
-        }
-        else if (callback)
-            callback(row.Zone + 1);
+        if (!row)
+            return zone;
+        return row.zone + 1;
     }
 
-    public roomExists(x, y, z, zone, callback) {
+    public roomExists(x, y, z, zone) {
         if (!zone) zone = 0;
         const row = this._db.prepare('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' AND Zone = ' + zone + ' ORDER BY Zone DESC LIMIT 1').get();
-        if (!row) {
-            if (callback)
-                callback(false);
-        }
-        else if (callback)
-            callback(true);
+        if (!row)
+            return false;
+        return true;
+    }
+
+    public roomAreaExists(x, y, z, zone, area) {
+        if (!zone) zone = 0;
+        const row = this._db.prepare('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' AND Zone = ' + zone + ' AND Area = ' + area + ' ORDER BY Zone DESC LIMIT 1').get();
+        if (!row)
+            return false;
+        return true;
     }
 
     public updateRoom(room) {
