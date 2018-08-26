@@ -16,9 +16,9 @@ $mapper: './../../assets/mapper';
 .map-canvas {
     image-rendering: optimizeSpeed;
     image-rendering: -o-crisp-edges;
-    image-rendering: -webkit-optimize-contrast;
     image-rendering: -moz-crisp-edges;
-    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
     -ms-interpolation-mode: nearest-neighbor;
     outline: none;
 }

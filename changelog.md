@@ -4,6 +4,10 @@
 
 - **New:**
   - Add tool tips to weapon icons displaying weapon type being held
+- **Changed:**
+  - Mapper: switch image-rendering to crisp-edges instead of pixelated
+- **Fixed:**
+  - Auto updater was updated to latest in attempt to fix auto update bugs.
 
 ## 0.5.0 2018-08-25
 
