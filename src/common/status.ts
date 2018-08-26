@@ -191,6 +191,7 @@ export class Status extends EventEmitter {
     }
 
     public setWeapon(limb, weapon) {
+        const l = limb;
         limb = limb.replace(/\s/g, '');
         limb = limb.toLowerCase();
         const eLimb = $(document.getElementById(limb + 'weapon'));
@@ -212,6 +213,13 @@ export class Status extends EventEmitter {
             eLimb.addClass('weapon-' + this.sanitizeID(weapon.name));
         if (weapon.dominant)
             eLimb.addClass('weapon-dominant');
+
+        if (weapon.subtype && weapon.subtype.length > 0)
+            eLimb[0].title = weapon.subtype + ' in ' + l;
+        else if (weapon.type && weapon.type.length > 0)
+            eLimb[0].title = weapon.type + ' in ' + l;
+        else
+            eLimb[0].title = 'weapon in ' + l;
     }
 
     public setLimbAC(limb, ac) {

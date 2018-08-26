@@ -2,6 +2,9 @@
 
 ## 0.5.1
 
+- **New:**
+  - Add tool tips to weapon icons displaying weapon type being held
+
 ## 0.5.0 2018-08-25
 
 - **New:**
