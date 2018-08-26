@@ -636,19 +636,19 @@ var menuTemp = [
     role: 'help',
     submenu: [
       {
-        label: '&ShadowMUD',
+        label: '&ShadowMUD...',
         click: () => {
           shell.openExternal("http://www.shadowmud.com/help.php", '_blank');
         }
       },
       {
-        label: '&jiMUD',
+        label: '&jiMUD...',
         click: () => {
           win.webContents.executeJavaScript('showHelp()');
         }
       },
       {
-        label: '&jiMUD website',
+        label: '&jiMUD website...',
         click: () => {
           shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
         }
@@ -904,19 +904,19 @@ function createTray() {
       role: 'help',
       submenu: [
         {
-          label: '&ShadowMUD',
+          label: '&ShadowMUD...',
           click: () => {
             shell.openExternal("http://www.shadowmud.com/help.php", '_blank');
           }
         },
         {
-          label: '&jiMUD',
+          label: '&jiMUD...',
           click: () => {
             win.webContents.executeJavaScript('showHelp()');
           }
-        },        
+        },
         {
-          label: '&jiMUD website',
+          label: '&jiMUD website...',
           click: () => {
             shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
           }
@@ -928,7 +928,7 @@ function createTray() {
             var b = win.getBounds();
 
             let about = new BrowserWindow({
-              parent: win,
+              parent: getParentWindow(),
               modal: true,
               x: Math.floor(b.x + b.width / 2 - 225),
               y: Math.floor(b.y + b.height / 2 - 200),
@@ -2501,7 +2501,7 @@ function showPrefs() {
     b = { x: 0, y: 0, height: 600, width: 800 };
 
   let pref = new BrowserWindow({
-    parent: win,
+    parent: getParentWindow(),
     modal: true,
     x: Math.floor(b.x + b.width / 2 - 400),
     y: Math.floor(b.y + b.height / 2 - 210),
@@ -2542,7 +2542,7 @@ function createMapper(show, loading, loaded) {
   if (winMap) return;
   var s = loadWindowState('mapper');
   winMap = new BrowserWindow({
-    parent: set.mapper.alwaysOnTopClient ? win : null,
+    parent: set.mapper.alwaysOnTopClient ? getParentWindow() : null,
     alwaysOnTop: set.mapper.alwaysOnTop,
     title: 'Mapper',
     x: s.x,
@@ -2656,7 +2656,7 @@ function showProfiles() {
   }
   var s = loadWindowState('profiles');
   winProfiles = new BrowserWindow({
-    parent: win,
+    parent: getParentWindow(),
     x: s.x,
     y: s.y,
     width: s.width,
@@ -2729,7 +2729,7 @@ function createEditor(show, loading) {
   if (winEditor) return;
   var s = loadWindowState('editor');
   winEditor = new BrowserWindow({
-    parent: global.editorOnly ? winCode : win,
+    parent: getParentWindow(),
     title: 'Advanced Editor',
     x: s.x,
     y: s.y,
@@ -2838,7 +2838,7 @@ function createChat(show, loading) {
   if (winChat) return;
   var s = loadWindowState('chat');
   winChat = new BrowserWindow({
-    parent: set.chat.alwaysOnTopClient ? win : null,
+    parent: set.chat.alwaysOnTopClient ? getParentWindow() : null,
     title: 'Chat',
     x: s.x,
     y: s.y,
@@ -2953,7 +2953,7 @@ function createNewWindow(name, options) {
   var s = loadWindowState(name);
   windows[name] = options;
   windows[name].window = new BrowserWindow({
-    parent: windows[name].alwaysOnTopClient ? win : null,
+    parent: windows[name].alwaysOnTopClient ? getParentWindow() : null,
     title: options.title || name,
     x: s.x,
     y: s.y,
@@ -3015,7 +3015,7 @@ function createNewWindow(name, options) {
     if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
       shell.openExternal(URL);
       return;
-    }    
+    }
     if (frameName === 'modal') {
       // open window as modal
       Object.assign(options, {
@@ -3110,7 +3110,7 @@ function showColor(args) {
   if (windows[args.window])
     w = windows[args.window].window;
   else
-    w = winEditor || win;
+    w = winEditor || getParentWindow();
   let cp = new BrowserWindow({
     parent: w,
     modal: true,
@@ -3518,7 +3518,7 @@ function checkForUpdatesManual() {
   });
 
   autoUpdater.on('update-available', () => {
-    dialog.showMessageBox(global.editorOnly ? winCode : win, {
+    dialog.showMessageBox(getParentWindow(), {
       type: 'info',
       title: 'Found Updates',
       message: 'Found updates, do you want update now?',
@@ -3538,7 +3538,7 @@ function checkForUpdatesManual() {
   });
 
   autoUpdater.on('update-not-available', () => {
-    dialog.showMessageBox(global.editorOnly ? winCode : win, {
+    dialog.showMessageBox(getParentWindow(), {
       title: 'No Updates',
       message: 'Current version is up-to-date.',
       buttons: ['Ok', 'Open website']
@@ -3553,7 +3553,7 @@ function checkForUpdatesManual() {
   });
 
   autoUpdater.on('update-downloaded', () => {
-    dialog.showMessageBox(global.editorOnly ? winCode : win, {
+    dialog.showMessageBox(getParentWindow(), {
       title: 'Install Updates',
       message: 'Updates downloaded, application will be quit for update...'
     }, () => {
@@ -3582,7 +3582,7 @@ function showAbout() {
     b = win.getBounds();
 
   let about = new BrowserWindow({
-    parent: global.editorOnly ? winCode : win,
+    parent: getParentWindow(),
     modal: true,
     x: Math.floor(b.x + b.width / 2 - 225),
     y: Math.floor(b.y + b.height / 2 - 200),
@@ -3615,4 +3615,10 @@ function showAbout() {
   about.once('ready-to-show', () => {
     about.show();
   });
+}
+
+function getParentWindow() {
+  if (global.editorOnly)
+    return winCode;
+  return win;
 }

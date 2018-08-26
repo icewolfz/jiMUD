@@ -2262,11 +2262,37 @@
             id: 'help',
             submenu: [
                 {
-                    label: '&Immortal',
+                    label: '&Immortal...',
                     click: () => {
                         shell.openExternal("http://www.shadowmud.com/tutorial", '_blank');
                     },
                     enabled: true
+                },
+                {
+                    label: '&jiMUD...',
+                    click: () => {
+                        var set = require('./js/settings').Settings.load(remote.getGlobal('settingsFile'));
+                        if (set.windows['help'] && set.windows['help'].options) {
+                            set.windows['help'].options.show = true;
+                            ipcRenderer.send('show-window', 'help', set.windows['help'].options);
+                        }
+                        else
+                            ipcRenderer.send('show-window', 'help', { show: true, file: 'help.html', icon: 'help', alwaysOnTopClient: true });
+                        var h = () => {
+                            var w = remote.BrowserWindow.getAllWindows().filter(w=>w.getTitle() === 'jiMUD Help');
+                            if(w.length === 0)
+                                setTimeout(h, 100);
+                            else
+                                w[0].webContents.executeJavaScript(`loadUrl('codeeditor');`);
+                        };
+                        h();
+                    }
+                },
+                {
+                    label: '&jiMUD website...',
+                    click: () => {
+                        shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
+                    }
                 },
                 { type: 'separator' },
                 {

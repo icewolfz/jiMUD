@@ -82,6 +82,15 @@
             container.html(md.render(data));
         }
 
+        function loadUrl(url) {
+            if (!contents) {
+                setTimeout(() => loadUrl(url), 10);
+                return;
+            }
+            contents.val(url).selectpicker('render');
+            contents.change();
+        }
+
         $(document).ready(() => {
             container = $("#container");
             contents = $('#contents');
@@ -93,8 +102,7 @@
                 _current = _history.length - 1;
                 updateButtons();
             });
-            contents.val('readme').selectpicker('render');
-            contents.change();
+            loadUrl('readme');
             container[0].addEventListener('contextmenu', e => {
                 e.preventDefault();
                 const sel = getSelection();
