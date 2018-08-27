@@ -12,7 +12,9 @@
   - Mapper: switch image-rendering to crisp-edges instead of pixelated
 - **Fixed:**
   - Auto updater was updated to latest in attempt to fix auto update bugs.
-  - Mapper: Fixed an issue when adding a new room and not checking if a room exist at the same locations for an area
+  - Mapper:
+    - Fixed an issue when adding a new room and not checking if a room exist at the same locations for an area
+    - Added more error catching to new mapper systems
 
 ## 0.5.0 2018-08-25
 
