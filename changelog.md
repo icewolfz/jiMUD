@@ -2,6 +2,11 @@
 
 ## v0.5.2
 
+- **Changed:**
+  - Help: Rename main to home
+- **Fixed:**
+  - Help: Fixed main page
+
 ## v0.5.1 2018-08-27
 
 - **New:**
