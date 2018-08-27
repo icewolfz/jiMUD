@@ -855,7 +855,7 @@ export class Mapper extends EventEmitter {
 
     public roomExists(x, y, z, zone) {
         if (!zone) zone = 0;
-        const row = this._db.prepare('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' AND Zone = ' + zone + ' ORDER BY Zone DESC LIMIT 1').get();
+        const row = this._db.prepare('SELECT DISTINCT Zone FROM Rooms WHERE X = ? AND Y = ? AND Z = ? AND Zone = ? ORDER BY Zone DESC LIMIT 1').get([x, y, z, zone]);
         if (!row)
             return false;
         return true;
@@ -863,7 +863,7 @@ export class Mapper extends EventEmitter {
 
     public roomAreaExists(x, y, z, zone, area) {
         if (!zone) zone = 0;
-        const row = this._db.prepare('SELECT DISTINCT Zone FROM Rooms WHERE X = ' + x + ' AND Y = ' + y + ' AND Z =' + z + ' AND Zone = ' + zone + ' AND Area = ' + area + ' ORDER BY Zone DESC LIMIT 1').get();
+        const row = this._db.prepare('SELECT DISTINCT Zone FROM Rooms WHERE X = ? AND Y = ? AND Z = ? AND Zone = ? AND Area = ? ORDER BY Zone DESC LIMIT 1').get([x, y, z, zone, area]);
         if (!row)
             return false;
         return true;
