@@ -57,7 +57,7 @@ export class PropertyGrid extends EventEmitter {
                 eProp = this.$editorClick.dataset.prop;
             this.buildProperties();
             if (eProp && !this.isReadonly(eProp))
-                this.createEditor(document.querySelector('[data-prop="' + eProp + '"]'));
+                this.createEditor(this.$el.querySelector('[data-prop="' + eProp + '"]'));
         }
     }
 
@@ -104,7 +104,7 @@ export class PropertyGrid extends EventEmitter {
         this.$objects.forEach(o => o['$propertyGrid'] = true);
         this.buildProperties();
         if (eProp) {
-            const el = <HTMLElement>document.querySelector('[data-prop="' + eProp + '"]');
+            const el = <HTMLElement>this.$el.querySelector('[data-prop="' + eProp + '"]');
             if (!el) return;
             if (el.dataset.readonly !== 'true')
                 this.createEditor(el);
