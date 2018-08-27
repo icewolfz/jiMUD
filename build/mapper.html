@@ -244,419 +244,428 @@
         };
 
         $(document).ready(() => {
-            if (remote.getGlobal('character') && remote.getGlobal('character').length > 0)
-                document.title = 'Mapper - ' + remote.getGlobal('character');
-            else
-                document.title = 'Mapper';
-            $("#mapper-room input").prop("disabled", true);
-            $("#mapper-room textarea").prop("disabled", true);
-            $("#mapper-room select").prop("disabled", true);
-            $("#mapper-room button").prop("disabled", true);
+            try {
+                if (remote.getGlobal('character') && remote.getGlobal('character').length > 0)
+                    document.title = 'Mapper - ' + remote.getGlobal('character');
+                else
+                    document.title = 'Mapper';
+                $("#mapper-room input").prop("disabled", true);
+                $("#mapper-room textarea").prop("disabled", true);
+                $("#mapper-room select").prop("disabled", true);
+                $("#mapper-room button").prop("disabled", true);
 
-            var options = Settings.load(remote.getGlobal('settingsFile'));
-            mapper = new Mapper(document.getElementById("MapperCanvas"), options.mapper.memory, options.mapper.memorySavePeriod, remote.getGlobal('mapFile'));
+                var options = Settings.load(remote.getGlobal('settingsFile'));
+                mapper = new Mapper(document.getElementById("MapperCanvas"), options.mapper.memory, options.mapper.memorySavePeriod, remote.getGlobal('mapFile'));
 
-            mapper.active = options.mapper.active;
-            mapper.commandDelay = options.commandDelay;
-            mapper.commandDelayCount = options.commandDelayCount;
-            importType = options.mapper.importType;
-            _enableDebug = options.enableDebug;
-            $("#MapLevel").val(options.mapper.active.z);
-            $("#MapZone").val(options.mapper.active.zone);
-            if (options.mapper.room)
-                toggleRooms();
+                mapper.active = options.mapper.active;
+                mapper.commandDelay = options.commandDelay;
+                mapper.commandDelayCount = options.commandDelayCount;
+                importType = options.mapper.importType;
+                _enableDebug = options.enableDebug;
 
-            mapper.on('debug', msg => {
-                if (_enableDebug)
-                    console.log(msg);
-            });
+                $("#MapLevel").val(options.mapper.active.z);
+                $("#MapZone").val(options.mapper.active.zone);
+                if (options.mapper.room)
+                    toggleRooms();
 
-            mapper.on('path-shown', () => {
-                $("#btn-clear").prop('disabled', false);
-                menubar.updateItem('actions|walk path', { enabled: false });
-                //$("#btn-walk").prop('disabled', false);
-            });
-
-            mapper.on('path-cleared', () => {
-                $("#btn-clear").prop('disabled', true);
-                menubar.updateItem('actions|walk path', { enabled: true });
-                //$("#btn-walk").prop('disabled', true);
-            });
-
-            mapper.on('room-before-selected', (room) => {
-                if (!roomEditor || !room || room.ID == null)
-                    return;
-                var data = {};
-                data.x = parseInt($("#reX").val(), 10);
-                data.y = parseInt($("#reY").val(), 10);
-                data.z = parseInt($("#reZ").val(), 10) || 0;
-                data.zone = parseInt($("#reZone").val(), 10);
-                data.area = $("#reArea").val();
-                data.background = $("#reBackground").val();
-                data.env = $("#reTerrain").val();
-                data.indoors = $("#reIndoors")[0].checked;
-                data.notes = $("#reNotes").val();
-                data.details = RoomDetails.None;
-                if ($("#reDDock")[0].checked)
-                    data.details |= RoomDetails.Dock;
-                if ($("#reDPier")[0].checked)
-                    data.details |= RoomDetails.Pier;
-                if ($("#reDBank")[0].checked)
-                    data.details |= RoomDetails.Bank;
-                if ($("#reDShop")[0].checked)
-                    data.details |= RoomDetails.Shop;
-                if ($("#reDHospital")[0].checked)
-                    data.details |= RoomDetails.Hospital;
-                if ($("#reDBar")[0].checked)
-                    data.details |= RoomDetails.Bar;
-                if ($("#reDRestaurant")[0].checked)
-                    data.details |= RoomDetails.Restaurant;
-                if ($("#reDWaterSource")[0].checked)
-                    data.details |= RoomDetails.WaterSource;
-                if ($("#reDTrainer")[0].checked)
-                    data.details |= RoomDetails.Trainer;
-                mapper.getRoom(room.ID, (room) => {
-                    if (room.x != data.x && room.y != data.y && room.z != data.z && room.zone != data.zone && room.area != data.area && room.background != data.background && room.env != data.env && room.indoors != data.indoors && room.details != data.details && room.notes != data.notes)
-                        return;
-                    room.x = data.x;
-                    room.y = data.y;
-                    room.z = data.z;
-                    room.zone = data.zone;
-                    room.area = data.area;
-                    room.background = data.background;
-                    room.env = data.env;
-                    room.indoors = data.indoors;
-                    room.details = data.details;
-                    room.notes = data.notes;
-                    mapper.addOrUpdateRoom(room);
+                mapper.on('debug', msg => {
+                    if (_enableDebug)
+                        console.log(msg);
                 });
-            });
 
-            mapper.on('active-room-changed', (room) => {
-                if (!($('#select-area option[value="' + room.area + '"]').length > 0)) {
-                    $("#select-area").append($('<option></option>').val(room.area).html(room.area));
-                    $("#reArea").append($('<option></option>').val(room.area).html(room.area));
-                }
-                $("#select-area").val(room.area);
-                $("#MapLevel").val(room.z);
-                $("#MapZone").val(room.zone);
-                $("#btn-walk").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
-                $("#btn-highlight").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
-
-                menubar.updateItem('edit|Remove current room', { enabled: mapper.current.ID && room.ID });
-                menubar.updateItem('actions|highlight path', { enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
-                menubar.updateItem('actions|walk path', { enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
-                ipcRenderer.send('setting-changed', { type: 'mapper', name: 'active', value: room });
-            });
-
-            mapper.on('current-room-changed', (room) => {
-                $("#btn-walk").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
-                $("#btn-highlight").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
-
-                menubar.updateItem('edit|Remove current room', { enabled: mapper.current.ID && room.ID });
-                menubar.updateItem('actions|highlight path', { enabled: mapper.selected.ID && room.ID && mapper.selected.ID != room.ID });
-                menubar.updateItem('actions|walk path', { enabled: mapper.selected.ID && room.ID && mapper.selected.ID != room.ID });
-            });
-
-            mapper.on('room-selected', (room) => {
-                $("#reDNone").prop('checked', true);
-                if (!room || room.ID == null) {
-                    $("#btn-walk").prop('disabled', true);
-                    $("#btn-highlight").prop('disabled', true);
-                    $("#mapper-room input").prop("disabled", true);
-                    $("#mapper-room select").prop("disabled", true);
-                    $("#mapper-room button").prop("disabled", true);
-                    $("#mapper-room textarea").prop("disabled", true);
-
-                    menubar.updateItem('edit|Remove selected room', { enabled: false });
-                    menubar.updateItem('actions|highlight path', { enabled: false });
+                mapper.on('path-shown', () => {
+                    $("#btn-clear").prop('disabled', false);
                     menubar.updateItem('actions|walk path', { enabled: false });
+                    //$("#btn-walk").prop('disabled', false);
+                });
+
+                mapper.on('path-cleared', () => {
+                    $("#btn-clear").prop('disabled', true);
+                    menubar.updateItem('actions|walk path', { enabled: true });
+                    //$("#btn-walk").prop('disabled', true);
+                });
+
+                mapper.on('room-before-selected', (room) => {
+                    if (!roomEditor || !room || room.ID == null)
+                        return;
+                    var data = {};
+                    data.x = parseInt($("#reX").val(), 10);
+                    data.y = parseInt($("#reY").val(), 10);
+                    data.z = parseInt($("#reZ").val(), 10) || 0;
+                    data.zone = parseInt($("#reZone").val(), 10);
+                    data.area = $("#reArea").val();
+                    data.background = $("#reBackground").val();
+                    data.env = $("#reTerrain").val();
+                    data.indoors = $("#reIndoors")[0].checked;
+                    data.notes = $("#reNotes").val();
+                    data.details = RoomDetails.None;
+                    if ($("#reDDock")[0].checked)
+                        data.details |= RoomDetails.Dock;
+                    if ($("#reDPier")[0].checked)
+                        data.details |= RoomDetails.Pier;
+                    if ($("#reDBank")[0].checked)
+                        data.details |= RoomDetails.Bank;
+                    if ($("#reDShop")[0].checked)
+                        data.details |= RoomDetails.Shop;
+                    if ($("#reDHospital")[0].checked)
+                        data.details |= RoomDetails.Hospital;
+                    if ($("#reDBar")[0].checked)
+                        data.details |= RoomDetails.Bar;
+                    if ($("#reDRestaurant")[0].checked)
+                        data.details |= RoomDetails.Restaurant;
+                    if ($("#reDWaterSource")[0].checked)
+                        data.details |= RoomDetails.WaterSource;
+                    if ($("#reDTrainer")[0].checked)
+                        data.details |= RoomDetails.Trainer;
+                    mapper.getRoom(room.ID, (room) => {
+                        if (room.x != data.x && room.y != data.y && room.z != data.z && room.zone != data.zone && room.area != data.area && room.background != data.background && room.env != data.env && room.indoors != data.indoors && room.details != data.details && room.notes != data.notes)
+                            return;
+                        room.x = data.x;
+                        room.y = data.y;
+                        room.z = data.z;
+                        room.zone = data.zone;
+                        room.area = data.area;
+                        room.background = data.background;
+                        room.env = data.env;
+                        room.indoors = data.indoors;
+                        room.details = data.details;
+                        room.notes = data.notes;
+                        mapper.addOrUpdateRoom(room);
+                    });
+                });
+
+                mapper.on('active-room-changed', (room) => {
+                    if (!($('#select-area option[value="' + room.area + '"]').length > 0)) {
+                        $("#select-area").append($('<option></option>').val(room.area).html(room.area));
+                        $("#reArea").append($('<option></option>').val(room.area).html(room.area));
+                    }
+                    $("#select-area").val(room.area);
+                    $("#MapLevel").val(room.z);
+                    $("#MapZone").val(room.zone);
+                    $("#btn-walk").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
+                    $("#btn-highlight").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
+
+                    menubar.updateItem('edit|Remove current room', { enabled: mapper.current.ID && room.ID });
+                    menubar.updateItem('actions|highlight path', { enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
+                    menubar.updateItem('actions|walk path', { enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
+                    ipcRenderer.send('setting-changed', { type: 'mapper', name: 'active', value: room });
+                });
+
+                mapper.on('current-room-changed', (room) => {
+                    $("#btn-walk").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
+                    $("#btn-highlight").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
+
+                    menubar.updateItem('edit|Remove current room', { enabled: mapper.current.ID && room.ID });
+                    menubar.updateItem('actions|highlight path', { enabled: mapper.selected.ID && room.ID && mapper.selected.ID != room.ID });
+                    menubar.updateItem('actions|walk path', { enabled: mapper.selected.ID && room.ID && mapper.selected.ID != room.ID });
+                });
+
+                mapper.on('room-selected', (room) => {
+                    $("#reDNone").prop('checked', true);
+                    if (!room || room.ID == null) {
+                        $("#btn-walk").prop('disabled', true);
+                        $("#btn-highlight").prop('disabled', true);
+                        $("#mapper-room input").prop("disabled", true);
+                        $("#mapper-room select").prop("disabled", true);
+                        $("#mapper-room button").prop("disabled", true);
+                        $("#mapper-room textarea").prop("disabled", true);
+
+                        menubar.updateItem('edit|Remove selected room', { enabled: false });
+                        menubar.updateItem('actions|highlight path', { enabled: false });
+                        menubar.updateItem('actions|walk path', { enabled: false });
 
 
-                    $("#reX").val('');
-                    $("#reY").val('');
-                    $("#reZ").val('');
-                    $("#reZone").val('');
-                    $("#reArea").val('');
-                    $("#reBackground").val('');
-                    $("#reTerrain").val('');
-                    $("#reNotes").val('');
-                    $("#reIndoors").prop('checked', false);
+                        $("#reX").val('');
+                        $("#reY").val('');
+                        $("#reZ").val('');
+                        $("#reZone").val('');
+                        $("#reArea").val('');
+                        $("#reBackground").val('');
+                        $("#reTerrain").val('');
+                        $("#reNotes").val('');
+                        $("#reIndoors").prop('checked', false);
 
-                    $("#reDDock").prop('checked', false);
-                    $("#reDPier").prop('checked', false);
-                    $("#reDBank").prop('checked', false);
-                    $("#reDShop").prop('checked', false);
+                        $("#reDDock").prop('checked', false);
+                        $("#reDPier").prop('checked', false);
+                        $("#reDBank").prop('checked', false);
+                        $("#reDShop").prop('checked', false);
 
-                    $("#reDHospital").prop('checked', false);
-                    $("#reDBar").prop('checked', false);
-                    $("#reDRestaurant").prop('checked', false);
-                    $("#reDWaterSource").prop('checked', false);
-                    $("#reDTrainer").prop('checked', false);
+                        $("#reDHospital").prop('checked', false);
+                        $("#reDBar").prop('checked', false);
+                        $("#reDRestaurant").prop('checked', false);
+                        $("#reDWaterSource").prop('checked', false);
+                        $("#reDTrainer").prop('checked', false);
 
-                    $("#reName").text('');
+                        $("#reName").text('');
 
-                }
-                else {
-                    $("#btn-walk").prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
-                    $("#btn-highlight").prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
-                    $("#reName").text(room.name);
-                    $("#mapper-room input").prop("disabled", false);
-                    $("#mapper-room select").prop("disabled", false);
-                    $("#mapper-room button").prop("disabled", false);
-                    $("#mapper-room textarea").prop("disabled", false);
+                    }
+                    else {
+                        $("#btn-walk").prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
+                        $("#btn-highlight").prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
+                        $("#reName").text(room.name);
+                        $("#mapper-room input").prop("disabled", false);
+                        $("#mapper-room select").prop("disabled", false);
+                        $("#mapper-room button").prop("disabled", false);
+                        $("#mapper-room textarea").prop("disabled", false);
 
-                    menubar.updateItem('edit|Remove selected room', { enabled: true });
-                    menubar.updateItem('actions|highlight path', { enabled: mapper.current.ID && mapper.current.ID != room.ID });
-                    menubar.updateItem('actions|walk path', { enabled: mapper.current.ID && mapper.current.ID != room.ID });
+                        menubar.updateItem('edit|Remove selected room', { enabled: true });
+                        menubar.updateItem('actions|highlight path', { enabled: mapper.current.ID && mapper.current.ID != room.ID });
+                        menubar.updateItem('actions|walk path', { enabled: mapper.current.ID && mapper.current.ID != room.ID });
 
-                    $("#reX").val(room.x);
-                    $("#reY").val(room.y);
-                    $("#reZ").val(room.z);
-                    $("#reZone").val(room.zone);
-                    $("#reArea").val(room.area);
-                    $("#reBackground").val(room.background);
-                    $("#reTerrain").val(room.env);
-                    $("#reIndoors").prop('checked', room.indoors);
-                    $("#reNotes").val(room.notes);
-                    $("#reDDock").prop('checked', (room.details & RoomDetails.Dock) === RoomDetails.Dock);
-                    $("#reDPier").prop('checked', (room.details & RoomDetails.Pier) === RoomDetails.Pier);
-                    $("#reDBank").prop('checked', (room.details & RoomDetails.Bank) === RoomDetails.Bank);
-                    $("#reDShop").prop('checked', (room.details & RoomDetails.Shop) === RoomDetails.Shop);
-                    $("#reDHospital").prop('checked', (room.details & RoomDetails.Hospital) === RoomDetails.Hospital);
-                    $("#reDBar").prop('checked', (room.details & RoomDetails.Bar) === RoomDetails.Bar);
-                    $("#reDRestaurant").prop('checked', (room.details & RoomDetails.Restaurant) === RoomDetails.Restaurant);
-                    $("#reDWaterSource").prop('checked', (room.details & RoomDetails.WaterSource) === RoomDetails.WaterSource);
-                    $("#reDTrainer").prop('checked', (room.details & RoomDetails.Trainer) === RoomDetails.Trainer);
-                }
-            });
+                        $("#reX").val(room.x);
+                        $("#reY").val(room.y);
+                        $("#reZ").val(room.z);
+                        $("#reZone").val(room.zone);
+                        $("#reArea").val(room.area);
+                        $("#reBackground").val(room.background);
+                        $("#reTerrain").val(room.env);
+                        $("#reIndoors").prop('checked', room.indoors);
+                        $("#reNotes").val(room.notes);
+                        $("#reDDock").prop('checked', (room.details & RoomDetails.Dock) === RoomDetails.Dock);
+                        $("#reDPier").prop('checked', (room.details & RoomDetails.Pier) === RoomDetails.Pier);
+                        $("#reDBank").prop('checked', (room.details & RoomDetails.Bank) === RoomDetails.Bank);
+                        $("#reDShop").prop('checked', (room.details & RoomDetails.Shop) === RoomDetails.Shop);
+                        $("#reDHospital").prop('checked', (room.details & RoomDetails.Hospital) === RoomDetails.Hospital);
+                        $("#reDBar").prop('checked', (room.details & RoomDetails.Bar) === RoomDetails.Bar);
+                        $("#reDRestaurant").prop('checked', (room.details & RoomDetails.Restaurant) === RoomDetails.Restaurant);
+                        $("#reDWaterSource").prop('checked', (room.details & RoomDetails.WaterSource) === RoomDetails.WaterSource);
+                        $("#reDTrainer").prop('checked', (room.details & RoomDetails.Trainer) === RoomDetails.Trainer);
+                    }
+                });
 
-            mapper.on('import-progress', (value) => {
-                if (value != -1) {
-                    ipcRenderer.send('progress', { percent: value });
-                    ipcRenderer.send('set-progress-window', 'mapper', { value: value / 100.0 });
-                }
-            });
+                mapper.on('import-progress', (value) => {
+                    if (value != -1) {
+                        ipcRenderer.send('progress', { percent: value });
+                        ipcRenderer.send('set-progress-window', 'mapper', { value: value / 100.0 });
+                    }
+                });
 
-            mapper.on('import-complete', (value) => {
-                updateAreas();
-                ipcRenderer.send('progress-close');
-                ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
-                ipcRenderer.send('send-gmcp', 'Room.Info');
-            });
+                mapper.on('import-complete', (value) => {
+                    updateAreas();
+                    ipcRenderer.send('progress-close');
+                    ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
+                    ipcRenderer.send('send-gmcp', 'Room.Info');
+                });
 
-            mapper.on('setting-changed', (setting, value) => {
-                if (setting === 'active') {
-                    $("#select-area").val(value.area);
-                    $("#MapLevel").val(value.z);
-                    $("#MapZone").val(value.zone);
-                }
-                ipcRenderer.send('setting-changed', { type: 'mapper', name: setting, value: value });
-            });
+                mapper.on('setting-changed', (setting, value) => {
+                    if (setting === 'active') {
+                        $("#select-area").val(value.area);
+                        $("#MapLevel").val(value.z);
+                        $("#MapZone").val(value.zone);
+                    }
+                    ipcRenderer.send('setting-changed', { type: 'mapper', name: setting, value: value });
+                });
 
-            mapper.on('remove-done', () => {
-                updateAreas();
-            });
+                mapper.on('remove-done', () => {
+                    updateAreas();
+                });
 
-            mapper.on('clear-area-done', (area) => {
-                $('#select-area option[value="' + area + '"]').remove();
-                $("#select-area").change();
-            });
+                mapper.on('clear-area-done', (area) => {
+                    $('#select-area option[value="' + area + '"]').remove();
+                    $("#select-area").change();
+                });
 
-            mapper.on('clear-done', () => {
-                $("#select-area").find("option").remove().end();
-                updateAreas();
-            });
+                mapper.on('clear-done', () => {
+                    $("#select-area").find("option").remove().end();
+                    updateAreas();
+                });
 
-            mapper.on('send-commands', (commands) => {
-                ipcRenderer.send('send-raw', commands);
-            });
+                mapper.on('send-commands', (commands) => {
+                    ipcRenderer.send('send-raw', commands);
+                });
 
-            mapper.on('context-menu', (room) => {
-                var menu = [];
-                if (room && room.ID) {
+                mapper.on('context-menu', (room) => {
+                    var menu = [];
+                    if (room && room.ID) {
+                        menu = menu.concat([
+                            {
+                                label: 'Set as current', Room: room, click: (item) => {
+                                    mapper.setCurrent(item.Room);
+                                }
+                            },
+                            {
+                                label: 'Remove', Room: room, click: (item) => {
+                                    mapper.removeRoom(item.Room);
+                                }
+                            },
+                        ]);
+                        if (!$("#btn-clear").prop('disabled') || (mapper.current.ID && room.ID && mapper.current.ID != room.ID))
+                            menu.push({ type: 'separator' });
+                        if (mapper.current.ID && room.ID && mapper.current.ID != room.ID) {
+                            menu.push({
+                                label: 'Highlight path to here', Room: room, click: (item) => {
+                                    mapper.showPath(item.Room);
+                                }
+                            });
+                            menu.push({
+                                label: 'Walk to here', Room: room, click: (item) => {
+                                    mapper.walkPath(item.Room);
+                                }
+                            });
+                        }
+                    }
+                    if (!$("#btn-clear").prop('disabled'))
+                        menu.push({
+                            label: 'Clear path', Room: room, click: () => {
+                                mapper.clearPath();
+                            }
+                        });
+                    if (menu.length > 0)
+                        menu.push({ type: 'separator' });
                     menu = menu.concat([
                         {
-                            label: 'Set as current', Room: room, click: (item) => {
-                                mapper.setCurrent(item.Room);
+                            label: 'Refresh', Room: room, click: () => {
+                                saveRoom();
+                                mapper.refresh();
                             }
                         },
                         {
-                            label: 'Remove', Room: room, click: (item) => {
-                                mapper.removeRoom(item.Room);
+                            label: 'Compact', Room: room, click: () => {
+                                compact();
                             }
-                        },
+                        }
                     ]);
-                    if (!$("#btn-clear").prop('disabled') || (mapper.current.ID && room.ID && mapper.current.ID != room.ID))
-                        menu.push({ type: 'separator' });
-                    if (mapper.current.ID && room.ID && mapper.current.ID != room.ID) {
-                        menu.push({
-                            label: 'Highlight path to here', Room: room, click: (item) => {
-                                mapper.showPath(item.Room);
-                            }
-                        });
-                        menu.push({
-                            label: 'Walk to here', Room: room, click: (item) => {
-                                mapper.walkPath(item.Room);
-                            }
-                        });
-                    }
+
+                    var inputMenu = Menu.buildFromTemplate(menu);
+                    inputMenu.popup({ window: remote.getCurrentWindow() });
+                });
+
+                mapper.on('error', (err) => {
+                    if (typeof err === 'string')
+                        ipcRenderer.send('error', err);
+                    else
+                        ipcRenderer.send('error', err.stack || err.message);
+                });
+
+                $(window).on('resize', () => {
+                    $("#mapper-body").css('top', $('#mapper-toolbar').outerHeight() + 'px');
+                    $("#mapper-room").css('top', $('#mapper-toolbar').outerHeight() + 'px');
+                    if (roomEditor)
+                        mapper._canvas.width = $(window).width() - 60 - $('#mapper-room').outerWidth();
+                    else
+                        mapper._canvas.width = $(window).width() - 60;
+                    mapper._canvas.height = $(window).height() - 60 - $('#mapper-toolbar').outerHeight();
+                    mapper.draw();
+                });
+
+                $(".MapperNavButton").mouseleave(function () {
+                    MapperNavDown = false;
+                }).mouseup(function () {
+                    MapperNavDown = false;
+                }).mousedown(function () {
+                    MapperNavDown = true;
+                    MapperNavClicked(parseInt($(this).data("x"), 10), parseInt($(this).data("y"), 10));
+                });
+                document.querySelectorAll('.MapperNavButton').forEach(e => e.addEventListener('wheel', (e) => {
+                    MapperNavDown = true;
+                    if (event.deltaY >= 0)
+                        MapperNavClicked(-parseInt($(e.target).data("x"), 10), -parseInt($(e.target).data("y"), 10));
+                    else
+                        MapperNavClicked(parseInt($(e.target).data("x"), 10), parseInt($(e.target).data("y"), 10));
+                    MapperNavDown = false;
+                }));
+
+                $(window).trigger('resize');
+
+                $("#export").on("show.bs.dropdown", () => {
+                    if ($(window).width() < 675 && $("#export").parent().position().left > 400)
+                        $("#export .dropdown-menu").addClass("dropdown-menu-right");
+                    else
+                        $("#export .dropdown-menu").removeClass("dropdown-menu-right");
+                });
+
+                if (options.mapper.enabled) {
+                    mapper.enabled = false;
+                    toggleEnabled();
                 }
-                if (!$("#btn-clear").prop('disabled'))
-                    menu.push({
-                        label: 'Clear path', Room: room, click: () => {
-                            mapper.clearPath();
-                        }
-                    });
-                if (menu.length > 0)
-                    menu.push({ type: 'separator' });
-                menu = menu.concat([
-                    {
-                        label: 'Refresh', Room: room, click: () => {
-                            saveRoom();
-                            mapper.refresh();
-                        }
-                    },
-                    {
-                        label: 'Compact', Room: room, click: () => {
-                            compact();
-                        }
-                    }
-                ]);
+                if (mapper.showLegend)
+                    toggleLegend();
+                if (options.mapper.follow) {
+                    mapper.follow = false;
+                    toggleFollow();
+                }
+                if (mapper.splitArea)
+                    toggleSplitArea();
+                if (mapper.fillWalls)
+                    toggleFillWalls();
+                if (mapper.follow)
+                    mapper.focusCurrentRoom();
 
-                var inputMenu = Menu.buildFromTemplate(menu);
-                inputMenu.popup({ window: remote.getCurrentWindow() });
-            });
+                $("#remove").click(function () {
+                    $(this).addClass('open');
+                    var pos = $(this).offset();
+                    var x = Math.floor(pos.left);
+                    var y = Math.floor(pos.top + $(this).outerHeight() + 2);
+                    var removeMenu = new Menu();
+                    removeMenu.append(new MenuItem({
+                        label: 'Remove selected room', enabled: mapper.selected.ID != null, click: removeSelectedRoom
+                    }));
+                    removeMenu.append(new MenuItem({
+                        label: 'Remove current room', enabled: mapper.current.ID != null, click: removeCurrentRoom
+                    }));
+                    removeMenu.append(new MenuItem({ type: 'separator' }));
+                    removeMenu.append(new MenuItem({
+                        label: 'Remove current area', click: removeCurrentArea
+                    }));
+                    removeMenu.append(new MenuItem({
+                        label: 'Remove all', click: removeAll
+                    }));
+                    removeMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
+                });
 
-            mapper.on('error', (err) => {
+                $("#export").click(function () {
+                    $(this).addClass('open');
+                    var pos = $(this).offset();
+                    var x = Math.floor(pos.left);
+                    var y = Math.floor(pos.top + $(this).outerHeight() + 2);
+                    var exportMenu = new Menu();
+                    exportMenu.append(new MenuItem({
+                        label: 'Export as image', click: exportImage
+                    }));
+                    exportMenu.append(new MenuItem({
+                        label: 'Export current view as image', click: exportCurrentImage
+                    }));
+                    exportMenu.append(new MenuItem({ type: 'separator' }));
+                    exportMenu.append(new MenuItem({
+                        label: 'Export current area', click: exportCurrentArea
+                    }));
+                    exportMenu.append(new MenuItem({
+                        label: 'Export all', click: exportAll
+                    }));
+                    exportMenu.append(new MenuItem({ type: 'separator' }));
+                    exportMenu.append(new MenuItem({
+                        label: 'Import and merge', click: importMerge
+                    }));
+                    exportMenu.append(new MenuItem({
+                        label: 'Import and replace', click: importReplace
+                    }));
+
+                    exportMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
+                });
+
+                $("#select-area").change(() => {
+                    mapper.setArea($("#select-area").find(":selected").text());
+                });
+
+                $("#MapLevel").change(() => {
+                    mapper.setLevel(parseInt($("#MapLevel").val(), 10));
+                });
+
+                $("#MapZone").change(() => {
+                    mapper.setZone(parseInt($("#MapZone").val(), 10));
+                });
+
+
+                updateAreas();
+                mapper.scrollTo(options.mapper.vscroll, options.mapper.hscroll);
+                ipcRenderer.send('send-gmcp', 'Room.Info');
+            }
+            catch (err) {
                 if (typeof err === 'string')
                     ipcRenderer.send('error', err);
                 else
                     ipcRenderer.send('error', err.stack || err.message);
-            });
-
-            $(window).on('resize', () => {
-                $("#mapper-body").css('top', $('#mapper-toolbar').outerHeight() + 'px');
-                $("#mapper-room").css('top', $('#mapper-toolbar').outerHeight() + 'px');
-                if (roomEditor)
-                    mapper._canvas.width = $(window).width() - 60 - $('#mapper-room').outerWidth();
-                else
-                    mapper._canvas.width = $(window).width() - 60;
-                mapper._canvas.height = $(window).height() - 60 - $('#mapper-toolbar').outerHeight();
-                mapper.draw();
-            });
-
-            $(".MapperNavButton").mouseleave(function () {
-                MapperNavDown = false;
-            }).mouseup(function () {
-                MapperNavDown = false;
-            }).mousedown(function () {
-                MapperNavDown = true;
-                MapperNavClicked(parseInt($(this).data("x"), 10), parseInt($(this).data("y"), 10));
-            });
-            document.querySelectorAll('.MapperNavButton').forEach(e => e.addEventListener('wheel', (e) => {
-                MapperNavDown = true;
-                if (event.deltaY >= 0)
-                    MapperNavClicked(-parseInt($(e.target).data("x"), 10), -parseInt($(e.target).data("y"), 10));
-                else
-                    MapperNavClicked(parseInt($(e.target).data("x"), 10), parseInt($(e.target).data("y"), 10));
-                MapperNavDown = false;
-            }));
-
-            $(window).trigger('resize');
-
-            $("#export").on("show.bs.dropdown", () => {
-                if ($(window).width() < 675 && $("#export").parent().position().left > 400)
-                    $("#export .dropdown-menu").addClass("dropdown-menu-right");
-                else
-                    $("#export .dropdown-menu").removeClass("dropdown-menu-right");
-            });
-
-            if (options.mapper.enabled) {
-                mapper.enabled = false;
-                toggleEnabled();
             }
-            if (mapper.showLegend)
-                toggleLegend();
-            if (options.mapper.follow) {
-                mapper.follow = false;
-                toggleFollow();
-            }
-            if (mapper.splitArea)
-                toggleSplitArea();
-            if (mapper.fillWalls)
-                toggleFillWalls();
-            if (mapper.follow)
-                mapper.focusCurrentRoom();
-
-            $("#remove").click(function () {
-                $(this).addClass('open');
-                var pos = $(this).offset();
-                var x = Math.floor(pos.left);
-                var y = Math.floor(pos.top + $(this).outerHeight() + 2);
-                var removeMenu = new Menu();
-                removeMenu.append(new MenuItem({
-                    label: 'Remove selected room', enabled: mapper.selected.ID != null, click: removeSelectedRoom
-                }));
-                removeMenu.append(new MenuItem({
-                    label: 'Remove current room', enabled: mapper.current.ID != null, click: removeCurrentRoom
-                }));
-                removeMenu.append(new MenuItem({ type: 'separator' }));
-                removeMenu.append(new MenuItem({
-                    label: 'Remove current area', click: removeCurrentArea
-                }));
-                removeMenu.append(new MenuItem({
-                    label: 'Remove all', click: removeAll
-                }));
-                removeMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
-            });
-
-            $("#export").click(function () {
-                $(this).addClass('open');
-                var pos = $(this).offset();
-                var x = Math.floor(pos.left);
-                var y = Math.floor(pos.top + $(this).outerHeight() + 2);
-                var exportMenu = new Menu();
-                exportMenu.append(new MenuItem({
-                    label: 'Export as image', click: exportImage
-                }));
-                exportMenu.append(new MenuItem({
-                    label: 'Export current view as image', click: exportCurrentImage
-                }));
-                exportMenu.append(new MenuItem({ type: 'separator' }));
-                exportMenu.append(new MenuItem({
-                    label: 'Export current area', click: exportCurrentArea
-                }));
-                exportMenu.append(new MenuItem({
-                    label: 'Export all', click: exportAll
-                }));
-                exportMenu.append(new MenuItem({ type: 'separator' }));
-                exportMenu.append(new MenuItem({
-                    label: 'Import and merge', click: importMerge
-                }));
-                exportMenu.append(new MenuItem({
-                    label: 'Import and replace', click: importReplace
-                }));
-
-                exportMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
-            });
-
-            $("#select-area").change(() => {
-                mapper.setArea($("#select-area").find(":selected").text());
-            });
-
-            $("#MapLevel").change(() => {
-                mapper.setLevel(parseInt($("#MapLevel").val(), 10));
-            });
-
-            $("#MapZone").change(() => {
-                mapper.setZone(parseInt($("#MapZone").val(), 10));
-            });
-
-
-            updateAreas();
-            mapper.scrollTo(options.mapper.vscroll, options.mapper.hscroll);
-            ipcRenderer.send('send-gmcp', 'Room.Info');
         });
 
         ipcRenderer.on('GMCP-received', (event, data) => {
@@ -697,7 +706,15 @@
                 document.title = 'Mapper - ' + char;
             else
                 document.title = 'Mapper';
-            mapper.mapFile = remote.getGlobal('mapFile');
+            try {
+                mapper.mapFile = remote.getGlobal('mapFile');
+            }
+            catch (err) {
+                if (typeof err === 'string')
+                    ipcRenderer.send('error', err);
+                else
+                    ipcRenderer.send('error', err.stack || err.message);
+            }
         });
 
         ipcRenderer.on('load-default', () => {
@@ -716,15 +733,23 @@
 
         ipcRenderer.on('reload-options', () => {
             save(function () {
-                var options = Settings.load(remote.getGlobal('settingsFile'));
-                mapper.memorySavePeriod = options.mapper.memorySavePeriod;
-                mapper.memory = options.mapper.memory;
-                mapper.mapFile = remote.getGlobal('mapFile');
+                try {
+                    var options = Settings.load(remote.getGlobal('settingsFile'));
+                    mapper.memorySavePeriod = options.mapper.memorySavePeriod;
+                    mapper.memory = options.mapper.memory;
+                    mapper.mapFile = remote.getGlobal('mapFile');
 
-                mapper.commandDelay = options.commandDelay;
-                mapper.commandDelayCount = options.commandDelayCount;
-                importType = options.mapper.importType;
-                _enableDebug = options.enableDebug;
+                    mapper.commandDelay = options.commandDelay;
+                    mapper.commandDelayCount = options.commandDelayCount;
+                    importType = options.mapper.importType;
+                    _enableDebug = options.enableDebug;
+                }
+                catch (err) {
+                    if (typeof err === 'string')
+                        ipcRenderer.send('error', err);
+                    else
+                        ipcRenderer.send('error', err.stack || err.message);
+                }
                 //remote.getCurrentWindow().reload();
             });
         });

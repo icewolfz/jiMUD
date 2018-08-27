@@ -451,25 +451,30 @@ export class Mapper extends EventEmitter {
             oy = 15;
         context.font = '8pt Arial';
         const s = new Date().getTime();
-        if (this._splitArea)
-            rows = this._db.prepare('Select X, Y, Rooms.ID as ID, Details, IsDoor, Indoors, IsClosed, Exit, Env, Background FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone AND  ((0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h) OR (0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h))').all({
-                area: area,
-                zone: zone,
-                x: x,
-                y: y,
-                z: z,
-                w: canvas.width / 32,
-                h: canvas.height / 32
-            });
-        else
-            rows = this._db.prepare('Select X, Y, Rooms.ID as ID, Details, IsDoor, Indoors, IsClosed, Exit, Env, Background FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone AND ((0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h) OR (0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h))').all({
-                zone: zone,
-                x: x,
-                y: y,
-                z: z,
-                w: canvas.width / 32,
-                h: canvas.height / 32
-            });
+        try {
+            if (this._splitArea)
+                rows = this._db.prepare('Select X, Y, Rooms.ID as ID, Details, IsDoor, Indoors, IsClosed, Exit, Env, Background FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone AND  ((0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h) OR (0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h))').all({
+                    area: area,
+                    zone: zone,
+                    x: x,
+                    y: y,
+                    z: z,
+                    w: canvas.width / 32,
+                    h: canvas.height / 32
+                });
+            else
+                rows = this._db.prepare('Select X, Y, Rooms.ID as ID, Details, IsDoor, Indoors, IsClosed, Exit, Env, Background FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone AND ((0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h) OR (0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h))').all({
+                    zone: zone,
+                    x: x,
+                    y: y,
+                    z: z,
+                    w: canvas.width / 32,
+                    h: canvas.height / 32
+                });
+        }
+        catch (err) {
+            this.emit('error', err);
+        }
         this.emit('debug', 'Draw - room query time: ' + (new Date().getTime() - s));
         const d = new Date().getTime();
         if (ex) {
