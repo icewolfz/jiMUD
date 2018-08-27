@@ -1061,7 +1061,7 @@ export class DataGrid extends EventEmitter {
     }
 
     public refresh() {
-        this.doUpdate(UpdateType.rows | UpdateType.sort);
+        this.doUpdate(UpdateType.buildRows | UpdateType.sort);
     }
 
     get selected() {

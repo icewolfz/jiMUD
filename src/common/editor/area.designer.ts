@@ -4222,6 +4222,14 @@ export class AreaDesigner extends EditorBase {
                 </select>
             </label>
         </div>`;
+        $('a[data-toggle="tab"]', this.$propertiesEditor.tabs).on('shown.bs.tab', (e) => {
+            if(e.target.textContent === 'Base rooms')
+                this.$propertiesEditor.roomGrid.refresh();
+            else if(e.target.textContent === 'Base monsters')
+                this.$propertiesEditor.monsterGrid.refresh();
+        });
+
+        //this.$propertiesEditor.tabs
         el = this.$propertiesEditor.generalTab.querySelectorAll('select');
         el[0].innerHTML = '<optgroup label="Area"><option value="base">Base</option></optgroup><optgroup label="Standard">' +
             RoomTypes.map(r => `<option value="${r.value}">${r.display}</option>`).join('') + '</optgroup>';
@@ -4410,7 +4418,7 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-emotes-chance-combat': '' + ed.value.emotesChanceCombat,
                                     'mon-wiz-speech-chance-combat': '' + ed.value.speechChanceCombat,
                                     'mon-wiz-welcome-message': 'Welcome to the base monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
-                                    'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).filter(r => r !== ed.value.type).map(r => {
+                                    'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).filter(r => r !== ed.data.name).map(r => {
                                         return {
                                             value: r,
                                             display: capitalize(r),
@@ -4865,7 +4873,7 @@ export class AreaDesigner extends EditorBase {
                                 data: {
                                     'room-wiz-notes': ed.value.notes || '',
                                     'room-wiz-welcome-message': 'Welcome to the base room editor, this will take you through the steps to edit a base room quickly and easily. You may finish at any time to save your current selections.',
-                                    'room-wiz-area-types': Object.keys(this.$area.baseRooms || { base: null }).filter(r => r !== ed.value.type).map(r => {
+                                    'room-wiz-area-types': Object.keys(this.$area.baseRooms || { base: null }).filter(r => r !== ed.data.name).map(r => {
                                         return {
                                             value: r,
                                             display: capitalize(r),
@@ -5101,6 +5109,7 @@ export class AreaDesigner extends EditorBase {
             newValue.room.baseFlags = newValue.baseFlags;
             this.$area.baseRooms[newValue.name] = newValue.room;
             this.changed = true;
+            this.loadTypes();
         });
         this.$propertiesEditor.roomGrid.on('add', e => {
             this.$new.baseRooms++;
@@ -5114,6 +5123,7 @@ export class AreaDesigner extends EditorBase {
             };
             this.pushUndo(undoAction.add, undoType.properties, { property: 'baseRooms', name: 'base' + this.$new.baseRooms, value: e.data.room });
             this.changed = true;
+            this.loadTypes();
         });
         this.$propertiesEditor.roomGrid.on('cut', (e) => {
             this.pushUndo(undoAction.delete, undoType.properties, {
@@ -5124,6 +5134,7 @@ export class AreaDesigner extends EditorBase {
             });
             this.emit('supports-changed');
             this.changed = true;
+            this.loadTypes();
         });
         this.$propertiesEditor.roomGrid.on('copy', () => {
             this.emit('supports-changed');
@@ -5161,6 +5172,7 @@ export class AreaDesigner extends EditorBase {
                     })
                 });
                 this.changed = true;
+                this.loadTypes();
             }
         });
         this.$propertiesEditor.roomGrid.on('selection-changed', () => {
@@ -8163,7 +8175,7 @@ export class AreaDesigner extends EditorBase {
                 switch (this.$propertiesEditor.tabs.querySelector('.active').firstChild.textContent) {
                     case 'Base rooms':
                         return this.$propertiesEditor.roomGrid.selected();
-                    case 'Base rooms':
+                    case 'Base monsters':
                         return this.$propertiesEditor.monsterGrid.selected();
                 }
                 return null;
@@ -8185,7 +8197,7 @@ export class AreaDesigner extends EditorBase {
                     case 'Base rooms':
                         this.$propertiesEditor.roomGrid.selectAll();
                         break;
-                    case 'Base rooms':
+                    case 'Base monsters':
                         this.$propertiesEditor.monsterGrid.selectAll();
                         break;
                 }
@@ -8229,7 +8241,7 @@ export class AreaDesigner extends EditorBase {
                     case 'Base rooms':
                         this.$propertiesEditor.roomGrid.cut();
                         break;
-                    case 'Base rooms':
+                    case 'Base monsters':
                         this.$propertiesEditor.monsterGrid.cut();
                         break;
                 }
@@ -8261,7 +8273,7 @@ export class AreaDesigner extends EditorBase {
                     case 'Base rooms':
                         this.$propertiesEditor.roomGrid.copy();
                         break;
-                    case 'Base rooms':
+                    case 'Base monsters':
                         this.$propertiesEditor.monsterGrid.copy();
                         break;
                 }
@@ -8312,7 +8324,7 @@ export class AreaDesigner extends EditorBase {
                     case 'Base rooms':
                         this.$propertiesEditor.roomGrid.paste();
                         break;
-                    case 'Base rooms':
+                    case 'Base monsters':
                         this.$propertiesEditor.monsterGrid.paste();
                         break;
                 }
@@ -8351,7 +8363,7 @@ export class AreaDesigner extends EditorBase {
                     case 'Base rooms':
                         this.$propertiesEditor.roomGrid.delete();
                         break;
-                    case 'Base rooms':
+                    case 'Base monsters':
                         this.$propertiesEditor.monsterGrid.delete();
                         break;
                 }
@@ -9202,6 +9214,11 @@ export class AreaDesigner extends EditorBase {
             case View.properties:
                 this.$label.textContent = 'Properties';
                 this.$propertiesEditor.container.style.display = '';
+                const tab = this.$propertiesEditor.tabs.querySelector('.active').textContent;
+                if(tab === 'Base rooms')
+                    this.$propertiesEditor.roomGrid.refresh();
+                else if(tab === 'Base monsters')
+                    this.$propertiesEditor.monsterGrid.refresh();                
                 break;
             case View.monsters:
                 this.$label.textContent = 'Monsters';
@@ -10460,6 +10477,7 @@ export class AreaDesigner extends EditorBase {
                 room: this.$area.baseRooms[r]
             };
         });
+
     }
 
     private updateBaseMonsters() {

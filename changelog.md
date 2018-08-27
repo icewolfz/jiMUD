@@ -20,8 +20,13 @@
     - Added more error catching to new mapper systems
   - Code editor:
     - If more then one area designer or virtual area editor open property grids got stuck when selecting room editor fields
-    - Fix placement of area designer and virtual area map container and being overlapped by the x/y coordinate rulers
-    - Area designer: Fix drawing of doors
+    - Fixed placement of area designer and virtual area map container and being overlapped by the x/y coordinate rulers
+    - Area designer:
+      - Fixed drawing of doors
+      - Fixed room editor type selection not having new base rooms added
+      - Fixed base room/monster editing not filtering out self from type dropdown
+      - Fixed base room/monster grids not correctly resizing when new data added when tabs hidden
+      - Fixed room/monster wizard editing to update inherit types
 
 ## 0.5.0 2018-08-25
 
@@ -51,24 +56,24 @@
   - Code editor:
     - Save scroll view state
     - Virtual area editor:
-      - Fix losing map dimensions after deleting or cutting room descriptions from the description editor
-      - Fix item editing when item index is greater then items created
-      - Fix parsing external rooms when changed and how set_items is parsed
+      - Fixed losing map dimensions after deleting or cutting room descriptions from the description editor
+      - Fixed item editing when item index is greater then items created
+      - Fixed parsing external rooms when changed and how set_items is parsed
       - Watch only files in the virtual map root path
-      - Fix external set_long formatting
+      - Fixed external set_long formatting
       - Double clicking text in a data grid field editor did not always work and do native word text selection and would instead focus on first editor in row
       - External room parsing now correctly sets states to know the external room states that are supported in the editor
     - Area designer:
       - Re-coded drawing system to use sprites as larger maps where slow drawing
-      - Fix up, down, enter, and out exit colors when hidden
-      - Fix browsing for external exits
-      - Fix depth toolbar min/max
-      - Fix collection dialog editor and drop down sub editors
+      - Fixed up, down, enter, and out exit colors when hidden
+      - Fixed browsing for external exits
+      - Fixed depth toolbar min/max
+      - Fixed collection dialog editor and drop down sub editors
   - Immortal tools: do not attempt to open paths in code editor
   - Mapper: Fix some issues with reloading preferences after they have been changed
-  - Fix quote parsing for several #commands so that they strip based on quote settings
-  - Fix an issue where active profile was returning null breaking any #command that tried to access profiles
-  - Fix alarm and untrigger not sending notification that a trigger was removed or added to profile manager
+  - Fixed quote parsing for several #commands so that they strip based on quote settings
+  - Fixed an issue where active profile was returning null breaking any #command that tried to access profiles
+  - Fixed alarm and untrigger not sending notification that a trigger was removed or added to profile manager
   - Profile manager: Fix deleting selected items by context menu not clearing the current item editor correctly
 
 ## 0.4.62 2018-08-13
@@ -159,7 +164,7 @@
     - Monster wizard
       - Fixed double set_height, mass being set to hair and other minor issues
     - When files saved update open time to save time, as file has been changed and old open is invalid
-  - Fix loading of external css/js scripts for different windows
+  - Fixed loading of external css/js scripts for different windows
   - Profile manager: Fix macro editing, at some point and upgrade to typescript changed how it imported a function block
   - Auto update: fix progress dialog not showing correct percent
   - Fixed -c command line argument
@@ -184,7 +189,7 @@
   - When loading the same character over ensure auto connect is reran even if settings are the same and not reloaded
   - Code editor:
     - Tab navigation buttons and menu would not appear sometimes when using side by side views
-    - Fix ctrl+w and ctrl+tab to use on current active tab group
+    - Fixed ctrl+w and ctrl+tab to use on current active tab group
     - Error updating scroll dropdown menu when not open
     - Room editor/Data grids:
       - Advanced text editing now break by word not by letter when wrapping text
@@ -203,19 +208,19 @@
     - Virtual area editor was not correctly firing resizing system to update offsets
     - Do not watch new files for disk changes as they do not exist
     - When saving file as, add resulting file to recent
-    - Fix issue with external exits and room editor doing data multiple times
-    - Fix format document indenting of arrays if last element in a mapping was an array lookup using []
-    - Fix escaped characters when parsing strings when indenting
+    - Fixed issue with external exits and room editor doing data multiple times
+    - Fixed format document indenting of arrays if last element in a mapping was an array lookup using []
+    - Fixed escaped characters when parsing strings when indenting
     - Tabstrip drop down navigation menu:
       - Colorized to match tab colors
       - Display tab tooltips when hovered
       - Correctly updates when window resized
     - Correctly remember last active open file when reopen is enabled
-    - Fix drag and drop of tabs between two tab groups
+    - Fixed drag and drop of tabs between two tab groups
     - Add line/column #s to errors when formatting
   - Immortal tools:
-    - Fix windows file name sanitize system, replaces invalid characters with _
-    - Fix issue with compressed dir decoding, if it fails attempt to re-get data
+    - Fixed windows file name sanitize system, replaces invalid characters with _
+    - Fixed issue with compressed dir decoding, if it fails attempt to re-get data
 
 ## 0.4.58 2018-07-07
 
@@ -305,7 +310,7 @@
 
 - **Fixed:**
   - Data grid:
-    - Fix position and width of advanced editors for data grid on smaller windows, as data grid advanced editors are not true floating windows and must fit inside the window for full visibility.
+    - Fixed position and width of advanced editors for data grid on smaller windows, as data grid advanced editors are not true floating windows and must fit inside the window for full visibility.
     - Readd focus outline to advance editor buttons to know when focused from tab
   - Code editor:
     - Virtual editor:
@@ -449,13 +454,13 @@
 - **Fixed:**
   - Backup: map file was not correctly updating when new character was loaded when connected to mud
   - Code editor:
-    - Fix output window display
-    - Fix dock change asking to save new files
-    - Fix file save cancel
+    - Fixed output window display
+    - Fixed dock change asking to save new files
+    - Fixed file save cancel
     - Validate split layout better to ensure it is restored to a usable state
     - Properly update tab state for save all/ revert all
     - Tabs resetting editors every time they are clicked
-    - Fix tab context menu
+    - Fixed tab context menu
     - Formatting :: operator when following keywords and constants stripping spaces
     - Do not add a space between -- or ++ and text
     - Remove all spaces after * when in a variable declaration statement  
@@ -530,15 +535,15 @@
 - **Fixed:**
   - Code editor:
     - Fixed reopen order when restoring files
-    - Fix insert color dialog
+    - Fixed insert color dialog
     - Editor only losing task bar icon when preference changed
     - Fixed state loading
-    - Fix file watching to ask if reload or keep open
+    - Fixed file watching to ask if reload or keep open
     - No longer loaded always after editor only mode used
-    - Fix new monster from file menu not working
+    - Fixed new monster from file menu not working
   - Advanced editor:
     - Fixed extra new line added when sending text to mud or code editor
-  - Fix help display for command line for -e and -eo arguments
+  - Fixed help display for command line for -e and -eo arguments
   - Force error into a string to ensure it is displayed.
   - Mapper:
     - Area list not being populated correctly on load
@@ -617,7 +622,7 @@
 - **Changed:**
   - Update to electron 1.7.12
 - **Fixed:**
-  - Fix double, triple, and quad click text selection
+  - Fixed double, triple, and quad click text selection
   - Immortal tools:
     - Double clicking a folder in local while remote is root (/) would cause a double // in the path
     - When uploading or downloading a new file it would fail to correctly focus on item when Focus on finish was enabled
@@ -640,7 +645,7 @@
   - Prevent disconnect dialog hotkeys from being sent to command input when pressed.
   - Fixed issue with disconnect dialog count down timer
   - Immortal tools:
-    - Fix double clicking items as they are removed from local/remote/queue table
+    - Fixed double clicking items as they are removed from local/remote/queue table
     - Update queue table properly when local/remote folder are changed to refresh the file path state
     - When double clicking a folder in local when sync enabled, fails when in root remote (/)
   - Mapper:
@@ -705,9 +710,9 @@
   - Add dev setting per character login to allow easier development login
 - **Fixed:**
   - Bug in disconnect code
-  - Fix an issue with game pads
-  - Fix chat, mapper, and editor windows when characters are changed so they close and reopen as needed
-  - Fix character data not saving before loading new character
+  - Fixed an issue with game pads
+  - Fixed chat, mapper, and editor windows when characters are changed so they close and reopen as needed
+  - Fixed character data not saving before loading new character
 
 ## 0.4.32 2017-12-12
 
@@ -727,7 +732,7 @@
 - **Fixed:**
   - Immortal Tools:
     - Update status bar when reset
-    - Fix creating sub folders in current local folder
+    - Fixed creating sub folders in current local folder
     - Statusbar now shows correct remote file counts
     - Mark items with an error icon instead of just removing
   - Fixed issue where new client window was created instead of a sub window
@@ -766,7 +771,7 @@
   - [#alarm](docs/commands.md), [#suspend](docs/commands.md), [#resume](docs/commands.md) now parse id, time pattern, and profile arguments so functions and variables can be used
 - **Fixed:**
   - Fixed loading profiles not clearing internal caches
-  - Fix suspend/resume to correctly time suspended alarms when resumed
+  - Fixed suspend/resume to correctly time suspended alarms when resumed
   - Immortal tools: Error dealing with missing type2 column used for date sorting
 
 ## 0.4.29 2017-11-27
@@ -788,7 +793,7 @@
   - Close check was not correctly working and closed even if you said now when connected
   - Profile manager:
     - when closing did not correctly check if changes wanted to be saved
-    - Fix never ask again when closing
+    - Fixed never ask again when closing
   - Immortal tools:
     - List views now correctly scroll to top when remote or local path has been changed
     - List view key down selection search now works more like windows explorer, will start from current selected item
@@ -820,7 +825,7 @@
 
 - **Fixed:**
   - Chat capture: fix ignore captures for stores and lockers, use a counter instead of a simple flag
-  - Fix spaces in skill/weapon ids to convert to - so large sword and small sword icons work
+  - Fixed spaces in skill/weapon ids to convert to - so large sword and small sword icons work
   - Mapper:
     - auto walk buttons not correctly set to enabled when current room is different from selected room
     - Re-coded draw timing to be synced with core drawing system to try and lower cpu
@@ -839,7 +844,7 @@
 
 - **Fixed:**
   - Mapper:
-    - Fix zone yet again, attempt to only change the zone if a room exist at coords
+    - Fixed zone yet again, attempt to only change the zone if a room exist at coords
     - Assign current zone to the new room
 
 ## 0.4.22 2017-10-06
@@ -909,7 +914,7 @@
   - Updated spell checker and sqlite
 - **Fixed:**
   - Copy was not working on linux
-  - Fix command argument parsing
+  - Fixed command argument parsing
   - Mapper: Zone/level not updating when active room
   - Verbatim was failing to append new line characters
   - Profile manger: Fix display of html characters in tree view
@@ -1074,9 +1079,9 @@
 - **Fixed:**
   - When closing a dynamic window dialog it would error saying window destroyed
   - Fixed saving dynamic window alwaysOnTop, alwaysOnTopClient, and persistent
-  - Fix window close states for all windows
+  - Fixed window close states for all windows
   - Backup was not correctly loading settings when using client load
-  - Fix MXP music, sound, gauge and stat tag argument parsing
+  - Fixed MXP music, sound, gauge and stat tag argument parsing
   - Immortal tools:
     - Updated status bar to have more generic information
     - Preference dialog now correctly sets and saves window settings
@@ -1260,13 +1265,13 @@
   - Re-enable TestMapper() to allow testing of mapper
   - Updated to electron 1.7.3 beta
 - **Fixed:**
-  - Fix bell Unicode character display
+  - Fixed bell Unicode character display
   - Editor:
     - New lines where not correctly being sent when sending as formatted text
     - Trailing newlines where being cut off
-    - Fix flashing format not being sent when flashing disabled
-  - Fix a bug in aliases and macros when script style was used, would error due to strict type comparison
-  - Fix a bug in aliases, macros, and triggers when script style returns a non string/null/undefined
+    - Fixed flashing format not being sent when flashing disabled
+  - Fixed a bug in aliases and macros when script style was used, would error due to strict type comparison
+  - Fixed a bug in aliases, macros, and triggers when script style returns a non string/null/undefined
 
 ## 0.3.1 - 2017-05-30
 
@@ -1353,7 +1358,7 @@
   - Adjusted dark mouse over colors to be more visible
   - Mapper window will now show when a backup import triggers to show mapper progress
 - **Fixed:**
-  - Fix issues with closing client and still being connected and saying no to close
+  - Fixed issues with closing client and still being connected and saying no to close
   - Sound/Music commands work
   - setsetting/getsetting commands work
   - A bug in backup when ajax error happens and not being able to abort load/save
@@ -1484,7 +1489,7 @@
   - A bug when using the cancel button on profile manager and warning about saving changes when nothing has been changed
   - Flashing when enabled should now correctly sync blocks in advanced editor, display, and chat window.
   - Fixed profile manager context menus
-  - Fix preference context menus
+  - Fixed preference context menus
   - Fixed bug with newline/prompt when executing triggers
   - A bug in needed xp being -#
 

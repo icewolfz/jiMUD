@@ -5147,7 +5147,7 @@
                             }
                             else
                                 aTypes.innerHTML = '<option value="BASEROOM">Base</option>';
-                            $('#room-wiz-type', e.page).val(e.wizard.defaults['room-wiz-type'] || 'STD_ROOM').selectpicker('render');
+                            $('#room-wiz-type', e.page).selectpicker('refresh').val(e.wizard.defaults['room-wiz-type'] || 'STD_ROOM').selectpicker('render');
                             e.page.querySelector('#room-wiz-terrain').value = e.wizard.defaults['room-wiz-terrain'] || '';
                             e.page.querySelector('#room-wiz-short').value = e.wizard.defaults['room-wiz-short'] || '';
                             e.page.querySelector('#room-wiz-light').value = e.wizard.defaults['room-wiz-light'] || '3';
@@ -6255,9 +6255,8 @@
                                     el.innerHTML = $dialogs.monster.options.groups[g].map(r => `<option value="${r.value || r.display}">${r.display || r.value}</option>`).join('');
                                     aTypes.parentNode.insertBefore(el, aTypes.nextSibling);
                                 });
-                                $('#mon-wiz-type', e.page).selectpicker('refresh');
                             }
-                            $('#mon-wiz-type', e.page).val(e.wizard.defaults['mon-wiz-type'] || 'STD_MONSTER').selectpicker('render');
+                            $('#mon-wiz-type', e.page).selectpicker('refresh').val(e.wizard.defaults['mon-wiz-type'] || 'STD_MONSTER').selectpicker('render');
                             e.page.querySelector('#mon-wiz-level').value = e.wizard.defaults['mon-wiz-level'] || '1';
                             e.page.querySelector('#mon-wiz-alignment').value = e.wizard.defaults['mon-wiz-alignment'] || '';
                             e.page.querySelector('#mon-wiz-race').value = e.wizard.defaults['mon-wiz-race'] || '';
