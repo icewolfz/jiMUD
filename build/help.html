@@ -78,7 +78,7 @@
 
         function loadContents(url) {
             container[0].scrollTop = 0;
-            var data = fs.readFileSync(path.join(__dirname, '..', 'docs', url + '.md'), 'utf8');
+            var data = fs.readFileSync(path.join(__dirname, '..', 'docs', url.replace('///g', path.sep) + '.md'), 'utf8');
             container.html(md.render(data));
         }
 
@@ -174,6 +174,7 @@
             <span class="path-container">
                 <select id="contents" class="form-control selectpicker" data-container="body" data-style="btn-default btn-xs" data-width="100%">
                     <option value="readme">Main</option>
+                    <option value="../changelog">Changelog</option>
                     <option value="faq">Frequently asked questions</option>
                     <option value="profiles">Profiles</option>
                     <option value="speedpaths">Speedpaths</option>

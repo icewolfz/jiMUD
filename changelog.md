@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.1
+## v0.5.1 2018-08-27
 
 - **New:**
   - Add tool tips to weapon icons displaying weapon type being held
@@ -28,7 +28,7 @@
       - Fixed base room/monster grids not correctly resizing when new data added when tabs hidden
       - Fixed room/monster wizard editing to update inherit types
 
-## 0.5.0 2018-08-25
+## v0.5.0 2018-08-25
 
 - **New:**
   - Code editor:
@@ -76,7 +76,7 @@
   - Fixed alarm and untrigger not sending notification that a trigger was removed or added to profile manager
   - Profile manager: Fix deleting selected items by context menu not clearing the current item editor correctly
 
-## 0.4.62 2018-08-13
+## v0.4.62 2018-08-13
 
 - **New:**
   - Code editor:
@@ -128,7 +128,7 @@
   - Fixed -#s when using show needed xp as progress bar
   - Chat capture: Fix bug when using persistent window setting
 
-## 0.4.61 2018-08-06
+## v0.4.61 2018-08-06
 
 - **New:**
   - Code editor:
@@ -173,7 +173,7 @@
   - Advanced editor: fix bug when inserting pinkfish formatted text
   - Fixed disconnect not fully disconnecting from mud
 
-## 0.4.60 2018-07-23
+## v0.4.60 2018-07-23
 
 - **New:**
   - Auto update:
@@ -197,7 +197,7 @@
     - Room preview now correctly handles mixed cased items in matching to items
   - Menu bars did not always re-enable correctly
 
-## 0.4.59 2018-07-16
+## v0.4.59 2018-07-16
 
 - **New:**
   - Code editor:
@@ -222,14 +222,14 @@
     - Fixed windows file name sanitize system, replaces invalid characters with _
     - Fixed issue with compressed dir decoding, if it fails attempt to re-get data
 
-## 0.4.58 2018-07-07
+## v0.4.58 2018-07-07
 
 - **Fixed:**
   - Code editor:
     - Changing item data would update the new selected room instead of the previous selected room
     - When saving catch any errors and display them
 
-## 0.4.57 2018-07-07
+## v0.4.57 2018-07-07
 
 - **New:**
   - New build process, 32 and 64 bit for windows are now all contained in a single installer/portable exe
@@ -243,7 +243,7 @@
     - Fixed minor issue updating room if no focused room set
     - Track open timestamp in an attempt to remove weird file change checks
 
-## 0.4.56 2018-07-04
+## v0.4.56 2018-07-04
 
 - **New:**
   - Mapper: character name is appended to window title to easily know who a map window is for
@@ -259,7 +259,7 @@
   - Immortal tools: fix undefined/undefined error correctly this time
   - Mapper: fix export as image
 
-## 0.4.55 2018-07-03
+## v0.4.55 2018-07-03
 
 - **New:**
   - Code editor:
@@ -281,7 +281,7 @@
     - Fixed when adding new external exit did not update changed state when starting with no exits
     - Fixed editing items in dedicated item editor
 
-## 0.4.54 2018-07-02
+## v0.4.54 2018-07-02
 
 - **Changed:**
   - Code editor: light range for virtual editor room/descriptions is now -15 to 15 instead of default
@@ -306,7 +306,7 @@
       - Fixed room edits when switching selected rooms, was updating new selection instead of previous
     - Make diff navigation buttons visible but disabled when not in use as you can not hide the menu due to a limitation in election not allowing hiding of separators
 
-## 0.4.53 2018-06-30
+## v0.4.53 2018-06-30
 
 - **Fixed:**
   - Data grid:
@@ -320,7 +320,7 @@
       - Room editor would throw an error when switching rooms with a property is in active edit.
       - When hitting enter after editing a number in a number editor did not cause the editor to close and save
 
-## 0.4.52 2018-06-29
+## v0.4.52 2018-06-29
 
 - **New:**
   - Code editor:
@@ -356,12 +356,12 @@
   - Fixed window save state system, correctly saves restore state so when un-minimized it returns to previous size instead of max size
   - Fixed data grid editors closing dialogs when pressing escape to exit editor
 
-## 0.4.51 2018-06-25
+## v0.4.51 2018-06-25
 
 - **Fixed:**
   - Code editor: Virtual editor property grid had wrong variable
 
-## 0.4.50 2018-06-25
+## v0.4.50 2018-06-25
 
 - **New:**
   - Log viewer: display your logs as if from the mud, supports html, raw ansi, and text files
@@ -398,7 +398,7 @@
     - Some colors where broken when codes where pasted in or sent from other windows
     - Link window to code editor when in editor only mode so the window stays on top and closes when the editor closes
 
-## 0.4.49 2018-06-17
+## v0.4.49 2018-06-17
 
 - **New:**
   - Code editor:
@@ -441,7 +441,7 @@
     - When requesting the client reload the character database, when no character load it would create an invalid character named null
   - Attempt to refocus on command input after disconnect, paste special, and progress dialogs are closed
 
-## 0.4.48 2018-06-05
+## v0.4.48 2018-06-05
 
 - **New:**
   - Add a limit to how many times to try to auto login in a row
@@ -465,7 +465,7 @@
     - Do not add a space between -- or ++ and text
     - Remove all spaces after * when in a variable declaration statement  
 
-## 0.4.47 2018-06-03
+## v0.4.47 2018-06-03
 
 - **New:**
   - Code editor:
@@ -482,7 +482,7 @@
     - Fixed issues with area names with single quotes (')
     - Fixed issues with rooms with no exits being ignored
 
-## 0.4.46 2018-05-30
+## v0.4.46 2018-05-30
 
 - **Changed:**
   - Switch workers to es2017
@@ -496,14 +496,14 @@
     - When switching characters was not correctly closing old windows
   - Child windows show state not being correctly saved
 
-## 0.4.45 2018-05-28
+## v0.4.45 2018-05-28
 
 - **Changed:**
   - Upgrade all 3rd party libraries to latest
 - **Fixed:**
   - Mapper: Fix walk/highlight path, broken in 0.4.44 when adding normalizing and fixing save bugs
 
-## 0.4.44 2018-05-28
+## v0.4.44 2018-05-28
 
 - **New:**
   - Code editor:
@@ -550,7 +550,7 @@
     - Area list is now sorted in alphabetic order
     - Mapper window was closing before mapper data was fully flushed to disk when [Load in memory](preferences.md#mapper) is enabled
 
-## 0.4.43 2018-05-07
+## v0.4.43 2018-05-07
 
 - **New:**
   - Status: dominant weapon hand is now bordered with red
@@ -587,7 +587,7 @@
     - Profile menu list state was being updated to match correctly enabled profiles
   - Fixed color picker not being a modal dialog in some instances
 
-## 0.4.42 2018-04-23
+## v0.4.42 2018-04-23
 
 - **Changed:**
   - Status: Use unique player/monster ids if supplied then fall back to the old name id
@@ -596,7 +596,7 @@
     - Double clicking local folder would not always change remote folder if matching sub folder exist
     - Fixed added 'change to directory' to context when nothing selected
 
-## 0.4.41 2018-04-17
+## v0.4.41 2018-04-17
 
 - **Changed:**
   - Upgrade electron to 1.8.4
@@ -608,14 +608,14 @@
   - Status: trim training # to monster name to allow unique monster classes to be used
   - When reloading options it would not reinitialize the profiles to correctly load the new enabled ones
 
-## 0.4.40 2018-03-20
+## v0.4.40 2018-03-20
 
 - **Changed:**
   - Upgrade several 3rd party dependencies
 - **Fixed:**
   - Mapper: in memory option was broken
 
-## 0.4.39 2018-02-12
+## v0.4.39 2018-02-12
 
 - **New:**
   - Preference: Show extended error messages, hide expanded error messages unless told to but for logging
@@ -631,7 +631,7 @@
   - Only show disconnect dialog if it was a connection error
   - Reset disconnect timers when clicking any button but reconnect from disconnect dialog
 
-## 0.4.38 2018-01-15
+## v0.4.38 2018-01-15
 
 - **New:**
   - MXP: add version, support, user, and password tag support but leave user/password disabled for now due to server side not supporting it
@@ -655,7 +655,7 @@
   - View > Buttons > Button check state was not correctly set when setting toggled
   - GMCP event is no longer triggered when an error decoding GMCP is done
 
-## 0.4.37 2017-12-26
+## v0.4.37 2017-12-26
 
 - **Changed:**
   - Immortal tools: Local/remote paths in queue list now replace start of path with . if local/remote paths match current working local/remote
@@ -665,7 +665,7 @@
     - Queue progress is more accurate
     - Could not download empty folders
 
-## 0.4.36 2017-12-25
+## v0.4.36 2017-12-25
 
 - **New:**
   - Immortal tools:
@@ -688,7 +688,7 @@
     - Files where not correctly renamed after setting character name on login.
     - Text was written out of order.
 
-## 0.4.35 2017-12-18
+## v0.4.35 2017-12-18
 
 - **Fixed:**
   - Rebuild context and buttons after a profile enabled state has changed
@@ -699,12 +699,12 @@
   - Mapper: fix minor issue when trying to process data before the mapper window is ready
   - Dont attempt to show disconnect dialog if already open
 
-## 0.4.34 2017-12-14
+## v0.4.34 2017-12-14
 
 - **Fixed:**
   - Preferences where not being saved, introduced in 0.4.32 with correcting windows open
 
-## 0.4.33 2017-12-12
+## v0.4.33 2017-12-12
 
 - **New:**
   - Add dev setting per character login to allow easier development login
@@ -714,7 +714,7 @@
   - Fixed chat, mapper, and editor windows when characters are changed so they close and reopen as needed
   - Fixed character data not saving before loading new character
 
-## 0.4.32 2017-12-12
+## v0.4.32 2017-12-12
 
 - **New:**
   - On disconnect preference, allows you to pick what happens when you are disconnected
@@ -739,7 +739,7 @@
   - When reloading options, close all child windows and recreate based on new options
   - Fixed issue with exporting macros
 
-## 0.4.31 2017-12-05
+## v0.4.31 2017-12-05
 
 - **New:**
   - Add [#untrigger](docs/commands.md) command to remove triggers or alarms
@@ -760,7 +760,7 @@
   - Fixed parsing of var tag if invalid tag matching
   - Immortal Tools: List view key down selection search now ignores case for more accurate searching
 
-## 0.4.30 2017-11-29
+## v0.4.30 2017-11-29
 
 - **New:**
   - Character manager: login name independent of the character group, this allows you to create 2 characters with same login name but different group name, this makes it easier for those that have a character on dev mud and main mud using the same name but different setting files
@@ -774,7 +774,7 @@
   - Fixed suspend/resume to correctly time suspended alarms when resumed
   - Immortal tools: Error dealing with missing type2 column used for date sorting
 
-## 0.4.29 2017-11-27
+## v0.4.29 2017-11-27
 
 - **New:**
   - Character manager: Added load default and close, and load and close buttons
@@ -799,7 +799,7 @@
     - List view key down selection search now works more like windows explorer, will start from current selected item
     - Date modified column groups folders and files instead of mixing them up
 
-## 0.4.28 2017-11-15
+## v0.4.28 2017-11-15
 
 - **Fixed:**
   - Backup:
@@ -808,7 +808,7 @@
   - Tray icon no longer lingers in system tray when client closed.
   - MXP parsing not correctly closing custom element tags
 
-## 0.4.27 2017-11-04
+## v0.4.27 2017-11-04
 
 - **Fixed:**
   - MXP parsing replacing custom tags with ''
@@ -816,12 +816,12 @@
     - Fixed capture of who list when only 1 user online
     - Fixed clearing chat window using clear button
 
-## 0.4.26 2017-10-27
+## v0.4.26 2017-10-27
 
 - **Fixed:**
   - Chat capture: finally fix ignoring stores and lockers
 
-## 0.4.25 2017-10-26
+## v0.4.25 2017-10-26
 
 - **Fixed:**
   - Chat capture: fix ignore captures for stores and lockers, use a counter instead of a simple flag
@@ -830,7 +830,7 @@
     - auto walk buttons not correctly set to enabled when current room is different from selected room
     - Re-coded draw timing to be synced with core drawing system to try and lower cpu
 
-## 0.4.24 2017-10-14
+## v0.4.24 2017-10-14
 
 - **New:**
   - Preference: can now disable file watcher for profile manager.
@@ -840,14 +840,14 @@
   - Backup: make sure room id is a number when saving
   - Mapper: make sure room id is a number when exporting
 
-## 0.4.23 2017-10-07
+## v0.4.23 2017-10-07
 
 - **Fixed:**
   - Mapper:
     - Fixed zone yet again, attempt to only change the zone if a room exist at coords
     - Assign current zone to the new room
 
-## 0.4.22 2017-10-06
+## v0.4.22 2017-10-06
 
 - **New:**
   - Experimental game pad support
@@ -858,12 +858,12 @@
   - Immortal button not being hidden on disconnect then re-login with a non immortal login
   - Backup system was not having the correct map file set when character was changed.
 
-## 0.4.21 2017-09-26
+## v0.4.21 2017-09-26
 
 - **Fixed:**
   - Mapper: Fix mapper new zone correctly this time
 
-## 0.4.20 2017-09-26
+## v0.4.20 2017-09-26
 
 - **New:**
   - Chat capture:
@@ -874,7 +874,7 @@
     - Fixed an issue when creating new zones.
     - Fixed an issue when adding new rooms it was attempting to add them twice
 
-## 0.4.19 2017-09-25
+## v0.4.19 2017-09-25
 
 - **Fixed:**
   - Profile manager:
@@ -884,7 +884,7 @@
     - Linux: Was not correctly removing profile data files due to casing issues
   - Chat capture: capture name that include a ' and spaces
 
-## 0.4.18 2017-09-18
+## v0.4.18 2017-09-18
 
 - **New:**
   - Chat capture: Add shout to tell captures for chat window
@@ -892,7 +892,7 @@
   - Mapper: Area navigation drop down fails when area name contained a space
   - Chat capture: ignore fragmented lines due to split packets or mixed parsing
 
-## 0.4.17 2017-09-16
+## v0.4.17 2017-09-16
 
 - **New:**
   - Added preference to disable code editor in profile manager
@@ -901,13 +901,13 @@
     - Area navigation not updated when new area created
     - Room property editor position not updating when toolbar wraps
 
-## 0.4.16 2017-09-15
+## v0.4.16 2017-09-15
 
 - **Fixed:**
   - Downgrade to electron 1.7.7 to fix a crashing bug with 1.8.0
   - An issue with auto connect not working
 
-## 0.4.15 2017-09-14
+## v0.4.15 2017-09-14
 
 - **Changed:**
   - Updated electron to 1.8.0
@@ -920,7 +920,7 @@
   - Profile manger: Fix display of html characters in tree view
   - Fixed a bug in parsing %# arguments
 
-## 0.4.14 2017-09-04
+## v0.4.14 2017-09-04
 
 - **Fixed:**
   - Fixed display width when status display hidden
@@ -928,7 +928,7 @@
   - Fixed spell checker on linux
   - Fixed parsing of double/single quotes as strings when ending of a command
 
-## 0.4.13 2017-08-19
+## v0.4.13 2017-08-19
 
 - **New:**
   - Added new Windows 10 color scheme
@@ -944,13 +944,13 @@
   - Mapper will now send a room request for current every time it is loaded/reloaded/importing fixing the mapper from getting lost when connected and changing mapper settings
   - Client saving was not correctly getting mapper data when in memory option was enabled
 
-## 0.4.12 2017-08-16
+## v0.4.12 2017-08-16
 
 - **Fixed:**
   - Backup exported macro display code wrong
   - Profile manager editor title text overflowed and filled background
 
-## 0.4.11 2017-08-16
+## v0.4.11 2017-08-16
 
 - **New:**
   - Added function doc file to explain functions and list predefined variables
@@ -1003,7 +1003,7 @@
     - Profile default context option was not being restored
   - Onload focus on main window instead of chat/mapper/editor windows
 
-## 0.4.10 2017-08-03
+## v0.4.10 2017-08-03
 
 - **Change:**
   - When window shown it will now focus on command input
@@ -1017,7 +1017,7 @@
     - When saving options, options not correctly applied to active window
     - Remote drag and drop on linux was broken
 
-## 0.4.9 2017-07-30
+## v0.4.9 2017-07-30
 
 - **New:**
   - Auto login system if using character manager, allows you to store a password encrypted using aes, this is basic encryption and nothing else.
@@ -1070,7 +1070,7 @@
   - Auto connect will now correctly fire when changing character settings based on if connected or not
   - Fixed a bug in echoing system and it restoring the previous ansi state
 
-## 0.4.8 2017-07-25
+## v0.4.8 2017-07-25
 
 - **New:**
   - Immortal tools:
@@ -1090,7 +1090,7 @@
     - Remote list is now properly reinitialized when the mud sends init code
     - Error when dropping files for remote upload
 
-## 0.4.7 2017-07-24
+## v0.4.7 2017-07-24
 
 - **New:**
   - Tray: added profile manager and preference to menu
@@ -1116,7 +1116,7 @@
   - Bug with display window size
   - Chat capture: fix some issues causing it not to display text
 
-## 0.4.6 2017-07-21
+## v0.4.6 2017-07-21
 
 - **New:**
   - Status: allow experience needed to be displayed as a progress bar
@@ -1154,7 +1154,7 @@
     - Issue when dragging and dropping remote files
     - When running backup remote command from context or menu and bak folder did not exist was setting wrong path when created in remote list
 
-## 0.4.5 2017-07-14
+## v0.4.5 2017-07-14
 
 - **New:**
   - Context menu:
@@ -1177,7 +1177,7 @@
   - Buttons, aliases, triggers, macros, and context should now be properly sorted by priorities. All items are first sorted by profile priority then by type priority.
   - Mapper window progress task bar
 
-## 0.4.4 2017-07-12
+## v0.4.4 2017-07-12
 
 - **New:**
   - Immortal tools: current queue progress now supports windows task bar progress
@@ -1186,12 +1186,12 @@
   - Mapper: during code cleanup moved to a stricter compare (===) and the mud sends a # while it is stored as a string in the mapper, it now converts remote data into string
   - Profile manager: During code cleanup deleted a line of code that broke macro editor
 
-## 0.4.3 2017-07-08
+## v0.4.3 2017-07-08
 
 - **Fixed:**
   -Advanced editor was broken due to previous code cleanups
 
-## 0.4.2 2017-07-07
+## v0.4.2 2017-07-07
 
 - **New:**
   - Immortal tools:
@@ -1215,7 +1215,7 @@
     - #alias/#unalias notify profile manager directly now notifying that profiles have changed.
   - Minor bug fixes related to cleaning code.
 
-## 0.4.1 2017-07-03
+## v0.4.1 2017-07-03
 
 - **New:**
   - Immortal tools
@@ -1232,7 +1232,7 @@
   - MSP: fixed playing notification message not displaying duration dime
   - Fixed issues with paste menu item not pasting into command input
 
-## 0.4.0 2017-06-23
+## v0.4.0 2017-06-23
 
 - **New:**
   - Display control
@@ -1247,7 +1247,7 @@
     - Format Timestamp in file name using moment
   - Chat capture find text
 
-## 0.3.3 2017-06-21
+## v0.3.3 2017-06-21
 
 - **Fixed:**
   - Fixed options undefined errors
@@ -1255,7 +1255,7 @@
   - Fixed issues with error log not correctly logging the error message
   - Attempted fixes to mapper losing data
 
-## 0.3.2 2017-06-16
+## v0.3.2 2017-06-16
 
 - **New:**
   - Add enable spellchecking preference to allow spell checking to be turned off
@@ -1273,13 +1273,13 @@
   - Fixed a bug in aliases and macros when script style was used, would error due to strict type comparison
   - Fixed a bug in aliases, macros, and triggers when script style returns a non string/null/undefined
 
-## 0.3.1 - 2017-05-30
+## v0.3.1 - 2017-05-30
 
 - **Fixed:**
   - Character manager: file not found issues, will now properly check if characters file exist before accessing it
   - Do not attempt to access user data folder until app is ready, fixes character folder creation checks
 
-## 0.3.0 - 2017-05-30
+## v0.3.0 - 2017-05-30
 
 - **New:**
   - Split scroll, **Experimental**  this will allow you to scroll while displaying the most recent lines at the bottom with option live update or post update
@@ -1321,7 +1321,7 @@
   - Fixed a bug when changing settings it would reset connect button while still connected
   - Issues with ansi parser and line heights, empty lines had wrong pixel hight throwing off other calculations, now all newlines are wrapped in basic ansi formatting to ensure empty lines have exactly the same height as all other lines.
 
-## 0.2.4 - 2017-05-22
+## v0.2.4 - 2017-05-22
 
 - **Changed:**
   - Profile manager: treeview should now sort by profile name, with default always being first
@@ -1331,7 +1331,7 @@
     - Undo/redo of adding profiles was broken when you undo an add then redid it would break and lose profile
   - Trigger cache was not clearing when profiles enabled/disabled
 
-## 0.2.3 - 2017-05-21
+## v0.2.3 - 2017-05-21
 
 - **New:**
   - Add some of the newer settings to set/getsetting commands
@@ -1344,7 +1344,7 @@
     - Walk button/context item should be enabled as long as current and selected room are set now just when path highlighted
     - Highlight button/context item are only enabled if current room/selected room and are not the same
 
-## 0.2.2 - 2017-05-20
+## v0.2.2 - 2017-05-20
 
 - **Fixed:**
   - Default profile appearing twice in menu on first load
@@ -1352,7 +1352,7 @@
     - loading wrong url when using development setting
     - corrupted load data due to a previous bug fix with data type
 
-## 0.2.1 - 2017-05-20
+## v0.2.1 - 2017-05-20
 
 - **Changed:**
   - Adjusted dark mouse over colors to be more visible
@@ -1365,7 +1365,7 @@
   - A bug when importing legacy profiles and settings not correctly converting to boolean datatype
   - Backup settings where not being applied until a restart
 
-## 0.2.0 - 2017-05-19
+## v0.2.0 - 2017-05-19
 
 - **New:**
   - Add ${variable.FUNCTION} format support to allow similar format to javascript.
@@ -1397,7 +1397,7 @@
     - Fixed a javascript bug when clicking cancel button on progress dialogs
     - Import dialog would not close when imported data had no rooms
 
-## 0.1.9 - 2017-05-14
+## v0.1.9 - 2017-05-14
 
 - **New:**
   - User context menus, create custom items for the right click display menu
@@ -1454,7 +1454,7 @@
   - Fixed a bug in display being in a frame and parser capturing previous line fragments
   - Fixed a bug that when always on top was turned off for chat, mapper, advanced editor windows would stay open after main client was closed, now all windows are closed when main client window is closed.
 
-## 0.1.8 - 2017-05-11
+## v0.1.8 - 2017-05-11
 
 - **New:**
   - Allow negative numbers for experience needed in status display
@@ -1470,7 +1470,7 @@
     - An issue with treeview context menu
     - A bug with the add new item button
 
-## 0.1.7 - 2017-05-09
+## v0.1.7 - 2017-05-09
 
 - **New:**
   - Chat window
@@ -1493,7 +1493,7 @@
   - Fixed bug with newline/prompt when executing triggers
   - A bug in needed xp being -#
 
-## 0.1.6 - 2017-05-07
+## v0.1.6 - 2017-05-07
 
 - **New:**
   - Advanced editor
@@ -1537,7 +1537,7 @@
     - Better color detection for pasted formatted text, it will now attempt to find the closet color supported in the 256 colors
     - Changing the item style will now correctly change the editor mode again
 
-## 0.1.5 - 2017-05-01
+## v0.1.5 - 2017-05-01
 
 - **New:**
   - Advanced editor has been added
@@ -1564,7 +1564,7 @@
     - Copy/cut/paste should once again work with input areas when they have focus
   - Properly working Linux packages
 
-## 0.1.4 - 2017-04-29
+## v0.1.4 - 2017-04-29
 
 - **New:**
   - Application icon, temporary for now will create a better one in th future
@@ -1582,7 +1582,7 @@
   - When saving profiles and closing, if invalid profile name supplied it would not save profile, now it will properly cancel save until name fixed
   - When cloning a profile default macros where appended.
 
-## 0.1.3 - 2017-04-26
+## v0.1.3 - 2017-04-26
 
 - **Changed:**
   - Mapper Clear/Walk path are now disabled when no path highlighted
@@ -1592,7 +1592,7 @@
   - Client was emitting wrong event when new text was added to display causing
   - triggers and anything that relied on that event to fail
 
-## 0.1.2 - 2017-04-25
+## v0.1.2 - 2017-04-25
 
 - **New:**
   - Trainer mapper npc type
@@ -1603,7 +1603,7 @@
   - Missing RGBColor module for settings dialog
   - Window size not being sent to mud when resized
 
-## 0.1.1 - 2017-04-24
+## v0.1.1 - 2017-04-24
 
 - **Fixed:**
   - Profile menu looking for a profile folder when does not exist
@@ -1611,6 +1611,6 @@
 - **Changed:**
   - Upgraded to electron 1.6.7
 
-## 0.1.0 - 2017-04-24
+## v0.1.0 - 2017-04-24
 
 - Initial release
