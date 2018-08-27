@@ -10,6 +10,7 @@
     - Add basic rules to add * for block comments when adding new lines
     - Area designer:
       - Add visible doors to up/down exits on map
+  - Mapper: Can scroll with mouse wheel when hovering a scroll icon.
 - **Changed:**
   - Mapper: switch image-rendering to crisp-edges instead of pixelated
 - **Fixed:**
@@ -21,7 +22,6 @@
     - If more then one area designer or virtual area editor open property grids got stuck when selecting room editor fields
     - Fix placement of area designer and virtual area map container and being overlapped by the x/y coordinate rulers
     - Area designer: Fix drawing of doors
-    
 
 ## 0.5.0 2018-08-25
 
