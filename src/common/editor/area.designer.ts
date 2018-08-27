@@ -9822,10 +9822,12 @@ export class AreaDesigner extends EditorBase {
             }
         }
         ctx.drawImage(this.$drawCache[key], x, y);
-        this.DrawDoor(ctx, x + 12, y - 2, 8, 3, room.exitsDetails.north);
-        this.DrawDoor(ctx, x + 31, y + 12, 3, 8, room.exitsDetails.east);
-        this.DrawDoor(ctx, x - 1, y + 12, 3, 8, room.exitsDetails.west);
-        this.DrawDoor(ctx, x + 12, y + 30, 8, 3, room.exitsDetails.south);
+        this.DrawDoor(ctx, x + 1, y + 5, 6, 2, room.exitsDetails.up);
+        this.DrawDoor(ctx, x + 1, y + 25, 6, 2, room.exitsDetails.down);
+        this.DrawDoor(ctx, x + 12, y, 9, 2, room.exitsDetails.north);
+        this.DrawDoor(ctx, x + 30, y + 12, 2, 9, room.exitsDetails.east);
+        this.DrawDoor(ctx, x, y + 12, 2, 9, room.exitsDetails.west);
+        this.DrawDoor(ctx, x + 12, y + 30, 9, 2, room.exitsDetails.south);
         this.DrawDDoor(ctx, x, y, 5, 5, room.exitsDetails.northwest);
         this.DrawDDoor(ctx, x + 32, y, -5, 5, room.exitsDetails.northeast);
         this.DrawDDoor(ctx, x + 32, y + 32, -5, -5, room.exitsDetails.southeast);
@@ -9847,7 +9849,7 @@ export class AreaDesigner extends EditorBase {
     }
 
     public DrawDoor(ctx, x, y, w, h, exit) {
-        if (!exit || !exit.door || exit.door.length !== 0) return;
+        if (!exit || !exit.door || exit.door.length === 0) return;
         ctx.beginPath();
         ctx.clearRect(x, y, w, h);
         ctx.fillStyle = 'black';
@@ -9865,7 +9867,7 @@ export class AreaDesigner extends EditorBase {
     }
 
     public DrawDDoor(ctx, x, y, w, h, exit) {
-        if (!exit || !exit.door || exit.door.length !== 0) return;
+        if (!exit || !exit.door || exit.door.length === 0) return;
         ctx.beginPath();
         ctx.fillStyle = 'black';
         ctx.strokeStyle = 'black';

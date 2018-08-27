@@ -8,6 +8,8 @@
   - Added jiMUD website to help drop down as jiMUD now opens new jiMUD help viewer
   - Code editor:
     - Add basic rules to add * for block comments when adding new lines
+  - Area designer:
+    - Add visible doors to up/down exits on map
 - **Changed:**
   - Mapper: switch image-rendering to crisp-edges instead of pixelated
 - **Fixed:**
@@ -15,6 +17,7 @@
   - Mapper:
     - Fixed an issue when adding a new room and not checking if a room exist at the same locations for an area
     - Added more error catching to new mapper systems
+  - Area designer: Fix drawing of doors
 
 ## 0.5.0 2018-08-25
 
