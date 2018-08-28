@@ -6,7 +6,9 @@
   - Help: Rename main to home
 - **Fixed:**
   - Help: Fixed main page
-  - Auto update: fix taskbar progress for windows
+  - Auto update: Fixed taskbar progress for windows
+  - Code editor:
+    - Area designer: Fixed capitalizing of monster names in room preview
 
 ## v0.5.1 2018-08-27
 

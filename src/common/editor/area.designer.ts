@@ -4223,9 +4223,9 @@ export class AreaDesigner extends EditorBase {
             </label>
         </div>`;
         $('a[data-toggle="tab"]', this.$propertiesEditor.tabs).on('shown.bs.tab', (e) => {
-            if(e.target.textContent === 'Base rooms')
+            if (e.target.textContent === 'Base rooms')
                 this.$propertiesEditor.roomGrid.refresh();
-            else if(e.target.textContent === 'Base monsters')
+            else if (e.target.textContent === 'Base monsters')
                 this.$propertiesEditor.monsterGrid.refresh();
         });
 
@@ -9215,10 +9215,10 @@ export class AreaDesigner extends EditorBase {
                 this.$label.textContent = 'Properties';
                 this.$propertiesEditor.container.style.display = '';
                 const tab = this.$propertiesEditor.tabs.querySelector('.active').textContent;
-                if(tab === 'Base rooms')
+                if (tab === 'Base rooms')
                     this.$propertiesEditor.roomGrid.refresh();
-                else if(tab === 'Base monsters')
-                    this.$propertiesEditor.monsterGrid.refresh();                
+                else if (tab === 'Base monsters')
+                    this.$propertiesEditor.monsterGrid.refresh();
                 break;
             case View.monsters:
                 this.$label.textContent = 'Monsters';
@@ -10362,7 +10362,7 @@ export class AreaDesigner extends EditorBase {
             items = Object.keys(counts);
             if (items.length > 0) {
                 this.$roomPreview.living.style.display = '';
-                this.$roomPreview.living.innerHTML = '<br>' + stripPinkfish(items.map(v => capitalize(consolidate(counts[v], v))).join('<br>'));
+                this.$roomPreview.living.innerHTML = '<br>' + stripPinkfish(items.map(v => capitalize(consolidate(counts[v], v), true)).join('<br>'));
             }
             else
                 this.$roomPreview.living.style.display = 'none';
