@@ -3480,11 +3480,11 @@ function createUpdater() {
     const autoUpdater = require("electron-updater").autoUpdater;
     autoUpdater.on('download-progress', progressObj => {
         if (win) {
-            win.setProgressBar(progressObj.percent);
+            win.setProgressBar(progressObj.percent / 100);
             win.webContents.send('update-progress', progressObj);
         }
         else if (global.editorOnly && winCode) {
-            winCode.setProgressBar(progressObj.percent);
+            winCode.setProgressBar(progressObj.percent / 100);
             winCode.webContents.send('update-progress', progressObj);
         }
     });  
@@ -3553,23 +3553,23 @@ function checkForUpdatesManual() {
     });
 
     autoUpdater.on('update-downloaded', () => {
+        if (global.editorOnly) {
+            winCode.webContents.send('update-menu', 'help|check for updates...', { enabled: false });
+            winCode.setProgressBar(-1);
+            winCode.webContents.send('update-downloaded');
+        }
+        else {
+            updateMenuItem({ menu: ['help', 'updater'], enabled: false });
+            win.setProgressBar(-1);
+            win.webContents.send('update-downloaded');
+        }
         dialog.showMessageBox(getParentWindow(), {
             title: 'Install Updates',
             message: 'Updates downloaded, application will be quit for update...'
         }, () => {
             setImmediate(() => autoUpdater.quitAndInstall());
         });
-    });
-    if (global.editorOnly) {
-        winCode.webContents.send('update-menu', 'help|check for updates...', { enabled: false });
-        winCode.setProgressBar(-1);
-        winCode.webContents.send('update-downloaded');
-    }
-    else {
-        updateMenuItem({ menu: ['help', 'updater'], enabled: false });
-        win.setProgressBar(-1);
-        win.webContents.send('update-downloaded');
-    }      
+    });    
     autoUpdater.checkForUpdates();
 }
 

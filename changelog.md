@@ -6,6 +6,7 @@
   - Help: Rename main to home
 - **Fixed:**
   - Help: Fixed main page
+  - Auto update: fix taskbar progress for windows
 
 ## v0.5.1 2018-08-27
 
