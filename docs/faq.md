@@ -103,6 +103,7 @@ mapper.room                       | boolean | false
 mapper.importType                 | integer | 1
 mapper.vscroll                    | integer | 0
 mapper.hscroll                    | integer | 0
+mapper.scale                      | float   | 1.0
 mapper.alwaysOnTop                | boolean | false
 mapper.alwaysOnTopClient          | boolean | true
 mapper.memory                     | boolean | false

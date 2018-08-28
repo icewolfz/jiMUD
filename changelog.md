@@ -2,6 +2,8 @@
 
 ## v0.5.2
 
+- **New:**
+  - Mapper: Custom zooming to better draw the map
 - **Changed:**
   - Help: Rename main to home
 - **Fixed:**
@@ -9,6 +11,7 @@
   - Auto update: Fixed taskbar progress for windows
   - Code editor:
     - Area designer: Fixed capitalizing of monster names in room preview
+  - Mapper: Fixed gap around map where rooms where not being drawn
 
 ## v0.5.1 2018-08-27
 

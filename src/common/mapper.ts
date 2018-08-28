@@ -101,6 +101,21 @@ export class Mapper extends EventEmitter {
     public _memorySavePeriod = 900000;
     public _memoryPeriod;
     public ready: boolean = false;
+    private _scale: number = 1.0;
+
+    set scale(value: number) {
+        if (value < 25)
+            value = 25;
+        if (value > 200)
+            value = 200;
+        if (this._scale !== value) {
+            this._scale = value / 100;
+            this.emit('setting-changed', 'scale', value);
+            this.$drawCache = {};
+            this.doUpdate(UpdateType.draw);
+        }
+    }
+    get scale(): number { return Math.round(this._scale * 100); }
 
     set enabled(value: boolean) {
         if (this._enabled !== value) {
@@ -283,13 +298,14 @@ export class Mapper extends EventEmitter {
             if (this.drag) {
                 this.MouseDrag.x += this.MousePrev.x - this.Mouse.x;
                 this.MouseDrag.y += this.MousePrev.y - this.Mouse.y;
-                const x = Math.floor(this.MouseDrag.x / 32);
-                const y = Math.floor(this.MouseDrag.y / 32);
+                const x = Math.floor(this.MouseDrag.x / 32 / this._scale);
+                const y = Math.floor(this.MouseDrag.y / 32 / this._scale);
                 if (x > 0 || x < 0 || y < 0 || y > 0) {
-                    this.MouseDrag.x -= x * 32;
-                    this.MouseDrag.y -= y * 32;
+                    this.MouseDrag.x -= x * 32 * this._scale;
+                    this.MouseDrag.y -= y * 32 * this._scale;
                     this.scrollBy(x, y);
                 }
+                $(this._canvas).css('cursor', 'move');
             }
             event.preventDefault();
         });
@@ -298,15 +314,13 @@ export class Mapper extends EventEmitter {
             this.MouseDown = this.getMapMousePos(event);
             this.MouseDrag.state = true;
             this.drag = this.MouseDown.button === 0;
-            if (this.drag)
-                $(this._canvas).css('cursor', 'move');
         });
 
         $(this._canvas).mouseup((event) => {
             this.Mouse = this.getMapMousePos(event);
             if (!this.MouseDown)
                 this.MouseDown = this.getMapMousePos(event);
-            if (this.Mouse.button === 0 && Math.floor(this.Mouse.x / 32) === Math.floor(this.MouseDown.x / 32) && Math.floor(this.Mouse.y / 32) === Math.floor(this.MouseDown.y / 32)) {
+            if (this.Mouse.button === 0 && Math.floor(this.Mouse.x / 32 / this._scale) === Math.floor(this.MouseDown.x / 32 / this._scale) && Math.floor(this.Mouse.y / 32 / this._scale) === Math.floor(this.MouseDown.y / 32 / this._scale)) {
                 const x = this.Mouse.x;
                 const y = this.Mouse.y;
                 const room = this.findActiveRoomByCoords(x, y);
@@ -380,20 +394,19 @@ export class Mapper extends EventEmitter {
     }
 
     public findActiveRoomByCoords(rx: number, ry: number) {
-        let x = this.vscroll - (this._canvas.width / 32 / 2);
-        let y = this.hscroll - (this._canvas.height / 32 / 2);
+        let x = this.vscroll - (this._canvas.width / 32 / 2 / this._scale);
+        let y = this.hscroll - (this._canvas.height / 32 / 2 / this._scale);
         const z = this.active.z;
         const area = this.active.area;
         const zone = this.active.zone;
-        let ox = 15.5;
-        let oy = 15.5;
+        let ox = 15.5 * this._scale;
+        let oy = 15.5 * this._scale;
         if (this._canvas.width % 2 !== 0)
-            ox = 15;
+            ox = 15 * this._scale;
         if (this._canvas.height % 2 !== 0)
-            oy = 15;
-
-        x += (rx - ox) / 32;
-        y += (ry - oy) / 32;
+            oy = 15 * this._scale;
+        x += (rx - ox) / 32 / this._scale;
+        y += (ry - oy) / 32 / this._scale;
         x = Math.floor(x);
         y = Math.floor(y);
         let rows;
@@ -423,7 +436,7 @@ export class Mapper extends EventEmitter {
         return new Room();
     }
 
-    public draw(canvas?, context?, ex?: boolean, callback?) {
+    public draw(canvas?: HTMLCanvasElement, context?: CanvasRenderingContext2D, ex?: boolean, callback?) {
         if (!this.ready) {
             setTimeout(() => { this.doUpdate(UpdateType.draw); }, 10);
             return;
@@ -436,19 +449,20 @@ export class Mapper extends EventEmitter {
         //cant get map canvas bail
         if (!canvas || !context) return;
 
-        const x = this.vscroll - (canvas.width / 32 / 2);
-        const y = this.hscroll - (canvas.height / 32 / 2);
+        const x = this.vscroll - (canvas.width / 32 / 2 / this._scale);
+        const y = this.hscroll - (canvas.height / 32 / 2 / this._scale);
         const z = this.active.z || 0;
         const area = this.active.area || '';
         const zone = this.active.zone || 0;
-        let ox = 15.5;
-        let oy = 15.5;
+        let ox = 15.5 * this._scale;
+        let oy = 15.5 * this._scale;
         let rows;
 
         if (canvas.width % 2 !== 0)
-            ox = 15;
+            ox = 15 * this._scale;
         if (canvas.height % 2 !== 0)
-            oy = 15;
+            oy = 15 * this._scale;
+
         context.font = '8pt Arial';
         const s = new Date().getTime();
         try {
@@ -456,20 +470,20 @@ export class Mapper extends EventEmitter {
                 rows = this._db.prepare('Select X, Y, Rooms.ID as ID, Details, IsDoor, Indoors, IsClosed, Exit, Env, Background FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Area = $area AND Zone = $zone AND  ((0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h) OR (0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h))').all({
                     area: area,
                     zone: zone,
-                    x: x,
-                    y: y,
+                    x: x - 1,
+                    y: y - 1,
                     z: z,
-                    w: canvas.width / 32,
-                    h: canvas.height / 32
+                    w: canvas.width / 32 / this._scale + 1,
+                    h: canvas.height / 32 / this._scale + 1
                 });
             else
                 rows = this._db.prepare('Select X, Y, Rooms.ID as ID, Details, IsDoor, Indoors, IsClosed, Exit, Env, Background FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Z = $z AND Zone = $zone AND ((0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h) OR (0 <= (X - $x) AND (X - $x) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y + 1) AND (Y - $y + 1) <= $h) OR (0 <= (X - $x + 1) AND (X - $x + 1) <= $w) AND (0 <= (Y - $y) AND (Y - $y) <= $h))').all({
                     zone: zone,
-                    x: x,
-                    y: y,
+                    x: x - 1,
+                    y: y - 1,
                     z: z,
-                    w: canvas.width / 32,
-                    h: canvas.height / 32
+                    w: canvas.width / 32 / this._scale + 1,
+                    h: canvas.height / 32 / this._scale + 1
                 });
         }
         catch (err) {
@@ -485,6 +499,7 @@ export class Mapper extends EventEmitter {
             context.clearRect(0, 0, canvas.width, canvas.height);
         const rooms = {};
         if (rows) {
+            //context.scale(this._scale, this._scale);
             const rl = rows.length;
             for (let r = 0; r < rl; r++) {
                 const ID = rows[r].ID;
@@ -513,8 +528,9 @@ export class Mapper extends EventEmitter {
             for (rm in rooms) {
                 if (!rooms.hasOwnProperty(rm)) continue;
                 const room = rooms[rm];
-                this.DrawRoom(context, (room.X - x) * 32 + ox, (room.Y - y) * 32 + oy, room, ex);
+                this.DrawRoom(context, (room.X - x) * 32 * this._scale + ox, (room.Y - y) * 32 * this._scale + oy, room, ex, this._scale);
             }
+            //context.setTransform(1, 0, 0, 1, 0, 0);
         }
         this.emit('debug', 'Draw - display time: ' + (new Date().getTime() - d));
         this.emit('debug', 'Draw - final time: ' + (new Date().getTime() - s));
@@ -1061,16 +1077,27 @@ export class Mapper extends EventEmitter {
 
     }
 
-    public DrawRoom(ctx, x, y, room, ex) {
+    private translate(ctx, amt, scale) {
+        if (scale === 2) return;
+        if (scale % 0.25 === 0)
+            ctx.translate(amt, amt);
+        else
+            ctx.translate(amt * scale, amt * scale);
+    }
+
+    public DrawRoom(ctx, x, y, room, ex, scale?) {
         if (!this.$drawCache)
             this.$drawCache = {};
+        if (!scale) scale = this._scale;
         const key = (room.Background ? '1' : room.Env) + ',' + room.Indoors + ',' + room.exitsID + ',' + room.Details;
+
         if (!this.$drawCache[key]) {
             this.$drawCache[key] = document.createElement('canvas');
             this.$drawCache[key].classList.add('map-canvas');
-            this.$drawCache[key].height = 32;
-            this.$drawCache[key].width = 32;
+            this.$drawCache[key].height = 32 * scale;
+            this.$drawCache[key].width = 32 * scale;
             const tx = this.$drawCache[key].getContext('2d');
+            this.translate(tx, 0.5, scale);
             tx.beginPath();
             let f = false;
             if (room.Background) {
@@ -1163,116 +1190,116 @@ export class Mapper extends EventEmitter {
             else
                 f = false;
             tx.strokeStyle = 'black';
-            tx.lineWidth = 0.6;
+            tx.lineWidth = 0.6 * scale;
             if (!room.Indoors) {
-                tx.arc(16.5, 16.5, 8.5, 0, Math.PI * 2, false);
+                tx.arc(16 * scale, 16 * scale, 8 * scale, 0, Math.PI * 2, false);
                 if (f) tx.fill();
                 tx.stroke();
             }
             else {
-                if (f) tx.fillRect(8.5, 8.5, 16, 16);
-                tx.strokeRect(8.5, 8.5, 16, 16);
+                if (f) tx.fillRect(8 * scale, 8 * scale, 16 * scale, 16 * scale);
+                tx.strokeRect(8 * scale, 8 * scale, 16 * scale, 16 * scale);
             }
             tx.closePath();
 
             tx.beginPath();
             tx.fillStyle = '#cccccc';
             if (room.exits.north) {
-                tx.moveTo(16.5, 0.5);
-                tx.lineTo(16.5, 8.5);
+                tx.moveTo(16 * scale, 0 * scale);
+                tx.lineTo(16 * scale, 8 * scale);
             }
             else if (this._fillWalls)
-                tx.fillRect(9.5, 0.5, 14.5, 4.5);
+                tx.fillRect(9 * scale, 0 * scale, 14 * scale, 4 * scale);
             if (room.exits.northwest) {
                 if (!room.Indoors) {
-                    tx.moveTo(0.5, 0.5);
-                    tx.lineTo(10.5, 10.5);
+                    tx.moveTo(0 * scale, 0 * scale);
+                    tx.lineTo(10 * scale, 10 * scale);
                 }
                 else {
-                    tx.moveTo(0.5, 0.5);
-                    tx.lineTo(8.5, 8.5);
+                    tx.moveTo(0 * scale, 0 * scale);
+                    tx.lineTo(8 * scale, 8 * scale);
                 }
             }
             else if (this._fillWalls) {
-                tx.fillRect(2.5, 0.5, 2.5, 2.5);
-                tx.fillRect(0.5, 2.5, 4.5, 2.5);
+                tx.fillRect(2 * scale, 0 * scale, 2 * scale, 2 * scale);
+                tx.fillRect(0 * scale, 2 * scale, 4 * scale, 2 * scale);
                 if (!room.exits.north)
-                    tx.fillRect(4.5, 0.5, 5.5, 4.5);
+                    tx.fillRect(4 * scale, 0 * scale, 5 * scale, 4 * scale);
                 if (!room.exits.west)
-                    tx.fillRect(0.5, 4.5, 4.5, 5.5);
+                    tx.fillRect(0 * scale, 4 * scale, 4 * scale, 5 * scale);
             }
             if (room.exits.northeast) {
                 if (!room.Indoors) {
-                    tx.moveTo(32.5, 0.5);
-                    tx.lineTo(22.5, 10.5);
+                    tx.moveTo(32 * scale, 0 * scale);
+                    tx.lineTo(22 * scale, 10 * scale);
                 }
                 else {
-                    tx.moveTo(32.5, 0.5);
-                    tx.lineTo(24.5, 8.5);
+                    tx.moveTo(32 * scale, 0 * scale);
+                    tx.lineTo(24 * scale, 8 * scale);
                 }
             }
             else if (this._fillWalls) {
-                tx.fillRect(28.5, 0.5, 2.5, 2.5);
-                tx.fillRect(28.5, 2.5, 4.5, 2.5);
-                tx.clearRect(30.5, 0.5, 2.5, 2.5);
+                tx.fillRect(28 * scale, 0 * scale, 2 * scale, 2 * scale);
+                tx.fillRect(28 * scale, 2 * scale, 4 * scale, 2 * scale);
+                tx.clearRect(30 * scale, 0 * scale, 2 * scale, 2 * scale);
                 if (!room.exits.north)
-                    tx.fillRect(23.5, 0.5, 5.5, 4.5);
+                    tx.fillRect(23 * scale, 0 * scale, 5 * scale, 4 * scale);
                 if (!room.exits.east)
-                    tx.fillRect(28.5, 4.5, 4.5, 5.5);
+                    tx.fillRect(28 * scale, 4 * scale, 4 * scale, 5 * scale);
             }
             if (room.exits.east) {
-                tx.moveTo(24.5, 16.5);
-                tx.lineTo(32.5, 16.5);
+                tx.moveTo(24 * scale, 16 * scale);
+                tx.lineTo(32 * scale, 16 * scale);
             }
             else if (this._fillWalls)
-                tx.fillRect(28.5, 9.5, 4.5, 14.5);
+                tx.fillRect(28 * scale, 9 * scale, 4 * scale, 14 * scale);
             if (room.exits.west) {
-                tx.moveTo(0.5, 16.5);
-                tx.lineTo(8.5, 16.5);
+                tx.moveTo(0 * scale, 16 * scale);
+                tx.lineTo(8 * scale, 16 * scale);
             }
             else if (this._fillWalls)
-                tx.fillRect(0.5, 9.5, 4.5, 14.5);
+                tx.fillRect(0 * scale, 9 * scale, 4 * scale, 14 * scale);
             if (room.exits.south) {
-                tx.moveTo(16.5, 24.5);
-                tx.lineTo(16.5, 32.5);
+                tx.moveTo(16 * scale, 24 * scale);
+                tx.lineTo(16 * scale, 32 * scale);
             }
             else if (this._fillWalls)
-                tx.fillRect(9.5, 28.5, 14.5, 4.5);
+                tx.fillRect(9 * scale, 28 * scale, 14 * scale, 4 * scale);
             if (room.exits.southeast) {
                 if (!room.Indoors) {
-                    tx.moveTo(32.5, 32.5);
-                    tx.lineTo(22.5, 22.5);
+                    tx.moveTo(32 * scale, 32 * scale);
+                    tx.lineTo(22 * scale, 22 * scale);
                 }
                 else {
-                    tx.moveTo(32.5, 32.5);
-                    tx.lineTo(24.5, 24.5);
+                    tx.moveTo(32 * scale, 32 * scale);
+                    tx.lineTo(24 * scale, 24 * scale);
                 }
             }
             else if (this._fillWalls) {
-                tx.fillRect(28.5, 28.5, 4.5, 2.5);
-                tx.fillRect(28.5, 30.5, 2.5, 2.5);
+                tx.fillRect(28 * scale, 28 * scale, 4 * scale, 2 * scale);
+                tx.fillRect(28 * scale, 30 * scale, 2 * scale, 2 * scale);
                 if (!room.exits.south)
-                    tx.fillRect(23.5, 28.5, 5.5, 4.5);
+                    tx.fillRect(23 * scale, 28 * scale, 5 * scale, 4 * scale);
                 if (!room.exits.east)
-                    tx.fillRect(28.5, 23.5, 4.5, 5.5);
+                    tx.fillRect(28 * scale, 23 * scale, 4 * scale, 5 * scale);
             }
             if (room.exits.southwest) {
                 if (!room.Indoors) {
-                    tx.moveTo(0.5, 32.5);
-                    tx.lineTo(10.5, 22.5);
+                    tx.moveTo(0 * scale, 32 * scale);
+                    tx.lineTo(10 * scale, 22 * scale);
                 }
                 else {
-                    tx.moveTo(0.5, 32.5);
-                    tx.lineTo(8.5, 24.5);
+                    tx.moveTo(0 * scale, 32 * scale);
+                    tx.lineTo(8 * scale, 24 * scale);
                 }
             }
             else if (this._fillWalls) {
-                tx.fillRect(0.5, 28.5, 4.5, 2.5);
-                tx.fillRect(2.5, 30.5, 2.5, 2.5);
+                tx.fillRect(0 * scale, 28 * scale, 4 * scale, 2 * scale);
+                tx.fillRect(2 * scale, 30 * scale, 2 * scale, 2 * scale);
                 if (!room.exits.south)
-                    tx.fillRect(4.5, 28.5, 5.5, 4.5);
+                    tx.fillRect(4 * scale, 28 * scale, 5 * scale, 4 * scale);
                 if (!room.exits.west)
-                    tx.fillRect(0.5, 23.5, 4.5, 5.5);
+                    tx.fillRect(0 * scale, 23 * scale, 4 * scale, 5 * scale);
             }
             tx.closePath();
             tx.stroke();
@@ -1280,136 +1307,143 @@ export class Mapper extends EventEmitter {
             tx.strokeStyle = 'black';
             if (room.exits.up) {
                 tx.beginPath();
-                tx.moveTo(1.5, 11.5);
-                tx.lineTo(7.5, 11.5);
-                tx.lineTo(4.5, 8.5);
+                tx.moveTo(1 * scale, 11 * scale);
+                tx.lineTo(7 * scale, 11 * scale);
+                tx.lineTo(4 * scale, 8 * scale);
                 tx.closePath();
                 tx.fill();
             }
             if (room.exits.down) {
                 tx.beginPath();
-                tx.moveTo(1.5, 21.5);
-                tx.lineTo(7.5, 21.5);
-                tx.lineTo(4.5, 24.5);
+                tx.moveTo(1 * scale, 21 * scale);
+                tx.lineTo(7 * scale, 21 * scale);
+                tx.lineTo(4 * scale, 24 * scale);
                 tx.closePath();
                 tx.fill();
             }
             if (room.exits.out) {
                 tx.beginPath();
-                tx.moveTo(26.5, 8.5);
-                tx.lineTo(29.5, 11.5);
-                tx.lineTo(26.5, 14.5);
+                tx.moveTo(26 * scale, 8 * scale);
+                tx.lineTo(29 * scale, 11 * scale);
+                tx.lineTo(26 * scale, 14 * scale);
                 tx.closePath();
                 tx.fill();
 
             }
             if (room.exits.enter) {
                 tx.beginPath();
-                tx.moveTo(29.5, 19.5);
-                tx.lineTo(26.5, 22.5);
-                tx.lineTo(29.5, 25.5);
+                tx.moveTo(29 * scale, 19 * scale);
+                tx.lineTo(26 * scale, 22 * scale);
+                tx.lineTo(29 * scale, 25 * scale);
                 tx.closePath();
                 tx.fill();
             }
             if ((room.Details & RoomDetails.Dock) === RoomDetails.Dock) {
                 tx.fillStyle = 'chocolate';
                 tx.beginPath();
-                tx.arc(20.5, 5.5, 2, 0, Math.PI * 2);
+                tx.arc(20 * scale, 5 * scale, 2 * scale, 0, Math.PI * 2);
                 tx.fill();
                 tx.closePath();
             }
             else if ((room.Details & RoomDetails.Pier) === RoomDetails.Pier) {
                 tx.fillStyle = 'gray';
                 tx.beginPath();
-                tx.arc(12.5, 5.5, 2, 0, Math.PI * 2);
+                tx.arc(12 * scale, 5 * scale, 2 * scale, 0, Math.PI * 2);
                 tx.fill();
                 tx.closePath();
             }
             if ((room.Details & RoomDetails.WaterSource) === RoomDetails.WaterSource) {
                 tx.fillStyle = 'aqua';
                 tx.beginPath();
-                tx.arc(12.5, 5.5, 2, 0, Math.PI * 2);
+                tx.arc(12 * scale, 5 * scale, 2 * scale, 0, Math.PI * 2);
                 tx.fill();
                 tx.closePath();
             }
+            tx.scale(scale, scale);
             if ((room.Details & RoomDetails.Bank) === RoomDetails.Bank) {
                 tx.fillStyle = 'goldenrod';
                 tx.beginPath();
-                tx.fillText('$', 9.5, 17.5);
+                tx.fillText('$', 9, 17);
                 tx.closePath();
             }
             if ((room.Details & RoomDetails.Shop) === RoomDetails.Shop) {
                 tx.fillStyle = 'purple';
                 tx.beginPath();
-                tx.fillText('\u23CF', 15.5, 17.5);
+                tx.fillText('\u23CF', 15, 17);
                 tx.closePath();
             }
             if ((room.Details & RoomDetails.Hospital) === RoomDetails.Hospital) {
                 tx.fillStyle = 'blue';
                 tx.beginPath();
-                tx.fillText('\u2665', 15.5, 17.5);
+                tx.fillText('\u2665', 15, 17);
                 tx.closePath();
             }
             if ((room.Details & RoomDetails.Trainer) === RoomDetails.Trainer) {
                 tx.fillStyle = 'red';
                 tx.beginPath();
-                tx.fillText('\u260D', 15.5, 17.5);
+                tx.fillText('\u260D', 15, 17);
                 tx.closePath();
             }
             if ((room.Details & RoomDetails.Stable) === RoomDetails.Stable) {
                 tx.fillStyle = 'rgb(153, 102, 0)';
                 tx.beginPath();
-                tx.fillText('\u2658', 7.5, 17.5);
+                tx.fillText('\u2658', 7, 17);
                 tx.closePath();
             }
             if ((room.Details & RoomDetails.Restaurant) === RoomDetails.Restaurant && (room.Details & RoomDetails.Bar) === RoomDetails.Bar) {
                 tx.fillStyle = 'green';
                 tx.beginPath();
-                tx.fillText('\u2617', 15.5, 17.5);
+                tx.fillText('\u2617', 15, 17);
                 tx.closePath();
             }
             else if ((room.Details & RoomDetails.Bar) === RoomDetails.Bar) {
                 tx.fillStyle = 'green';
                 tx.beginPath();
-                tx.fillText('\u266A', 15.5, 17.5);
+                tx.fillText('\u266A', 15, 17);
                 tx.closePath();
             }
             else if ((room.Details & RoomDetails.Restaurant) === RoomDetails.Restaurant) {
                 tx.fillStyle = 'green';
                 tx.beginPath();
-                tx.fillText('\u2616', 15.5, 17.5);
+                tx.fillText('\u2616', 15, 17);
                 tx.closePath();
             }
+            tx.setTransform(1, 0, 0, 1, 0, 0);
+            this.translate(tx, -0.5, scale);
         }
-        ctx.drawImage(this.$drawCache[key], x - 0.5, y - 0.5);
-        this.DrawDoor(ctx, x + 12, y - 2, 8, 3, room.exits.north);
-        this.DrawDoor(ctx, x + 31, y + 12, 3, 8, room.exits.east);
-        this.DrawDoor(ctx, x - 1, y + 12, 3, 8, room.exits.west);
-        this.DrawDoor(ctx, x + 12, y + 30, 8, 3, room.exits.south);
-        this.DrawDDoor(ctx, x, y, 5, 5, room.exits.northwest);
-        this.DrawDDoor(ctx, x + 32, y, -5, 5, room.exits.northeast);
-        this.DrawDDoor(ctx, x + 32, y + 32, -5, -5, room.exits.southeast);
-        this.DrawDDoor(ctx, x, y + 32, 5, -5, room.exits.southwest);
+        this.translate(ctx, -0.5, scale);
+        ctx.drawImage(this.$drawCache[key], x, y);
+        this.translate(ctx, 0.5, scale);
+        this.DrawDoor(ctx, x + 12 * scale, y - 2 * scale, 8 * scale, 3 * scale, room.exits.north);
+        this.DrawDoor(ctx, x + 31 * scale, y + 12 * scale, 3 * scale, 8 * scale, room.exits.east);
+        this.DrawDoor(ctx, x - 1 * scale, y + 12 * scale, 3 * scale, 8 * scale, room.exits.west);
+        this.DrawDoor(ctx, x + 12 * scale, y + 30 * scale, 8 * scale, 3 * scale, room.exits.south);
+        this.DrawDDoor(ctx, x, y, 5 * scale, 5 * scale, room.exits.northwest);
+        this.DrawDDoor(ctx, x + 32 * scale, y, -5 * scale, 5 * scale, room.exits.northeast);
+        this.DrawDDoor(ctx, x + 32 * scale, y + 32 * scale, -5 * scale, -5 * scale, room.exits.southeast);
+        this.DrawDDoor(ctx, x, y + 32 * scale, 5 * scale, -5 * scale, room.exits.southwest);
 
         if (!ex && this.selected.ID === room.ID) {
             ctx.fillStyle = 'rgba(135, 206, 250, 0.5)';
             ctx.strokeStyle = 'LightSkyBlue';
-            ctx.fillRoundedRect(x, y, 32, 32, 8);
-            ctx.strokeRoundedRect(x, y, 32, 32, 8);
+            ctx.fillRoundedRect(x, y, 32 * scale, 32 * scale, 8 * scale);
+            ctx.strokeRoundedRect(x, y, 32 * scale, 32 * scale, 8 * scale);
         }
         if (this.markers[room.ID] === 2)
-            this.drawMarker(ctx, x, y, 'green');
+            this.drawMarker(ctx, x, y, 'green', scale);
         else if (this.markers[room.ID] === 3)
-            this.drawMarker(ctx, x, y, 'blue');
+            this.drawMarker(ctx, x, y, 'blue', scale);
         else if (this.markers[room.ID])
-            this.drawMarker(ctx, x, y, 'yellow');
+            this.drawMarker(ctx, x, y, 'yellow', scale);
         if (!ex && room.ID === this.current.ID)
-            this.drawMarker(ctx, x, y, 'red');
+            this.drawMarker(ctx, x, y, 'red', scale);
     }
 
-    public DrawNormalizedRoom(ctx, x, y, room, ex) {
+    public DrawNormalizedRoom(ctx, x, y, room, ex, scale?) {
         ctx.beginPath();
         let f = false;
+        if (!scale) scale = this._scale;
+        this.translate(ctx, 0.5, scale);
         if (room.background) {
             ctx.fillStyle = room.background;
             f = true;
@@ -1488,115 +1522,115 @@ export class Mapper extends EventEmitter {
         else
             f = false;
         ctx.strokeStyle = 'black';
-        ctx.lineWidth = 0.6;
+        ctx.lineWidth = 0.6 * scale;
         if (!room.indoors) {
-            ctx.arc(x + 16, y + 16, 8.5, 0, Math.PI * 2, false);
+            ctx.arc(x + 16 * scale, y + 16 * scale, 8.5 * scale, 0, Math.PI * 2, false);
             if (f) ctx.fill();
             ctx.stroke();
         }
         else {
-            if (f) ctx.fillRect(x + 8, y + 8, 16, 16);
-            ctx.strokeRect(x + 8, y + 8, 16, 16);
+            if (f) ctx.fillRect(x + 8 * scale, y + 8 * scale, 16 * scale, 16 * scale);
+            ctx.strokeRect(x + 8 * scale, y + 8 * scale, 16 * scale, 16 * scale);
         }
         ctx.closePath();
         ctx.beginPath();
         ctx.fillStyle = '#cccccc';
         if (room.exits.north) {
-            ctx.moveTo(x + 16, y);
-            ctx.lineTo(x + 16, y + 8);
+            ctx.moveTo(x + 16 * scale, y);
+            ctx.lineTo(x + 16 * scale, y + 8 * scale);
         }
         else if (this._fillWalls)
-            ctx.fillRect(x + 9, y, 14.5, 4.5);
+            ctx.fillRect(x + 9 * scale, y, 14.5 * scale, 4.5 * scale);
         if (room.exits.northwest) {
             if (!room.indoors) {
                 ctx.moveTo(x, y);
-                ctx.lineTo(x + 10, y + 10);
+                ctx.lineTo(x + 10 * scale, y + 10 * scale);
             }
             else {
                 ctx.moveTo(x, y);
-                ctx.lineTo(x + 8, y + 8);
+                ctx.lineTo(x + 8 * scale, y + 8 * scale);
             }
         }
         else if (this._fillWalls) {
-            ctx.fillRect(x + 2, y, 2.5, 2.5);
-            ctx.fillRect(x, y + 2, 4.5, 2.5);
+            ctx.fillRect(x + 2 * scale, y, 2.5 * scale, 2.5 * scale);
+            ctx.fillRect(x, y + 2 * scale, 4.5 * scale, 2.6 * scale);
             if (!room.exits.north)
-                ctx.fillRect(x + 4, y, 5.5, 4.5);
+                ctx.fillRect(x + 4 * scale, y, 5.5 * scale, 4.5 * scale);
             if (!room.exits.west)
-                ctx.fillRect(x, y + 4, 4.5, 5.5);
+                ctx.fillRect(x, y + 4 * scale, 4.5 * scale, 5.5 * scale);
         }
         if (room.exits.northeast) {
             if (!room.indoors) {
-                ctx.moveTo(x + 32, y);
-                ctx.lineTo(x + 22, y + 10);
+                ctx.moveTo(x + 32 * scale, y);
+                ctx.lineTo(x + 22 * scale, y + 10 * scale);
             }
             else {
-                ctx.moveTo(x + 32, y);
-                ctx.lineTo(x + 24, y + 8);
+                ctx.moveTo(x + 32 * scale, y);
+                ctx.lineTo(x + 24 * scale, y + 8 * scale);
             }
         }
         else if (this._fillWalls) {
-            ctx.fillRect(x + 28, y, 2.5, 2.5);
-            ctx.fillRect(x + 28, y + 2, 4.5, 2.5);
-            ctx.clearRect(x + 30, y, 2, 2);
+            ctx.fillRect(x + 28 * scale, y, 2.5 * scale, 2.5 * scale);
+            ctx.fillRect(x + 28 * scale, y + 2 * scale, 4.5 * scale, 2.5 * scale);
+            ctx.clearRect(x + 30 * scale, y, 2 * scale, 2 * scale);
             if (!room.exits.north)
-                ctx.fillRect(x + 23, y, 5.5, 4.5);
+                ctx.fillRect(x + 23 * scale, y, 5.5 * scale, 4.5 * scale);
             if (!room.exits.east)
-                ctx.fillRect(x + 28, y + 4, 4.5, 5.5);
+                ctx.fillRect(x + 28 * scale, y + 4 * scale, 4.5 * scale, 5.5 * scale);
         }
         if (room.exits.east) {
-            ctx.moveTo(x + 24, y + 16);
-            ctx.lineTo(x + 32, y + 16);
+            ctx.moveTo(x + 24 * scale, y + 16 * scale);
+            ctx.lineTo(x + 32 * scale, y + 16 * scale);
         }
         else if (this._fillWalls)
-            ctx.fillRect(x + 28, y + 9, 4.5, 14.5);
+            ctx.fillRect(x + 28 * scale, y + 9 * scale, 4.5 * scale, 14.5 * scale);
         if (room.exits.west) {
-            ctx.moveTo(x, y + 16);
-            ctx.lineTo(x + 8, y + 16);
+            ctx.moveTo(x, y + 16 * scale);
+            ctx.lineTo(x + 8 * scale, y + 16 * scale);
         }
         else if (this._fillWalls)
-            ctx.fillRect(x, y + 9, 4.5, 14.5);
+            ctx.fillRect(x, y + 9 * scale, 4.5 * scale, 14.5 * scale);
         if (room.exits.south) {
-            ctx.moveTo(x + 16, y + 24);
-            ctx.lineTo(x + 16, y + 32);
+            ctx.moveTo(x + 16 * scale, y + 24 * scale);
+            ctx.lineTo(x + 16 * scale, y + 32 * scale);
         }
         else if (this._fillWalls)
-            ctx.fillRect(x + 9, y + 28, 14.5, 4.5);
+            ctx.fillRect(x + 9 * scale, y + 28 * scale, 14.5 * scale, 4.5 * scale);
         if (room.exits.southeast) {
             if (!room.Indoors) {
-                ctx.moveTo(x + 32, y + 32);
-                ctx.lineTo(x + 22, y + 22);
+                ctx.moveTo(x + 32 * scale, y + 32 * scale);
+                ctx.lineTo(x + 22 * scale, y + 22 * scale);
             }
             else {
-                ctx.moveTo(x + 32, y + 32);
-                ctx.lineTo(x + 24, y + 24);
+                ctx.moveTo(x + 32 * scale, y + 32 * scale);
+                ctx.lineTo(x + 24 * scale, y + 24 * scale);
             }
         }
         else if (this._fillWalls) {
-            ctx.fillRect(x + 28, y + 28, 4.5, 2.5);
-            ctx.fillRect(x + 28, y + 30, 2.5, 2.5);
+            ctx.fillRect(x + 28 * scale, y + 28 * scale, 4.5 * scale, 2.5 * scale);
+            ctx.fillRect(x + 28 * scale, y + 30 * scale, 2.5 * scale, 2.5 * scale);
             if (!room.exits.south)
-                ctx.fillRect(x + 23, y + 28, 5.5, 4.5);
+                ctx.fillRect(x + 23 * scale, y + 28 * scale, 5.5 * scale, 4.5 * scale);
             if (!room.exits.east)
-                ctx.fillRect(x + 28, y + 23, 4.5, 5.5);
+                ctx.fillRect(x + 28 * scale, y + 23 * scale, 4.5 * scale, 5.5 * scale);
         }
         if (room.exits.southwest) {
             if (!room.indoors) {
-                ctx.moveTo(x, y + 32);
-                ctx.lineTo(x + 10, y + 22);
+                ctx.moveTo(x, y + 32 * scale);
+                ctx.lineTo(x + 10 * scale, y + 22 * scale);
             }
             else {
-                ctx.moveTo(x, y + 32);
-                ctx.lineTo(x + 8, y + 24);
+                ctx.moveTo(x, y + 32 * scale);
+                ctx.lineTo(x + 8 * scale, y + 24 * scale);
             }
         }
         else if (this._fillWalls) {
-            ctx.fillRect(x, y + 28, 4.5, 2.5);
-            ctx.fillRect(x + 2, y + 30, 2.5, 2.5);
+            ctx.fillRect(x, y + 28 * scale, 4.5 * scale, 2.5 * scale);
+            ctx.fillRect(x + 2 * scale, y + 30 * scale, 2.5 * scale, 2.5 * scale);
             if (!room.exits.south)
-                ctx.fillRect(x + 4, y + 28, 5.5, 4.5);
+                ctx.fillRect(x + 4 * scale, y + 28 * scale, 5.5, 4.5 * scale);
             if (!room.exits.west)
-                ctx.fillRect(x, y + 23, 4.5, 5.5);
+                ctx.fillRect(x, y + 23 * scale, 4.5 * scale, 5.5 * scale);
         }
         ctx.closePath();
         ctx.stroke();
@@ -1604,66 +1638,68 @@ export class Mapper extends EventEmitter {
         ctx.strokeStyle = 'black';
         if (room.exits.up) {
             ctx.beginPath();
-            ctx.moveTo(x + 1, y + 11);
-            ctx.lineTo(x + 7, y + 11);
-            ctx.lineTo(x + 4, y + 8);
+            ctx.moveTo(x + 1 * scale, y + 11 * scale);
+            ctx.lineTo(x + 7 * scale, y + 11 * scale);
+            ctx.lineTo(x + 4 * scale, y + 8 * scale);
             ctx.closePath();
             ctx.fill();
         }
         if (room.exits.down) {
             ctx.beginPath();
-            ctx.moveTo(x + 1, y + 21);
-            ctx.lineTo(x + 7, y + 21);
-            ctx.lineTo(x + 4, y + 24);
+            ctx.moveTo(x + 1 * scale, y + 21 * scale);
+            ctx.lineTo(x + 7 * scale, y + 21 * scale);
+            ctx.lineTo(x + 4 * scale, y + 24 * scale);
             ctx.closePath();
             ctx.fill();
         }
         if (room.exits.out) {
             ctx.beginPath();
-            ctx.moveTo(x + 26, y + 8);
-            ctx.lineTo(x + 29, y + 11);
-            ctx.lineTo(x + 26, y + 14);
+            ctx.moveTo(x + 26 * scale, y + 8 * scale);
+            ctx.lineTo(x + 29 * scale, y + 11 * scale);
+            ctx.lineTo(x + 26 * scale, y + 14 * scale);
             ctx.closePath();
             ctx.fill();
 
         }
         if (room.exits.enter) {
             ctx.beginPath();
-            ctx.moveTo(x + 29, y + 19);
-            ctx.lineTo(x + 26, y + 22);
-            ctx.lineTo(x + 29, y + 25);
+            ctx.moveTo(x + 29 * scale, y + 19 * scale);
+            ctx.lineTo(x + 26 * scale, y + 22 * scale);
+            ctx.lineTo(x + 29 * scale, y + 25 * scale);
             ctx.closePath();
             ctx.fill();
         }
-        this.DrawDoor(ctx, x + 12, y - 2, 8, 3, room.exits.north);
-        this.DrawDoor(ctx, x + 31, y + 12, 3, 8, room.exits.east);
-        this.DrawDoor(ctx, x - 1, y + 12, 3, 8, room.exits.west);
-        this.DrawDoor(ctx, x + 12, y + 30, 8, 3, room.exits.south);
-        this.DrawDDoor(ctx, x, y, 5, 5, room.exits.northwest);
-        this.DrawDDoor(ctx, x + 32, y, -5, 5, room.exits.northeast);
-        this.DrawDDoor(ctx, x + 32, y + 32, -5, -5, room.exits.southeast);
-        this.DrawDDoor(ctx, x, y + 32, 5, -5, room.exits.southwest);
+        this.translate(ctx, -0.5, scale);
+        this.DrawDoor(ctx, x + 12 * scale, y - 2 * scale, 8 * scale, 3 * scale, room.exits.north);
+        this.DrawDoor(ctx, x + 31 * scale, y + 12 * scale, 3 * scale, 8 * scale, room.exits.east);
+        this.DrawDoor(ctx, x - 1 * scale, y + 12 * scale, 3 * scale, 8 * scale, room.exits.west);
+        this.DrawDoor(ctx, x + 12 * scale, y + 30 * scale, 8 * scale, 3 * scale, room.exits.south);
+        this.DrawDDoor(ctx, x, y, 5 * scale, 5 * scale, room.exits.northwest);
+        this.DrawDDoor(ctx, x + 32 * scale, y, -5 * scale, 5 * scale, room.exits.northeast);
+        this.DrawDDoor(ctx, x + 32 * scale, y + 32 * scale, -5 * scale, -5 * scale, room.exits.southeast);
+        this.DrawDDoor(ctx, x, y + 32 * scale, 5 * scale, -5 * scale, room.exits.southwest);
         if ((room.details & RoomDetails.Dock) === RoomDetails.Dock) {
             ctx.fillStyle = 'chocolate';
             ctx.beginPath();
-            ctx.arc(x + 20, y + 5, 2, 0, Math.PI * 2);
+            ctx.arc(x + 20 * scale, y + 5 * scale, 2 * scale, 0, Math.PI * 2);
             ctx.fill();
             ctx.closePath();
         }
         else if ((room.details & RoomDetails.Pier) === RoomDetails.Pier) {
             ctx.fillStyle = 'gray';
             ctx.beginPath();
-            ctx.arc(x + 12, y + 5, 2, 0, Math.PI * 2);
+            ctx.arc(x + 12 * scale, y + 5 * scale, 2 * scale, 0, Math.PI * 2);
             ctx.fill();
             ctx.closePath();
         }
         if ((room.details & RoomDetails.WaterSource) === RoomDetails.WaterSource) {
             ctx.fillStyle = 'aqua';
             ctx.beginPath();
-            ctx.arc(x + 12, y + 5, 2, 0, Math.PI * 2);
+            ctx.arc(x + 12 * scale, y + 5 * scale, 2 * scale, 0, Math.PI * 2);
             ctx.fill();
             ctx.closePath();
         }
+        ctx.scale(scale, scale);
         if ((room.details & RoomDetails.Bank) === RoomDetails.Bank) {
             ctx.fillStyle = 'goldenrod';
             ctx.beginPath();
@@ -1712,29 +1748,30 @@ export class Mapper extends EventEmitter {
             ctx.fillText('\u2616', x + 15, y + 17);
             ctx.closePath();
         }
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
 
         if (!ex && this.selected.ID === room.ID) {
             ctx.fillStyle = 'rgba(135, 206, 250, 0.5)';
             ctx.strokeStyle = 'LightSkyBlue';
-            ctx.fillRoundedRect(x, y, 32, 32, 8);
-            ctx.strokeRoundedRect(x, y, 32, 32, 8);
+            ctx.fillRoundedRect(x, y, 32 * scale, 32 * scale, 8 * scale);
+            ctx.strokeRoundedRect(x, y, 32 * scale, 32 * scale, 8 * scale);
         }
         if (this.markers[room.ID] === 2)
-            this.drawMarker(ctx, x, y, 'green');
+            this.drawMarker(ctx, x, y, 'green', scale);
         else if (this.markers[room.ID] === 3)
-            this.drawMarker(ctx, x, y, 'blue');
+            this.drawMarker(ctx, x, y, 'blue', scale);
         else if (this.markers[room.ID])
-            this.drawMarker(ctx, x, y, 'yellow');
+            this.drawMarker(ctx, x, y, 'yellow', scale);
         if (!ex && room.ID === this.current.ID)
-            this.drawMarker(ctx, x, y, 'red');
+            this.drawMarker(ctx, x, y, 'red', scale);
     }
 
-    public drawMarker(ctx, x, y, color) {
+    public drawMarker(ctx, x, y, color, scale) {
         if (!color) color = 'yellow';
         ctx.beginPath();
         ctx.fillStyle = color;
         ctx.strokeStyle = 'black';
-        ctx.arc(x + 16, y + 16, 4, 0, Math.PI * 2);
+        ctx.arc(x + 16 * scale, y + 16 * scale, 4 * scale, 0, Math.PI * 2);
         ctx.fill();
         ctx.closePath();
     }

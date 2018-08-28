@@ -14,6 +14,7 @@ export class Mapper {
     public importType = 1;
     public vscroll: number = 0;
     public hscroll: number = 0;
+    public scale: number = 1.0;
     public alwaysOnTop: boolean = false;
     public alwaysOnTopClient: boolean = true;
     public memory: boolean = false;
@@ -182,6 +183,7 @@ export let SettingList: any[] = [
     ['mapper.importType', 0, 2, 1],
     ['mapper.vscroll', 0, 2, 0],
     ['mapper.hscroll', 0, 2, 0],
+    ['mapper.scale', 0, 2, 1.0],
     ['mapper.alwaysOnTop', 0, 1, false],
     ['mapper.alwaysOnTopClient', 0, 1, true],
     ['mapper.memory', 0, 1, false],
