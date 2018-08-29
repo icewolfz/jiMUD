@@ -378,63 +378,82 @@ export class Mapper extends EventEmitter {
             if (!this.$focused) return;
             switch (e.which) {
                 case 27:
+                    e.preventDefault();
                     this.MouseDrag.state = false;
                     this.drag = false;
                     $(this._canvas).css('cursor', 'default');
                     break;
                 case 38: //up
+                    e.preventDefault();
                     this.scrollBy(0, -1);
                     break;
                 case 40: //down
+                    e.preventDefault();
                     this.scrollBy(0, 1);
                     break;
                 case 37: //left
+                    e.preventDefault();
                     this.scrollBy(-1, 0);
                     break;
                 case 39: //right
+                    e.preventDefault();
                     this.scrollBy(1, 0);
                     break;
                 case 110:
                 case 46: //delete
+                    e.preventDefault();
                     this.clearSelectedRoom();
                     break;
                 case 97: //num1
+                    e.preventDefault();
                     this.scrollBy(-1, 1);
                     break;
                 case 98: //num2
+                    e.preventDefault();
                     this.scrollBy(0, 1);
                     break;
                 case 99: //num3
+                    e.preventDefault();
                     this.scrollBy(1, 1);
                     break;
                 case 100: //num4
+                    e.preventDefault();
                     this.scrollBy(-1, 0);
                     break;
                 case 101: //num5
+                    e.preventDefault();
                     this.focusCurrentRoom();
                     break;
                 case 102: //num6
+                    e.preventDefault();
                     this.scrollBy(1, 0);
                     break;
                 case 103: //num7
+                    e.preventDefault();
                     this.scrollBy(-1, -1);
                     break;
                 case 104: //num8
+                    e.preventDefault();
                     this.scrollBy(0, -1);
                     break;
                 case 105: //num9
+                    e.preventDefault();
                     this.scrollBy(1, -1);
                     break;
                 case 107: //+
+                    e.preventDefault();
                     this.setLevel(this.active.z + 1);
                     break;
                 case 109: //-
+                    e.preventDefault();
                     this.setLevel(this.active.z - 1);
                     break;
                 case 111: // /
+                    e.preventDefault();
                     this.setZone(this.active.zone - 1);
                     break;
                 case 106: // *
+                    e.preventDefault();
                     this.setZone(this.active.zone + 1);
                     break;
             }
