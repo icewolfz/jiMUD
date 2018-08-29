@@ -1280,17 +1280,8 @@
         </div>
         <div class="btn-group" style="float: left">
             <label for="MapZoom" style="float: left">Zoom:</label>
-            <input id="MapZoom" list="ZoomTickmarks" type="range" min="25" max="200" step="5" oninput="zoomMap($('#MapZoom').val(), true)">
-            <datalist id="ZoomTickmarks">
-                <option value="25" label="0.25%" />
-                <option value="50" />
-                <option value="75" />
-                <option value="100" label="100%" />
-                <option value="125" />
-                <option value="150" />
-                <option value="175" />
-                <option value="200" label="200%" />
-            </datalist>
+            <input id="MapZoom" type="range" min="25" max="200" step="5" oninput="zoomMap($('#MapZoom').val(), true)">
+
             <label id="MapZoomDisplay">100%</label>
         </div>
 
