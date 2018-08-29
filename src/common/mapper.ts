@@ -86,7 +86,7 @@ export class Mapper extends EventEmitter {
     private _mapFile = path.join(parseTemplate('{data}'), 'map.sqlite');
     private _updating: UpdateType = UpdateType.none;
     private $drawCache;
-    private $focused;
+    private $focused = false;
 
     public current: Room;
     public active: Room;
@@ -364,7 +364,7 @@ export class Mapper extends EventEmitter {
             this.Mouse = this.getMapMousePos(event);
             this.MouseDown = this.getMapMousePos(event);
             this.MouseDrag.state = true;
-            this.drag = this.MouseDown.button === 0;
+            this.drag = true;
             $(this._canvas).css('cursor', 'move');
         });
         this._canvas.onselectstart = () => { return false; };
@@ -434,7 +434,7 @@ export class Mapper extends EventEmitter {
                 case 111: // /
                     this.setZone(this.active.zone - 1);
                     break;
-                case 105: // *
+                case 106: // *
                     this.setZone(this.active.zone + 1);
                     break;
             }
@@ -1510,12 +1510,14 @@ export class Mapper extends EventEmitter {
         this.DrawDDoor(ctx, x, y + 32 * scale, 5 * scale, -5 * scale, room.exits.southwest);
 
         if (!ex && this.selected.ID === room.ID) {
-            if (this.$focused)
-                ctx.fillStyle = 'rgba(135, 206, 250, 0.50)';
-            else
-                ctx.fillStyle = 'rgba(142, 142, 142, 0.50)';
-            ctx.fillStyle = 'rgba(135, 206, 250, 0.5)';
-            ctx.strokeStyle = 'LightSkyBlue';
+            if (this.$focused) {
+                ctx.fillStyle = 'rgba(135, 206, 250, 0.5)';
+                ctx.strokeStyle = 'LightSkyBlue';
+            }
+            else {
+                ctx.fillStyle = 'rgba(142, 142, 142, 0.5)';
+                ctx.strokeStyle = 'rgba(142, 142, 142, 0.5)';
+            }
             ctx.fillRoundedRect(x, y, 32 * scale, 32 * scale, 8 * scale);
             ctx.strokeRoundedRect(x, y, 32 * scale, 32 * scale, 8 * scale);
         }
