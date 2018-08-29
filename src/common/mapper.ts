@@ -1763,7 +1763,7 @@ export class Mapper extends EventEmitter {
             ctx.closePath();
         }
         x = ox;
-        y = oy;        
+        y = oy;
         ctx.setTransform(1, 0, 0, 1, 0, 0);
 
         if (!ex && this.selected.ID === room.ID) {
