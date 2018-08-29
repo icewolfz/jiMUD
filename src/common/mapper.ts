@@ -1079,10 +1079,16 @@ export class Mapper extends EventEmitter {
 
     private translate(ctx, amt, scale) {
         if (scale === 2) return;
-        if (scale % 0.25 === 0)
-            ctx.translate(amt, amt);
-        else
-            ctx.translate(amt * scale, amt * scale);
+        //if (scale < 1) {
+        const o = amt - amt * scale;
+        ctx.translate(amt * scale + o, amt * scale + o);
+        /*
+    }
+    else if (scale % 0.25 === 0)
+        ctx.translate(amt, amt);
+    else
+        ctx.translate(amt * scale, amt * scale);
+        */
     }
 
     public DrawRoom(ctx, x, y, room, ex, scale?) {
@@ -1411,9 +1417,9 @@ export class Mapper extends EventEmitter {
             tx.setTransform(1, 0, 0, 1, 0, 0);
             this.translate(tx, -0.5, scale);
         }
-        this.translate(ctx, -0.5, scale);
-        ctx.drawImage(this.$drawCache[key], x, y);
-        this.translate(ctx, 0.5, scale);
+        //this.translate(ctx, -0.5, scale);
+        ctx.drawImage(this.$drawCache[key], x | 0, y | 0);
+        //this.translate(ctx, 0.5, scale);
         this.DrawDoor(ctx, x + 12 * scale, y - 2 * scale, 8 * scale, 3 * scale, room.exits.north);
         this.DrawDoor(ctx, x + 31 * scale, y + 12 * scale, 3 * scale, 8 * scale, room.exits.east);
         this.DrawDoor(ctx, x - 1 * scale, y + 12 * scale, 3 * scale, 8 * scale, room.exits.west);
@@ -1444,6 +1450,10 @@ export class Mapper extends EventEmitter {
         let f = false;
         if (!scale) scale = this._scale;
         this.translate(ctx, 0.5, scale);
+        const ox = x;
+        const oy = y;
+        x = x | 0;
+        y = y | 0;
         if (room.background) {
             ctx.fillStyle = room.background;
             f = true;
@@ -1670,6 +1680,8 @@ export class Mapper extends EventEmitter {
             ctx.fill();
         }
         this.translate(ctx, -0.5, scale);
+        x = ox;
+        y = oy;
         this.DrawDoor(ctx, x + 12 * scale, y - 2 * scale, 8 * scale, 3 * scale, room.exits.north);
         this.DrawDoor(ctx, x + 31 * scale, y + 12 * scale, 3 * scale, 8 * scale, room.exits.east);
         this.DrawDoor(ctx, x - 1 * scale, y + 12 * scale, 3 * scale, 8 * scale, room.exits.west);
@@ -1700,6 +1712,8 @@ export class Mapper extends EventEmitter {
             ctx.closePath();
         }
         ctx.scale(scale, scale);
+        x /= scale;
+        y /= scale;
         if ((room.details & RoomDetails.Bank) === RoomDetails.Bank) {
             ctx.fillStyle = 'goldenrod';
             ctx.beginPath();
@@ -1748,6 +1762,8 @@ export class Mapper extends EventEmitter {
             ctx.fillText('\u2616', x + 15, y + 17);
             ctx.closePath();
         }
+        x = ox;
+        y = oy;        
         ctx.setTransform(1, 0, 0, 1, 0, 0);
 
         if (!ex && this.selected.ID === room.ID) {
