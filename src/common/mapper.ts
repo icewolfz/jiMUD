@@ -86,6 +86,7 @@ export class Mapper extends EventEmitter {
     private _mapFile = path.join(parseTemplate('{data}'), 'map.sqlite');
     private _updating: UpdateType = UpdateType.none;
     private $drawCache;
+    private $focused;
 
     public current: Room;
     public active: Room;
@@ -354,11 +355,90 @@ export class Mapper extends EventEmitter {
         });
         $(this._canvas).click((event) => {
             event.preventDefault();
+            this.MouseDrag.state = false;
+            this.drag = false;
+            $(this._canvas).css('cursor', 'default');
         });
         $(this._canvas).dblclick((event) => {
             event.preventDefault();
+            this.Mouse = this.getMapMousePos(event);
+            this.MouseDown = this.getMapMousePos(event);
+            this.MouseDrag.state = true;
+            this.drag = this.MouseDown.button === 0;
+            $(this._canvas).css('cursor', 'move');
         });
         this._canvas.onselectstart = () => { return false; };
+        this._canvas.addEventListener('focus', (e) => {
+            this.setFocus(true);
+        });
+        this._canvas.addEventListener('blur', (e) => {
+            this.setFocus(false);
+        });
+        this._canvas.addEventListener('keydown', (e) => {
+            if (!this.$focused) return;
+            switch (e.which) {
+                case 27:
+                    this.MouseDrag.state = false;
+                    this.drag = false;
+                    $(this._canvas).css('cursor', 'default');
+                    break;
+                case 38: //up
+                    this.scrollBy(0, -1);
+                    break;
+                case 40: //down
+                    this.scrollBy(0, 1);
+                    break;
+                case 37: //left
+                    this.scrollBy(-1, 0);
+                    break;
+                case 39: //right
+                    this.scrollBy(1, 0);
+                    break;
+                case 110:
+                case 46: //delete
+                    this.clearSelectedRoom();
+                    break;
+                case 97: //num1
+                    this.scrollBy(-1, 1);
+                    break;
+                case 98: //num2
+                    this.scrollBy(0, 1);
+                    break;
+                case 99: //num3
+                    this.scrollBy(1, 1);
+                    break;
+                case 100: //num4
+                    this.scrollBy(-1, 0);
+                    break;
+                case 101: //num5
+                    this.focusCurrentRoom();
+                    break;
+                case 102: //num6
+                    this.scrollBy(1, 0);
+                    break;
+                case 103: //num7
+                    this.scrollBy(-1, -1);
+                    break;
+                case 104: //num8
+                    this.scrollBy(0, -1);
+                    break;
+                case 105: //num9
+                    this.scrollBy(1, -1);
+                    break;
+                case 107: //+
+                    this.setLevel(this.active.z + 1);
+                    break;
+                case 109: //-
+                    this.setLevel(this.active.z - 1);
+                    break;
+                case 111: // /
+                    this.setZone(this.active.zone - 1);
+                    break;
+                case 105: // *
+                    this.setZone(this.active.zone + 1);
+                    break;
+            }
+        });
         this.reset();
         this.refresh();
     }
@@ -1430,6 +1510,10 @@ export class Mapper extends EventEmitter {
         this.DrawDDoor(ctx, x, y + 32 * scale, 5 * scale, -5 * scale, room.exits.southwest);
 
         if (!ex && this.selected.ID === room.ID) {
+            if (this.$focused)
+                ctx.fillStyle = 'rgba(135, 206, 250, 0.50)';
+            else
+                ctx.fillStyle = 'rgba(142, 142, 142, 0.50)';
             ctx.fillStyle = 'rgba(135, 206, 250, 0.5)';
             ctx.strokeStyle = 'LightSkyBlue';
             ctx.fillRoundedRect(x, y, 32 * scale, 32 * scale, 8 * scale);
@@ -2526,5 +2610,11 @@ export class Mapper extends EventEmitter {
             }
         }
         return room;
+    }
+
+    private setFocus(value) {
+        if (this.$focused === value) return;
+        this.$focused = value;
+        this.doUpdate(UpdateType.draw);
     }
 }

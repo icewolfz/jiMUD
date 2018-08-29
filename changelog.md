@@ -3,7 +3,10 @@
 ## v0.5.2
 
 - **New:**
-  - Mapper: Custom zooming to better draw the map
+  - Mapper:
+    - Custom zooming to better draw the map
+    - Keyboard support, Use numpad or arrow keys to scroll, delete key to remove a room, + or - to change level, / or * to change zone
+    - Mouse scroll lock, double clicking will lock scroll mode until click or escape ends it.
 - **Changed:**
   - Help: Rename main to home
 - **Fixed:**
@@ -11,7 +14,10 @@
   - Auto update: Fixed taskbar progress for windows
   - Code editor:
     - Area designer: Fixed capitalizing of monster names in room preview
-  - Mapper: Fixed gap around map where rooms where not being drawn
+  - Mapper:
+    - Fixed gap around map where rooms where not being drawn
+    - Fixed double click break mouse drag scroll
+    - Fixed drag cursor appearing on click, will now only appear when you start to drag when mouse down or scroll lock.
 
 ## v0.5.1 2018-08-27
 

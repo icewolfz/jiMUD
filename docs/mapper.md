@@ -1,5 +1,28 @@
 # Mapper
 
+## Keyboard shortcuts
+
+- `Arrow keys` scroll the map north, south, east, or west
+- `Numpad 1` scroll the map southwest
+- `Numpad 2` scroll the map south
+- `Numpad 3` scroll the map southeast
+- `Numpad 4` scroll the map west
+- `Numpad 5` scroll the map focus on current room
+- `Numpad 6` scroll the map east
+- `Numpad 7` scroll the map northwest
+- `Numpad 8` scroll the map north
+- `Numpad 9` scroll the map northeast
+- `/` go down one zone
+- `*` go up one zone
+- `-` go down one level
+- `+` go up one level
+- `escape` cancel current drag
+- `delete` remove current selected room
+
+## Mouse
+
+- `Double click` lock drag scrolling on with out the need to hold mouse button down
+
 ## Toolbar
 
 - `Enabled` whether mapper is enabled or not, it not enabled will not add new rooms as you move
