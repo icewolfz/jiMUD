@@ -386,6 +386,26 @@ export class PropertyGrid extends EventEmitter {
         this.$el.appendChild(frag);
     }
 
+    public updateValue() {
+        if (!this.$editor) return;
+        let value;
+        let oldValue;
+        const prop = this.$editor.property;
+        if (this.$editor.editor)
+            value = this.$editor.editor.value;
+        oldValue = this.$objects[0][this.$editor.property];
+        if (value !== oldValue || !this.sameValue(prop)) {
+            this.$objects.forEach(o => o[prop] = value);
+            this.$editor.el.textContent = this.formattedValue(this.$editor.property);
+        }
+        if (value === this.defaultFormattedValue(prop))
+            this.$editor.el.classList.add('default');
+        else
+            this.$editor.el.classList.remove('default');
+        if (value !== oldValue)
+            this.emit('value-changed', prop, value, oldValue);
+    }
+
     public clearEditor(evt?, next?, canceled?) {
         if (!this.$editor) return;
         let value;
