@@ -4049,7 +4049,6 @@ export class AreaDesigner extends EditorBase {
                                 if (notes.open)
                                     notes.close();
                                 notes.remove();
-                                ed.control.clearEditor();
                             });
                             notes.showModal();
                         }
