@@ -1673,6 +1673,7 @@ export class ButtonValueEditor extends ValueEditor {
                 this.options.click(this);
         });
         this.parent.appendChild(this.$el);
+        this.parent.classList.add('property-grid-editor-button-container');
     }
     public focus() {
         this.$el.focus();
@@ -1681,6 +1682,7 @@ export class ButtonValueEditor extends ValueEditor {
         super.destroy();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
+        this.parent.classList.remove('property-grid-editor-button-container');
     }
 
     public scroll() { /**/ }

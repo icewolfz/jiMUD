@@ -782,6 +782,10 @@ cause test to be brighter but more bold looking
     position: absolute;
 }
 
+.property-grid-editor-button-container {
+    border: 1px solid #f2cb7f;
+}
+
 select.property-grid-editor {
     -webkit-appearance: none;
     background: url(./../../assets/editor/select.png) no-repeat 100% 50%;
