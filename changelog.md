@@ -7,6 +7,10 @@
     - Custom zooming to better draw the map
     - Keyboard support, Use numpad or arrow keys to scroll, delete key to remove a room, + or - to change level, / or * to change zone
     - Mouse scroll lock, double clicking will lock scroll mode until click or escape ends it.
+  - Code editor:
+    - Virtual area editor:
+      - Parse external rooms for doors to mark them as exits
+      - Check if exit destinations start with VIR and if not mark them as external exits
 - **Changed:**
   - Help: Rename main to home
 - **Fixed:**
@@ -14,6 +18,11 @@
   - Auto update: Fixed taskbar progress for windows
   - Code editor:
     - Area designer: Fixed capitalizing of monster names in room preview
+    - Virtual area editor:
+      - Fixed external room code generation for set_items and set_exits to have proper comma formatting and no trailing comma
+      - Trim all data values for external room generation to remove trailing spaces
+      - Trim all external room strings when parsing
+      - Correctly add add_exits for external rooms
   - Mapper:
     - Fixed gap around map where rooms where not being drawn
     - Fixed double click break mouse drag scroll

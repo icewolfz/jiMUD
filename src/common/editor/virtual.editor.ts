@@ -7421,6 +7421,7 @@ export class VirtualEditor extends EditorBase {
         let ident = '';
         let c;
         let i;
+        let e;
         let b = 0;
         let b2;
         let quote = false;
@@ -7475,9 +7476,9 @@ export class VirtualEditor extends EditorBase {
                                         break;
                                 }
                                 if (code.charAt(idx2 - 1) === ')')
-                                    r.short = this.parseString(code.substring(idx, idx2 - 1).trim());
+                                    r.short = this.parseString(code.substring(idx, idx2 - 1));
                                 else
-                                    r.short = this.parseString(code.substring(idx, idx2).trim());
+                                    r.short = this.parseString(code.substring(idx, idx2));
                                 idx = idx2;
                                 break;
                             case 'set_long':
@@ -7496,9 +7497,78 @@ export class VirtualEditor extends EditorBase {
                                         break;
                                 }
                                 if (code.charAt(idx2 - 1) === ')')
-                                    r.long = this.parseString(code.substring(idx, idx2 - 1).trim());
+                                    r.long = this.parseString(code.substring(idx, idx2 - 1));
                                 else
-                                    r.long = this.parseString(code.substring(idx, idx2).trim());
+                                    r.long = this.parseString(code.substring(idx, idx2));
+                                idx = idx2;
+                                break;
+                            case 'set_door':
+                                idx++;
+                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
+                                    idx++;
+                                for (idx2 = idx; idx2 < len; idx2++) {
+                                    c = code.charAt(idx2);
+                                    if (c === '"') {
+                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
+                                            continue;
+                                        quote = !quote;
+                                    }
+                                    if (!quote && c === ';')
+                                        break;
+                                }
+                                exit = code.substring(idx, idx2 - 1).trim().splitQuote(',', 3, 3);
+                                if (exit.length > 2) {
+                                    block = this.parseString(exit[1]);
+                                    if (!block.startsWith('VIR ') && !block.startsWith('VIR+'))
+                                        block = 1;
+                                    else
+                                        block = 0;
+                                    switch (this.parseString(exit[2])) {
+                                        case 'north':
+                                            e = RoomExit.North;
+                                            break;
+                                        case 'northeast':
+                                            e = RoomExit.NorthEast;
+                                            break;
+                                        case 'east':
+                                            e = RoomExit.East;
+                                            break;
+                                        case 'southeast':
+                                            e = RoomExit.SouthEast;
+                                            break;
+                                        case 'south':
+                                            e = RoomExit.South;
+                                            break;
+                                        case 'southwest':
+                                            e = RoomExit.SouthWest;
+                                            break;
+                                        case 'west':
+                                            e = RoomExit.West;
+                                            break;
+                                        case 'northwest':
+                                            e = RoomExit.NorthWest;
+                                            break;
+                                        case 'up':
+                                            e = RoomExit.Up;
+                                            break;
+                                        case 'down':
+                                            e = RoomExit.Down;
+                                            break;
+                                        case 'out':
+                                            e = RoomExit.Out;
+                                            break;
+                                        case 'enter':
+                                            e = RoomExit.Enter;
+                                            break;
+                                        default:
+                                            e = RoomExit.Unknown;
+                                            break;
+                                    }
+                                    if (block)
+                                        r.ee |= e;
+                                    else
+                                        r.exits |= e;
+                                }
                                 idx = idx2;
                                 break;
                             case 'add_exit':
@@ -7517,50 +7587,63 @@ export class VirtualEditor extends EditorBase {
                                 }
                                 exit = code.substring(idx, idx2 - 1).trim().splitQuote(',', 3, 3);
                                 if (exit.length > 0) {
+                                    block = 0;
+                                    if (exits.length > 1) {
+                                        block = this.parseString(exit[1]);
+                                        if (!block.startsWith('VIR ') && !block.startsWith('VIR+'))
+                                            block = 1;
+                                        else
+                                            block = 0;
+                                    }
                                     switch (this.parseString(exit[0])) {
                                         case 'north':
-                                            r.exits |= RoomExit.North;
+                                            e = RoomExit.North;
                                             break;
                                         case 'northeast':
-                                            r.exits |= RoomExit.NorthEast;
+                                            e = RoomExit.NorthEast;
                                             break;
                                         case 'east':
-                                            r.exits |= RoomExit.East;
+                                            e = RoomExit.East;
                                             break;
                                         case 'southeast':
-                                            r.exits |= RoomExit.SouthEast;
+                                            e = RoomExit.SouthEast;
                                             break;
                                         case 'south':
-                                            r.exits |= RoomExit.South;
+                                            e = RoomExit.South;
                                             break;
                                         case 'southwest':
-                                            r.exits |= RoomExit.SouthWest;
+                                            e = RoomExit.SouthWest;
                                             break;
                                         case 'west':
-                                            r.exits |= RoomExit.West;
+                                            e = RoomExit.West;
                                             break;
                                         case 'northwest':
-                                            r.exits |= RoomExit.NorthWest;
+                                            e = RoomExit.NorthWest;
                                             break;
                                         case 'up':
-                                            r.exits |= RoomExit.Up;
+                                            e = RoomExit.Up;
                                             break;
                                         case 'down':
-                                            r.exits |= RoomExit.Down;
+                                            e = RoomExit.Down;
                                             break;
                                         case 'out':
-                                            r.exits |= RoomExit.Out;
+                                            e = RoomExit.Out;
                                             break;
                                         case 'enter':
-                                            r.exits |= RoomExit.Enter;
+                                            e = RoomExit.Enter;
                                             break;
                                         default:
-                                            r.exits |= RoomExit.Unknown;
+                                            e = RoomExit.Unknown;
                                             break;
                                     }
+                                    if (block)
+                                        r.ee |= e;
+                                    else
+                                        r.exits |= e;
                                 }
                                 idx = idx2;
                                 break;
+                            case 'add_exits':
                             case 'set_exits':
                                 idx++;
                                 while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
@@ -7578,47 +7661,55 @@ export class VirtualEditor extends EditorBase {
                                 exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
                                 for (exit in exits) {
                                     if (exit.length === 0 || !exits.hasOwnProperty(exit)) continue;
+                                    block = 0;
+                                    if (!exits[exit].startsWith('VIR ') && !exits[exit].startsWith('VIR+'))
+                                        block = 1;
+
                                     switch (exit) {
                                         case 'north':
-                                            r.exits |= RoomExit.North;
+                                            e = RoomExit.North;
                                             break;
                                         case 'northeast':
-                                            r.exits |= RoomExit.NorthEast;
+                                            e = RoomExit.NorthEast;
                                             break;
                                         case 'east':
-                                            r.exits |= RoomExit.East;
+                                            e = RoomExit.East;
                                             break;
                                         case 'southeast':
-                                            r.exits |= RoomExit.SouthEast;
+                                            e = RoomExit.SouthEast;
                                             break;
                                         case 'south':
-                                            r.exits |= RoomExit.South;
+                                            e = RoomExit.South;
                                             break;
                                         case 'southwest':
-                                            r.exits |= RoomExit.SouthWest;
+                                            e = RoomExit.SouthWest;
                                             break;
                                         case 'west':
-                                            r.exits |= RoomExit.West;
+                                            e = RoomExit.West;
                                             break;
                                         case 'northwest':
-                                            r.exits |= RoomExit.NorthWest;
+                                            e = RoomExit.NorthWest;
                                             break;
                                         case 'up':
-                                            r.exits |= RoomExit.Up;
+                                            e = RoomExit.Up;
                                             break;
                                         case 'down':
-                                            r.exits |= RoomExit.Down;
+                                            e = RoomExit.Down;
                                             break;
                                         case 'out':
-                                            r.exits |= RoomExit.Out;
+                                            e = RoomExit.Out;
                                             break;
                                         case 'enter':
-                                            r.exits |= RoomExit.Enter;
+                                            e = RoomExit.Enter;
                                             break;
                                         default:
-                                            r.exits |= RoomExit.Unknown;
+                                            e = RoomExit.Unknown;
                                             break;
                                     }
+                                    if (block)
+                                        r.ee |= e;
+                                    else
+                                        r.exits |= e;
                                 }
                                 idx = idx2;
                                 break;
@@ -7677,7 +7768,7 @@ export class VirtualEditor extends EditorBase {
                                     if (!quote && c === ';')
                                         break;
                                 }
-                                r.terrain = this.parseString(code.substring(idx, idx2 - 1).trim());
+                                r.terrain = this.parseString(code.substring(idx, idx2 - 1));
                                 idx = idx2;
                                 break;
                             case 'set_listen':
@@ -7714,7 +7805,7 @@ export class VirtualEditor extends EditorBase {
                                             break;
                                     }
                                     if (block === 'default')
-                                        r.sound = this.parseString(code.substring(idx, idx2 - 1).trim());
+                                        r.sound = this.parseString(code.substring(idx, idx2 - 1));
                                 }
                                 else {
                                     if (block.startsWith('"'))
@@ -7769,7 +7860,7 @@ export class VirtualEditor extends EditorBase {
                                             break;
                                     }
                                     if (block === 'default')
-                                        r.smell = this.parseString(code.substring(idx, idx2 - 1).trim());
+                                        r.smell = this.parseString(code.substring(idx, idx2 - 1));
                                     idx = idx2;
                                 }
                                 else {
@@ -7819,14 +7910,14 @@ export class VirtualEditor extends EditorBase {
                                         const sl = k.length;
                                         for (s = 0; s < sl; s++)
                                             r.items.push({
-                                                item: this.parseString(k[s].trim()),
-                                                description: this.parseString(items[item].trim())
+                                                item: this.parseString(k[s]),
+                                                description: this.parseString(items[item])
                                             });
                                     }
                                     else
                                         r.items.push({
                                             item: this.parseString(item),
-                                            description: this.parseString(items[item].trim())
+                                            description: this.parseString(items[item])
                                         });
                                 }
                                 break;
@@ -7934,7 +8025,10 @@ export class VirtualEditor extends EditorBase {
     }
 
     private parseString(str) {
-        if (!str || str.length === 0)
+        if (!str)
+            return str;
+        str = str.trim();
+        if (str.length === 0)
             return str;
         const end = str.length;
         if (str.startsWith('(:'))
@@ -8089,7 +8183,7 @@ export class VirtualEditor extends EditorBase {
                     break;
                 case ':':
                     if (array > 0) continue;
-                    pair[0] = this.parseString(str.substring(0, idx).trim());
+                    pair[0] = this.parseString(str.substring(0, idx));
                     idx++;
                     pair[1] = str.substring(idx).trim();
                     return pair;
@@ -9115,8 +9209,9 @@ export class VirtualEditor extends EditorBase {
                 d += t.join(',\n       ');
                 d += '\n     ]) );\n';
             }
-            d += '   set_short("' + data.short + '");\n';
+            d += '   set_short("' + data.short.trim() + '");\n';
             d += '   set_long(';
+            data.long = data.long.trim();
             if (data.long.length > 70) {
                 t = data.long.substr(0, 66);
                 let tl = t.length;
@@ -9133,7 +9228,7 @@ export class VirtualEditor extends EditorBase {
                 d += `"${data.long}"`;
             d += ');\n';
             if (data.terrain.length > 0 && data.terrain !== '0')
-                d += '   set_terrain("' + data.terrain + '");\n';
+                d += '   set_terrain("' + data.terrain.trim() + '");\n';
             else if ((r.state & RoomStates.Water) === RoomStates.Water)
                 d += '   set_terrain("water");\n';
 
@@ -9141,14 +9236,14 @@ export class VirtualEditor extends EditorBase {
                 d += '   set_items( ([\n';
                 const items = this.$items[r.item].children;
                 d += items.map(i => {
-                    return `       "${i.item}" : "${i.description}"\n`;
-                });
-                d += '     ]) );\n';
+                    return `       "${i.item.trim()}" : "${i.description.trim()}"`;
+                }).join(',\n');
+                d += '\n     ]) );\n';
             }
-            if (data.smell.length > 0 && data.smell !== '0')
-                d += '   set_smell("' + data.smell + '");\n';
-            if (data.sound.length > 0 && data.sound !== '0')
-                d += '   set_listen("' + data.sound + '");\n';
+            if (data.smell.trim().length > 0 && data.smell.trim() !== '0')
+                d += '   set_smell("' + data.smell.trim() + '");\n';
+            if (data.sound.trim().length > 0 && data.sound.trim() !== '0')
+                d += '   set_listen("' + data.sound.trim() + '");\n';
         }
         if (RoomExit.None !== r.exits) {
             d += '   set_exits( ([\n';
@@ -9182,9 +9277,10 @@ export class VirtualEditor extends EditorBase {
             for (ri = 0; ri < rl; ri++) {
                 if (!this.$exits[ri].enabled || +this.$exits[ri].x !== r.x || +this.$exits[ri].y !== r.y || +this.$exits[ri].z !== r.z)
                     continue;
-                d += '       "' + this.$exits[ri].exit + '":"' + this.$exits[ri].dest + '",\n';
+                d += '       "' + this.$exits[ri].exit.trim() + '":"' + this.$exits[ri].dest.trim() + '",\n';
             }
-            d += '     ]) );\n';
+            d = d.substr(0, d.length - 2);
+            d += '\n     ]) );\n';
         }
         if ((r.state & RoomStates.Cold) === RoomStates.Cold)
             d += '   set_temperature(-200);\n';
