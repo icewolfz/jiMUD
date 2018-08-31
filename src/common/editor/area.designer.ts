@@ -8299,12 +8299,13 @@ export class AreaDesigner extends EditorBase {
                 const data = JSON.parse(clipboard.readBuffer('jiMUD/Area').toString());
                 const osX = data.rooms[0].x - or.x;
                 const osY = data.rooms[0].y - or.y;
+                const osZ = data.rooms[0].z - or.z;
                 let dl = data.rooms.length;
                 const rooms = [];
                 this.startUndoGroup();
                 while (dl--) {
                     const dRoom = data.rooms[dl];
-                    const room = new Room(dRoom.x - osX, dRoom.y - osY, dRoom.z, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
+                    const room = new Room(dRoom.x - osX, dRoom.y - osY, dRoom.z - osZ, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
                     let prop;
                     for (prop in dRoom) {
                         if (prop === 'x' || prop === 'y' || prop === 'z' || !dRoom.hasOwnProperty(prop)) continue;

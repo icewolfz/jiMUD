@@ -17,12 +17,15 @@
   - Help: Fixed main page
   - Auto update: Fixed taskbar progress for windows
   - Code editor:
-    - Area designer: Fixed capitalizing of monster names in room preview
+    - Area designer:
+      - Fixed capitalizing of monster names in room preview
+      - Fixed pasting rooms from differnt depth levels
     - Virtual area editor:
       - Fixed external room code generation for set_items and set_exits to have proper comma formatting and no trailing comma
       - Trim all data values for external room generation to remove trailing spaces
       - Trim all external room strings when parsing
       - Correctly add add_exits for external rooms
+      - Fixed pasting rooms from differnt depth levels
   - Mapper:
     - Fixed gap around map where rooms where not being drawn
     - Fixed double click break mouse drag scroll

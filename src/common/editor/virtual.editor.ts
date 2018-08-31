@@ -4964,12 +4964,13 @@ export class VirtualEditor extends EditorBase {
                 const data = JSON.parse(clipboard.readBuffer('jiMUD/VirtualArea').toString());
                 const osX = data.rooms[0].x - or.x;
                 const osY = data.rooms[0].y - or.y;
+                const osZ = data.rooms[0].z - or.z;
                 let dl = data.rooms.length;
                 const rooms = [];
                 this.startUndoGroup();
                 while (dl--) {
                     const dRoom = data.rooms[dl];
-                    const room = new Room(dRoom.x - osX, dRoom.y - osY, dRoom.z, dRoom.exits, dRoom.terrain, dRoom.item, dRoom.state);
+                    const room = new Room(dRoom.x - osX, dRoom.y - osY, dRoom.z - osZ, dRoom.exits, dRoom.terrain, dRoom.item, dRoom.state);
                     room.climbs = dRoom.climbs;
                     room.ef = dRoom.ef;
                     room.ee = dRoom.ee;
