@@ -1,9 +1,10 @@
 /// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
-import { EditorBase, EditorOptions, FileState } from './editor.base';
+import { EditorBase, EditorOptions, FileState, Source } from './editor.base';
 import { conf, language, loadCompletion, LPCIndenter, LPCFormatter } from './lpc';
-import { existsSync } from '../library';
+import { existsSync, isDirSync } from '../library';
 const { ipcRenderer } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 interface LoadMonacoOptions {
     baseUrl?: string;
@@ -41,6 +42,7 @@ export function loadMonaco(options: LoadMonacoOptions = {}) {
 let $lpcCompletionCache;
 let $lpcIndenter;
 let $lpcFormatter;
+let $lpcDefineCache;
 
 export function SetupEditor() {
     return new Promise((resolve, reject) => {
@@ -150,7 +152,90 @@ export function SetupEditor() {
                     });
                 }
             });
-
+            //https://github.com/Microsoft/monaco-editor/issues/852
+            //https://github.com/Microsoft/monaco-editor/issues/935
+            monaco.languages.registerDefinitionProvider('lpc', {
+                provideDefinition(model: monaco.editor.ITextModel, position: monaco.Position, token: monaco.CancellationToken): monaco.Thenable<monaco.languages.Definition> {
+                    return new Promise<monaco.languages.Definition>((resolve2, reject2) => {
+                        if (!model) return;
+                        if (!$lpcDefineCache) $lpcDefineCache = {};
+                        const defines = [];
+                        //monaco.Uri.file()
+                        const resource = model.uri;
+                        let word: any = model.getWordAtPosition(position);
+                        if (word)
+                            word = word.word;
+                        const value = model.getValue();
+                        const root = path.dirname(resource.fsPath);
+                        const def = /^#define ([_a-zA-Z0-9]+)[ |\(].*$/gm;
+                        let dValue;
+                        if (isDirSync(root)) {
+                            //const p = path.dirname((<any>model).file);
+                            const reg = /^#include "(.*)"$/gm;
+                            let result = reg.exec(value);
+                            while (result !== null) {
+                                if (result.index === reg.lastIndex) {
+                                    reg.lastIndex++;
+                                }
+                                const f = path.join(root, result[1]);
+                                if (existsSync(f)) {
+                                    if (!$lpcDefineCache[f]) {
+                                        $lpcDefineCache[f] = {};
+                                        dValue = fs.readFileSync(f, 'utf8').split('\n');
+                                        dValue.forEach((l, i) => {
+                                            let results2 = def.exec(l);
+                                            while (results2 !== null) {
+                                                if (results2.index === def.lastIndex) {
+                                                    def.lastIndex++;
+                                                }
+                                                $lpcDefineCache[f][results2[1]] = {
+                                                    uri: monaco.Uri.file(f),
+                                                    range: new monaco.Range(i + 1, 9, i + 1, 9)
+                                                };
+                                                defines[results2[1]] = $lpcDefineCache[f][results2[1]];
+                                                results2 = def.exec(l);
+                                            }
+                                        });
+                                    } else {
+                                        Object.keys($lpcDefineCache[f]).forEach(k => {
+                                            defines[k] = $lpcDefineCache[f][k];
+                                        });
+                                    }
+                                }
+                                result = reg.exec(value);
+                            }
+                        }
+                        dValue = value.split('\n');
+                        dValue.forEach((l, i) => {
+                            let results2 = def.exec(l);
+                            while (results2 !== null) {
+                                if (results2.index === def.lastIndex) {
+                                    def.lastIndex++;
+                                }
+                                defines[results2[1]] = {
+                                    uri: model.uri,
+                                    range: new monaco.Range(i + 1, results2.index + 1, i + 1, results2.index + 1)
+                                };
+                                results2 = def.exec(l);
+                            }
+                        });
+                        if (defines[word])
+                            resolve2(defines[word]);
+                        else
+                            reject2();
+                    });
+                    /*
+                    return wireCancellationToken(token, this._worker(resource).then(worker => {
+                        return worker.findDefinition(resource.toString(), fromPosition(position));
+                    }).then(definition => {
+                        if (!definition) {
+                            return;
+                        }
+                        return [toLocation(definition)];
+                    }));
+                    */
+                }
+            });
             resolve(monaco);
         });
     });
@@ -241,9 +326,18 @@ export class MonacoCodeEditor extends EditorBase {
             };
     }
 
-    public createControl() {
-        //TODO tooltip show folded code
-        this.$model = monaco.editor.createModel('', 'lpc');
+    private createModel() {
+        if (this.$model)
+            this.$model.dispose();
+        if (!this.new && this.file && this.file.length !== 0 && this.source === Source.local) {
+            this.$model = monaco.editor.getModel(monaco.Uri.file(this.file));
+            if (this.$model)
+                this.$model.dispose();
+        }
+        this.$model = monaco.editor.createModel('', 'lpc', !this.new && this.file && this.file.length !== 0 && this.source === Source.local ? monaco.Uri.file(this.file) : null);
+        if (this.rawDecorations && this.rawDecorations.length !== 0) {
+            this.$model.deltaDecorations([], this.rawDecorations);
+        }
         this.$model.onDidChangeContent((e) => {
             this.changed = true;
             this.emit('changed', this.$model.getValueLength());
@@ -258,7 +352,12 @@ export class MonacoCodeEditor extends EditorBase {
             if (this.decorations.length === 0)
                 this.decorations = null;
         });
+    }
 
+    public createControl() {
+        //TODO tooltip show folded code
+        if (!this.$model)
+            this.createModel();
         setTimeout(() => {
             this.resize();
         }, 100);
@@ -271,6 +370,7 @@ export class MonacoCodeEditor extends EditorBase {
     set file(value: string) {
         if (this.file !== value) {
             super.file = value;
+            this.createModel();
             const ext = path.extname(this.source === 1 ? this.remote : this.file);
             switch (ext) {
                 case '.c':
@@ -285,7 +385,7 @@ export class MonacoCodeEditor extends EditorBase {
                         monaco.editor.setModelLanguage(this.$model, 'plaintext');
                     break;
             }
-
+            //(<any>this.$model).file = this.file;
         }
     }
 
@@ -425,8 +525,7 @@ export class MonacoCodeEditor extends EditorBase {
                         return;
                     this.emit('reload', action);
                 }
-                else
-                {
+                else {
                     this.opened = new Date().getTime();
                     this.$saving = false;
                 }
@@ -597,6 +696,13 @@ export class MonacoCodeEditor extends EditorBase {
                 },
                 { type: 'separator' },
                 {
+                    label: 'Go to Definition',
+                    accelerator: 'F12',
+                    click: () => {
+                        this.$editor.getAction('editor.action.goToDeclaration').run();
+                    }
+                },
+                {
                     label: '&Go to line...',
                     accelerator: 'CmdOrCtrl+G',
                     click: () => {
@@ -625,6 +731,25 @@ export class MonacoCodeEditor extends EditorBase {
                     }
                 ];
             return [
+                {
+                    label: 'Go to Definition',
+                    accelerator: 'F12',
+                    click: () => {
+                        this.$editor.getAction('editor.action.goToDeclaration').run();
+                    },
+                    position: 'before=1',
+                    id: 'goto'
+                },
+                {
+                    label: 'Peek Definition',
+                    accelerator: 'Alt+F12',
+                    click: () => {
+                        this.$editor.getAction('editor.action.previewDeclaration').run();
+                    },
+                    position: 'after=goto',
+                    id: 'peek'
+                },
+                { type: 'separator', position: 'after=peek' },
                 {
                     label: 'Formatting',
                     submenu: [
@@ -817,6 +942,9 @@ export class MonacoCodeEditor extends EditorBase {
         return [this.$editor.getPosition().column, this.$editor.getPosition().lineNumber];
     }
     public get length() { return this.$model.getValueLength(); }
+
+    public get model() { return this.model; }
+
     public selectionChanged(e) {
         this.emit('selection-changed');
         const selected = this.selected.length > 0;
@@ -863,4 +991,6 @@ export class MonacoCodeEditor extends EditorBase {
         }
         this.$editor = null;
     }
+
+    public clear() { /** */ }
 }

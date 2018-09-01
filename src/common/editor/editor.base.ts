@@ -78,6 +78,8 @@ export abstract class EditorBase extends EventEmitter {
             this.on('watch-stop', options.watchStop);
         if (options.opened)
             this.on('opened', options.opened);
+        if (options.new)
+            this.state |= FileState.new;
         if (options.parent)
             this.parent = options.parent;
         else if (options.container)
@@ -88,8 +90,6 @@ export abstract class EditorBase extends EventEmitter {
             this.remote = options.remote;
         if (options.source !== Source.local)
             this.source = options.source;
-        if (options.new)
-            this.state |= FileState.new;
         this.file = options.file;
         if (options.open)
             this.open();

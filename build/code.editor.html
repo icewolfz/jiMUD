@@ -16,7 +16,7 @@
     <link href="css/editorcontent.css" rel="stylesheet" type="text/css" />
     <script>
         // eslint-disable-next-line no-unused-vars
-        /* global _ready, doUpdate, manager, inverse, capitalize, options, monaco, initEditor, shell, setViewState */
+        /* global _ready, doUpdate, manager, inverse, capitalize, options, monaco, initEditor, shell, setViewState, findEditor, fs, openFile */
         // eslint-disable-next-line no-unused-vars
         var _ready = false;
         const { SetupEditor } = require('./js/editor/code.editor');
@@ -30,11 +30,50 @@
                 editor.getOriginalEditor().getContribution('editor.linkDetector').openerService.open = (url) => {
                     shell.openExternal(url.toString());
                 };
+                if (!editor.getOriginalEditor()._oldOpenCodeEditor)
+                    editor.getOriginalEditor()._oldOpenCodeEditor = editor._codeEditorService.openCodeEditor;
+                editor.getOriginalEditor()._codeEditorService.openCodeEditor = (input, source, sideBySide) => {
+                    if (!input || !input.resource)
+                        return editor.getOriginalEditor()._oldOpenCodeEditor(input, source, sideBySide);
+                    openFile(input.resource.fsPath);
+                    if (input.options){
+                        let idx = manager.panes.indexOf(manager.activePane);
+                        if (idx !== -1) {
+                            var ed;
+                            if(window.$editors[idx].domElement.style.display !== 'block')
+                                ed = window.$dEditors[idx];
+                            else
+                                ed = window.$editors[idx];
+                            ed.setPosition({ column: input.options.selection.startColumn, lineNumber: input.options.selection.startLineNumber });
+                        }
+                    }
+                    return Promise.resolve();
+                };
             }
-            else
+            else {
                 editor.getContribution('editor.linkDetector').openerService.open = (url) => {
                     shell.openExternal(url.toString());
                 };
+                if (!editor._oldOpenCodeEditor)
+                    editor._oldOpenCodeEditor = editor._codeEditorService.openCodeEditor;
+                editor._codeEditorService.openCodeEditor = (input, source, sideBySide) => {
+                    if (!input || !input.resource)
+                        return editor._oldOpenCodeEditor(input, source, sideBySide);
+                    openFile(input.resource.fsPath);
+                    if (input.options) {
+                        let idx = manager.panes.indexOf(manager.activePane);
+                        if (idx !== -1) {
+                            var ed;
+                            if(window.$editors[idx].domElement.style.display !== 'block')
+                                ed = window.$dEditors[idx];
+                            else
+                                ed = window.$editors[idx];
+                            ed.setPosition({ column: input.options.selection.startColumn, lineNumber: input.options.selection.startLineNumber });
+                        }
+                    }
+                    return Promise.resolve();
+                };
+            }
             editor.addAction({
                 id: 'jimud.action.transformToInverse',
                 label: 'Transform to Inverse',
@@ -212,7 +251,62 @@
                 contextmenu: false,
                 theme: 'lpcTheme',
                 model: null,
-            })];
+            }, {
+                    /*
+                    codeEditorService: {
+                            addCodeEditor: (editor) => {
+                                console.log('addCodeEditor');
+                            },
+                            openCodeEditor: function (input, source, sideBySide) {
+                                console.log('openCodeEditor');
+                                // this actually sets the opened source
+                                //actions.set({ opened: input.resource.path })
+                                // this just returns the editor itself
+                                //return Promise.resolve({ getControl: () => getEditor(e) })
+                                return Promise.resolve({});
+                            },
+                            resolveEditor: function () {
+                                return Promise.resolve({});
+                            }
+                        },
+                        */
+                    textModelService: {
+                        createModelReference: resource => {
+                            var model = monaco.editor.getModel(resource);
+                            if (!model) {
+                                var e = findEditor(resource.fsPath);
+                                if (e && e.editor && e.editor.model)
+                                    model = e.editor.model;
+                                else
+                                    model = monaco.editor.createModel(fs.readFileSync(resource.fsPath, 'utf8'), 'lpc');
+                            }
+                            var model2 = {
+                                load() {
+                                    return Promise.resolve(model);
+                                },
+                                // in my case, I have nothing to dispose as I just re-use existing resources
+                                dispose() { },
+                                textEditorModel: model
+                            };
+                            return window.monaco.Promise.as({
+                                object: model2,
+                                dispose: () => { }
+                            });
+
+                            /*
+                            const simpleModel = resourceModel
+                                ? new SimpleModel(resourceModel)
+                                : null;
+
+                            return window.monaco.Promise.as({
+                                object: simpleModel,
+                                dispose: () => { }
+                            });
+                            */
+                        },
+                        registerTextModelContentProvider: () => ({ dispose: () => { } })
+                    }
+                })];
             initEditor(window.$editors[0]);
             el = document.createElement('div');
             el.classList.add('diff-container');
@@ -1906,6 +2000,7 @@
                 accelerator: "CmdOrCtrl+Z",
                 click: doUndo,
                 enabled: false,
+                id: 'undo'
             },
             {
                 label: '&Redo',
@@ -2279,8 +2374,8 @@
                         else
                             ipcRenderer.send('show-window', 'help', { show: true, file: 'help.html', icon: 'help', alwaysOnTopClient: true });
                         var h = () => {
-                            var w = remote.BrowserWindow.getAllWindows().filter(w=>w.getTitle() === 'jiMUD Help');
-                            if(w.length === 0)
+                            var w = remote.BrowserWindow.getAllWindows().filter(w => w.getTitle() === 'jiMUD Help');
+                            if (w.length === 0)
                                 setTimeout(h, 100);
                             else
                                 w[0].webContents.executeJavaScript(`loadUrl('codeeditor');`);
@@ -7682,8 +7777,11 @@
                 return;
             panel = manager.active;
         }
-        if (panel)
+        if (panel) {
+            if (panel.editor && panel.editor.clean)
+                panel.editor.clean();
             manager.removePanel(panel);
+        }
         if (manager.active && manager.active.editor)
             manager.active.editor.focus();
     }
@@ -8601,6 +8699,7 @@
                     temp.push({ type: 'separator' });
                     temp = temp.concat(p.editor.menu('context'));
                 }
+                temp[0].id = '1';
                 let inputMenu = Menu.buildFromTemplate(temp);
                 inputMenu.popup({ window: remote.getCurrentWindow() });
             });

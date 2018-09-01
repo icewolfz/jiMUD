@@ -8,6 +8,7 @@
     - Keyboard support, Use numpad or arrow keys to scroll, delete key to remove a room, + or - to change level, / or * to change zone
     - Mouse scroll lock, double clicking will lock scroll mode until click or escape ends it.
   - Code editor:
+    - Add basic Go to/Peek definition, works only with #define macros and only if in current file or included files relative to file
     - Virtual area editor:
       - Parse external rooms for doors to mark them as exits
       - Check if exit destinations start with VIR and if not mark them as external exits
