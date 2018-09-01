@@ -14,6 +14,7 @@
       - Check if exit destinations start with VIR and if not mark them as external exits
 - **Changed:**
   - Help: Rename main to home
+  - Code editor: Menu and context menu now only show code related commands for .c files
 - **Fixed:**
   - Help: Fixed main page
   - Auto update: Fixed taskbar progress for windows

@@ -591,112 +591,119 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public menu(menu) {
+        let m;
         if (menu === 'edit') {
             const selected = this.$oEditor && this.$oEditor.hasTextFocus() ? false : this.selected.length > 0;
-            return [
-                {
-                    label: 'F&ormatting',
-                    submenu: [
-                        {
-                            label: '&Insert Color...',
-                            click: () => {
-                                ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
-                                const setcolor = (event, type, color, code, window) => {
-                                    if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
-                                        return;
-                                    this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
-                                    ipcRenderer.removeListener('set-color', setcolor);
-                                };
-                                ipcRenderer.on('set-color', setcolor);
-                            }
-                        },
-                        { type: 'separator' },
-                        {
-                            label: 'To &Upper Case',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('editor.action.transformToUppercase').run();
-                            }
-                        },
-                        {
-                            label: 'To &Lower Case',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('editor.action.transformToLowercase').run();
-                            }
-                        },
-                        {
-                            label: '&Capitalize',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('jimud.action.transformToCapitalize').run();
-                            }
-                        },
-                        {
-                            label: 'In&verse Case',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('jimud.action.transformToInverse').run();
-                            }
-                        },
-                        { type: 'separator' },
-                        {
-                            label: '&Line Comment',
-                            accelerator: 'CmdOrCtrl+/',
-                            click: () => {
-                                this.$editor.getAction('editor.action.commentLine').run();
-                            }
-                        },
-                        {
-                            label: '&Block Comment',
-                            accelerator: 'Alt+Shift+A',
-                            click: () => {
-                                this.$editor.getAction('editor.action.blockComment').run();
-                            }
-                        },
-                        { type: 'separator' },
-                        {
-                            label: '&Format Document',
-                            accelerator: 'Alt+Shift+F',
-                            click: () => {
-                                monaco.editor.setModelMarkers(this.$model, '', []);
-                                this.$editor.getAction('editor.action.formatDocument').run();
-                            }
+            m = [{
+                label: 'F&ormatting',
+                submenu: [
+                    {
+                        label: '&Insert Color...',
+                        click: () => {
+                            ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
+                            const setcolor = (event, type, color, code, window) => {
+                                if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
+                                    return;
+                                this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
+                                ipcRenderer.removeListener('set-color', setcolor);
+                            };
+                            ipcRenderer.on('set-color', setcolor);
                         }
-                    ]
-                },
-                { type: 'separator' },
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'To &Upper Case',
+                        enabled: selected,
+                        click: () => {
+                            this.$editor.getAction('editor.action.transformToUppercase').run();
+                        }
+                    },
+                    {
+                        label: 'To &Lower Case',
+                        enabled: selected,
+                        click: () => {
+                            this.$editor.getAction('editor.action.transformToLowercase').run();
+                        }
+                    },
+                    {
+                        label: '&Capitalize',
+                        enabled: selected,
+                        click: () => {
+                            this.$editor.getAction('jimud.action.transformToCapitalize').run();
+                        }
+                    },
+                    {
+                        label: 'In&verse Case',
+                        enabled: selected,
+                        click: () => {
+                            this.$editor.getAction('jimud.action.transformToInverse').run();
+                        }
+                    }
+                ]
+            }];
+            if (path.extname(this.file) === '.c' || path.extname(this.file) === '.h') {
+                m[0].submenu.push(...[{ type: 'separator' },
                 {
-                    label: '&Test',
+                    label: '&Line Comment',
+                    accelerator: 'CmdOrCtrl+/',
                     click: () => {
-                        this.emit('debug', this.file);
+                        this.$editor.getAction('editor.action.commentLine').run();
                     }
                 },
                 {
-                    label: 'T&est Clear',
+                    label: '&Block Comment',
+                    accelerator: 'Alt+Shift+A',
+                    click: () => {
+                        this.$editor.getAction('editor.action.blockComment').run();
+                    }
+                },
+                { type: 'separator' },
+                {
+                    label: '&Format Document',
+                    accelerator: 'Alt+Shift+F',
                     click: () => {
                         monaco.editor.setModelMarkers(this.$model, '', []);
-                        this.$model.deltaDecorations(this.decorations || [], []);
-                        this.decorations = null;
-                        this.rawDecorations = null;
+                        this.$editor.getAction('editor.action.formatDocument').run();
                     }
-                },
-                { type: 'separator' },
+                }]);
+                if (path.extname(this.file) === '.c') {
+                    m.push(...[
+                        { type: 'separator' },
+                        {
+                            label: '&Test',
+                            click: () => {
+                                this.emit('debug', this.file);
+                            }
+                        },
+                        {
+                            label: 'T&est Clear',
+                            click: () => {
+                                monaco.editor.setModelMarkers(this.$model, '', []);
+                                this.$model.deltaDecorations(this.decorations || [], []);
+                                this.decorations = null;
+                                this.rawDecorations = null;
+                            }
+                        }
+                    ]);
+                }
+                m.push(...[{ type: 'separator' },
                 {
                     label: 'Go to Definition',
                     accelerator: 'F12',
                     click: () => {
                         this.$editor.getAction('editor.action.goToDeclaration').run();
                     }
-                },
-                {
-                    label: '&Go to line...',
-                    accelerator: 'CmdOrCtrl+G',
-                    click: () => {
-                        this.$editor.getAction('editor.action.gotoLine').run();
-                    }
+                }]);
+            }
+            m.push({ type: 'separator' });
+            m.push({
+                label: '&Go to line...',
+                accelerator: 'CmdOrCtrl+G',
+                click: () => {
+                    this.$editor.getAction('editor.action.gotoLine').run();
                 }
-            ];
+            });
+            return m;
         }
         else if (menu === 'context') {
             const selected = this.selected.length > 0;
@@ -717,117 +724,121 @@ export class MonacoCodeEditor extends EditorBase {
                         }
                     }
                 ];
-            return [
+            m = [{
+                label: 'F&ormatting',
+                submenu: [
+                    {
+                        label: '&Insert Color...',
+                        click: () => {
+                            ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
+                            const setcolor = (event, type, color, code, window) => {
+                                if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
+                                    return;
+                                this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
+                                ipcRenderer.removeListener('set-color', setcolor);
+                            };
+                            ipcRenderer.on('set-color', setcolor);
+                        }
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'To &Upper Case',
+                        enabled: selected,
+                        click: () => {
+                            this.$editor.getAction('editor.action.transformToUppercase').run();
+                        }
+                    },
+                    {
+                        label: 'To &Lower Case',
+                        enabled: selected,
+                        click: () => {
+                            this.$editor.getAction('editor.action.transformToLowercase').run();
+                        }
+                    },
+                    {
+                        label: '&Capitalize',
+                        enabled: selected,
+                        click: () => {
+                            this.$editor.getAction('jimud.action.transformToCapitalize').run();
+                        }
+                    },
+                    {
+                        label: 'In&verse Case',
+                        enabled: selected,
+                        click: () => {
+                            this.$editor.getAction('jimud.action.transformToInverse').run();
+                        }
+                    }
+                ]
+            }];
+            if (path.extname(this.file) === '.c' || path.extname(this.file) === '.h') {
+                m[0].submenu.push(...[{ type: 'separator' },
                 {
-                    label: 'Formatting',
-                    submenu: [
-                        {
-                            label: 'Insert Color...',
-                            click: () => {
-                                ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
-                                const setcolor = (event, type, color, code, window) => {
-                                    if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
-                                        return;
-                                    this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
-                                    ipcRenderer.removeListener('set-color', setcolor);
-                                };
-                                ipcRenderer.on('set-color', setcolor);
-                            }
-                        },
+                    label: '&Line Comment',
+                    accelerator: 'CmdOrCtrl+/',
+                    click: () => {
+                        this.$editor.getAction('editor.action.commentLine').run();
+                    }
+                },
+                {
+                    label: '&Block Comment',
+                    accelerator: 'Alt+Shift+A',
+                    click: () => {
+                        this.$editor.getAction('editor.action.blockComment').run();
+                    }
+                },
+                { type: 'separator' },
+                {
+                    label: '&Format Document',
+                    accelerator: 'Alt+Shift+F',
+                    click: () => {
+                        monaco.editor.setModelMarkers(this.$model, '', []);
+                        this.$editor.getAction('editor.action.formatDocument').run();
+                    }
+                }]);
+                if (path.extname(this.file) === '.c') {
+                    m.push(...[
                         { type: 'separator' },
                         {
-                            label: 'To Upper Case',
-                            enabled: selected,
+                            label: '&Test',
                             click: () => {
-                                this.$editor.getAction('editor.action.transformToUppercase').run();
+                                this.emit('debug', this.file);
                             }
                         },
                         {
-                            label: 'To Lower Case',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('editor.action.transformToLowercase').run();
-                            }
-                        },
-                        {
-                            label: 'Capitalize',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('jimud.action.transformToCapitalize').run();
-                            }
-                        },
-                        {
-                            label: 'Inverse Case',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('jimud.action.transformToInverse').run();
-                            }
-                        },
-                        { type: 'separator' },
-                        {
-                            label: 'Line Comment',
-                            accelerator: 'CmdOrCtrl+/',
-                            click: () => {
-                                this.$editor.getAction('editor.action.commentLine').run();
-                            }
-                        },
-                        {
-                            label: 'Block Comment',
-                            accelerator: 'Alt+Shift+A',
-                            click: () => {
-                                this.$editor.getAction('editor.action.blockComment').run();
-                            }
-                        },
-                        { type: 'separator' },
-                        {
-                            label: 'Format Document',
-                            accelerator: 'Alt+Shift+F',
+                            label: 'T&est Clear',
                             click: () => {
                                 monaco.editor.setModelMarkers(this.$model, '', []);
-                                this.$editor.getAction('editor.action.formatDocument').run();
+                                this.$model.deltaDecorations(this.decorations || [], []);
+                                this.decorations = null;
+                                this.rawDecorations = null;
                             }
                         }
-                    ]
-                },
-                {
-                    label: 'Folding',
-                    submenu: [
-                        {
-                            label: 'Expand All',
-                            accelerator: 'CmdOrCtrl+>',
-                            click: () => {
-                                this.$editor.getAction('editor.unfoldAll').run();
-                            }
-                        },
-                        {
-                            label: 'Collapse All',
-                            accelerator: 'CmdOrCtrl+<',
-                            click: () => {
-                                this.$editor.getAction('editor.foldAll').run();
-                            }
-                        }
-                    ]
-                },
-                { id: 'sep', type: 'separator', position: 'before=1' },
-                {
-                    label: 'Go to Definition',
-                    accelerator: 'F12',
-                    click: () => {
-                        this.$editor.getAction('editor.action.goToDeclaration').run();
-                    },
-                    position: 'before=sep',
-                    id: 'goto'
-                },
-                {
-                    label: 'Peek Definition',
-                    accelerator: 'Alt+F12',
-                    click: () => {
-                        this.$editor.getAction('editor.action.previewDeclaration').run();
-                    },
-                    position: 'after=goto',
-                    id: 'peek'
+                    ]);
                 }
-            ];
+                m.push(...[
+                    { id: 'sep', type: 'separator', position: 'before=1' },
+                    {
+                        label: 'Go to Definition',
+                        accelerator: 'F12',
+                        click: () => {
+                            this.$editor.getAction('editor.action.goToDeclaration').run();
+                        },
+                        position: 'before=sep',
+                        id: 'goto'
+                    },
+                    {
+                        label: 'Peek Definition',
+                        accelerator: 'Alt+F12',
+                        click: () => {
+                            this.$editor.getAction('editor.action.previewDeclaration').run();
+                        },
+                        position: 'after=goto',
+                        id: 'peek'
+                    }]);
+            }
+
+            return m;
         }
         else if (menu === 'view')
             return [
