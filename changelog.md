@@ -17,15 +17,16 @@
   - Help: Fixed main page
   - Auto update: Fixed taskbar progress for windows
   - Code editor:
+    - Fixed issue when opening a file it would open in the panel not linked to it's tab.
     - Area designer:
       - Fixed capitalizing of monster names in room preview
-      - Fixed pasting rooms from differnt depth levels
+      - Fixed pasting rooms from different depth levels
     - Virtual area editor:
       - Fixed external room code generation for set_items and set_exits to have proper comma formatting and no trailing comma
       - Trim all data values for external room generation to remove trailing spaces
       - Trim all external room strings when parsing
       - Correctly add add_exits for external rooms
-      - Fixed pasting rooms from differnt depth levels
+      - Fixed pasting rooms from different depth levels
   - Mapper:
     - Fixed gap around map where rooms where not being drawn
     - Fixed double click break mouse drag scroll

@@ -580,6 +580,8 @@ export class DockManager extends EventEmitter {
     public switchToPanel(panel, dock?) {
         if (dock)
             dock.switchToPanel(panel);
+        else if (panel.dock)
+            panel.dock.switchToPanel(panel);
         else
             this.$activePane.switchToPanel(panel);
     }
