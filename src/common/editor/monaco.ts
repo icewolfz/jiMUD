@@ -155,85 +155,72 @@ export function SetupEditor() {
             //https://github.com/Microsoft/monaco-editor/issues/852
             //https://github.com/Microsoft/monaco-editor/issues/935
             monaco.languages.registerDefinitionProvider('lpc', {
-                provideDefinition(model: monaco.editor.ITextModel, position: monaco.Position, token: monaco.CancellationToken): monaco.Thenable<monaco.languages.Definition> {
-                    return new Promise<monaco.languages.Definition>((resolve2, reject2) => {
-                        if (!model) return;
-                        if (!$lpcDefineCache) $lpcDefineCache = {};
-                        const defines = [];
-                        //monaco.Uri.file()
-                        const resource = model.uri;
-                        let word: any = model.getWordAtPosition(position);
-                        if (word)
-                            word = word.word;
-                        const value = model.getValue();
-                        const root = path.dirname(resource.fsPath);
-                        const def = /^#define ([_a-zA-Z0-9]+)[ |\(].*$/gm;
-                        let dValue;
-                        if (isDirSync(root)) {
-                            //const p = path.dirname((<any>model).file);
-                            const reg = /^#include "(.*)"$/gm;
-                            let result = reg.exec(value);
-                            while (result !== null) {
-                                if (result.index === reg.lastIndex) {
-                                    reg.lastIndex++;
-                                }
-                                const f = path.join(root, result[1]);
-                                if (existsSync(f)) {
-                                    if (!$lpcDefineCache[f]) {
-                                        $lpcDefineCache[f] = {};
-                                        dValue = fs.readFileSync(f, 'utf8').split('\n');
-                                        dValue.forEach((l, i) => {
-                                            let results2 = def.exec(l);
-                                            while (results2 !== null) {
-                                                if (results2.index === def.lastIndex) {
-                                                    def.lastIndex++;
-                                                }
-                                                $lpcDefineCache[f][results2[1]] = {
-                                                    uri: monaco.Uri.file(f),
-                                                    range: new monaco.Range(i + 1, 9, i + 1, 9)
-                                                };
-                                                defines[results2[1]] = $lpcDefineCache[f][results2[1]];
-                                                results2 = def.exec(l);
+                async provideDefinition(model: monaco.editor.ITextModel, position: monaco.Position, token: monaco.CancellationToken): Promise<monaco.languages.DefinitionLink[] | monaco.languages.Definition | undefined> {
+                    if (!model) return undefined;
+                    if (!$lpcDefineCache) $lpcDefineCache = {};
+                    const defines = [];
+                    //monaco.Uri.file()
+                    const resource = model.uri;
+                    let word: any = model.getWordAtPosition(position);
+                    if (word)
+                        word = word.word;
+                    const value = model.getValue();
+                    const root = path.dirname(resource.fsPath);
+                    const def = /^#define ([_a-zA-Z0-9]+)[ |\(].*$/gm;
+                    let dValue;
+                    if (isDirSync(root)) {
+                        //const p = path.dirname((<any>model).file);
+                        const reg = /^#include "(.*)"$/gm;
+                        let result = reg.exec(value);
+                        while (result !== null) {
+                            if (result.index === reg.lastIndex) {
+                                reg.lastIndex++;
+                            }
+                            const f = path.join(root, result[1]);
+                            if (existsSync(f)) {
+                                if (!$lpcDefineCache[f]) {
+                                    $lpcDefineCache[f] = {};
+                                    dValue = fs.readFileSync(f, 'utf8').split('\n');
+                                    dValue.forEach((l, i) => {
+                                        let results2 = def.exec(l);
+                                        while (results2 !== null) {
+                                            if (results2.index === def.lastIndex) {
+                                                def.lastIndex++;
                                             }
-                                        });
-                                    } else {
-                                        Object.keys($lpcDefineCache[f]).forEach(k => {
-                                            defines[k] = $lpcDefineCache[f][k];
-                                        });
-                                    }
+                                            $lpcDefineCache[f][results2[1]] = {
+                                                uri: monaco.Uri.file(f),
+                                                range: new monaco.Range(i + 1, 9, i + 1, 9 + results2[1].length)
+                                            };
+                                            defines[results2[1]] = $lpcDefineCache[f][results2[1]];
+                                            results2 = def.exec(l);
+                                        }
+                                    });
+                                } else {
+                                    Object.keys($lpcDefineCache[f]).forEach(k => {
+                                        defines[k] = $lpcDefineCache[f][k];
+                                    });
                                 }
-                                result = reg.exec(value);
                             }
+                            result = reg.exec(value);
                         }
-                        dValue = value.split('\n');
-                        dValue.forEach((l, i) => {
-                            let results2 = def.exec(l);
-                            while (results2 !== null) {
-                                if (results2.index === def.lastIndex) {
-                                    def.lastIndex++;
-                                }
-                                defines[results2[1]] = {
-                                    uri: model.uri,
-                                    range: new monaco.Range(i + 1, results2.index + 1, i + 1, results2.index + 1)
-                                };
-                                results2 = def.exec(l);
+                    }
+                    dValue = value.split('\n');
+                    dValue.forEach((l, i) => {
+                        let results2 = def.exec(l);
+                        while (results2 !== null) {
+                            if (results2.index === def.lastIndex) {
+                                def.lastIndex++;
                             }
-                        });
-                        if (defines[word])
-                            resolve2(defines[word]);
-                        else
-                            reject2();
+                            defines[results2[1]] = {
+                                uri: model.uri,
+                                range: new monaco.Range(i + 1, results2.index + 1, i + 1, results2.index + 1)
+                            };
+                            results2 = def.exec(l);
+                        }
                     });
-                    /*
-                    return wireCancellationToken(token, this._worker(resource).then(worker => {
-                        return worker.findDefinition(resource.toString(), fromPosition(position));
-                    }).then(definition => {
-                        if (!definition) {
-                            return;
-                        }
-                        return [toLocation(definition)];
-                    }));
-                    */
+                    if (defines[word])
+                        return defines[word];
+                    return undefined;
                 }
             });
             resolve(monaco);
@@ -732,25 +719,6 @@ export class MonacoCodeEditor extends EditorBase {
                 ];
             return [
                 {
-                    label: 'Go to Definition',
-                    accelerator: 'F12',
-                    click: () => {
-                        this.$editor.getAction('editor.action.goToDeclaration').run();
-                    },
-                    position: 'before=1',
-                    id: 'goto'
-                },
-                {
-                    label: 'Peek Definition',
-                    accelerator: 'Alt+F12',
-                    click: () => {
-                        this.$editor.getAction('editor.action.previewDeclaration').run();
-                    },
-                    position: 'after=goto',
-                    id: 'peek'
-                },
-                { type: 'separator', position: 'after=peek' },
-                {
                     label: 'Formatting',
                     submenu: [
                         {
@@ -839,6 +807,25 @@ export class MonacoCodeEditor extends EditorBase {
                             }
                         }
                     ]
+                },
+                { id: 'sep', type: 'separator', position: 'before=1' },
+                {
+                    label: 'Go to Definition',
+                    accelerator: 'F12',
+                    click: () => {
+                        this.$editor.getAction('editor.action.goToDeclaration').run();
+                    },
+                    position: 'before=sep',
+                    id: 'goto'
+                },
+                {
+                    label: 'Peek Definition',
+                    accelerator: 'Alt+F12',
+                    click: () => {
+                        this.$editor.getAction('editor.action.previewDeclaration').run();
+                    },
+                    position: 'after=goto',
+                    id: 'peek'
                 }
             ];
         }

@@ -36,11 +36,11 @@
                     if (!input || !input.resource)
                         return editor.getOriginalEditor()._oldOpenCodeEditor(input, source, sideBySide);
                     openFile(input.resource.fsPath);
-                    if (input.options){
+                    if (input.options) {
                         let idx = manager.panes.indexOf(manager.activePane);
                         if (idx !== -1) {
                             var ed;
-                            if(window.$editors[idx].domElement.style.display !== 'block')
+                            if (window.$editors[idx].domElement.style.display !== 'block')
                                 ed = window.$dEditors[idx];
                             else
                                 ed = window.$editors[idx];
@@ -64,7 +64,7 @@
                         let idx = manager.panes.indexOf(manager.activePane);
                         if (idx !== -1) {
                             var ed;
-                            if(window.$editors[idx].domElement.style.display !== 'block')
+                            if (window.$editors[idx].domElement.style.display !== 'block')
                                 ed = window.$dEditors[idx];
                             else
                                 ed = window.$editors[idx];
@@ -273,24 +273,27 @@
                     textModelService: {
                         createModelReference: resource => {
                             var model = monaco.editor.getModel(resource);
+                            var d = false;
                             if (!model) {
                                 var e = findEditor(resource.fsPath);
                                 if (e && e.editor && e.editor.model)
                                     model = e.editor.model;
-                                else
+                                else {
                                     model = monaco.editor.createModel(fs.readFileSync(resource.fsPath, 'utf8'), 'lpc');
+                                    d = true;
+                                }
                             }
                             var model2 = {
                                 load() {
                                     return Promise.resolve(model);
                                 },
                                 // in my case, I have nothing to dispose as I just re-use existing resources
-                                dispose() { },
+                                dispose() { if (d && !model.isDisposed()) model.dispose(); },
                                 textEditorModel: model
                             };
                             return window.monaco.Promise.as({
                                 object: model2,
-                                dispose: () => { }
+                                dispose: () => { if (d && !model.isDisposed()) model.dispose(); }
                             });
 
                             /*
