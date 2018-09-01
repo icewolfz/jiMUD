@@ -724,53 +724,75 @@ export class MonacoCodeEditor extends EditorBase {
                         }
                     }
                 ];
-            m = [{
-                label: 'F&ormatting',
-                submenu: [
-                    {
-                        label: '&Insert Color...',
-                        click: () => {
-                            ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
-                            const setcolor = (event, type, color, code, window) => {
-                                if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
-                                    return;
-                                this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
-                                ipcRenderer.removeListener('set-color', setcolor);
-                            };
-                            ipcRenderer.on('set-color', setcolor);
+            m = [
+                {
+                    label: 'F&ormatting',
+                    submenu: [
+                        {
+                            label: '&Insert Color...',
+                            click: () => {
+                                ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
+                                const setcolor = (event, type, color, code, window) => {
+                                    if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
+                                        return;
+                                    this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
+                                    ipcRenderer.removeListener('set-color', setcolor);
+                                };
+                                ipcRenderer.on('set-color', setcolor);
+                            }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: 'To &Upper Case',
+                            enabled: selected,
+                            click: () => {
+                                this.$editor.getAction('editor.action.transformToUppercase').run();
+                            }
+                        },
+                        {
+                            label: 'To &Lower Case',
+                            enabled: selected,
+                            click: () => {
+                                this.$editor.getAction('editor.action.transformToLowercase').run();
+                            }
+                        },
+                        {
+                            label: '&Capitalize',
+                            enabled: selected,
+                            click: () => {
+                                this.$editor.getAction('jimud.action.transformToCapitalize').run();
+                            }
+                        },
+                        {
+                            label: 'In&verse Case',
+                            enabled: selected,
+                            click: () => {
+                                this.$editor.getAction('jimud.action.transformToInverse').run();
+                            }
                         }
-                    },
-                    { type: 'separator' },
-                    {
-                        label: 'To &Upper Case',
-                        enabled: selected,
-                        click: () => {
-                            this.$editor.getAction('editor.action.transformToUppercase').run();
+                    ],
+
+                }, {
+                    label: 'Folding',
+                    submenu: [
+                        {
+                            label: 'Expand All',
+                            accelerator: 'CmdOrCtrl+>',
+                            click: () => {
+                                this.$editor.getAction('editor.unfoldAll').run();
+                            }
+                        },
+                        {
+                            label: 'Collapse All',
+                            accelerator: 'CmdOrCtrl+<',
+                            click: () => {
+                                this.$editor.getAction('editor.foldAll').run();
+                            }
                         }
-                    },
-                    {
-                        label: 'To &Lower Case',
-                        enabled: selected,
-                        click: () => {
-                            this.$editor.getAction('editor.action.transformToLowercase').run();
-                        }
-                    },
-                    {
-                        label: '&Capitalize',
-                        enabled: selected,
-                        click: () => {
-                            this.$editor.getAction('jimud.action.transformToCapitalize').run();
-                        }
-                    },
-                    {
-                        label: 'In&verse Case',
-                        enabled: selected,
-                        click: () => {
-                            this.$editor.getAction('jimud.action.transformToInverse').run();
-                        }
-                    }
-                ]
-            }];
+                    ]
+                }
+            ];
+
             if (path.extname(this.file) === '.c' || path.extname(this.file) === '.h') {
                 m[0].submenu.push(...[{ type: 'separator' },
                 {
