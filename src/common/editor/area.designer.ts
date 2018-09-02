@@ -5713,7 +5713,7 @@ export class AreaDesigner extends EditorBase {
                     type: EditorType.button,
                     options: {
                         click: ed => {
-                            let ty = ed.data.type;
+                            let ty = ed.value.type;
                             let sh = ed.value.short;
                             let name = ed.value.name;
                             if (ed.editors) {
@@ -6224,7 +6224,7 @@ export class AreaDesigner extends EditorBase {
                                         id: 'obj-welcome',
                                         title: 'Welcome',
                                         body: `
-                                        <img src="../assets/icons/png/wiz.obj.logo.png" alt="Welcome to the object wizard" style="float: left;padding-top: 76px;">
+                                        <img src="../assets/icons/png/wiz.obj.logo.png" alt="Welcome to the object wizard" style="float: left;padding-top: 81px;">
                                         <div style="padding-top:96px">Welcome to the object editor wizard, this will take you through the steps to edit an object quickly and easily. You may finish at any time to save your current selections.</div>
                                         `
                                     }),
@@ -6268,7 +6268,7 @@ export class AreaDesigner extends EditorBase {
                                             <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('obj-long').value, 'editor', true);document.getElementById('obj-long').focus();">
                                                 <i class="fa fa-edit"></i>
                                             </a>
-                                            <textarea class="input-sm form-control" id="obj-long" style="width: 100%;height: 256px;"></textarea>
+                                            <textarea class="input-sm form-control" id="obj-long" style="width: 100%;height: 266px;"></textarea>
                                         </label>
                                     </div>`,
                                         reset: (e) => {
@@ -6334,7 +6334,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-mass').value = ed.value.mass || '0';
                                             e.page.querySelector('#obj-value').value = ed.value.value || '0';
                                             e.page.querySelector('#obj-material').value = ed.value.material || '';
-                                            if (ed.value.type === StdObjectType.food || ed.value.type === StdObjectType.object) {
+                                            if (ty === StdObjectType.food || ty === StdObjectType.object) {
                                                 e.page.querySelector('#obj-bait').parentElement.parentElement.style.display = '';
                                                 e.page.querySelector('#obj-baitStrength').parentElement.parentElement.style.display = '';
                                                 e.page.querySelector('#obj-baitUses').parentElement.parentElement.style.display = '';
@@ -6453,7 +6453,7 @@ export class AreaDesigner extends EditorBase {
                             };
                             wiz.pages[3].page.querySelector('#obj-material-list').innerHTML = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'material.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
                             initEditDropdown(wiz.pages[3].page.querySelector('#obj-material-list').closest('.edit-dropdown'));
-                            wiz.height = '380px';
+                            wiz.height = '390px';
                             wiz.on('open', () => {
                                 this.emit('dialog-open');
                                 ed.focus();
@@ -7493,7 +7493,7 @@ export class AreaDesigner extends EditorBase {
                             wiz.addPages(new WizardPage({
                                 id: 'obj-wiz-notes',
                                 title: 'Notes',
-                                body: `<div class="col-sm-12 form-group"><label class="control-label" style="width: 100%">Notes<textarea class="input-sm form-control" id="obj-notes" style="width: 100%;height: 256px;"></textarea></label></div>`,
+                                body: `<div class="col-sm-12 form-group"><label class="control-label" style="width: 100%">Notes<textarea class="input-sm form-control" id="obj-notes" style="width: 100%;height: 266px;"></textarea></label></div>`,
                                 reset: (e) => {
                                     e.page.querySelector('#obj-notes').value = ed.value.notes || '';
                                 }

@@ -770,8 +770,7 @@ export class MonacoCodeEditor extends EditorBase {
                                 this.$editor.getAction('jimud.action.transformToInverse').run();
                             }
                         }
-                    ],
-
+                    ]
                 }, {
                     label: 'Folding',
                     submenu: [
