@@ -285,6 +285,7 @@ export class ReplaceCommand implements monaco.editor.ICommand {
 export class MonacoCodeEditor extends EditorBase {
     private $oEditor: monaco.editor.IStandaloneCodeEditor;
     private $editor: monaco.editor.IStandaloneCodeEditor;
+    private $dEditor: monaco.editor.IStandaloneDiffEditor;
     private $model: monaco.editor.ITextModel;
     private $saving = false;
     private $state;
@@ -344,6 +345,20 @@ export class MonacoCodeEditor extends EditorBase {
             if (this.decorations.length === 0)
                 this.decorations = null;
         });
+        if (this.$dEditor) {
+            this.$dEditor.setModel({
+                original: this.$diffModel || this.$model,
+                modified: this.$model
+            });
+            this.$dEditor.restoreViewState({
+                modified: this.$state,
+                original: this.$diffState || this.$state
+            });
+        }
+        else if (this.$editor) {
+            this.$editor.setModel(this.$model);
+            this.$editor.restoreViewState(this.$state);
+        }
     }
 
     public createControl() {
@@ -987,10 +1002,12 @@ export class MonacoCodeEditor extends EditorBase {
         if (editor.getEditorType() === 'vs.editor.ICodeEditor') {
             this.$editor = editor;
             this.$oEditor = null;
+            this.$dEditor = null;
             editor.setModel(this.$model);
             editor.restoreViewState(this.$state);
         }
         else {
+            this.$dEditor = editor;
             this.$editor = editor.getModifiedEditor();
             this.$oEditor = editor.getOriginalEditor();
             editor.setModel({
