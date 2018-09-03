@@ -50,24 +50,24 @@ export const conf: IRichLanguageConfiguration = {
             // e.g. /** | */
             beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
             afterText: /^\s*\*\/$/,
-            action: { indentAction:  2, appendText: ' * ' }
+            action: { indentAction: 2, appendText: ' * ' }
         }, {
             // e.g. /** ...|
             beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
-            action: { indentAction:  0, appendText: ' * ' }
+            action: { indentAction: 0, appendText: ' * ' }
         }, {
             // e.g.  * ...|
             beforeText: /^(\t|[ ])*[ ]\*([ ]([^\*]|\*(?!\/))*)?$/,
-            action: { indentAction:  0, appendText: '* ' }
+            action: { indentAction: 0, appendText: '* ' }
         }, {
             // e.g.  */|
             beforeText: /^(\t|[ ])*[ ]\*\/\s*$/,
-            action: { indentAction:  0, removeText: 1 }
+            action: { indentAction: 0, removeText: 1 }
         },
         {
             // e.g.  *-----*/|
             beforeText: /^(\t|[ ])*[ ]\*[^/]*\*\/\s*$/,
-            action: { indentAction:  0, removeText: 1 }
+            action: { indentAction: 0, removeText: 1 }
         }
     ]
 };
@@ -2464,4 +2464,190 @@ export function formatArgumentList(str, first, second?, indent?, quotes?) {
     if (tmp2.length)
         tmp.push(tmp2.join(', '));
     return tmp.join(',\n' + ' '.repeat(indent));
+}
+
+export function formatMapping(str, indent?) {
+    if (!str) return;
+    str = str.trim();
+    if (!str.startsWith('([') && !str.ends_with('])'))
+        return str;
+    const map = parseMapping(str, true);
+    indent = '   ' + ' '.repeat(indent || 0);
+    let out = indent + '([\n';
+    out += Object.keys(map).map(k => {
+        if (map[k].startsWith('([') && map[k].endsWith('])'))
+            return `${indent}  "${k}" : ${formatMapping(map[k], indent.length + 3)}`;
+        return `${indent}  "${k}" : ${map[k]}`;
+    }).join(',\n');
+    out += '\n' + indent + '])';
+    return out;
+}
+
+function parseString(str, format?) {
+    if (!str)
+        return str;
+    str = str.trim();
+    if (str.length === 0)
+        return str;
+    const end = str.length;
+    if (str.startsWith('(:'))
+        return format ? formatFunctionPointer(str) : 'Function: ' + str;
+    if (str.startsWith('(['))
+        return format ? str : 'Mapping: ' + str;
+    if (str.startsWith('({'))
+        return format ? str : 'Array: ' + str;
+    const sb = [];
+    let save = true;
+    let c;
+    for (let idx = 0; idx < end; idx++) {
+        c = str.charAt(idx);
+        switch (c) {
+            case '\\': //escaped;
+                idx++;
+                if (idx >= end) break;
+                sb.push(c);
+                break;
+            case '"':
+                if (!save) {
+                    idx++;
+                    while (idx < end && str.charAt(idx) !== '"')
+                        idx++;
+                    save = true;
+                }
+                save = false;
+                break;
+            default:
+                sb.push(c);
+                break;
+        }
+    }
+
+    return sb.join('');
+}
+
+function parseMapping(str, format?) {
+    if (!str || str.length === 0)
+        return {};
+    if (!str.startsWith('(['))
+        return {};
+    if (!str.endsWith('])'))
+        return {};
+
+    str = str.slice(2, -2).trim();
+    let idx = 0;
+    let pIdx = 0;
+    const end = str.length;
+    const m = {};
+    let array = 0;
+    let pair;
+    let c;
+    for (; idx < end; idx++) {
+        c = str.charAt(idx);
+        switch (c) {
+            case '/':
+                if (idx + 1 < end && str.charAt(idx + 1) === '/') {
+                    if (pIdx < idx) {
+                        pair = parseKeyPair(str.substring(pIdx, idx).trim(), format);
+                        m[pair[0]] = pair[1];
+                    }
+                    while (idx < end) {
+                        c = str.charAt(idx);
+                        if (c === '\n')
+                            break;
+                        idx++;
+                        pIdx = idx;
+                    }
+                }
+                else if (idx + 1 < end && str.charAt(idx + 1) === '*') {
+                    if (pIdx < idx) {
+                        pair = parseKeyPair(str.substring(pIdx, idx).trim(), format);
+                        m[pair[0]] = pair[1];
+                    }
+                    while (idx < end) {
+                        c = str.charAt(idx);
+                        if (idx + 1 < end && c === '*' && str.charAt(idx + 1) === '/') {
+                            break;
+                        }
+                        idx++;
+                        pIdx = idx;
+                    }
+                }
+                break;
+            case '(':
+                array++;
+                break;
+            case '"':
+                idx++;
+                while (idx < end) {
+                    c = str.charAt(idx);
+                    if (str === '\\')
+                        idx++;
+                    else if (c === '"')
+                        break;
+                    idx++;
+                }
+                break;
+            case ')':
+                array--;
+                break;
+            case ',':
+                if (array > 0) {
+                    idx++;
+                    continue;
+                }
+                pair = parseKeyPair(str.substring(pIdx, idx).trim(), format);
+                m[pair[0]] = pair[1];
+                pIdx = idx + 1;
+                break;
+        }
+    }
+    if (pIdx < idx) {
+        pair = parseKeyPair(str.substring(pIdx, idx).trim(), format);
+        m[pair[0]] = pair[1];
+    }
+    return m || {};
+
+}
+
+function parseKeyPair(str, format?) {
+    if (!str || str.length === 0)
+        return ['', ''];
+    const pair = ['', ''];
+    let c;
+    let idx = 0;
+    const end = str.length;
+    let array;
+    for (; idx < end; idx++) {
+        c = str.charAt(idx);
+        switch (c) {
+            case '(':
+                array++;
+                break;
+            case ')':
+                idx++;
+                pair[0] = str.substring(0, idx).trim();
+                idx++;
+                pair[1] = str.substring(idx).trim();
+                return pair;
+            case '"':
+                idx++;
+                while (idx < end) {
+                    c = str.charAt(idx);
+                    if (str === '\\')
+                        idx++;
+                    else if (c === '"')
+                        break;
+                    idx++;
+                }
+                break;
+            case ':':
+                if (array > 0) continue;
+                pair[0] = parseString(str.substring(0, idx), format);
+                idx++;
+                pair[1] = str.substring(idx).trim();
+                return pair;
+        }
+    }
+    pair[0] = str;
+    return pair;
 }

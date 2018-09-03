@@ -3,7 +3,7 @@
 //spell-checker:ignore dirtroad highmountain icesheet pavedroad rockdesert sanddesert
 //spell-checker:ignore bandedmail splintmail chainmail ringmail scalemail overclothing
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
-import { createFunction, formatFunctionPointer, formatArgumentList } from './lpc';
+import { createFunction, formatFunctionPointer, formatArgumentList, formatMapping } from './lpc';
 import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
@@ -11960,9 +11960,12 @@ export class AreaDesigner extends EditorBase {
         if (monster.attackInitiators !== base.attackInitiators)
             data['create body'] += `   set_combat_initiator(${formatArgumentList(monster.attackInitiators, 56)}); //Set attack initiators\n`;
         if (monster.aggressive !== base.aggressive) {
-            data['create body'] += `   set_aggressive(${monster.aggressive}); //Set monster aggressiveness\n`;
+            if (monster.aggressive.trim().startsWith('(['))
+                data['create body'] += `   set_aggressive( ${formatMapping(monster.aggressive, 4).trim()} ); //Set monster aggressiveness\n`;
+            else
+                data['create body'] += `   set_aggressive(${monster.aggressive.trim()}); //Set monster aggressiveness\n`;
             data['doc'].push('/doc/build/monster/haggle');
-            data['doc'].push('/doc/build/monster/aggressive');
+            data['doc'].push('/doc/build/monfster/aggressive');
         }
         if (monster.party !== base.party)
             data['create body'] += `   set_mon_party("${monster.party}");\n`;

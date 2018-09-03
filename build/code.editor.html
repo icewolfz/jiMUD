@@ -1847,7 +1847,7 @@
     const { DockManager } = require('./js/dockmanager');
     const { EditorType } = require('./js/value.editors');
     const { DataGrid } = require('./js/datagrid');
-    const { createFunction, formatFunctionPointer, formatArgumentList, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
+    const { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
 
     const { dialog, Menu, MenuItem, app } = remote;
@@ -7010,7 +7010,10 @@
                 if (data['mon-wiz-initiators'].length > 0)
                     tmpl['create body'] += `   set_combat_initiator(${formatArgumentList(data['mon-wiz-initiators'], 56)}); //Set attack initiators\n`;
                 if (data['mon-wiz-aggressive'].length > 0) {
-                    tmpl['create body'] += `   set_aggressive(${data['mon-wiz-aggressive']}); //Set monster aggressiveness\n`;
+                    if (data['mon-wiz-aggressive'].trim().startsWith('(['))
+                        tmpl['create body'] += `   set_aggressive(${formatMapping(data['mon-wiz-aggressive'], 4).trim()}); //Set monster aggressiveness\n`;
+                    else
+                        tmpl['create body'] += `   set_aggressive(${data['mon-wiz-aggressive'].trim()}); //Set monster aggressiveness\n`;
                     tmpl['doc'].push('/doc/build/monster/haggle');
                     tmpl['doc'].push('/doc/build/monster/aggressive');
                 }
