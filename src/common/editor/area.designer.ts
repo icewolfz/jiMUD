@@ -12001,7 +12001,7 @@ export class AreaDesigner extends EditorBase {
                 tmp.forEach(r => {
                     data['create body'] += `       "${r.type.length > 0 ? r.type + ' ' : ''}${r.reaction}" : "${r.action}"\n`;
                 });
-                data['create body'] += '\n     ]) );\n';
+                data['create body'] += '     ]) );\n';
             }
         }
         if (monster.tracking && !base.tracking)

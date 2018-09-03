@@ -7012,7 +7012,7 @@
                 if (data['mon-wiz-aggressive'].length > 0) {
                     tmpl['create body'] += `   set_aggressive(${data['mon-wiz-aggressive']}); //Set monster aggressiveness\n`;
                     tmpl['doc'].push('/doc/build/monster/haggle');
-                    data['doc'].push('/doc/build/monster/aggressive');
+                    tmpl['doc'].push('/doc/build/monster/aggressive');
                 }
                 if (data['mon-wiz-party'].length > 0)
                     tmpl['create body'] += `   set_mon_party("${data['mon-wiz-party']}");\n`;
@@ -7048,7 +7048,7 @@
                     data['mon-wiz-reactions'].forEach(r => {
                         tmpl['create body'] += `       "${r.type.length > 0 ? r.type + ' ' : ''}${r.reaction}" : "${r.action}"\n`;
                     });
-                    tmpl['create body'] += '\n     ]) );\n';
+                    tmpl['create body'] += '     ]) );\n';
                 }
 
                 if (data['mon-wiz-tracking'])

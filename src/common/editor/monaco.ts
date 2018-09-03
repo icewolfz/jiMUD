@@ -314,14 +314,19 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     private createModel() {
-        if (this.$model)
+        let value = '';
+        if (this.$model) {
+            value = this.$model.getValue(monaco.editor.EndOfLinePreference.LF);
             this.$model.dispose();
+        }
         if (!this.new && this.file && this.file.length !== 0 && this.source === Source.local) {
             this.$model = monaco.editor.getModel(monaco.Uri.file(this.file));
-            if (this.$model)
+            if (this.$model) {
+                value = this.$model.getValue(monaco.editor.EndOfLinePreference.LF);
                 this.$model.dispose();
+            }
         }
-        this.$model = monaco.editor.createModel('', 'lpc', !this.new && this.file && this.file.length !== 0 && this.source === Source.local ? monaco.Uri.file(this.file) : null);
+        this.$model = monaco.editor.createModel(value, 'lpc', !this.new && this.file && this.file.length !== 0 && this.source === Source.local ? monaco.Uri.file(this.file) : null);
         if (this.rawDecorations && this.rawDecorations.length !== 0) {
             this.$model.deltaDecorations([], this.rawDecorations);
         }
