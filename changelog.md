@@ -22,6 +22,7 @@
   - Code editor:
     - Fixed issue when opening a file it would open in the panel not linked to it's tab.
     - Monster wizard: fixed a minor issue when aggressive value set
+    - Fixed copy selected text
     - Area designer:
       - Fixed capitalizing of monster names in room preview
       - Fixed pasting rooms from different depth levels

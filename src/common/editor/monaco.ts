@@ -500,7 +500,7 @@ export class MonacoCodeEditor extends EditorBase {
     public copy() {
         if (this.$oEditor && this.$oEditor.hasTextFocus())
             this.$oEditor.getAction('editor.action.clipboardCopyAction').run();
-        else if (this.$editor) return;
+        else if (!this.$editor) return;
         this.$editor.getAction('editor.action.clipboardCopyAction').run();
     }
     public paste() {
