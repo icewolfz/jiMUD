@@ -27,6 +27,7 @@
       - Fixed pasting rooms from different depth levels
       - Fixed object editing showing bait properties for object types that should not be bait
       - Fixed object editor dialog height covering parts of bait input fields
+      - Fixed monster ask response type when editing
     - Virtual area editor:
       - Fixed external room code generation for set_items and set_exits to have proper comma formatting and no trailing comma
       - Trim all data values for external room generation to remove trailing spaces

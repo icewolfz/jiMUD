@@ -4479,7 +4479,7 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-tracking-aggressively': ed.value.trackingAggressively,
                                     'mon-wiz-ask': ed.value.askEnabled,
                                     'mon-wiz-ask-no-topic': ed.value.askNoTopic,
-                                    'mon-wiz-ask-response': '' + ed.value.askResponseType,
+                                    'mon-wiz-ask-response': '' + (ed.value.askResponseType || 0),
                                     'mon-wiz-ask-topics': ed.value.askTopics,
                                     'mon-wiz-reputation-group': ed.value.reputationGroup,
                                     'mon-wiz-reputations': ed.value.reputations
@@ -5455,7 +5455,7 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-tracking-aggressively': ed.value.trackingAggressively,
                                     'mon-wiz-ask': ed.value.askEnabled,
                                     'mon-wiz-ask-no-topic': ed.value.askNoTopic,
-                                    'mon-wiz-ask-response': '' + ed.value.askResponseType,
+                                    'mon-wiz-ask-response': '' + (ed.value.askResponseType || 0),
                                     'mon-wiz-ask-topics': ed.value.askTopics,
                                     'mon-wiz-reputation-group': ed.value.reputationGroup,
                                     'mon-wiz-reputations': ed.value.reputations
@@ -5532,7 +5532,7 @@ export class AreaDesigner extends EditorBase {
 
                                     nMonster.askEnabled = e.data['mon-wiz-ask'];
                                     nMonster.askNoTopic = e.data['mon-wiz-ask-no-topic'];
-                                    nMonster.askResponseType = +e.data['mon-wiz-ask-response'];
+                                    nMonster.askResponseType = +(e.data['mon-wiz-ask-response'].value);
                                     nMonster.askTopics = e.data['mon-wiz-ask-topics'];
                                     nMonster.emotes = e.data['mon-wiz-emotes'];
                                     nMonster.emotesChance = e.data['mon-wiz-emotes-chance'];
