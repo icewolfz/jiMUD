@@ -315,7 +315,7 @@ function nroffParse(data) {
                 d++;
             }
             d--;
-            md.synopsis = str.join(' ').trim();
+            md.synopsis = str.join(' ').trim().replace(/&nbsp;$/, '').trim();
             continue;
         }
         if (data[d] === '.SH SYNOPSIS') {
@@ -331,23 +331,37 @@ function nroffParse(data) {
                 d++;
             }
             d--;
-            md.synopsis = str.join(' ').trim();
+            md.synopsis = str.join(' ').trim().replace(/&nbsp;$/, '').trim();
             continue;
         }
         if (data[d] === '.SH DESCRIPTION') {
             d++;
             str = [];
             while (d < dl && !data[d].startsWith('.SH ')) {
-                data[d] = nroffToMarkdown(data[d].trim());
-                if (!data[d]) {
+                if (data[d].startsWith('.TP ') || data[d] === '.TP') {
                     d++;
-                    continue;
+                    if (d + 1 >= dl) {
+                        d++;
+                        continue;
+                    }
+                    if (str.length > 0 && !str[str.length - 1].endsWith('\n'))
+                        str.push(`\n|${data[d]}|${data[d + 1]}|\n`);
+                    else
+                        str.push(`|${data[d]}|${data[d + 1]}|\n`);
+                    d++;
                 }
-                str.push(data[d]);
-                d++;
+                else {
+                    data[d] = nroffToMarkdown(data[d].trim());
+                    if (!data[d]) {
+                        d++;
+                        continue;
+                    }
+                    str.push(data[d]);
+                    d++;
+                }
             }
             d--;
-            md.description = str.join(' ').trim();
+            md.description = str.join(' ').trim().replace(/&nbsp;$/, '').trim();
             continue;
         }
         if (data[d] === '.SH NAME') {
@@ -363,7 +377,7 @@ function nroffParse(data) {
                 d++;
             }
             d--;
-            md.name = str.join(' ').trim();
+            md.name = str.join(' ').trim().replace(/&nbsp;$/, '').trim();
             continue;
         }
         if (data[d] === '.SH SEE ALSO') {
@@ -379,7 +393,7 @@ function nroffParse(data) {
                 d++;
             }
             d--;
-            md.see = str.join(' ').trim();
+            md.see = str.join(' ').trim().replace(/&nbsp;$/, '').trim();
             continue;
         }
     }
@@ -389,13 +403,13 @@ function nroffParse(data) {
 //http://home.fnal.gov/~mengel/man_page_notes.html
 function nroffToMarkdown(str) {
     if (!str || str.length === 0)
-        return '\n\n';
+        return '\n\n&nbsp;\n\n';
     if (str.startsWith('.\"') || str.startsWith('.TH '))
         return null;
     if (str.startsWith('.nf'))
         return null;
-    if (str.startsWith('.PP'))
-        return '\n\n';
+    if (str.startsWith('.br') || str.startsWith('.PP'))
+        return '\n\n&nbsp;\n\n';
     if (str.startsWith('.IP'))
         return '\n\n>';
     return str;
@@ -421,7 +435,7 @@ function markdownParse(data) {
                 d++;
             str = [];
             while (d < dl && !data[d].startsWith('#')) {
-                data[d] = markdownLine(data[d].trim());
+                data[d] = markdownLine(data[d]);
                 if (!data[d]) {
                     d++;
                     continue;
@@ -430,7 +444,7 @@ function markdownParse(data) {
                 d++;
             }
             d--;
-            md.location = str.join(' ').trim();
+            md.location = str.join('\n').trim();
             continue;
         }
         if (data[d].toUpperCase() === '# SYNOPSIS' || data[d].toUpperCase() === '## SYNOPSIS') {
@@ -439,7 +453,7 @@ function markdownParse(data) {
                 d++;
             str = [];
             while (d < dl && !data[d].startsWith('#')) {
-                data[d] = markdownLine(data[d].trim());
+                data[d] = markdownLine(data[d]);
                 if (!data[d]) {
                     d++;
                     continue;
@@ -448,7 +462,7 @@ function markdownParse(data) {
                 d++;
             }
             d--;
-            md.synopsis = str.join(' ').trim();
+            md.synopsis = str.join('\n').trim();
             continue;
         }
         if (data[d].toUpperCase() === '## DESCRIPTION') {
@@ -457,7 +471,7 @@ function markdownParse(data) {
                 d++;
             str = [];
             while (d < dl && !data[d].startsWith('#')) {
-                data[d] = markdownLine(data[d].trim());
+                data[d] = markdownLine(data[d]);
                 if (!data[d]) {
                     d++;
                     continue;
@@ -466,7 +480,7 @@ function markdownParse(data) {
                 d++;
             }
             d--;
-            md.description = str.join(' ').trim();
+            md.description = str.join('\n').trim();
             continue;
         }
         if (data[d].toUpperCase() === '# NAME' || data[d].toUpperCase() === '## NAME') {
@@ -475,7 +489,7 @@ function markdownParse(data) {
                 d++;
             str = [];
             while (d < dl && !data[d].startsWith('#')) {
-                data[d] = markdownLine(data[d].trim());
+                data[d] = markdownLine(data[d]);
                 if (!data[d]) {
                     d++;
                     continue;
@@ -484,7 +498,7 @@ function markdownParse(data) {
                 d++;
             }
             d--;
-            md.name = str.join(' ').trim();
+            md.name = str.join('\n').trim();
             continue;
         }
         if (data[d].toUpperCase() === '## SEE ALSO') {
@@ -493,7 +507,7 @@ function markdownParse(data) {
                 d++;
             str = [];
             while (d < dl && !data[d].startsWith('#')) {
-                data[d] = markdownLine(data[d].trim());
+                data[d] = markdownLine(data[d]);
                 if (!data[d]) {
                     d++;
                     continue;
@@ -502,7 +516,7 @@ function markdownParse(data) {
                 d++;
             }
             d--;
-            md.see = str.join(' ').trim();
+            md.see = str.join('\n').trim();
             continue;
         }
     }
@@ -512,7 +526,7 @@ function markdownParse(data) {
 function markdownLine(str) {
     if (!str || str.length === 0)
         return '\n\n';
-    return str;
+    return str + '\n';
 }
 
 function objectToHover(data) {
