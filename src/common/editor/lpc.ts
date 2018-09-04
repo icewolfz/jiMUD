@@ -1705,6 +1705,11 @@ export class LPCFormatter extends EventEmitter {
                                     }
                                     else if (tokenLine[t].value === '--' || tokenLine[t].value === '++')
                                         op = op.trimRight();
+                                    else if (incase && tokenLine[t1].value === ':') {
+                                        op = op.trimRight();
+                                        op += '\n';
+                                        incase = 0;
+                                    }
                                     else {
                                         op = op.trimRight();
                                         op += ' ';

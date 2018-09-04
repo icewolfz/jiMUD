@@ -25,6 +25,7 @@
     - Fixed issue when opening a file it would open in the panel not linked to it's tab.
     - Monster wizard: fixed a minor issue when aggressive value set
     - Fixed copy selected text
+    - Fixed formatting of text after a case in a switch statement
     - Area designer:
       - Fixed capitalizing of monster names in room preview
       - Fixed pasting rooms from different depth levels
