@@ -256,7 +256,6 @@ export function SetupEditor() {
                     let data = fs.readFileSync(doc, 'utf8');
                     if (!data || data.length === 0)
                         return undefined;
-                    //http://home.fnal.gov/~mengel/man_page_notes.html
                     switch (path.extname(doc)) {
                         case '.md':
                             data = markdownParse(data);
@@ -270,7 +269,6 @@ export function SetupEditor() {
                             return objectToHover(data);
                         case '.3':
                         case '.4':
-                        case '.pre':
                             data = nroffParse(data);
                             data.title = data.title || title;
                             return objectToHover(data);
@@ -388,6 +386,7 @@ function nroffParse(data) {
     return md;
 }
 
+//http://home.fnal.gov/~mengel/man_page_notes.html
 function nroffToMarkdown(str) {
     if (!str || str.length === 0)
         return '\n\n';
@@ -534,18 +533,19 @@ function objectToHover(data) {
 }
 
 function findDoc(doc, p) {
-    if (existsSync(path.join(p, doc)))
-        return path.join(p, doc);
-    if (existsSync(path.join(p, doc + '.json')))
-        return path.join(p, doc + '.json');
-    if (existsSync(path.join(p, doc + '.md')))
-        return path.join(p, doc + '.md');
-    if (existsSync(path.join(p, doc + '.3')))
-        return path.join(p, doc + '.3');
-    if (existsSync(path.join(p, doc + '.4')))
-        return path.join(p, doc + '.4');
-    if (existsSync(path.join(p, doc + '.pre')))
-        return path.join(p, doc + '.pre');
+    const file = path.join(p, doc);
+    if (existsSync(file) && !isDirSync(file))
+        return file;
+    if (existsSync(file + '.json') && !isDirSync(file))
+        return file + '.json';
+    if (existsSync(file + '.md') && !isDirSync(file))
+        return file + '.md';
+    if (existsSync(file + '.3') && !isDirSync(file))
+        return file + '.3';
+    if (existsSync(file + '.4') && !isDirSync(file))
+        return file + '.4';
+    if (existsSync(file + '.pre') && !isDirSync(file))
+        return file + '.pre';
     const files = fs.readdirSync(p);
     const fl = files.length;
     let d;

@@ -176,6 +176,7 @@ export const language = <ILanguage>{
     ],
 
     efuns: [
+        'functions',
         'allocate',
         'filter_array',
         'filter',

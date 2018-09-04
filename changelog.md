@@ -21,6 +21,7 @@
   - Help: Fixed main page
   - Auto update: Fixed taskbar progress for windows
   - Code editor:
+    - Add functions efun to syntax highlighting
     - Fixed issue when opening a file it would open in the panel not linked to it's tab.
     - Monster wizard: fixed a minor issue when aggressive value set
     - Fixed copy selected text
