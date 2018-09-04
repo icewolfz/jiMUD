@@ -1,7 +1,7 @@
 /// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import { EditorBase, EditorOptions, FileState, Source } from './editor.base';
 import { conf, language, loadCompletion, LPCIndenter, LPCFormatter } from './lpc';
-import { existsSync, isDirSync } from '../library';
+import { existsSync, isDirSync, parseTemplate } from '../library';
 const { ipcRenderer } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -223,9 +223,216 @@ export function SetupEditor() {
                     return undefined;
                 }
             });
+
+            monaco.languages.registerHoverProvider('lpc', {
+                provideHover: async (model, position): Promise<monaco.languages.Hover> => {
+                    if (!model)
+                        return undefined;
+                    let word: any = model.getWordAtPosition(position);
+                    if (!word)
+                        return undefined;
+                    const p = parseTemplate(path.join('{assets}', 'editor', 'docs'));
+                    word = word.word;
+                    let doc = findDoc(word, path.join(p, 'applies'));
+                    let title = 'apply';
+                    if (!doc) {
+                        doc = findDoc(word, path.join(p, 'efuns'));
+                        title = 'efun';
+                    }
+                    if (!doc) {
+                        doc = findDoc(word, path.join(p, 'sefuns'));
+                        title = 'sefun';
+                    }
+                    if (!doc) {
+                        doc = findDoc(word, path.join(p, 'lfuns'));
+                        title = 'lfun';
+                    }
+                    if (!doc) {
+                        doc = findDoc(word, path.join(p, 'constants'));
+                        title = 'constant';
+                    }
+                    if (!doc || isDirSync(doc))
+                        return undefined;
+                    let data = fs.readFileSync(doc, 'utf8');
+                    if (!data || data.length === 0)
+                        return undefined;
+                    let contents;
+                    //http://home.fnal.gov/~mengel/man_page_notes.html
+                    switch (path.extname(doc)) {
+                        case '.json':
+                            data = JSON.parse(data);
+                            if (Array.isArray(data))
+                                return { contents: data };
+                            contents = [{ isTrusted: true, value: `**${title}**` }];
+                            if (data.synopsis)
+                                contents.push({ isTrusted: true, value: data.synopsis });
+                            else if (data.name)
+                                contents.push({ isTrusted: true, value: data.name });
+                            if (data.description)
+                                contents.push({ isTrusted: true, value: data.description });
+                            if (data.see)
+                                contents.push({ isTrusted: true, value: `**See also:** ${data.see}` });
+                            if (contents.length === 0)
+                                return undefined;
+                            return { contents: contents };
+                        case '.3':
+                        case '.4':
+                        case '.pre':
+                            data = nroffParts(data);
+                            contents = [{ isTrusted: true, value: `**${title}**` }];
+                            if (data.synopsis)
+                                contents.push({ isTrusted: true, value: data.synopsis });
+                            else if (data.name)
+                                contents.push({ isTrusted: true, value: data.name });
+                            if (data.description) {
+                                contents.push({ isTrusted: true, value: data.description });
+                                /*
+                                contents.push(...data.description.split('\n').map(l => {
+                                    return { value: l };
+                                }));
+                                */
+                            }
+                            if (data.see)
+                                contents.push({ value: `**See also:** ${data.see}` });
+                            if (contents.length === 0)
+                                return undefined;
+                            return { contents: contents };
+                    }
+                    return {
+                        contents: [
+                            { value: `**${title}**` },
+                            { value: data }
+                        ]
+                    };
+                }
+            });
+
             resolve(monaco);
         });
     });
+}
+
+function nroffParts(data) {
+    if (!data || data.length === 0)
+        return data;
+    const md = {
+        name: null,
+        synopsis: null,
+        description: null,
+        see: null
+    };
+    data = data.split(/\r\n|\n|\r/);
+    const dl = data.length;
+    for (let d = 0; d < dl; d++) {
+        let str;
+        if (data[d].startsWith('.\"') || data[d].startsWith('.TH '))
+            continue;
+        if (data[d] === '.SH SYNOPSIS') {
+            d++;
+            str = [];
+            while (d < dl && !data[d].startsWith('.SH ')) {
+                data[d] = nroffToMarkdown(data[d].trim());
+                if (!data[d]) {
+                    d++;
+                    continue;
+                }
+                str.push(data[d]);
+                d++;
+            }
+            d--;
+            md.synopsis = str.join(' ').replace(/&nbsp;&nbsp;$/, '').trim();
+            continue;
+        }
+        if (data[d] === '.SH DESCRIPTION') {
+            d++;
+            str = [];
+            while (d < dl && !data[d].startsWith('.SH ')) {
+                data[d] = nroffToMarkdown(data[d].trim());
+                if (!data[d]) {
+                    d++;
+                    continue;
+                }
+                str.push(data[d]);
+                d++;
+            }
+            d--;
+            md.description = str.join(' ').replace(/&nbsp;&nbsp;$/, '').trim();
+            continue;
+        }
+        if (data[d] === '.SH NAME') {
+            d++;
+            str = [];
+            while (d < dl && !data[d].startsWith('.SH ')) {
+                data[d] = nroffToMarkdown(data[d].trim());
+                if (!data[d]) {
+                    d++;
+                    continue;
+                }
+                str.push(data[d]);
+                d++;
+            }
+            d--;
+            md.name = str.join(' ').replace(/&nbsp;&nbsp;$/, '').trim();
+            continue;
+        }
+        if (data[d] === '.SH SEE ALSO') {
+            d++;
+            str = [];
+            while (d < dl && !data[d].startsWith('.SH ')) {
+                data[d] = nroffToMarkdown(data[d].trim());
+                if (!data[d]) {
+                    d++;
+                    continue;
+                }
+                str.push(data[d].replace(/\([3|4]\)/g, '()'));
+                d++;
+            }
+            d--;
+            md.see = str.join(' ').replace(/&nbsp;&nbsp;$/, '').trim();
+            continue;
+        }
+    }
+    return md;
+}
+
+function nroffToMarkdown(str) {
+    if (!str || str.length === 0)
+        return '\n\n';
+    if (str.startsWith('.\"') || str.startsWith('.TH '))
+        return null;
+    if (str.startsWith('.nf'))
+        return null;
+    if (str.startsWith('.PP'))
+        return '\n\n';
+    if (str.startsWith('.IP'))
+        return '\n\n>';
+    return str;
+}
+
+function findDoc(doc, p) {
+    if (existsSync(path.join(p, doc)))
+        return path.join(p, doc);
+    if (existsSync(path.join(p, doc + '.json')))
+        return path.join(p, doc + '.json');
+    if (existsSync(path.join(p, doc + '.md')))
+        return path.join(p, doc + '.md');
+    if (existsSync(path.join(p, doc + '.3')))
+        return path.join(p, doc + '.3');
+    if (existsSync(path.join(p, doc + '.4')))
+        return path.join(p, doc + '.4');
+    if (existsSync(path.join(p, doc + '.pre')))
+        return path.join(p, doc + '.pre');
+    const files = fs.readdirSync(p);
+    const fl = files.length;
+    let d;
+    for (let f = 0; f < fl; f++) {
+        if (fs.statSync(path.join(p, files[f])).isDirectory()) {
+            d = findDoc(doc, path.join(p, files[f]));
+            if (d)
+                return d;
+        }
+    }
+    return null;
 }
 
 /*

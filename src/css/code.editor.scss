@@ -1224,3 +1224,11 @@ input[type=checkbox].property-grid-editor {
 .area-editor-properties > .nav-tabs {
     margin-right: 5px;
 }
+
+.monaco-editor-hover-content .hover-row p {
+    padding-bottom: 15px;
+}
+
+.monaco-editor-hover-content .hover-row p:last-child {
+    padding-bottom: 0;
+}
