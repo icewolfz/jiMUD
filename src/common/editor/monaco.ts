@@ -1,7 +1,7 @@
 /// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import { EditorBase, EditorOptions, FileState, Source } from './editor.base';
 import { conf, language, loadCompletion, LPCIndenter, LPCFormatter } from './lpc';
-import { existsSync, isDirSync, parseTemplate } from '../library';
+import { existsSync, isDirSync, parseTemplate, stripPinkfish } from '../library';
 const { ipcRenderer } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -278,7 +278,7 @@ export function SetupEditor() {
                     return {
                         contents: [
                             { value: `**${title}**` },
-                            { value: data }
+                            { value: stripPinkfish(data) }
                         ]
                     };
                 }
