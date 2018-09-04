@@ -295,7 +295,8 @@ function nroffParse(data) {
         name: null,
         synopsis: null,
         description: null,
-        see: null
+        see: null,
+        location: null
     };
     data = data.split(/\r\n|\n|\r/);
     const dl = data.length;
@@ -303,6 +304,22 @@ function nroffParse(data) {
         let str;
         if (data[d].startsWith('.\"') || data[d].startsWith('.TH '))
             continue;
+        if (data[d] === '.SH LOCATION') {
+            d++;
+            str = [];
+            while (d < dl && !data[d].startsWith('.SH ')) {
+                data[d] = nroffToMarkdown(data[d].trim());
+                if (!data[d]) {
+                    d++;
+                    continue;
+                }
+                str.push(data[d]);
+                d++;
+            }
+            d--;
+            md.synopsis = str.join(' ').trim();
+            continue;
+        }
         if (data[d] === '.SH SYNOPSIS') {
             d++;
             str = [];
@@ -392,16 +409,37 @@ function markdownParse(data) {
         name: null,
         synopsis: null,
         description: null,
-        see: null
+        see: null,
+        location: null
     };
     data = data.split(/\r\n|\n|\r/);
     const dl = data.length;
     for (let d = 0; d < dl; d++) {
         let str;
-        if (data[d].toUpperCase() === '# SYNOPSIS') {
+        if (data[d].toUpperCase() === '## LOCATION') {
             d++;
+            if (d < dl && data[d].trim().length === 0)
+                d++;
             str = [];
-            while (d < dl && !data[d].startsWith('# ')) {
+            while (d < dl && !data[d].startsWith('#')) {
+                data[d] = markdownLine(data[d].trim());
+                if (!data[d]) {
+                    d++;
+                    continue;
+                }
+                str.push(data[d]);
+                d++;
+            }
+            d--;
+            md.location = str.join(' ').trim();
+            continue;
+        }
+        if (data[d].toUpperCase() === '# SYNOPSIS' || data[d].toUpperCase() === '## SYNOPSIS') {
+            d++;
+            if (d < dl && data[d].trim().length === 0)
+                d++;
+            str = [];
+            while (d < dl && !data[d].startsWith('#')) {
                 data[d] = markdownLine(data[d].trim());
                 if (!data[d]) {
                     d++;
@@ -414,10 +452,12 @@ function markdownParse(data) {
             md.synopsis = str.join(' ').trim();
             continue;
         }
-        if (data[d].toUpperCase() === '# DESCRIPTION') {
+        if (data[d].toUpperCase() === '## DESCRIPTION') {
             d++;
+            if (d < dl && data[d].trim().length === 0)
+                d++;
             str = [];
-            while (d < dl && !data[d].startsWith('# ')) {
+            while (d < dl && !data[d].startsWith('#')) {
                 data[d] = markdownLine(data[d].trim());
                 if (!data[d]) {
                     d++;
@@ -430,10 +470,12 @@ function markdownParse(data) {
             md.description = str.join(' ').trim();
             continue;
         }
-        if (data[d].toUpperCase() === '# NAME') {
+        if (data[d].toUpperCase() === '# NAME' || data[d].toUpperCase() === '## NAME') {
             d++;
+            if (d < dl && data[d].trim().length === 0)
+                d++;
             str = [];
-            while (d < dl && !data[d].startsWith('# ')) {
+            while (d < dl && !data[d].startsWith('#')) {
                 data[d] = markdownLine(data[d].trim());
                 if (!data[d]) {
                     d++;
@@ -446,10 +488,12 @@ function markdownParse(data) {
             md.name = str.join(' ').trim();
             continue;
         }
-        if (data[d].toUpperCase() === '# SEE ALSO') {
+        if (data[d].toUpperCase() === '## SEE ALSO') {
             d++;
+            if (d < dl && data[d].trim().length === 0)
+                d++;
             str = [];
-            while (d < dl && !data[d].startsWith('# ')) {
+            while (d < dl && !data[d].startsWith('#')) {
                 data[d] = markdownLine(data[d].trim());
                 if (!data[d]) {
                     d++;
@@ -480,6 +524,8 @@ function objectToHover(data) {
         contents.push({ value: data.name });
     if (data.description)
         contents.push({ value: data.description });
+    if (data.location)
+        contents.push({ value: `**Location:** ${data.location}` });
     if (data.see)
         contents.push({ value: `**See also:** ${data.see}` });
     if (contents.length === 0)

@@ -1,15 +1,21 @@
+# SYNOPSIS
+
 string possessive_noun(mixed)
 
-DESCRIPTION
+## DESCRIPTION
+
 When a string is passed, it returns the possessive form of the string.
 When an object is passed, it returns the possessive of query_cap_name()
 
-EXAMPLES
+## EXAMPLES
+
 pluralize("frog") returns "frog's"
 pluralize("moose") returns "moose's"
 
-LOCATION
+## LOCATION
+
 /adm/simul_efun/possessive_noun.c
 
-SEE ALSO
+## SEE ALSO
+
 consolidate, ordinal, pluralize
