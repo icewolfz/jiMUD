@@ -256,47 +256,24 @@ export function SetupEditor() {
                     let data = fs.readFileSync(doc, 'utf8');
                     if (!data || data.length === 0)
                         return undefined;
-                    let contents;
                     //http://home.fnal.gov/~mengel/man_page_notes.html
                     switch (path.extname(doc)) {
+                        case '.md':
+                            data = markdownParse(data);
+                            data.title = data.title || title;
+                            return objectToHover(data);
                         case '.json':
                             data = JSON.parse(data);
                             if (Array.isArray(data))
                                 return { contents: data };
-                            contents = [{ isTrusted: true, value: `**${title}**` }];
-                            if (data.synopsis)
-                                contents.push({ isTrusted: true, value: data.synopsis });
-                            else if (data.name)
-                                contents.push({ isTrusted: true, value: data.name });
-                            if (data.description)
-                                contents.push({ isTrusted: true, value: data.description });
-                            if (data.see)
-                                contents.push({ isTrusted: true, value: `**See also:** ${data.see}` });
-                            if (contents.length === 0)
-                                return undefined;
-                            return { contents: contents };
+                            data.title = data.title || title;
+                            return objectToHover(data);
                         case '.3':
                         case '.4':
                         case '.pre':
-                            data = nroffParts(data);
-                            contents = [{ isTrusted: true, value: `**${title}**` }];
-                            if (data.synopsis)
-                                contents.push({ isTrusted: true, value: data.synopsis });
-                            else if (data.name)
-                                contents.push({ isTrusted: true, value: data.name });
-                            if (data.description) {
-                                contents.push({ isTrusted: true, value: data.description });
-                                /*
-                                contents.push(...data.description.split('\n').map(l => {
-                                    return { value: l };
-                                }));
-                                */
-                            }
-                            if (data.see)
-                                contents.push({ value: `**See also:** ${data.see}` });
-                            if (contents.length === 0)
-                                return undefined;
-                            return { contents: contents };
+                            data = nroffParse(data);
+                            data.title = data.title || title;
+                            return objectToHover(data);
                     }
                     return {
                         contents: [
@@ -306,13 +283,12 @@ export function SetupEditor() {
                     };
                 }
             });
-
             resolve(monaco);
         });
     });
 }
 
-function nroffParts(data) {
+function nroffParse(data) {
     if (!data || data.length === 0)
         return data;
     const md = {
@@ -340,7 +316,7 @@ function nroffParts(data) {
                 d++;
             }
             d--;
-            md.synopsis = str.join(' ').replace(/&nbsp;&nbsp;$/, '').trim();
+            md.synopsis = str.join(' ').trim();
             continue;
         }
         if (data[d] === '.SH DESCRIPTION') {
@@ -356,7 +332,7 @@ function nroffParts(data) {
                 d++;
             }
             d--;
-            md.description = str.join(' ').replace(/&nbsp;&nbsp;$/, '').trim();
+            md.description = str.join(' ').trim();
             continue;
         }
         if (data[d] === '.SH NAME') {
@@ -372,7 +348,7 @@ function nroffParts(data) {
                 d++;
             }
             d--;
-            md.name = str.join(' ').replace(/&nbsp;&nbsp;$/, '').trim();
+            md.name = str.join(' ').trim();
             continue;
         }
         if (data[d] === '.SH SEE ALSO') {
@@ -388,7 +364,7 @@ function nroffParts(data) {
                 d++;
             }
             d--;
-            md.see = str.join(' ').replace(/&nbsp;&nbsp;$/, '').trim();
+            md.see = str.join(' ').trim();
             continue;
         }
     }
@@ -407,6 +383,108 @@ function nroffToMarkdown(str) {
     if (str.startsWith('.IP'))
         return '\n\n>';
     return str;
+}
+
+function markdownParse(data) {
+    if (!data || data.length === 0)
+        return data;
+    const md = {
+        name: null,
+        synopsis: null,
+        description: null,
+        see: null
+    };
+    data = data.split(/\r\n|\n|\r/);
+    const dl = data.length;
+    for (let d = 0; d < dl; d++) {
+        let str;
+        if (data[d].toUpperCase() === '# SYNOPSIS') {
+            d++;
+            str = [];
+            while (d < dl && !data[d].startsWith('# ')) {
+                data[d] = markdownLine(data[d].trim());
+                if (!data[d]) {
+                    d++;
+                    continue;
+                }
+                str.push(data[d]);
+                d++;
+            }
+            d--;
+            md.synopsis = str.join(' ').trim();
+            continue;
+        }
+        if (data[d].toUpperCase() === '# DESCRIPTION') {
+            d++;
+            str = [];
+            while (d < dl && !data[d].startsWith('# ')) {
+                data[d] = markdownLine(data[d].trim());
+                if (!data[d]) {
+                    d++;
+                    continue;
+                }
+                str.push(data[d]);
+                d++;
+            }
+            d--;
+            md.description = str.join(' ').trim();
+            continue;
+        }
+        if (data[d].toUpperCase() === '# NAME') {
+            d++;
+            str = [];
+            while (d < dl && !data[d].startsWith('# ')) {
+                data[d] = markdownLine(data[d].trim());
+                if (!data[d]) {
+                    d++;
+                    continue;
+                }
+                str.push(data[d]);
+                d++;
+            }
+            d--;
+            md.name = str.join(' ').trim();
+            continue;
+        }
+        if (data[d].toUpperCase() === '# SEE ALSO') {
+            d++;
+            str = [];
+            while (d < dl && !data[d].startsWith('# ')) {
+                data[d] = markdownLine(data[d].trim());
+                if (!data[d]) {
+                    d++;
+                    continue;
+                }
+                str.push(data[d].replace(/\([3|4]\)/g, '()'));
+                d++;
+            }
+            d--;
+            md.see = str.join(' ').trim();
+            continue;
+        }
+    }
+    return md;
+}
+
+function markdownLine(str) {
+    if (!str || str.length === 0)
+        return '\n\n';
+    return str;
+}
+
+function objectToHover(data) {
+    const contents = [{ value: `**${data.title}**` }];
+    if (data.synopsis)
+        contents.push({ value: data.synopsis });
+    else if (data.name)
+        contents.push({ value: data.name });
+    if (data.description)
+        contents.push({ value: data.description });
+    if (data.see)
+        contents.push({ value: `**See also:** ${data.see}` });
+    if (contents.length === 0)
+        return undefined;
+    return { contents: contents };
 }
 
 function findDoc(doc, p) {
