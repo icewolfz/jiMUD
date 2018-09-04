@@ -406,7 +406,7 @@ function nroffToMarkdown(str) {
         return '\n\n&nbsp;\n\n';
     if (str.startsWith('.\"') || str.startsWith('.TH '))
         return null;
-    if (str.startsWith('.nf'))
+    if (str.startsWith('.nf') || str.startsWith('.fi'))
         return null;
     if (str.startsWith('.br') || str.startsWith('.PP'))
         return '\n\n&nbsp;\n\n';
@@ -434,7 +434,7 @@ function markdownParse(data) {
             if (d < dl && data[d].trim().length === 0)
                 d++;
             str = [];
-            while (d < dl && !data[d].startsWith('#')) {
+            while (d < dl && !data[d].startsWith('# ') && !data[d].startsWith('## ')) {
                 data[d] = markdownLine(data[d]);
                 if (!data[d]) {
                     d++;
@@ -452,7 +452,7 @@ function markdownParse(data) {
             if (d < dl && data[d].trim().length === 0)
                 d++;
             str = [];
-            while (d < dl && !data[d].startsWith('#')) {
+            while (d < dl && !data[d].startsWith('# ') && !data[d].startsWith('## ')) {
                 data[d] = markdownLine(data[d]);
                 if (!data[d]) {
                     d++;
@@ -470,13 +470,13 @@ function markdownParse(data) {
             if (d < dl && data[d].trim().length === 0)
                 d++;
             str = [];
-            while (d < dl && !data[d].startsWith('#')) {
+            while (d < dl && !data[d].startsWith('# ') && !data[d].startsWith('## ')) {
                 data[d] = markdownLine(data[d]);
                 if (!data[d]) {
                     d++;
                     continue;
                 }
-                str.push(data[d]);
+                str.push(data[d].replace(/\([3|4]\)/g, '()'));
                 d++;
             }
             d--;
@@ -488,7 +488,7 @@ function markdownParse(data) {
             if (d < dl && data[d].trim().length === 0)
                 d++;
             str = [];
-            while (d < dl && !data[d].startsWith('#')) {
+            while (d < dl && !data[d].startsWith('# ') && !data[d].startsWith('## ')) {
                 data[d] = markdownLine(data[d]);
                 if (!data[d]) {
                     d++;
@@ -506,7 +506,7 @@ function markdownParse(data) {
             if (d < dl && data[d].trim().length === 0)
                 d++;
             str = [];
-            while (d < dl && !data[d].startsWith('#')) {
+            while (d < dl && !data[d].startsWith('# ') && !data[d].startsWith('## ')) {
                 data[d] = markdownLine(data[d]);
                 if (!data[d]) {
                     d++;

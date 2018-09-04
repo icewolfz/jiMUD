@@ -1,13 +1,13 @@
-.\"controls the use of efun:: to override simulated efuns that mask efuns.
-.TH valid_override 4 "5 Sep 1994" MudOS "Driver Applies"
+# NAME
 
-.SH NAME
-valid_override - controls the use of efun:: 
+valid_override - controls the use of efun::
 
-.SH SYNOPSIS
+## SYNOPSIS
+
 int valid_override( string file, string efun_name , string main_file );
 
-.SH DESCRIPTION
+## DESCRIPTION
+
 Add valid_override to master.c in order to control the use of the efun::
 prefix.  The valid_override function in master.c will be called each
 time the driver attempts to compile a function call that begins with
@@ -18,33 +18,35 @@ name as the efun to be modified and having valid_override disallow that
 simul_efun from being overriden).
 File will be the actual file the call appears in; mainfile will be the file
 being compiled (the two can differ due to #include)
-.PP
+
 If you wish to have the original 3.1.2 efun:: behavior, simply add
 a line to master.c that looks like this:
-.TP
-   int valid_override(string file, string efun, string main_file) { return 1; }
-.PP
-Here is an example valid_override that is more restrictive:
-.PP
-  int
-  valid_override(string file, string name, string main_file)
-  {
-      if (file == "/adm/obj/simul_efun") {
-          return 1;
-      }
-      if (name == "destruct")
-          return 0;
-      if (name == "shutdown")
-          return 0;
-      if (name == "snoop")
-          return 0;
-      if (name == "exec")
-          return 0;
-      return 1;
-   }
 
-.SH AUTHOR
+`int valid_override(string file, string efun, string main_file) { return 1; }`
+
+Here is an example valid_override that is more restrictive:
+```cpp
+int valid_override(string file, string name, string main_file)
+{
+    if (file == "/adm/obj/simul_efun") {
+        return 1;
+    }
+    if (name == "destruct")
+        return 0;
+    if (name == "shutdown")
+        return 0;
+    if (name == "snoop")
+        return 0;
+    if (name == "exec")
+        return 0;
+    return 1;
+}
+```
+
+## AUTHOR
+
 Truilkan@Basis
 
-.SH SEE ALSO
-valid_object(4), function_exists(3)
+## SEE ALSO
+
+valid_object, function_exists
