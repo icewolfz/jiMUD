@@ -2,6 +2,9 @@
 
 ## v0.5.3
 
+- **Fixed:**
+  - Auto update: disable manual check for updates when checking
+
 ## v0.5.2 2018-09-04
 
 - **New:**

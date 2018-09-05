@@ -3487,7 +3487,7 @@ function createUpdater() {
             winCode.setProgressBar(progressObj.percent / 100);
             winCode.webContents.send('update-progress', progressObj);
         }
-    });  
+    });
     return autoUpdater;
 }
 
@@ -3530,7 +3530,7 @@ function checkForUpdatesManual() {
                 if (buttonIndex === 2)
                     shell.openExternal("https://github.com/icewolfz/jiMUD/releases/latest", '_blank');
                 if (global.editorOnly)
-                    winCode.webContents.send('update-menu', 'help|check for updates...', { enabled: true });
+                    winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
                 else
                     updateMenuItem({ menu: ['help', 'updater'], enabled: true });
             }
@@ -3546,7 +3546,7 @@ function checkForUpdatesManual() {
             if (buttonIndex === 0)
                 shell.openExternal("https://github.com/icewolfz/jiMUD/releases/latest", '_blank');
             if (global.editorOnly)
-                winCode.webContents.send('update-menu', 'help|check for updates...', { enabled: true });
+                winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
             else
                 updateMenuItem({ menu: ['help', 'updater'], enabled: true });
         });
@@ -3554,7 +3554,7 @@ function checkForUpdatesManual() {
 
     autoUpdater.on('update-downloaded', () => {
         if (global.editorOnly) {
-            winCode.webContents.send('update-menu', 'help|check for updates...', { enabled: false });
+            winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: false });
             winCode.setProgressBar(-1);
             winCode.webContents.send('update-downloaded');
         }
@@ -3569,7 +3569,11 @@ function checkForUpdatesManual() {
         }, () => {
             setImmediate(() => autoUpdater.quitAndInstall());
         });
-    });    
+    });
+    if (global.editorOnly)
+        winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: false });
+    else
+        updateMenuItem({ menu: ['help', 'updater'], enabled: false });
     autoUpdater.checkForUpdates();
 }
 
