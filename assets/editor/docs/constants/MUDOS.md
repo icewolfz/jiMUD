@@ -1,0 +1,7 @@
+# SYNOPSIS
+
+MUDOS
+
+## DESCRIPTION
+
+Defined if MudOS
