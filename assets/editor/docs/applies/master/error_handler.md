@@ -11,7 +11,7 @@ void error_handler( mapping error, int caught );
 This function allows the mudlib to handle errors instead of the driver.
 The contents of the 'error' mapping are:
 
-```cpp
+```lpc
 ([
     "error"   : string,     // the error
     "program" : string,     // the program
@@ -23,7 +23,7 @@ The contents of the 'error' mapping are:
 
 Each line of traceback is a mapping containing the following:
 
-```cpp
+```lpc
 ([
     "function"  : string,   // the function name
     "program"   : string,   // the program

@@ -7,12 +7,13 @@ throw() - forces an error to occur in an object.
 void throw(mixed);
 
 ## DESCRIPTION
+
 The throw() efun may be used to force an error to occur in an object.  When
 used in conjunction, throw() and catch() allow the programmer to choose what
 error message is displayed when a runtime error occurs.  When throw() is used,
 it should be used in conjunction with the catch(3) efun.  Here is a typical
 usage:
-```cpp
+```lpc
 string err;
 int rc;
 
@@ -24,4 +25,5 @@ if (err) {
 ```
 
 ## SEE ALSO
+
 catch, error, error_handler

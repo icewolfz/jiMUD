@@ -25,7 +25,7 @@ a line to master.c that looks like this:
 `int valid_override(string file, string efun, string main_file) { return 1; }`
 
 Here is an example valid_override that is more restrictive:
-```cpp
+```lpc
 int valid_override(string file, string name, string main_file)
 {
     if (file == "/adm/obj/simul_efun") {

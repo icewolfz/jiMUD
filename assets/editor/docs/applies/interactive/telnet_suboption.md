@@ -19,7 +19,7 @@ In the case of a terminal type call, the data will be routed
 through through the terminal_type() apply instead.
 
 Possible suboptions:
-```cpp
+```lpc
 #define TELQUAL_IS    0 // option is...
 #define TELQUAL_SEND  1 // send options
 #define TELQUAL_INFO  2 // ENVIRON: informational version of IS
