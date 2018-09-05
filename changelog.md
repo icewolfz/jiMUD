@@ -2,6 +2,9 @@
 
 ## v0.5.3
 
+- **New:**
+  - Code editor:
+    - Colorize syntax hover help line
 - **Fixed:**
   - Auto update: disable manual check for updates when checking
 

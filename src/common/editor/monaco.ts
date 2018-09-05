@@ -532,9 +532,9 @@ function markdownLine(str) {
 function objectToHover(data) {
     const contents = [{ value: `**${data.title}**` }];
     if (data.synopsis)
-        contents.push({ value: data.synopsis });
+        contents.push({ value: '```lpc\n' + data.synopsis + '\n```' });
     else if (data.name)
-        contents.push({ value: data.name });
+        contents.push({ value: '```lpc\n' + data.name + '\n```' });
     if (data.description)
         contents.push({ value: data.description });
     if (data.location)
