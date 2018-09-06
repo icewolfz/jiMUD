@@ -106,7 +106,7 @@ export function SetupEditor() {
                         const $formatter = $lpcFormatter || ($lpcFormatter = new LPCFormatter());
                         const code = $formatter.format(model.getValue());
                         const $indenter = $lpcIndenter || ($lpcIndenter = new LPCIndenter());
-                        $indenter.on('error', (e) => {
+                        const err = (e) => {
                             //reject2(e);
                             model.pushStackElement();
                             model.pushEditOperations([], [{
@@ -136,8 +136,10 @@ export function SetupEditor() {
                                     severity: 8
                                 }
                             ]);
-                        });
-                        $indenter.on('complete', (lines) => {
+                            $indenter.removeListener('error', err);
+                            $indenter.removeListener('complete', complete);
+                        };
+                        const complete = (lines) => {
                             resolve2([{
                                 range: {
                                     startLineNumber: 1,
@@ -147,7 +149,11 @@ export function SetupEditor() {
                                 },
                                 text: lines.join('\n')
                             }]);
-                        });
+                            $indenter.removeListener('error', err);
+                            $indenter.removeListener('complete', complete);
+                        };
+                        $indenter.on('error', err);
+                        $indenter.on('complete', complete);
                         $indenter.indent(code);
                     });
                 }

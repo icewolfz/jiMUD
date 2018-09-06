@@ -8,6 +8,8 @@
     - Add hover tool tips for all FluffOS defined constants
 - **Fixed:**
   - Auto update: disable manual check for updates when checking
+  - Code editor:
+    - Fixed memory leak with code formatting systems
 
 ## v0.5.2 2018-09-04
 
