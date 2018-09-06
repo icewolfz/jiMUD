@@ -7048,10 +7048,8 @@
                     tmpl['create body'] += `   set_reaction("${data['mon-wiz-reactions'][0].type.length > 0 ? data['mon-wiz-reactions'][0].type + ' ' : ''}${data['mon-wiz-reactions'][0].reaction}", "${data['mon-wiz-reactions'][0].action}");\n`;
                 else if (data['mon-wiz-reactions'].length > 1) {
                     tmpl['create body'] += '   set_reactions( ([\n';
-                    data['mon-wiz-reactions'].forEach(r => {
-                        tmpl['create body'] += `       "${r.type.length > 0 ? r.type + ' ' : ''}${r.reaction}" : "${r.action}"\n`;
-                    });
-                    tmpl['create body'] += '     ]) );\n';
+                    tmpl['create body'] += data['mon-wiz-reactions'].map(r => `       "${r.type.length > 0 ? r.type + ' ' : ''}${r.reaction}" : "${r.action}"`).join(',\n');
+                    tmpl['create body'] += '\n     ]) );\n';
                 }
 
                 if (data['mon-wiz-tracking'])

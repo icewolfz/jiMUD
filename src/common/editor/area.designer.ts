@@ -12001,10 +12001,8 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += `   set_reaction("${tmp[0].type.length > 0 ? tmp[0].type + ' ' : ''}${tmp[0].reaction}", "${tmp[0].action}");\n`;
             else if (tmp.length > 1) {
                 data['create body'] += '   set_reactions( ([\n';
-                tmp.forEach(r => {
-                    data['create body'] += `       "${r.type.length > 0 ? r.type + ' ' : ''}${r.reaction}" : "${r.action}"\n`;
-                });
-                data['create body'] += '     ]) );\n';
+                data['create body'] += tmp.map(r => `       "${r.type.length > 0 ? r.type + ' ' : ''}${r.reaction}" : "${r.action}"`).join(',\n');
+                data['create body'] += '\n     ]) );\n';
             }
         }
         if (monster.tracking && !base.tracking)

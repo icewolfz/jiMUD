@@ -10,6 +10,7 @@
   - Auto update: disable manual check for updates when checking
   - Code editor:
     - Fixed memory leak with code formatting systems
+    - Fixed set_reactions code generation in monster wizard and area designer
 
 ## v0.5.2 2018-09-04
 
