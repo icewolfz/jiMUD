@@ -6,6 +6,8 @@
   - Code editor:
     - Colorize syntax hover help line
     - Add hover tool tips for all FluffOS defined constants
+- **Changed:**
+  - Update spellchecker
 - **Fixed:**
   - Auto update: disable manual check for updates when checking
   - Code editor:
