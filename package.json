@@ -98,7 +98,7 @@
       "category": "Game;Network;",
       "synopsis": "MUD client coded in javascript.",
       "files": [
-        "!./lib/fswin/*"
+        "!./lib/fswin/**/*"
       ]
     }
   },
