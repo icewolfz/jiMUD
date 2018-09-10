@@ -8,6 +8,7 @@
     - Add hover tool tips for all FluffOS defined constants
 - **Changed:**
   - Update spellchecker
+  - Update electron from 2.0.8 to 2.0.9
 - **Fixed:**
   - Auto update: disable manual check for updates when checking
   - Code editor:
