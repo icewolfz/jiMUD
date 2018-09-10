@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.3
+## v0.5.3 2018-09-10
 
 - **New:**
   - Code editor:
