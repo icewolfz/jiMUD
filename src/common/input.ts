@@ -2218,7 +2218,7 @@ export class Input extends EventEmitter {
         this.client.emit('function', data);
         if (data.handled)
             return data.return;
-        return data.raw;
+        return data.raw + '\n';
     }
 
     public parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean) {
