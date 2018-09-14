@@ -11,6 +11,7 @@
   - Update electron from 2.0.8 to 2.0.9
 - **Fixed:**
   - Auto update: disable manual check for updates when checking
+  - Auto login: delay sending the character name by a small amount to ensure the client has finished processing the incoming text
   - Code editor:
     - Fixed memory leak with code formatting systems
     - Fixed set_reactions code generation in monster wizard and area designer

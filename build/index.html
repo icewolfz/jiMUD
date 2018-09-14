@@ -750,7 +750,7 @@
                     if (data.line === remote.getGlobal('character') + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
                         autoLoginCounter = 4;
                     if (data.fragment && data.line === 'Enter your character\'s name (or \'new\' for a new character): ') {
-                        client.sendCommand(remote.getGlobal('characterLogin'));
+                        setTimeout( () => client.sendCommand(remote.getGlobal('characterLogin')), 100);
                         autoLoginCounter++;
                     }
                     else if (data.fragment && data.line === 'Password: ') {
