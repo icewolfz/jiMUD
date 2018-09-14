@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.4
+
+- **Fixed:**
+  - Auto login: delay sending the character name by a small amount to ensure the client has finished processing the incoming text
+  - Make test commands case insensitive like all other #commands
+  - Fix sending text that starts with # and is not a function
+
 ## v0.5.3 2018-09-10
 
 - **New:**
@@ -11,9 +18,6 @@
   - Update electron from 2.0.8 to 2.0.9
 - **Fixed:**
   - Auto update: disable manual check for updates when checking
-  - Auto login: delay sending the character name by a small amount to ensure the client has finished processing the incoming text
-  - Make test commands case insensitive like all other #commands
-  - Fix sending text that starts with # and is not a function
   - Code editor:
     - Fixed memory leak with code formatting systems
     - Fixed set_reactions code generation in monster wizard and area designer
