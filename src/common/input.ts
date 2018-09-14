@@ -405,8 +405,8 @@ export class Input extends EventEmitter {
         if (txt == null)
             return txt;
         const tTxt: string = txt.trim().substr(1);
-        if (this._tests.TestFunctions[tTxt]) {
-            this._tests.TestFunctions[tTxt].apply(this._tests, []);
+        if (this._tests.TestFunctions[tTxt.toLowerCase()]) {
+            this._tests.TestFunctions[tTxt.toLowerCase()].apply(this._tests, []);
             return null;
         }
 

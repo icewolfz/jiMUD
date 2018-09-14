@@ -40,7 +40,7 @@ export class Tests extends EventEmitter {
         super();
         this.Client = client;
 
-        this.TestFunctions['TestList'] = function () {
+        this.TestFunctions['testlist'] = function () {
             let sample = 'Test commands:\n';
             let t;
             for (t in this.TestFunctions) {
@@ -50,7 +50,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestColors'] = function () {
+        this.TestFunctions['testcolors'] = function () {
             let r;
             let sample = 'Colors and Styles\n-------------------------------------------------------------------------------------------\n';
             for (r = 30; r < 38; r++) {
@@ -87,7 +87,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestColorsDetails'] = function () {
+        this.TestFunctions['testcolorsdetails'] = function () {
             let sample = '';
             if (this.Client.telnet.prompt)
                 sample = '\n';
@@ -138,7 +138,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestXTerm'] = function (title) {
+        this.TestFunctions['testxterm'] = function (title) {
             let r;
             let g;
             let b;
@@ -179,7 +179,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
         //spell-checker:disable
-        this.TestFunctions['TestMXP'] = function () {
+        this.TestFunctions['testmxp'] = function () {
             let sample = 'Text Formatting\n';
             sample += '\t\x1B[6z';
             sample += '<!--Test-->&lt;!--Test--&gt;\n';
@@ -257,7 +257,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestMXP2'] = function () {
+        this.TestFunctions['testmxp2'] = function () {
             let sample = '\x1B[6z';
             sample += '<!-- Elements to support the Auto mapper -->';
             sample += '<!ELEMENT RName \'<FONT COLOR=Red><B>\' FLAG="RoomName">';
@@ -294,11 +294,11 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
         //spell-checker:enable
-        this.TestFunctions['TestMXPExpire'] = function () {
+        this.TestFunctions['testmxpexpire'] = function () {
             this.Client.print('\t\x1B[6z<SEND "sample" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND "sample" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt>\x1B[0z\n', true);
         };
 
-        this.TestFunctions['TestMXPColors'] = function () {
+        this.TestFunctions['testmxpcolors'] = function () {
             const colors = ['IndianRed', 'LightCoral', 'Salmon', 'DarkSalmon', 'LightSalmon',
                 'Crimson', 'Red', 'FireBrick', 'DarkRed', 'Pink', 'LightPink', 'HotPink', 'DeepPink',
                 'MediumVioletRed', 'PaleVioletRed', 'LightSalmon', 'Coral', 'Tomato', 'OrangeRed',
@@ -365,7 +365,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestMXPElements'] = function () {
+        this.TestFunctions['testmxpelements'] = function () {
             let sample = '\x1B[6z';
             sample += 'Custom Element\n';
             sample += '\t<!ELEMENT help \'<send href="help &text;">\'>&lt;!ELEMENT help \'&lt;send href="help &amp;text;"&gt;\'&gt;\n';
@@ -376,7 +376,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestMXPLines'] = function () {
+        this.TestFunctions['testmxpLines'] = function () {
             let sample = '\x1B[6z';
             sample += '<!ELEMENT Auction \'<FONT COLOR=red>\' TAG=20 OPEN>';
             sample += '\x1B[20zA nice shiny sword is being auctioned.\n';
@@ -392,7 +392,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestMapper'] = () => {
+        this.TestFunctions['testmapper'] = () => {
             const { ipcRenderer } = require('electron');
             ipcRenderer.send('GMCP-received', {
                 mod: 'Room.Info', obj: {
@@ -543,7 +543,7 @@ export class Tests extends EventEmitter {
             });
         };
 
-        this.TestFunctions['TestFANSI'] = function () {
+        this.TestFunctions['testfansi'] = function () {
             let sample = '';
             let i;
             sample = String.fromCharCode(1);
@@ -574,7 +574,7 @@ export class Tests extends EventEmitter {
         };
 
         //spell-checker:disable
-        this.TestFunctions['TestURLDetect'] = function () {
+        this.TestFunctions['testurldetect'] = function () {
             let sample = '\x1B[0mhttp://www.google.com\n';
             sample += '\thttp://www.google.com\x1B[44m\n';
             sample += 'http://www.google.com\n';
@@ -599,7 +599,7 @@ export class Tests extends EventEmitter {
         };
         //spell-checker:enable
 
-        this.TestFunctions['TestXTermRGB'] = function () {
+        this.TestFunctions['testxtermrgb'] = function () {
             let sample = '';
             let r;
             let g;
@@ -619,7 +619,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestSize'] = function () {
+        this.TestFunctions['testsize'] = function () {
             const ws = this.Client.display.WindowSize;
             let sample = ws.width + 'x' + ws.height + ' ';
             ws.width -= sample.length;
@@ -630,9 +630,9 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['TestSpeed'] = function () {
+        this.TestFunctions['testspeed'] = function () {
             const sample = [];
-            const commands = this.Client.options.commandChar + ['TestMXPColors', 'TestMXP', 'TestColors', 'TestColorsDetails', 'TestXTerm', 'TestXTermRGB'].join('\n' + this.Client.options.commandChar);
+            const commands = this.Client.options.commandChar + ['testmxpcolors', 'testmxp', 'testcolors', 'testcolorsdetails', 'testxterm', 'testxtermrgb'].join('\n' + this.Client.options.commandChar);
             const e = this.Client.options.enableCommands;
             this.Client.options.enableCommands = true;
             let avg = 0;
