@@ -111,12 +111,12 @@
                         label: 'Zoom In',
                         click: () => { zoomMap(mapper.scale + 5); },
                         accelerator: 'CmdOrCtrl+Shift+='
-                    },  
+                    },
                     {
                         label: 'Zoom Out',
                         click: () => { zoomMap(mapper.scale - 5); },
                         accelerator: 'CmdOrCtrl+-'
-                    },                                        
+                    },
                     {
                         type: 'separator'
                     },
@@ -348,11 +348,15 @@
                 });
 
                 mapper.on('active-room-changed', (room) => {
-                    if (!($('#select-area option[value="' + room.area + '"]').length > 0)) {
-                        $("#select-area").append($('<option></option>').val(room.area).html(room.area));
-                        $("#reArea").append($('<option></option>').val(room.area).html(room.area));
+                    if (!room.area || room.area.length === 0)
+                        $("#select-area").val($("#select-area option:first").val());
+                    else {
+                        if (!($('#select-area option[value="' + room.area + '"]').length > 0)) {
+                            $("#select-area").append($('<option></option>').val(room.area).html(room.area));
+                            $("#reArea").append($('<option></option>').val(room.area).html(room.area));
+                        }
+                        $("#select-area").val(room.area);
                     }
-                    $("#select-area").val(room.area);
                     $("#MapLevel").val(room.z);
                     $("#MapZone").val(room.zone);
                     $("#btn-walk").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
