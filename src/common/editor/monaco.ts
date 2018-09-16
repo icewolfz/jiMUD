@@ -644,6 +644,11 @@ export class MonacoCodeEditor extends EditorBase {
     private $startValue = '';
     private $diffModel: monaco.editor.ITextModel;
     private $pSelectedLength;
+    private $options = {
+        tabSize: 3,
+        insertSpaces: true,
+        trimAutoWhitespace: true
+    };
 
     public decorations;
     public rawDecorations;
@@ -679,6 +684,18 @@ export class MonacoCodeEditor extends EditorBase {
             }
         }
         this.$model = monaco.editor.createModel(value, 'lpc', !this.new && this.file && this.file.length !== 0 && this.source === Source.local ? monaco.Uri.file(this.file) : null);
+        if (this.$options)
+            this.$model.updateOptions({
+                tabSize: this.$options.hasOwnProperty('tabSize') ? this.$options.tabSize : 3,
+                insertSpaces: this.$options.hasOwnProperty('tabSize') ? this.$options.insertSpaces : true,
+                trimAutoWhitespace: this.$options.hasOwnProperty('tabSize') ? this.$options.trimAutoWhitespace : true
+            });
+        else
+            this.$model.updateOptions({
+                tabSize: 3,
+                insertSpaces: true,
+                trimAutoWhitespace: true
+            });
         if (this.rawDecorations && this.rawDecorations.length !== 0) {
             this.$model.deltaDecorations([], this.rawDecorations);
         }
@@ -950,13 +967,14 @@ export class MonacoCodeEditor extends EditorBase {
     public set options(value) {
         if (!value)
             return;
+        this.$options = value;
         this.$model.updateOptions({
             tabSize: value.hasOwnProperty('tabSize') ? value.tabSize : 3,
             insertSpaces: value.hasOwnProperty('tabSize') ? value.insertSpaces : true,
             trimAutoWhitespace: value.hasOwnProperty('tabSize') ? value.trimAutoWhitespace : true
         });
     }
-    public get options() { return null; }
+    public get options() { return this.$options; }
     public get type() {
         return 1;
     }

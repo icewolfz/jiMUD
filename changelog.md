@@ -7,6 +7,7 @@
   - Make test commands case insensitive like all other #commands
   - Fix sending text that starts with # and is not a function
   - Mapper: Fix clear current area not updating the drop down navigation correctly
+  - Code editor: Fix editor losing editor options when using save as
 
 ## v0.5.3 2018-09-10
 
