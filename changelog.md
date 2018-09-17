@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.4
+## v0.5.4 2018-09-17
 
 - **Fixed:**
   - Auto login: delay sending the character name by a small amount to ensure the client has finished processing the incoming text
