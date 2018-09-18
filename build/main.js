@@ -634,6 +634,7 @@ var menuTemp = [
     {
         label: '&Help',
         role: 'help',
+        id: 'help',
         submenu: [
             {
                 label: '&ShadowMUD...',
@@ -3504,7 +3505,7 @@ function checkForUpdates() {
             else if (global.editorOnly && winCode) {
                 winCode.setProgressBar(-1);
                 winCode.webContents.send('update-downloaded');
-            }
+            }           
         });
         autoUpdater.checkForUpdatesAndNotify();
     }
