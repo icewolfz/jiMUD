@@ -275,13 +275,33 @@ export class WizardDataGridPage extends WizardPage {
                 this.on('delete', options.delete);
         }
         this.on('reset', e => {
-            if (!this.wizard.data[this.id])
+            if (this.wizard.defaults[this.id])
+                this.wizard.data[this.id] = this.wizard.defaults[this.id].slice() || [];
+            else if (!this.wizard.data[this.id])
                 this.wizard.data[this.id] = [];
-            else if (this.wizard.defaults[this.id])
-                this.wizard.data[this.id] = this.wizard.defaults[this.id] || [];
             else
                 this.wizard.data[this.id].length = 0;
             this.dataGrid.rows = this.wizard.data[this.id];
+        });
+        this.on('shown', e => {
+            this.$paste.disabled = !this.dataGrid.canPaste;
+            if (this.dataGrid.selectedCount) {
+                this.$edit.removeAttribute('disabled');
+                this.$del.removeAttribute('disabled');
+                if (this.dataGrid.selectedCount > 1)
+                    this.$del.title = 'Delete';
+                else
+                    this.$del.title = 'Delete';
+                this.$cut.removeAttribute('disabled');
+                this.$copy.removeAttribute('disabled');
+            }
+            else {
+                this.$edit.setAttribute('disabled', 'true');
+                this.$del.setAttribute('disabled', 'true');
+                this.$cut.setAttribute('disabled', 'true');
+                this.$copy.setAttribute('disabled', 'true');
+            }
+            this.dataGrid.refresh();
         });
     }
 
