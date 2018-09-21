@@ -27,6 +27,7 @@ export interface DataGridPageOptions extends PageOptions {
     enterMoveFirst?: boolean;
     enterMoveNext?: boolean;
     enterMoveNew?: boolean;
+    clipboard?: string;
 }
 
 export class WizardPage extends EventEmitter {
@@ -202,7 +203,10 @@ export class WizardDataGridPage extends WizardPage {
             this.dataGrid.enterMoveNext = options.enterMoveNext;
         if (options && options.hasOwnProperty('enterMoveNew'))
             this.dataGrid.enterMoveNew = options.enterMoveNew;
-        this.dataGrid.clipboardPrefix = 'wizard/';
+        if (options && options.clipboard && options.clipboard.length !== 0)
+            this.dataGrid.clipboardPrefix = options.clipboard;
+        else
+            this.dataGrid.clipboardPrefix = 'wizard/';
         this.dataGrid.on('selection-changed', () => {
             if (this.dataGrid.selectedCount) {
                 this.$edit.removeAttribute('disabled');

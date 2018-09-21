@@ -4991,6 +4991,7 @@ export class AreaDesigner extends EditorBase {
                                     new WizardDataGridPage({
                                         title: 'Forage objects',
                                         id: 'room-wiz-forage-objects',
+                                        clipboard: 'jiMUD/',
                                         columns: [
                                             {
                                                 label: 'Name',
@@ -5039,6 +5040,7 @@ export class AreaDesigner extends EditorBase {
                                     new WizardDataGridPage({
                                         title: 'Rummage objects',
                                         id: 'room-wiz-rummage-objects',
+                                        clipboard: 'jiMUD/',
                                         columns: [
                                             {
                                                 label: 'Name',
@@ -5724,6 +5726,7 @@ export class AreaDesigner extends EditorBase {
                             const wizBonuses = new WizardDataGridPage({
                                 title: 'Bonuses',
                                 id: 'obj-bonuses',
+                                clipboard: 'jiMUD/',
                                 columns: [
                                     {
                                         label: 'Type',
@@ -6098,6 +6101,7 @@ export class AreaDesigner extends EditorBase {
                             const wizSkills = new WizardDataGridPage({
                                 title: 'Skill requirements',
                                 id: 'obj-skills',
+                                clipboard: 'jiMUD/',
                                 columns: [
                                     {
                                         label: 'Type',
@@ -6395,6 +6399,7 @@ export class AreaDesigner extends EditorBase {
                                     new WizardDataGridPage({
                                         title: 'Reads',
                                         id: 'obj-reads',
+                                        clipboard: 'jiMUD/',
                                         columns: [
                                             {
                                                 label: 'Read',
@@ -6567,6 +6572,7 @@ export class AreaDesigner extends EditorBase {
                                     }), new WizardDataGridPage({
                                         title: 'Damaged armor descriptions',
                                         id: 'obj-damaged',
+                                        clipboard: 'jiMUD/',
                                         columns: [
                                             {
                                                 label: 'Type',
@@ -6738,6 +6744,7 @@ export class AreaDesigner extends EditorBase {
                                     }), new WizardDataGridPage({
                                         title: 'Damaged armor descriptions',
                                         id: 'obj-damaged',
+                                        clipboard: 'jiMUD/',
                                         columns: [
                                             {
                                                 label: 'Type',
@@ -6891,6 +6898,7 @@ export class AreaDesigner extends EditorBase {
                                     new WizardDataGridPage({
                                         title: 'Chest contents',
                                         id: 'obj-contents',
+                                        clipboard: 'jiMUD/',
                                         columns: [
                                             {
                                                 label: 'Item',
