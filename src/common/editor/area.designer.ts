@@ -10259,7 +10259,7 @@ export class AreaDesigner extends EditorBase {
             if (items.length > 0) {
                 items = items.sort((a, b) => { return b.item.length - a.item.length; });
                 for (c = 0, cl = items.length; c < cl; c++)
-                    str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'gi'), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
+                    str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'gi'), m => '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + m + '</span>');
             }
             else
                 items = null;
