@@ -5,6 +5,7 @@
 - **Fixed:**
   - Correctly disable check for update menu item while in the middle of a check
   - Code editor:
+    - Fix drawing focused room indicator for virtual area and area designer when clicking on axis number
     - Area designer: Fix room preview to support comma delimited item list
 
 ## v0.5.4 2018-09-17

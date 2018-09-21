@@ -6724,7 +6724,7 @@ export class VirtualEditor extends EditorBase {
         let sl = this.$selectedRooms.length;
         while (sl--)
             this.DrawRoom(this.$mapContext, this.$selectedRooms[sl], true, this.$selectedRooms[sl].at(this.$mouse.rx, this.$mouse.ry));
-        if (this.$mouse.rx >= 0 && this.$mouse.ry > 0) {
+        if (this.$mouse.x >= 0 && this.$mouse.y >= 0 && this.$mouse.rx >= 0 && this.$mouse.ry > 0) {
             const r = this.getRoom(this.$mouse.rx, this.$mouse.ry);
             if (r) this.DrawRoom(this.$mapContext, r, true, true);
         }
