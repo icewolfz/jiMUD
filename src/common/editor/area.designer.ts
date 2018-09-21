@@ -10232,14 +10232,24 @@ export class AreaDesigner extends EditorBase {
             this.$roomPreview.short.textContent = room.short || base.short;
             this.$roomPreview.long.textContent = room.long || base.short;
             str = this.$roomPreview.long.innerHTML;
-
-            if ((room.baseFlags & RoomBaseFlags.No_Items) === RoomBaseFlags.No_Items)
-                items = room.items || [];
-            else
-                items = room.items.concat(...base.items);
+            items = [];
+            if ((room.baseFlags & RoomBaseFlags.No_Items) === RoomBaseFlags.No_Items && room.items && room.items.length !== 0)
+                room.items.forEach(i => {
+                    i = i.item.split(',').map(i2 => items.push({ item: i2.trim(), description: i.description }));
+                });
+            else if ((room.baseFlags & RoomBaseFlags.No_Items) !== RoomBaseFlags.No_Items) {
+                if (room.items && room.items.length !== 0)
+                    room.items.forEach(i => {
+                        i.item.split(',').forEach(i2 => items.push({ item: i2.trim(), description: i.description }));
+                    });
+                if (base.items && base.items.length !== 0)
+                    base.items.forEach(i => {
+                        i.item.split(',').forEach(i2 => items.push({ item: i2.trim(), description: i.description }));
+                    });
+            }
 
             if (items.length > 0) {
-                items = items.slice().sort((a, b) => { return b.item.length - a.item.length; });
+                items = items.sort((a, b) => { return b.item.length - a.item.length; });
                 for (c = 0, cl = items.length; c < cl; c++)
                     str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'gi'), '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + items[c].item + '</span>');
             }

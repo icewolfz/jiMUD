@@ -3,7 +3,9 @@
 ## v0.5.5
 
 - **Fixed:**
- - Correctly disable check for update menu item while in the middle of a check
+  - Correctly disable check for update menu item while in the middle of a check
+  - Code editor:
+    - Area designer: Fix room preview to support comma delimited item list
 
 ## v0.5.4 2018-09-17
 
