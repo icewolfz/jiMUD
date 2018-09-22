@@ -12,6 +12,8 @@
     - Area designer:
       - Fix room preview to support comma delimited item list
       - Fix room preview item underline casing display
+      - Fix code generation of long/short if empty and base not empty
+      - Fix room preview to use base long/short if selected long/short is empty
 
 ## v0.5.4 2018-09-17
 

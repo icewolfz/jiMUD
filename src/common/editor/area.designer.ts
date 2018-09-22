@@ -10236,9 +10236,14 @@ export class AreaDesigner extends EditorBase {
         }
         else {
             const base: Room = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
-
-            this.$roomPreview.short.textContent = room.short || base.short;
-            this.$roomPreview.long.textContent = room.long || base.short;
+            if (!room.short || room.short.trim().length === 0)
+                this.$roomPreview.long.textContent = base.short;
+            else
+                this.$roomPreview.short.textContent = room.short;
+            if (!room.long || room.long.trim().length === 0)
+                this.$roomPreview.long.textContent = base.long;
+            else
+                this.$roomPreview.long.textContent = room.long;
             str = this.$roomPreview.long.innerHTML;
             items = [];
             if ((room.baseFlags & RoomBaseFlags.No_Items) === RoomBaseFlags.No_Items && room.items && room.items.length !== 0)
@@ -11136,7 +11141,7 @@ export class AreaDesigner extends EditorBase {
                 data.short = room.short;
                 data.name = data.short.substr(1, data.short.length - 2);
             }
-            else {
+            else if (room.short.length !== 0 || base.short.length === 0) {
                 data.short = `"${room.short.replace(/"/g, '\\"')}"`;
                 data.name = room.short;
             }
@@ -11164,7 +11169,7 @@ export class AreaDesigner extends EditorBase {
                     data.description = data.description.substr(0, data.description.length - 2);
                 data.description = data.description.trim();
             }
-            else {
+            else if (room.long.length !== 0 || base.long.length === 0) {
                 if (!room.long.startsWith('"') && !room.long.endsWith('"'))
                     room.long = room.long.replace(/"/g, '\\"');
                 if (room.long.startsWith('"'))
@@ -11819,7 +11824,7 @@ export class AreaDesigner extends EditorBase {
             }
             else if (monster.short.startsWith('"') && monster.short.endsWith('"'))
                 data['create body'] += `   set_short(${monster.short});\n`;
-            else
+            else if (monster.short.length !== 0 || base.short.length === 0)
                 data['create body'] += `   set_short("${monster.short.replace(/"/g, '\\"')}");\n`;
         }
         if (monster.long !== base.long) {
@@ -11832,7 +11837,7 @@ export class AreaDesigner extends EditorBase {
                     data.description = data.description.substr(0, data.description.length - 2);
                 data.description = data.description.trim();
             }
-            else {
+            else if (monster.long.length !== 0 || base.long.length === 0) {
                 if (!monster.long.startsWith('"') && !monster.long.endsWith('"'))
                     monster.long = monster.long.replace(/"/g, '\\"');
                 if (monster.long.startsWith('"'))
