@@ -34,13 +34,13 @@
         const crypto = require('crypto');
 
         var characters, current = '';
-        var charactersFile = parseTemplate(path.join("{data}", "characters.json"));
+        var charactersFile = parseTemplate(path.join('{data}', 'characters.json'));
         var changed = 0;
 
         $(window).keydown((event) => {
             if (event.which === 27) {
-                if ($("#get-name")[0].open)
-                    $("#get-name")[0].close();
+                if ($('#get-name')[0].open)
+                    $('#get-name')[0].close();
                 else
                     window.close();
             }
@@ -50,7 +50,7 @@
         });
 
         $(document).ready(() => {
-            $("#characters-list").contextmenu((event) => {
+            $('#characters-list').contextmenu((event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -91,7 +91,7 @@
             });
             loadCharacters();
 
-            $("#btn-add-dropdown").click(function () {
+            $('#btn-add-dropdown').click(function () {
                 $(this).addClass('open');
                 var pos = $(this).offset();
                 var x = Math.floor(pos.left);
@@ -99,51 +99,51 @@
                 const addMenu = new Menu();
                 addMenu.append(new MenuItem({
                     label: 'Add default', click() {
-                        clearButton("#btn-add-dropdown");
+                        clearButton('#btn-add-dropdown');
                         add();
                     }
                 }));
                 addMenu.append(new MenuItem({
                     label: 'Add empty', click() {
-                        clearButton("#btn-add-dropdown");
+                        clearButton('#btn-add-dropdown');
                         addEmpty();
                     }
                 }));
                 addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
             });
 
-            $("#get-name-ok").click(function () {
-                var p = $("#get-name-value").parent();
+            $('#get-name-ok').click(function () {
+                var p = $('#get-name-value').parent();
                 if (invalidFile($('#get-name-value').val())) {
-                    p.addClass("has-error");
-                    p.addClass("has-feedback");
-                    p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid name</small>");
+                    p.addClass('has-error');
+                    p.addClass('has-feedback');
+                    p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Invalid name</small>');
                     $('#get-name-value').focus();
                     return;
                 }
                 if ($('#get-name').data('type') === 1 && $('#get-name-value').val().toLowerCase() === $('#get-name').data('name')) {
-                    p.addClass("has-error");
-                    p.addClass("has-feedback");
-                    p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Current name</small>");
+                    p.addClass('has-error');
+                    p.addClass('has-feedback');
+                    p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Current name</small>');
                     $('#get-name-value').focus();
                     return;
                 }
                 if (characters.characters[$('#get-name-value').val().toLowerCase()]) {
-                    p.addClass("has-error");
-                    p.addClass("has-feedback");
-                    p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Name exists</small>");
+                    p.addClass('has-error');
+                    p.addClass('has-feedback');
+                    p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Name exists</small>');
                     $('#get-name-value').focus();
                     return;
                 }
 
-                $("#get-name").trigger('get-name-ok', [$('#get-name-value').val().toLowerCase(), $("#get-name").data("name")]);
-                $("#get-name").off('get-name-ok');
+                $('#get-name').trigger('get-name-ok', [$('#get-name-value').val().toLowerCase(), $('#get-name').data('name')]);
+                $('#get-name').off('get-name-ok');
                 $('#get-name')[0].close();
             });
 
-            $("#get-name-value").keypress(function (event) {
+            $('#get-name-value').keypress(function (event) {
                 if (event.which === 13)
-                    $("#get-name-ok").click();
+                    $('#get-name-ok').click();
             });
         });
 
@@ -155,38 +155,38 @@
 
         function updateCurrent() {
             if (!current) return;
-            var v = templatePath($("#settings").val());
+            var v = templatePath($('#settings').val());
             if (v != characters.characters[current].settings) {
                 characters.characters[current].settings = v;
                 changed++;
             }
-            v = templatePath($("#map").val());
+            v = templatePath($('#map').val());
             if (v != characters.characters[current].map) {
                 characters.characters[current].map = v;
                 changed++;
             }
-            v = $("#name").val();
+            v = $('#name').val();
             if (v != characters.characters[current].name) {
                 characters.characters[current].name = v;
                 changed++;
             }
             if (current === characters.load) {
-                if (!$("#auto-load").prop('checked')) {
+                if (!$('#auto-load').prop('checked')) {
                     characters.load = 0;
                     changed++;
                 }
             }
-            else if ($("#auto-load").prop('checked')) {
+            else if ($('#auto-load').prop('checked')) {
                 changed++;
                 characters.load = current;
             }
 
-            if ($("#dev").prop('checked') != characters.characters[current].dev) {
+            if ($('#dev').prop('checked') != characters.characters[current].dev) {
                 changed++;
-                characters.characters[current].dev = $("#dev").prop('checked');
+                characters.characters[current].dev = $('#dev').prop('checked');
             }
 
-            v = $("#password").val() || '';
+            v = $('#password').val() || '';
             if (v && v.length > 0) {
                 var key, iv;
                 if (characters.characters[current].password) {
@@ -258,7 +258,7 @@
             }
             else
                 characters = { load: 0, characters: {} };
-            var list = $("#characters-list");
+            var list = $('#characters-list');
             list.empty();
             clearEditor();
             var keys = Object.keys(characters.characters).sort();
@@ -268,7 +268,7 @@
         }
 
         function createItem(name, list) {
-            if (!list) list = $("#characters-list");
+            if (!list) list = $('#characters-list');
             var item = $('<li></li>', {
                 id: 'character-' + sanitizeID(name),
                 class: 'list-group-item'
@@ -280,27 +280,27 @@
                 $('.list-group-item').removeClass('selected');
                 $(this).addClass('selected');
                 current = $(this).data('name');
-                $("#btn-rename").prop('disabled', false);
-                $("#btn-copy").prop('disabled', false);
-                $("#btn-delete").prop('disabled', false);
-                $("#btn-load").prop('disabled', false);
-                $("#btn-load-close").prop('disabled', false);
-                $("#character-editor input").prop('disabled', false);
-                $("#character-editor button").prop('disabled', false);
-                $("#settings").val(characters.characters[current].settings);
-                $("#map").val(characters.characters[current].map);
-                $("#name").val(characters.characters[current].name || current);
-                $("#auto-load").prop('checked', current === characters.load);
-                $("#dev").prop('checked', characters.characters[current].dev);
+                $('#btn-rename').prop('disabled', false);
+                $('#btn-copy').prop('disabled', false);
+                $('#btn-delete').prop('disabled', false);
+                $('#btn-load').prop('disabled', false);
+                $('#btn-load-close').prop('disabled', false);
+                $('#character-editor input').prop('disabled', false);
+                $('#character-editor button').prop('disabled', false);
+                $('#settings').val(characters.characters[current].settings);
+                $('#map').val(characters.characters[current].map);
+                $('#name').val(characters.characters[current].name || current);
+                $('#auto-load').prop('checked', current === characters.load);
+                $('#dev').prop('checked', characters.characters[current].dev);
 
                 if (characters.characters[current].password && characters.characters[current].password.length > 0) {
                     var pass = characters.characters[current].password.split(':');
-                    $("#password").val(decrypt(pass[0], pass[1], pass[2]));
+                    $('#password').val(decrypt(pass[0], pass[1], pass[2]));
                 }
                 else
-                    $("#password").val('');
+                    $('#password').val('');
 
-                $("#title").text(name);
+                $('#title').text(name);
             });
             item.on('dblclick', function () {
                 $(this).click();
@@ -318,16 +318,16 @@
 
         function clearEditor() {
             current = 0;
-            $("#btn-rename").prop('disabled', true);
-            $("#btn-copy").prop('disabled', true);
-            $("#btn-delete").prop('disabled', true);
-            $("#btn-load").prop('disabled', true);
-            $("#btn-load-close").prop('disabled', true);
-            $("#character-editor input").prop('disabled', true);
-            $("#character-editor input[type=text]").val('');
-            $("#character-editor input[type=checkbox]").prop('checked', false);
-            $("#character-editor button").prop('disabled', true);
-            $("#title").text('');
+            $('#btn-rename').prop('disabled', true);
+            $('#btn-copy').prop('disabled', true);
+            $('#btn-delete').prop('disabled', true);
+            $('#btn-load').prop('disabled', true);
+            $('#btn-load-close').prop('disabled', true);
+            $('#character-editor input').prop('disabled', true);
+            $('#character-editor input[type=text]').val('');
+            $('#character-editor input[type=checkbox]').prop('checked', false);
+            $('#character-editor button').prop('disabled', true);
+            $('#title').text('');
         }
 
         /*
@@ -385,7 +385,7 @@
 
         function add() {
             showGetName(function (event, name) {
-                characters.characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
+                characters.characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', name + '.json'), map: path.join('{characters}', name + '.map') };
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response, d;
                 if (isFileSync(sf)) {
@@ -397,12 +397,12 @@
                         defaultId: 1,
                     });
                     if (response === 0) {
-                        d = Settings.load(parseTemplate(path.join("{data}", "settings.json")));
+                        d = Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
                         d.save(sf);
                     }
                 }
                 else {
-                    d = Settings.load(parseTemplate(path.join("{data}", "settings.json")));
+                    d = Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
                     d.save(sf);
                 }
                 sf = parseTemplate(characters.characters[name].map);
@@ -415,14 +415,14 @@
                         defaultId: 1,
                     });
                     if (response === 0) {
-                        if (isFileSync(parseTemplate(path.join("{data}", "map.sqlite"))))
-                            copyFile(parseTemplate(path.join("{data}", "map.sqlite")), sf);
+                        if (isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
+                            copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
                         else
                             fs.closeSync(fs.openSync(sf, 'w'));
                     }
                 }
-                else if (isFileSync(parseTemplate(path.join("{data}", "map.sqlite"))))
-                    copyFile(parseTemplate(path.join("{data}", "map.sqlite")), sf);
+                else if (isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
+                    copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
                 else
                     fs.closeSync(fs.openSync(sf, 'w'));
                 changed++;
@@ -434,7 +434,7 @@
 
         function addEmpty() {
             showGetName(function (event, name) {
-                characters.characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join("{characters}", name + ".json"), map: path.join("{characters}", name + ".map") };
+                characters.characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', name + '.json'), map: path.join('{characters}', name + '.map') };
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response, d;
                 if (isFileSync(sf)) {
@@ -481,8 +481,8 @@
                 name = current;
             showGetName(name, 0, 1, function (event, name, oldName) {
                 characters.characters[name] = clone(characters.characters[oldName]);
-                characters.characters[name].settings = path.join("{characters}", name + ".json");
-                characters.characters[name].map = path.join("{characters}", name + ".map");
+                characters.characters[name].settings = path.join('{characters}', name + '.json');
+                characters.characters[name].map = path.join('{characters}', name + '.map');
                 var f = parseTemplate(characters.characters[oldName].settings);
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response;
@@ -545,8 +545,8 @@
                 name = current;
             showGetName(name, copyName(name), function (event, name, oldName) {
                 characters.characters[name] = clone(characters.characters[oldName]);
-                characters.characters[name].settings = path.join("{characters}", name + ".json");
-                characters.characters[name].map = path.join("{characters}", name + ".map");
+                characters.characters[name].settings = path.join('{characters}', name + '.json');
+                characters.characters[name].map = path.join('{characters}', name + '.map');
                 var f = parseTemplate(characters.characters[oldName].settings);
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response;
@@ -626,7 +626,7 @@
             var response = dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'warning',
                 title: 'Load character',
-                message: 'Load ' + name + "?",
+                message: 'Load ' + name + '?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
             });
@@ -654,30 +654,30 @@
         }
 
         function showGetName(name, val, type, callback) {
-            if (typeof name === "function") {
+            if (typeof name === 'function') {
                 callback = name;
                 name = undefined;
             }
-            else if (typeof val === "function") {
+            else if (typeof val === 'function') {
                 callback = val;
                 val = undefined;
             }
-            else if (typeof type === "function") {
+            else if (typeof type === 'function') {
                 callback = type;
                 type = undefined;
             }
 
-            var p = $("#get-name-value").parent();
-            p.removeClass("has-error");
-            p.removeClass("has-feedback");
+            var p = $('#get-name-value').parent();
+            p.removeClass('has-error');
+            p.removeClass('has-feedback');
 
-            $("#get-name")[0].showModal();
-            $("#get-name").off('get-name-ok');
+            $('#get-name')[0].showModal();
+            $('#get-name').off('get-name-ok');
             if (callback)
-                $("#get-name").on('get-name-ok', callback);
+                $('#get-name').on('get-name-ok', callback);
             $('#get-name-value').val(val || '');
-            $("#get-name").data('type', type);
-            $("#get-name").data("name", name || current);
+            $('#get-name').data('type', type);
+            $('#get-name').data('name', name || current);
         }
 
         function copyFile(src, dest) {

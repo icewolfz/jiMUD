@@ -13,7 +13,8 @@
 		"semi": "error",
 		"no-global-assign": 0,
 		"no-delete-var": "off",
-		"no-trailing-spaces": "warn"
+		"no-trailing-spaces": "warn",
+		"quotes": ["error", "single"]
 	},
 	"extends": "eslint:recommended",
 	"plugins": [

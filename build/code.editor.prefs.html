@@ -80,7 +80,7 @@
     <script>
         /* global ace */
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        const { parseTemplate, isDirSync } = require("./js/library.js");
+        const { parseTemplate, isDirSync } = require('./js/library.js');
         const { remote, ipcRenderer, shell } = require('electron');
         const { dialog, Menu, MenuItem } = remote;
         const path = require('path');
@@ -138,14 +138,14 @@
             });
 
             $('#editorOptions-fontSize').on('input', () => {
-                $('#editorOptions-font-sample').css("font-family", $("#editorOptions-fontFamily").val());
-                $('#editorOptions-font-sample').css("font-size", $("#editorOptions-fontSize").val() + 'px');
+                $('#editorOptions-font-sample').css('font-family', $('#editorOptions-fontFamily').val());
+                $('#editorOptions-font-sample').css('font-size', $('#editorOptions-fontSize').val() + 'px');
                 $('#editorOptions-font-sample').css('font-weight', $('#editorOptions-fontWeight').val());
             });
 
             $('#editorOptions-fontWeight').change(() => {
-                $('#editorOptions-font-sample').css("font-family", $("#editorOptions-fontFamily").val());
-                $('#editorOptions-font-sample').css("font-size", $("#editorOptions-fontSize").val() + 'px');
+                $('#editorOptions-font-sample').css('font-family', $('#editorOptions-fontFamily').val());
+                $('#editorOptions-font-sample').css('font-size', $('#editorOptions-fontSize').val() + 'px');
                 $('#editorOptions-font-sample').css('font-weight', $('#editorOptions-fontWeight').val());
             });
 
@@ -156,14 +156,14 @@
             });
 
             $('#virtualOptions-rawFontSize').on('input', () => {
-                $('#virtualOptions-raw-font-sample').css("font-family", $("#virtualOptions-rawFontFamily").val());
-                $('#virtualOptions-raw-font-sample').css("font-size", $("#virtualOptions-rawFontSize").val() + 'px');
+                $('#virtualOptions-raw-font-sample').css('font-family', $('#virtualOptions-rawFontFamily').val());
+                $('#virtualOptions-raw-font-sample').css('font-size', $('#virtualOptions-rawFontSize').val() + 'px');
                 $('#virtualOptions-raw-font-sample').css('font-weight', $('#virtualOptions-fontWeight').val());
             });
 
             $('#virtualOptions-rawFontWeight').change(() => {
-                $('#virtualOptions-raw-font-sample').css("font-family", $("#virtualOptions-rawFontFamily").val());
-                $('#virtualOptions-raw-font-sample').css("font-size", $("#virtualOptions-rawFontSize").val());
+                $('#virtualOptions-raw-font-sample').css('font-family', $('#virtualOptions-rawFontFamily').val());
+                $('#virtualOptions-raw-font-sample').css('font-size', $('#virtualOptions-rawFontSize').val());
                 $('#virtualOptions-raw-font-sample').css('font-weight', $('#virtualOptions-rawFontWeight').val() + 'px');
             });
 
@@ -173,8 +173,8 @@
             });
 
             $('#virtualOptions-previewFontSize').on('input', () => {
-                $('#virtualOptions-preview-font-sample').css("font-family", $("#virtualOptions-previewFontFamily").val());
-                $('#virtualOptions-preview-font-sample').css("font-size", $("#virtualOptions-previewFontSize").val() + 'px');
+                $('#virtualOptions-preview-font-sample').css('font-family', $('#virtualOptions-previewFontFamily').val());
+                $('#virtualOptions-preview-font-sample').css('font-size', $('#virtualOptions-previewFontSize').val() + 'px');
             });
 
             $('#designOptions-previewFontFamily').change(() => {
@@ -183,8 +183,8 @@
             });
 
             $('#designOptions-previewFontSize').on('input', () => {
-                $('#designOptions-preview-font-sample').css("font-family", $("#designOptions-previewFontFamily").val());
-                $('#designOptions-preview-font-sample').css("font-size", $("#designOptions-previewFontSize").val() + 'px');
+                $('#designOptions-preview-font-sample').css('font-family', $('#designOptions-previewFontFamily').val());
+                $('#designOptions-preview-font-sample').css('font-size', $('#designOptions-previewFontSize').val() + 'px');
             });
 
             _settings = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
@@ -278,11 +278,11 @@
         });
 
         function setValue(option, value) {
-            if (value == "false") value = false;
-            if (value == "true") value = true;
-            if (value == "null") value = null;
-            if (value == "undefined") value = undefined;
-            if (typeof value == "string" && parseFloat(value).toString() == value)
+            if (value == 'false') value = false;
+            if (value == 'true') value = true;
+            if (value == 'null') value = null;
+            if (value == 'undefined') value = undefined;
+            if (typeof value == 'string' && parseFloat(value).toString() == value)
                 value = parseFloat(value);
             option = option.split('-');
             if (option.length === 3)
@@ -298,21 +298,21 @@
             for (option in obj) {
                 if (!obj.hasOwnProperty(option))
                     continue;
-                if (typeof (obj[option]) === "object") {
+                if (typeof (obj[option]) === 'object') {
                     setSettings(obj[option], root + option + '-');
                     continue;
                 }
-                if (typeof (obj[option]) === "string" || typeof (obj[option]) === "number")
+                if (typeof (obj[option]) === 'string' || typeof (obj[option]) === 'number')
                     $('#' + root + option).val(obj[option]);
-                else if (typeof (obj[option]) !== "boolean")
+                else if (typeof (obj[option]) !== 'boolean')
                     continue;
                 $('#' + root + option).prop('checked', obj[option]);
             }
         }
 
         function loadSettings() {
-            $("#reopen").prop('checked', _settings.reopen);
-            $("#maxRecent").val(_settings.maxRecent);
+            $('#reopen').prop('checked', _settings.reopen);
+            $('#maxRecent').val(_settings.maxRecent);
             setSettings(_settings, '');
 
             $('#editorOptions-fontFamily').val(_settings.editorOptions.fontFamily);

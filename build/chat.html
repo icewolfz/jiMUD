@@ -21,7 +21,7 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script>
         const { clipboard, ipcRenderer, remote, webFrame } = require('electron');
-        const { parseTemplate } = require("./js/library.js");
+        const { parseTemplate } = require('./js/library.js');
         const { Settings } = require('./js/settings');
         const { Display } = require('./js/display');
         const { AnsiColorCode } = require('./js/ansi');
@@ -57,7 +57,7 @@
         }
 
         function error(err) {
-            echo("Error: " + err + ".", AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
+            echo('Error: ' + err + '.', AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
         }
 
         function echo(str, fore, back, newline, forceLine) {
@@ -69,14 +69,14 @@
             var codes = display.CurrentAnsiCode() + '\n';
             if (str.endsWith('\n'))
                 str = str.substr(0, str.length - 1);
-            str = "\x1b[" + fore + ";" + back + "m" + str + codes;
+            str = '\x1b[' + fore + ';' + back + 'm' + str + codes;
             if (newline && display.textLength > 0 && !display.EndOfLine)
                 str = '\n' + str;
             display.append(str, false);
         }
 
         $(document).ready(function () {
-            display = new Display($("#display"));
+            display = new Display($('#display'));
 
             display.on('selection-done', () => {
                 if (options.AutoCopySelectedToClipboard && display.hasSelection) {
@@ -85,15 +85,15 @@
                     display.clearSelection();
                 }
             });
-            _logger = new Worker("./js/logging.js");
+            _logger = new Worker('./js/logging.js');
             _logger.onmessage = (e) => {
                 switch (e.data.event) {
                     case 'started':
-                        $("#btn-enable").button('toggle');
+                        $('#btn-enable').button('toggle');
                         ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: e.data.args });
                         break;
                     case 'stopped':
-                        $("#btn-enable").button('toggle');
+                        $('#btn-enable').button('toggle');
                         ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: e.data.args });
                         break;
                     case 'logging':

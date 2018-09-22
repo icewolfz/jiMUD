@@ -102,7 +102,7 @@
             submenu: [
                 {
                     label: '&Open...',
-                    accelerator: "CmdOrCtrl+O",
+                    accelerator: 'CmdOrCtrl+O',
                     click: () => { openFile(); }
                 },
                 {
@@ -112,7 +112,7 @@
                 { type: 'separator' },
                 {
                     label: '&Preferences...',
-                    accelerator: "CmdOrCtrl+Comma",
+                    accelerator: 'CmdOrCtrl+Comma',
                     click: () => {
                         ipcRenderer.send('show-window', 'prefs');
                     }
@@ -121,19 +121,19 @@
                 {
                     label: '&Close',
                     click: () => { closeFile(); },
-                    accelerator: "CmdOrCtrl+F4",
+                    accelerator: 'CmdOrCtrl+F4',
                     enabled: false
                 },
                 {
                     label: 'C&lose All',
                     click: () => { closeAllFiles(); },
-                    accelerator: "CmdOrCtrl+Shift+F4",
+                    accelerator: 'CmdOrCtrl+Shift+F4',
                     enabled: false
                 },
                 { type: 'separator' },
                 {
                     label: 'E&xit',
-                    accelerator: "CmdOrCtrl+Shift+W",
+                    accelerator: 'CmdOrCtrl+Shift+W',
                     click: () => { window.close(); }
                 }
             ]
@@ -143,14 +143,14 @@
             submenu: [
                 {
                     label: '&Copy',
-                    accelerator: "CmdOrCtrl+C",
+                    accelerator: 'CmdOrCtrl+C',
                     click: doCopy,
                     enabled: false,
                 },
                 { type: 'separator' },
                 {
                     label: '&Select All',
-                    accelerator: "CmdOrCtrl+A",
+                    accelerator: 'CmdOrCtrl+A',
                     enabled: false,
                     click: () => {
                         if (manager.active && manager.active.viewer)
@@ -160,7 +160,7 @@
                 { type: 'separator' },
                 {
                     label: '&Find',
-                    accelerator: "CmdOrCtrl+F",
+                    accelerator: 'CmdOrCtrl+F',
                     enabled: false,
                     click: doFind
                 },
@@ -171,7 +171,7 @@
             submenu: [
                 {
                     label: '&Refresh',
-                    accelerator: "F5",
+                    accelerator: 'F5',
                     enabled: false,
                     click: doRefresh
                 },
@@ -241,14 +241,14 @@
         $search.search = null;
     });
     manager.on('dragenter', (e) => {
-        event.dataTransfer.dropEffect = "copy";
-        event.dataTransfer.effectAllowed = "copy";
+        event.dataTransfer.dropEffect = 'copy';
+        event.dataTransfer.effectAllowed = 'copy';
         if (e.dataTransfer.items) {
             for (var i = 0; i < e.dataTransfer.items.length; i++) {
                 // If dropped items aren't files, reject them
                 if (e.dataTransfer.items[i].kind === 'file') {
-                    event.dataTransfer.dropEffect = "link";
-                    event.dataTransfer.effectAllowed = "link";
+                    event.dataTransfer.dropEffect = 'link';
+                    event.dataTransfer.effectAllowed = 'link';
                     event.preventDefault();
                     event.cancelBubble = true;
                     event.stopPropagation();
@@ -257,8 +257,8 @@
             }
         }
         else if (e.dataTransfer.files && e.dataTransfer.files.length) {
-            event.dataTransfer.dropEffect = "link";
-            event.dataTransfer.effectAllowed = "link";
+            event.dataTransfer.dropEffect = 'link';
+            event.dataTransfer.effectAllowed = 'link';
             event.preventDefault();
             event.cancelBubble = true;
             event.stopPropagation();
@@ -266,14 +266,14 @@
         }
     });
     manager.on('dragover', (e) => {
-        event.dataTransfer.dropEffect = "copy";
-        event.dataTransfer.effectAllowed = "copy";
+        event.dataTransfer.dropEffect = 'copy';
+        event.dataTransfer.effectAllowed = 'copy';
         if (e.dataTransfer.items) {
             for (var i = 0; i < e.dataTransfer.items.length; i++) {
                 // If dropped items aren't files, reject them
                 if (e.dataTransfer.items[i].kind === 'file') {
-                    event.dataTransfer.dropEffect = "link";
-                    event.dataTransfer.effectAllowed = "link";
+                    event.dataTransfer.dropEffect = 'link';
+                    event.dataTransfer.effectAllowed = 'link';
                     event.preventDefault();
                     event.cancelBubble = true;
                     event.stopPropagation();
@@ -282,8 +282,8 @@
             }
         }
         else if (e.dataTransfer.files && e.dataTransfer.files.length) {
-            event.dataTransfer.dropEffect = "link";
-            event.dataTransfer.effectAllowed = "link";
+            event.dataTransfer.dropEffect = 'link';
+            event.dataTransfer.effectAllowed = 'link';
             event.preventDefault();
             event.cancelBubble = true;
             event.stopPropagation();
@@ -327,7 +327,7 @@
             click: () => {
                 loadContents(e.panel);
             },
-            accelerator: "F5"
+            accelerator: 'F5'
         });
         temp.push({ type: 'separator' });
         temp.push({
@@ -343,7 +343,7 @@
         temp.push({
             label: '&Close',
             click: () => { closeFile(e.panel); },
-            accelerator: "CmdOrCtrl+F4"
+            accelerator: 'CmdOrCtrl+F4'
         });
         if (manager.panels.length > 1)
             temp.push({
@@ -365,8 +365,8 @@
             document.title = 'Log viewer - ' + manager.active.tab.innerText;
         else
             document.title = 'Log viewer';
-        $("#btn-close").prop('disabled', !enabled);
-        $("#btn-close-all").prop('disabled', !enabled);
+        $('#btn-close').prop('disabled', !enabled);
+        $('#btn-close-all').prop('disabled', !enabled);
         menubar.updateItem('File|Close', { enabled: enabled });
         menubar.updateItem('File|Close all', { enabled: enabled });
         sbSize.textContent = enabled ? ('Length: ' + manager.active.viewer.textContent.length.toLocaleString()) : '';
@@ -383,11 +383,11 @@
             var sel = ow.getSelection();
             selected = !sel.isCollapsed && sel.type === 'Range' && manager.active.viewer.contains(sel.anchorNode);
         }
-        $("#btn-copy").prop('disabled', (manager.active && manager.active.viewer) ? !selected : true);
+        $('#btn-copy').prop('disabled', (manager.active && manager.active.viewer) ? !selected : true);
         menubar.updateItem('edit|copy', { enabled: (manager.active && manager.active.viewer) ? selected : false });
-        $("#btn-find").prop('disabled', (manager.active && manager.active.viewer) ? false : true);
+        $('#btn-find').prop('disabled', (manager.active && manager.active.viewer) ? false : true);
         menubar.updateItem('edit|find', { enabled: (manager.active && manager.active.viewer) ? true : false });
-        $("#btn-refresh").prop('disabled', (manager.active && manager.active.viewer) ? false : true);
+        $('#btn-refresh').prop('disabled', (manager.active && manager.active.viewer) ? false : true);
         menubar.updateItem('view|refresh', { enabled: (manager.active && manager.active.viewer) ? true : false });
         menubar.updateItem('edit|select all', { enabled: (manager.active && manager.active.viewer) ? true : false });
     }
@@ -395,7 +395,7 @@
     function loadOptions(data) {
         var set = Settings.load(remote.getGlobal('settingsFile'));
         if (!data)
-            options = set.extensions["log-viewer"];
+            options = set.extensions['log-viewer'];
         else
             options = data;
         if (!options) {
@@ -573,7 +573,7 @@
             selection.removeAllRanges();
             selection.addRange(range);
         } else {
-            console.warn("Could not select text in node: Unsupported browser.");
+            console.warn('Could not select text in node: Unsupported browser.');
         }
     }
 
@@ -617,13 +617,13 @@
                     inputMenu = Menu.buildFromTemplate([
                         {
                             label: '&Copy',
-                            accelerator: "CmdOrCtrl+C",
+                            accelerator: 'CmdOrCtrl+C',
                             click: doCopy
                         },
                         { type: 'separator' },
                         {
                             label: '&Select All',
-                            accelerator: "CmdOrCtrl+A",
+                            accelerator: 'CmdOrCtrl+A',
                             click: () => {
                                 if (manager.active && manager.active.viewer)
                                     selectText(manager.active.viewer);
@@ -635,7 +635,7 @@
                     inputMenu = Menu.buildFromTemplate([
                         {
                             label: '&Select All',
-                            accelerator: "CmdOrCtrl+A",
+                            accelerator: 'CmdOrCtrl+A',
                             click: () => {
                                 if (manager.active && manager.active.viewer)
                                     selectText(manager.active.viewer);
@@ -647,10 +647,10 @@
 
             var oDoc = (document.all) ? p.iframe.contentWindow.document : p.iframe.contentDocument;
             oDoc.body.appendChild(p.viewer);
-            oDoc.addEventListener("selectionchange", function () {
+            oDoc.addEventListener('selectionchange', function () {
                 doUpdate(2);
             });
-            oDoc.addEventListener("mousedown", function () {
+            oDoc.addEventListener('mousedown', function () {
                 manager.focusPane(p.dock);
             });
             loadContents(p);
@@ -909,7 +909,7 @@
 
     // eslint-disable-next-line no-unused-vars
     function closeHidden() {
-        var dialogs = document.body.getElementsByTagName("dialog");
+        var dialogs = document.body.getElementsByTagName('dialog');
         var e = 0, el = dialogs.length;
         for (; e < el; e++) {
             if (dialogs[e].open) {
@@ -941,7 +941,7 @@
                 document.activeElement.blur();
             evt.returnValue = false;
             setTimeout(() => {
-                var dialogs = document.body.getElementsByTagName("dialog");
+                var dialogs = document.body.getElementsByTagName('dialog');
                 var e = 0, el = dialogs.length;
                 for (; e < el; e++) {
                     if (dialogs[e].open) {

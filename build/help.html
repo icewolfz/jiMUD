@@ -66,14 +66,14 @@
 
         function updateButtons() {
             if (_current === 0 || _history.length === 0)
-                $("#btn-back").prop('disabled', true);
+                $('#btn-back').prop('disabled', true);
             else
-                $("#btn-back").prop('disabled', false);
+                $('#btn-back').prop('disabled', false);
             if (_current === _history.length - 1 || _history.length === 0)
-                $("#btn-forward").prop('disabled', true);
+                $('#btn-forward').prop('disabled', true);
             else
-                $("#btn-forward").prop('disabled', false);
-            $("#btn-history-dropdown").prop('disabled', _history.length <= 1);
+                $('#btn-forward').prop('disabled', false);
+            $('#btn-history-dropdown').prop('disabled', _history.length <= 1);
         }
 
         function loadContents(url) {
@@ -91,15 +91,16 @@
             contents.change();
         }
 
+        // eslint-disable-next-line no-unused-vars
         function clearButton(id) {
             $(id).removeClass('open');
             $(id).blur();
         }
 
         $(document).ready(() => {
-            container = $("#container");
+            container = $('#container');
             contents = $('#contents');
-            contents.on('change', (e) => {
+            contents.on('change', () => {
                 loadContents(contents.val());
                 if (_history.length !== 0)
                     _history.length = _current + 1;

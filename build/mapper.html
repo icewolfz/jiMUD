@@ -158,33 +158,33 @@
             if (!roomEditor || !mapper.selected || mapper.selected.ID == null)
                 return;
             var data = {};
-            data.x = parseInt($("#reX").val(), 10);
-            data.y = parseInt($("#reY").val(), 10);
-            data.z = parseInt($("#reZ").val(), 10) || 0;
-            data.zone = parseInt($("#reZone").val(), 10);
-            data.area = $("#reArea").val();
-            data.background = $("#reBackground").val();
-            data.env = $("#reTerrain").val();
-            data.indoors = $("#reIndoors")[0].checked;
-            data.notes = $("#reNotes").val();
+            data.x = parseInt($('#reX').val(), 10);
+            data.y = parseInt($('#reY').val(), 10);
+            data.z = parseInt($('#reZ').val(), 10) || 0;
+            data.zone = parseInt($('#reZone').val(), 10);
+            data.area = $('#reArea').val();
+            data.background = $('#reBackground').val();
+            data.env = $('#reTerrain').val();
+            data.indoors = $('#reIndoors')[0].checked;
+            data.notes = $('#reNotes').val();
             data.details = RoomDetails.None;
-            if ($("#reDDock")[0].checked)
+            if ($('#reDDock')[0].checked)
                 data.details |= RoomDetails.Dock;
-            if ($("#reDPier")[0].checked)
+            if ($('#reDPier')[0].checked)
                 data.details |= RoomDetails.Pier;
-            if ($("#reDBank")[0].checked)
+            if ($('#reDBank')[0].checked)
                 data.details |= RoomDetails.Bank;
-            if ($("#reDShop")[0].checked)
+            if ($('#reDShop')[0].checked)
                 data.details |= RoomDetails.Shop;
-            if ($("#reDHospital")[0].checked)
+            if ($('#reDHospital')[0].checked)
                 data.details |= RoomDetails.Hospital;
-            if ($("#reDBar")[0].checked)
+            if ($('#reDBar')[0].checked)
                 data.details |= RoomDetails.Bar;
-            if ($("#reDRestaurant")[0].checked)
+            if ($('#reDRestaurant')[0].checked)
                 data.details |= RoomDetails.Restaurant;
-            if ($("#reDWaterSource")[0].checked)
+            if ($('#reDWaterSource')[0].checked)
                 data.details |= RoomDetails.WaterSource;
-            if ($("#reDTrainer")[0].checked)
+            if ($('#reDTrainer')[0].checked)
                 data.details |= RoomDetails.Trainer;
             mapper.getRoom(mapper.selected.ID, (room) => {
                 room.x = data.x;
@@ -255,15 +255,15 @@
                     document.title = 'Mapper - ' + remote.getGlobal('character');
                 else
                     document.title = 'Mapper';
-                $("#mapper-room input").prop("disabled", true);
-                $("#mapper-room textarea").prop("disabled", true);
-                $("#mapper-room select").prop("disabled", true);
-                $("#mapper-room button").prop("disabled", true);
+                $('#mapper-room input').prop('disabled', true);
+                $('#mapper-room textarea').prop('disabled', true);
+                $('#mapper-room select').prop('disabled', true);
+                $('#mapper-room button').prop('disabled', true);
 
                 var options = Settings.load(remote.getGlobal('settingsFile'));
-                mapper = new Mapper(document.getElementById("MapperCanvas"), options.mapper.memory, options.mapper.memorySavePeriod, remote.getGlobal('mapFile'));
+                mapper = new Mapper(document.getElementById('MapperCanvas'), options.mapper.memory, options.mapper.memorySavePeriod, remote.getGlobal('mapFile'));
 
-                document.getElementById("MapperCanvas").addEventListener('wheel', (e) => {
+                document.getElementById('MapperCanvas').addEventListener('wheel', (e) => {
                     if (e.deltaY >= 0)
                         zoomMap(mapper.scale - 5);
                     else
@@ -276,8 +276,8 @@
                 importType = options.mapper.importType;
                 _enableDebug = options.enableDebug;
 
-                $("#MapLevel").val(options.mapper.active.z);
-                $("#MapZone").val(options.mapper.active.zone);
+                $('#MapLevel').val(options.mapper.active.z);
+                $('#MapZone').val(options.mapper.active.zone);
                 if (options.mapper.room)
                     toggleRooms();
 
@@ -287,13 +287,13 @@
                 });
 
                 mapper.on('path-shown', () => {
-                    $("#btn-clear").prop('disabled', false);
+                    $('#btn-clear').prop('disabled', false);
                     menubar.updateItem('actions|walk path', { enabled: false });
                     //$("#btn-walk").prop('disabled', false);
                 });
 
                 mapper.on('path-cleared', () => {
-                    $("#btn-clear").prop('disabled', true);
+                    $('#btn-clear').prop('disabled', true);
                     menubar.updateItem('actions|walk path', { enabled: true });
                     //$("#btn-walk").prop('disabled', true);
                 });
@@ -302,33 +302,33 @@
                     if (!roomEditor || !room || room.ID == null)
                         return;
                     var data = {};
-                    data.x = parseInt($("#reX").val(), 10);
-                    data.y = parseInt($("#reY").val(), 10);
-                    data.z = parseInt($("#reZ").val(), 10) || 0;
-                    data.zone = parseInt($("#reZone").val(), 10);
-                    data.area = $("#reArea").val();
-                    data.background = $("#reBackground").val();
-                    data.env = $("#reTerrain").val();
-                    data.indoors = $("#reIndoors")[0].checked;
-                    data.notes = $("#reNotes").val();
+                    data.x = parseInt($('#reX').val(), 10);
+                    data.y = parseInt($('#reY').val(), 10);
+                    data.z = parseInt($('#reZ').val(), 10) || 0;
+                    data.zone = parseInt($('#reZone').val(), 10);
+                    data.area = $('#reArea').val();
+                    data.background = $('#reBackground').val();
+                    data.env = $('#reTerrain').val();
+                    data.indoors = $('#reIndoors')[0].checked;
+                    data.notes = $('#reNotes').val();
                     data.details = RoomDetails.None;
-                    if ($("#reDDock")[0].checked)
+                    if ($('#reDDock')[0].checked)
                         data.details |= RoomDetails.Dock;
-                    if ($("#reDPier")[0].checked)
+                    if ($('#reDPier')[0].checked)
                         data.details |= RoomDetails.Pier;
-                    if ($("#reDBank")[0].checked)
+                    if ($('#reDBank')[0].checked)
                         data.details |= RoomDetails.Bank;
-                    if ($("#reDShop")[0].checked)
+                    if ($('#reDShop')[0].checked)
                         data.details |= RoomDetails.Shop;
-                    if ($("#reDHospital")[0].checked)
+                    if ($('#reDHospital')[0].checked)
                         data.details |= RoomDetails.Hospital;
-                    if ($("#reDBar")[0].checked)
+                    if ($('#reDBar')[0].checked)
                         data.details |= RoomDetails.Bar;
-                    if ($("#reDRestaurant")[0].checked)
+                    if ($('#reDRestaurant')[0].checked)
                         data.details |= RoomDetails.Restaurant;
-                    if ($("#reDWaterSource")[0].checked)
+                    if ($('#reDWaterSource')[0].checked)
                         data.details |= RoomDetails.WaterSource;
-                    if ($("#reDTrainer")[0].checked)
+                    if ($('#reDTrainer')[0].checked)
                         data.details |= RoomDetails.Trainer;
                     mapper.getRoom(room.ID, (room) => {
                         if (room.x != data.x && room.y != data.y && room.z != data.z && room.zone != data.zone && room.area != data.area && room.background != data.background && room.env != data.env && room.indoors != data.indoors && room.details != data.details && room.notes != data.notes)
@@ -349,18 +349,18 @@
 
                 mapper.on('active-room-changed', (room) => {
                     if (!room.area || room.area.length === 0)
-                        $("#select-area").val($("#select-area option:first").val());
+                        $('#select-area').val($('#select-area option:first').val());
                     else {
                         if (!($('#select-area option[value="' + room.area + '"]').length > 0)) {
-                            $("#select-area").append($('<option></option>').val(room.area).html(room.area));
-                            $("#reArea").append($('<option></option>').val(room.area).html(room.area));
+                            $('#select-area').append($('<option></option>').val(room.area).html(room.area));
+                            $('#reArea').append($('<option></option>').val(room.area).html(room.area));
                         }
-                        $("#select-area").val(room.area);
+                        $('#select-area').val(room.area);
                     }
-                    $("#MapLevel").val(room.z);
-                    $("#MapZone").val(room.zone);
-                    $("#btn-walk").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
-                    $("#btn-highlight").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
+                    $('#MapLevel').val(room.z);
+                    $('#MapZone').val(room.zone);
+                    $('#btn-walk').prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
+                    $('#btn-highlight').prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
 
                     menubar.updateItem('edit|Remove current room', { enabled: mapper.current.ID && room.ID });
                     menubar.updateItem('actions|highlight path', { enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
@@ -369,8 +369,8 @@
                 });
 
                 mapper.on('current-room-changed', (room) => {
-                    $("#btn-walk").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
-                    $("#btn-highlight").prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
+                    $('#btn-walk').prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
+                    $('#btn-highlight').prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
 
                     menubar.updateItem('edit|Remove current room', { enabled: mapper.current.ID && room.ID });
                     menubar.updateItem('actions|highlight path', { enabled: mapper.selected.ID && room.ID && mapper.selected.ID != room.ID });
@@ -378,75 +378,75 @@
                 });
 
                 mapper.on('room-selected', (room) => {
-                    $("#reDNone").prop('checked', true);
+                    $('#reDNone').prop('checked', true);
                     if (!room || room.ID == null) {
-                        $("#btn-walk").prop('disabled', true);
-                        $("#btn-highlight").prop('disabled', true);
-                        $("#mapper-room input").prop("disabled", true);
-                        $("#mapper-room select").prop("disabled", true);
-                        $("#mapper-room button").prop("disabled", true);
-                        $("#mapper-room textarea").prop("disabled", true);
+                        $('#btn-walk').prop('disabled', true);
+                        $('#btn-highlight').prop('disabled', true);
+                        $('#mapper-room input').prop('disabled', true);
+                        $('#mapper-room select').prop('disabled', true);
+                        $('#mapper-room button').prop('disabled', true);
+                        $('#mapper-room textarea').prop('disabled', true);
 
                         menubar.updateItem('edit|Remove selected room', { enabled: false });
                         menubar.updateItem('actions|highlight path', { enabled: false });
                         menubar.updateItem('actions|walk path', { enabled: false });
 
 
-                        $("#reX").val('');
-                        $("#reY").val('');
-                        $("#reZ").val('');
-                        $("#reZone").val('');
-                        $("#reArea").val('');
-                        $("#reBackground").val('');
-                        $("#reTerrain").val('');
-                        $("#reNotes").val('');
-                        $("#reIndoors").prop('checked', false);
+                        $('#reX').val('');
+                        $('#reY').val('');
+                        $('#reZ').val('');
+                        $('#reZone').val('');
+                        $('#reArea').val('');
+                        $('#reBackground').val('');
+                        $('#reTerrain').val('');
+                        $('#reNotes').val('');
+                        $('#reIndoors').prop('checked', false);
 
-                        $("#reDDock").prop('checked', false);
-                        $("#reDPier").prop('checked', false);
-                        $("#reDBank").prop('checked', false);
-                        $("#reDShop").prop('checked', false);
+                        $('#reDDock').prop('checked', false);
+                        $('#reDPier').prop('checked', false);
+                        $('#reDBank').prop('checked', false);
+                        $('#reDShop').prop('checked', false);
 
-                        $("#reDHospital").prop('checked', false);
-                        $("#reDBar").prop('checked', false);
-                        $("#reDRestaurant").prop('checked', false);
-                        $("#reDWaterSource").prop('checked', false);
-                        $("#reDTrainer").prop('checked', false);
+                        $('#reDHospital').prop('checked', false);
+                        $('#reDBar').prop('checked', false);
+                        $('#reDRestaurant').prop('checked', false);
+                        $('#reDWaterSource').prop('checked', false);
+                        $('#reDTrainer').prop('checked', false);
 
-                        $("#reName").text('');
+                        $('#reName').text('');
 
                     }
                     else {
-                        $("#btn-walk").prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
-                        $("#btn-highlight").prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
-                        $("#reName").text(room.name);
-                        $("#mapper-room input").prop("disabled", false);
-                        $("#mapper-room select").prop("disabled", false);
-                        $("#mapper-room button").prop("disabled", false);
-                        $("#mapper-room textarea").prop("disabled", false);
+                        $('#btn-walk').prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
+                        $('#btn-highlight').prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
+                        $('#reName').text(room.name);
+                        $('#mapper-room input').prop('disabled', false);
+                        $('#mapper-room select').prop('disabled', false);
+                        $('#mapper-room button').prop('disabled', false);
+                        $('#mapper-room textarea').prop('disabled', false);
 
                         menubar.updateItem('edit|Remove selected room', { enabled: true });
                         menubar.updateItem('actions|highlight path', { enabled: mapper.current.ID && mapper.current.ID != room.ID });
                         menubar.updateItem('actions|walk path', { enabled: mapper.current.ID && mapper.current.ID != room.ID });
 
-                        $("#reX").val(room.x);
-                        $("#reY").val(room.y);
-                        $("#reZ").val(room.z);
-                        $("#reZone").val(room.zone);
-                        $("#reArea").val(room.area);
-                        $("#reBackground").val(room.background);
-                        $("#reTerrain").val(room.env);
-                        $("#reIndoors").prop('checked', room.indoors);
-                        $("#reNotes").val(room.notes);
-                        $("#reDDock").prop('checked', (room.details & RoomDetails.Dock) === RoomDetails.Dock);
-                        $("#reDPier").prop('checked', (room.details & RoomDetails.Pier) === RoomDetails.Pier);
-                        $("#reDBank").prop('checked', (room.details & RoomDetails.Bank) === RoomDetails.Bank);
-                        $("#reDShop").prop('checked', (room.details & RoomDetails.Shop) === RoomDetails.Shop);
-                        $("#reDHospital").prop('checked', (room.details & RoomDetails.Hospital) === RoomDetails.Hospital);
-                        $("#reDBar").prop('checked', (room.details & RoomDetails.Bar) === RoomDetails.Bar);
-                        $("#reDRestaurant").prop('checked', (room.details & RoomDetails.Restaurant) === RoomDetails.Restaurant);
-                        $("#reDWaterSource").prop('checked', (room.details & RoomDetails.WaterSource) === RoomDetails.WaterSource);
-                        $("#reDTrainer").prop('checked', (room.details & RoomDetails.Trainer) === RoomDetails.Trainer);
+                        $('#reX').val(room.x);
+                        $('#reY').val(room.y);
+                        $('#reZ').val(room.z);
+                        $('#reZone').val(room.zone);
+                        $('#reArea').val(room.area);
+                        $('#reBackground').val(room.background);
+                        $('#reTerrain').val(room.env);
+                        $('#reIndoors').prop('checked', room.indoors);
+                        $('#reNotes').val(room.notes);
+                        $('#reDDock').prop('checked', (room.details & RoomDetails.Dock) === RoomDetails.Dock);
+                        $('#reDPier').prop('checked', (room.details & RoomDetails.Pier) === RoomDetails.Pier);
+                        $('#reDBank').prop('checked', (room.details & RoomDetails.Bank) === RoomDetails.Bank);
+                        $('#reDShop').prop('checked', (room.details & RoomDetails.Shop) === RoomDetails.Shop);
+                        $('#reDHospital').prop('checked', (room.details & RoomDetails.Hospital) === RoomDetails.Hospital);
+                        $('#reDBar').prop('checked', (room.details & RoomDetails.Bar) === RoomDetails.Bar);
+                        $('#reDRestaurant').prop('checked', (room.details & RoomDetails.Restaurant) === RoomDetails.Restaurant);
+                        $('#reDWaterSource').prop('checked', (room.details & RoomDetails.WaterSource) === RoomDetails.WaterSource);
+                        $('#reDTrainer').prop('checked', (room.details & RoomDetails.Trainer) === RoomDetails.Trainer);
                     }
                 });
 
@@ -466,9 +466,9 @@
 
                 mapper.on('setting-changed', (setting, value) => {
                     if (setting === 'active') {
-                        $("#select-area").val(value.area);
-                        $("#MapLevel").val(value.z);
-                        $("#MapZone").val(value.zone);
+                        $('#select-area').val(value.area);
+                        $('#MapLevel').val(value.z);
+                        $('#MapZone').val(value.zone);
                     }
                     ipcRenderer.send('setting-changed', { type: 'mapper', name: setting, value: value });
                 });
@@ -479,11 +479,11 @@
 
                 mapper.on('clear-area-done', (area) => {
                     $('#select-area option[value="' + area + '"]').remove();
-                    $("#select-area").change();
+                    $('#select-area').change();
                 });
 
                 mapper.on('clear-done', () => {
-                    $("#select-area").find("option").remove().end();
+                    $('#select-area').find('option').remove().end();
                     updateAreas();
                 });
 
@@ -506,7 +506,7 @@
                                 }
                             },
                         ]);
-                        if (!$("#btn-clear").prop('disabled') || (mapper.current.ID && room.ID && mapper.current.ID != room.ID))
+                        if (!$('#btn-clear').prop('disabled') || (mapper.current.ID && room.ID && mapper.current.ID != room.ID))
                             menu.push({ type: 'separator' });
                         if (mapper.current.ID && room.ID && mapper.current.ID != room.ID) {
                             menu.push({
@@ -521,7 +521,7 @@
                             });
                         }
                     }
-                    if (!$("#btn-clear").prop('disabled'))
+                    if (!$('#btn-clear').prop('disabled'))
                         menu.push({
                             label: 'Clear path', Room: room, click: () => {
                                 mapper.clearPath();
@@ -555,8 +555,8 @@
                 });
 
                 $(window).on('resize', () => {
-                    $("#mapper-body").css('top', $('#mapper-toolbar').outerHeight() + 'px');
-                    $("#mapper-room").css('top', $('#mapper-toolbar').outerHeight() + 'px');
+                    $('#mapper-body').css('top', $('#mapper-toolbar').outerHeight() + 'px');
+                    $('#mapper-room').css('top', $('#mapper-toolbar').outerHeight() + 'px');
                     if (roomEditor)
                         mapper._canvas.width = $(window).width() - 60 - $('#mapper-room').outerWidth();
                     else
@@ -565,30 +565,30 @@
                     mapper.draw();
                 });
 
-                $(".MapperNavButton").mouseleave(function () {
+                $('.MapperNavButton').mouseleave(function () {
                     MapperNavDown = false;
                 }).mouseup(function () {
                     MapperNavDown = false;
                 }).mousedown(function () {
                     MapperNavDown = true;
-                    MapperNavClicked(parseInt($(this).data("x"), 10), parseInt($(this).data("y"), 10));
+                    MapperNavClicked(parseInt($(this).data('x'), 10), parseInt($(this).data('y'), 10));
                 });
                 document.querySelectorAll('.MapperNavButton').forEach(e => e.addEventListener('wheel', (e) => {
                     MapperNavDown = true;
                     if (e.deltaY >= 0)
-                        MapperNavClicked(-parseInt($(e.target).data("x"), 10), -parseInt($(e.target).data("y"), 10));
+                        MapperNavClicked(-parseInt($(e.target).data('x'), 10), -parseInt($(e.target).data('y'), 10));
                     else
-                        MapperNavClicked(parseInt($(e.target).data("x"), 10), parseInt($(e.target).data("y"), 10));
+                        MapperNavClicked(parseInt($(e.target).data('x'), 10), parseInt($(e.target).data('y'), 10));
                     MapperNavDown = false;
                 }));
 
                 $(window).trigger('resize');
 
-                $("#export").on("show.bs.dropdown", () => {
-                    if ($(window).width() < 675 && $("#export").parent().position().left > 400)
-                        $("#export .dropdown-menu").addClass("dropdown-menu-right");
+                $('#export').on('show.bs.dropdown', () => {
+                    if ($(window).width() < 675 && $('#export').parent().position().left > 400)
+                        $('#export .dropdown-menu').addClass('dropdown-menu-right');
                     else
-                        $("#export .dropdown-menu").removeClass("dropdown-menu-right");
+                        $('#export .dropdown-menu').removeClass('dropdown-menu-right');
                 });
 
                 if (options.mapper.enabled) {
@@ -608,7 +608,7 @@
                 if (mapper.follow)
                     mapper.focusCurrentRoom();
 
-                $("#remove").click(function () {
+                $('#remove').click(function () {
                     $(this).addClass('open');
                     var pos = $(this).offset();
                     var x = Math.floor(pos.left);
@@ -630,7 +630,7 @@
                     removeMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
                 });
 
-                $("#export").click(function () {
+                $('#export').click(function () {
                     $(this).addClass('open');
                     var pos = $(this).offset();
                     var x = Math.floor(pos.left);
@@ -660,16 +660,16 @@
                     exportMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
                 });
 
-                $("#select-area").change(() => {
-                    mapper.setArea($("#select-area").find(":selected").text());
+                $('#select-area').change(() => {
+                    mapper.setArea($('#select-area').find(':selected').text());
                 });
 
-                $("#MapLevel").change(() => {
-                    mapper.setLevel(parseInt($("#MapLevel").val(), 10));
+                $('#MapLevel').change(() => {
+                    mapper.setLevel(parseInt($('#MapLevel').val(), 10));
                 });
 
-                $("#MapZone").change(() => {
-                    mapper.setZone(parseInt($("#MapZone").val(), 10));
+                $('#MapZone').change(() => {
+                    mapper.setZone(parseInt($('#MapZone').val(), 10));
                 });
 
 
@@ -786,22 +786,22 @@
         });
 
         function updateAreas() {
-            $("#select-area option").remove();
-            $("#reArea option").remove();
+            $('#select-area option').remove();
+            $('#reArea option').remove();
             if (!mapper.ready) {
                 setTimeout(updateAreas, 10);
                 return;
             }
-            let rows = mapper._db.prepare("SELECT DISTINCT Area from Rooms order by Area").all();
+            let rows = mapper._db.prepare('SELECT DISTINCT Area from Rooms order by Area').all();
             if (rows && rows.length > 0) {
                 for (var a = 0; a < rows.length; a++) {
-                    $("#select-area").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
-                    $("#reArea").append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
+                    $('#select-area').append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
+                    $('#reArea').append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
                 }
                 if (mapper.active.area)
-                    $("#select-area").val(mapper.active.area);
+                    $('#select-area').val(mapper.active.area);
                 else
-                    mapper.active.area = $("#select-area option:first").val();
+                    mapper.active.area = $('#select-area option:first').val();
             }
         }
         function compact() {
@@ -843,14 +843,14 @@
         function toggleRooms() {
             roomEditor = !roomEditor;
             if (roomEditor) {
-                $("#mapper-room").css("display", "block");
-                $("#mapper-body").css('right', $('#mapper-room').outerWidth() + "px");
+                $('#mapper-room').css('display', 'block');
+                $('#mapper-body').css('right', $('#mapper-room').outerWidth() + 'px');
                 $('#btn-room').addClass('active');
-                $("#mapper-room").css('top', $('#mapper-toolbar').outerHeight() + 'px');
+                $('#mapper-room').css('top', $('#mapper-toolbar').outerHeight() + 'px');
             }
             else {
-                $("#mapper-room").css("display", '');
-                $("#mapper-body").css('right', '');
+                $('#mapper-room').css('display', '');
+                $('#mapper-body').css('right', '');
                 $('#btn-room').removeClass('active');
             }
             $(window).trigger('resize');
@@ -886,10 +886,10 @@
         }
 
         function exportImage() {
-            clearButton("#export");
+            clearButton('#export');
             dialog.showSaveDialog(remote.getCurrentWindow(), {
                 title: 'Export image',
-                defaultPath: 'jiMUD' + (!mapper.SplitArea ? '' : "." + mapper.active.area) + '.png',
+                defaultPath: 'jiMUD' + (!mapper.SplitArea ? '' : '.' + mapper.active.area) + '.png',
                 filters: [
 
                     { name: 'Images (*.png)', extensions: ['png'] },
@@ -929,7 +929,7 @@
                             if (room.x < x) x = room.x; else if (room.x > w) w = room.x;
                             if (room.y < y) y = room.y; else if (room.y > h) h = room.y;
                         }
-                        mapper._context.font = "italic bold 16pt Georgia";
+                        mapper._context.font = 'italic bold 16pt Georgia';
                         var fx = mapper._context.measureText(t).width;
                         var rw = 32 * mapper.scale / 100;
                         var rectWidth = Math.sqrt(Math.pow(w - x, 2)) * rw + 60 + 32;
@@ -945,7 +945,7 @@
 
                         var ctx;
                         if (canvas && canvas.getContext)
-                            ctx = canvas.getContext("2d");
+                            ctx = canvas.getContext('2d');
                         else {
                             dialog.showMessageBox(remote.getCurrentWindow(), {
                                 type: 'error',
@@ -954,11 +954,11 @@
                             });
                             return;
                         }
-                        ctx.strokeStyle = "black";
+                        ctx.strokeStyle = 'black';
 
-                        ctx.fillStyle = "#eae4d6";
+                        ctx.fillStyle = '#eae4d6';
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        ctx.font = "8pt Arial";
+                        ctx.font = '8pt Arial';
                         for (rms in rooms) {
                             if (!rooms.hasOwnProperty(rms)) continue;
                             room = rooms[rms];
@@ -969,14 +969,14 @@
                             mapper.DrawNormalizedRoom(ctx, cx, cy, room, true);
                         }
                         ctx.save();
-                        ctx.strokeStyle = "black";
-                        ctx.fillStyle = "black";
-                        ctx.font = "italic bold 16pt Georgia";
+                        ctx.strokeStyle = 'black';
+                        ctx.fillStyle = 'black';
+                        ctx.font = 'italic bold 16pt Georgia';
                         fx = rectWidth / 2 - fx / 2;
                         ctx.fillText(t, fx, 20);
                         ctx.translate(rectWidth - 25, rectHeight - 25);
-                        ctx.font = "italic bold 12pt Georgia";
-                        ctx.fillText("N", 3, -5);
+                        ctx.font = 'italic bold 12pt Georgia';
+                        ctx.fillText('N', 3, -5);
                         ctx.beginPath();
                         ctx.moveTo(10, 0);
                         ctx.lineTo(5, 15);
@@ -996,7 +996,7 @@
         }
 
         function exportCurrentImage() {
-            clearButton("#export");
+            clearButton('#export');
             dialog.showSaveDialog(remote.getCurrentWindow(), {
                 title: 'Export clipped view',
                 defaultPath: 'jiMUD.clipped.png',
@@ -1011,7 +1011,7 @@
                         return;
                     }
                     showProgress('Exporting image&hellip;');
-                    var oldCanvas = document.getElementById("MapperCanvas");
+                    var oldCanvas = document.getElementById('MapperCanvas');
                     var newCanvas = document.createElement('canvas');
                     var context = newCanvas.getContext('2d');
                     newCanvas.width = oldCanvas.width;
@@ -1024,7 +1024,7 @@
         }
 
         function exportCurrentArea() {
-            clearButton("#export");
+            clearButton('#export');
             dialog.showSaveDialog(remote.getCurrentWindow(), {
                 title: 'Export current area',
                 defaultPath: 'jiMUD.' + mapper.active.area + '.txt',
@@ -1040,12 +1040,12 @@
                     ipcRenderer.send('set-progress', { value: 0 });
                     ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
                     _progress = { action: 1, file: fileName };
-                    ipcRenderer.send('progress-show', `Exporting area data&hellip;`);
+                    ipcRenderer.send('progress-show', 'Exporting area data&hellip;');
                 });
         }
 
         function exportAll() {
-            clearButton("#export");
+            clearButton('#export');
             dialog.showSaveDialog(remote.getCurrentWindow(), {
                 title: 'Export all',
                 defaultPath: 'jiMUD.txt',
@@ -1061,12 +1061,12 @@
                     ipcRenderer.send('set-progress', { value: 0 });
                     ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
                     _progress = { action: 2, file: fileName };
-                    ipcRenderer.send('progress-show', `Exporting map data&hellip;`);
+                    ipcRenderer.send('progress-show', 'Exporting map data&hellip;');
                 });
         }
 
         function importMerge() {
-            clearButton("#export");
+            clearButton('#export');
             dialog.showOpenDialog(remote.getCurrentWindow(),
                 {
                     filters: [
@@ -1098,7 +1098,7 @@
         }
 
         function importReplace() {
-            clearButton("#export");
+            clearButton('#export');
             dialog.showOpenDialog(remote.getCurrentWindow(),
                 {
                     filters: [
@@ -1130,7 +1130,7 @@
         }
 
         function removeSelectedRoom() {
-            clearButton("#remove");
+            clearButton('#remove');
             dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'question',
                 title: 'Remove selected room',
@@ -1144,7 +1144,7 @@
         }
 
         function removeCurrentRoom() {
-            clearButton("#remove");
+            clearButton('#remove');
             dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'question',
                 title: 'Remove current room',
@@ -1158,7 +1158,7 @@
         }
 
         function removeCurrentArea() {
-            clearButton("#remove");
+            clearButton('#remove');
             dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'question',
                 title: 'Remove ' + mapper.active.area,
@@ -1172,7 +1172,7 @@
         }
 
         function removeAll() {
-            clearButton("#remove");
+            clearButton('#remove');
             dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'question',
                 title: 'Remove all',
@@ -1188,14 +1188,14 @@
         function showProgress(title) {
             ipcRenderer.send('set-progress', { value: 0 });
             ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-            $("#mapProgressbar").html('<progress max="100"></progress>');
-            $("#mapProgressTitle").html(title);
-            $("#mapProgress")[0].showModal();
+            $('#mapProgressbar').html('<progress max="100"></progress>');
+            $('#mapProgressTitle').html(title);
+            $('#mapProgress')[0].showModal();
         }
 
         function closeProgress() {
-            if ($("#mapProgress")[0].open)
-                $("#mapProgress")[0].close();
+            if ($('#mapProgress')[0].open)
+                $('#mapProgress')[0].close();
             ipcRenderer.send('set-progress', { value: -1 });
             ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
         }
@@ -1207,7 +1207,7 @@
                 amt = 200;
             mapper.scale = parseInt(amt, 10);
             if (!rng)
-                $("#MapZoom").val(amt);
+                $('#MapZoom').val(amt);
             $('#MapZoomDisplay').text(amt + '%');
         }
     </script>

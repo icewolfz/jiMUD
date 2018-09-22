@@ -59,27 +59,27 @@
                 submenu: [
                     {
                         label: 'C&ompose',
-                        accelerator: "CmdOrCtrl+N",
+                        accelerator: 'CmdOrCtrl+N',
                         enabled: true,
                         //click: download
                     },
                     { type: 'separator' },
                     {
                         label: '&Get new mail',
-                        accelerator: "CmdOrCtrl+S",
+                        accelerator: 'CmdOrCtrl+S',
                         enabled: true,
                         click: checkMail
                     },
                     {
                         label: '&Sync to mud',
-                        accelerator: "CmdOrCtrl+S",
+                        accelerator: 'CmdOrCtrl+S',
                         enabled: true,
                         //click: download
                     },
                     { type: 'separator' },
                     {
                         label: '&Preferences...',
-                        accelerator: "CmdOrCtrl+Comma",
+                        accelerator: 'CmdOrCtrl+Comma',
                         click: () => {
                             window.open('mail.prefs.html', 'modal', 'backgroundColor=#fff,height=300,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                         }
@@ -132,14 +132,14 @@
                 submenu: [
                     {
                         label: '&Refresh list',
-                        accelerator: "F5",
+                        accelerator: 'F5',
                         click: () => {
 
                         }
                     },
                     {
                         label: '&Refresh view',
-                        accelerator: "CmdOrCtrl+F5",
+                        accelerator: 'CmdOrCtrl+F5',
                         click: () => {
 
                         }
@@ -147,7 +147,7 @@
 
                     {
                         label: '&Refresh all',
-                        accelerator: "CmdOrCtrl+Shift+F5",
+                        accelerator: 'CmdOrCtrl+Shift+F5',
                         click: () => {
 
                         }
@@ -211,28 +211,28 @@
                         label: '&Inbox',
                         type: 'checkbox',
                         checked: true,
-                        accelerator: "CmdOrCtrl+Shift+S",
+                        accelerator: 'CmdOrCtrl+Shift+S',
                         click: () => { }
                     },
 
                     {
                         label: '&Drafts',
                         type: 'checkbox',
-                        accelerator: "CmdOrCtrl+Shift+S",
+                        accelerator: 'CmdOrCtrl+Shift+S',
                         click: () => { }
                     },
 
                     {
                         label: '&Sent',
                         type: 'checkbox',
-                        accelerator: "CmdOrCtrl+Shift+S",
+                        accelerator: 'CmdOrCtrl+Shift+S',
                         click: () => { }
                     },
 
                     {
                         label: '&Trash',
                         type: 'checkbox',
-                        accelerator: "CmdOrCtrl+Shift+S",
+                        accelerator: 'CmdOrCtrl+Shift+S',
                         click: () => { }
                     },
 
@@ -242,21 +242,21 @@
                         label: '&Headers',
                         checked: true,
                         type: 'checkbox',
-                        accelerator: "CmdOrCtrl+Shift+S",
+                        accelerator: 'CmdOrCtrl+Shift+S',
                         click: () => { headers(!options.showHeaders); }
                     },
                     { type: 'separator' },
                     {
                         label: '&Raw',
                         type: 'checkbox',
-                        accelerator: "CmdOrCtrl+Q",
+                        accelerator: 'CmdOrCtrl+Q',
                         click: () => { }
                     },
                     {
                         label: '&Formated',
                         type: 'checkbox',
                         checked: true,
-                        accelerator: "CmdOrCtrl+Shift+S",
+                        accelerator: 'CmdOrCtrl+Shift+S',
                         click: () => { }
                     },
                     { type: 'separator' },
@@ -353,7 +353,7 @@
             }
 
             jQuery.extend(jQuery.fn.dataTableExt.oSort, {
-                "moment-asc": function (a, b) {
+                'moment-asc': function (a, b) {
                     if (moment(a).isBefore(b))
                         return -1;
                     if (moment(b).isBefore(a))
@@ -361,7 +361,7 @@
                     return 0;
                 },
 
-                "moment-desc": function (a, b) {
+                'moment-desc': function (a, b) {
                     if (moment(a).isBefore(b))
                         return 1;
                     if (moment(b).isBefore(a))
@@ -418,7 +418,7 @@
         function loadOptions(data) {
             if (!data) {
                 var set = Settings.load(remote.getGlobal('settingsFile'));
-                options = set.extensions["mail"];
+                options = set.extensions['mail'];
             }
             else
                 options = data;
@@ -448,12 +448,12 @@
             //min of 15 mins as dont want to check to fast, defaults to 48 hrs
             //if (options.checkPeriod < 900)
             //options.checkPeriod = 900;
-            $('#folders').css("width", options.folderSize);
-            $('#messages').css("left", options.folderSize);
-            $('#bottom').css("height", options.viewSize);
-            $('#bottom-loading').css("line-height", options.viewSize + "px");
+            $('#folders').css('width', options.folderSize);
+            $('#messages').css('left', options.folderSize);
+            $('#bottom').css('height', options.viewSize);
+            $('#bottom-loading').css('line-height', options.viewSize + 'px');
 
-            $('#main').css("bottom", options.viewSize + 26);
+            $('#main').css('bottom', options.viewSize + 26);
             headers(options.showHeaders, true);
             display.updateFont(options.viewFont, options.viewFontSize);
             if (!options.lastCheck)
@@ -469,7 +469,7 @@
 
         function logMessage(msg) {
             if (!msg) return;
-            logView.html(logView.html() + msg.toString() + "<br>");
+            logView.html(logView.html() + msg.toString() + '<br>');
         }
 
         function logError(error) {
@@ -478,9 +478,9 @@
             if (error.stack && options.showErrorsExtended)
                 msg = error.stack;
             else if (error instanceof TypeError)
-                msg = error.name + " - " + error.message;
+                msg = error.name + ' - ' + error.message;
             else if (error instanceof Error)
-                msg = error.name + " - " + error.message;
+                msg = error.name + ' - ' + error.message;
             else if (error.message)
                 msg = error.message;
             else
@@ -490,17 +490,17 @@
             if (options.logErrors) {
                 if (error.stack && !options.showErrorsExtended)
                     msg = error.stack;
-                fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), "Immortal Tools: " + new Date().toLocaleString() + '\n', { flag: 'a' });
-                fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), msg + '\n', { flag: 'a' });
+                fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), 'Immortal Tools: ' + new Date().toLocaleString() + '\n', { flag: 'a' });
+                fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), msg + '\n', { flag: 'a' });
             }
         }
 
         $(document).ready(() => {
             var file = remote.getGlobal('character');
             if (!file || file.length === 0)
-                file = parseTemplate(path.join("{data}", "mail.sqlite"));
+                file = parseTemplate(path.join('{data}', 'mail.sqlite'));
             else
-                file = parseTemplate(path.join("{characters}", file + ".mail"));
+                file = parseTemplate(path.join('{characters}', file + '.mail'));
             mail = new Mail(file);
             mail.on('got-mail', (timeStamp, letters) => {
                 if (options.debug)
@@ -551,14 +551,14 @@
                 scrollResize: true,
                 language: { zeroRecords: '', emptyTable: '' },
                 autoWidth: false,
-                order: [[3, "desc"]],
+                order: [[3, 'desc']],
                 columnDefs: [
                     {
                         targets: 0,
                         render: function (data) {
                             return `<input type="checkbox" value="${data}"/>`;
                         },
-                        "orderable": false
+                        'orderable': false
                     },
                     {
                         targets: 1,
@@ -569,7 +569,7 @@
                         }
                     },
                     {
-                        type: "moment",
+                        type: 'moment',
                         targets: 3,
                         orderData: [3, 1, 0],
                         render: function (data) {
@@ -652,8 +652,8 @@
                     */
             });
 
-            $("#messages-list").on('focus', () => {
-                $("#messages-list").addClass('focused');
+            $('#messages-list').on('focus', () => {
+                $('#messages-list').addClass('focused');
                 doUpdate(4);
             });
 
@@ -673,11 +673,11 @@
 
                 $(document).mousemove(function (e) {
                     if (e.pageX < 199)
-                        ghostBar.css("left", 199);
+                        ghostBar.css('left', 199);
                     else if (e.pageX > document.body.clientWidth - 300)
-                        ghostBar.css("left", document.body.clientWidth - 300);
+                        ghostBar.css('left', document.body.clientWidth - 300);
                     else
-                        ghostBar.css("left", e.pageX);
+                        ghostBar.css('left', e.pageX);
                 });
             });
 
@@ -697,27 +697,27 @@
 
                 $(document).mousemove(function (e) {
                     if (e.pageY < 199)
-                        ghostBar.css("top", 199);
+                        ghostBar.css('top', 199);
                     else if (e.pageY > document.body.clientHeight - 200)
-                        ghostBar.css("top", document.body.clientHeight - 200);
+                        ghostBar.css('top', document.body.clientHeight - 200);
                     else
-                        ghostBar.css("top", e.pageY);
+                        ghostBar.css('top', e.pageY);
                 });
             });
 
             $(window).on('resize', () => {
-                if ($('#messages').outerWidth() < 300 && $("#folders").outerWidth() > 202) {
-                    $('#folders').css("width", document.body.clientWidth - 300);
-                    $('#messages').css("left", document.body.clientWidth - 300);
+                if ($('#messages').outerWidth() < 300 && $('#folders').outerWidth() > 202) {
+                    $('#folders').css('width', document.body.clientWidth - 300);
+                    $('#messages').css('left', document.body.clientWidth - 300);
                     options.folderSize = document.body.clientWidth - 300;
                     saveOptions();
                 }
 
-                if ($('#bottom').outerHeight() < 200 && $("#main").outerHeight() > 202) {
+                if ($('#bottom').outerHeight() < 200 && $('#main').outerHeight() > 202) {
                     options.viewSize = 200;
-                    $('#bottom').css("height", options.viewSize);
-                    $('#bottom-loading').css("line-height", options.viewSize + "px");
-                    $('#main').css("bottom", options.viewSize + 26);
+                    $('#bottom').css('height', options.viewSize);
+                    $('#bottom-loading').css('line-height', options.viewSize + 'px');
+                    $('#main').css('bottom', options.viewSize + 26);
                     saveOptions();
                 }
 
@@ -732,18 +732,18 @@
             $(document).mouseup(function (e) {
                 if (dragging) {
                     if (e.pageX < 200) {
-                        $('#folders').css("width", 202);
-                        $('#messages').css("left", 202);
+                        $('#folders').css('width', 202);
+                        $('#messages').css('left', 202);
                         options.folderSize = 202;
                     }
                     else if (e.pageX > document.body.clientWidth - 300) {
-                        $('#folders').css("width", document.body.clientWidth - 300);
-                        $('#messages').css("left", document.body.clientWidth - 300);
+                        $('#folders').css('width', document.body.clientWidth - 300);
+                        $('#messages').css('left', document.body.clientWidth - 300);
                         options.folderSize = document.body.clientWidth - 300;
                     }
                     else {
-                        $('#folders').css("width", e.pageX + 2);
-                        $('#messages').css("left", e.pageX + 2);
+                        $('#folders').css('width', e.pageX + 2);
+                        $('#messages').css('left', e.pageX + 2);
                         options.folderSize = e.pageX + 2;
                     }
                     doUpdate(2);
@@ -760,9 +760,9 @@
                     else
                         options.viewSize = document.body.clientHeight - e.pageY + 2;
                     options.viewSize -= 26;
-                    $('#bottom').css("height", options.viewSize);
-                    $('#bottom-loading').css("line-height", options.viewSize + "px");
-                    $('#main').css("bottom", options.viewSize + 26);
+                    $('#bottom').css('height', options.viewSize);
+                    $('#bottom-loading').css('line-height', options.viewSize + 'px');
+                    $('#main').css('bottom', options.viewSize + 26);
                     doUpdate(2);
                     saveOptions();
                     $('#btm-ghost-bar').remove();
@@ -770,7 +770,7 @@
                     btmDragging = false;
                 }
             });
-            display = new Display($("#display"));
+            display = new Display($('#display'));
             display.scrollToEnd = false;
             display.maxLines = -1;
             loadOptions();
@@ -778,7 +778,7 @@
                 switch (event.which) {
                     case 116: //f5
                         if (!event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
-                            if ($("#messages-list").hasClass("focused"))
+                            if ($('#messages-list').hasClass('focused'))
                                 updateMessages();
                             event.preventDefault();
                         }
@@ -818,7 +818,7 @@
                 messageTable.rows.add(letters);
                 doUpdate(7);
             });
-            $("#messages-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
+            $('#messages-list_wrapper .dataTables_scrollBody')[0].scrollTop = 0;
         }
 
         function doUpdate(type) {
@@ -851,7 +851,7 @@
         function updateDraw(table, what) {
             if (!table) return;
             if (!what) what = table;
-            var body = $(".dataTables_scrollBody", table.table().container())[0];
+            var body = $('.dataTables_scrollBody', table.table().container())[0];
             var st = body.scrollTop;
             what.draw();
             body.scrollTop = st;
@@ -860,22 +860,22 @@
         function focusRow(row) {
             if (!row || row.length === 0) return;
             var top = row.node().offsetTop;
-            var body = $(".dataTables_scrollBody", row.table().container())[0];
+            var body = $('.dataTables_scrollBody', row.table().container())[0];
             var sTop = body.scrollTop;
             var sHeight = body.clientHeight;
             if (top < sTop || top + 31 >= sTop + sHeight)
                 body.scrollTop = top;
         }
         ipcRenderer.on('load-default', () => {
-            mail.file = parseTemplate(path.join("{data}", "mail.sqlite"));
+            mail.file = parseTemplate(path.join('{data}', 'mail.sqlite'));
         });
 
         ipcRenderer.on('load-char', (event, char) => {
             var file = char;
             if (!file || file.length === 0)
-                file = parseTemplate(path.join("{data}", "mail.sqlite"));
+                file = parseTemplate(path.join('{data}', 'mail.sqlite'));
             else
-                file = parseTemplate(path.join("{characters}", file + ".mail"));
+                file = parseTemplate(path.join('{characters}', file + '.mail'));
             mail.file = file;
         });
 
@@ -935,8 +935,8 @@
             if (!letter) {
                 dialog.showMessageBox(remote.getCurrentWindow(), {
                     type: 'error',
-                    title: "Letter not found",
-                    message: "Letter could not be found."
+                    title: 'Letter not found',
+                    message: 'Letter could not be found.'
                 });
                 return;
             }

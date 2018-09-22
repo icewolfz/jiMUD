@@ -57,20 +57,20 @@
                 submenu: [
                     {
                         label: '&Upload',
-                        accelerator: "CmdOrCtrl+U",
+                        accelerator: 'CmdOrCtrl+U',
                         enabled: false,
                         click: upload
                     },
                     {
                         label: '&Download',
-                        accelerator: "CmdOrCtrl+D",
+                        accelerator: 'CmdOrCtrl+D',
                         enabled: false,
                         click: download
                     },
                     { type: 'separator' },
                     {
                         label: '&Preferences...',
-                        accelerator: "CmdOrCtrl+Comma",
+                        accelerator: 'CmdOrCtrl+Comma',
                         click: () => {
                             window.open('immortal.prefs.html', 'modal', 'backgroundColor=#fff,height=300,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                         }
@@ -109,7 +109,7 @@
                     },
                     {
                         label: '&Reset all',
-                        accelerator: "CmdOrCtrl+R",
+                        accelerator: 'CmdOrCtrl+R',
                         click: () => { _ied.reset(); }
                     },
                 ]
@@ -119,7 +119,7 @@
                 submenu: [
                     {
                         label: '&Refresh all',
-                        accelerator: "F5",
+                        accelerator: 'F5',
                         click: () => {
                             updateLocal();
                             _ied.getDir((!options.remote || options.remote.length === 0) ? '.' : options.remote);
@@ -131,7 +131,7 @@
                         submenu: [
                             {
                                 label: '&Refresh',
-                                accelerator: "CmdOrCtrl+F5",
+                                accelerator: 'CmdOrCtrl+F5',
                                 click: () => {
                                     updateLocal();
                                 }
@@ -149,30 +149,30 @@
                             {
                                 label: '&Rename',
                                 enabled: false,
-                                accelerator: "CmdOrCtrl+F2",
+                                accelerator: 'CmdOrCtrl+F2',
                                 click: renameLocal
                             },
                             {
                                 label: '&Delete',
                                 enabled: false,
-                                accelerator: "CmdOrCtrl+Delete",
+                                accelerator: 'CmdOrCtrl+Delete',
                                 click: deleteLocal
                             },
                             { type: 'separator' },
                             {
                                 label: '&New file',
-                                accelerator: "CmdOrCtrl+F",
+                                accelerator: 'CmdOrCtrl+F',
                                 click: newLocalFile
                             },
                             {
                                 label: '&New directory',
-                                accelerator: "CmdOrCtrl+N",
+                                accelerator: 'CmdOrCtrl+N',
                                 click: newFolderLocal
                             },
                             { type: 'separator' },
                             {
                                 label: '&Select all',
-                                accelerator: "CmdOrCtrl+Alt+A",
+                                accelerator: 'CmdOrCtrl+Alt+A',
                                 click: () => {
                                     localTable.rows().select();
                                 }
@@ -181,7 +181,7 @@
                             {
                                 label: '&Reveal in explorer...',
                                 enabled: false,
-                                accelerator: "CmdOrCtrl+X",
+                                accelerator: 'CmdOrCtrl+X',
                                 click: () => {
                                     var data = localTable.rows({ selected: true }).data().pluck('path');
                                     for (var d = 0, dl = data.length; d < dl; d++)
@@ -193,7 +193,7 @@
                             {
                                 label: '&Open...',
                                 enabled: false,
-                                accelerator: "CmdOrCtrl+O",
+                                accelerator: 'CmdOrCtrl+O',
                                 click: () => {
                                     var data = localTable.rows({ selected: true }).data().pluck('path');
                                     for (var d = 0, dl = data.length; d < dl; d++)
@@ -203,7 +203,7 @@
                             {
                                 label: 'Open &with editor...',
                                 enabled: false,
-                                accelerator: "CmdOrCtrl+Shift+E",
+                                accelerator: 'CmdOrCtrl+Shift+E',
                                 click: () => {
                                     var data = localTable.rows({ selected: true }).data().pluck('path');
                                     for (var d = 0, dl = data.length; d < dl; d++) {
@@ -217,7 +217,7 @@
                             {
                                 label: 'Open &with external editor...',
                                 enabled: false,
-                                accelerator: "CmdOrCtrl+Alt+E",
+                                accelerator: 'CmdOrCtrl+Alt+E',
                                 click: () => {
                                     var data = localTable.rows({ selected: true }).data().pluck('path');
                                     for (var d = 0, dl = data.length; d < dl; d++) {
@@ -234,9 +234,9 @@
                         submenu: [
                             {
                                 label: '&Refresh',
-                                accelerator: "CmdOrCtrl+Shift+F5",
+                                accelerator: 'CmdOrCtrl+Shift+F5',
                                 click: () => {
-                                    if ($("#remote-list").hasClass("focused"))
+                                    if ($('#remote-list').hasClass('focused'))
                                         _ied.getDir((!options.remote || options.remote.length === 0) ? '.' : options.remote);
                                 }
                             },
@@ -244,8 +244,8 @@
                             {
                                 label: '&Goto',
                                 enabled: false,
-                                accelerator: "CmdOrCtrl+G",
-                                click: () => { doCommandFirst("goto"); }
+                                accelerator: 'CmdOrCtrl+G',
+                                click: () => { doCommandFirst('goto'); }
                             },
                             {
                                 label: '&Change to directory',
@@ -264,31 +264,31 @@
                                 label: '&Update',
                                 enabled: false,
                                 // accelerator: "CmdOrCtrl+U",
-                                click: () => { doCommand("update"); }
+                                click: () => { doCommand('update'); }
                             },
                             {
                                 label: '&Renew',
                                 enabled: false,
                                 //accelerator: "CmdOrCtrl+U",
-                                click: () => { doCommand("renew"); }
+                                click: () => { doCommand('renew'); }
                             },
                             {
                                 label: '&Clone',
                                 enabled: false,
                                 //accelerator: "CmdOrCtrl+U",
-                                click: () => { doCommand("clone"); }
+                                click: () => { doCommand('clone'); }
                             },
                             //clone x...
                             {
                                 label: '&Dest',
                                 enabled: false,
                                 //accelerator: "CmdOrCtrl+U",
-                                click: () => { doCommand("dest", true); }
+                                click: () => { doCommand('dest', true); }
                             },
                             {
                                 label: '&Backup',
                                 enabled: false,
-                                accelerator: "CmdOrCtrl+B",
+                                accelerator: 'CmdOrCtrl+B',
                                 click: doBackup
                             },
                             {
@@ -304,24 +304,24 @@
                             {
                                 label: '&Rename',
                                 enabled: false,
-                                accelerator: "CmdOrCtrl+ShiftF2",
+                                accelerator: 'CmdOrCtrl+ShiftF2',
                                 click: renameRemote
                             },
                             {
                                 label: '&Delete',
                                 enabled: false,
-                                accelerator: "CmdOrCtrl+Shift+Delete",
+                                accelerator: 'CmdOrCtrl+Shift+Delete',
                                 click: deleteRemote
                             },
                             {
                                 label: '&New directory',
-                                accelerator: "CmdOrCtrl+Shift+N",
+                                accelerator: 'CmdOrCtrl+Shift+N',
                                 click: newFolderRemote
                             },
                             { type: 'separator' },
                             {
                                 label: '&Select all',
-                                accelerator: "CmdOrCtrl+Shift+A",
+                                accelerator: 'CmdOrCtrl+Shift+A',
                                 click: () => {
                                     remoteTable.rows().select();
                                 }
@@ -329,7 +329,7 @@
                             { type: 'separator' },
                             {
                                 label: '&Edit...',
-                                accelerator: "CmdOrCtrl+Shift+O",
+                                accelerator: 'CmdOrCtrl+Shift+O',
                                 click: openRemoteWithEditor
                             },
                         ]
@@ -349,26 +349,26 @@
                     {
                         label: '&Show queue and log',
                         type: 'checkbox',
-                        accelerator: "CmdOrCtrl+Q",
+                        accelerator: 'CmdOrCtrl+Q',
                         click: () => { toggleQueue(); }
                     },
                     {
                         label: 'Sync folders',
                         type: 'checkbox',
-                        accelerator: "CmdOrCtrl+Shift+S",
+                        accelerator: 'CmdOrCtrl+Shift+S',
                         click: () => { toggleSync(); }
                     },
                     { type: 'separator' },
                     {
                         label: '&Editor',
-                        accelerator: "CmdOrCtrl+E",
+                        accelerator: 'CmdOrCtrl+E',
                         click: () => {
                             ipcRenderer.send('open-editor', '');
                         }
                     },
                     {
                         label: 'E&xternal editor',
-                        accelerator: "CmdOrCtrl+Alt+E",
+                        accelerator: 'CmdOrCtrl+Alt+E',
                         click: () => {
                             shell.openItem(options.editor);
                         }
@@ -485,23 +485,23 @@
             }
 
             jQuery.extend(jQuery.fn.dataTableExt.oSort, {
-                "file-asc": function (a, b) {
+                'file-asc': function (a, b) {
                     return fileSort(a, b);
                 },
 
-                "file-desc": function (a, b) {
+                'file-desc': function (a, b) {
                     return fileSort(a, b) * -1;
                 },
 
-                "rFile-asc": function (a, b) {
+                'rFile-asc': function (a, b) {
                     return rFileSort(a, b);
                 },
 
-                "rFile-desc": function (a, b) {
+                'rFile-desc': function (a, b) {
                     return rFileSort(a, b) * -1;
                 },
 
-                "moment-asc": function (a, b) {
+                'moment-asc': function (a, b) {
                     if (moment(a).isBefore(b))
                         return -1;
                     if (moment(b).isBefore(a))
@@ -509,7 +509,7 @@
                     return 0;
                 },
 
-                "moment-desc": function (a, b) {
+                'moment-desc': function (a, b) {
                     if (moment(a).isBefore(b))
                         return 1;
                     if (moment(b).isBefore(a))
@@ -566,7 +566,7 @@
         function loadOptions(data) {
             if (!data) {
                 var set = Settings.load(remote.getGlobal('settingsFile'));
-                options = set.extensions["immortal"];
+                options = set.extensions['immortal'];
             }
             else
                 options = data;
@@ -603,29 +603,29 @@
             if (options.localSize < 202)
                 options.localSize = 202;
 
-            $('#local').css("width", options.localSize);
-            $('#remote').css("left", options.localSize);
+            $('#local').css('width', options.localSize);
+            $('#remote').css('left', options.localSize);
 
 
-            $('#bottom').css("height", options.queueSize);
-            $('#main').css("bottom", options.queueSize);
+            $('#bottom').css('height', options.queueSize);
+            $('#main').css('bottom', options.queueSize);
 
             menubar.updateItem('view|sync folders', { checked: options.syncFolders });
             if (options.syncFolders)
-                $("#btn-sync").addClass("active");
+                $('#btn-sync').addClass('active');
             else
                 $('#btn-sync').removeClass('active');
             menubar.updateItem('edit|external editor', { enabled: options.editor && options.editor.length > 0 });
             menubar.updateItem('view|show queue and log', { checked: options.showQueue });
             if (options.showQueue) {
-                $("#btn-queue").addClass("active");
-                $("#bottom").css('display', '');
-                $("#main").css('bottom', (options.queueSize + 26) + 'px');
+                $('#btn-queue').addClass('active');
+                $('#bottom').css('display', '');
+                $('#main').css('bottom', (options.queueSize + 26) + 'px');
             }
             else {
                 $('#btn-queue').removeClass('active');
-                $("#bottom").css('display', 'none');
-                $("#main").css('bottom', '28px');
+                $('#bottom').css('display', 'none');
+                $('#main').css('bottom', '28px');
             }
             if (options.openEditor)
                 $('#btn-editor-remote').addClass('active');
@@ -680,8 +680,8 @@
             }
             info.localDirs = dirs.length;
             info.localFiles = all.length - dirs.length;
-            $("#local-path").val(p);
-            $("#local-navigate").empty();
+            $('#local-path').val(p);
+            $('#local-navigate').empty();
             drivelist.list((error, drives) => {
                 if (error) {
                     logMessage(error);
@@ -734,21 +734,21 @@
                         return 1;
                     return 0;
                 });
-                $("#local-navigate").empty();
+                $('#local-navigate').empty();
                 for (c = 0, cl = paths.length; c < cl; c++) {
                     if (paths[c].drive && paths[c].open)
-                        $("#local-navigate").append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`);
+                        $('#local-navigate').append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`);
                     else if (paths[c].drive)
-                        $("#local-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`);
+                        $('#local-navigate').append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a></li>`);
                     else if (paths[c].open)
-                        $("#local-navigate").append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-open-o"></i> ${paths[c].name}</a></li>`);
+                        $('#local-navigate').append(`<li><a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-open-o"></i> ${paths[c].name}</a></li>`);
                     else
-                        $("#local-navigate").append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`);
+                        $('#local-navigate').append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`);
                 }
             });
             localTable.clear().rows.add(all);
-            $("#btn-local-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
-            $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
+            $('#btn-local-up').prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
+            $('#local-list_wrapper .dataTables_scrollBody')[0].scrollTop = 0;
             doUpdate(275);
         }
 
@@ -766,7 +766,7 @@
             var file;
             var paths = [];
             var c = [], d, dl, cl;
-            var pre = (p === "/" ? '' : p) + "/";
+            var pre = (p === '/' ? '' : p) + '/';
             for (d = 0, dl = dir.length; d < dl; d++) {
                 file = {
                     name: dir[d].file,
@@ -780,7 +780,7 @@
                 if (file.hidden && !options.showhidden)
                     continue;
                 if (file.size === -2) {
-                    file.type = "Directory";
+                    file.type = 'Directory';
                     dirs.push(file);
                     info.remoteDirs++;
                     file.type2 = -2;
@@ -791,13 +791,13 @@
                 all.push(file);
                 _remote[file.name] = file;
             }
-            $("#remote-path").val(p);
+            $('#remote-path').val(p);
 
             setTimeout(() => {
                 for (var pt = 0, pl = parts.length; pt < pl; pt++) {
                     c.push(parts[pt]);
                     if (pt === 0)
-                        paths.push({ path: "/", name: "/", count: pt, open: pt === pl - 1 });
+                        paths.push({ path: '/', name: '/', count: pt, open: pt === pl - 1 });
                     else
                         paths.push({ path: c.join('/'), name: parts[pt], count: pt, open: pt === pl - 1 });
                 }
@@ -812,7 +812,7 @@
                         return 1;
                     return 0;
                 });
-                $("#remote-navigate").empty();
+                $('#remote-navigate').empty();
                 var str = '';
                 for (c = 0, cl = paths.length; c < cl; c++) {
                     if (paths[c].drive && paths[c].open)
@@ -824,17 +824,17 @@
                     else
                         str += `<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`;
                 }
-                $("#remote-navigate").append(str);
+                $('#remote-navigate').append(str);
             });
             remoteTable.clear().rows.add(all);
             doUpdate(277);
-            $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop = 0;
-            $("#btn-remote-up").prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
+            $('#remote-list_wrapper .dataTables_scrollBody')[0].scrollTop = 0;
+            $('#btn-remote-up').prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
         }
 
         function logMessage(msg) {
             if (!msg) return;
-            logView.html(logView.html() + msg.toString() + "<br>");
+            logView.html(logView.html() + msg.toString() + '<br>');
             doUpdate(32);
         }
 
@@ -844,9 +844,9 @@
             if (error.stack && options.showErrorsExtended)
                 msg = error.stack;
             else if (error instanceof TypeError)
-                msg = error.name + " - " + error.message;
+                msg = error.name + ' - ' + error.message;
             else if (error instanceof Error)
-                msg = error.name + " - " + error.message;
+                msg = error.name + ' - ' + error.message;
             else if (error.message)
                 msg = error.message;
             else
@@ -856,8 +856,8 @@
             if (options.logErrors) {
                 if (!options.showErrorsExtended && error.stack)
                     msg = error.stack;
-                fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), "Immortal Tools: " + new Date().toLocaleString() + '\n', { flag: 'a' });
-                fs.writeFileSync(parseTemplate(path.join('{data}', "jimud.error.log")), msg + '\n', { flag: 'a' });
+                fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), 'Immortal Tools: ' + new Date().toLocaleString() + '\n', { flag: 'a' });
+                fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), msg + '\n', { flag: 'a' });
             }
         }
 
@@ -939,99 +939,99 @@
                 menubar.updateItem('edit|remote|rename', { enabled: remoteSelected });
                 menubar.updateItem('edit|remote|delete', { enabled: remoteSelected });
 
-                $("#btn-rename-local").prop('disabled', !localSelected);
-                $("#btn-delete-local").prop('disabled', !localSelected);
-                $("#btn-upload-local").prop('disabled', !localSelected);
-                $("#btn-reveal-local").prop('disabled', !localSelected);
-                $("#btn-open-local").prop('disabled', !localSelected);
-                $("#btn-editor-local").prop('disabled', !localSelected);
+                $('#btn-rename-local').prop('disabled', !localSelected);
+                $('#btn-delete-local').prop('disabled', !localSelected);
+                $('#btn-upload-local').prop('disabled', !localSelected);
+                $('#btn-reveal-local').prop('disabled', !localSelected);
+                $('#btn-open-local').prop('disabled', !localSelected);
+                $('#btn-editor-local').prop('disabled', !localSelected);
                 //$("#btn-editor-local").prop('disabled', !(localSelected && options.editor && options.editor.length > 0));
 
-                $("#btn-rename-remote").prop('disabled', !remoteSelected);
-                $("#btn-delete-remote").prop('disabled', !remoteSelected);
-                $("#btn-download-remote").prop('disabled', !remoteSelected);
-                $("#btn-edit-remote").prop('disabled', !remoteSelected);
+                $('#btn-rename-remote').prop('disabled', !remoteSelected);
+                $('#btn-delete-remote').prop('disabled', !remoteSelected);
+                $('#btn-download-remote').prop('disabled', !remoteSelected);
+                $('#btn-edit-remote').prop('disabled', !remoteSelected);
 
-                $("#btn-start").prop('disabled', !queueSelected);
-                $("#btn-pause").prop('disabled', !queueSelected);
-                $("#btn-stop").prop('disabled', !queueSelected);
+                $('#btn-start').prop('disabled', !queueSelected);
+                $('#btn-pause').prop('disabled', !queueSelected);
+                $('#btn-stop').prop('disabled', !queueSelected);
                 doUpdate(1);
                 updatingMenu = false;
             }, 0);
         }
 
         function renderFile(data, type, full) {
-            if (type === "sort" || type === 'type')
+            if (type === 'sort' || type === 'type')
                 return data;
             if (full.size === -2) {
                 return '<i class="fa fa-folder-o" style="margin-right: 2px"></i>' + data;
             }
             else {
                 switch (full.type.toLowerCase()) {
-                    case ".pdf":
+                    case '.pdf':
                         return '<i class="fa fa-file-pdf-o" style="color: #cc3e44;margin-right: 2px"></i>' + data;
-                    case ".xls":
-                    case ".xlt":
-                    case ".xlm":
-                    case ".xlsx":
-                    case ".xlsm":
-                    case ".xltx":
-                    case ".xltm":
+                    case '.xls':
+                    case '.xlt':
+                    case '.xlm':
+                    case '.xlsx':
+                    case '.xlsm':
+                    case '.xltx':
+                    case '.xltm':
                         return '<i class="fa fa-file-excel-o" style="color: #8dc149;margin-right: 2px"></i>' + data;
-                    case ".doc":
-                    case ".dot":
-                    case ".wbk":
-                    case ".docx":
-                    case ".docm":
-                    case ".dotx":
-                    case ".dotm":
-                    case ".docb":
+                    case '.doc':
+                    case '.dot':
+                    case '.wbk':
+                    case '.docx':
+                    case '.docm':
+                    case '.dotx':
+                    case '.dotm':
+                    case '.docb':
                         return '<i class="fa fa-file-word-o" style="color:#519aba;margin-right: 2px"></i>' + data;
-                    case ".ppt":
-                    case ".pot":
-                    case ".pps":
-                    case ".pptx":
-                    case ".pptm":
-                    case ".potx":
-                    case ".potm":
-                    case ".ppam":
-                    case ".ppsx":
-                    case ".ppsm":
-                    case ".sldx":
-                    case ".sldm":
+                    case '.ppt':
+                    case '.pot':
+                    case '.pps':
+                    case '.pptx':
+                    case '.pptm':
+                    case '.potx':
+                    case '.potm':
+                    case '.ppam':
+                    case '.ppsx':
+                    case '.ppsm':
+                    case '.sldx':
+                    case '.sldm':
                         return '<i class="fa fa-file-powerpoint-o" style="margin-right: 2px"></i>' + data;
-                    case ".png":
-                    case ".gif":
-                    case ".jpg":
-                    case ".ico":
-                    case ".svg":
-                    case ".webp":
+                    case '.png':
+                    case '.gif':
+                    case '.jpg':
+                    case '.ico':
+                    case '.svg':
+                    case '.webp':
                         return '<i class="fa fa-file-image-o" style="color: #a074c4;margin-right: 2px"></i>' + data;
-                    case ".m4a":
-                    case ".wav":
-                    case ".mp3":
-                    case ".flac":
+                    case '.m4a':
+                    case '.wav':
+                    case '.mp3':
+                    case '.flac':
                         return '<i class="fa fa-file-audio-o" style="margin-right: 2px"></i>' + data;
-                    case ".avi":
-                    case ".mpg":
-                    case ".mov":
-                    case ".webm":
-                    case ".oog":
-                    case ".mkv":
+                    case '.avi':
+                    case '.mpg':
+                    case '.mov':
+                    case '.webm':
+                    case '.oog':
+                    case '.mkv':
                         return '<i class="fa fa-file-video-o" style="color: #f55385;margin-right: 2px"></i>' + data;
-                    case ".7z":
-                    case ".zip":
-                    case ".rar":
-                    case ".jar":
+                    case '.7z':
+                    case '.zip':
+                    case '.rar':
+                    case '.jar':
                         return '<i class="fa fa-file-archive-o" style="color: #6d8086;margin-right: 2px"></i>' + data;
-                    case ".txt":
+                    case '.txt':
                         return '<i class="fa fa-file-text-o" style="margin-right: 2px"></i>' + data;
-                    case ".o":
-                    case ".csv":
+                    case '.o':
+                    case '.csv':
                         return '<i class="fa fa-file-o" style="color: #8dc149;margin-right: 2px"></i>' + data;
-                    case ".h":
+                    case '.h':
                         return '<i class="fa fa-file-code-o" style="color:#a074c4;margin-right: 2px"></i>' + data;
-                    case ".c":
+                    case '.c':
                         return '<i class="fa fa-file-code-o" style="color:#519aba;margin-right: 2px"></i>' + data;
                 }
 
@@ -1079,7 +1079,7 @@
                         orderData: [4, 2, 0],
                     },
                     {
-                        type: "moment",
+                        type: 'moment',
                         targets: 3,
                         orderData: [4, 3, 0],
                         render: function (data) {
@@ -1087,8 +1087,8 @@
                         }
                     },
                     {
-                        "targets": 4,
-                        "visible": false
+                        'targets': 4,
+                        'visible': false
 
                     }
                 ],
@@ -1138,7 +1138,7 @@
                         orderData: [4, 2, 0],
                     },
                     {
-                        type: "moment",
+                        type: 'moment',
                         targets: 3,
                         orderData: [4, 3, 0],
                         render: function (data) {
@@ -1146,8 +1146,8 @@
                         }
                     },
                     {
-                        "targets": 4,
-                        "visible": false
+                        'targets': 4,
+                        'visible': false
                     }
                 ],
                 columns: [
@@ -1178,7 +1178,7 @@
                         type: 'file',
                         targets: 0,
                         render: function (data, type, full) {
-                            if (type === "sort" || type === 'type')
+                            if (type === 'sort' || type === 'type')
                                 return data;
                             var file = data;
                             if (file.startsWith(options.local)) {
@@ -1199,7 +1199,7 @@
                     {
                         targets: 2,
                         render: function (data, type) {
-                            if (type === "sort" || type === 'type')
+                            if (type === 'sort' || type === 'type')
                                 return data;
                             var file = data;
                             if (file.startsWith(options.remote)) {
@@ -1211,7 +1211,7 @@
                     },
                     {
                         render: function (data, type) {
-                            if (type === "sort" || type === 'type')
+                            if (type === 'sort' || type === 'type')
                                 return data;
                             return `<div class="progressbar"><div class="progressbar-text">${Math.round(100 * data)}%</div><div class="progressbar-value" style="width: ${100 - 100 * data}%"></div></div>`;
                         },
@@ -1221,7 +1221,7 @@
                     {
                         targets: 4,
                         render: function (data, type, full) {
-                            if (type === "sort" || type === 'type')
+                            if (type === 'sort' || type === 'type')
                                 return data;
                             switch (full.state) {
                                 case ItemState.paused:
@@ -1257,7 +1257,7 @@
             _ied.compressDir = options.compress;
             _ied.on('init', () => {
                 if (!options.remote || options.remote.length === 0)
-                    _ied.getDir(".");
+                    _ied.getDir('.');
                 else
                     _ied.getDir(options.remote);
             });
@@ -1335,9 +1335,9 @@
                 if (error.stack)
                     msg = error.stack;
                 else if (error instanceof TypeError)
-                    msg = error.name + " - " + error.message;
+                    msg = error.name + ' - ' + error.message;
                 else if (error instanceof Error)
-                    msg = error.name + " - " + error.message;
+                    msg = error.name + ' - ' + error.message;
                 else if (error.message)
                     msg = error.message;
                 else if (error.msg)
@@ -1363,16 +1363,16 @@
                 else if (tag.startsWith('manager-dir:download')) {
                     if (_progressCancel) {
                         if (options.debug)
-                            console.log("Download files canceled");
+                            console.log('Download files canceled');
                         pTotal = 0;
-                        if ($("#Progress")[0].open)
-                            $("#Progress")[0].close();
+                        if ($('#Progress')[0].open)
+                            $('#Progress')[0].close();
                         return;
                     }
                     if (options.debug) {
-                        console.log("Download files:");
+                        console.log('Download files:');
                         console.log(files);
-                        console.log("Download dir: " + dir);
+                        console.log('Download dir: ' + dir);
                     }
                     var s = options.remote.length;
                     if (options.remote.endsWith('/'))
@@ -1387,7 +1387,7 @@
                     */
                     console.log(files);
                     for (f = 0, fl = files.length; f < fl; f++) {
-                        file = (dir === "/" ? '' : dir) + "/" + files[f].file;
+                        file = (dir === '/' ? '' : dir) + '/' + files[f].file;
                         if (files[f].size == -2) {
                             console.log(file);
                             console.log(local);
@@ -1395,7 +1395,7 @@
                             //create local
                             if (local && !existsSync(path.join(local, path.basename(file)))) {
                                 fs.mkdirSync(path.join(local, path.basename(file)));
-                                logMessage("Creating directory: " + path.join(local, path.basename(file)));
+                                logMessage('Creating directory: ' + path.join(local, path.basename(file)));
                             }
                             pTotal++;
                             _ied.getDir(file, true, 'download:' + file, path.join(local, path.basename(file)));
@@ -1406,8 +1406,8 @@
                     pTotal--;
                     if (pTotal <= 0) {
                         pTotal = 0;
-                        if ($("#Progress")[0].open)
-                            $("#Progress")[0].close();
+                        if ($('#Progress')[0].open)
+                            $('#Progress')[0].close();
                         return;
                     }
                 }
@@ -1415,12 +1415,12 @@
                     if (_progressCancel) {
                         pTotal = 0;
                         pFiles = 0;
-                        if ($("#Progress")[0].open)
-                            $("#Progress")[0].close();
+                        if ($('#Progress')[0].open)
+                            $('#Progress')[0].close();
                         return;
                     }
                     for (f = 0, fl = files.length; f < fl; f++) {
-                        file = (dir === "/" ? '' : dir) + "/" + files[f].file;
+                        file = (dir === '/' ? '' : dir) + '/' + files[f].file;
                         if (files[f].size === -2)
                             deleteRemoteFolder(file);
                         else
@@ -1431,15 +1431,15 @@
                         for (f = pFiles.length - 1; f >= 0; f--)
                             _ied.deleteDirectory(pFiles[f]);
                         pTotal = 0;
-                        if ($("#Progress")[0].open)
-                            $("#Progress")[0].close();
+                        if ($('#Progress')[0].open)
+                            $('#Progress')[0].close();
                         return;
                     }
                 }
             });
             _ied.on('resolved', (dir, tag) => {
                 if (tag && tag.startsWith('manager-'))
-                    logMessage("Resolved: " + dir);
+                    logMessage('Resolved: ' + dir);
             });
             _ied.on('message', (msg) => {
                 logMessage(msg);
@@ -1451,19 +1451,19 @@
                         if (val.download) {
                             _downloads[val.local] = true;
                             if (val.tmp === TempType.extension)
-                                _downloads[val.local + ".tmp"] = true;
+                                _downloads[val.local + '.tmp'] = true;
                             info.downloads++;
                         }
                         else
                             info.uploads++;
                         info.active++;
                         return {
-                            "local": val.local,
-                            "direction": val.download ? "<-" : "->",
-                            "remote": val.remote,
-                            "progress": val.percent,
-                            "id": val.ID,
-                            "state": val.state,
+                            'local': val.local,
+                            'direction': val.download ? '<-' : '->',
+                            'remote': val.remote,
+                            'progress': val.percent,
+                            'id': val.ID,
+                            'state': val.state,
                             'error': val.error
                         };
                     });
@@ -1473,18 +1473,18 @@
                     if (item.download) {
                         _downloads[item.local] = true;
                         if (item.tmp === TempType.extension)
-                            _downloads[item.local + ".tmp"] = true;
+                            _downloads[item.local + '.tmp'] = true;
                         info.downloads++;
                     }
                     else
                         info.uploads++;
                     queueTable.row.add({
-                        "local": item.local,
-                        "direction": item.download ? "<-" : "->",
-                        "remote": item.remote,
-                        "progress": item.percent,
-                        "id": item.ID,
-                        "state": item.state,
+                        'local': item.local,
+                        'direction': item.download ? '<-' : '->',
+                        'remote': item.remote,
+                        'progress': item.percent,
+                        'id': item.ID,
+                        'state': item.state,
                         'error': item.error
                     });
                     info.active++;
@@ -1519,7 +1519,7 @@
 
             _ied.on('cmd', (obj) => {
                 var row, name;
-                if (obj.cmd === "rm") {
+                if (obj.cmd === 'rm') {
                     if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Deleted: ${obj.path}/${obj.file}`);
                         if (obj.path != options.remote)
@@ -1540,12 +1540,12 @@
                         logMessage(`Failed to delete: ${obj.path}/${obj.file}`);
                         dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'error',
-                            title: "Could not delete",
-                            message: "Could not delete: " + obj.path + "/" + obj.file,
+                            title: 'Could not delete',
+                            message: 'Could not delete: ' + obj.path + '/' + obj.file,
                         });
                     }
                 }
-                else if (obj.cmd === "mv") {
+                else if (obj.cmd === 'mv') {
                     if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Renamed ${obj.path}/${obj.file} to ${obj.path2}/${obj.file2}`);
                         if (obj.path != options.remote)
@@ -1561,7 +1561,7 @@
 
                         //update old data to new data
                         _remote[obj.file2].name = obj.file2;
-                        _remote[obj.file2].path = obj.path2 + "/" + obj.file2;
+                        _remote[obj.file2].path = obj.path2 + '/' + obj.file2;
                         _remote[obj.file2].hidden = IED.isHidden(_remote[obj.file2].path, true);
 
                         if (_remote[obj.file2].hidden && !options.showHidden) {
@@ -1576,12 +1576,12 @@
                         logMessage(`Failed to rename: ${obj.path}/${obj.file}`);
                         dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'error',
-                            title: "Could not rename",
-                            message: "Could not rename: " + obj.file,
+                            title: 'Could not rename',
+                            message: 'Could not rename: ' + obj.file,
                         });
                     }
                 }
-                else if (obj.cmd === "mkdir") {
+                else if (obj.cmd === 'mkdir') {
                     if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Created directory ${obj.path}`);
                         if (path.dirname(obj.path) != options.remote)
@@ -1595,7 +1595,7 @@
                             name: name,
                             path: obj.path,
                             size: -2,
-                            type: "Directory",
+                            type: 'Directory',
                             date: new Date().getTime(),
                             hidden: IED.isHidden(obj.path, true),
                             type2: -2
@@ -1615,12 +1615,12 @@
                         logMessage(`Failed to create directory: ${obj.path}`);
                         dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'error',
-                            title: "Could not create directory",
-                            message: "Could not create: " + path.basename(obj.path),
+                            title: 'Could not create directory',
+                            message: 'Could not create: ' + path.basename(obj.path),
                         });
                     }
                 }
-                else if (obj.cmd === "rmdir") {
+                else if (obj.cmd === 'rmdir') {
                     if (obj.code === IEDCmdStatus.success) {
                         logMessage(`Removed directory ${obj.path}`);
                         if (path.dirname(obj.path) != options.remote)
@@ -1642,8 +1642,8 @@
                         logMessage(`Failed to remove directory: ${obj.path}`);
                         dialog.showMessageBox(remote.getCurrentWindow(), {
                             type: 'error',
-                            title: "Could not remove directory",
-                            message: "Could not remove: " + path.basename(obj.path),
+                            title: 'Could not remove directory',
+                            message: 'Could not remove: ' + path.basename(obj.path),
                         });
                     }
                 }
@@ -1652,7 +1652,7 @@
             localTable = $('#local-list').DataTable();
             remoteTable = $('#remote-list').DataTable();
             queueTable = $('#queue-list').DataTable();
-            logView = $("#log-view");
+            logView = $('#log-view');
 
             localTable.on('user-select', function (e, dt, type, cell) {
                 if ($(cell.node()).parent().hasClass('selected') && dt.rows('.selected').data().length === 1) {
@@ -1734,7 +1734,7 @@
                 event.stopPropagation();
                 event.cancelBubble = true;
                 var c = new Menu();
-                if (window.getSelection().type === "Range") {
+                if (window.getSelection().type === 'Range') {
                     c.append(new MenuItem({ role: 'copy' }));
                     c.append(new MenuItem({ type: 'separator' }));
                 }
@@ -1788,7 +1788,7 @@
                     doUpdate(16);
             });
 
-            $("#local-list").on('keypress', function (e) {
+            $('#local-list').on('keypress', function (e) {
                 key += e.key.toLowerCase();
                 var selected = localTable.rows({ selected: true });
                 var f = -1;
@@ -1825,10 +1825,10 @@
                 }
                 localTable.rows().deselect();
                 var top = row.node().offsetTop;
-                var sTop = $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop;
-                var sHeight = $("#local-list_wrapper .dataTables_scrollBody")[0].clientHeight;
+                var sTop = $('#local-list_wrapper .dataTables_scrollBody')[0].scrollTop;
+                var sHeight = $('#local-list_wrapper .dataTables_scrollBody')[0].clientHeight;
                 if (top < sTop || top + 31 >= sTop + sHeight)
-                    $("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = top;
+                    $('#local-list_wrapper .dataTables_scrollBody')[0].scrollTop = top;
                 //$("#local-list_wrapper .dataTables_scrollBody")[0].scrollTop = row.node().offsetTop;
                 //row.node().scrollIntoView();
                 //$("body")[0].scrollTop = 0
@@ -1840,7 +1840,7 @@
                     key = '';
                 }, 300);
             });
-            $("#remote-list").on('keypress', function (e) {
+            $('#remote-list').on('keypress', function (e) {
                 key += e.key.toLowerCase();
                 var selected = remoteTable.rows({ selected: true });
                 var f = -1;
@@ -1875,10 +1875,10 @@
                 }
                 remoteTable.rows().deselect();
                 var top = row.node().offsetTop;
-                var sTop = $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop;
-                var sHeight = $("#remote-list_wrapper .dataTables_scrollBody")[0].clientHeight;
+                var sTop = $('#remote-list_wrapper .dataTables_scrollBody')[0].scrollTop;
+                var sHeight = $('#remote-list_wrapper .dataTables_scrollBody')[0].clientHeight;
                 if (top < sTop || top + 31 >= sTop + sHeight)
-                    $("#remote-list_wrapper .dataTables_scrollBody")[0].scrollTop = top;
+                    $('#remote-list_wrapper .dataTables_scrollBody')[0].scrollTop = top;
                 //row.node().scrollIntoView();
                 //$("body")[0].scrollTop = 0
                 row.select();
@@ -1896,9 +1896,9 @@
                 if (data.size === -2) {
                     if (options.syncFolders && _remote[data.name]) {
                         if (options.remote === '/')
-                            _ied.getDir("/" + data.name, true);
+                            _ied.getDir('/' + data.name, true);
                         else
-                            _ied.getDir(options.remote + "/" + data.name, true);
+                            _ied.getDir(options.remote + '/' + data.name, true);
                     }
                     updateLocal(data.path);
                 }
@@ -1929,46 +1929,46 @@
                     _ied.pauseItem(data.id);
             });
 
-            $("#local-list").on('focus', () => {
-                $("#local-list").addClass('focused');
-                $("#remote-list").removeClass('focused');
-                $("#queue-list").removeClass('focused');
+            $('#local-list').on('focus', () => {
+                $('#local-list').addClass('focused');
+                $('#remote-list').removeClass('focused');
+                $('#queue-list').removeClass('focused');
                 doUpdate(16);
 
             });
-            $("#remote-list").on('focus', () => {
-                $("#local-list").removeClass('focused');
-                $("#remote-list").addClass('focused');
-                $("#queue-list").removeClass('focused');
+            $('#remote-list').on('focus', () => {
+                $('#local-list').removeClass('focused');
+                $('#remote-list').addClass('focused');
+                $('#queue-list').removeClass('focused');
                 doUpdate(16);
             });
-            $("#queue-list").on('focus', () => {
-                $("#local-list").removeClass('focused');
-                $("#remote-list").removeClass('focused');
-                $("#queue-list").addClass('focused');
+            $('#queue-list').on('focus', () => {
+                $('#local-list').removeClass('focused');
+                $('#remote-list').removeClass('focused');
+                $('#queue-list').addClass('focused');
                 doUpdate(16);
             });
             updateLocal(options.local);
             if (!options.remote || options.remote.length === 0)
-                _ied.getDir(".");
+                _ied.getDir('.');
             else
                 _ied.getDir(options.remote);
 
-            $("#btn-local-up").on('click', () => {
+            $('#btn-local-up').on('click', () => {
                 if (options.syncFolders) {
                     if (path.basename(options.remote) === path.basename(options.local))
                         _ied.getDir(path.dirname(options.remote), true);
                 }
-                updateLocal(path.dirname($("#local-path").val()));
+                updateLocal(path.dirname($('#local-path').val()));
             });
 
-            $("#local-navigate").on('click', (e) => {
+            $('#local-navigate').on('click', (e) => {
                 e.preventDefault();
                 e.cancelBubble = true;
                 var p = $(e.target).data('path');
                 if (options.syncFolders) {
                     if (p.startsWith(options.local) && _remote[path.basename(p)] && (path.basename(options.remote) === path.basename(options.local) || options.remote === '/'))
-                        _ied.getDir(options.remote + "/" + path.basename(p), true);
+                        _ied.getDir(options.remote + '/' + path.basename(p), true);
                     else if (path.basename(path.dirname(options.remote)).length === 0 && path.dirname(options.local) === p)
                         _ied.getDir(path.dirname(options.remote), true);
                     else if (path.basename(path.dirname(options.remote)) === path.basename(p))
@@ -1979,25 +1979,25 @@
             });
 
             $('#local-path').change(function () {
-                updateLocal($("#local-path").val());
+                updateLocal($('#local-path').val());
             });
             $('#local-path').keyup(function (e) {
                 if (e.which === 27)
-                    $("#local-path").val(options.local);
+                    $('#local-path').val(options.local);
             });
             $('#local-path').on('focus', () => {
                 $('#local-path').select();
             });
 
-            $("#btn-remote-up").on('click', () => {
-                _ied.getDir(path.dirname($("#remote-path").val()), true);
+            $('#btn-remote-up').on('click', () => {
+                _ied.getDir(path.dirname($('#remote-path').val()), true);
                 if (options.syncFolders) {
                     if (path.basename(options.remote) === path.basename(options.local))
                         updateLocal(path.dirname(options.local));
                 }
             });
 
-            $("#remote-navigate").on('click', (e) => {
+            $('#remote-navigate').on('click', (e) => {
                 e.preventDefault();
                 e.cancelBubble = true;
                 var p = $(e.target).data('path');
@@ -2011,19 +2011,19 @@
             });
 
             $('#remote-path').change(function () {
-                _ied.getDir($("#remote-path").val());
+                _ied.getDir($('#remote-path').val());
             });
             $('#remote-path').keyup(function (e) {
                 if (e.which === 27)
-                    $("#remote-path").val(options.remote);
+                    $('#remote-path').val(options.remote);
             });
             $('#remote-path').on('focus', () => {
                 $('#remote-path').select();
             });
 
             $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-                var target = $(e.target).attr("href"); // activated tab
-                if (target === "#log")
+                var target = $(e.target).attr('href'); // activated tab
+                if (target === '#log')
                     logView[0].scrollTop = logView[0].scrollHeight;
             });
 
@@ -2035,17 +2035,17 @@
                     case 113: //f2
                         if (!event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
                             event.preventDefault();
-                            if ($("#local-list").hasClass("focused"))
+                            if ($('#local-list').hasClass('focused'))
                                 renameLocal();
-                            else if ($("#remote-list").hasClass("focused"))
+                            else if ($('#remote-list').hasClass('focused'))
                                 renameRemote();
                         }
                         break;
                     case 116: //f5
                         if (!event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
-                            if ($("#local-list").hasClass("focused"))
+                            if ($('#local-list').hasClass('focused'))
                                 updateLocal();
-                            else if ($("#remote-list").hasClass("focused"))
+                            else if ($('#remote-list').hasClass('focused'))
                                 _ied.getDir((!options.remote || options.remote.length === 0) ? '.' : options.remote);
 
                             event.preventDefault();
@@ -2053,22 +2053,22 @@
                         break;
                     case 46://delete
                         if (!event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
-                            if ($("#local-list").hasClass("focused"))
+                            if ($('#local-list').hasClass('focused'))
                                 deleteLocal();
-                            else if ($("#remote-list").hasClass("focused"))
+                            else if ($('#remote-list').hasClass('focused'))
                                 deleteRemote();
-                            else if ($("#queue-list").hasClass("focused"))
+                            else if ($('#queue-list').hasClass('focused'))
                                 queueStop();
                             event.preventDefault();
                         }
                         break;
                     case 65://select all, hack as menu accelerator doesn't work
                         if (!event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey) {
-                            if ($("#local-list").hasClass("focused"))
+                            if ($('#local-list').hasClass('focused'))
                                 localTable.rows().select();
-                            else if ($("#remote-list").hasClass("focused"))
+                            else if ($('#remote-list').hasClass('focused'))
                                 remoteTable.rows().select();
-                            else if ($("#queue-list").hasClass("focused"))
+                            else if ($('#queue-list').hasClass('focused'))
                                 queueTable.rows().select();
                             event.preventDefault();
                         }
@@ -2100,11 +2100,11 @@
 
                 $(document).mousemove(function (e) {
                     if (e.pageX < 199)
-                        ghostBar.css("left", 199);
+                        ghostBar.css('left', 199);
                     else if (e.pageX > document.body.clientWidth - 300)
-                        ghostBar.css("left", document.body.clientWidth - 300);
+                        ghostBar.css('left', document.body.clientWidth - 300);
                     else
-                        ghostBar.css("left", e.pageX);
+                        ghostBar.css('left', e.pageX);
                 });
             });
 
@@ -2124,52 +2124,52 @@
 
                 $(document).mousemove(function (e) {
                     if (e.pageY < 199)
-                        ghostBar.css("top", 199);
+                        ghostBar.css('top', 199);
                     else if (e.pageY > document.body.clientHeight - 200)
-                        ghostBar.css("top", document.body.clientHeight - 200);
+                        ghostBar.css('top', document.body.clientHeight - 200);
                     else
-                        ghostBar.css("top", e.pageY);
+                        ghostBar.css('top', e.pageY);
                 });
             });
 
             $(window).on('resize', () => {
-                if ($('#remote').outerWidth() < 300 && $("#local").outerWidth() > 202) {
-                    $('#local').css("width", document.body.clientWidth - 300);
-                    $('#remote').css("left", document.body.clientWidth - 300);
+                if ($('#remote').outerWidth() < 300 && $('#local').outerWidth() > 202) {
+                    $('#local').css('width', document.body.clientWidth - 300);
+                    $('#remote').css('left', document.body.clientWidth - 300);
                     options.localSize = document.body.clientWidth - 300;
                     saveOptions();
                 }
 
-                if ($('#bottom').outerHeight() < 200 && $("#main").outerHeight() > 202) {
+                if ($('#bottom').outerHeight() < 200 && $('#main').outerHeight() > 202) {
                     options.queueSize = 200;
-                    $('#bottom').css("height", options.queueSize);
-                    $('#main').css("bottom", options.queueSize);
+                    $('#bottom').css('height', options.queueSize);
+                    $('#main').css('bottom', options.queueSize);
                     saveOptions();
                 }
 
-                var h = $("#main").outerHeight() - 40;
+                var h = $('#main').outerHeight() - 40;
                 if (options.showQueue)
-                    h += $("#bottom").outerHeight();
-                $("#local-navigate").css("max-height", h + "px");
-                $("#remote-navigate").css("max-height", h + "px");
+                    h += $('#bottom').outerHeight();
+                $('#local-navigate').css('max-height', h + 'px');
+                $('#remote-navigate').css('max-height', h + 'px');
                 doUpdate(14);
             });
 
             $(document).mouseup(function (e) {
                 if (dragging) {
                     if (e.pageX < 200) {
-                        $('#local').css("width", 202);
-                        $('#remote').css("left", 202);
+                        $('#local').css('width', 202);
+                        $('#remote').css('left', 202);
                         options.localSize = 202;
                     }
                     else if (e.pageX > document.body.clientWidth - 300) {
-                        $('#local').css("width", document.body.clientWidth - 300);
-                        $('#remote').css("left", document.body.clientWidth - 300);
+                        $('#local').css('width', document.body.clientWidth - 300);
+                        $('#remote').css('left', document.body.clientWidth - 300);
                         options.localSize = document.body.clientWidth - 300;
                     }
                     else {
-                        $('#local').css("width", e.pageX + 2);
-                        $('#remote').css("left", e.pageX + 2);
+                        $('#local').css('width', e.pageX + 2);
+                        $('#remote').css('left', e.pageX + 2);
                         options.localSize = e.pageX + 2;
                     }
                     doUpdate(6);
@@ -2186,8 +2186,8 @@
                     else
                         options.queueSize = document.body.clientHeight - e.pageY + 2;
                     options.queueSize -= 26;
-                    $('#bottom').css("height", options.queueSize);
-                    $('#main').css("bottom", options.queueSize);
+                    $('#bottom').css('height', options.queueSize);
+                    $('#main').css('bottom', options.queueSize);
                     doUpdate(14);
                     saveOptions();
                     $('#btm-ghost-bar').remove();
@@ -2197,26 +2197,26 @@
             });
 
             window.ondragover = window.ondragenter = window.ondrop = (e) => {
-                e.dataTransfer.effectAllowed = "none";
-                e.dataTransfer.dropEffect = "none";
+                e.dataTransfer.effectAllowed = 'none';
+                e.dataTransfer.dropEffect = 'none';
                 e.stopPropagation();
                 e.preventDefault();
                 return false;
             };
 
-            $("#bottom")[0].ondragover = document.ondragover = document.ondrop = (ev) => {
+            $('#bottom')[0].ondragover = document.ondragover = document.ondrop = (ev) => {
                 ev.preventDefault();
-                ev.dataTransfer.effectAllowed = "none";
-                ev.dataTransfer.dropEffect = "none";
+                ev.dataTransfer.effectAllowed = 'none';
+                ev.dataTransfer.dropEffect = 'none';
                 ev.cancelBubble = true;
                 ev.stopPropagation();
                 return false;
             };
 
-            $("#bottom")[0].ondrop = document.ondrop = document.body.ondrop = (ev) => {
+            $('#bottom')[0].ondrop = document.ondrop = document.body.ondrop = (ev) => {
                 ev.preventDefault();
-                ev.dataTransfer.effectAllowed = "none";
-                ev.dataTransfer.dropEffect = "none";
+                ev.dataTransfer.effectAllowed = 'none';
+                ev.dataTransfer.dropEffect = 'none';
                 ev.cancelBubble = true;
                 ev.stopPropagation();
                 return false;
@@ -2227,69 +2227,69 @@
                 _remoteDrag = 0;
             };
 
-            $("#local")[0].ondragenter = (event) => {
+            $('#local')[0].ondragenter = (event) => {
                 event.preventDefault();
                 event.cancelBubble = true;
                 event.stopPropagation();
                 if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey) {
                     if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path === options.local || path.dirname(event.dataTransfer.files[0].path) === options.local)) {
-                        event.dataTransfer.dropEffect = "none";
-                        event.dataTransfer.effectAllowed = "none";
+                        event.dataTransfer.dropEffect = 'none';
+                        event.dataTransfer.effectAllowed = 'none';
                     }
                     else {
-                        event.dataTransfer.dropEffect = "move";
-                        event.dataTransfer.effectAllowed = "move";
+                        event.dataTransfer.dropEffect = 'move';
+                        event.dataTransfer.effectAllowed = 'move';
                     }
                 }
                 else {
-                    event.dataTransfer.dropEffect = "copy";
-                    event.dataTransfer.effectAllowed = "copy";
+                    event.dataTransfer.dropEffect = 'copy';
+                    event.dataTransfer.effectAllowed = 'copy';
                 }
 
                 return false;
             };
 
-            $("#local")[0].ondragover = (event) => {
+            $('#local')[0].ondragover = (event) => {
                 event.preventDefault();
                 event.cancelBubble = true;
                 event.stopPropagation();
                 if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey) {
                     if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path === options.local || path.dirname(event.dataTransfer.files[0].path) === options.local)) {
-                        event.dataTransfer.dropEffect = "none";
-                        event.dataTransfer.effectAllowed = "none";
+                        event.dataTransfer.dropEffect = 'none';
+                        event.dataTransfer.effectAllowed = 'none';
                     }
                     else {
-                        event.dataTransfer.dropEffect = "move";
-                        event.dataTransfer.effectAllowed = "move";
+                        event.dataTransfer.dropEffect = 'move';
+                        event.dataTransfer.effectAllowed = 'move';
                     }
                 }
                 else {
-                    event.dataTransfer.dropEffect = "copy";
-                    event.dataTransfer.effectAllowed = "copy";
+                    event.dataTransfer.dropEffect = 'copy';
+                    event.dataTransfer.effectAllowed = 'copy';
                 }
 
                 return false;
             };
 
-            $("#local")[0].ondrop = (event) => {
+            $('#local')[0].ondrop = (event) => {
                 event.preventDefault();
                 event.cancelBubble = true;
                 event.stopPropagation();
                 var type = 0, f, fl;
                 if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey) {
                     if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path === options.local || path.dirname(event.dataTransfer.files[0].path) === options.local)) {
-                        event.dataTransfer.dropEffect = "none";
-                        event.dataTransfer.effectAllowed = "none";
+                        event.dataTransfer.dropEffect = 'none';
+                        event.dataTransfer.effectAllowed = 'none';
                     }
                     else {
-                        event.dataTransfer.dropEffect = "move";
-                        event.dataTransfer.effectAllowed = "move";
+                        event.dataTransfer.dropEffect = 'move';
+                        event.dataTransfer.effectAllowed = 'move';
                         type = 1;
                     }
                 }
                 else {
-                    event.dataTransfer.dropEffect = "copy";
-                    event.dataTransfer.effectAllowed = "copy";
+                    event.dataTransfer.dropEffect = 'copy';
+                    event.dataTransfer.effectAllowed = 'copy';
                     type = 2;
                 }
                 if (_localDrag) {
@@ -2319,28 +2319,28 @@
                     for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
                         var p;
                         if (event.dataTransfer.files[f].path === options.local) continue;
-                        if (event.dataTransfer.files[f].path.startsWith("jiMUDPath://")) {
+                        if (event.dataTransfer.files[f].path.startsWith('jiMUDPath://')) {
                             p = event.dataTransfer.files[f].path.substring(12);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
                                 _ied.download(p);
                         }
-                        else if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
+                        else if (event.dataTransfer.files[f].path.startsWith('jiMUD://')) {
                             p = event.dataTransfer.files[f].path.substring(8);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
                                 _ied.download(p);
                         }
-                        else if (event.dataTransfer.files[f].path.startsWith("/jiMUDPath:")) {
+                        else if (event.dataTransfer.files[f].path.startsWith('/jiMUDPath:')) {
                             p = event.dataTransfer.files[f].path.substring(11);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
                                 _ied.download(p);
                         }
-                        else if (event.dataTransfer.files[f].path.startsWith("/jiMUD:")) {
+                        else if (event.dataTransfer.files[f].path.startsWith('/jiMUD:')) {
                             p = event.dataTransfer.files[f].path.substring(7);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
@@ -2359,14 +2359,14 @@
                 }
             };
 
-            $("#remote")[0].ondragenter = (event) => {
-                if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path.startsWith("jiMUD://") || event.dataTransfer.files[0].path.startsWith("/jiMUD:") || event.dataTransfer.files[0].path.startsWith("jiMUDPath://") || event.dataTransfer.files[0].path.startsWith("/jiMUDPath:"))) {
-                    event.dataTransfer.dropEffect = "none";
-                    event.dataTransfer.effectAllowed = "none";
+            $('#remote')[0].ondragenter = (event) => {
+                if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path.startsWith('jiMUD://') || event.dataTransfer.files[0].path.startsWith('/jiMUD:') || event.dataTransfer.files[0].path.startsWith('jiMUDPath://') || event.dataTransfer.files[0].path.startsWith('/jiMUDPath:'))) {
+                    event.dataTransfer.dropEffect = 'none';
+                    event.dataTransfer.effectAllowed = 'none';
                 }
                 else {
-                    event.dataTransfer.dropEffect = "copy";
-                    event.dataTransfer.effectAllowed = "copy";
+                    event.dataTransfer.dropEffect = 'copy';
+                    event.dataTransfer.effectAllowed = 'copy';
                 }
                 event.preventDefault();
                 event.cancelBubble = true;
@@ -2374,14 +2374,14 @@
                 return false;
             };
 
-            $("#remote")[0].ondragover = (event) => {
-                if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path.startsWith("jiMUD://") || event.dataTransfer.files[0].path.startsWith("/jiMUD:") || event.dataTransfer.files[0].path.startsWith("jiMUDPath://") || event.dataTransfer.files[0].path.startsWith("/jiMUDPath:"))) {
-                    event.dataTransfer.dropEffect = "none";
-                    event.dataTransfer.effectAllowed = "none";
+            $('#remote')[0].ondragover = (event) => {
+                if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path.startsWith('jiMUD://') || event.dataTransfer.files[0].path.startsWith('/jiMUD:') || event.dataTransfer.files[0].path.startsWith('jiMUDPath://') || event.dataTransfer.files[0].path.startsWith('/jiMUDPath:'))) {
+                    event.dataTransfer.dropEffect = 'none';
+                    event.dataTransfer.effectAllowed = 'none';
                 }
                 else {
-                    event.dataTransfer.dropEffect = "copy";
-                    event.dataTransfer.effectAllowed = "copy";
+                    event.dataTransfer.dropEffect = 'copy';
+                    event.dataTransfer.effectAllowed = 'copy';
                 }
                 event.preventDefault();
                 event.cancelBubble = true;
@@ -2389,7 +2389,7 @@
                 return false;
             };
 
-            $("#remote")[0].ondrop = (event) => {
+            $('#remote')[0].ondrop = (event) => {
                 event.preventDefault();
                 if (_localDrag) {
                     _ied.begin();
@@ -2408,10 +2408,10 @@
                 else {
                     _ied.begin();
                     for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
-                        if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) continue;
-                        if (event.dataTransfer.files[f].path.startsWith("jiMUDPath://")) continue;
-                        if (event.dataTransfer.files[f].path.startsWith("/jiMUD:")) continue;
-                        if (event.dataTransfer.files[f].path.startsWith("/jiMUDPath:")) continue;
+                        if (event.dataTransfer.files[f].path.startsWith('jiMUD://')) continue;
+                        if (event.dataTransfer.files[f].path.startsWith('jiMUDPath://')) continue;
+                        if (event.dataTransfer.files[f].path.startsWith('/jiMUD:')) continue;
+                        if (event.dataTransfer.files[f].path.startsWith('/jiMUDPath:')) continue;
                         if (event.dataTransfer.files[f].size < 1) {
                             try {
                                 var stat = fs.statSync(event.dataTransfer.files[f].path);
@@ -2432,7 +2432,7 @@
                 }
             };
 
-            $("#local-list")[0].ondragstart = (event) => {
+            $('#local-list')[0].ondragstart = (event) => {
                 var row = $(document.elementFromPoint(event.pageX, event.pageY)).parent();
                 if (!$(row).hasClass('selected')) {
                     localTable.rows().deselect();
@@ -2452,21 +2452,21 @@
                 return false;
             };
 
-            $("#local-list")[0].ondragend = (event) => {
+            $('#local-list')[0].ondragend = (event) => {
                 event.preventDefault();
                 _localDrag = 0;
                 _remoteDrag = 0;
                 return false;
             };
 
-            $("#remote-list")[0].ondragend = (event) => {
+            $('#remote-list')[0].ondragend = (event) => {
                 event.preventDefault();
                 _localDrag = 0;
                 _remoteDrag = 0;
                 return false;
             };
 
-            $("#remote-list")[0].ondragstart = (event) => {
+            $('#remote-list')[0].ondragstart = (event) => {
                 var row = $(document.elementFromPoint(event.pageX, event.pageY)).parent();
                 if (!$(row).hasClass('selected')) {
                     remoteTable.rows().deselect();
@@ -2478,9 +2478,9 @@
                 _remoteDrag = [];
                 for (var s = 0, sl = selected.length; s < sl; s++) {
                     if (selected[s].size === -2)
-                        files.push("jiMUDPath://" + selected[s].path);
+                        files.push('jiMUDPath://' + selected[s].path);
                     else
-                        files.push("jiMUD://" + selected[s].path);
+                        files.push('jiMUD://' + selected[s].path);
                     _remoteDrag.push(selected[s].path);
                 }
                 _localDrag = 0;
@@ -2488,25 +2488,25 @@
                     ipcRenderer.send('ondragstart', files, path.join(__dirname, '../assets/icons/png/drag2.png'));
             };
 
-            $("#queue-list-container")[0].ondragenter = (event) => {
-                event.dataTransfer.dropEffect = "copy";
-                event.dataTransfer.effectAllowed = "copy";
+            $('#queue-list-container')[0].ondragenter = (event) => {
+                event.dataTransfer.dropEffect = 'copy';
+                event.dataTransfer.effectAllowed = 'copy';
                 event.preventDefault();
                 event.cancelBubble = true;
                 event.stopPropagation();
                 return false;
             };
 
-            $("#queue-list-container")[0].ondragover = (event) => {
-                event.dataTransfer.dropEffect = "copy";
-                event.dataTransfer.effectAllowed = "copy";
+            $('#queue-list-container')[0].ondragover = (event) => {
+                event.dataTransfer.dropEffect = 'copy';
+                event.dataTransfer.effectAllowed = 'copy';
                 event.preventDefault();
                 event.cancelBubble = true;
                 event.stopPropagation();
                 return false;
             };
 
-            $("#queue-list-container")[0].ondrop = (event) => {
+            $('#queue-list-container')[0].ondrop = (event) => {
                 event.preventDefault();
                 if (_localDrag) {
                     _ied.begin();
@@ -2534,28 +2534,28 @@
                     _ied.begin();
                     for (f = 0, fl = event.dataTransfer.files.length; f < fl; f++) {
                         var p;
-                        if (event.dataTransfer.files[f].path.startsWith("jiMUDPath://")) {
+                        if (event.dataTransfer.files[f].path.startsWith('jiMUDPath://')) {
                             p = event.dataTransfer.files[f].path.substring(12);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
                                 _ied.download(p);
                         }
-                        else if (event.dataTransfer.files[f].path.startsWith("jiMUD://")) {
+                        else if (event.dataTransfer.files[f].path.startsWith('jiMUD://')) {
                             p = event.dataTransfer.files[f].path.substring(8);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
                                 _ied.download(p);
                         }
-                        else if (event.dataTransfer.files[f].path.startsWith("/jiMUDPath:")) {
+                        else if (event.dataTransfer.files[f].path.startsWith('/jiMUDPath:')) {
                             p = event.dataTransfer.files[f].path.substring(11);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
                                 _ied.download(p);
                         }
-                        else if (event.dataTransfer.files[f].path.startsWith("/jiMUD:")) {
+                        else if (event.dataTransfer.files[f].path.startsWith('/jiMUD:')) {
                             p = event.dataTransfer.files[f].path.substring(7);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
@@ -2703,8 +2703,8 @@
                 }
                 c.append(new MenuItem({
                     label: 'Goto',
-                    accelerator: "CmdOrCtrl+G",
-                    click: () => { doCommandFirst("goto"); }
+                    accelerator: 'CmdOrCtrl+G',
+                    click: () => { doCommandFirst('goto'); }
                 }));
                 c.append(new MenuItem({
                     label: 'Change to directory',
@@ -2720,19 +2720,19 @@
                 c.append(new MenuItem({ type: 'separator' }));
                 c.append(new MenuItem({
                     label: 'Update',
-                    click: () => { doCommand("update"); }
+                    click: () => { doCommand('update'); }
                 }));
                 c.append(new MenuItem({
                     label: 'Renew',
-                    click: () => { doCommand("renew"); }
+                    click: () => { doCommand('renew'); }
                 }));
                 c.append(new MenuItem({
                     label: 'Clone',
-                    click: () => { doCommand("clone"); }
+                    click: () => { doCommand('clone'); }
                 }));
                 c.append(new MenuItem({
                     label: 'Dest',
-                    click: () => { doCommand("dest", true); }
+                    click: () => { doCommand('dest', true); }
                 }));
                 c.append(new MenuItem({
                     label: 'Backup',
@@ -2780,7 +2780,7 @@
                 c.append(new MenuItem({ type: 'separator' }));
                 c.append(new MenuItem({
                     label: '&Edit...',
-                    accelerator: "CmdOrCtrl+Shift+O",
+                    accelerator: 'CmdOrCtrl+Shift+O',
                     click: openRemoteWithEditor
                 }));
             }
@@ -2840,11 +2840,11 @@
             else if (dl > 0)
                 tmp.push(`${dl} items selected ${formatSize(size)}`);
 
-            $("#localInfo").text(tmp.join(", "));
+            $('#localInfo').text(tmp.join(', '));
 
             tmp = [];
             if (info.remoteFiles + info.remoteDirs === 1)
-                tmp.push(`Remote: 1 item`);
+                tmp.push('Remote: 1 item');
             else
                 tmp.push(`Remote: ${info.remoteFiles + info.remoteDirs} items`);
 
@@ -2861,21 +2861,21 @@
                 tmp.push(`${dl} items selected ${formatSize(size)}`);
 
             if (tmp.length > 0)
-                $("#remoteInfo").text(tmp.join(", "));
+                $('#remoteInfo').text(tmp.join(', '));
 
             tmp = [];
             if (info.uploads)
                 tmp.push(`Uploads: ${info.uploads}`);
             if (info.downloads)
                 tmp.push(`Downloads: ${info.downloads}`);
-            $("#queueInfo").text(tmp.join(", "));
+            $('#queueInfo').text(tmp.join(', '));
         }
 
         function toggleSync() {
             options.syncFolders = !options.syncFolders;
             menubar.updateItem('view|sync folders', { checked: options.syncFolders });
             if (options.syncFolders)
-                $("#btn-sync").addClass("active");
+                $('#btn-sync').addClass('active');
             else
                 $('#btn-sync').removeClass('active');
             saveOptions();
@@ -2885,14 +2885,14 @@
             options.showQueue = !options.showQueue;
             menubar.updateItem('view|show queue and log', { checked: options.showQueue });
             if (options.showQueue) {
-                $("#btn-queue").addClass("active");
-                $("#bottom").css('display', '');
-                $("#main").css('bottom', options.queueSize + 'px');
+                $('#btn-queue').addClass('active');
+                $('#bottom').css('display', '');
+                $('#main').css('bottom', options.queueSize + 'px');
             }
             else {
                 $('#btn-queue').removeClass('active');
-                $("#bottom").css('display', 'none');
-                $("#main").css('bottom', '28px');
+                $('#bottom').css('display', 'none');
+                $('#main').css('bottom', '28px');
             }
             saveOptions();
             $(window).trigger('resize');
@@ -2933,18 +2933,18 @@
 
         function uploadPath(p) {
             _progressCancel = false;
-            if (!pTotal && !$("#Progress")[0].open) {
-                $("#Progressbar").html('<progress max="100"></progress>');
-                $("#ProgressTitle").html(`Preparing upload`);
-                $("#Progress")[0].showModal();
+            if (!pTotal && !$('#Progress')[0].open) {
+                $('#Progressbar').html('<progress max="100"></progress>');
+                $('#ProgressTitle').html('Preparing upload');
+                $('#Progress')[0].showModal();
             }
             if (options.debug)
                 console.log(`Upload path: ${p}`);
             //make dir then start uploads
-            _ied.makeDirectory(options.remote + "/" + path.basename(p), false, true, () => {
+            _ied.makeDirectory(options.remote + '/' + path.basename(p), false, true, () => {
                 walk(p, (files, dirs, empty) => {
                     if (options.debug) {
-                        console.log("Upload files:");
+                        console.log('Upload files:');
                         console.log(files);
                     }
                     var s = options.local.length;
@@ -2955,7 +2955,7 @@
                         r = r.substr(0, r.length - 1);
 
                     for (var e = 0, el = empty.length; e < el; e++) {
-                        _ied.makeDirectory(r + path.dirname(empty[e]).substr(s).replace(/\\/g, "/") + '/' + path.basename(empty[e]), false, true);
+                        _ied.makeDirectory(r + path.dirname(empty[e]).substr(s).replace(/\\/g, '/') + '/' + path.basename(empty[e]), false, true);
                     }
                     if (pTotal) {
                         pFiles.push.apply(pFiles, files);
@@ -2974,8 +2974,8 @@
             if (!pFiles || pFiles.length === 0 || _progressCancel) {
                 pFiles = null;
                 pTotal = 0;
-                if ($("#Progress")[0].open)
-                    $("#Progress")[0].close();
+                if ($('#Progress')[0].open)
+                    $('#Progress')[0].close();
                 return;
             }
             var file = pFiles.shift();
@@ -2986,9 +2986,9 @@
             if (r.endsWith('/'))
                 r = r.substr(0, r.length - 1);
             var p = path.dirname(file);
-            p = r + p.substr(s).replace(/\\/g, "/");
+            p = r + p.substr(s).replace(/\\/g, '/');
             _ied.uploadTo(file, p + '/' + path.basename(file), false, 0, true);
-            $("#Progress progress").val(Math.ceil((pTotal - pFiles.length) * 100 / pTotal));
+            $('#Progress progress').val(Math.ceil((pTotal - pFiles.length) * 100 / pTotal));
             setTimeout(upNext, 0);
         }
 
@@ -2997,22 +2997,22 @@
             _progressCancel = true;
             pTotal = 0;
             pFiles = 0;
-            if ($("#Progress")[0].open)
-                $("#Progress")[0].close();
+            if ($('#Progress')[0].open)
+                $('#Progress')[0].close();
         }
 
         function downloadPath(p, local) {
             _progressCancel = false;
-            if (!pTotal && !$("#Progress")[0].open) {
-                $("#Progressbar").html('<progress max="100"></progress>');
-                $("#ProgressTitle").html(`Preparing download`);
-                $("#Progress")[0].showModal();
+            if (!pTotal && !$('#Progress')[0].open) {
+                $('#Progressbar').html('<progress max="100"></progress>');
+                $('#ProgressTitle').html('Preparing download');
+                $('#Progress')[0].showModal();
             }
             if (options.debug)
                 console.log(`Download path: ${p}`);
             if (local && !existsSync(path.join(local, path.basename(p)))) {
                 fs.mkdirSync(path.join(local, path.basename(p)));
-                logMessage("Creating directory: " + path.join(local, path.basename(p)));
+                logMessage('Creating directory: ' + path.join(local, path.basename(p)));
             }
             pTotal = 1;
             _ied.getDir(p, true, 'download:' + p, path.join(local, path.basename(p)));
@@ -3204,8 +3204,8 @@
             var data = remoteTable.rows({ selected: true }).data();
             dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'warning',
-                title: "Delete?",
-                message: data.length > 1 ? "Delete remote?" : "Delete remote: " + data[0].name + "?",
+                title: 'Delete?',
+                message: data.length > 1 ? 'Delete remote?' : 'Delete remote: ' + data[0].name + '?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
             }, (response) => {
@@ -3222,10 +3222,10 @@
         }
 
         function deleteRemoteFolder(dir) {
-            if (!$("#Progress")[0].open) {
-                $("#Progressbar").html('<progress max="100"></progress>');
-                $("#ProgressTitle").html(`Preparing delete`);
-                $("#Progress")[0].showModal();
+            if (!$('#Progress')[0].open) {
+                $('#Progressbar').html('<progress max="100"></progress>');
+                $('#ProgressTitle').html('Preparing delete');
+                $('#Progress')[0].showModal();
             }
             if (!pFiles)
                 pFiles = [];
@@ -3235,48 +3235,48 @@
         }
 
         function newFolderLocal() {
-            $("#newFolder").data("type", "local");
-            $("#newFolderLabel").text("New local folder");
-            $("#newFolder-name").val(getNewName("New Folder", _local));
-            $("#newFolder-name")[0].selectionStart = 0;
-            $("#newFolder-name")[0].selectionEnd = $("#newFolder-name").val().length;
-            $("#newFolder")[0].showModal();
+            $('#newFolder').data('type', 'local');
+            $('#newFolderLabel').text('New local folder');
+            $('#newFolder-name').val(getNewName('New Folder', _local));
+            $('#newFolder-name')[0].selectionStart = 0;
+            $('#newFolder-name')[0].selectionEnd = $('#newFolder-name').val().length;
+            $('#newFolder')[0].showModal();
         }
 
         function newFolderRemote() {
-            $("#newFolder").data("type", "remote");
-            $("#newFolderLabel").text("New remote folder");
-            $("#newFolder-name").val(getNewName("New Folder", _remote));
-            $("#newFolder-name")[0].selectionStart = 0;
-            $("#newFolder-name")[0].selectionEnd = $("#newFolder-name").val().length;
-            $("#newFolder")[0].showModal();
+            $('#newFolder').data('type', 'remote');
+            $('#newFolderLabel').text('New remote folder');
+            $('#newFolder-name').val(getNewName('New Folder', _remote));
+            $('#newFolder-name')[0].selectionStart = 0;
+            $('#newFolder-name')[0].selectionEnd = $('#newFolder-name').val().length;
+            $('#newFolder')[0].showModal();
         }
 
         // eslint-disable-next-line no-unused-vars
         function newFolderOk() {
-            var n = $("#newFolder-name").val();
+            var n = $('#newFolder-name').val();
             if (!n || n.length === 0) {
                 dialog.showMessageBox(remote.getCurrentWindow(), {
                     type: 'error',
-                    title: "Name required",
-                    message: "You must supply a valid name!"
+                    title: 'Name required',
+                    message: 'You must supply a valid name!'
                 });
                 return;
             }
             if (IED.invalidFile(n)) {
                 dialog.showMessageBox(remote.getCurrentWindow(), {
                     type: 'error',
-                    title: "Invalid folder name",
-                    message: "The name you supplied contains invalid characters!"
+                    title: 'Invalid folder name',
+                    message: 'The name you supplied contains invalid characters!'
                 });
                 return;
             }
-            if ($("#newFolder").data("type") === "local") {
+            if ($('#newFolder').data('type') === 'local') {
                 if (_local[n]) {
                     n = getNewName(n, _local);
                     if (dialog.showMessageBox(remote.getCurrentWindow(), {
                         type: 'warning',
-                        title: "File or folder exist?",
+                        title: 'File or folder exist?',
                         message: `Do you want to rename to "${n}"?`,
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
@@ -3286,14 +3286,14 @@
                     }
                 }
                 fs.mkdirSync(path.join(options.local, n));
-                logMessage("Creating directory: " + path.join(options.local, n));
+                logMessage('Creating directory: ' + path.join(options.local, n));
             }
-            else if ($("#newFolder").data("type") === "remote") {
+            else if ($('#newFolder').data('type') === 'remote') {
                 if (_remote[n]) {
                     n = getNewName(n, _remote);
                     if (dialog.showMessageBox(remote.getCurrentWindow(), {
                         type: 'warning',
-                        title: "File or folder exist?",
+                        title: 'File or folder exist?',
                         message: `Do you want to rename to "${n}"?`,
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
@@ -3302,9 +3302,9 @@
                         return;
                     }
                 }
-                _ied.makeDirectory(options.remote + "/" + n);
+                _ied.makeDirectory(options.remote + '/' + n);
             }
-            $("#newFolder")[0].close();
+            $('#newFolder')[0].close();
         }
 
         function renameLocal() {
@@ -3319,7 +3319,7 @@
             var selected = remoteTable.rows({ selected: true });
             if (!selected || selected.length === 0) return;
             rename(selected, _remote, (o, n) => {
-                _ied.rename(o, path.dirname(o) + "/" + n);
+                _ied.rename(o, path.dirname(o) + '/' + n);
             });
         }
 
@@ -3337,7 +3337,7 @@
                     var n = getNewName(editor.val(), list);
                     if (dialog.showMessageBox(remote.getCurrentWindow(), {
                         type: 'warning',
-                        title: "Rename file?",
+                        title: 'Rename file?',
                         message: `Do you want to rename "${editor.original}" to "${n}"?`,
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
@@ -3379,10 +3379,10 @@
             editor.focus();
 
             editor[0].selectionStart = 0;
-            if (editor.val().lastIndexOf(".") === -1)
+            if (editor.val().lastIndexOf('.') === -1)
                 editor[0].selectionEnd = editor.val().length;
             else
-                editor[0].selectionEnd = editor.val().lastIndexOf(".");
+                editor[0].selectionEnd = editor.val().lastIndexOf('.');
         }
 
         function getNewName(name, list) {
@@ -3400,17 +3400,17 @@
         }
 
         function queueStart() {
-            var selected = queueTable.rows({ selected: true }).data().pluck("id");
+            var selected = queueTable.rows({ selected: true }).data().pluck('id');
             for (var q = 0, ql = selected.length; q < ql; q++)
                 _ied.startItem(selected[q]);
         }
         function queuePause() {
-            var selected = queueTable.rows({ selected: true }).data().pluck("id");
+            var selected = queueTable.rows({ selected: true }).data().pluck('id');
             for (var q = 0, ql = selected.length; q < ql; q++)
                 _ied.pauseItem(selected[q]);
         }
         function queueStop() {
-            var selected = queueTable.rows({ selected: true }).data().pluck("id");
+            var selected = queueTable.rows({ selected: true }).data().pluck('id');
             for (var q = 0, ql = selected.length; q < ql; q++)
                 _ied.removeItem(selected[q]);
         }
@@ -3440,19 +3440,19 @@
         }
 
         function doBackup() {
-            doCommand("backup");
-            if (!_remote["bak"]) {
-                _remote["bak"] = {
-                    name: "bak",
-                    path: options.remote + "/bak",
+            doCommand('backup');
+            if (!_remote['bak']) {
+                _remote['bak'] = {
+                    name: 'bak',
+                    path: options.remote + '/bak',
                     size: -2,
-                    type: "Directory",
+                    type: 'Directory',
                     date: new Date().getTime(),
                     hidden: false,
                     type2: -2
                 };
                 info.remoteDirs++;
-                remoteTable.row.add(_remote["bak"]);
+                remoteTable.row.add(_remote['bak']);
                 doUpdate(4);
             }
         }
@@ -3460,7 +3460,7 @@
         function updateDraw(table, what) {
             if (!table) return;
             if (!what) what = table;
-            var body = $(".dataTables_scrollBody", table.table().container())[0];
+            var body = $('.dataTables_scrollBody', table.table().container())[0];
             var st = body.scrollTop;
             what.draw();
             body.scrollTop = st;
@@ -3469,7 +3469,7 @@
         function focusRow(row) {
             if (!row || row.length === 0) return;
             var top = row.node().offsetTop;
-            var body = $(".dataTables_scrollBody", row.table().container())[0];
+            var body = $('.dataTables_scrollBody', row.table().container())[0];
             var sTop = body.scrollTop;
             var sHeight = body.clientHeight;
             if (top < sTop || top + 31 >= sTop + sHeight)
@@ -3481,7 +3481,7 @@
         }
 
         function newLocalFile() {
-            var file = path.join(options.local, getNewName("newfile", _local));
+            var file = path.join(options.local, getNewName('newfile', _local));
             fs.closeSync(fs.openSync(file, 'w'));
             setTimeout(() => {
                 var row = localTable.row(function (idx, data) {
@@ -3511,7 +3511,7 @@
         });
 
         ipcRenderer.on('setting-changed', (event, data) => {
-            if (data.type === "extensions" && data.name === "immortal") {
+            if (data.type === 'extensions' && data.name === 'immortal') {
                 loadOptions(data.value);
                 if (_ied) {
                     _ied.local = options.local;
@@ -3654,12 +3654,12 @@
                 });
                 if (row && row.length === 1) {
                     row.data({
-                        "local": item.local,
-                        "direction": item.download ? "<-" : "->",
-                        "remote": item.remote,
-                        "progress": item.percent,
-                        "id": item.ID,
-                        "state": item.state,
+                        'local': item.local,
+                        'direction': item.download ? '<-' : '->',
+                        'remote': item.remote,
+                        'progress': item.percent,
+                        'id': item.ID,
+                        'state': item.state,
                         'error': item.error
                     });
                     doUpdate(8);

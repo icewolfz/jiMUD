@@ -1928,7 +1928,7 @@
         e.stopPropagation();
     });
 
-    webFrame.setSpellCheckProvider("en-US", true, {
+    webFrame.setSpellCheckProvider('en-US', true, {
         spellCheck: function (text) {
             if (!spellchecker || !options.spellchecking)
                 return true;
@@ -2000,46 +2000,46 @@
         'edit': [
             {
                 label: '&Undo',
-                accelerator: "CmdOrCtrl+Z",
+                accelerator: 'CmdOrCtrl+Z',
                 click: doUndo,
                 enabled: false,
                 id: 'undo'
             },
             {
                 label: '&Redo',
-                accelerator: "CmdOrCtrl+Y",
+                accelerator: 'CmdOrCtrl+Y',
                 click: doRedo,
                 enabled: false,
             },
             { type: 'separator' },
             {
                 label: 'Cu&t',
-                accelerator: "CmdOrCtrl+X",
+                accelerator: 'CmdOrCtrl+X',
                 click: doCut,
                 enabled: false,
             },
             {
                 label: '&Copy',
-                accelerator: "CmdOrCtrl+C",
+                accelerator: 'CmdOrCtrl+C',
                 click: doCopy,
                 enabled: false,
             },
             {
                 label: '&Paste',
-                accelerator: "CmdOrCtrl+V",
+                accelerator: 'CmdOrCtrl+V',
                 click: doPaste,
                 enabled: false,
             },
             {
                 label: 'Paste to Advanced Editor',
-                accelerator: "CmdOrCtrl+Shift+V",
+                accelerator: 'CmdOrCtrl+Shift+V',
                 click: doEditor,
                 enabled: false,
             },
             { type: 'separator' },
             {
                 label: '&Select All',
-                accelerator: "CmdOrCtrl+A",
+                accelerator: 'CmdOrCtrl+A',
                 enabled: false,
                 click: () => {
                     if (manager.active && manager.active.editor)
@@ -2049,13 +2049,13 @@
             { type: 'separator' },
             {
                 label: '&Find',
-                accelerator: "CmdOrCtrl+F",
+                accelerator: 'CmdOrCtrl+F',
                 enabled: false,
                 click: doFind
             },
             {
                 label: '&Replace',
-                accelerator: "CmdOrCtrl+H",
+                accelerator: 'CmdOrCtrl+H',
                 enabled: false,
                 click: doReplace
             },
@@ -2063,7 +2063,7 @@
         'view': [
             {
                 label: '&Refresh',
-                accelerator: "F5",
+                accelerator: 'F5',
                 enabled: false,
                 click: doRefresh
             },
@@ -2125,7 +2125,7 @@
                     submenu: [
                         {
                             label: '&File',
-                            accelerator: "CmdOrCtrl+N",
+                            accelerator: 'CmdOrCtrl+N',
                             click: () => { newFile(); }
                         },
                         { type: 'separator' },
@@ -2165,12 +2165,12 @@
                 { type: 'separator' },
                 {
                     label: '&Open...',
-                    accelerator: "CmdOrCtrl+O",
+                    accelerator: 'CmdOrCtrl+O',
                     click: () => { openFile(); }
                 },
                 {
                     label: 'Op&en Remote...',
-                    accelerator: "CmdOrCtrl+Shift+O",
+                    accelerator: 'CmdOrCtrl+Shift+O',
                     click: () => { openRemote(); },
                     enabled: false
                 },
@@ -2181,39 +2181,39 @@
                 { type: 'separator' },
                 {
                     label: '&Save',
-                    accelerator: "CmdOrCtrl+S",
+                    accelerator: 'CmdOrCtrl+S',
                     click: () => { saveFile(); },
                     enabled: false
                 },
                 {
                     label: 'Save &As...',
-                    accelerator: "CmdOrCtrl+Shift+S",
+                    accelerator: 'CmdOrCtrl+Shift+S',
                     click: () => { saveFileAs(); },
                     enabled: false,
                 },
                 {
                     label: 'Save A&ll',
-                    accelerator: "CmdOrCtrl+Alt+S",
+                    accelerator: 'CmdOrCtrl+Alt+S',
                     click: () => { saveAllFiles(); },
                     enabled: false
                 },
                 { type: 'separator' },
                 {
                     label: '&Upload',
-                    accelerator: "CmdOrCtrl+U",
+                    accelerator: 'CmdOrCtrl+U',
                     click: () => { uploadFile(); },
                     enabled: false,
                 },
                 {
                     label: 'Up&load As...',
-                    accelerator: "CmdOrCtrl+Alt+U",
+                    accelerator: 'CmdOrCtrl+Alt+U',
                     click: () => { uploadFileAs(); },
                     enabled: false,
                 },
                 { type: 'separator' },
                 {
                     label: '&Preferences...',
-                    accelerator: "CmdOrCtrl+Comma",
+                    accelerator: 'CmdOrCtrl+Comma',
                     click: () => {
                         window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=465,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                     }
@@ -2329,19 +2329,19 @@
                 {
                     label: '&Close',
                     click: () => { closeFile(); },
-                    accelerator: "CmdOrCtrl+F4",
+                    accelerator: 'CmdOrCtrl+F4',
                     enabled: false
                 },
                 {
                     label: 'C&lose All',
                     click: () => { closeAllFiles(); },
-                    accelerator: "CmdOrCtrl+Shift+F4",
+                    accelerator: 'CmdOrCtrl+Shift+F4',
                     enabled: false
                 },
                 { type: 'separator' },
                 {
                     label: 'E&xit',
-                    accelerator: "CmdOrCtrl+Shift+W",
+                    accelerator: 'CmdOrCtrl+Shift+W',
                     click: () => { window.close(); }
                 }
             ]
@@ -2362,7 +2362,7 @@
                 {
                     label: '&Immortal...',
                     click: () => {
-                        shell.openExternal("http://www.shadowmud.com/tutorial", '_blank');
+                        shell.openExternal('http://www.shadowmud.com/tutorial', '_blank');
                     },
                     enabled: true
                 },
@@ -2381,7 +2381,7 @@
                             if (w.length === 0)
                                 setTimeout(h, 100);
                             else
-                                w[0].webContents.executeJavaScript(`loadUrl('codeeditor');`);
+                                w[0].webContents.executeJavaScript('loadUrl(\'codeeditor\');');
                         };
                         h();
                     }
@@ -2389,21 +2389,21 @@
                 {
                     label: '&jiMUD website...',
                     click: () => {
-                        shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
+                        shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
                     }
                 },
                 { type: 'separator' },
                 {
                     label: '&Code editor',
                     click: () => {
-                        shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs/codeeditor.md", '_blank');
+                        shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs/codeeditor.md', '_blank');
                     },
                     enabled: true
                 },
                 {
                     label: '&jiMUD',
                     click: () => {
-                        shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
+                        shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
                     },
                     enabled: true
                 },
@@ -2428,7 +2428,7 @@
     ]);
     menubar.enabled = false;
     var manager = new DockManager();
-    var dock = $(".dock-manager");
+    var dock = $('.dock-manager');
     var toolbar = $('#toolbar');
     manager.hideTabstrip = false;
     manager.on('add', (e) => {
@@ -2573,14 +2573,14 @@
             e.panel.editor.deactivate();
     });
     manager.on('dragenter', (e) => {
-        event.dataTransfer.dropEffect = "copy";
-        event.dataTransfer.effectAllowed = "copy";
+        event.dataTransfer.dropEffect = 'copy';
+        event.dataTransfer.effectAllowed = 'copy';
         if (e.dataTransfer.items) {
             for (var i = 0; i < e.dataTransfer.items.length; i++) {
                 // If dropped items aren't files, reject them
                 if (e.dataTransfer.items[i].kind === 'file') {
-                    event.dataTransfer.dropEffect = "link";
-                    event.dataTransfer.effectAllowed = "link";
+                    event.dataTransfer.dropEffect = 'link';
+                    event.dataTransfer.effectAllowed = 'link';
                     event.preventDefault();
                     event.cancelBubble = true;
                     event.stopPropagation();
@@ -2589,8 +2589,8 @@
             }
         }
         else if (e.dataTransfer.files && e.dataTransfer.files.length) {
-            event.dataTransfer.dropEffect = "link";
-            event.dataTransfer.effectAllowed = "link";
+            event.dataTransfer.dropEffect = 'link';
+            event.dataTransfer.effectAllowed = 'link';
             event.preventDefault();
             event.cancelBubble = true;
             event.stopPropagation();
@@ -2598,14 +2598,14 @@
         }
     });
     manager.on('dragover', (e) => {
-        event.dataTransfer.dropEffect = "copy";
-        event.dataTransfer.effectAllowed = "copy";
+        event.dataTransfer.dropEffect = 'copy';
+        event.dataTransfer.effectAllowed = 'copy';
         if (e.dataTransfer.items) {
             for (var i = 0; i < e.dataTransfer.items.length; i++) {
                 // If dropped items aren't files, reject them
                 if (e.dataTransfer.items[i].kind === 'file') {
-                    event.dataTransfer.dropEffect = "link";
-                    event.dataTransfer.effectAllowed = "link";
+                    event.dataTransfer.dropEffect = 'link';
+                    event.dataTransfer.effectAllowed = 'link';
                     event.preventDefault();
                     event.cancelBubble = true;
                     event.stopPropagation();
@@ -2614,8 +2614,8 @@
             }
         }
         else if (e.dataTransfer.files && e.dataTransfer.files.length) {
-            event.dataTransfer.dropEffect = "link";
-            event.dataTransfer.effectAllowed = "link";
+            event.dataTransfer.dropEffect = 'link';
+            event.dataTransfer.effectAllowed = 'link';
             event.preventDefault();
             event.cancelBubble = true;
             event.stopPropagation();
@@ -2677,7 +2677,7 @@
                     e.panel.editor.refresh();
                     e.panel.editor.focus();
                 },
-                accelerator: "F5"
+                accelerator: 'F5'
             });
         }
         if (temp.length)
@@ -2701,13 +2701,13 @@
         if (e.panel.editor.changed) {
             temp.push({
                 label: '&Save',
-                accelerator: "CmdOrCtrl+S",
+                accelerator: 'CmdOrCtrl+S',
                 click: () => { saveFile(e.panel); }
             });
         }
         temp.push({
             label: 'Save &As',
-            accelerator: "CmdOrCtrl+Shift+S",
+            accelerator: 'CmdOrCtrl+Shift+S',
             click: () => { saveFileAs(e.panel); },
         });
         if (e.panel.editor.changed) {
@@ -2727,7 +2727,7 @@
         temp.push({
             label: '&Close',
             click: () => { closeFile(e.panel); },
-            accelerator: "CmdOrCtrl+F4"
+            accelerator: 'CmdOrCtrl+F4'
         });
         if (manager.panels.length > 1)
             temp.push({
@@ -2758,8 +2758,8 @@
             document.title = 'Code Editor - ' + manager.active.tab.innerText;
         else
             document.title = 'Code Editor';
-        $("#btn-close").prop('disabled', !enabled);
-        $("#btn-close-all").prop('disabled', !enabled);
+        $('#btn-close').prop('disabled', !enabled);
+        $('#btn-close-all').prop('disabled', !enabled);
         menubar.updateItem('File|Close', { enabled: enabled });
         menubar.updateItem('File|Close all', { enabled: enabled });
         menubar.updateItem('File|save as...', { enabled: enabled });
@@ -2767,9 +2767,9 @@
         menubar.updateItem('file|diff|remote...', { enabled: connected && enabled && manager.active.editor.supports('diff') });
         menubar.updateItem('file|upload', { enabled: connected && enabled && manager.active.editor.supports('upload') });
         menubar.updateItem('file|upload as...', { enabled: connected && enabled && manager.active.editor.supports('upload-as') });
-        $("#btn-upload").prop('disabled', !(connected && enabled && manager.active.editor.supports('upload')));
-        $("#btn-upload-as").prop('disabled', !(connected && enabled && manager.active.editor.supports('upload-as')));
-        var buttons = document.getElementById("editor-buttons");
+        $('#btn-upload').prop('disabled', !(connected && enabled && manager.active.editor.supports('upload')));
+        $('#btn-upload-as').prop('disabled', !(connected && enabled && manager.active.editor.supports('upload-as')));
+        var buttons = document.getElementById('editor-buttons');
         while (buttons.firstChild) {
             buttons.removeChild(buttons.firstChild);
         }
@@ -2823,9 +2823,9 @@
             if (revertAll && changedAll)
                 break; //do not need to check all as soon as one has been found
         }
-        $("#btn-save").prop('disabled', !changed);
+        $('#btn-save').prop('disabled', !changed);
         menubar.updateItem('file|save', { enabled: changed });
-        $("#btn-save-all").prop('disabled', !changedAll);
+        $('#btn-save-all').prop('disabled', !changedAll);
         menubar.updateItem('file|save all', { enabled: changedAll });
         menubar.updateItem('file|diff|clear', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.diff !== null && manager.active.editor.supports('diff')) : false });
         menubar.updateItem('file|diff|original', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.diff === null && !manager.active.editor.new && manager.active.editor.changed && manager.active.editor.supports('diff')) : false });
@@ -2833,24 +2833,24 @@
         menubar.updateItem('file|revert', { enabled: (manager.active && manager.active.editor) ? (manager.active.editor.changed) : false });
         menubar.updateItem('file|revert all', { enabled: revertAll });
 
-        $("#btn-undo").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('undo') : true);
+        $('#btn-undo').prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('undo') : true);
         menubar.updateItem('edit|undo', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('undo') : false });
-        $("#btn-redo").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('redo') : true);
+        $('#btn-redo').prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('redo') : true);
         menubar.updateItem('edit|redo', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('redo') : false });
 
-        $("#btn-cut").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('cut') : true);
+        $('#btn-cut').prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('cut') : true);
         menubar.updateItem('edit|cut', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('cut') : false });
-        $("#btn-copy").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('copy') : true);
+        $('#btn-copy').prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('copy') : true);
         menubar.updateItem('edit|copy', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('copy') : false });
-        $("#btn-editor").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('paste-advanced') : true);
+        $('#btn-editor').prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('paste-advanced') : true);
         menubar.updateItem('edit|paste to advanced editor', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('paste-advanced') : false });
-        $("#btn-paste").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('paste') : true);
+        $('#btn-paste').prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('paste') : true);
         menubar.updateItem('edit|paste', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('paste') : false });
-        $("#btn-find").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('find') : true);
+        $('#btn-find').prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('find') : true);
         menubar.updateItem('edit|find', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('find') : false });
-        $("#btn-replace").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('replace') : true);
+        $('#btn-replace').prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('replace') : true);
         menubar.updateItem('edit|replace', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('replace') : false });
-        $("#btn-refresh").prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('refresh') : true);
+        $('#btn-refresh').prop('disabled', (manager.active && manager.active.editor) ? !manager.active.editor.supports('refresh') : true);
         menubar.updateItem('view|refresh', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('refresh') : false });
         menubar.updateItem('edit|select all', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('selectall') : false });
     }
@@ -3011,72 +3011,72 @@
 
     function getFileIcon(file) {
         switch (path.extname(file)) {
-            case ".pdf":
+            case '.pdf':
                 return 'fa fa-file-pdf-o';
-            case ".xls":
-            case ".xlt":
-            case ".xlm":
-            case ".xlsx":
-            case ".xlsm":
-            case ".xltx":
-            case ".xltm":
+            case '.xls':
+            case '.xlt':
+            case '.xlm':
+            case '.xlsx':
+            case '.xlsm':
+            case '.xltx':
+            case '.xltm':
                 return 'fa fa-file-excel-o';
-            case ".doc":
-            case ".dot":
-            case ".wbk":
-            case ".docx":
-            case ".docm":
-            case ".dotx":
-            case ".dotm":
-            case ".docb":
+            case '.doc':
+            case '.dot':
+            case '.wbk':
+            case '.docx':
+            case '.docm':
+            case '.dotx':
+            case '.dotm':
+            case '.docb':
                 return 'fa fa-file-word-o';
-            case ".ppt":
-            case ".pot":
-            case ".pps":
-            case ".pptx":
-            case ".pptm":
-            case ".potx":
-            case ".potm":
-            case ".ppam":
-            case ".ppsx":
-            case ".ppsm":
-            case ".sldx":
-            case ".sldm":
+            case '.ppt':
+            case '.pot':
+            case '.pps':
+            case '.pptx':
+            case '.pptm':
+            case '.potx':
+            case '.potm':
+            case '.ppam':
+            case '.ppsx':
+            case '.ppsm':
+            case '.sldx':
+            case '.sldm':
                 return 'fa fa-file-powerpoint-o';
-            case ".png":
-            case ".gif":
-            case ".jpg":
-            case ".ico":
-            case ".svg":
-            case ".webp":
+            case '.png':
+            case '.gif':
+            case '.jpg':
+            case '.ico':
+            case '.svg':
+            case '.webp':
                 return 'fa fa-file-image-o';
-            case ".m4a":
-            case ".wav":
-            case ".mp3":
-            case ".flac":
+            case '.m4a':
+            case '.wav':
+            case '.mp3':
+            case '.flac':
                 return 'fa fa-file-audio-o';
-            case ".avi":
-            case ".mpg":
-            case ".mov":
-            case ".webm":
-            case ".oog":
-            case ".mkv":
+            case '.avi':
+            case '.mpg':
+            case '.mov':
+            case '.webm':
+            case '.oog':
+            case '.mkv':
                 return 'fa fa-file-video-o';
-            case ".7z":
-            case ".zip":
-            case ".rar":
-            case ".jar":
+            case '.7z':
+            case '.zip':
+            case '.rar':
+            case '.jar':
                 return 'fa fa-file-archive-o';
-            case ".txt":
+            case '.txt':
                 return 'fa fa-file-text-o';
-            case ".o":
-            case ".csv":
+            case '.o':
+            case '.csv':
                 return 'fa fa-file-o icon-o';
-            case ".h":
+            case '.h':
                 return 'fa fa-file-code-o icon-h';
-            case ".c":
+            case '.c':
                 return 'fa fa-file-code-o icon-c';
-            case ".map":
+            case '.map':
                 return 'fa fa-map-o';
             case '.design':
                 return 'fa fa-file-image-o icon-design';
@@ -3309,70 +3309,70 @@
                         if (data.row.size === -2)
                             return '<i class="fa fa-folder-o" style="margin-right: 2px"></i>' + data.cell;
                         switch (data.row.type.toLowerCase()) {
-                            case ".pdf":
+                            case '.pdf':
                                 return '<i class="fa fa-file-pdf-o" style="margin-right: 2px"></i>' + data.cell;
-                            case ".xls":
-                            case ".xlt":
-                            case ".xlm":
-                            case ".xlsx":
-                            case ".xlsm":
-                            case ".xltx":
-                            case ".xltm":
+                            case '.xls':
+                            case '.xlt':
+                            case '.xlm':
+                            case '.xlsx':
+                            case '.xlsm':
+                            case '.xltx':
+                            case '.xltm':
                                 return '<i class="fa fa-file-excel-o" style="margin-right: 2px"></i>' + data.cell;
-                            case ".doc":
-                            case ".dot":
-                            case ".wbk":
-                            case ".docx":
-                            case ".docm":
-                            case ".dotx":
-                            case ".dotm":
-                            case ".docb":
+                            case '.doc':
+                            case '.dot':
+                            case '.wbk':
+                            case '.docx':
+                            case '.docm':
+                            case '.dotx':
+                            case '.dotm':
+                            case '.docb':
                                 return '<i class="fa fa-file-word-o" style="margin-right: 2px"></i>' + data.cell;
-                            case ".ppt":
-                            case ".pot":
-                            case ".pps":
-                            case ".pptx":
-                            case ".pptm":
-                            case ".potx":
-                            case ".potm":
-                            case ".ppam":
-                            case ".ppsx":
-                            case ".ppsm":
-                            case ".sldx":
-                            case ".sldm":
+                            case '.ppt':
+                            case '.pot':
+                            case '.pps':
+                            case '.pptx':
+                            case '.pptm':
+                            case '.potx':
+                            case '.potm':
+                            case '.ppam':
+                            case '.ppsx':
+                            case '.ppsm':
+                            case '.sldx':
+                            case '.sldm':
                                 return '<i class="fa fa-file-powerpoint-o" style="margin-right: 2px"></i>' + data.cell;
-                            case ".png":
-                            case ".gif":
-                            case ".jpg":
-                            case ".ico":
-                            case ".svg":
-                            case ".webp":
+                            case '.png':
+                            case '.gif':
+                            case '.jpg':
+                            case '.ico':
+                            case '.svg':
+                            case '.webp':
                                 return '<i class="fa fa-file-image-o" style="margin-right: 2px"></i>' + data.cell;
-                            case ".m4a":
-                            case ".wav":
-                            case ".mp3":
-                            case ".flac":
+                            case '.m4a':
+                            case '.wav':
+                            case '.mp3':
+                            case '.flac':
                                 return '<i class="fa fa-file-audio-o" style="margin-right: 2px"></i>' + data.cell;
-                            case ".avi":
-                            case ".mpg":
-                            case ".mov":
-                            case ".webm":
-                            case ".oog":
-                            case ".mkv":
+                            case '.avi':
+                            case '.mpg':
+                            case '.mov':
+                            case '.webm':
+                            case '.oog':
+                            case '.mkv':
                                 return '<i class="fa fa-file-video-o" style="margin-right: 2px"></i>' + data.cell;
-                            case ".7z":
-                            case ".zip":
-                            case ".rar":
-                            case ".jar":
+                            case '.7z':
+                            case '.zip':
+                            case '.rar':
+                            case '.jar':
                                 return '<i class="fa fa-file-archive-o" style="margin-right: 2px"></i>' + data.cell;
-                            case ".txt":
+                            case '.txt':
                                 return '<i class="fa fa-file-text-o" style="margin-right: 2px"></i>' + data.cell;
-                            case ".o":
-                            case ".csv":
+                            case '.o':
+                            case '.csv':
                                 return '<i class="fa fa-file-o icon-o" style="margin-right: 2px"></i>' + data.cell;
-                            case ".h":
+                            case '.h':
                                 return '<i class="fa fa-file-code-o icon-h" style="margin-right: 2px"></i>' + data.cell;
-                            case ".c":
+                            case '.c':
                                 return '<i class="fa fa-file-code-o icon-c style="margin-right: 2px"></i>' + data.cell;
 
                         }
@@ -3868,9 +3868,9 @@
             if (error.stack)
                 msg = error.stack;
             else if (error instanceof TypeError)
-                msg = error.name + " - " + error.message;
+                msg = error.name + ' - ' + error.message;
             else if (error instanceof Error)
-                msg = error.name + " - " + error.message;
+                msg = error.name + ' - ' + error.message;
             else if (error.message)
                 msg = error.message;
             else if (error.msg)
@@ -3926,7 +3926,7 @@
                     for (var pt = 0, pl = parts.length; pt < pl; pt++) {
                         c.push(parts[pt]);
                         if (pt === 0)
-                            paths.push({ path: "/", name: "/", count: pt, open: pt === pl - 1 });
+                            paths.push({ path: '/', name: '/', count: pt, open: pt === pl - 1 });
                         else
                             paths.push({ path: c.join('/'), name: parts[pt], count: pt, open: pt === pl - 1 });
                     }
@@ -4143,11 +4143,11 @@
 
             $(document).mousemove(function (e) {
                 if (e.pageY < 169)
-                    ghostBar.css("top", 169);
+                    ghostBar.css('top', 169);
                 else if (e.pageY > document.body.clientHeight - 170)
-                    ghostBar.css("top", document.body.clientHeight - 170);
+                    ghostBar.css('top', document.body.clientHeight - 170);
                 else
-                    ghostBar.css("top", e.pageY);
+                    ghostBar.css('top', e.pageY);
                 //if (window.$editor)
                 //window.$editor.layout();
             });
@@ -4163,8 +4163,8 @@
             dock.css('top', tbh + 'px');
             if (output.outerHeight() < 170 && (dock.outerHeight() + tbh) > 172) {
                 options.outputSize = 170;
-                output.css("height", (options.outputSize - 20) + 'px');
-                dock.css("bottom", options.outputSize + 'px');
+                output.css('height', (options.outputSize - 20) + 'px');
+                dock.css('bottom', options.outputSize + 'px');
                 doUpdate(16);
             }
             doUpdate(128);
@@ -4185,8 +4185,8 @@
                     options.outputSize = 170;
                 else
                     options.outputSize = document.body.clientHeight - e.pageY + 2;
-                output.css("height", (options.outputSize - 20) + 'px');
-                dock.css("bottom", options.outputSize + 'px');
+                output.css('height', (options.outputSize - 20) + 'px');
+                dock.css('bottom', options.outputSize + 'px');
                 doUpdate(16);
                 $('#btm-ghost-bar').remove();
                 $(document).unbind('mousemove');
@@ -4311,8 +4311,8 @@
             }
         }
         doUpdate(4);
-        $("#splashScreenMask").css('display', 'none');
-        $("#splashLayout").css('display', 'none');
+        $('#splashScreenMask').css('display', 'none');
+        $('#splashLayout').css('display', 'none');
         remote.getCurrentWindow().setEnabled(true);
         menubar.enabled = true;
         _loading = 0;
@@ -4321,8 +4321,8 @@
     function toggleDiffNav(state) {
         menubar.updateItem('view|previous change', { enabled: state });
         menubar.updateItem('view|next change', { enabled: state });
-        $("#btn-diff-nav-prev").prop('disabled', !state);
-        $("#btn-diff-nav-next").prop('disabled', !state);
+        $('#btn-diff-nav-prev').prop('disabled', !state);
+        $('#btn-diff-nav-next').prop('disabled', !state);
     }
 
     function savedOpened() {
@@ -4372,7 +4372,7 @@
 
     // eslint-disable-next-line no-unused-vars
     function closeHidden() {
-        var dialogs = document.body.getElementsByTagName("dialog");
+        var dialogs = document.body.getElementsByTagName('dialog');
         var e = 0, el = dialogs.length;
         for (; e < el; e++) {
             if (dialogs[e].open) {
@@ -4404,7 +4404,7 @@
                 document.activeElement.blur();
             evt.returnValue = false;
             setTimeout(() => {
-                var dialogs = document.body.getElementsByTagName("dialog");
+                var dialogs = document.body.getElementsByTagName('dialog');
                 var e = 0, el = dialogs.length;
                 for (; e < el; e++) {
                     if (dialogs[e].open) {
@@ -4453,16 +4453,16 @@
     });
 
     ipcRenderer.on('update-progress', (event, progressObj) => {
-        if (!$("#update-progress")[0].open) {
-            $("#update-progress-title").html("Downloading update&hellip;");
-            $("#update-progress")[0].show();
+        if (!$('#update-progress')[0].open) {
+            $('#update-progress-title').html('Downloading update&hellip;');
+            $('#update-progress')[0].show();
         }
-        $("#update-progressbar").val(progressObj.percent);
+        $('#update-progressbar').val(progressObj.percent);
     });
 
     ipcRenderer.on('update-downloaded', () => {
-        if ($("#update-progress")[0].open)
-            $("#update-progress")[0].close();
+        if ($('#update-progress')[0].open)
+            $('#update-progress')[0].close();
     });
 
     ipcRenderer.on('open-editor', (event, file, remoteFile, remoteEdit) => {
@@ -4476,7 +4476,7 @@
     });
 
     ipcRenderer.on('send-editor', (event, text, window) => {
-        if (!manager.active || !manager.active.editor || window != "code-editor")
+        if (!manager.active || !manager.active.editor || window != 'code-editor')
             return;
         if (($dialogs.monster && $dialogs.monster.open) || ($dialogs.room && $dialogs.room.open)) {
             if ((document.activeElement.tagName === 'INPUT' && document.activeElement.type === 'text') || document.activeElement.tagName === 'TEXTAREA')
@@ -4504,8 +4504,8 @@
         menubar.updateItem('file|diff|remote...', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('diff') });
         menubar.updateItem('file|upload', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('upload') });
         menubar.updateItem('file|upload as...', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('upload-as') });
-        $("#btn-upload").prop('disabled', !(connected && manager.active && manager.active.editor && manager.active.editor.supports('upload')));
-        $("#btn-upload-as").prop('disabled', !(connected && manager.active && manager.active.editor && manager.active.editor.supports('upload-as')));
+        $('#btn-upload').prop('disabled', !(connected && manager.active && manager.active.editor && manager.active.editor.supports('upload')));
+        $('#btn-upload-as').prop('disabled', !(connected && manager.active && manager.active.editor && manager.active.editor.supports('upload-as')));
         document.getElementById('btn-open-remote').removeAttribute('disabled');
         menubar.updateItem('file|open remote...', { enabled: connected });
     });
@@ -4514,8 +4514,8 @@
         menubar.updateItem('file|diff|remote...', { enabled: false });
         menubar.updateItem('file|upload', { enabled: false });
         menubar.updateItem('file|upload as...', { enabled: false });
-        $("#btn-upload").prop('disabled', true);
-        $("#btn-upload-as").prop('disabled', true);
+        $('#btn-upload').prop('disabled', true);
+        $('#btn-upload-as').prop('disabled', true);
         document.getElementById('btn-open-remote').setAttribute('disabled', 'true');
         menubar.updateItem('file|open remote...', { enabled: false });
     });
@@ -4605,7 +4605,7 @@
                 path: document.getElementById('new-area-path'),
                 remote: document.getElementById('new-area-remote-path')
             };
-            $("#btn-new-area-path").on('click', () => {
+            $('#btn-new-area-path').on('click', () => {
                 dialog.showOpenDialog(remote.getCurrentWindow(), {
                     defaultPath: $dialogs.area.path.value,
                     properties: ['openDirectory', 'createDirectory']
@@ -4634,13 +4634,13 @@
         $('#new-area *').attr('disabled', false);
         $('#btn-new-area-remote-path').attr('disabled', !connected);
 
-        var p = $("#new-area-path").parent().parent();
-        p.removeClass("has-error");
-        p.removeClass("has-feedback");
-        $("button", p).removeClass('btn-danger');
-        p = $("#new-area-name").parent();
-        p.removeClass("has-error");
-        p.removeClass("has-feedback");
+        var p = $('#new-area-path').parent().parent();
+        p.removeClass('has-error');
+        p.removeClass('has-feedback');
+        $('button', p).removeClass('btn-danger');
+        p = $('#new-area-name').parent();
+        p.removeClass('has-error');
+        p.removeClass('has-feedback');
         $('#new-area-path').val(options.browse || ((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')));
         $('#new-area-name').val(name || '');
         menubar.enabled = false;
@@ -4650,46 +4650,46 @@
     // eslint-disable-next-line no-unused-vars
     function createArea() {
         var p;
-        p = $("#new-area-path").parent().parent();
-        p.removeClass("has-error");
-        p.removeClass("has-feedback");
-        $("button", p).removeClass('btn-danger');
-        p = $("#new-area-name").parent();
-        p.removeClass("has-error");
-        p.removeClass("has-feedback");
+        p = $('#new-area-path').parent().parent();
+        p.removeClass('has-error');
+        p.removeClass('has-feedback');
+        $('button', p).removeClass('btn-danger');
+        p = $('#new-area-name').parent();
+        p.removeClass('has-error');
+        p.removeClass('has-feedback');
         if (!existsSync($('#new-area-path').val())) {
-            p = $("#new-area-path").parent().parent();
-            p.addClass("has-error");
-            p.addClass("has-feedback");
-            $("button", p).addClass('btn-danger');
-            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Path does not exist</small>");
+            p = $('#new-area-path').parent().parent();
+            p.addClass('has-error');
+            p.addClass('has-feedback');
+            $('button', p).addClass('btn-danger');
+            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Path does not exist</small>');
             $('#new-area-path').focus();
             return;
         }
         if (!isDirSync($('#new-area-path').val())) {
-            p = $("#new-area-path").parent();
-            p.addClass("has-error");
-            p.addClass("has-feedback");
-            $("button", p).addClass('btn-danger');
-            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid path</small>");
+            p = $('#new-area-path').parent();
+            p.addClass('has-error');
+            p.addClass('has-feedback');
+            $('button', p).addClass('btn-danger');
+            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Invalid path</small>');
             $('#new-area-path').focus();
             return;
         }
         if (!validName($('#new-area-name').val())) {
-            p = $("#new-area-name").parent();
-            p.addClass("has-error");
-            p.addClass("has-feedback");
-            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid, can only contain letters, numbers, and _</small>");
+            p = $('#new-area-name').parent();
+            p.addClass('has-error');
+            p.addClass('has-feedback');
+            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Invalid, can only contain letters, numbers, and _</small>');
             $('#new-area-name').focus();
             return;
         }
         var aPath = path.join($('#new-area-path').val(), $('#new-area-name').val());
         if (existsSync(aPath)) {
-            p = $("#new-area-path").parent().parent();
-            p.addClass("has-error");
-            p.addClass("has-feedback");
-            $("button", p).addClass('btn-danger');
-            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Directory with area name already exist</small>");
+            p = $('#new-area-path').parent().parent();
+            p.addClass('has-error');
+            p.addClass('has-feedback');
+            $('button', p).addClass('btn-danger');
+            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Directory with area name already exist</small>');
             $('#new-area-path').focus();
             return;
         }
@@ -4760,16 +4760,16 @@
             $dialogs.virtualArea = {
                 dialog: document.getElementById('new-virtual-area')
             };
-            $("#btn-new-virtual-area-path").on('click', () => {
+            $('#btn-new-virtual-area-path').on('click', () => {
                 dialog.showOpenDialog(remote.getCurrentWindow(), {
-                    defaultPath: $("#new-virtual-area-path").val(),
+                    defaultPath: $('#new-virtual-area-path').val(),
                     properties: ['openDirectory', 'createDirectory']
                 },
                     function (fileNames) {
                         if (fileNames === undefined) {
                             return;
                         }
-                        $("#new-virtual-area-path").val(fileNames[0]);
+                        $('#new-virtual-area-path').val(fileNames[0]);
                     });
             });
             $('#btn-new-virtual-area-remote-path').on('click', () => {
@@ -4823,20 +4823,20 @@
             $('#new-virtual-area-depth').on('change input keypress', () => {
                 var value = +$('#new-virtual-area-depth').val();
                 if (value <= 1) {
-                    $("#deUp").parent().addClass('disabled');
-                    $("#deDown").parent().addClass('disabled');
-                    $("#dsSinkingUp").parent().addClass('disabled');
-                    $("#dsSinkingDown").parent().addClass('disabled');
-                    $("#deUp").prop("checked", false);
-                    $("#deDown").prop("checked", false);
-                    $("#dsSinkingUp").prop("checked", false);
-                    $("#dsSinkingDown").prop("checked", false);
+                    $('#deUp').parent().addClass('disabled');
+                    $('#deDown').parent().addClass('disabled');
+                    $('#dsSinkingUp').parent().addClass('disabled');
+                    $('#dsSinkingDown').parent().addClass('disabled');
+                    $('#deUp').prop('checked', false);
+                    $('#deDown').prop('checked', false);
+                    $('#dsSinkingUp').prop('checked', false);
+                    $('#dsSinkingDown').prop('checked', false);
                 }
                 else {
-                    $("#deUp").parent().removeClass('disabled');
-                    $("#deDown").parent().removeClass('disabled');
-                    $("#dsSinkingUp").parent().removeClass('disabled');
-                    $("#dsSinkingDown").parent().removeClass('disabled');
+                    $('#deUp').parent().removeClass('disabled');
+                    $('#deDown').parent().removeClass('disabled');
+                    $('#dsSinkingUp').parent().removeClass('disabled');
+                    $('#dsSinkingDown').parent().removeClass('disabled');
                 }
             });
         }
@@ -4851,10 +4851,10 @@
         $('#deEast').prop('checked', true);
         $('#deSouth').prop('checked', true);
         $('#deWest').prop('checked', true);
-        $("#deUp").parent().addClass('disabled');
-        $("#deDown").parent().addClass('disabled');
-        $("#dsSinkingUp").parent().addClass('disabled');
-        $("#dsSinkingDown").parent().addClass('disabled');
+        $('#deUp').parent().addClass('disabled');
+        $('#deDown').parent().addClass('disabled');
+        $('#dsSinkingUp').parent().addClass('disabled');
+        $('#dsSinkingDown').parent().addClass('disabled');
         $('#new-virtual-area-path').val(options.browse || ((manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')));
         $('#new-virtual-area-area').val('');
         $('#new-virtual-area-area-enabled').prop('checked', false);
@@ -4867,13 +4867,13 @@
         $('.btn-group input').parent().removeClass('active');
         $('.btn-group input:checked').parent().addClass('active');
 
-        var p = $("#new-virtual-area-path").parent().parent();
-        p.removeClass("has-error");
-        p.removeClass("has-feedback");
-        $("button", p).removeClass('btn-danger');
-        p = $("#new-virtual-area-area").parent().parent();
-        p.removeClass("has-error");
-        p.removeClass("has-feedback");
+        var p = $('#new-virtual-area-path').parent().parent();
+        p.removeClass('has-error');
+        p.removeClass('has-feedback');
+        $('button', p).removeClass('btn-danger');
+        p = $('#new-virtual-area-area').parent().parent();
+        p.removeClass('has-error');
+        p.removeClass('has-feedback');
 
         menubar.enabled = false;
         document.getElementById('new-virtual-area').showModal();
@@ -4882,37 +4882,37 @@
     // eslint-disable-next-line no-unused-vars
     function createVirtualArea() {
         var p;
-        p = $("#new-virtual-area-path").parent().parent();
-        p.removeClass("has-error");
-        p.removeClass("has-feedback");
-        $("button", p).removeClass('btn-danger');
-        p = $("#new-virtual-area-name").parent();
-        p.removeClass("has-error");
-        p.removeClass("has-feedback");
+        p = $('#new-virtual-area-path').parent().parent();
+        p.removeClass('has-error');
+        p.removeClass('has-feedback');
+        $('button', p).removeClass('btn-danger');
+        p = $('#new-virtual-area-name').parent();
+        p.removeClass('has-error');
+        p.removeClass('has-feedback');
         if (!existsSync($('#new-virtual-area-path').val())) {
-            p = $("#new-virtual-area-path").parent().parent();
-            p.addClass("has-error");
-            p.addClass("has-feedback");
-            $("button", p).addClass('btn-danger');
-            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Path does not exist</small>");
+            p = $('#new-virtual-area-path').parent().parent();
+            p.addClass('has-error');
+            p.addClass('has-feedback');
+            $('button', p).addClass('btn-danger');
+            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Path does not exist</small>');
             $('#new-virtual-area-path').focus();
             return;
         }
         if (!isDirSync($('#new-virtual-area-path').val())) {
-            p = $("#new-virtual-area-path").parent();
-            p.addClass("has-error");
-            p.addClass("has-feedback");
-            $("button", p).addClass('btn-danger');
-            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid path</small>");
+            p = $('#new-virtual-area-path').parent();
+            p.addClass('has-error');
+            p.addClass('has-feedback');
+            $('button', p).addClass('btn-danger');
+            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Invalid path</small>');
             $('#new-virtual-area-path').focus();
             return;
         }
         if (!$('#new-virtual-area-area-enabled').prop('checked') && existsSync(path.join($('#new-virtual-area-path').val(), 'virtual'))) {
-            p = $("#new-virtual-area-path").parent().parent();
-            p.addClass("has-error");
-            p.addClass("has-feedback");
-            $("button", p).addClass('btn-danger');
-            p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Path already contains a virtual server</small>");
+            p = $('#new-virtual-area-path').parent().parent();
+            p.addClass('has-error');
+            p.addClass('has-feedback');
+            $('button', p).addClass('btn-danger');
+            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Path already contains a virtual server</small>');
             $('#new-virtual-area-path').focus();
             return;
         }
@@ -4921,20 +4921,20 @@
         var data = baseParseData();
         if ($('#new-virtual-area-area-enabled').prop('checked')) {
             if (!validName($('#new-virtual-area-area').val())) {
-                p = $("#new-virtual-area-area").parent().parent();
-                p.addClass("has-error");
-                p.addClass("has-feedback");
-                p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Invalid, can only contain letters, numbers, and _</small>");
+                p = $('#new-virtual-area-area').parent().parent();
+                p.addClass('has-error');
+                p.addClass('has-feedback');
+                p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Invalid, can only contain letters, numbers, and _</small>');
                 $('#new-virtual-area-area').focus();
                 return;
             }
             aPath = path.join(aPath, $('#new-virtual-area-area').val());
             if (existsSync(aPath)) {
-                p = $("#new-virtual-area-area").parent().parent();
-                p.addClass("has-error");
-                p.addClass("has-feedback");
-                $("button", p).addClass('btn-danger');
-                p.find(".form-error").html("<small class=\"aura-error\"><span class='sr-only'>Error:</span>Directory with area name already exist</small>");
+                p = $('#new-virtual-area-area').parent().parent();
+                p.addClass('has-error');
+                p.addClass('has-feedback');
+                $('button', p).addClass('btn-danger');
+                p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Directory with area name already exist</small>');
                 $('#new-virtual-area-area').focus();
                 return;
             }
@@ -5020,30 +5020,30 @@
     }
 
     function buildNewVirtualMap(width, height, depth, exits, states) {
-        var f = width + " " + height;
-        if (depth > 1) f += " " + depth;
-        f += "\n";
+        var f = width + ' ' + height;
+        if (depth > 1) f += ' ' + depth;
+        f += '\n';
         if (states)
-            states = ":0:0:" + states;
+            states = ':0:0:' + states;
         else
-            states = "";
+            states = '';
         var te = exits & ~128 & ~64 & ~1;
         var be = exits & ~16 & ~8 & ~4;
-        var m = (te & ~4 & ~2) + states + " ";
-        if (width > 2) m += Array(width - 1).join(te + states + " ");
+        var m = (te & ~4 & ~2) + states + ' ';
+        if (width > 2) m += Array(width - 1).join(te + states + ' ');
         m += (te & ~32 & ~16) + states;
-        m += "\n";
+        m += '\n';
         for (var y = 1; y < height - 1; y++) {
-            m += (exits & ~4 & ~2 & ~1) + states + " ";
-            if (width > 2) m += Array(width - 1).join(exits + states + " ");
+            m += (exits & ~4 & ~2 & ~1) + states + ' ';
+            if (width > 2) m += Array(width - 1).join(exits + states + ' ');
             m += (exits & ~64 & ~32 & ~16) + states;
-            m += "\n";
+            m += '\n';
         }
-        m += (be & ~2 & ~1) + states + " ";
-        if (width > 2) m += Array(width - 1).join(be + states + " ");
+        m += (be & ~2 & ~1) + states + ' ';
+        if (width > 2) m += Array(width - 1).join(be + states + ' ');
         m += (be & ~64 & ~32 & ~16) + states;
-        m += "\n";
-        for (var z = 0; z < depth; z++) f += m + "\n";
+        m += '\n';
+        for (var z = 0; z < depth; z++) f += m + '\n';
         return f;
     }
 
@@ -5794,8 +5794,8 @@
                     tmpl['create pre'] += createFunction(data['room-wiz-secret-exit'], 'string', 'object room, object player');
                 }
                 else if (data['room-wiz-secret-exit'] === 'true')
-                    tmp.push(`"secret exit" : 1`);
-                else if (typeof data['room-wiz-secret-exit'] === "string" && parseFloat(data['room-wiz-secret-exit']).toString() == data['room-wiz-secret-exit'])
+                    tmp.push('"secret exit" : 1');
+                else if (typeof data['room-wiz-secret-exit'] === 'string' && parseFloat(data['room-wiz-secret-exit']).toString() == data['room-wiz-secret-exit'])
                     tmp.push(`"secret exit" : ${data['room-wiz-secret-exit']}`);
                 else if (data['room-wiz-secret-exit'].length > 0) {
                     tmp.push(`"secret exit" : "${data['room-wiz-secret-exit'].replace(/"/g, '\\"')}"`);
@@ -5821,7 +5821,7 @@
                     tmpl['create pre'] += createFunction(data['room-wiz-prevent-peer'], 'string', 'string dir, object player');
                 }
                 else if (data['room-wiz-prevent-peer'] === 'true')
-                    tmpl['create body'] += `   set_prevent_peer(1);\n`;
+                    tmpl['create body'] += '   set_prevent_peer(1);\n';
                 else if (data['room-wiz-prevent-peer'].startsWith('"') && data['room-wiz-prevent-peer'].endsWith('"'))
                     tmpl['create body'] += `   set_prevent_peer(${data['room-wiz-prevent-peer']});\n`;
                 else if (data['room-wiz-prevent-peer'].length > 0)
@@ -6918,7 +6918,7 @@
                     tmpl['create arguments comment'] += ', Class';
                 }
                 else if (data['mon-wiz-body'].length > 0) {
-                    tmpl['create arguments'] += `, 0`;
+                    tmpl['create arguments'] += ', 0';
                     tmpl['create arguments comment'] += ', No class';
                 }
                 if (data['mon-wiz-body'].length > 0) {
@@ -6987,7 +6987,7 @@
                     tmpl['create body'] += `   set_mass(${data['mon-wiz-mass']});\n`;
                 //tmpl['create body'] += `   set_height(${data['mon-wiz-height']});\n`;
                 if (data['mon-wiz-alignment'].length > 0 && data['mon-wiz-alignment'] !== '0' && data['mon-wiz-alignment'] !== 'neutral') {
-                    if (typeof data['mon-wiz-alignment'] === "string" && parseFloat(data['mon-wiz-alignment']).toString() == data['mon-wiz-alignment'])
+                    if (typeof data['mon-wiz-alignment'] === 'string' && parseFloat(data['mon-wiz-alignment']).toString() == data['mon-wiz-alignment'])
                         tmpl['create body'] += `   set_alignment(${data['mon-wiz-alignment']});\n`;
                     else
                         tmpl['create body'] += `   set_alignment("${data['mon-wiz-alignment']}");\n`;
@@ -7030,29 +7030,29 @@
                 if (data['mon-wiz-party'].length > 0)
                     tmpl['create body'] += `   set_mon_party("${data['mon-wiz-party']}");\n`;
                 if (data['mon-wiz-auto-drop-enabled'])
-                    tmpl['create body'] += `   set_auto_drop(1);`;
+                    tmpl['create body'] += '   set_auto_drop(1);';
                 if (data['mon-wiz-auto-drop'] !== 1)
                     tmpl['create body'] += `   set_auto_drop_delay(${data['mon-wiz-auto-drop']});`;
                 if (!data['mon-wiz-storage-enabled'])
-                    tmpl['create body'] += `   set_open_storage(0);`;
+                    tmpl['create body'] += '   set_open_storage(0);';
                 if (data['mon-wiz-storage'] !== 3)
                     tmpl['create body'] += `   set_open_storage_delay(${data['mon-wiz-storage']});`;
                 if (!data['mon-wiz-auto-wield-enabled'])
-                    tmpl['create body'] += `   set_auto_wield(0);`;
+                    tmpl['create body'] += '   set_auto_wield(0);';
                 if (data['mon-wiz-auto-wield'] !== 3)
                     tmpl['create body'] += `   set_auto_wield_delay(${data['mon-wiz-auto-wield']});`;
                 if (data['mon-wiz-auto-loot-enabled'])
-                    tmpl['create body'] += `   set_auto_loot(1);`;
+                    tmpl['create body'] += '   set_auto_loot(1);';
                 if (data['mon-wiz-auto-loot'] !== 1)
                     tmpl['create body'] += `   set_auto_loot_delay(${data['mon-wiz-auto-loot']});`;
                 if (data['mon-wiz-auto-wear-enabled'])
-                    tmpl['create body'] += `   set_auto_wear(1);`;
+                    tmpl['create body'] += '   set_auto_wear(1);';
                 if (data['mon-wiz-auto-wear'] !== 3)
                     tmpl['create body'] += `   set_auto_wear_delay(${data['mon-wiz-auto-wear']});`;
                 if (data['mon-wiz-wimpy'] !== 0)
                     tmpl['create body'] += `   set_wimpy(${data['mon-wiz-wimpy']});`;
                 if (!data['mon-wiz-auto-stand'])
-                    tmpl['create body'] += `   set_auto_stand(0);`;
+                    tmpl['create body'] += '   set_auto_stand(0);';
                 data['mon-wiz-reactions'] = data['mon-wiz-reactions'].filter(r => r.reaction.length > 0);
                 if (data['mon-wiz-reactions'].length === 1)
                     tmpl['create body'] += `   set_reaction("${data['mon-wiz-reactions'][0].type.length > 0 ? data['mon-wiz-reactions'][0].type + ' ' : ''}${data['mon-wiz-reactions'][0].reaction}", "${data['mon-wiz-reactions'][0].action}");\n`;
@@ -7063,30 +7063,30 @@
                 }
 
                 if (data['mon-wiz-tracking'])
-                    tmpl['create body'] += `   set_track_attackers(1);\n`;
+                    tmpl['create body'] += '   set_track_attackers(1);\n';
                 if (data['mon-wiz-tracking-message'].length > 0)
                     tmpl['create body'] += `   set_track_enter_message("${data['mon-wiz-tracking-message']}");\n`;
                 if (data['mon-wiz-tracking'].length > 0)
                     tmpl['create body'] += `   set_track_enter_message_type("${data['mon-wiz-tracking-type']}");\n`;
                 if (data['mon-wiz-tracking-aggressively'])
-                    tmpl['create body'] += `   set_track_aggressively_only(1);\n`;
+                    tmpl['create body'] += '   set_track_aggressively_only(1);\n';
 
                 if (data['mon-wiz-ask'] && data['mon-wiz-ask-topics'].length === 0)
-                    tmpl['create body'] += `   set_enable_ask(1);\n`;
+                    tmpl['create body'] += '   set_enable_ask(1);\n';
                 if (data['mon-wiz-ask-no-topic'].trim().length !== 0)
                     tmpl['create body'] += `   set_no_topic("${data['mon-wiz-ask-no-topic'].trim()}");\n`;
                 switch (data['mon-wiz-ask-response']) {
                     case 1:
-                        tmpl['create body'] += `   set_response_type("tell");\n`;
+                        tmpl['create body'] += '   set_response_type("tell");\n';
                         break;
                     case 2:
-                        tmpl['create body'] += `   set_response_type("speak");\n`;
+                        tmpl['create body'] += '   set_response_type("speak");\n';
                         break;
                     case 3:
-                        tmpl['create body'] += `   set_response_type("whisper");\n`;
+                        tmpl['create body'] += '   set_response_type("whisper");\n';
                         break;
                     case 4:
-                        tmpl['create body'] += `   set_response_type("custom");\n`;
+                        tmpl['create body'] += '   set_response_type("custom");\n';
                         break;
                 }
                 let tmp2;
@@ -7207,7 +7207,7 @@
                     else if (r.group.length !== 0)
                         r.group = `${r.group}, `;
 
-                    if (typeof r.amount === "string" && parseFloat(r.amount).toString() == r.amount)
+                    if (typeof r.amount === 'string' && parseFloat(r.amount).toString() == r.amount)
                         tmpl['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});\n`;
                     else if (r.amount.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(r.amount);
@@ -7961,31 +7961,31 @@
                         temp.push({
                             label: 'Undo',
                             click: doUndo,
-                            accelerator: "CmdOrCtrl+Z"
+                            accelerator: 'CmdOrCtrl+Z'
                         });
                     if (p.editor.supports('redo'))
                         temp.push({
                             label: 'Redo',
                             click: doRedo,
-                            accelerator: "CmdOrCtrl+Y"
+                            accelerator: 'CmdOrCtrl+Y'
                         });
                     if (p.editor.supports('undo') || p.editor.supports('redo'))
                         temp.push({ type: 'separator' });
                     temp.push({
                         label: 'Cut',
                         click: doCut,
-                        accelerator: "CmdOrCtrl+C"
+                        accelerator: 'CmdOrCtrl+C'
                     });
                     temp.push({
                         label: 'Copy',
                         click: doCopy,
-                        accelerator: "CmdOrCtrl+X"
+                        accelerator: 'CmdOrCtrl+X'
                     });
                     if (p.editor.supports('paste'))
                         temp.push({
                             label: 'Paste',
                             click: doPaste,
-                            accelerator: "CmdOrCtrl+V"
+                            accelerator: 'CmdOrCtrl+V'
                         });
                     temp.push({ type: 'separator' });
                     temp.push({
@@ -7994,7 +7994,7 @@
                             p.editor.delete();
                             p.editor.focus();
                         },
-                        accelerator: "Delete"
+                        accelerator: 'Delete'
                     });
                     temp.push({ type: 'separator' });
                     temp.push({
@@ -8037,9 +8037,9 @@
                 p.editor.on('room-dblclick', (room) => {
                     var f;
                     if (p.editor.maxLevel > 1)
-                        f = room.x + "," + room.y + "," + room.z + ".c";
+                        f = room.x + ',' + room.y + ',' + room.z + '.c';
                     else
-                        f = room.x + "," + room.y + ".c";
+                        f = room.x + ',' + room.y + '.c';
                     f = path.join(path.dirname(p.editor.file), f);
                     if (existsSync(f))
                         openFile(f);
@@ -8064,31 +8064,31 @@
                         temp.push({
                             label: 'Undo',
                             click: doUndo,
-                            accelerator: "CmdOrCtrl+Z"
+                            accelerator: 'CmdOrCtrl+Z'
                         });
                     if (p.editor.supports('redo'))
                         temp.push({
                             label: 'Redo',
                             click: doRedo,
-                            accelerator: "CmdOrCtrl+Y"
+                            accelerator: 'CmdOrCtrl+Y'
                         });
                     if (p.editor.supports('undo') || p.editor.supports('redo'))
                         temp.push({ type: 'separator' });
                     temp.push({
                         label: 'Cut',
                         click: doCut,
-                        accelerator: "CmdOrCtrl+C"
+                        accelerator: 'CmdOrCtrl+C'
                     });
                     temp.push({
                         label: 'Copy',
                         click: doCopy,
-                        accelerator: "CmdOrCtrl+X"
+                        accelerator: 'CmdOrCtrl+X'
                     });
                     if (p.editor.supports('paste'))
                         temp.push({
                             label: 'Paste',
                             click: doPaste,
-                            accelerator: "CmdOrCtrl+V"
+                            accelerator: 'CmdOrCtrl+V'
                         });
                     temp.push({ type: 'separator' });
                     temp.push({
@@ -8097,14 +8097,14 @@
                             p.editor.delete();
                             p.editor.focus();
                         },
-                        accelerator: "Delete"
+                        accelerator: 'Delete'
                     });
                     temp.push({ type: 'separator' });
                     var f;
                     if (p.editor.maxLevel > 1)
-                        f = e.room.x + "," + e.room.y + "," + e.room.z + ".c";
+                        f = e.room.x + ',' + e.room.y + ',' + e.room.z + '.c';
                     else
-                        f = e.room.x + "," + e.room.y + ".c";
+                        f = e.room.x + ',' + e.room.y + '.c';
                     f = path.join(path.dirname(p.editor.file), f);
                     if (existsSync(f)) {
                         temp.push({
@@ -8557,7 +8557,7 @@
             });
             p.editor.on('rebuild-buttons', () => {
                 if (p !== manager.active) return;
-                var buttons = document.getElementById("editor-buttons");
+                var buttons = document.getElementById('editor-buttons');
                 while (buttons.firstChild) {
                     buttons.removeChild(buttons.firstChild);
                 }
@@ -8581,7 +8581,7 @@
                     temp.push({
                         label: 'Copy',
                         click: doCopy,
-                        accelerator: "CmdOrCtrl+X"
+                        accelerator: 'CmdOrCtrl+X'
                     });
                     temp.push({ type: 'separator' });
                 }
@@ -8591,7 +8591,7 @@
                         if (manager.active && manager.active.editor)
                             manager.active.editor.selectAll();
                     },
-                    accelerator: "CmdOrCtrl+A"
+                    accelerator: 'CmdOrCtrl+A'
                 });
                 if (p.editor.changed) {
                     temp.push({ type: 'separator' });
@@ -8626,7 +8626,7 @@
                     temp.push({
                         label: 'Refresh',
                         click: doRefresh,
-                        accelerator: "F5"
+                        accelerator: 'F5'
                     });
                     temp.push({ type: 'separator' });
                 }
@@ -8645,13 +8645,13 @@
                     temp.push({
                         label: 'Undo',
                         click: doUndo,
-                        accelerator: "CmdOrCtrl+Z"
+                        accelerator: 'CmdOrCtrl+Z'
                     });
                 if (p.editor.supports('redo'))
                     temp.push({
                         label: 'Redo',
                         click: doRedo,
-                        accelerator: "CmdOrCtrl+Y"
+                        accelerator: 'CmdOrCtrl+Y'
                     });
                 if (p.editor.supports('undo') || p.editor.supports('redo'))
                     temp.push({ type: 'separator' });
@@ -8659,25 +8659,25 @@
                     temp.push({
                         label: 'Cut',
                         click: doCut,
-                        accelerator: "CmdOrCtrl+C"
+                        accelerator: 'CmdOrCtrl+C'
                     });
                 if (p.editor.supports('copy'))
                     temp.push({
                         label: 'Copy',
                         click: doCopy,
-                        accelerator: "CmdOrCtrl+X"
+                        accelerator: 'CmdOrCtrl+X'
                     });
                 if (p.editor.supports('paste'))
                     temp.push({
                         label: 'Paste',
                         click: doPaste,
-                        accelerator: "CmdOrCtrl+V"
+                        accelerator: 'CmdOrCtrl+V'
                     });
                 if (p.editor.supports('copy'))
                     temp.push({
                         label: 'Paste to &Advanced Editor',
                         click: doEditor,
-                        accelerator: "CmdOrCtrl+Shift+V"
+                        accelerator: 'CmdOrCtrl+Shift+V'
                     });
                 if (p.editor.supports('cut') || p.editor.supports('copy') || p.editor.supports('paste'))
                     temp.push({ type: 'separator' });
@@ -8687,7 +8687,7 @@
                         if (manager.active && manager.active.editor)
                             manager.active.editor.selectAll();
                     },
-                    accelerator: "CmdOrCtrl+A"
+                    accelerator: 'CmdOrCtrl+A'
                 });
                 if (p.editor.changed) {
                     temp.push({ type: 'separator' });

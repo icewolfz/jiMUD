@@ -120,7 +120,7 @@
         });
 
         window.addEventListener('keydown', (event) => {
-            if ($("#disconnectDialog")[0].open) {
+            if ($('#disconnectDialog')[0].open) {
                 if (event.which === 81) {
                     closeDisconnectDialog(true);
                     window.close();
@@ -154,10 +154,10 @@
         const { Settings } = require('./js/settings');
         const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
         const { dialog, Menu, MenuItem, nativeImage } = remote;
-        const { parseTemplate, setSelectionRange, isFileSync, decrypt } = require("./js/library.js");
+        const { parseTemplate, setSelectionRange, isFileSync, decrypt } = require('./js/library.js');
         //    const fs = require('fs');
         const path = require('path');
-        const { version } = require("../package.json");
+        const { version } = require('../package.json');
         var spellchecker;
         var autoConnectID;
         var autoLoginCounter = 0;
@@ -195,17 +195,17 @@
                 else
                     client.error(`${msg}`);
                 if (client.options.enableDebug) {
-                    client.error("Url: " + url);
-                    client.error("Line: " + line);
-                    client.error("Column: " + col);
+                    client.error('Url: ' + url);
+                    client.error('Line: ' + line);
+                    client.error('Column: ' + col);
                     client.error(error);
                 }
             }
             else {
-                console.error("Message: " + msg);
-                console.error("Url: " + url);
-                console.error("Line: " + line);
-                console.error("Column: " + col);
+                console.error('Message: ' + msg);
+                console.error('Url: ' + url);
+                console.error('Line: ' + line);
+                console.error('Column: ' + col);
                 console.error(error);
             }
             return true;
@@ -215,7 +215,7 @@
             lastMouse = e;
         };
 
-        webFrame.setSpellCheckProvider("en-US", true, {
+        webFrame.setSpellCheckProvider('en-US', true, {
             spellCheck: function (text) {
                 if (!spellchecker || !client.options.spellchecking)
                     return true;
@@ -239,34 +239,34 @@
         }
 
         function doLink(url) {
-            if (confirm("Open '" + url + "'?") === true)
+            if (confirm('Open \'' + url + '\'?') === true)
                 shell.openExternal(url);
         }
 
         // eslint-disable-next-line no-unused-vars
         function doMXPLink(el, url) {
-            if (url.startsWith("OoMUD://") || url.startsWith("jiMUD://") || url.startsWith("client://"))
+            if (url.startsWith('OoMUD://') || url.startsWith('jiMUD://') || url.startsWith('client://'))
                 doMXPSend(0, el, url.substring(8));
-            else if (confirm("Open '" + url + "'?") === true)
-                shell.openExternal(url.replace("&text;", $(el).text()));
+            else if (confirm('Open \'' + url + '\'?') === true)
+                shell.openExternal(url.replace('&text;', $(el).text()));
         }
 
         function doMXPSend(e, el, url, pmt, tt) {
             el = $(el);
-            var im = el.find("img[ismap]");
+            var im = el.find('img[ismap]');
             var extra = '';
             if (im.length > 0) {
                 var offset = im.offset();
                 var x = Math.floor(e.clientX - offset.left);
                 var y = Math.floor(e.clientY - offset.top);
-                extra = "?" + x + "," + y;
+                extra = '?' + x + ',' + y;
             }
 
-            if (url.constructor === Array || url.__proto__.constructor === Array || Object.prototype.toString.call(url) === "[object Array]") {
+            if (url.constructor === Array || url.__proto__.constructor === Array || Object.prototype.toString.call(url) === '[object Array]') {
                 var menu = new Menu();
                 var item;
                 for (var i = 0, il = url.length; i < il; i++) {
-                    url[i] = url[i].replace("&text;", $(el).text());
+                    url[i] = url[i].replace('&text;', $(el).text());
                     if (i < tt.length) {
                         item = new MenuItem({
                             label: tt[i], click(item) {
@@ -287,12 +287,12 @@
                 menu.popup({ window: remote.getCurrentWindow(), x: e.pageX, y: e.pageY });
             }
             else if (pmt) {
-                url = url.replace("&text;", $(el).text()) + extra;
+                url = url.replace('&text;', $(el).text()) + extra;
                 client.commandInput.val(url);
                 setSelectionRange(client.commandInput[0], url.length, url.length);
             }
             else
-                client.send(url.replace("&text;", $(el).text()) + extra + '\n', true);
+                client.send(url.replace('&text;', $(el).text()) + extra + '\n', true);
         }
 
         function MXPMenuHandler(cmd, pmt) {
@@ -307,7 +307,7 @@
         // eslint-disable-next-line no-unused-vars
         function doMXPTooltip(el) {
             el = $(el);
-            el.prop("title", el.prop("title").replace("&text;", el.text()));
+            el.prop('title', el.prop('title').replace('&text;', el.text()));
         }
 
         function selectAll() {
@@ -331,7 +331,7 @@
                     client.options.buttons[view[1]] = !client.options.buttons[view[1]];
                     updateInterface();
                     client.saveOptions();
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', view[1] + "button"], checked: client.options.buttons[view[1]] });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', view[1] + 'button'], checked: client.options.buttons[view[1]] });
                     break;
                 case 'buttons':
                     client.options.showButtonBar = !client.options.showButtonBar;
@@ -398,10 +398,10 @@
 
 
         function loadTheme(theme) {
-            theme = parseTemplate(theme) + ".css";
+            theme = parseTemplate(theme) + '.css';
             if (!isFileSync(theme))
-                theme = parseTemplate(path.join("{themes}", "default")) + ".css";
-            var el = $("#theme");
+                theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
+            var el = $('#theme');
             if (el.attr('href') != theme)
                 el.attr('href', theme);
         }
@@ -409,55 +409,55 @@
 
         function updateInterface() {
             loadTheme(client.options.theme);
-            $("#display").css('left', '');
-            $("#display-border").css('left', '');
-            $("#command").css('left', '');
+            $('#display').css('left', '');
+            $('#display-border').css('left', '');
+            $('#command').css('left', '');
             if (!client.options.showButtonBar) {
-                $("#buttonbar").css('display', 'none');
-                var w = parseInt($("#buttonbar").css('left'), 10);
+                $('#buttonbar').css('display', 'none');
+                var w = parseInt($('#buttonbar').css('left'), 10);
                 if (isNaN(w)) w = 0;
-                w += $("#buttonbar").outerWidth();
+                w += $('#buttonbar').outerWidth();
 
-                $("#display").css('left', $("#display").offset().left - w);
-                $("#display-border").css('left', $("#display-border").offset().left - w);
-                $("#command").css('left', $("#command").offset().left - w);
+                $('#display').css('left', $('#display').offset().left - w);
+                $('#display-border').css('left', $('#display-border').offset().left - w);
+                $('#command').css('left', $('#command').offset().left - w);
             }
             else {
-                $("#buttonbar").css('display', '');
+                $('#buttonbar').css('display', '');
             }
             if (client.options.scrollLocked) {
-                $("#lock").prop("title", "Unlock display");
-                $("#lock i").removeClass("fa-lock");
-                $("#lock i").addClass("fa-unlock");
-                $("#lock").addClass("on");
+                $('#lock').prop('title', 'Unlock display');
+                $('#lock i').removeClass('fa-lock');
+                $('#lock i').addClass('fa-unlock');
+                $('#lock').addClass('on');
             }
             else {
-                $("#lock").removeClass("on");
-                $("#lock").prop("title", "Lock display");
-                $("#lock i").addClass("fa-lock");
-                $("#lock i").removeClass("fa-unlock");
+                $('#lock').removeClass('on');
+                $('#lock').prop('title', 'Lock display');
+                $('#lock i').addClass('fa-lock');
+                $('#lock i').removeClass('fa-unlock');
             }
             if (!client.options.buttons.connect) {
-                $("#connect").css('display', 'none');
-                $("#disconnect").css('display', 'none');
+                $('#connect').css('display', 'none');
+                $('#disconnect').css('display', 'none');
             }
             else if (client.connecting || client.connected) {
-                $("#connect").css('display', 'none');
-                $("#disconnect").css('display', '');
+                $('#connect').css('display', 'none');
+                $('#disconnect').css('display', '');
             }
             else {
-                $("#connect").css('display', '');
-                $("#disconnect").css('display', 'none');
+                $('#connect').css('display', '');
+                $('#disconnect').css('display', 'none');
             }
-            $("#characters").css('display', client.options.buttons.characters ? '' : 'none');
-            $("#preferences").css('display', client.options.buttons.preferences ? '' : 'none');
-            $("#log").css('display', client.options.buttons.log ? '' : 'none');
-            $("#clear").css('display', client.options.buttons.clear ? '' : 'none');
-            $("#lock").css('display', client.options.buttons.lock ? '' : 'none');
-            $("#map").css('display', client.options.buttons.map ? '' : 'none');
-            $("#mail").css('display', client.options.buttons.mail ? '' : 'none');
-            $("#compose").css('display', client.options.buttons.compose ? '' : 'none');
-            $("#codeEditor").css('display', client.options.buttons.codeEditor ? '' : 'none');
+            $('#characters').css('display', client.options.buttons.characters ? '' : 'none');
+            $('#preferences').css('display', client.options.buttons.preferences ? '' : 'none');
+            $('#log').css('display', client.options.buttons.log ? '' : 'none');
+            $('#clear').css('display', client.options.buttons.clear ? '' : 'none');
+            $('#lock').css('display', client.options.buttons.lock ? '' : 'none');
+            $('#map').css('display', client.options.buttons.map ? '' : 'none');
+            $('#mail').css('display', client.options.buttons.mail ? '' : 'none');
+            $('#compose').css('display', client.options.buttons.compose ? '' : 'none');
+            $('#codeEditor').css('display', client.options.buttons.codeEditor ? '' : 'none');
 
             _status.updateInterface();
             buildButtons();
@@ -474,7 +474,7 @@
             for (var x = 0, xl = context.length; x < xl; x++) {
                 if (!context[x].enabled || context[x].parent != name) continue;
                 var menu;
-                if (context[x].caption === "-")
+                if (context[x].caption === '-')
                     menu = { type: 'separator' };
                 else {
                     menu = {};
@@ -532,7 +532,7 @@
                 for (x = 0; x < xl; x++) {
                     if (!context[x].enabled || context[x].parent) continue;
                     var menu;
-                    if (context[x].caption === "-")
+                    if (context[x].caption === '-')
                         menu = { type: 'separator' };
                     else {
                         menu = {};
@@ -568,12 +568,12 @@
                 else if (client && !client.connecting)
                     ipcRenderer.send('set-overlay', 0);
                 client.raise('focus');
-                $("#commandinput").focus();
+                $('#commandinput').focus();
             });
             window.addEventListener('resize', function () {
                 client.UpdateWindow();
             });
-            _logger = new Worker("./js/logging.js");
+            _logger = new Worker('./js/logging.js');
             _logger.onmessage = (e) => {
                 switch (e.data.event) {
                     case 'started':
@@ -614,7 +614,7 @@
                 else
                     client.error(e);
             };
-            client = new Client($("#display"), $("#commandinput"), remote.getGlobal('settingsFile'));
+            client = new Client($('#display'), $('#commandinput'), remote.getGlobal('settingsFile'));
 
             client.sendChat = (text) => ipcRenderer.send('chat', text);
 
@@ -715,10 +715,10 @@
             client.writeClipboard = window.writeClipboard;
 
             client.version = version;
-            client.host = "www.shadowmud.com";
+            client.host = 'www.shadowmud.com';
             client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
-            client.telnet.GMCPSupports.push("Room 1");
-            client.telnet.GMCPSupports.push("IED 1");
+            client.telnet.GMCPSupports.push('Room 1');
+            client.telnet.GMCPSupports.push('IED 1');
             //client.telnet.GMCPSupports.push("Post 1");
             //client.telnet.GMCPSupports.push('Comm 1');
             client.on('initialized', () => {
@@ -750,7 +750,7 @@
                     if (data.line === remote.getGlobal('character') + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
                         autoLoginCounter = 4;
                     if (data.fragment && data.line === 'Enter your character\'s name (or \'new\' for a new character): ') {
-                        setTimeout( () => client.sendCommand(remote.getGlobal('characterLogin')), 100);
+                        setTimeout(() => client.sendCommand(remote.getGlobal('characterLogin')), 100);
                         autoLoginCounter++;
                     }
                     else if (data.fragment && data.line === 'Password: ') {
@@ -835,7 +835,7 @@
                 if (!shown && client.options.chat.CaptureOnlyOpen) return;
 
                 //capture indented text
-                if (capture > 0 && data.line.startsWith("    ")) {
+                if (capture > 0 && data.line.startsWith('    ')) {
                     ipcRenderer.send('chat', data);
                     data.gagged = client.options.chat.gag;
                     return;
@@ -932,14 +932,14 @@
                 if (options.icon)
                     options.icon = parseTemplate(options.icon);
                 else
-                    options.icon = parseTemplate("{assets}\\icons\\png\\128x128.png");
+                    options.icon = parseTemplate('{assets}\\icons\\png\\128x128.png');
                 if (options.badge)
                     options.badge = parseTemplate(options.badge);
                 if (options.image)
                     options.image = parseTemplate(options.image);
                 options.body = message;
                 if (options.body && options.body.length > 127)
-                    options.body = options.body.substr(0, 127) + "...";
+                    options.body = options.body.substr(0, 127) + '...';
                 var notify = new window.Notification(title, options);
                 notify.onclick = () => {
                     client.emit('notify-clicked', title, message);
@@ -976,29 +976,29 @@
             client.on('scroll-lock', (lock) => {
                 ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: lock });
                 if (lock) {
-                    $("#lock").prop("title", "Unlock display");
-                    $("#lock").addClass("on");
-                    $("#lock i").removeClass("fa-lock");
-                    $("#lock i").addClass("fa-unlock");
+                    $('#lock').prop('title', 'Unlock display');
+                    $('#lock').addClass('on');
+                    $('#lock i').removeClass('fa-lock');
+                    $('#lock i').addClass('fa-unlock');
                 }
                 else {
-                    $("#lock").removeClass("on");
-                    $("#lock").prop("title", "Lock display");
-                    $("#lock i").addClass("fa-lock");
-                    $("#lock i").removeClass("fa-unlock");
+                    $('#lock').removeClass('on');
+                    $('#lock').prop('title', 'Lock display');
+                    $('#lock i').addClass('fa-lock');
+                    $('#lock i').removeClass('fa-unlock');
                 }
                 client.options.scrollLocked = lock;
                 client.saveOptions();
             });
             client.on('connecting', () => {
                 if (client.options.buttons.connect) {
-                    $("#connect").css("display", "none");
-                    $("#disconnect").css("display", '');
+                    $('#connect').css('display', 'none');
+                    $('#disconnect').css('display', '');
                 }
                 ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: false });
                 ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: true });
                 ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: false });
-                $("#immortal").css('display', "none");
+                $('#immortal').css('display', 'none');
                 ipcRenderer.send('set-overlay', 1);
                 _logger.postMessage({ action: 'connected', args: client.connected });
                 _logger.postMessage({
@@ -1013,8 +1013,8 @@
 
             client.on('closed', () => {
                 if (client.options.buttons.connect) {
-                    $("#connect").css("display", '');
-                    $("#disconnect").css("display", "none");
+                    $('#connect').css('display', '');
+                    $('#disconnect').css('display', 'none');
                 }
                 autoLoginCounter = 0;
                 ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: true });
@@ -1028,7 +1028,7 @@
                         autoConnect();
                         break;
                     case 2: //dialog
-                        if ($("#disconnectDialog")[0].open)
+                        if ($('#disconnectDialog')[0].open)
                             return;
                         if (_disconnectTimerID)
                             clearTimeout(_disconnectTimerID);
@@ -1049,7 +1049,7 @@
                             $('#disconnectTimer').text(_disconnectTimer);
                         }, 1000);
                         $('#disconnectTimer').text(_disconnectTimer);
-                        $("#disconnectDialog")[0].showModal();
+                        $('#disconnectDialog')[0].showModal();
                         $('#disconnectDialogReconnect').focus();
                         break;
                     case 4: //character manger
@@ -1083,7 +1083,7 @@
                         autoConnect();
                         break;
                     case 2: //dialog
-                        if ($("#disconnectDialog")[0].open)
+                        if ($('#disconnectDialog')[0].open)
                             return;
                         if (_disconnectTimerID)
                             clearTimeout(_disconnectTimerID);
@@ -1104,7 +1104,7 @@
                             $('#disconnectTimer').text(_disconnectTimer);
                         }, 1000);
                         $('#disconnectTimer').text(_disconnectTimer);
-                        $("#disconnectDialog")[0].showModal();
+                        $('#disconnectDialog')[0].showModal();
                         $('#disconnectDialogReconnect').focus();
                         break;
                     case 4: //character manger
@@ -1146,7 +1146,7 @@
                       */
                     case 'IED.init':
                         ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
-                        $("#immortal").css('display', "block");
+                        $('#immortal').css('display', 'block');
                         break;
                 }
                 ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
@@ -1181,14 +1181,14 @@
                 ipcRenderer.send('set-progress', { value: 0 });
                 ipcRenderer.send('flush', title);
                 client.debug('Flushing map');
-                $("#Progressbar").html('<progress max="100"></progress>');
-                $("#ProgressTitle").html(title || "Importing data&hellip;");
-                $("#Progress")[0].showModal();
+                $('#Progressbar').html('<progress max="100"></progress>');
+                $('#ProgressTitle').html(title || 'Importing data&hellip;');
+                $('#Progress')[0].showModal();
             });
 
             _backup.on('error', (err) => {
-                if ($("#Progress")[0].open)
-                    $("#Progress")[0].close();
+                if ($('#Progress')[0].open)
+                    $('#Progress')[0].close();
                 ipcRenderer.send('set-progress', { value: -1 });
                 client.error(err);
                 dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -1196,30 +1196,30 @@
                     title: 'Import error',
                     message: err || 'Error importing or exporting data.'
                 });
-                $("#commandinput").focus();
+                $('#commandinput').focus();
             });
 
             _backup.on('abort', (err) => {
-                if ($("#Progress")[0].open)
-                    $("#Progress")[0].close();
+                if ($('#Progress')[0].open)
+                    $('#Progress')[0].close();
                 ipcRenderer.send('set-progress', { value: -1 });
                 dialog.showMessageBox(remote.getCurrentWindow(), {
                     type: 'error',
                     title: 'Aborted',
                     message: err || 'Aborted importing or exporting data.'
                 });
-                $("#commandinput").focus();
+                $('#commandinput').focus();
             });
 
             _backup.on('close', () => {
-                if ($("#Progress")[0].open)
-                    $("#Progress")[0].close();
-                $("#commandinput").focus();
+                if ($('#Progress')[0].open)
+                    $('#Progress')[0].close();
+                $('#commandinput').focus();
                 ipcRenderer.send('set-progress', { value: -1 });
             });
 
             _backup.on('progress', (value) => {
-                $("#Progress progress").val(value);
+                $('#Progress progress').val(value);
                 ipcRenderer.send('set-progress', { value: value / 100.0 });
             });
 
@@ -1242,12 +1242,12 @@
             _status = new Status(client);
             _status.on('display-changed', () => {
                 if (_status.ac) {
-                    $("#health").removeClass('on');
-                    $("#armor").addClass('on');
+                    $('#health').removeClass('on');
+                    $('#armor').addClass('on');
                 }
                 else {
-                    $("#health").addClass('on');
-                    $("#armor").removeClass('on');
+                    $('#health').addClass('on');
+                    $('#armor').removeClass('on');
                 }
                 if (client.options.showArmor != _status.ac) {
                     client.options.showArmor = _status.ac;
@@ -1265,7 +1265,7 @@
             });
             if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
                 _logger.postMessage({ action: 'name', args: remote.getGlobal('character') });
-                $("#character-name").text(remote.getGlobal('character'));
+                $('#character-name').text(remote.getGlobal('character'));
             }
             updateMenu();
             updateInterface();
@@ -1439,7 +1439,7 @@
                 return;
                 */
             };
-            $("#status").on('contextmenu', (e) => {
+            $('#status').on('contextmenu', (e) => {
                 e.preventDefault();
                 var c = new Menu();
                 c.append(new MenuItem({
@@ -1447,7 +1447,7 @@
                     type: 'checkbox',
                     checked: client.options.showStatus,
                     click: () => {
-                        toggleView("status");
+                        toggleView('status');
                     }
                 }));
                 c.append(new MenuItem({
@@ -1462,7 +1462,7 @@
                     type: 'checkbox',
                     checked: client.options.showStatusWeather,
                     click: () => {
-                        toggleView("weather");
+                        toggleView('weather');
                     }
                 }));
 
@@ -1474,7 +1474,7 @@
                             type: 'checkbox',
                             checked: client.options.showStatusLimbs,
                             click: () => {
-                                toggleView("limbs");
+                                toggleView('limbs');
                             }
                         },
                         { type: 'separator' },
@@ -1483,7 +1483,7 @@
                             type: 'checkbox',
                             checked: !client.options.showArmor,
                             click: () => {
-                                toggleView("limbhealth");
+                                toggleView('limbhealth');
                             }
                         },
                         {
@@ -1491,7 +1491,7 @@
                             type: 'checkbox',
                             checked: client.options.showArmor,
                             click: () => {
-                                toggleView("limbarmor");
+                                toggleView('limbarmor');
                             }
                         },
                     ]
@@ -1501,7 +1501,7 @@
                     type: 'checkbox',
                     checked: client.options.showStatusHealth,
                     click: () => {
-                        toggleView("health");
+                        toggleView('health');
                     }
                 }));
                 c.append(new MenuItem({
@@ -1509,7 +1509,7 @@
                     type: 'checkbox',
                     checked: client.options.showStatusExperience,
                     click: () => {
-                        toggleView("experience");
+                        toggleView('experience');
                     }
                 }));
                 c.append(new MenuItem({
@@ -1517,7 +1517,7 @@
                     type: 'checkbox',
                     checked: client.options.showStatusPartyHealth,
                     click: () => {
-                        toggleView("partyhealth");
+                        toggleView('partyhealth');
                     }
                 }));
                 c.append(new MenuItem({
@@ -1525,7 +1525,7 @@
                     type: 'checkbox',
                     checked: client.options.showStatusCombatHealth,
                     click: () => {
-                        toggleView("combathealth");
+                        toggleView('combathealth');
                     }
                 }));
                 c.append(new MenuItem({
@@ -1533,7 +1533,7 @@
                     type: 'checkbox',
                     checked: client.options.lagMeter,
                     click: () => {
-                        toggleView("lagmeter");
+                        toggleView('lagmeter');
                     }
                 }));
                 if (client.options.enableDebug || remote.getGlobal('debug')) {
@@ -1547,7 +1547,7 @@
                 c.popup({ window: remote.getCurrentWindow() });
             });
 
-            $("#buttonbar").on('contextmenu', (e) => {
+            $('#buttonbar').on('contextmenu', (e) => {
                 e.preventDefault();
                 var c = new Menu();
                 c.append(new MenuItem({
@@ -1555,7 +1555,7 @@
                     type: 'checkbox',
                     checked: client.options.showButtonBar,
                     click: () => {
-                        toggleView("buttons");
+                        toggleView('buttons');
                     }
                 }));
                 c.append(new MenuItem({ type: 'separator' }));
@@ -1564,7 +1564,7 @@
                     type: 'checkbox',
                     checked: client.options.buttons.connect,
                     click: () => {
-                        toggleView("button.connect");
+                        toggleView('button.connect');
                     }
                 }));
                 c.append(new MenuItem({
@@ -1572,7 +1572,7 @@
                     type: 'checkbox',
                     checked: client.options.buttons.characters,
                     click: () => {
-                        toggleView("button.characters");
+                        toggleView('button.characters');
                     }
                 }));
                 c.append(new MenuItem({
@@ -1580,7 +1580,7 @@
                     type: 'checkbox',
                     checked: client.options.buttons.codeEditor,
                     click: () => {
-                        toggleView("button.codeEditor");
+                        toggleView('button.codeEditor');
                     }
                 }));
                 c.append(new MenuItem({
@@ -1588,7 +1588,7 @@
                     type: 'checkbox',
                     checked: client.options.buttons.preferences,
                     click: () => {
-                        toggleView("button.preferences");
+                        toggleView('button.preferences');
                     }
                 }));
                 c.append(new MenuItem({
@@ -1596,7 +1596,7 @@
                     type: 'checkbox',
                     checked: client.options.buttons.log,
                     click: () => {
-                        toggleView("button.log");
+                        toggleView('button.log');
                     }
                 }));
                 c.append(new MenuItem({
@@ -1604,7 +1604,7 @@
                     type: 'checkbox',
                     checked: client.options.buttons.clear,
                     click: () => {
-                        toggleView("button.clear");
+                        toggleView('button.clear');
                     }
                 }));
                 c.append(new MenuItem({
@@ -1612,7 +1612,7 @@
                     type: 'checkbox',
                     checked: client.options.buttons.lock,
                     click: () => {
-                        toggleView("button.lock");
+                        toggleView('button.lock');
                     }
                 }));
                 c.append(new MenuItem({
@@ -1620,7 +1620,7 @@
                     type: 'checkbox',
                     checked: client.options.buttons.map,
                     click: () => {
-                        toggleView("button.map");
+                        toggleView('button.map');
                     }
                 }));
                 /*
@@ -1646,7 +1646,7 @@
                     type: 'checkbox',
                     checked: client.options.buttons.user,
                     click: () => {
-                        toggleView("button.user");
+                        toggleView('button.user');
                     }
                 }));
                 if (client.options.enableDebug || remote.getGlobal('debug')) {
@@ -1660,7 +1660,7 @@
                 c.popup({ window: remote.getCurrentWindow() });
             });
 
-            $("#commandinput").on('contextmenu', (e) => {
+            $('#commandinput').on('contextmenu', (e) => {
                 e.preventDefault();
                 var inputMenu = Menu.buildFromTemplate([
                     { role: 'undo' },
@@ -1700,13 +1700,13 @@
                             start: start,
                             end: end,
                             click: function (item) {
-                                var value = $("#commandinput").val();
+                                var value = $('#commandinput').val();
                                 value = value.substring(0, item.start) + item.label + value.substring(item.end);
-                                $("#commandinput").val(value);
-                                $("#commandinput")[0].selectionStart = value.length;
-                                $("#commandinput")[0].selectionEnd = value.length;
-                                $("#commandinput").blur();
-                                $("#commandinput").focus();
+                                $('#commandinput').val(value);
+                                $('#commandinput')[0].selectionStart = value.length;
+                                $('#commandinput')[0].selectionEnd = value.length;
+                                $('#commandinput').blur();
+                                $('#commandinput').focus();
                             }
                         }));
                     }
@@ -1771,7 +1771,7 @@
                     break;
                 case 2:
                     /*jslint evil: true */
-                    var f = new Function("try { " + item.value + "} catch (e) { if(this.options.showScriptErrors) this.error(e);}");
+                    var f = new Function('try { ' + item.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                     ret = f.apply(client);
                     if (ret)
                         ret = client.parseOutgoing(ret);
@@ -1786,7 +1786,7 @@
             if (item.send) {
                 if (!ret.endsWith('\n'))
                     ret += '\n';
-                if (item.chain && client.commandInput.val().endsWith(" ")) {
+                if (item.chain && client.commandInput.val().endsWith(' ')) {
                     client.commandInput.val(client.commandInput.val() + ret);
                     client.sendCommand();
                 }
@@ -1811,7 +1811,7 @@
                     break;
                 case 2:
                     /*jslint evil: true */
-                    var f = new Function("try { " + button.value + "} catch (e) { if(this.options.showScriptErrors) this.error(e);}");
+                    var f = new Function('try { ' + button.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                     ret = f.apply(client);
                     if (typeof ret === 'string')
                         ret = client.parseOutgoing(ret);
@@ -1825,7 +1825,7 @@
             if (button.send) {
                 if (!ret.endsWith('\n'))
                     ret += '\n';
-                if (button.chain && client.commandInput.val().endsWith(" ")) {
+                if (button.chain && client.commandInput.val().endsWith(' ')) {
                     client.commandInput.val(client.commandInput.val() + ret);
                     client.sendCommand();
                 }
@@ -1838,7 +1838,7 @@
         }
 
         function buildButtons() {
-            var buttons = $("#user-buttons");
+            var buttons = $('#user-buttons');
             buttons.empty();
             if (!client.options.buttons.user)
                 return;
@@ -1858,13 +1858,13 @@
                         button.addClass('button-stretch');
 
                     button.prop('title', item.caption);
-                    if (item.icon.startsWith("fa-"))
+                    if (item.icon.startsWith('fa-'))
                         button.html('<i class="fa ' + item.icon + '"></i>');
-                    else if (item.icon.startsWith("gi-"))
+                    else if (item.icon.startsWith('gi-'))
                         button.html('<i class="glyphicon glyphicon-' + item.icon.substring(3) + '"></i>');
-                    else if (item.icon.startsWith("glyphicon-"))
+                    else if (item.icon.startsWith('glyphicon-'))
                         button.html('<i class="glyphicon ' + item.icon + '"></i>');
-                    else if (item.icon.startsWith("."))
+                    else if (item.icon.startsWith('.'))
                         button.html('<i class="fa button-icon ' + item.icon.substring(1) + '"></i>');
                     else if (item.icon.length > 0)
                         button.html('<img src="' + parseTemplate(item.icon) + '" />');
@@ -1951,16 +1951,16 @@
         }
 
         ipcRenderer.on('update-progress', (event, progressObj) => {
-            if (!$("#update-progress")[0].open) {
-                $("#update-progress-title").html("Downloading update&hellip;");
-                $("#update-progress")[0].show();
+            if (!$('#update-progress')[0].open) {
+                $('#update-progress-title').html('Downloading update&hellip;');
+                $('#update-progress')[0].show();
             }
-            $("#update-progressbar").val(progressObj.percent);
+            $('#update-progressbar').val(progressObj.percent);
         });
 
         ipcRenderer.on('update-downloaded', () => {
-            if ($("#update-progress")[0].open)
-                $("#update-progress")[0].close();
+            if ($('#update-progress')[0].open)
+                $('#update-progress')[0].close();
         });
 
         ipcRenderer.on('flush-end', (event, sender) => {
@@ -1975,7 +1975,7 @@
         ipcRenderer.on('load-char', (event, char) => {
             if (!client.connected) {
                 _logger.postMessage({ action: 'name', args: char });
-                $("#character-name").text(char);
+                $('#character-name').text(char);
             }
             _backup.mapFile = remote.getGlobal('mapFile');
             client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
@@ -1985,7 +1985,7 @@
         ipcRenderer.on('load-default', () => {
             if (!client.connected) {
                 _logger.postMessage({ action: 'name', args: '' });
-                $("#character-name").text("&nbsp;");
+                $('#character-name').text('&nbsp;');
             }
             _backup.mapFile = remote.getGlobal('mapFile');
         });
@@ -1996,25 +1996,25 @@
         });
 
         ipcRenderer.on('setting-changed', (event, data) => {
-            if (data.type === "mapper") {
+            if (data.type === 'mapper') {
                 client.options.mapper[data.name] = data.value;
                 client.saveOptions();
             }
-            else if (data.type === "profiles") {
+            else if (data.type === 'profiles') {
                 client.options.profiles[data.name] = data.value;
-                if (data.name === "enabled")
+                if (data.name === 'enabled')
                     updateMenu();
                 client.saveOptions();
             }
-            else if (data.type === "chat") {
+            else if (data.type === 'chat') {
                 client.options.chat[data.name] = data.value;
                 client.saveOptions();
             }
-            else if (data.type === "extensions") {
+            else if (data.type === 'extensions') {
                 client.options.extensions[data.name] = data.value;
                 client.saveOptions();
             }
-            else if (data.type === "windows") {
+            else if (data.type === 'windows') {
                 if (!client.options.windows[data.name])
                     client.options.windows[data.name] = { options: {} };
                 else if (!client.options.windows[data.name].options)
@@ -2130,7 +2130,7 @@
             }
             else
                 ipcRenderer.send('show-window', 'help', { show: true, file: 'help.html', icon: 'help', alwaysOnTopClient: true });
-        }        
+        }
 
         // eslint-disable-next-line no-unused-vars
         function showLogViewer() {
@@ -2188,7 +2188,7 @@
                 $('#pasteSpecial-replace').prop('disabled', !client.options.pasteSpecialReplaceEnabled);
                 $('#pasteSpecial-replace-enable').prop('checked', client.options.pasteSpecialReplaceEnabled);
 
-                $("#pasteSpecial")[0].showModal();
+                $('#pasteSpecial')[0].showModal();
             }
             else
                 pasteSpecialOk(true);
@@ -2206,7 +2206,7 @@
 
                 client.saveOptions();
                 $('#pasteSpecial')[0].close();
-                $("#commandinput").focus();
+                $('#commandinput').focus();
             }
             var post = client.options.pasteSpecialPostfixEnabled ? client.options.pasteSpecialPostfix : 0;
             var pre = client.options.pasteSpecialPrefixEnabled ? client.options.pasteSpecialPrefix : 0;
@@ -2266,7 +2266,7 @@
                 _disconnectCounter = 0;
             }
             $('#disconnectDialog')[0].close();
-            $("#commandinput").focus();
+            $('#commandinput').focus();
         }
 
         $(document).ready(init);

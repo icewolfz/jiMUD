@@ -67,7 +67,7 @@ if (!process.env.PORTABLE_EXECUTABLE_DIR) {
         return;
     }
     else if (argv.v) {
-        console.log(`jiMUD v${require("../package.json").version}`);
+        console.log(`jiMUD v${require('../package.json').version}`);
         app.quit();
         return;
     }
@@ -116,12 +116,12 @@ function loadCharacter(char) {
     if (!characters)
         characters = { load: 0, characters: {} };
     if (!characters.characters[char]) {
-        characters.characters[char] = { settings: path.join("{characters}", char + ".json"), map: path.join("{characters}", char + ".map") };
-        var d = settings.Settings.load(parseTemplate(path.join("{data}", "settings.json")));
+        characters.characters[char] = { settings: path.join('{characters}', char + '.json'), map: path.join('{characters}', char + '.map') };
+        var d = settings.Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
         d.save(parseTemplate(characters.characters[char].settings));
-        fs.writeFileSync(path.join(app.getPath('userData'), "characters.json"), JSON.stringify(characters));
-        if (isFileSync(parseTemplate(path.join("{data}", "map.sqlite")))) {
-            copyFile(parseTemplate(path.join("{data}", "map.sqlite")), parseTemplate(characters.characters[char].map));
+        fs.writeFileSync(path.join(app.getPath('userData'), 'characters.json'), JSON.stringify(characters));
+        if (isFileSync(parseTemplate(path.join('{data}', 'map.sqlite')))) {
+            copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), parseTemplate(characters.characters[char].map));
         }
     }
     global.character = char;
@@ -141,17 +141,17 @@ var menuTemp = [
         id: 'file',
         submenu: [
             {
-                label: "&Connect",
-                id: "connect",
-                accelerator: "CmdOrCtrl+N",
+                label: '&Connect',
+                id: 'connect',
+                accelerator: 'CmdOrCtrl+N',
                 click: () => {
                     win.webContents.executeJavaScript('client.connect()');
                 }
             },
             {
-                label: "&Disconnect",
-                id: "disconnect",
-                accelerator: "CmdOrCtrl+D",
+                label: '&Disconnect',
+                id: 'disconnect',
+                accelerator: 'CmdOrCtrl+D',
                 enabled: false,
                 click: () => {
                     win.webContents.executeJavaScript('client.close()');
@@ -161,9 +161,9 @@ var menuTemp = [
                 type: 'separator'
             },
             {
-                label: "Ch&aracters...",
-                id: "characters",
-                accelerator: "CmdOrCtrl+H",
+                label: 'Ch&aracters...',
+                id: 'characters',
+                accelerator: 'CmdOrCtrl+H',
                 click: () => {
                     win.webContents.executeJavaScript('showCharacters()');
                 }
@@ -171,7 +171,7 @@ var menuTemp = [
             { type: 'separator' },
             {
                 label: '&Log',
-                id: "log",
+                id: 'log',
                 type: 'checkbox',
                 checked: false,
                 click: () => {
@@ -190,7 +190,7 @@ var menuTemp = [
             {
                 label: '&Preferences...',
                 id: 'preferences',
-                accelerator: "CmdOrCtrl+Comma",
+                accelerator: 'CmdOrCtrl+Comma',
                 click: showPrefs
             },
             {
@@ -283,7 +283,7 @@ var menuTemp = [
         submenu: [
             {
                 label: '&Lock',
-                id: "lock",
+                id: 'lock',
                 type: 'checkbox',
                 checked: false,
                 click: () => {
@@ -297,7 +297,7 @@ var menuTemp = [
                         winWho.show();
                         return;
                     }
-                    shell.openExternal("http://www.shadowmud.com/who.php", '_blank');
+                    shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
                 }
             },
             {
@@ -309,7 +309,7 @@ var menuTemp = [
                 submenu: [
                     {
                         label: '&Visible',
-                        id: "statusvisible",
+                        id: 'statusvisible',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -318,7 +318,7 @@ var menuTemp = [
                     },
                     {
                         label: '&Refresh',
-                        id: "refresh",
+                        id: 'refresh',
                         click: () => {
                             win.webContents.executeJavaScript('client.sendGMCP(\'Core.Hello { "client": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');');
                         }
@@ -326,7 +326,7 @@ var menuTemp = [
                     { type: 'separator' },
                     {
                         label: '&Weather',
-                        id: "weather",
+                        id: 'weather',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -335,11 +335,11 @@ var menuTemp = [
                     },
                     {
                         label: '&Limbs',
-                        id: "limbsmenu",
+                        id: 'limbsmenu',
                         submenu: [
                             {
                                 label: '&Visible',
-                                id: "limbs",
+                                id: 'limbs',
                                 type: 'checkbox',
                                 checked: true,
                                 click: () => {
@@ -349,7 +349,7 @@ var menuTemp = [
                             { type: 'separator' },
                             {
                                 label: '&Health',
-                                id: "limbhealth",
+                                id: 'limbhealth',
                                 type: 'checkbox',
                                 checked: true,
                                 click: () => {
@@ -358,7 +358,7 @@ var menuTemp = [
                             },
                             {
                                 label: '&Armor',
-                                id: "limbarmor",
+                                id: 'limbarmor',
                                 type: 'checkbox',
                                 checked: true,
                                 click: () => {
@@ -369,7 +369,7 @@ var menuTemp = [
                     },
                     {
                         label: '&Health',
-                        id: "health",
+                        id: 'health',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -378,7 +378,7 @@ var menuTemp = [
                     },
                     {
                         label: '&Experience',
-                        id: "experience",
+                        id: 'experience',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -387,7 +387,7 @@ var menuTemp = [
                     },
                     {
                         label: '&Party Health',
-                        id: "partyhealth",
+                        id: 'partyhealth',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -396,7 +396,7 @@ var menuTemp = [
                     },
                     {
                         label: '&Combat Health',
-                        id: "combathealth",
+                        id: 'combathealth',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -405,7 +405,7 @@ var menuTemp = [
                     },
                     {
                         label: '&Lag meter',
-                        id: "lagmeter",
+                        id: 'lagmeter',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -427,7 +427,7 @@ var menuTemp = [
                 submenu: [
                     {
                         label: '&Visible',
-                        id: "buttonsvisible",
+                        id: 'buttonsvisible',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -437,7 +437,7 @@ var menuTemp = [
                     { type: 'separator' },
                     {
                         label: '&Connect',
-                        id: "connectbutton",
+                        id: 'connectbutton',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -446,7 +446,7 @@ var menuTemp = [
                     },
                     {
                         label: '&Characters',
-                        id: "charactersbutton",
+                        id: 'charactersbutton',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -455,13 +455,13 @@ var menuTemp = [
                     },
                     {
                         label: 'Code &editor',
-                        id: "codeEditorbutton",
+                        id: 'codeEditorbutton',
                         type: 'checkbox',
                         click: showCodeEditor
                     },
                     {
                         label: '&Preferences',
-                        id: "preferencesbutton",
+                        id: 'preferencesbutton',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -470,7 +470,7 @@ var menuTemp = [
                     },
                     {
                         label: '&Log',
-                        id: "logbutton",
+                        id: 'logbutton',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -479,7 +479,7 @@ var menuTemp = [
                     },
                     {
                         label: '&Clear',
-                        id: "clearbutton",
+                        id: 'clearbutton',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -488,7 +488,7 @@ var menuTemp = [
                     },
                     {
                         label: '&Lock',
-                        id: "lockbutton",
+                        id: 'lockbutton',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -497,7 +497,7 @@ var menuTemp = [
                     },
                     {
                         label: '&Map',
-                        id: "mapbutton",
+                        id: 'mapbutton',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -526,7 +526,7 @@ var menuTemp = [
                     */
                     {
                         label: '&User buttons',
-                        id: "userbutton",
+                        id: 'userbutton',
                         type: 'checkbox',
                         checked: true,
                         click: () => {
@@ -639,7 +639,7 @@ var menuTemp = [
             {
                 label: '&ShadowMUD...',
                 click: () => {
-                    shell.openExternal("http://www.shadowmud.com/help.php", '_blank');
+                    shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
                 }
             },
             {
@@ -651,7 +651,7 @@ var menuTemp = [
             {
                 label: '&jiMUD website...',
                 click: () => {
-                    shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
+                    shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
                 }
             },
             { type: 'separator' },
@@ -779,7 +779,7 @@ function addInputContext(window) {
 function createMenu() {
     var profiles;
     for (var m = 0; m < menuTemp.length; m++) {
-        if (menuTemp[m].id === "profiles") {
+        if (menuTemp[m].id === 'profiles') {
             profiles = menuTemp[m];
             break;
         }
@@ -796,19 +796,19 @@ function createMenu() {
             }
         });
 
-    var p = path.join(app.getPath('userData'), "profiles");
+    var p = path.join(app.getPath('userData'), 'profiles');
     if (isDirSync(p)) {
         var files = fs.readdirSync(p);
         for (var i = 0; i < files.length; i++) {
-            if (path.extname(files[i]) === ".json") {
-                if (files[i].toLowerCase() === "default.json")
+            if (path.extname(files[i]) === '.json') {
+                if (files[i].toLowerCase() === 'default.json')
                     continue;
                 profiles.submenu.push(
                     {
-                        label: path.basename(files[i], ".json"),
+                        label: path.basename(files[i], '.json'),
                         type: 'checkbox',
                         checked: false,
-                        id: path.basename(files[i], ".json").toLowerCase(),
+                        id: path.basename(files[i], '.json').toLowerCase(),
                         click: (menuItem) => {
                             win.webContents.executeJavaScript('client.toggleProfile("' + menuItem.label.toLowerCase() + '")');
                         }
@@ -861,8 +861,8 @@ function createTray() {
         },
         { type: 'separator' },
         {
-            label: "Ch&aracters...",
-            id: "characters",
+            label: 'Ch&aracters...',
+            id: 'characters',
             click: () => {
                 let s = getWindowState('main');
                 if (!s) getWindowState('main', win);
@@ -896,7 +896,7 @@ function createTray() {
                     winWho.show();
                     return;
                 }
-                shell.openExternal("http://www.shadowmud.com/who.php", '_blank');
+                shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
             }
         },
         { type: 'separator' },
@@ -907,7 +907,7 @@ function createTray() {
                 {
                     label: '&ShadowMUD...',
                     click: () => {
-                        shell.openExternal("http://www.shadowmud.com/help.php", '_blank');
+                        shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
                     }
                 },
                 {
@@ -919,7 +919,7 @@ function createTray() {
                 {
                     label: '&jiMUD website...',
                     click: () => {
-                        shell.openExternal("https://github.com/icewolfz/jiMUD/tree/master/docs", '_blank');
+                        shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
                     }
                 },
                 { type: 'separator' },
@@ -1061,7 +1061,7 @@ function updateTray() {
     if (!title || title.length === 0)
         title = global.character;
     if ((set && set.dev) || global.dev)
-        d = " to Development";
+        d = ' to Development';
     switch (overlay) {
         case 1:
             tray.setImage(path.join(__dirname, '../assets/icons/png/connected2.png'));
@@ -1167,7 +1167,7 @@ function createWindow() {
                 return;
             if (result === 0) {
                 win.reload();
-                logError(`Client unresponsive, reload.\n`, true);
+                logError('Client unresponsive, reload.\n', true);
             }
             else if (result === 2) {
                 set = settings.Settings.load(global.settingsFile);
@@ -1202,13 +1202,13 @@ function createWindow() {
                     winCode = null;
                 }
                 closeWindows(false, true);
-                logError(`Client unresponsive, closed.\n`, true);
+                logError('Client unresponsive, closed.\n', true);
                 set.save(global.settingsFile);
                 win.destroy();
                 win = null;
             }
             else
-                logError(`Client unresponsive, waiting.\n`, true);
+                logError('Client unresponsive, waiting.\n', true);
         });
     });
 
@@ -1303,12 +1303,12 @@ function createWindow() {
 
     win.once('ready-to-show', () => {
         addInputContext(win);
-        if (isFileSync(path.join(app.getPath('userData'), "monsters.css"))) {
-            fs.readFile(path.join(app.getPath('userData'), "monsters.css"), 'utf8', (err, data) => {
+        if (isFileSync(path.join(app.getPath('userData'), 'monsters.css'))) {
+            fs.readFile(path.join(app.getPath('userData'), 'monsters.css'), 'utf8', (err, data) => {
                 win.webContents.insertCSS(parseTemplate(data));
             });
         }
-        loadWindowScripts(win, "user");
+        loadWindowScripts(win, 'user');
         if (s.maximized)
             win.maximize();
         win.show();
@@ -1374,13 +1374,13 @@ function createWindow() {
 
 function resetProfiles() {
     updateMenuItem({ menu: ['profiles', 'default'], checked: false });
-    var p = path.join(app.getPath('userData'), "profiles");
+    var p = path.join(app.getPath('userData'), 'profiles');
     if (isDirSync(p)) {
         var files = fs.readdirSync(p);
         for (var i = 0; i < files.length; i++) {
-            if (path.extname(files[i]) !== ".json")
+            if (path.extname(files[i]) !== '.json')
                 continue;
-            updateMenuItem({ menu: ['profiles', path.basename(files[i], ".json")], checked: false });
+            updateMenuItem({ menu: ['profiles', path.basename(files[i], '.json')], checked: false });
         }
     }
 }
@@ -1392,8 +1392,8 @@ if (argv['disable-gpu'])
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-    if (!existsSync(path.join(app.getPath('userData'), "characters")))
-        fs.mkdirSync(path.join(app.getPath('userData'), "characters"));
+    if (!existsSync(path.join(app.getPath('userData'), 'characters')))
+        fs.mkdirSync(path.join(app.getPath('userData'), 'characters'));
 
     loadCharacters();
     var a, al;
@@ -1431,9 +1431,9 @@ app.on('ready', () => {
         else if (argv.v) {
             dialog.showMessageBox({
                 type: 'info',
-                message: `jiMUD v${require("../package.json").version}`
+                message: `jiMUD v${require('../package.json').version}`
             });
-            console.log(`jiMUD v${require("../package.json").version}`);
+            console.log(`jiMUD v${require('../package.json').version}`);
             app.quit();
             return;
         }
@@ -1548,8 +1548,8 @@ ipcMain.on('load-default', () => {
     var name;
     var cWin;
     //already loaded so no need to switch
-    var sf = parseTemplate(path.join("{data}", "settings.json"));
-    var mf = parseTemplate(path.join("{data}", "map.sqlite"));
+    var sf = parseTemplate(path.join('{data}', 'settings.json'));
+    var mf = parseTemplate(path.join('{data}', 'map.sqlite'));
     if (sf === global.settingsFile && mf === global.mapFile) {
         for (name in windows) {
             if (!windows.hasOwnProperty(name) || !windows[name].window)
@@ -1964,12 +1964,12 @@ function sendChat(text) {
 }
 
 ipcMain.on('setting-changed', (event, data) => {
-    if (data.type === "mapper" && data.name === "alwaysOnTopClient") {
+    if (data.type === 'mapper' && data.name === 'alwaysOnTopClient') {
         if (winMap.setParentWindow)
             winMap.setParentWindow(data.value ? win : null);
         winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
     }
-    if (data.type === "mapper" && data.name === "setAlwaysOnTop") {
+    if (data.type === 'mapper' && data.name === 'setAlwaysOnTop') {
         winMap.setAlwaysOnTop(data.value);
         winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
     }
@@ -1978,23 +1978,23 @@ ipcMain.on('setting-changed', (event, data) => {
     if (winMap && event.sender != winMap.webContents)
         winMap.webContents.send('setting-changed', data);
 
-    if (data.type === "chat" && data.name === "alwaysOnTopClient") {
+    if (data.type === 'chat' && data.name === 'alwaysOnTopClient') {
         if (winChat.setParentWindow)
             winChat.setParentWindow(data.value ? win : null);
         winChat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
     }
-    if (data.type === "chat" && data.name === "setAlwaysOnTop") {
+    if (data.type === 'chat' && data.name === 'setAlwaysOnTop') {
         winChat.setAlwaysOnTop(data.value);
         winChat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
     }
-    if (data.type === "mapper" && data.name === "enabled" && !winMap && data.value)
+    if (data.type === 'mapper' && data.name === 'enabled' && !winMap && data.value)
         createMapper();
-    if (!winChat && data.type === "chat" && (data.name === 'captureTells' || data.name === 'captureTalk' || data.name === 'captureLines')) {
+    if (!winChat && data.type === 'chat' && (data.name === 'captureTells' || data.name === 'captureTalk' || data.name === 'captureLines')) {
         if (data.value)
             createChat();
     }
     var name;
-    if (data.type === "windows")
+    if (data.type === 'windows')
         for (name in windows) {
             if (!windows.hasOwnProperty(name) || !windows[name].window)
                 continue;
@@ -2012,7 +2012,7 @@ ipcMain.on('setting-changed', (event, data) => {
             if (windows[name].persistent)
                 createNewWindow(name, windows[name]);
         }
-    if (data.type === "extensions")
+    if (data.type === 'extensions')
         for (name in windows) {
             if (!windows.hasOwnProperty(name) || !windows[name].window)
                 continue;
@@ -2076,7 +2076,7 @@ ipcMain.on('set-progress', (event, args) => {
 });
 
 ipcMain.on('set-progress-window', (event, window, args) => {
-    if (window == "mapper") {
+    if (window == 'mapper') {
         if (winMap)
             winMap.setProgressBar(args.value, args.options);
     }
@@ -2200,17 +2200,17 @@ ipcMain.on('show-window', (event, window, args) => {
 function showSelectedWindow(window, args) {
     if (window === 'about')
         showAbout();
-    else if (window === "prefs")
+    else if (window === 'prefs')
         showPrefs();
-    else if (window === "mapper")
+    else if (window === 'mapper')
         showMapper();
-    else if (window === "editor")
+    else if (window === 'editor')
         showEditor();
-    else if (window === "profiles")
+    else if (window === 'profiles')
         showProfiles();
-    else if (window === "chat")
+    else if (window === 'chat')
         showChat();
-    else if (window === "color")
+    else if (window === 'color')
         showColor(args);
     else if (window === 'code-editor')
         showCodeEditor();
@@ -2268,7 +2268,7 @@ ipcMain.on('profile-toggled', (event, profile, enabled) => {
 
 ipcMain.on('ondragstart', (event, files, icon) => {
     if (!files || files.length === 0) return;
-    if (typeof (files) === "string")
+    if (typeof (files) === 'string')
         event.sender.startDrag({
             file: files,
             icon: icon ? icon : path.join(__dirname, '../assets/icons/png/drag.png')
@@ -2446,14 +2446,14 @@ function parseTemplate(str, data) {
     str = str.replace(/{music}/g, app.getPath('music'));
     str = str.replace(/{pictures}/g, app.getPath('pictures'));
     str = str.replace(/{videos}/g, app.getPath('videos'));
-    str = str.replace(/{characters}/g, path.join(app.getPath('userData'), "characters"));
-    str = str.replace(/{themes}/g, path.join(__dirname, "..", "build", "themes"));
-    str = str.replace(/{assets}/g, path.join(__dirname, "..", "assets"));
+    str = str.replace(/{characters}/g, path.join(app.getPath('userData'), 'characters'));
+    str = str.replace(/{themes}/g, path.join(__dirname, '..', 'build', 'themes'));
+    str = str.replace(/{assets}/g, path.join(__dirname, '..', 'assets'));
 
     if (data) {
         var keys = Object.keys(data);
         for (var key in keys) {
-            var regex = new RegExp("{}" + key + "}", "g");
+            var regex = new RegExp('{}' + key + '}', 'g');
             str = str.replace(regex, data[key]);
         }
     }
@@ -2601,7 +2601,7 @@ function createMapper(show, loading, loaded) {
         winMap.webContents.openDevTools();
 
     winMap.once('ready-to-show', () => {
-        loadWindowScripts(winMap, "map");
+        loadWindowScripts(winMap, 'map');
         addInputContext(winMap);
         if (show) {
             if (s.maximized)
@@ -2692,7 +2692,7 @@ function showProfiles() {
         slashes: true
     }));
     winProfiles.once('ready-to-show', () => {
-        loadWindowScripts(winProfiles, "profiles");
+        loadWindowScripts(winProfiles, 'profiles');
         //addInputContext(winProfiles);
         if (s.maximized)
             winProfiles.maximize();
@@ -3163,8 +3163,8 @@ function copyFile(src, dest) {
 }
 
 function loadCharacters(noLoad) {
-    if (isFileSync(path.join(app.getPath('userData'), "characters.json"))) {
-        characters = fs.readFileSync(path.join(app.getPath('userData'), "characters.json"), 'utf-8');
+    if (isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
+        characters = fs.readFileSync(path.join(app.getPath('userData'), 'characters.json'), 'utf-8');
         if (characters.length > 0) {
             try {
                 characters = JSON.parse(characters);
@@ -3187,9 +3187,9 @@ function logError(err, skipClient) {
     if (err.stack && set.showErrorsExtended)
         msg = err.stack;
     else if (err instanceof TypeError)
-        msg = err.name + " - " + err.message;
+        msg = err.name + ' - ' + err.message;
     else if (err instanceof Error)
-        msg = err.name + " - " + err.message;
+        msg = err.name + ' - ' + err.message;
     else if (err.message)
         msg = err.message;
     else
@@ -3201,8 +3201,8 @@ function logError(err, skipClient) {
     else if (set.logErrors) {
         if (err.stack && !set.showErrorsExtended)
             msg = err.stack;
-        fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), new Date().toLocaleString() + '\n', { flag: 'a' });
-        fs.writeFileSync(path.join(app.getPath('userData'), "jimud.error.log"), msg + '\n', { flag: 'a' });
+        fs.writeFileSync(path.join(app.getPath('userData'), 'jimud.error.log'), new Date().toLocaleString() + '\n', { flag: 'a' });
+        fs.writeFileSync(path.join(app.getPath('userData'), 'jimud.error.log'), msg + '\n', { flag: 'a' });
     }
 }
 
@@ -3210,7 +3210,7 @@ function copyWindowOptions(name) {
     if (!name || !windows[name]) return {};
     var ops = {};
     for (var op in windows[name]) {
-        if (!windows[name].hasOwnProperty(op) || op === "window")
+        if (!windows[name].hasOwnProperty(op) || op === 'window')
             continue;
         ops[op] = windows[name][op];
     }
@@ -3334,7 +3334,7 @@ function createCodeEditor(show, loading, loaded) {
         winCode.webContents.openDevTools();
 
     winCode.once('ready-to-show', () => {
-        loadWindowScripts(winCode, "code.editor");
+        loadWindowScripts(winCode, 'code.editor');
         addInputContext(winCode);
         if (show) {
             if (s.maximized)
@@ -3455,8 +3455,8 @@ function updateJumpList() {
         items: [
             {
                 type: 'task',
-                title: "New Code Editor",
-                description: "Opens a new code editor",
+                title: 'New Code Editor',
+                description: 'Opens a new code editor',
                 program: process.execPath,
                 args: '-eo', // force editor only mode
                 iconPath: process.execPath,
@@ -3478,7 +3478,7 @@ function updateJumpList() {
 }
 
 function createUpdater() {
-    const autoUpdater = require("electron-updater").autoUpdater;
+    const autoUpdater = require('electron-updater').autoUpdater;
     autoUpdater.on('download-progress', progressObj => {
         if (win) {
             win.setProgressBar(progressObj.percent / 100);
@@ -3505,7 +3505,7 @@ function checkForUpdates() {
             else if (global.editorOnly && winCode) {
                 winCode.setProgressBar(-1);
                 winCode.webContents.send('update-downloaded');
-            }           
+            }
         });
         autoUpdater.checkForUpdatesAndNotify();
     }
@@ -3515,7 +3515,7 @@ function checkForUpdatesManual() {
     const autoUpdater = createUpdater();
     autoUpdater.autoDownload = false;
     autoUpdater.on('error', (error) => {
-        dialog.showErrorBox('Error: ', error == null ? "unknown" : (error.stack || error).toString());
+        dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
     });
 
     autoUpdater.on('update-available', () => {
@@ -3529,7 +3529,7 @@ function checkForUpdatesManual() {
                 autoUpdater.downloadUpdate();
             else {
                 if (buttonIndex === 2)
-                    shell.openExternal("https://github.com/icewolfz/jiMUD/releases/latest", '_blank');
+                    shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest', '_blank');
                 if (global.editorOnly)
                     winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
                 else
@@ -3545,7 +3545,7 @@ function checkForUpdatesManual() {
             buttons: ['Ok', 'Open website']
         }, (buttonIndex) => {
             if (buttonIndex === 0)
-                shell.openExternal("https://github.com/icewolfz/jiMUD/releases/latest", '_blank');
+                shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest', '_blank');
             if (global.editorOnly)
                 winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
             else

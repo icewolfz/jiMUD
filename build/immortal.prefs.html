@@ -103,7 +103,7 @@
                     case 'alwaysOnTop':
                         break;
                     default:
-                        _settings.extensions["immortal"][$(this).attr('id')] = this.checked;
+                        _settings.extensions['immortal'][$(this).attr('id')] = this.checked;
                         break;
                 }
             });
@@ -111,34 +111,34 @@
                 switch ($(this).attr('id')) {
                     case 'tempFile-none':
                         if (this.checked)
-                            _settings.extensions["immortal"].tempFile = TempType.none;
+                            _settings.extensions['immortal'].tempFile = TempType.none;
                         break;
                     case 'tempFile-file':
                         if (this.checked)
-                            _settings.extensions["immortal"].tempFile = TempType.file;
+                            _settings.extensions['immortal'].tempFile = TempType.file;
                         break;
                     case 'tempFile-extension':
                         if (this.checked)
-                            _settings.extensions["immortal"].tempFile = TempType.extension;
+                            _settings.extensions['immortal'].tempFile = TempType.extension;
                         break;
                 }
             });
 
             $('input[type="text"]').change(function () {
-                _settings.extensions["immortal"][$(this).attr('id')] = $(this).val();
+                _settings.extensions['immortal'][$(this).attr('id')] = $(this).val();
             });
             $('input[type="number"]').change(function () {
-                _settings.extensions["immortal"][$(this).attr('id')] = parseInt($(this).val(), 10);
+                _settings.extensions['immortal'][$(this).attr('id')] = parseInt($(this).val(), 10);
             });
             $('.selectpicker').change(function () {
                 if ($(this).attr('id') == 'bufferSize')
-                    _settings.extensions["immortal"][$(this).attr('id')] = parseInt($(this).val(), 10);
+                    _settings.extensions['immortal'][$(this).attr('id')] = parseInt($(this).val(), 10);
                 else
-                    _settings.extensions["immortal"][$(this).attr('id')] = $(this).val();
+                    _settings.extensions['immortal'][$(this).attr('id')] = $(this).val();
             });
-            $("#btn-editor").on('click', () => {
+            $('#btn-editor').on('click', () => {
                 dialog.showOpenDialog(remote.getCurrentWindow(), {
-                    defaultPath: path.dirname($("#editor").val()),
+                    defaultPath: path.dirname($('#editor').val()),
                     filters: process.platform === 'win32' ? [
                         { name: 'Programs (*.exe, *.com)', extensions: ['exe', 'com', 'com'] },
                         { name: 'All files (*.*)', extensions: ['*'] },
@@ -152,61 +152,61 @@
                         if (fileNames === undefined) {
                             return;
                         }
-                        $("#editor").val(fileNames[0]);
-                        _settings.extensions["immortal"].editor = fileNames[0];
+                        $('#editor').val(fileNames[0]);
+                        _settings.extensions['immortal'].editor = fileNames[0];
                     });
             });
         });
 
         function loadSettings() {
-            if (!_settings.extensions["immortal"])
+            if (!_settings.extensions['immortal'])
                 resetSettings();
             else {
-                if (!_settings.extensions["immortal"].hasOwnProperty('focusOnFinished'))
-                    _settings.extensions["immortal"].focusOnFinished = true;
-                if (!_settings.extensions["immortal"].hasOwnProperty('selectOnFinished'))
-                    _settings.extensions["immortal"].selectOnFinished = true;
+                if (!_settings.extensions['immortal'].hasOwnProperty('focusOnFinished'))
+                    _settings.extensions['immortal'].focusOnFinished = true;
+                if (!_settings.extensions['immortal'].hasOwnProperty('selectOnFinished'))
+                    _settings.extensions['immortal'].selectOnFinished = true;
             }
-            $("#focusOnFinished").prop('checked', _settings.extensions["immortal"].focusOnFinished);
-            $("#selectOnFinished").prop('checked', _settings.extensions["immortal"].selectOnFinished);
+            $('#focusOnFinished').prop('checked', _settings.extensions['immortal'].focusOnFinished);
+            $('#selectOnFinished').prop('checked', _settings.extensions['immortal'].selectOnFinished);
 
-            $("#openEditor").prop('checked', _settings.extensions["immortal"].openEditor);
-            $("#openExternalEditor").prop('checked', _settings.extensions["immortal"].openExternalEditor);
-            $("#syncFolders").prop('checked', _settings.extensions["immortal"].syncFolders);
-            $("#showQueue").prop('checked', _settings.extensions["immortal"].showQueue);
-            $("#showHidden").prop('checked', _settings.extensions["immortal"].showHidden);
-            $("#uploadOnChange").prop('checked', _settings.extensions["immortal"].uploadOnChange);
+            $('#openEditor').prop('checked', _settings.extensions['immortal'].openEditor);
+            $('#openExternalEditor').prop('checked', _settings.extensions['immortal'].openExternalEditor);
+            $('#syncFolders').prop('checked', _settings.extensions['immortal'].syncFolders);
+            $('#showQueue').prop('checked', _settings.extensions['immortal'].showQueue);
+            $('#showHidden').prop('checked', _settings.extensions['immortal'].showHidden);
+            $('#uploadOnChange').prop('checked', _settings.extensions['immortal'].uploadOnChange);
 
-            $('#tempFile-none').prop('checked', _settings.extensions["immortal"].tempFile === TempType.none);
-            $('#tempFile-extension').prop('checked', _settings.extensions["immortal"].tempFile === TempType.extension);
-            $('#tempFile-file').prop('checked', _settings.extensions["immortal"].tempFile === TempType.file);
+            $('#tempFile-none').prop('checked', _settings.extensions['immortal'].tempFile === TempType.none);
+            $('#tempFile-extension').prop('checked', _settings.extensions['immortal'].tempFile === TempType.extension);
+            $('#tempFile-file').prop('checked', _settings.extensions['immortal'].tempFile === TempType.file);
 
-            $("#debug").prop('checked', _settings.extensions["immortal"].debug);
-            $("#compress").prop('checked', _settings.extensions["immortal"].compress);
-            $("#logErrors").prop('checked', _settings.extensions["immortal"].logErrors);
-            $("#showErrorsExtended").prop('checked', _settings.extensions["immortal"].showErrorsExtended);
+            $('#debug').prop('checked', _settings.extensions['immortal'].debug);
+            $('#compress').prop('checked', _settings.extensions['immortal'].compress);
+            $('#logErrors').prop('checked', _settings.extensions['immortal'].logErrors);
+            $('#showErrorsExtended').prop('checked', _settings.extensions['immortal'].showErrorsExtended);
 
-            $('#bufferSize').val(_settings.extensions["immortal"].bufferSize);
+            $('#bufferSize').val(_settings.extensions['immortal'].bufferSize);
             $('#bufferSize').selectpicker('render');
             $('#bufferSize').change();
 
-            $('#editor').val(_settings.extensions["immortal"].editor);
-            if (!_settings.windows["immortal"] || !_settings.windows["immortal"].options) {
-                $("#persistent").prop('checked', false);
-                $("#alwaysOnTopClient").prop('checked', true);
-                $("#alwaysOnTop").prop('checked', false);
+            $('#editor').val(_settings.extensions['immortal'].editor);
+            if (!_settings.windows['immortal'] || !_settings.windows['immortal'].options) {
+                $('#persistent').prop('checked', false);
+                $('#alwaysOnTopClient').prop('checked', true);
+                $('#alwaysOnTop').prop('checked', false);
             }
             else {
-                $("#persistent").prop('checked', _settings.windows["immortal"].options.persistent);
-                $("#alwaysOnTopClient").prop('checked', _settings.windows["immortal"].options.alwaysOnTopClient);
-                $("#alwaysOnTop").prop('checked', _settings.windows["immortal"].options.alwaysOnTop);
+                $('#persistent').prop('checked', _settings.windows['immortal'].options.persistent);
+                $('#alwaysOnTopClient').prop('checked', _settings.windows['immortal'].options.alwaysOnTopClient);
+                $('#alwaysOnTop').prop('checked', _settings.windows['immortal'].options.alwaysOnTop);
             }
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
         }
 
         function resetSettings() {
-            _settings.extensions["immortal"] = {
+            _settings.extensions['immortal'] = {
                 'local': '',
                 'remote': '',
                 'editor': '',
@@ -227,30 +227,30 @@
                 'selectOnFinished': true,
                 'compress': true
             };
-            if (!_settings.windows["immortal"] || !_settings.windows["immortal"].options)
-                _settings.windows["immortal"].options = {
+            if (!_settings.windows['immortal'] || !_settings.windows['immortal'].options)
+                _settings.windows['immortal'].options = {
                     persistent: false,
                     alwaysOnTopClient: true,
                     alwaysOnTop: false
                 };
             else {
-                _settings.windows["immortal"].options.persistent = false;
-                _settings.windows["immortal"].options.alwaysOnTopClient = true;
-                _settings.windows["immortal"].options.alwaysOnTop = false;
+                _settings.windows['immortal'].options.persistent = false;
+                _settings.windows['immortal'].options.alwaysOnTopClient = true;
+                _settings.windows['immortal'].options.alwaysOnTop = false;
             }
             loadSettings();
         }
 
         // eslint-disable-next-line no-unused-vars
         function saveSettings() {
-            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'immortal', value: _settings.extensions["immortal"] });
+            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'immortal', value: _settings.extensions['immortal'] });
             ipcRenderer.send('setting-changed', {
                 type: 'windows',
                 name: 'immortal',
                 value: {
-                    persistent: $("#persistent").prop('checked'),
-                    alwaysOnTopClient: $("#alwaysOnTopClient").prop('checked'),
-                    alwaysOnTop: $("#alwaysOnTop").prop('checked')
+                    persistent: $('#persistent').prop('checked'),
+                    alwaysOnTopClient: $('#alwaysOnTopClient').prop('checked'),
+                    alwaysOnTop: $('#alwaysOnTop').prop('checked')
                 }
             });
             window.close();
