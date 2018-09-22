@@ -14,6 +14,7 @@
       - Fix room preview item underline casing display
       - Fix code generation of long/short if empty and base not empty
       - Fix room preview to use base long/short if selected long/short is empty
+      - Fix room preview when long/short starts and ends with a quote
 
 ## v0.5.4 2018-09-17
 
