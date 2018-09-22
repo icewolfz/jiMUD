@@ -462,10 +462,6 @@ export class Mapper extends EventEmitter {
         this.refresh();
     }
 
-    public verbose() {
-        sqlite3.verbose();
-    }
-
     public getMapMousePos(evt): MouseData {
         const rect = this._canvas.getBoundingClientRect();
         return {
