@@ -7764,7 +7764,7 @@ export class AreaDesigner extends EditorBase {
             return;
         this.opened = new Date().getTime();
         this.$area = Area.load(this.file);
-        this.doUpdate(UpdateType.buildMap);
+        this.BuildMap();
         this.emit('opened', this.file);
         this.state |= FileState.opened;
         this.changed = false;
@@ -10453,7 +10453,8 @@ export class AreaDesigner extends EditorBase {
                 }
             }
         }
-        this.$selectedRooms.map(r => this.getRoom(r.x, r.y, r.z));
+        if (this.$selectedRooms)
+            this.$selectedRooms.map(r => this.getRoom(r.x, r.y, r.z));
         if (this.$focusedRoom)
             this.$focusedRoom = this.getRoom(this.$focusedRoom.x, this.$focusedRoom.y, this.$focusedRoom.z);
         if (this.$depth >= this.$area.size.depth)
@@ -10467,8 +10468,10 @@ export class AreaDesigner extends EditorBase {
                 this.DrawMap();
             }, 500);
         }
-        else
+        else {
             this.doUpdate(UpdateType.drawMap);
+            this.DrawMap();
+        }
         if (this.$area.size.depth < 2) {
             this.$depth = 0;
             this.$roomEditor.setPropertyOptions({
