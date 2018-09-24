@@ -6527,8 +6527,8 @@ export class AreaDesigner extends EditorBase {
                                         </div>
                                         <div class="col-sm-12 form-group">
                                             <label class="control-label">Limbs
-                                                <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of limbs</span>
-                                                <div class="input-group edit-dropdown">
+                                                <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of limbs, ctrl+click to append</span>
+                                                <div class="input-group edit-dropdown" data-multiple="true">
                                                     <input type="text" id="obj-limbs" class="input-sm form-control">
                                                     <span class="input-group-btn">
                                                         <button id="btn-obj-limbs" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -6708,8 +6708,8 @@ export class AreaDesigner extends EditorBase {
                                     </div>
                                     <div class="col-sm-12 form-group">
                                         <label class="control-label">Limbs
-                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of limbs</span>
-                                            <div class="input-group edit-dropdown">
+                                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of limbs, ctrl+click to append</span>
+                                            <div class="input-group edit-dropdown" data-multiple="true">
                                                 <input type="text" id="obj-limbs" class="input-sm form-control">
                                                 <span class="input-group-btn">
                                                     <button id="btn-obj-limbs" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

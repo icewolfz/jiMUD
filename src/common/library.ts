@@ -1886,10 +1886,20 @@ export function updateEditDropdown(d) {
     const ip = d.querySelector('input');
     m.forEach(i => {
         (<HTMLElement>i).addEventListener('click', (e) => {
-            ip.value = (<HTMLElement>e.target).dataset.value || (<HTMLElement>e.target).textContent || '';
+            if (e.ctrlKey && (d.dataset.multiple === '1' || d.dataset.multiple === 'true')) {
+                if (ip.value.length !== 0)
+                    ip.value += ',' + ((<HTMLElement>e.target).dataset.value || (<HTMLElement>e.target).textContent || '');
+                else
+                    ip.value = (<HTMLElement>e.target).dataset.value || (<HTMLElement>e.target).textContent || '';
+            }
+            else
+                ip.value = (<HTMLElement>e.target).dataset.value || (<HTMLElement>e.target).textContent || '';
             const evt = document.createEvent('HTMLEvents');
             evt.initEvent('change', false, true);
             ip.dispatchEvent(evt);
+            e.returnValue = false;
+            e.preventDefault();
+            return false;
         });
     });
 }
@@ -1898,17 +1908,29 @@ export function initEditDropdown(d) {
     updateEditDropdown(d);
     const ip = d.querySelector('input');
     const b = d.querySelector('button');
+
     b.addEventListener('click', () => {
         const m = Array.from(b.nextElementSibling.querySelectorAll('li > a'));
+        let val;
+        if (d.dataset.multiple === '1' || d.dataset.multiple === 'true')
+            val = ip.value.toLowerCase().split(',');
+        else if (ip.value.length !== 0)
+            val = [ip.value.toLowerCase()];
+        else
+            val = [];
         m.forEach(i => {
             (<HTMLElement>i).classList.remove('active');
         });
-        let el: any = m.filter(i => (<HTMLElement>i).dataset.value === ip.value);
+        let el: any = m.filter(i => (val.indexOf(((<HTMLElement>i).dataset.value || '').toLowerCase()) !== -1));
         if (el.length === 0)
-            el = m.filter(i => (<HTMLElement>i).textContent === ip.value);
+            el = m.filter(i => val.indexOf((<HTMLElement>i).textContent.toLowerCase()) !== -1);
         if (el.length === 0)
             return;
-        el = el[0];
-        el.classList.add('active');
+        if (d.dataset.multiple === '1' || d.dataset.multiple === 'true')
+            el.forEach(a => a.classList.add('active'));
+        else {
+            el = el[0];
+            el.classList.add('active');
+        }
     });
 }

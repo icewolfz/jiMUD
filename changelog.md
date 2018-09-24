@@ -2,6 +2,9 @@
 
 ## v0.5.5
 
+- **New:**
+  - Code editor:
+    - Allow ctrl+click to append items for object editor limb selections
 - **Fixed:**
   - Correctly disable check for update menu item while in the middle of a check
   - Code editor:
@@ -17,6 +20,7 @@
       - Fix room preview when long/short starts and ends with a quote
       - Fix code generation and not correctly handling quotes in certain places
       - Fix drop downs in object editor
+      - Fix ctrl+click opening multiple editor windows when using drop down list
 
 ## v0.5.4 2018-09-17
 
