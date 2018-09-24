@@ -6738,7 +6738,7 @@ export class AreaDesigner extends EditorBase {
                                         reset: (e) => {
                                             $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'accessory').selectpicker('render');
                                             e.page.querySelector('#obj-limbs').value = ed.value.limbs || '';
-                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-maxWearable').value = ed.value.maxWearable || '0';
                                             initEditDropdown(e.page.querySelector('#obj-limbs-list').closest('.edit-dropdown'));
@@ -7051,7 +7051,7 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-size').value = ed.value.size || '0';
                                             e.page.querySelector('#obj-describers').value = ed.value.describers || '';
                                             initEditDropdown(e.page.querySelector('#obj-size-list').closest('.edit-dropdown'));
@@ -7092,7 +7092,7 @@ export class AreaDesigner extends EditorBase {
                                         </label>
                                     </div>`,
                                         reset: (e) => {
-                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-size').value = ed.value.size || '1';
                                             e.page.querySelector('#obj-describers').value = ed.value.describers || '';
                                             initEditDropdown(e.page.querySelector('#obj-size-list').closest('.edit-dropdown'));
@@ -7131,7 +7131,7 @@ export class AreaDesigner extends EditorBase {
                                         reset: (e) => {
                                             $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'bell').selectpicker('render');
                                             $(e.page.querySelector('#obj-wType')).val(ed.value.subType || '').selectpicker('render');
-                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
                                     }), wizSkills, wizBonuses]);
@@ -7153,7 +7153,7 @@ export class AreaDesigner extends EditorBase {
                                     </label>
                                 </div>`,
                                         reset: (e) => {
-                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
                                     }), wizSkills, wizBonuses]);
@@ -7184,7 +7184,7 @@ export class AreaDesigner extends EditorBase {
                                     </div>`,
                                         reset: (e) => {
                                             $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'blunt').selectpicker('render');
-                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                         }
                                     }), wizSkills, wizBonuses]);
@@ -7240,7 +7240,7 @@ export class AreaDesigner extends EditorBase {
                                     </div>`,
                                         reset: (e) => {
                                             $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'blunt').selectpicker('render');
-                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-size').value = ed.value.size || '0';
                                             e.page.querySelector('#obj-describers').value = ed.value.describers || '';
@@ -7430,7 +7430,7 @@ export class AreaDesigner extends EditorBase {
                                     </div>`,
                                         reset: (e) => {
                                             $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'staff').selectpicker('render');
-                                            $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
+                                            $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-class').value = ed.value.class || '1';
                                             e.page.querySelector('#obj-canBait').checked = !ed.value.hasOwnProperty('canBait') || ed.value.canBait;

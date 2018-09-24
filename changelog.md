@@ -21,6 +21,7 @@
       - Fix code generation and not correctly handling quotes in certain places
       - Fix drop downs in object editor
       - Fix ctrl+click opening multiple editor windows when using drop down list
+      - Fix quality value for object editor not being set correctly
 
 ## v0.5.4 2018-09-17
 
