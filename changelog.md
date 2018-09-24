@@ -16,6 +16,7 @@
       - Fix room preview to use base long/short if selected long/short is empty
       - Fix room preview when long/short starts and ends with a quote
       - Fix code generation and not correctly handling quotes in certain places
+      - Fix drop downs in object editor
 
 ## v0.5.4 2018-09-17
 

@@ -6568,6 +6568,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-limbs').value = ed.value.limbs || '';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-maxWearable').value = ed.value.maxWearable || '0';
+                                            initEditDropdown(e.page.querySelector('#obj-limbs-list').closest('.edit-dropdown'));
                                         }
                                     }), new WizardDataGridPage({
                                         title: 'Damaged armor descriptions',
@@ -6740,6 +6741,7 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-maxWearable').value = ed.value.maxWearable || '0';
+                                            initEditDropdown(e.page.querySelector('#obj-limbs-list').closest('.edit-dropdown'));
                                         }
                                     }), new WizardDataGridPage({
                                         title: 'Damaged armor descriptions',
@@ -7031,7 +7033,7 @@ export class AreaDesigner extends EditorBase {
                                                     <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                    <ul id="obj-size-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                         <li><a href="#">Small</a></li>
                                                         <li><a href="#">Medium</a></li>
                                                         <li><a href="#">Large</a></li>
@@ -7052,6 +7054,7 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-size').value = ed.value.size || '0';
                                             e.page.querySelector('#obj-describers').value = ed.value.describers || '';
+                                            initEditDropdown(e.page.querySelector('#obj-size-list').closest('.edit-dropdown'));
                                         }
                                     }), wizBonuses]);
                                     break;
@@ -7071,7 +7074,7 @@ export class AreaDesigner extends EditorBase {
                                                     <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                    <ul id="obj-size-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                         <li><a href="#">Small</a></li>
                                                         <li><a href="#">Medium</a></li>
                                                         <li><a href="#">Large</a></li>
@@ -7092,6 +7095,7 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.subType || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-size').value = ed.value.size || '1';
                                             e.page.querySelector('#obj-describers').value = ed.value.describers || '';
+                                            initEditDropdown(e.page.querySelector('#obj-size-list').closest('.edit-dropdown'));
                                         }
                                     }), wizBonuses]);
                                     break;
@@ -7211,7 +7215,7 @@ export class AreaDesigner extends EditorBase {
                                                     <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                    <ul id="obj-size-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                         <li><a href="#">Small</a></li>
                                                         <li><a href="#">Medium</a></li>
                                                         <li><a href="#">Large</a></li>
@@ -7240,6 +7244,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-size').value = ed.value.size || '0';
                                             e.page.querySelector('#obj-describers').value = ed.value.describers || '';
+                                            initEditDropdown(e.page.querySelector('#obj-size-list').closest('.edit-dropdown'));
                                         }
                                     }), wizSkills, wizBonuses]);
                                     //spell-checker:enable
@@ -7264,7 +7269,7 @@ export class AreaDesigner extends EditorBase {
                                                 <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                     <span class="caret" style="margin-left: -1px;"></span>
                                                 </button>
-                                                <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                <ul id="obj-preserved-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                     <li><a href="#">Cooked</a></li>
                                                     <li><a href="#">Smoked</a></li>
                                                     <li><a href="#">Salted</a></li>
@@ -7308,6 +7313,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-your-message').value = ed.value.yourMessage || '';
                                             e.page.querySelector('#obj-decay').value = ed.value.decay || '300';
                                             e.page.querySelector('#obj-decay-message').value = ed.value.decayMessage || '';
+                                            initEditDropdown(e.page.querySelector('#obj-preserved-list').closest('.edit-dropdown'));
                                         }
                                     }));
                                     break;
