@@ -5,6 +5,8 @@
 - **New:**
   - Code editor:
     - Allow ctrl+click to append items for object editor limb selections
+- **Changed:**
+  - Update fswin to latest, and use package instead of custom builds
 - **Fixed:**
   - Correctly disable check for update menu item while in the middle of a check
   - Code editor:

@@ -22,7 +22,7 @@ tmp.setGracefulCleanup();
 let fswin;
 if (process.platform.indexOf('win') === 0) {
     try {
-        fswin = require('../../lib/fswin');
+        fswin = require('fswin');
     }
     catch (err) {
         //Ignore as not windows

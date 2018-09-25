@@ -94,10 +94,7 @@
       "maintainer": "icewolfz",
       "icon": "./assets/icons/png/",
       "category": "Game;Network;",
-      "synopsis": "MUD client coded in javascript.",
-      "files": [
-        "!./lib/fswin/**/*"
-      ]
+      "synopsis": "MUD client coded in javascript."
     }
   },
   "dependencies": {
@@ -108,6 +105,7 @@
     "electron-updater": "^3.1.2",
     "font-manager": "^0.3.0",
     "fs-extra": "^6.0.1",
+    "fswin": "^3.18.918",
     "jquery": "^3.3.1",
     "lz-string": "^1.4.4",
     "markdown-it": "^8.4.2",
