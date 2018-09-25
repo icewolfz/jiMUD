@@ -671,7 +671,7 @@
                     logError(error);
                     continue;
                 }
-                if (file.hidden && !options.showhidden)
+                if (file.hidden && !options.showHidden)
                     continue;
                 if (file.size === -2)
                     dirs.push(file);
@@ -777,7 +777,7 @@
                     hidden: dir[d].file[0] === '.',
                     type2: 0
                 };
-                if (file.hidden && !options.showhidden)
+                if (file.hidden && !options.showHidden)
                     continue;
                 if (file.size === -2) {
                     file.type = 'Directory';

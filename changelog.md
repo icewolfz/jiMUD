@@ -6,9 +6,10 @@
   - Code editor:
     - Allow ctrl+click to append items for object editor limb selections
 - **Changed:**
-  - Update fswin to latest, and use package instead of custom builds
+  - Update fswin to 3.18.918, and use package instead of custom builds
 - **Fixed:**
   - Correctly disable check for update menu item while in the middle of a check
+  - Immortal tools: Fix show hidden files/folders preference
   - Code editor:
     - Fix drawing focused room indicator for virtual area and area designer when clicking on axis number
     - Fix room wizard clipboard data grids so they are compatible with area designer data grids
