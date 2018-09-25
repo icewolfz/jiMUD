@@ -4,9 +4,10 @@
 
 - **New:**
   - Code editor:
-    - Allow ctrl+click to append items for object editor limb selections
+    - Area designer:
+      - Allow ctrl+click to append items for object editor limb selections
 - **Changed:**
-  - Update fswin to 3.18.918, and use package instead of custom builds
+  - Update fswin to 3.18.918, and use package instead of custom builds for easier electron upgrades
 - **Fixed:**
   - Correctly disable check for update menu item while in the middle of a check
   - Immortal tools: Fix show hidden files/folders preference
