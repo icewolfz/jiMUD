@@ -4161,7 +4161,7 @@
         $(window).on('resize', () => {
             var tbh = toolbar.outerHeight();
             dock.css('top', tbh + 'px');
-            if (output.outerHeight() < 170 && (dock.outerHeight() + tbh) > 172) {
+            if (options.output && output.outerHeight() < 170 && (dock.outerHeight() + tbh) > 172) {
                 options.outputSize = 170;
                 output.css('height', (options.outputSize - 20) + 'px');
                 dock.css('bottom', options.outputSize + 'px');

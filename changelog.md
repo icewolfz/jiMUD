@@ -18,6 +18,7 @@
     - Fix room wizard clipboard data grids so they are compatible with area designer data grids
     - Fix wizard data grids to correctly restore default data
     - Fix wizard paste button states
+    - Fix output window space when disabled
     - Area designer:
       - Fix room preview to support comma delimited item list
       - Fix room preview item underline casing display
