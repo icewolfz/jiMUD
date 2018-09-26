@@ -68,7 +68,22 @@
       "./lib/**/*",
       "./changelog.md",
       "./readme.md",
-      "./package.json"
+      "./package.json",
+      "!node_modules/**/*.{py,c,gz,sln,map,lib,sh,gyp,gypi,html,md,MD,markdown,txt,tlog,vcxproj,vcxproj.*,yml,xml}",
+      "!node_modules/**/{MAKEFILE,Dockerfile,TODO,README,LICENSE,LICENSE.*,Makefile,License,NOTICE,license}",
+      "!node_modules/**/doc/*",
+      "!node_modules/**/Release/*.{map,lib,exp}",
+      "!node_modules/**/(browser|demo|obj|doc|test)/*",
+      "!node_modules/!(fast-plist|debug)/**/src/*",
+      "!node_modules/**/*.o(bj)?$'",
+      "!node_modules/**/test*",
+      "!node_modules/**/*.debug.js'",
+      "!node_modules/better-sqlite3/deps/*",
+      "!node_modules/better-sqlite3/obj/*",
+      "!node_modules/better-sqlite3/build/Release/test_extension.node",
+      "!node_modules/**/benchmark/*",
+      "!node_modules/**/browser/*",
+      "!node_modules/monaco-editor/!(min)/*"
     ],
     "extends": null,
     "asar": {

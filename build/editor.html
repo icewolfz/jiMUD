@@ -787,9 +787,6 @@
                     var icon;
                     for (var c = 0, cl = _ColorTable.length; c < cl; c += 2) {
                         //generate icon for the first 16 user definable colors, else use predefined icons
-                        //if (c >= 64)
-                        //icon = path.join(__dirname, '../assets/icons/png/colors/' + _ColorTable[c + 1].replace(/\s+/g, "-") + '.png');
-                        //else
                         icon = createIcon(0, 0, 0, '#' + _ColorTable[c], true);
                         fmi.push({
                             label: _ColorTable[c + 1] + ', ' + colorNames[_ColorTable[c + 1]],
