@@ -13,6 +13,7 @@
 - **Fixed:**
   - Correctly disable check for update menu item while in the middle of a check
   - Immortal tools: Fix show hidden files/folders preference
+  - Fix mapper default zoom scale from 25% to 100%
   - Code editor:
     - Fix drawing focused room indicator for virtual area and area designer when clicking on axis number
     - Fix room wizard clipboard data grids so they are compatible with area designer data grids

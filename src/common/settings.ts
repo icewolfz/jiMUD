@@ -14,7 +14,7 @@ export class Mapper {
     public importType = 1;
     public vscroll: number = 0;
     public hscroll: number = 0;
-    public scale: number = 1.0;
+    public scale: number = 100;
     public alwaysOnTop: boolean = false;
     public alwaysOnTopClient: boolean = true;
     public memory: boolean = false;
