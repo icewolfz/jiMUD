@@ -3592,7 +3592,7 @@ function showAbout() {
         x: Math.floor(b.x + b.width / 2 - 225),
         y: Math.floor(b.y + b.height / 2 - 200),
         width: 450,
-        height: 400,
+        height: 440,
         movable: false,
         minimizable: false,
         maximizable: false,
@@ -3604,6 +3604,8 @@ function showAbout() {
     about.webContents.on('crashed', (event, killed) => {
         logError(`About crashed, killed: ${killed}\n`, true);
     });
+
+about.webContents.openDevTools();
 
     about.setMenu(null);
     about.on('closed', () => {

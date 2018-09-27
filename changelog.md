@@ -2,6 +2,10 @@
 
 ## v0.6.0
 
+- **Changed:**
+  - Update electron from 2.0.10 to 3.0.0
+  - Remove memory info from about dialog as 3.0 removes memory metrics data
+
 ## v0.5.5 2018-09-26
 
 - **New:**
