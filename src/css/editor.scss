@@ -29,12 +29,18 @@ textarea {
     right: 0;
 }
 
+.mce-tinymce.mce-container.mce-panel {
+    border-top: 1px solid rgb(197, 197, 197);
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+}
 
 /*Editing area*/
 
 .mce-container-body .mce-edit-area {
     position: absolute;
-    top: 37px;
+    top: 35px;
     /*bottom: 37px;*/
     bottom: 0;
     left: 0;

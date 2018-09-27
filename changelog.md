@@ -10,6 +10,7 @@
   - Tweak about dialog
 - **Fixed:**
   - Code editor: Changed how files are tested if they exist in so directories are not counted as files
+  - Advanced editor: fix spacing and border issues
 
 ## v0.5.5 2018-09-26
 
