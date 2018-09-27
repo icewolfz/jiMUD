@@ -8,6 +8,7 @@
   - New about dialog logo, cleaning and more simple
 - **Changed:**
   - Update electron from 2.0.10 to 3.0.2
+  - Update jquery from 3.2.1 to 3.3.1
 - **Fixed:**
   - Code editor:
     - Changed how files are tested if they exist in so directories are not counted as files
