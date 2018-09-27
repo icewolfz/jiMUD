@@ -3,7 +3,7 @@ import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType, ValueEditor } from '../value.editors';
 import { DataGrid } from '../datagrid';
-import { copy, formatString, existsSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString, pinkfishToHTML } from '../library';
+import { copy, formatString, isFileSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString, pinkfishToHTML } from '../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
@@ -4158,7 +4158,7 @@ export class VirtualEditor extends EditorBase {
     private openRaw(file, raw, noRebuild?) {
         const base = path.basename(file);
         this.$opened[base] = new Date().getTime();
-        this.$files[base] = existsSync(file);
+        this.$files[base] = isFileSync(file);
         if (this.$files[base])
             raw.value = this.read(file);
         else
@@ -4176,7 +4176,7 @@ export class VirtualEditor extends EditorBase {
     }
 
     public open(file?) {
-        if (!this.file || this.file.length === 0 || !existsSync(this.file) || this.new)
+        if (!this.file || this.file.length === 0 || !isFileSync(this.file) || this.new)
             return;
         const root = path.dirname(this.file);
         if (file) {
@@ -4219,11 +4219,11 @@ export class VirtualEditor extends EditorBase {
         this.$files = {};
         this.$opened = {};
         this.$opened[this.filename] = new Date().getTime();
-        this.$files['virtual.terrain'] = existsSync(path.join(root, 'virtual.terrain'));
-        this.$files['terrain.desc'] = existsSync(path.join(root, 'terrain.desc'));
-        this.$files['terrain.item'] = existsSync(path.join(root, 'terrain.item'));
-        this.$files['virtual.exits'] = existsSync(path.join(root, 'virtual.exits'));
-        this.$files['virtual.state'] = existsSync(path.join(root, 'virtual.state'));
+        this.$files['virtual.terrain'] = isFileSync(path.join(root, 'virtual.terrain'));
+        this.$files['terrain.desc'] = isFileSync(path.join(root, 'terrain.desc'));
+        this.$files['terrain.item'] = isFileSync(path.join(root, 'terrain.item'));
+        this.$files['virtual.exits'] = isFileSync(path.join(root, 'virtual.exits'));
+        this.$files['virtual.state'] = isFileSync(path.join(root, 'virtual.state'));
 
         this.$mapRaw.value = this.read();
         if (this.$files['virtual.terrain']) {
@@ -4356,7 +4356,7 @@ export class VirtualEditor extends EditorBase {
 
     private confirmRaw(file) {
         // no file so skip
-        if (!this.$files[file] || !existsSync(path.join(path.dirname(this.file), file)))
+        if (!this.$files[file] || !isFileSync(path.join(path.dirname(this.file), file)))
             return 0;
         //ask and return answer
         return dialog.showMessageBox(
@@ -5684,7 +5684,7 @@ export class VirtualEditor extends EditorBase {
                 case 'add':
                 case 'change':
                 case 'unlink':
-                    r.ef = existsSync(file);
+                    r.ef = isFileSync(file);
                     this.loadRoom(r);
                     break;
             }
@@ -8743,6 +8743,7 @@ export class VirtualEditor extends EditorBase {
         let dl;
         let r;
         let ry;
+        let rz;
         let s;
         let sl;
         let tl;
@@ -8796,6 +8797,7 @@ export class VirtualEditor extends EditorBase {
             let e;
             let t;
             let i;
+            let li;
             const selected = this.$selectedRooms.slice();
             this.$selectedRooms.length = 0;
             if (xl > 0 && yl > 0 && zl > 0) {
@@ -8805,28 +8807,33 @@ export class VirtualEditor extends EditorBase {
                 let cname;
                 for (; z < zl; z++) {
                     if (!rooms[z]) rooms[z] = [];
+                    rz = rooms[z];
                     for (y = 0; y < yl; y++) {
-                        if (!rooms[z][y])
-                            rooms[z][y] = [];
-                        ry = rooms[z][y];
-                        if (y + z * (yl + 1) < dl && data[y + z * (yl + 1)].length > 0)
-                            line = data[y + z * (yl + 1)].split(' ');
+                        if (!rz[y])
+                            rz[y] = [];
+                        ry = rz[y];
+                        li = y + z * (yl + 1);
+                        if (li < dl && data[li].length > 0)
+                            line = data[li].split(' ');
                         else
                             line = [];
 
-                        if (y + z * (yl + 1) < tl && tdata[y + z * (yl + 1)].length > 0)
-                            tline = tdata[y + z * (yl + 1)].split(' ');
+                        if (li < tl && tdata[li].length > 0)
+                            tline = tdata[li].split(' ');
                         else
                             tline = [];
 
-                        if (y + z * (yl + 1) < sl && sdata[y + z * (yl + 1)].length > 0)
-                            sline = sdata[y + z * (yl + 1)].split(' ');
+                        if (li < sl && sdata[li].length > 0)
+                            sline = sdata[li].split(' ');
                         else
                             sline = [];
 
                         for (x = 0; x < xl; x++) {
-                            if (x >= line.length)
-                                r = new Room(x, y, z, e, 0, 0, 0);
+                            if (x >= line.length) {
+                                t = 0;
+                                s = 0;
+                                i = 0;
+                            }
                             else {
                                 rd = line[x].split(':');
                                 e = rd.length > 0 ? +rd[0] : 0;
@@ -8841,10 +8848,9 @@ export class VirtualEditor extends EditorBase {
                                 }
                                 if (x < sline.length)
                                     s = sline[x];
-                                //x,y,z,e,t,i,s
-                                r = new Room(x, y, z, e, t, i, s);
                                 if (t > maxTerrain) maxTerrain = t;
                             }
+                            r = new Room(x, y, z, e, t, i, s);
                             if (selected.length > 0 && selected.filter(sR => sR.at(r.x, r.y, r.z)).length > 0)
                                 this.$selectedRooms.push(r);
                             cname = x + ',' + y;
@@ -8852,7 +8858,7 @@ export class VirtualEditor extends EditorBase {
                                 cname += ',' + z;
                             if (ee[cname])
                                 r.ee |= RoomExits[ee[cname]];
-                            r.ef = existsSync(path.join(root, cname + '.c'));
+                            r.ef = isFileSync(path.join(root, cname + '.c'));
                             this.loadRoom(r);
                             ry.push(r);
                             if (r.exits) rcount++;
@@ -8892,13 +8898,15 @@ export class VirtualEditor extends EditorBase {
             this.$map.width = this.$mapSize.right;
             this.$map.height = this.$mapSize.bottom;
             this.BuildAxises();
-            this.DrawMap();
             setTimeout(() => {
                 this.DrawMap();
-            }, 500);
+            }, 250);
         }
-        else
+        else {
             this.doUpdate(UpdateType.drawMap);
+            this.DrawMap();
+        }
+        this.doUpdate(UpdateType.drawMap);
         const cols = this.$exitGrid.columns;
         if (this.$mapSize.depth < 2) {
             this.$depth = 0;

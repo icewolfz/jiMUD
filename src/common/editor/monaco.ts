@@ -1,7 +1,7 @@
 /// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
 import { EditorBase, EditorOptions, FileState, Source } from './editor.base';
 import { conf, language, loadCompletion, LPCIndenter, LPCFormatter } from './lpc';
-import { existsSync, isDirSync, parseTemplate, stripPinkfish } from '../library';
+import { isFileSync, isDirSync, parseTemplate, stripPinkfish } from '../library';
 const { ipcRenderer } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -183,7 +183,7 @@ export function SetupEditor() {
                                 reg.lastIndex++;
                             }
                             const f = path.join(root, result[1]);
-                            if (existsSync(f)) {
+                            if (isFileSync(f)) {
                                 if (!$lpcDefineCache[f]) {
                                     $lpcDefineCache[f] = {};
                                     dValue = fs.readFileSync(f, 'utf8').split('\n');
@@ -554,17 +554,17 @@ function objectToHover(data) {
 
 function findDoc(doc, p) {
     const file = path.join(p, doc);
-    if (existsSync(file) && !isDirSync(file))
+    if (isFileSync(file) && !isDirSync(file))
         return file;
-    if (existsSync(file + '.json') && !isDirSync(file))
+    if (isFileSync(file + '.json') && !isDirSync(file))
         return file + '.json';
-    if (existsSync(file + '.md') && !isDirSync(file))
+    if (isFileSync(file + '.md') && !isDirSync(file))
         return file + '.md';
-    if (existsSync(file + '.3') && !isDirSync(file))
+    if (isFileSync(file + '.3') && !isDirSync(file))
         return file + '.3';
-    if (existsSync(file + '.4') && !isDirSync(file))
+    if (isFileSync(file + '.4') && !isDirSync(file))
         return file + '.4';
-    if (existsSync(file + '.pre') && !isDirSync(file))
+    if (isFileSync(file + '.pre') && !isDirSync(file))
         return file + '.pre';
     const files = fs.readdirSync(p);
     const fl = files.length;
@@ -783,7 +783,7 @@ export class MonacoCodeEditor extends EditorBase {
     public refresh() { this.emit('refreshed'); }
 
     public open() {
-        if (!this.file || this.file.length === 0 || !existsSync(this.file) || this.new)
+        if (!this.file || this.file.length === 0 || !isFileSync(this.file) || this.new)
             return;
         this.opened = new Date().getTime();
         this.$model.setValue(this.read());

@@ -8,7 +8,7 @@ import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
-import { copy, formatString, existsSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, stripQuotes } from '../library';
+import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, stripQuotes } from '../library';
 const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, dialog } = remote;
@@ -7766,7 +7766,7 @@ export class AreaDesigner extends EditorBase {
     }
 
     public open() {
-        if (!this.file || this.file.length === 0 || !existsSync(this.file) || this.new)
+        if (!this.file || this.file.length === 0 || !isFileSync(this.file) || this.new)
             return;
         this.opened = new Date().getTime();
         this.$area = Area.load(this.file);
@@ -10472,7 +10472,7 @@ export class AreaDesigner extends EditorBase {
             this.DrawMap();
             setTimeout(() => {
                 this.DrawMap();
-            }, 500);
+            }, 250);
         }
         else {
             this.doUpdate(UpdateType.drawMap);
