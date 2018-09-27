@@ -5,9 +5,9 @@
 - **New:**
   - Code editor:
     - Virtual area editor: Improve open times
+  - New about dialog logo, cleaning and more simple
 - **Changed:**
   - Update electron from 2.0.10 to 3.0.1
-  - Tweak about dialog
 - **Fixed:**
   - Code editor:
     - Changed how files are tested if they exist in so directories are not counted as files

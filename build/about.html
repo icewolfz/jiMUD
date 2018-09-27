@@ -14,13 +14,6 @@
             margin: 0px;
         }
 
-        #logo {
-            width: 400px;
-            height: 140px;
-            border: 0px solid silver;
-            background-image: url(./../assets/logo@3x.png);
-        }
-
         #logo-version {
             position: absolute;
             right: 30px;
@@ -66,6 +59,42 @@
 
         .totals {
             font-weight: bold;
+        }
+
+        #logo {
+            background: black;
+            border: silver;
+            color: white;
+            height: 148px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #logo-text {
+            text-align: center;
+            font-size: 90px;
+            font-family: 'Courier New', Courier, monospace;
+            float: left;
+            display: inline;
+        }
+
+        #logo-image {
+            float: left;
+            padding: 10px;
+        }
+
+        #logo-editor {
+            display: none;
+            font-size: 32px;
+            font-family: 'Courier New', Courier, monospace;
+            position: absolute;
+            bottom: 0;
+            z-index: 100;
+            left: 148px;
+            margin: 0px;
+            padding: 0px;
+            text-align: left;
+            right: 0;
         }
     </style>
     <script>
@@ -113,8 +142,8 @@
             row += '<td>' + (total[2]).toLocaleString() + ' K</td>';
             row += '<td>' + (total[3]).toLocaleString() + ' K</td>';
             row += '<td>' + total[4].toFixed(3) + '%</td>';
-            row += '<td>' + total[5] + '</td></tr>';     
-            $('#memory tbody').append(row);       
+            row += '<td>' + total[5] + '</td></tr>';
+            $('#memory tbody').append(row);
             /*
             var mi = remote.process.getProcessMemoryInfo();
             var ci = remote.process.getCPUUsage();
@@ -129,6 +158,9 @@
             row += '<td>' + ci.idleWakeupsPerSecond + '</td></tr>';
             $('#memory tbody').append(row);
             */
+            if (remote.getGlobal('editorOnly'))
+                $('#logo-editor').css('display', 'block');
+
         });
 
         $(window).keydown((event) => {
@@ -139,8 +171,12 @@
 </head>
 
 <body>
-    <img id="logo" src="./../assets/logo@3x.png" />
-    <div id="logo-version"></div>
+    <div id="logo">
+        <img id="logo-image" src="./../assets/icons/png/128x128.png" />
+        <div id="logo-text">jiMUD</div>
+        <span id="logo-editor">Code editor</span>
+        <div id="logo-version"></div>
+    </div>
     <div style="margin:2px;text-align:left;">
 
         <ul class="nav nav-tabs" role="tablist">

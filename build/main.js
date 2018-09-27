@@ -3592,7 +3592,7 @@ function showAbout() {
         x: Math.floor(b.x + b.width / 2 - 225),
         y: Math.floor(b.y + b.height / 2 - 200),
         width: 450,
-        height: 440,
+        height: 450,
         movable: false,
         minimizable: false,
         maximizable: false,
