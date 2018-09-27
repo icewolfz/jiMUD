@@ -71,11 +71,22 @@
         }
 
         #logo-text {
+            position: absolute;
+            top: 0;
+            left: 148px;
+            padding: 0;
             text-align: center;
             font-size: 90px;
             font-family: 'Courier New', Courier, monospace;
-            float: left;
             display: inline;
+            /* Adjust as needed */
+            animation:
+                typing 3.5s steps(5, end),
+                blink-caret 1s step-end infinite;
+            white-space: nowrap;
+            /* Gives that scrolling effect as the typing happens */
+            overflow: hidden;
+            border-right: .06em solid orange; /* The typwriter cursor */
         }
 
         #logo-image {
@@ -95,6 +106,31 @@
             padding: 0px;
             text-align: left;
             right: 0;
+            border-right: .15em solid orange; /* The typwriter cursor */
+        }
+
+        /* The typing effect */
+        @keyframes typing {
+            from {
+                width: 0
+            }
+
+            to {
+                width: 275px
+            }
+        }
+
+        /* The typewriter cursor effect */
+        @keyframes blink-caret {
+
+            from,
+            to {
+                border-color: transparent
+            }
+
+            50% {
+                border-color: orange
+            }
         }
     </style>
     <script>
@@ -167,6 +203,7 @@
             if (event.which === 27)
                 window.close();
         });
+        remote.getCurrentWindow().openDevTools();
     </script>
 </head>
 
