@@ -2,6 +2,9 @@
 
 ## v0.6.0
 
+- **New:**
+  - Code editor:
+    - Virtual area editor: Improve open times
 - **Changed:**
   - Update electron from 2.0.10 to 3.0.1
   - Tweak about dialog

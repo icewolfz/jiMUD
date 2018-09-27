@@ -8,6 +8,7 @@ const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, MenuItem, dialog } = remote;
 const path = require('path');
+const fs = require('fs');
 
 interface VirtualEditorOptions extends EditorOptions {
     value?: string;
@@ -8754,6 +8755,7 @@ export class VirtualEditor extends EditorBase {
         const sdata = this.$stateRaw.value.split('\n');
         const edata = this.$externalRaw.value.split('\n');
         const root = path.dirname(this.file);
+        const files = fs.readdirSync(root);
         const ee = {};
         this.$rcount = 0;
         this.$maxTerrain = 0;
@@ -8858,7 +8860,7 @@ export class VirtualEditor extends EditorBase {
                                 cname += ',' + z;
                             if (ee[cname])
                                 r.ee |= RoomExits[ee[cname]];
-                            r.ef = isFileSync(path.join(root, cname + '.c'));
+                            r.ef = files.indexOf(cname + '.c') !== -1;
                             this.loadRoom(r);
                             ry.push(r);
                             if (r.exits) rcount++;
