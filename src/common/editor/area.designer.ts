@@ -10469,15 +10469,12 @@ export class AreaDesigner extends EditorBase {
             this.$map.width = this.$area.size.right;
             this.$map.height = this.$area.size.bottom;
             this.BuildAxises();
-            this.DrawMap();
             setTimeout(() => {
                 this.DrawMap();
-            }, 250);
+            }, 500);
         }
-        else {
-            this.doUpdate(UpdateType.drawMap);
-            this.DrawMap();
-        }
+        this.DrawMap();
+        this.doUpdate(UpdateType.drawMap);
         if (this.$area.size.depth < 2) {
             this.$depth = 0;
             this.$roomEditor.setPropertyOptions({

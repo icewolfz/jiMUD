@@ -8904,10 +8904,8 @@ export class VirtualEditor extends EditorBase {
                 this.DrawMap();
             }, 250);
         }
-        else {
-            this.doUpdate(UpdateType.drawMap);
-            this.DrawMap();
-        }
+        this.doUpdate(UpdateType.drawMap);
+        this.DrawMap();
         this.doUpdate(UpdateType.drawMap);
         const cols = this.$exitGrid.columns;
         if (this.$mapSize.depth < 2) {
