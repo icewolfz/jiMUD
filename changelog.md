@@ -9,7 +9,9 @@
   - Update electron from 2.0.10 to 3.0.1
   - Tweak about dialog
 - **Fixed:**
-  - Code editor: Changed how files are tested if they exist in so directories are not counted as files
+  - Code editor:
+    - Changed how files are tested if they exist in so directories are not counted as files
+    - More error catching when opening a file
   - Advanced editor: fix spacing and border issues
 
 ## v0.5.5 2018-09-26

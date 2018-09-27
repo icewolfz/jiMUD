@@ -7935,7 +7935,19 @@
             };
             if (path.extname(data.file) === '.design') {
                 data.options = options.designOptions;
-                p.editor = new AreaDesigner(data);
+                try {
+                    p.editor = new AreaDesigner(data);
+                }
+                catch (err) {
+                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                        type: 'info',
+                        title: 'Error opening file',
+                        message: 'Could not open \'' + data.file + '\'.'
+                    });
+                    if (options && options.debug)
+                        console.log(err);
+                }
+
                 p.editor.on('show-room-wizard', e => {
                     roomWizard(e.data, e);
                 });
@@ -8027,7 +8039,18 @@
             }
             else if (path.extname(data.file) === '.map' && data.source !== 1) {
                 data.options = options.virtualOptions;
-                p.editor = new VirtualEditor(data);
+                try {
+                    p.editor = new VirtualEditor(data);
+                }
+                catch (err) {
+                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                        type: 'info',
+                        title: 'Error opening file',
+                        message: 'Could not open \'' + data.file + '\'.'
+                    });
+                    if (options && options.debug)
+                        console.log(err);
+                }
                 p.editor.on('show-resize', size => {
                     showResizeDialog(size);
                 });
@@ -8388,7 +8411,18 @@
                 });
             }
             else {
-                p.editor = new MonacoCodeEditor(data);
+                try {
+                    p.editor = new MonacoCodeEditor(data);
+                }
+                catch (err) {
+                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                        type: 'info',
+                        title: 'Error opening file',
+                        message: 'Could not open \'' + data.file + '\'.'
+                    });
+                    if (options && options.debug)
+                        console.log(err);
+                }
                 if (options.nativeIcons)
                     app.getFileIcon((path.extname(data.file).length !== 0 ? data.file : '.*'), { size: 'small' }, (err, icon) => {
                         if (err || !icon) return;
