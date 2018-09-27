@@ -3605,8 +3605,6 @@ function showAbout() {
         logError(`About crashed, killed: ${killed}\n`, true);
     });
 
-about.webContents.openDevTools();
-
     about.setMenu(null);
     about.on('closed', () => {
         about = null;

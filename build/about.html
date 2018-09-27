@@ -86,6 +86,35 @@
             $('#nv').text(process.versions.node);
             $('#cv').text(process.versions.chrome);
             $('#logo-version').text('v' + version);
+
+            var mi = remote.app.getAppMetrics();
+            var total = [0, 0, 0, 0, 0, 0];
+            for (var i = 0; i < mi.length; i++) {
+                var row = '<tr><td>' + mi[i].pid + '</td>';
+                row += '<td>' + mi[i].type + '</td>';
+                row += '<td>' + (mi[i].memory.peakWorkingSetSize).toLocaleString() + ' K</td>';
+                row += '<td>' + (mi[i].memory.privateBytes).toLocaleString() + 'K</td>';
+                row += '<td>' + (mi[i].memory.sharedBytes).toLocaleString() + ' K</td>';
+                row += '<td>' + (mi[i].memory.workingSetSize).toLocaleString() + ' K</td>';
+                row += '<td>' + (mi[i].cpu.percentCPUUsage || 0.0).toFixed(3) + '%</td>';
+                row += '<td>' + mi[i].cpu.idleWakeupsPerSecond + '</td></tr>';
+                $('#memory tbody').append(row);
+                total[0] += mi[i].memory.peakWorkingSetSize;
+                total[1] += mi[i].memory.privateBytes;
+                total[2] += mi[i].memory.sharedBytes;
+                total[3] += mi[i].memory.workingSetSize;
+                total[4] += (mi[i].cpu.percentCPUUsage || 0.0);
+                total[5] += mi[i].cpu.idleWakeupsPerSecond;
+            }
+            row = '<tr class=\'totals\'><td>Total:</td>';
+            row += '<td></td>';
+            row += '<td>' + (total[0]).toLocaleString() + ' K</td>';
+            row += '<td>' + (total[1]).toLocaleString() + ' K</td>';
+            row += '<td>' + (total[2]).toLocaleString() + ' K</td>';
+            row += '<td>' + (total[3]).toLocaleString() + ' K</td>';
+            row += '<td>' + total[4].toFixed(3) + '%</td>';
+            row += '<td>' + total[5] + '</td></tr>';     
+            $('#memory tbody').append(row);       
             /*
             var mi = remote.process.getProcessMemoryInfo();
             var ci = remote.process.getCPUUsage();
@@ -113,18 +142,17 @@
     <img id="logo" src="./../assets/logo@3x.png" />
     <div id="logo-version"></div>
     <div style="margin:2px;text-align:left;">
-        <!--
+
         <ul class="nav nav-tabs" role="tablist">
             <li role="presentation" class="active"><a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a></li>
             <li role="presentation"><a href="#memory" aria-controls="memory" role="tab" data-toggle="tab">Memory</a></li>
         </ul>
-    -->
+
         <div class="tab-content">
             <div role="tabpanel" class="container tab-pane fade in active" id="general">
                 Electron: <span id="ev"></span> - https://electronjs.org/<br /> Node: <span id="nv"></span> - http://www.nodejs.org/<br /> Chromium: <span id="cv"></span> - https://www.chromium.org/Home<br /> Buzz: 1.2.0 - http://buzz.jaysalvat.com<br /> jQuery: 3.1.1 - http://www.jquery.com<br /> Icons: http://opengameart.org/<br /> Font Awesome: v4.7.0 - http://http://fontawesome.io/
                 <br /><br />&copy; 2017-2018
             </div>
-            <!--
             <div role="tabpanel" class="tab-pane fade" id="memory" style="height: 185px;overflow: auto;text-align: right">
                 <table id="memory" style="width: 100%;" class="table table-striped table-hover table-condensed">
                     <thead>
@@ -143,7 +171,6 @@
                     </tbody>
                 </table>
             </div>
-            -->
         </div>
     </div>
 </body>
