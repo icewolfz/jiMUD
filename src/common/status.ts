@@ -215,11 +215,11 @@ export class Status extends EventEmitter {
             eLimb.addClass('weapon-dominant');
 
         if (weapon.subtype && weapon.subtype.length > 0)
-            eLimb[0].title = weapon.subtype + ' in ' + l;
+            (<HTMLElement>eLimb[0]).title = weapon.subtype + ' in ' + l;
         else if (weapon.type && weapon.type.length > 0)
-            eLimb[0].title = weapon.type + ' in ' + l;
+            (<HTMLElement>eLimb[0]).title = weapon.type + ' in ' + l;
         else
-            eLimb[0].title = 'weapon in ' + l;
+            (<HTMLElement>eLimb[0]).title = 'weapon in ' + l;
     }
 
     public setLimbAC(limb, ac) {
