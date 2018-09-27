@@ -12,6 +12,7 @@
             text-align: center;
             padding: 0px;
             margin: 0px;
+            overflow: hidden;
         }
 
         #logo-version {
@@ -202,6 +203,7 @@
             if (event.which === 27)
                 window.close();
         });
+        //remote.getCurrentWindow().openDevTools();
     </script>
 </head>
 
@@ -212,7 +214,7 @@
         <span id="logo-editor">Code editor</span>
         <div id="logo-version"></div>
     </div>
-    <div style="margin:2px;text-align:left;">
+    <div style="margin:2px;text-align:left;position: absolute;bottom:0;top:148px;overflow: hidden;right: 0;left: 0;">
 
         <ul class="nav nav-tabs" role="tablist">
             <li role="presentation" class="active"><a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a></li>
@@ -224,7 +226,7 @@
                 Electron: <span id="ev"></span> - https://electronjs.org/<br /> Node: <span id="nv"></span> - http://www.nodejs.org/<br /> Chromium: <span id="cv"></span> - https://www.chromium.org/Home<br /> Buzz: 1.2.0 - http://buzz.jaysalvat.com<br /> jQuery: 3.1.1 - http://www.jquery.com<br /> Icons: http://opengameart.org/<br /> Font Awesome: v4.7.0 - http://http://fontawesome.io/
                 <br /><br />&copy; 2017-2018
             </div>
-            <div role="tabpanel" class="tab-pane fade" id="memory" style="height: 185px;overflow: auto;text-align: right">
+            <div role="tabpanel" class="tab-pane fade" id="memory" style="height: 185px;overflow: auto;text-align: right;    width: 440px;">
                 <table id="memory" style="width: 100%;" class="table table-striped table-hover table-condensed">
                     <thead>
                         <tr style="text-align: center">
