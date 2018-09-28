@@ -17,7 +17,7 @@
     <script src="../lib/jquery.min.js" type="text/javascript"></script>
     <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
     <script src="../lib/datatables.min.js" type="text/javascript"></script>
-    <script src="../lib/datatables.scrollresize.js" type="text/javascript"></script>
+    <script src="../lib/datatables.scrollresize.min.js" type="text/javascript"></script>
     <script>
         //spell-checker:ignore hellip datatable, datatables, scrollresize, drivelist, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
         //spell-checker:ignore keypress, haspopup, labelledby, tabindex, tablist, tabpanel
@@ -72,7 +72,7 @@
                         label: '&Preferences...',
                         accelerator: 'CmdOrCtrl+Comma',
                         click: () => {
-                            window.open('immortal.prefs.html', 'modal', 'backgroundColor=#fff,height=300,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                            window.open('immortal.prefs.html', 'modal', 'backgroundColor=#fff,height=320,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                         }
                     },
                     { type: 'separator' },
@@ -3852,7 +3852,7 @@
                                 </button>
                                 <ul id="local-navigate" class="dropdown-menu" aria-labelledby="button-local" data-container="body"></ul>
                                 <button id="btn-local-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory">
-                                    <span class="fa-stack" style="top: -3px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                                    <span class="fa-stack" style="top: -5px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                         <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1.2em"></i>
                                         <i class="fa fa-caret-up fa-stack-1x" style="font-size: 1em;margin-top: 1px;"></i>
                                     </span>
@@ -3925,7 +3925,7 @@
                                 </button>
                                 <ul id="remote-navigate" class="dropdown-menu pull-right" aria-labelledby="button-remote" data-container="body"></ul>
                                 <button id="btn-remote-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory">
-                                    <span class="fa-stack" style="top: -3px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                                    <span class="fa-stack" style="top: -5px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                         <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1.2em"></i>
                                         <i class="fa fa-caret-up fa-stack-1x" style="font-size: 1em;margin-top: 1px;"></i>
                                     </span>

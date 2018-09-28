@@ -15,6 +15,11 @@
 - **Changed:**
   - Update electron from 2.0.10 to 3.0.2
   - Update jquery from 3.2.1 to 3.3.1
+  - Update bootstrap select from 1.12.4 to 1.13.2
+  - Update bootstrap treeview to 2.1.7
+  - Update zlib to 0.3.1
+  - Update datatables from 1.10.16 to 1.10.18
+  - 
 - **Fixed:**
   - Code editor:
     - Changed how files are tested if they exist in so directories are not counted as files

@@ -995,7 +995,11 @@ input[type=checkbox].property-grid-editor {
 
 .path-container .input-group button {
     height: 26px;
-    padding-top: 2px;
+    padding-top: 6px;
+}
+
+.path-container .caret {
+    margin-top: -9px;
 }
 
 #remoteBrowse .dialog-footer .bootstrap-select {
