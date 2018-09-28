@@ -4,7 +4,10 @@
 
 - **New:**
   - Code editor:
-    - Virtual area editor: Improve open times
+    - Virtual area editor:
+      - Improve open times
+      - Add new hidden external exit support
+      - Add support for older virtual areas in external exits that ise VV define
   - New about dialog logo, cleaning and more simple
   - Events:
     - `backup-loaded` fired when backup has finished loading

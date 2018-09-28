@@ -1,4 +1,5 @@
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
+import { formatArgumentList } from './lpc';
 import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType, ValueEditor } from '../value.editors';
@@ -1458,6 +1459,11 @@ export class VirtualEditor extends EditorBase {
                         return value;
                     }
                 }
+            },
+            {
+                label: 'Hidden',
+                field: 'hidden',
+                width: 150
             }
         ];
         this.$exitGrid.on('cut', (e) => {
@@ -2293,9 +2299,9 @@ export class VirtualEditor extends EditorBase {
                             this.$exits = nExternal;
                             this.$exitGrid.rows = this.$exits;
                             if (this.$mapSize.depth > 1)
-                                nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+                                nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest + (d.hidden ? ':1' : ''));
                             else
-                                nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+                                nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest + (d.hidden ? ':1' : ''));
                             this.$externalRaw.value = '';
                             this.updateRaw(this.$externalRaw, 0, nExternal);
                             resetCursor(this.$externalRaw);
@@ -3610,9 +3616,9 @@ export class VirtualEditor extends EditorBase {
                         this.$exits = nExternal;
                         this.$exitGrid.rows = this.$exits;
                         if (this.$mapSize.depth > 1)
-                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest + (d.hidden ? ':1' : ''));
                         else
-                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest + (d.hidden ? ':1' : ''));
                         this.$externalRaw.value = '';
                         this.updateRaw(this.$externalRaw, 0, nExternal);
                         oldValues[sl] = old.ee;
@@ -4873,9 +4879,9 @@ export class VirtualEditor extends EditorBase {
                         this.$exits = nExternal;
                         this.$exitGrid.rows = this.$exits;
                         if (this.$mapSize.depth > 1)
-                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest + (d.hidden ? ':1' : ''));
                         else
-                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest + (d.hidden ? ':1' : ''));
                         this.$externalRaw.value = '';
                         this.updateRaw(this.$externalRaw, 0, nExternal);
                         resetCursor(this.$externalRaw);
@@ -4987,9 +4993,9 @@ export class VirtualEditor extends EditorBase {
                         });
                         //append to raw editors
                         if (this.$mapSize.depth > 1)
-                            this.updateRaw(this.$externalRaw, this.$exits.length, dRoom.external.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest));
+                            this.updateRaw(this.$externalRaw, this.$exits.length, dRoom.external.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest + (d.hidden ? ':1' : '')));
                         else
-                            this.updateRaw(this.$externalRaw, this.$exits.length, dRoom.external.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest));
+                            this.updateRaw(this.$externalRaw, this.$exits.length, dRoom.external.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest + (d.hidden ? ':1' : '')));
                         //append changed exits
                         this.$exits.push(...dRoom.external);
                         //refresh the grid to make sure it has all the new data
@@ -5045,9 +5051,9 @@ export class VirtualEditor extends EditorBase {
                         this.$exits = nExternal;
                         this.$exitGrid.rows = this.$exits;
                         if (this.$mapSize.depth > 1)
-                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest + (d.hidden ? ':1' : ''));
                         else
-                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+                            nExternal = nExternal.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest + (d.hidden ? ':1' : ''));
                         this.$externalRaw.value = '';
                         this.updateRaw(this.$externalRaw, 0, nExternal);
                         resetCursor(this.$externalRaw);
@@ -7521,7 +7527,7 @@ export class VirtualEditor extends EditorBase {
                                 exit = code.substring(idx, idx2 - 1).trim().splitQuote(',', 3, 3);
                                 if (exit.length > 2) {
                                     block = this.parseString(exit[1]);
-                                    if (!block.startsWith('VIR ') && !block.startsWith('VIR+'))
+                                    if (!block.startsWith('VIR ') && !block.startsWith('VIR+') && !block.startsWith('VV ') && !block.startsWith('VV+'))
                                         block = 1;
                                     else
                                         block = 0;
@@ -7592,7 +7598,7 @@ export class VirtualEditor extends EditorBase {
                                     block = 0;
                                     if (exits.length > 1) {
                                         block = this.parseString(exit[1]);
-                                        if (!block.startsWith('VIR ') && !block.startsWith('VIR+'))
+                                        if (!block.startsWith('VIR ') && !block.startsWith('VIR+') && !block.startsWith('VV ') && !block.startsWith('VV+'))
                                             block = 1;
                                         else
                                             block = 0;
@@ -7664,7 +7670,7 @@ export class VirtualEditor extends EditorBase {
                                 for (exit in exits) {
                                     if (exit.length === 0 || !exits.hasOwnProperty(exit)) continue;
                                     block = 0;
-                                    if (!exits[exit].startsWith('VIR ') && !exits[exit].startsWith('VIR+'))
+                                    if (!exits[exit].startsWith('VIR ') && !exits[exit].startsWith('VIR+') && !exits[exit].startsWith('VV ') && !exits[exit].startsWith('VV+'))
                                         block = 1;
 
                                     switch (exit) {
@@ -9123,7 +9129,8 @@ export class VirtualEditor extends EditorBase {
                 y: 0,
                 z: 0,
                 exit: '',
-                dest: ''
+                dest: '',
+                hidden: false
             };
             if (data[c].startsWith('#')) {
                 row.enabled = false;
@@ -9136,6 +9143,7 @@ export class VirtualEditor extends EditorBase {
             if (tmp2.length > 2) row.z = +tmp2[2];
             if (tmp.length > 1) row.exit = tmp[1];
             if (tmp.length > 2) row.dest = tmp[2];
+            if (tmp.length > 3) row.hidden = tmp[3] === '1';
             rows.push(row);
         }
         this.$exits = rows;
@@ -9283,13 +9291,18 @@ export class VirtualEditor extends EditorBase {
                 d += '       "southwest" : VIR + "' + (r.x - 1) + ',' + (r.y + 1) + t + '.c",\n';
             let ri;
             const rl = this.$exits.length;
+            const eh = [];
             for (ri = 0; ri < rl; ri++) {
                 if (!this.$exits[ri].enabled || +this.$exits[ri].x !== r.x || +this.$exits[ri].y !== r.y || +this.$exits[ri].z !== r.z)
                     continue;
+                if (this.$exits[ri].hidden)
+                    eh.push(this.$exits[ri].exit.trim());
                 d += '       "' + this.$exits[ri].exit.trim() + '":"' + this.$exits[ri].dest.trim() + '",\n';
             }
             d = d.substr(0, d.length - 2);
             d += '\n     ]) );\n';
+            if (eh.length)
+                d += `   add_invis_exits(${formatArgumentList(eh.join(', '), 61)});\n`;
         }
         if ((r.state & RoomStates.Cold) === RoomStates.Cold)
             d += '   set_temperature(-200);\n';
