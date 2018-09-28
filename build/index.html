@@ -1237,8 +1237,13 @@
             });
 
             _backup.on('finish-load', () => {
-
+                client.raise('backup-loaded');
             });
+            
+            _backup.on('finish-save', () => {
+                client.raise('backup-saved');
+            });
+
             _status = new Status(client);
             _status.on('display-changed', () => {
                 if (_status.ac) {

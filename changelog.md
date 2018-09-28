@@ -6,6 +6,9 @@
   - Code editor:
     - Virtual area editor: Improve open times
   - New about dialog logo, cleaning and more simple
+  - Events:
+    - `backup-loaded` fired when backup has finished loading
+    - `backup-saved` fired when backup has finished saving
 - **Changed:**
   - Update electron from 2.0.10 to 3.0.2
   - Update jquery from 3.2.1 to 3.3.1

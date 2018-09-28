@@ -76,6 +76,8 @@
     - `blur` fired when window loses focus
     - `notify-clicked` fired when notification is clicked, argument 1 is title, argument 2 is message
     - `notify-closed` fired when notification is closed, argument 1 is title, argument 2 is message
+    - `backup-loaded` fired when backup has finished loading
+    - `backup-saved` fired whe backup has finished saving
   - `Alarm` create repeating tick timers
     ```
     When using alarm type pattern is in the format of hours:minutes:seconds, where hours and minutes are optional. A asterisk (*) is a wildcard to match any value for that place, if minutes or hours are missing a * is assumed. If pattern is preceded with a minus (-) the connection time is used instead of current time.

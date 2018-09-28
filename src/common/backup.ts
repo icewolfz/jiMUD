@@ -322,6 +322,7 @@ export class Backup extends EventEmitter {
                     }
                     else {
                         if (typeof (this._save[2]) === 'function') this._save[2]();
+                        this.emit('finish-save');
                         this.close();
                     }
                 },
