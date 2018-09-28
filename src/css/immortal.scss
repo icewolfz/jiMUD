@@ -281,6 +281,23 @@ table.dataTable {
     outline: none;
 }
 
+.dataTables_scrollBody {
+    border: 0 !important;
+}
+
+.dataTables_scrollHeadInner .table > caption + thead > tr:first-child > td,
+.dataTables_scrollHeadInner .table > caption + thead > tr:first-child > th,
+.dataTables_scrollHeadInner .table > colgroup + thead > tr:first-child > td,
+.dataTables_scrollHeadInner .table > colgroup + thead > tr:first-child > th,
+.dataTables_scrollHeadInner .table > thead:first-child > tr:first-child > td,
+.dataTables_scrollHeadInner .table > thead:first-child > tr:first-child > th {
+    border: 0;
+}
+
+.dataTables_scrollHeadInner {
+    border-bottom: 1px solid #111;
+}
+
 #local-list.table.dataTable tbody > tr.selected td > .fa,
 #local-list.table.dataTable tbody > tr > .selected td > .fa,
 #remote-list.table.dataTable tbody > tr.selected td > .fa,
