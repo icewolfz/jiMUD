@@ -9,7 +9,6 @@ import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, stripQuotes } from '../library';
-const ResizeObserver = require('resize-observer-polyfill');
 const { clipboard, remote } = require('electron');
 const { Menu, dialog } = remote;
 const path = require('path');

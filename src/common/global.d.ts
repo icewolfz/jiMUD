@@ -10,7 +10,7 @@ interface CanvasRenderingContext2D {
 }
 
 interface String {
-	
+
 	splice(idx: number, s: string, rem?: number): string;
 	paddingLeft(paddingvalue: (string | number)): string;
 	paddingRight(paddingvalue: (string | number)): string;
@@ -42,4 +42,30 @@ interface Window {
 	i: any;
 	repeatnum: any;
 	$copied: string;
+	ResizeObserver: ResizeObserver;
 }
+
+interface ResizeObserver {
+	observe: (target: Element) => void;
+	unobserve: (target: Element) => void;
+	disconnect: () => void;
+}
+
+declare var ResizeObserver: {
+    prototype: ResizeObserver;
+    new(callback: ResizeObserverCallback): ResizeObserver;
+};
+
+interface ResizeObserverCallback {
+	(entries: ResizeObserverEntry[], observer: ResizeObserver): void;
+}
+
+interface ResizeObserverEntry {
+	readonly target: Element;
+	readonly contentRect: DOMRectReadOnly;
+}
+
+declare var ResizeObserverEntry: {
+    prototype: ResizeObserverEntry;
+    new(): ResizeObserverEntry;
+};

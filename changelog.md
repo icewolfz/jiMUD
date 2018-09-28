@@ -19,7 +19,7 @@
   - Update bootstrap treeview to 2.1.7
   - Update zlib to 0.3.1
   - Update datatables from 1.10.16 to 1.10.18
-  - 
+  - Remove ResizerObserver polyfill as electron 3 includes native support
 - **Fixed:**
   - Code editor:
     - Changed how files are tested if they exist in so directories are not counted as files

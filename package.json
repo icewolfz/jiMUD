@@ -126,7 +126,6 @@
     "mathjs-expression-parser": "^1.0.0",
     "moment": "^2.22.2",
     "monaco-editor": "^0.14.3",
-    "resize-observer-polyfill": "^1.5.0",
     "rgbcolor": "^1.0.1",
     "spellchecker": "^3.5.0",
     "tmp": "0.0.33",

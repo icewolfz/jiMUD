@@ -1,5 +1,4 @@
 import EventEmitter = require('events');
-const ResizeObserver = require('resize-observer-polyfill');
 
 export interface SplitterOptions {
     container?: any;
