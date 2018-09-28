@@ -181,7 +181,7 @@ export class Finder extends EventEmitter {
     }
 
     public find(focus?: boolean) {
-        const val = $('input', this._control).val();
+        const val = <string>$('input', this._control).val();
         this.clear();
         if (val.length === 0) {
             $('#' + this._display.id + '-find-count', this._control).html('No Results');

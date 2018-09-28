@@ -13,17 +13,17 @@ export interface PageOptions {
     id: string;
     title: string;
     body?: any;
-    reset?: Function;
-    shown?: Function;
-    hidden?: Function;
+    reset?(...args: any[]): void;
+    shown?(...args: any[]): void;
+    hidden?(...args: any[]): void;
 }
 
 export interface DataGridPageOptions extends PageOptions {
     rows?: any[];
     columns?: any[];
-    add?: Function;
-    edit?: Function;
-    delete?: Function;
+    add?(...args: any[]): void;
+    edit?(...args: any[]): void;
+    delete?(...args: any[]): void;
     enterMoveFirst?: boolean;
     enterMoveNext?: boolean;
     enterMoveNew?: boolean;

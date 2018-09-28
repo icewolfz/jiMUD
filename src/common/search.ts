@@ -194,7 +194,7 @@ export class Search extends EventEmitter {
     }
 
     public find(focus?: boolean, search?) {
-        const val = $('input', this._control).val();
+        const val = <string>$('input', this._control).val();
         this.clear();
         if (val.length === 0) {
             this.updateCount();

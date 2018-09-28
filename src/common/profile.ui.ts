@@ -367,13 +367,13 @@ function AddNewProfile(d?: Boolean) {
 }
 
 export function RunTester() {
-    if ($('#trigger-test-text').val().length === 0) {
+    if ((<string>$('#trigger-test-text').val()).length === 0) {
         $('#trigger-test-results').val('No text to test against!');
         return;
     }
     try {
         if ($('#trigger-verbatim').prop('checked')) {
-            if (!$('#trigger-caseSensitive').prop('checked') && $('#trigger-pattern').val().toLowerCase() !== $('#trigger-test-text').val().toLowerCase())
+            if (!$('#trigger-caseSensitive').prop('checked') && (<string>$('#trigger-pattern').val()).toLowerCase() !== (<string>$('#trigger-test-text').val()).toLowerCase())
                 $('#trigger-test-results').val('Pattern doesn\'t Match!');
             else if ($('#trigger-caseSensitive').prop('checked') && $('#trigger-pattern').val() !== $('#trigger-test-text').val())
                 $('#trigger-test-results').val('Pattern doesn\'t Match!');
@@ -383,9 +383,9 @@ export function RunTester() {
         else {
             let re;
             if ($('#trigger-caseSensitive').prop('checked'))
-                re = new RegExp($('#trigger-pattern').val(), 'g');
+                re = new RegExp((<string>$('#trigger-pattern').val()), 'g');
             else
-                re = new RegExp($('#trigger-pattern').val(), 'gi');
+                re = new RegExp((<string>$('#trigger-pattern').val()), 'gi');
             const res = re.exec($('#trigger-test-text').val());
             if (res == null || res.length === 0)
                 $('#trigger-test-results').val('Pattern doesn\'t Match!');
@@ -412,7 +412,7 @@ function clearTriggerTester() {
 
 export function UpdateButtonSample() {
     const button = $('#button-sample');
-    const icon = $('#button-icon').val();
+    const icon = <string>$('#button-icon').val();
     if ($('#button-stretch').prop('checked'))
         button.addClass('button-stretch');
     else
@@ -436,7 +436,7 @@ export function UpdateButtonSample() {
 export function UpdateContextSample() {
     const button = $('#context-sample');
     button.prop('title', $('#context-caption').val());
-    const icon = $('#context-icon').val();
+    const icon = <string>$('#context-icon').val();
     if (icon.length > 0)
         button.html('<img src="' + nativeImage.createFromPath(parseTemplate(icon)).toDataURL() + '" />');
     else
@@ -839,10 +839,10 @@ function UpdateItem(item, type?, options?) {
             }
         }
         else if (typeof item[prop] === 'number') {
-            if (item[prop] !== parseInt($(id).val(), 10)) {
+            if (item[prop] !== parseInt(<string>$(id).val(), 10)) {
                 data[prop] = item[prop];
                 changed++;
-                item[prop] = parseInt($(id).val(), 10);
+                item[prop] = parseInt(<string>$(id).val(), 10);
             }
         }
         else if (editors[type + '-' + prop]) {
@@ -1102,7 +1102,7 @@ function cleanNodes(nodes) {
 function UpdateProfile(customUndo?: boolean): UpdateState {
     const data: any = {};
     let changed = 0;
-    let val = $('#profile-name').val();
+    let val = <string>$('#profile-name').val();
     const e = _enabled.indexOf(currentProfile.name.toLowerCase()) !== -1;
 
     if (val !== currentProfile.name) {
@@ -1196,10 +1196,10 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
         }
     }
 
-    if (currentProfile.priority !== parseInt($('#profile-priority').val(), 10)) {
+    if (currentProfile.priority !== parseInt(<string>$('#profile-priority').val(), 10)) {
         data.priority = currentProfile.priority;
         changed++;
-        currentProfile.priority = parseInt($('#profile-priority').val(), 10);
+        currentProfile.priority = parseInt(<string>$('#profile-priority').val(), 10);
     }
 
     val = profileID(currentProfile.name);
@@ -2508,33 +2508,33 @@ export function init() {
 
     $('select').on('focus', function () {
         // Store the current value on focus and on change
-        $(this).data('previous-value', this.value);
+        $(this).data('previous-value', (<HTMLInputElement>this).value);
     }).change(function () {
         updateCurrent();
-        $(this).data('previous-value', this.value);
+        $(this).data('previous-value', (<HTMLInputElement>this).value);
     });
 
     $('input[type=\'text\'],input[type=\'number\'],textarea').on('keydown', function () {
-        $(this).data('previous-value', this.value);
+        $(this).data('previous-value', (<HTMLInputElement>this).value);
     }).on('keyup', function () {
         updateCurrent();
-        $(this).data('previous-value', this.value);
+        $(this).data('previous-value', (<HTMLInputElement>this).value);
     });
 
     $('input[type=\'number\']').on('focus', function () {
         // Store the current value on focus and on change
-        $(this).data('previous-value', this.value);
+        $(this).data('previous-value', (<HTMLInputElement>this).value);
     }).change(function () {
         updateCurrent();
-        $(this).data('previous-value', this.value);
+        $(this).data('previous-value', (<HTMLInputElement>this).value);
     });
 
     $('input[type=checkbox]').on('focus', function () {
         // Store the current value on focus and on change
-        $(this).data('previous-value', this.checked);
+        $(this).data('previous-value', (<HTMLInputElement>this).checked);
     }).change(function () {
         updateCurrent();
-        $(this).data('previous-value', this.checked);
+        $(this).data('previous-value', (<HTMLInputElement>this).checked);
     });
     addInputContext();
 
@@ -2564,7 +2564,7 @@ export function init() {
     initEditor('button-value');
     initEditor('context-value');
     buildTreeview(getProfileData());
-    $('#profile-tree').contextmenu((event) => {
+    $('#profile-tree').on('contextmenu', (event: JQueryEventObject) => {
         event.preventDefault();
         event.stopPropagation();
         event.cancelBubble = true;

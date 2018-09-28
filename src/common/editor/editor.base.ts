@@ -11,10 +11,10 @@ export interface EditorOptions {
     value?: any;
     remote?: string;
     options?: any;
-    watch?: Function;
-    watchStop?: Function;
+    watch?(...args: any[]): void;
+    watchStop?(...args: any[]): void;
     source?: Source;
-    opened?: Function;
+    opened?(...args: any[]): void;
 }
 
 export enum FileState {
