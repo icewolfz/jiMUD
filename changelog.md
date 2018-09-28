@@ -30,6 +30,7 @@
     - Fixed reopening of remote edited files
   - Advanced editor: fix spacing and border issues
   - Fixed window ready checks for chat, editor, code editor, and progress dialogs to make sure they are 100% loaded before processing any data
+  - Profile manager: fix syntax highlighting when changing styles
 
 ## v0.5.5 2018-09-26
 

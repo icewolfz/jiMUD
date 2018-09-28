@@ -710,10 +710,14 @@ function setEditorValue(editor, value) {
 
 export function UpdateEditorMode(type) {
     if (editors[type + '-value']) {
-        if ($('#' + type + '-style').val() === ItemStyle.Script)
+        if ($('#' + type + '-style').val() === '2' || $('#' + type + '-style').val() === ItemStyle.Script) {
             editors[type + '-value'].getSession().setMode('ace/mode/javascript');
-        else
+            setTimeout(() => editors[type + '-value'].getSession().setMode('ace/mode/javascript'), 100);
+        }
+        else {
             editors[type + '-value'].getSession().setMode('ace/mode/text');
+            setTimeout(() => editors[type + '-value'].getSession().setMode('ace/mode/text'), 100);
+        }
     }
 }
 
