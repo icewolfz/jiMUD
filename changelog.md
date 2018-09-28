@@ -8,7 +8,7 @@
       - Improve open times
       - Add new hidden external exit support
       - Add support for older virtual areas in external exits that ise VV define
-  - New about dialog logo, cleaning and more simple
+  - New about dialog logo, clean and more simple
   - Events:
     - `backup-loaded` fired when backup has finished loading
     - `backup-saved` fired when backup has finished saving
