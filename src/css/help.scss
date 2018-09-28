@@ -60,6 +60,7 @@ body {
 .panel-heading .form-control {
     display: inline-block;
     margin: 0px;
+    height: auto;
 }
 
 .panel-heading {
@@ -69,7 +70,7 @@ body {
 .path-container {
     display: inline-block;
     position: absolute;
-    top: 2px;
+    top: 4px;
     right: 5px;
     left: 72px;
 }
