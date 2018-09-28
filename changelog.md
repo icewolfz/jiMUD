@@ -19,6 +19,8 @@
   - Code editor:
     - Changed how files are tested if they exist in so directories are not counted as files
     - More error catching when opening a file
+    - Fixed remote editing file icon
+    - Fixed reopening of remote edited files
   - Advanced editor: fix spacing and border issues
 
 ## v0.5.5 2018-09-26

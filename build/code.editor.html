@@ -7363,7 +7363,7 @@
         if (files.length === 0) return;
         var panels = [];
         for (var f = 0, fl = files.length; f < fl; f++) {
-            if (isDirSync(files[f].file)) {
+            if (!files[f].remoteEdit && isDirSync(files[f].file)) {
                 dialog.showMessageBox(remote.getCurrentWindow(), {
                     type: 'info',
                     title: 'Can not open folders',
@@ -7371,7 +7371,7 @@
                 });
                 continue;
             }
-            if (!existsSync(files[f].file)) {
+            if (!files[f].remoteEdit && !existsSync(files[f].file)) {
                 if (exists)
                     dialog.showMessageBox(remote.getCurrentWindow(), {
                         type: 'info',
@@ -8424,7 +8424,7 @@
                         console.log(err);
                 }
                 if (options.nativeIcons)
-                    app.getFileIcon((path.extname(data.file).length !== 0 ? data.file : '.*'), { size: 'small' }, (err, icon) => {
+                    app.getFileIcon((path.extname(data.source ? data.remote : data.file).length !== 0 ? data.source ? data.remote : data.file : '.*'), { size: 'small' }, (err, icon) => {
                         if (err || !icon) return;
                         manager.setPanelIcon(icon.toDataURL(), p);
                     });
