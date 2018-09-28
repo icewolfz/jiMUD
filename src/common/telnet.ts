@@ -1668,7 +1668,7 @@ export class Telnet extends EventEmitter {
         if (this.enableDebug) this.emit('debug', 'Pre decompress:' + data.toString('binary'), 1);
         data = this.zStream.decompress(data);
         if (this.enableDebug) this.emit('debug', 'Post decompress:' + data.toString('binary'), 1);
-        return new Buffer(data, 'binary');
+        return Buffer.from(data, 'binary');
     }
 
     /**

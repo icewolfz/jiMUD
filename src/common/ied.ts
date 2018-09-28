@@ -77,7 +77,7 @@ export class IED extends EventEmitter {
                 let files;
                 try {
                     const z = new ZLIB.InflateStream();
-                    files = Buffer.from(z.decompress(new Buffer(e.data.data, 'binary'))).toString();
+                    files = Buffer.from(z.decompress(Buffer.from(e.data.data, 'binary'))).toString();
                     files = JSON.parse(files);
                     this.emit('dir', e.data.path, files, e.data.tag || 'dir', e.data.local);
                 }
@@ -1118,11 +1118,11 @@ export class Item {
         let buffer: Buffer;
         let br;
         if (position + size > this.totalSize) {
-            buffer = new Buffer(this.totalSize - position);
+            buffer = Buffer.alloc(this.totalSize - position);
             br = fs.readSync(this.stream, buffer, 0, this.totalSize - position, position);
         }
         else {
-            buffer = new Buffer(size);
+            buffer = Buffer.alloc(size);
             br = fs.readSync(this.stream, buffer, 0, size, position);
         }
         return buffer.toString();
@@ -1156,10 +1156,7 @@ export class Item {
         if (this.compress) {
             if (!this._zStream)
                 this._zStream = new ZLIB.InflateStream();
-            //Buffer.from(data, '')
-            //data = nZLIB.inflateRawSync(data);
-            data = this._zStream.decompress(new Buffer(data, 'binary'));
-            //var d = nZLIB.inflateRawSync(new Buffer(data, "binary"));
+            data = this._zStream.decompress(Buffer.from(data, 'binary'));
             fs.writeSync(this.stream, data);
         }
         else
