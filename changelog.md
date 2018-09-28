@@ -20,6 +20,7 @@
   - Update zlib to 0.3.1
   - Update datatables from 1.10.16 to 1.10.18
   - Remove ResizerObserver polyfill as electron 3 includes native support
+  - Update tinymce from 4.8.1 to 4.8.3
 - **Fixed:**
   - Code editor:
     - Changed how files are tested if they exist in so directories are not counted as files
