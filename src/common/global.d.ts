@@ -45,6 +45,9 @@ interface Window {
 	ResizeObserver: ResizeObserver;
 }
 
+/**
+ * Remove once typscript nativly supports ResizeObserver 
+ */
 interface ResizeObserver {
 	observe: (target: Element) => void;
 	unobserve: (target: Element) => void;
@@ -69,3 +72,4 @@ declare var ResizeObserverEntry: {
     prototype: ResizeObserverEntry;
     new(): ResizeObserverEntry;
 };
+/** End ResizeObserver */
