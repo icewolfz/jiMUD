@@ -18,7 +18,7 @@ const { TrayClick } = require('./js/types');
 let win, winWho, winMap, winProfiles, winEditor, winChat, winCode, winProgress;
 let set, mapperMax = false, editorMax = false, chatMax = false, codeMax = false;
 let edset;
-let chatReady = false, codeReady = false, editorReady = false, progressReady = false;
+let chatReady = 0, codeReady = 0, editorReady = 0, progressReady = 0;
 let reload = null;
 let tray = null;
 let overlay = 0;
@@ -1840,7 +1840,7 @@ ipcMain.on('open-editor', (event, file, remote, remoteEdit) => {
 });
 
 function openEditor(file, remote, remoteEdit) {
-    if (!codeReady || !winCode) {
+    if (codeReady !== 2 || !winCode) {
         setTimeout(() => {
             openEditor(file, remote, remoteEdit);
         }, 1000);
@@ -1882,12 +1882,12 @@ ipcMain.on('send-editor', (event, text, window, show, args) => {
 });
 
 function sendEditor(text, window) {
-    if ((!codeReady || !winCode || !winCode.isVisible()) && window === 'code-editor') {
+    if ((codeReady !== 2 || !winCode || !winCode.isVisible()) && window === 'code-editor') {
         setTimeout(() => {
             sendEditor(text, window);
         }, 1000);
     }
-    else if ((!editorReady || !winEditor || !winEditor.isVisible()) && window === 'editor') {
+    else if ((editorReady !== 2 || !winEditor || !winEditor.isVisible()) && window === 'editor') {
         setTimeout(() => {
             sendEditor(text, window);
         }, 1000);
@@ -1955,7 +1955,7 @@ ipcMain.on('chat', (event, text) => {
 });
 
 function sendChat(text) {
-    if (!chatReady || !winChat) {
+    if (chatReady !== 2 || !winChat) {
         setTimeout(() => { sendChat(text); }, 100);
         return;
     }
@@ -2116,7 +2116,7 @@ ipcMain.on('progress-show', (event, title) => {
         winProgress.setMenu(null);
         winProgress.on('closed', () => {
             winProgress = null;
-            progressReady = false;
+            progressReady = 0;
         });
         winProgress.loadURL(url.format({
             pathname: path.join(__dirname, 'progress.html'),
@@ -2127,8 +2127,12 @@ ipcMain.on('progress-show', (event, title) => {
         if (global.debug)
             winProgress.webContents.openDevTools();
 
+        winProgress.webContents.on('did-finish-load', () => {
+            progressReady = 2;
+        });
+
         winProgress.once('ready-to-show', () => {
-            progressReady = true;
+            progressReady = 1;
             winProgress.show();
             if (typeof title === 'string')
                 setProgressTitle(title);
@@ -2153,7 +2157,7 @@ ipcMain.on('progress-close', (event, progressObj) => {
 });
 
 function setProgress(progressObj) {
-    if (!progressReady || !winProgress)
+    if (progressReady !== 2 || !winProgress)
         setTimeout(() => setProgress(progressObj), 100);
     else {
         winProgress.webContents.send('progress', progressObj);
@@ -2165,7 +2169,7 @@ function setProgress(progressObj) {
 }
 
 function setProgressTitle(title) {
-    if (!progressReady || !winProgress)
+    if (progressReady !== 2 || !winProgress)
         setTimeout(() => setProgressTitle(title), 100);
     else
         winProgress.webContents.send('progress-title', title);
@@ -2759,7 +2763,7 @@ function createEditor(show, loading) {
     winEditor.on('closed', (e) => {
         if (e.sender !== winEditor) return;
         winEditor = null;
-        editorReady = false;
+        editorReady = 0;
     });
 
     winEditor.on('resize', () => {
@@ -2784,6 +2788,10 @@ function createEditor(show, loading) {
     if (global.debug)
         winEditor.webContents.openDevTools();
 
+    winEditor.webContents.on('did-finish-load', () => {
+        editorReady = 2;
+    });
+
     winEditor.once('ready-to-show', () => {
         loadWindowScripts(winEditor, 'editor');
         addInputContext(winEditor);
@@ -2798,7 +2806,7 @@ function createEditor(show, loading) {
             clearTimeout(loadid);
             loadid = setTimeout(() => { win.focus(); }, 500);
         }
-        editorReady = true;
+        editorReady = 1;
     });
 
     winEditor.on('close', (e) => {
@@ -2871,7 +2879,7 @@ function createChat(show, loading) {
     winChat.on('closed', (e) => {
         if (e.sender !== winChat) return;
         winChat = null;
-        chatReady = false;
+        chatReady = 0;
     });
 
     winChat.on('resize', () => {
@@ -2896,6 +2904,10 @@ function createChat(show, loading) {
     if (global.debug)
         winChat.webContents.openDevTools();
 
+    winChat.webContents.on('did-finish-load', () => {
+        chatReady = 2;
+    });
+
     winChat.once('ready-to-show', () => {
         loadWindowScripts(winChat, 'chat');
         addInputContext(winChat);
@@ -2906,7 +2918,7 @@ function createChat(show, loading) {
         }
         else
             chatMax = s.maximized;
-        chatReady = true;
+        chatReady = 1;
         if (loading) {
             clearTimeout(loadid);
             loadid = setTimeout(() => { win.focus(); }, 500);
@@ -3308,7 +3320,7 @@ function createCodeEditor(show, loading, loaded) {
     winCode.on('closed', (e) => {
         if (e.sender !== winCode) return;
         winCode = null;
-        codeReady = false;
+        codeReady = 0;
     });
 
     winCode.on('resize', () => {
@@ -3333,6 +3345,10 @@ function createCodeEditor(show, loading, loaded) {
     if (global.debug)
         winCode.webContents.openDevTools();
 
+    winCode.webContents.on('did-finish-load', () => {
+        codeReady = 2;
+    });
+
     winCode.once('ready-to-show', () => {
         loadWindowScripts(winCode, 'code.editor');
         addInputContext(winCode);
@@ -3350,7 +3366,7 @@ function createCodeEditor(show, loading, loaded) {
         }
         if (loaded)
             loaded();
-        codeReady = true;
+        codeReady = 1;
         if (global.editorOnly) {
             updateJumpList();
             checkForUpdates();
