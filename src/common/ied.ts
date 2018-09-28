@@ -14,8 +14,7 @@ const tmp = require('tmp');
 const { ipcRenderer } = require('electron');
 
 const ZLIB: any = require('./../../lib/inflate_stream.min.js').Zlib;
-const dZLIB: any = require('./../../lib/zlib/deflate.min.js').Zlib;
-//const nZLIB = require("zlib");
+const dZLIB: any = require('./../../lib/deflate.min.js').Zlib;
 
 tmp.setGracefulCleanup();
 
