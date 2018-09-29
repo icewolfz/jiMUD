@@ -37,11 +37,16 @@ dialog {
     color: black;
 }
 
-.dialog-footer .btn, .dialog-footer .btn-group, .dialog-footer .bootstrap-select  {
+.bootstrap-select .dropdown-menu {
+    max-height: 400px !important;
+    width: 100%;
+}
+
+.dialog-footer .btn, .dialog-footer .btn-group, .dialog-footer .bootstrap-select {
     margin: 5px;
 }
 
-.dialog-footer .bootstrap-select .btn, .dialog-footer .bootstrap-select .btn-group  {
+.dialog-footer .bootstrap-select .btn, .dialog-footer .bootstrap-select .btn-group {
     margin: 0px;
 }
 
