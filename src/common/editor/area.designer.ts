@@ -4489,7 +4489,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.flags = RoomFlags.None;
                                     nMonster.type = e.data['mon-wiz-type'].value;
                                     nMonster.level = +e.data['mon-wiz-level'];
-                                    nMonster.alignment = +e.data['mon-wiz-alignment'];
+                                    nMonster.alignment = e.data['mon-wiz-alignment'];
                                     nMonster.race = e.data['mon-wiz-race'];
                                     nMonster.class = e.data['mon-wiz-class'];
                                     nMonster.language = e.data['mon-wiz-language'];
@@ -5471,7 +5471,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.flags = RoomFlags.None;
                                     nMonster.type = e.data['mon-wiz-type'].value;
                                     nMonster.level = +e.data['mon-wiz-level'];
-                                    nMonster.alignment = +e.data['mon-wiz-alignment'];
+                                    nMonster.alignment = e.data['mon-wiz-alignment'];
                                     nMonster.race = e.data['mon-wiz-race'];
                                     nMonster.class = e.data['mon-wiz-class'];
                                     nMonster.language = e.data['mon-wiz-language'];

@@ -28,6 +28,8 @@
     - More error catching when opening a file
     - Fixed remote editing file icon
     - Fixed reopening of remote edited files
+    - Area designer:
+      - Fix monster alignment not being correctly saved when using string word
   - Advanced editor: fix spacing and border issues
   - Fixed window ready checks for chat, editor, code editor, and progress dialogs to make sure they are 100% loaded before processing any data
   - Profile manager: fix syntax highlighting when changing styles
