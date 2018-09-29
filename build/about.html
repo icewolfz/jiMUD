@@ -132,6 +132,23 @@
                 border-color: orange
             }
         }
+
+        .tab-content {
+            position: absolute;
+            top: 42px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .tab-pane {
+            overflow: auto;
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            top: 0;
+        }
     </style>
     <script>
         if (typeof module === 'object') { window.module = module; module = undefined; }
@@ -226,7 +243,7 @@
                 Electron: <span id="ev"></span> - https://electronjs.org/<br /> Node: <span id="nv"></span> - http://www.nodejs.org/<br /> Chromium: <span id="cv"></span> - https://www.chromium.org/Home<br /> Buzz: 1.2.1 - http://buzz.jaysalvat.com<br /> jQuery: 3.3.1 - http://www.jquery.com<br /> Icons: http://opengameart.org/<br /> Font Awesome: v4.7.0 - http://http://fontawesome.io/
                 <br /><br />&copy; 2017-2018
             </div>
-            <div role="tabpanel" class="tab-pane fade" id="memory" style="height: 185px;overflow: auto;text-align: right;    width: 440px;">
+            <div role="tabpanel" class="tab-pane fade" id="memory" style="text-align: right;">
                 <table id="memory" style="width: 100%;" class="table table-striped table-hover table-condensed">
                     <thead>
                         <tr style="text-align: center">
