@@ -69,8 +69,8 @@
       "./changelog.md",
       "./readme.md",
       "./package.json",
-      "!lib/**/*.{py,c,gz,sln,map,lib,sh,gyp,gypi,html,md,MD,markdown,txt,tlog,vcxproj,vcxproj.*,yml,xml,iobj,ipdb}",
-      "!node_modules/**/*.{py,c,gz,sln,map,lib,sh,gyp,gypi,html,md,MD,markdown,txt,tlog,vcxproj,vcxproj.*,yml,xml,iobj,ipdb}",
+      "!lib/**/*.{h,py,c,gz,sln,map,lib,sh,gyp,gypi,html,md,MD,markdown,txt,tlog,vcxproj,vcxproj.*,yml,xml,iobj,ipdb}",
+      "!node_modules/**/*.{h,py,c,gz,sln,map,lib,sh,gyp,gypi,html,md,MD,markdown,txt,tlog,vcxproj,vcxproj.*,yml,xml,iobj,ipdb}",
       "!node_modules/**/{MAKEFILE,Dockerfile,TODO,README,LICENSE,LICENSE.*,Makefile,License,NOTICE,license,gruntfile.js,metadata.js,metadata.json,bower.json,component.json}",
       "!node_modules/**/doc/*",
       "!node_modules/**/Release/*.{map,lib,exp}",
@@ -88,7 +88,8 @@
       "!node_modules/monaco-editor/!(min)/*",
       "!node_modules/moment/locale/*",
       "!node_modules/moment/min/*",
-      "!node_modules/spellchecker/vendor/hunspell/*"
+      "!node_modules/spellchecker/vendor/hunspell/*",
+      "!node_modules/{xtend,prebuild-install,detect-libc,expand-template,github-from-package,node-abi,noop-logger,npmlog,os-homedir,tar-fs,pump,rc,simple-get,tunnel-agent,which-pm-runs,tar-stream,tar-stream/readable-stream}/**/*"
     ],
     "extends": null,
     "asar": {
