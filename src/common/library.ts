@@ -1884,6 +1884,7 @@ export function getColors() {
 export function updateEditDropdown(d) {
     const m = Array.from(d.querySelectorAll('ul > li > a'));
     const ip = d.querySelector('input');
+    const b = d.querySelector('button');
     m.forEach(i => {
         (<HTMLElement>i).addEventListener('click', (e) => {
             if (e.ctrlKey && (d.dataset.multiple === '1' || d.dataset.multiple === 'true')) {
@@ -1899,6 +1900,10 @@ export function updateEditDropdown(d) {
             ip.dispatchEvent(evt);
             e.returnValue = false;
             e.preventDefault();
+            if (b.parentElement.classList.contains('autocomplete')) {
+                b.parentElement.classList.remove('autocomplete');
+                Array.from(b.nextElementSibling.querySelectorAll('li')).map(a => (<HTMLElement>a).style.display = '');
+            }
             return false;
         });
     });
@@ -1924,13 +1929,42 @@ export function initEditDropdown(d) {
         let el: any = m.filter(i => (val.indexOf(((<HTMLElement>i).dataset.value || '').toLowerCase()) !== -1));
         if (el.length === 0)
             el = m.filter(i => val.indexOf((<HTMLElement>i).textContent.toLowerCase()) !== -1);
-        if (el.length === 0)
+        if (el.length === 0) {
+            b.nextElementSibling.scrollTop = 0;
             return;
-        if (d.dataset.multiple === '1' || d.dataset.multiple === 'true')
+        }
+        if (d.dataset.multiple === '1' || d.dataset.multiple === 'true') {
             el.forEach(a => a.classList.add('active'));
+            if (el.length !== 0)
+                b.nextElementSibling.scrollTop = el[0].parentElement.offsetTop;
+        }
         else {
             el = el[0];
             el.classList.add('active');
+            setTimeout(() => {
+                b.nextElementSibling.scrollTop = el.parentElement.offsetTop;
+            }, 50);
         }
+    });
+
+    ip.addEventListener('blur', (e) => {
+        if (b.parentElement.classList.contains('autocomplete') && (!e.relatedTarget || !b.parentElement.contains(e.relatedTarget))) {
+            b.parentElement.classList.remove('open', 'autocomplete');
+            Array.from(b.nextElementSibling.querySelectorAll('li')).map(a => (<HTMLElement>a).style.display = '');
+        }
+    });
+
+    ip.addEventListener('input', () => {
+        const parent = b.parentElement;
+        const list = b.nextElementSibling;
+        let items = Array.from(list.querySelectorAll('li'));
+        items.map(e => (<HTMLElement>e).firstElementChild.classList.remove('active'));
+        items.map(e => (<HTMLElement>e).style.display = '');
+        items = items.filter(e => !(<HTMLElement>e).textContent.match(new RegExp(ip.value)));
+        items.map(e => (<HTMLElement>e).style.display = 'none');
+        if (items.length !== 0)
+            parent.classList.add('open', 'autocomplete');
+        else
+            parent.classList.remove('open', 'autocomplete');
     });
 }

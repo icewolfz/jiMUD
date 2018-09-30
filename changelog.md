@@ -8,6 +8,7 @@
       - Improve open times
       - Add new hidden external exit support
       - Add support for older virtual areas in external exits that ise VV define
+    - Wizards: Add autocomplete suggestions to all editable dropdowns
   - New about dialog logo, clean and more simple
   - Events:
     - `backup-loaded` fired when backup has finished loading
