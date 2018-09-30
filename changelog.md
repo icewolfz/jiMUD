@@ -44,7 +44,7 @@
 - **Changed:**
   - Update fswin to 3.18.918, and use package instead of custom builds for easier electron upgrades
   - Update electron from 2.0.9 to 2.0.10
-  - Cut blot from install package by more then 50%
+  - Cut bloat from install package by more then 50%
 - **Fixed:**
   - Correctly disable check for update menu item while in the middle of a check
   - Immortal tools: Fix show hidden files/folders preference
