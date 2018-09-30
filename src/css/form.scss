@@ -214,3 +214,40 @@ textarea {
     border-color: #ddd #ddd #ddd transparent;
     *border-left-color: #ffffff;
 }
+
+.input-dropdown {
+    padding-right: 0;
+}
+
+input.input-dropdown::-webkit-calendar-picker-indicator:hover {
+    background-image: url(../../assets/editor/edit-dropdown.over.png);
+    background-repeat: no-repeat;
+    background-position: right;
+    opacity: 1;
+    color: transparent;
+    border-left: 1px solid #ADADAD;
+}
+
+input.input-dropdown::-webkit-calendar-picker-indicator:active {
+    background-image: url(../../assets/editor/edit-dropdown.down.png);
+    background-repeat: no-repeat;
+    background-position: right;    
+    opacity: 1;
+    color: transparent;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102,175,233,.6);
+    border-left: 1px solid rgba(102,175,233,.6);    
+    border-left: 1px solid #ADADAD;
+}
+
+input.input-dropdown::-webkit-calendar-picker-indicator  {
+    padding: 0;
+    margin: 0;
+    height: 30px;
+    width: 15px;
+    opacity: 1;
+    color: transparent;
+    background-image: url(../../assets/editor/edit-dropdown.png);
+    background-repeat: no-repeat;
+    background-position: right;
+    border-left: 1px solid #CCCCCC;    
+}
