@@ -8,9 +8,6 @@ A list of profiled images and image spites that can be accessed using
 - `input.left.png` Command box left end cap
 - `input.png` Command box repeating middle background
 - `input.right.png` Command box right end cap
-- `logo.png` jiMUD logo
-- `logo@2x.png` jiMUD logo 2 times larger
-- `logo@3x.png` jiMUD logo 3 times larger
 
 ## Actions
 
