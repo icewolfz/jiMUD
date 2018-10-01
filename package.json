@@ -115,6 +115,10 @@
       "icon": "./assets/icons/png/",
       "category": "Game;Network;",
       "synopsis": "MUD client coded in javascript."
+    },
+    "mac": {
+      "category" : "public.app-category.role-playing-games",
+      "icon":"./assets/icons/mac/app.icns"
     }
   },
   "dependencies": {
