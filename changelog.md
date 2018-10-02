@@ -2,6 +2,14 @@
 
 ## v0.6.1
 
+- **Fixed:**
+  - Code editor:
+    - Area designer:
+      - Room preview:
+        - Fix displaying climbs as normal exits.
+        - Fix room and base room climbs being combined
+        - Fix flying monsters by append (flying) to monsters
+
 ## v0.6.0 2018-10-01
 
 - **New:**

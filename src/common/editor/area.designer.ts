@@ -10280,7 +10280,7 @@ export class AreaDesigner extends EditorBase {
             }
             else
                 items = null;
-            e = room.climbs | base.climbs;
+            e = room.climbs || base.climbs;
             if (e !== RoomExit.None) {
                 ex = [];
                 for (exit in RoomExits) {
@@ -10347,6 +10347,7 @@ export class AreaDesigner extends EditorBase {
                 this.$roomPreview.sound.style.display = 'none';
             }
             e = room.exits | room.external || base.exits || base.external;
+            e &= ~(room.climbs || base.climbs);
             if (e === RoomExit.None)
                 this.$roomPreview.exits.textContent = 'There are no obvious exits.';
             else {
@@ -10379,21 +10380,32 @@ export class AreaDesigner extends EditorBase {
             }
             let counts = {};
             room.monsters.forEach(i => {
-                if (!counts[this.$area.monsters[i.id].short])
-                    counts[this.$area.monsters[i.id].short] = 0;
+                let short;
+                if (this.$area.monsters[i.id].flags & MonsterFlags.Flying)
+                    short = this.$area.monsters[i.id].short + ' (flying)';
+                else
+                    short = this.$area.monsters[i.id].short;
+
+                if (!counts[short])
+                    counts[short] = 0;
                 if (i.minAmount > 0)
-                    counts[this.$area.monsters[i.id].short] += i.minAmount;
+                    counts[short] += i.minAmount;
                 else if (i.unique)
-                    counts[this.$area.monsters[i.id].short]++;
+                    counts[short]++;
             });
             if ((room.baseFlags & RoomBaseFlags.No_Monsters) !== RoomBaseFlags.No_Monsters)
                 base.monsters.forEach(i => {
-                    if (!counts[this.$area.monsters[i.id].short])
-                        counts[this.$area.monsters[i.id].short] = 0;
+                    let short;
+                    if (this.$area.monsters[i.id].flags & MonsterFlags.Flying)
+                        short = this.$area.monsters[i.id].short + ' (flying)';
+                    else
+                        short = this.$area.monsters[i.id].short;
+                    if (!counts[short])
+                        counts[short] = 0;
                     if (i.minAmount > 0)
-                        counts[this.$area.monsters[i.id].short] += i.minAmount;
+                        counts[short] += i.minAmount;
                     else if (i.unique)
-                        counts[this.$area.monsters[i.id].short]++;
+                        counts[short]++;
                 });
             items = Object.keys(counts);
             if (items.length > 0) {
