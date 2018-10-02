@@ -1902,7 +1902,7 @@ export function updateEditDropdown(d) {
             e.preventDefault();
             if (b.parentElement.classList.contains('autocomplete')) {
                 b.parentElement.classList.remove('autocomplete');
-                Array.from(b.nextElementSibling.querySelectorAll('li')).map(a => (<HTMLElement>a).style.display = '');
+                Array.from(b.nextElementSibling.querySelectorAll('li')).forEach(a => (<HTMLElement>a).style.display = '');
             }
             return false;
         });
@@ -1950,7 +1950,7 @@ export function initEditDropdown(d) {
     ip.addEventListener('blur', (e) => {
         if (b.parentElement.classList.contains('autocomplete') && (!e.relatedTarget || !b.parentElement.contains(e.relatedTarget))) {
             b.parentElement.classList.remove('open', 'autocomplete');
-            Array.from(b.nextElementSibling.querySelectorAll('li')).map(a => (<HTMLElement>a).style.display = '');
+            Array.from(b.nextElementSibling.querySelectorAll('li')).forEach(a => (<HTMLElement>a).style.display = '');
         }
     });
 
@@ -1958,10 +1958,10 @@ export function initEditDropdown(d) {
         const parent = b.parentElement;
         const list = b.nextElementSibling;
         let items = Array.from(list.querySelectorAll('li'));
-        items.map(e => (<HTMLElement>e).firstElementChild.classList.remove('active'));
-        items.map(e => (<HTMLElement>e).style.display = '');
+        items.forEach(e => (<HTMLElement>e).firstElementChild.classList.remove('active'));
+        items.forEach(e => (<HTMLElement>e).style.display = '');
         items = items.filter(e => !(<HTMLElement>e).textContent.match(new RegExp(ip.value)));
-        items.map(e => (<HTMLElement>e).style.display = 'none');
+        items.forEach(e => (<HTMLElement>e).style.display = 'none');
         if (items.length !== 0)
             parent.classList.add('open', 'autocomplete');
         else

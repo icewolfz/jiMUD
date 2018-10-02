@@ -1660,13 +1660,13 @@ export class Input extends EventEmitter {
             case 'raiseevent':
             case 'raise':
                 if (this.client.options.parseDoubleQuotes)
-                    args.map((a) => {
+                    args.forEach((a) => {
                         return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
                             return e.replace(/\\\"/g, '"');
                         });
                     });
                 if (this.client.options.parseSingleQuotes)
-                    args.map((a) => {
+                    args.forEach((a) => {
                         return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
                             return e.replace(/\\\'/g, '\'');
                         });
@@ -1689,13 +1689,13 @@ export class Input extends EventEmitter {
                     throw new Error('Must be greater then zero');
                 args.shift();
                 if (this.client.options.parseDoubleQuotes)
-                    args.map((a) => {
+                    args.forEach((a) => {
                         return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
                             return e.replace(/\\\"/g, '"');
                         });
                     });
                 if (this.client.options.parseSingleQuotes)
-                    args.map((a) => {
+                    args.forEach((a) => {
                         return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
                             return e.replace(/\\\'/g, '\'');
                         });

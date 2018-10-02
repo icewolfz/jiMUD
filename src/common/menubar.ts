@@ -124,7 +124,7 @@ export class Menubar {
                 this.doUpdate(1);
         }
         if (tItem.root && !tItem.enabled) {
-            tItem.submenu.map(f => {
+            tItem.submenu.forEach(f => {
                 if (f.hasOwnProperty('rootEnabled'))
                     return f;
                 if (!f.hasOwnProperty('enabled'))
@@ -138,7 +138,7 @@ export class Menubar {
                 this.doUpdate(1);
         }
         else if (tItem.root && tItem.enabled) {
-            tItem.submenu.map(f => {
+            tItem.submenu.forEach(f => {
                 if (!f.hasOwnProperty('rootEnabled')) return f;
                 f.enabled = f.rootEnabled || false;
                 delete f.rootEnabled;

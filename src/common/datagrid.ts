@@ -475,7 +475,7 @@ export class DataGrid extends EventEmitter {
         el.addEventListener('scroll', (e) => {
             this.$header.style.transform = 'translate(-' + (<HTMLElement>e.currentTarget).scrollLeft + 'px,0)';
             if (this.$editor && this.$editor.editors.length > 0)
-                this.$editor.editors.map(ed => ed.editor.scroll());
+                this.$editor.editors.forEach(ed => ed.editor.scroll());
         });
         el.addEventListener('contextmenu', (e) => {
             (<any>e).editor = this.$editor;
@@ -935,7 +935,7 @@ export class DataGrid extends EventEmitter {
             rows = [rows[0]];
         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
         this.$selected = rows;
-        this.$selected.map(r => {
+        this.$selected.forEach(r => {
             const el = <HTMLElement>(<HTMLElement>this.$body.firstChild).children[r];
             el.classList.add('selected');
         });
@@ -958,7 +958,7 @@ export class DataGrid extends EventEmitter {
         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
         this.$selected = indexes.map(i => this.$sortedRows.indexOf(i));
         const rows = <HTMLElement>(<HTMLElement>this.$body.firstChild);
-        this.$selected.map(r => {
+        this.$selected.forEach(r => {
             if (r < 0 || r >= rows.children.length) return;
             const el = rows.children[r];
             if (el)
@@ -1534,12 +1534,12 @@ export class DataGrid extends EventEmitter {
         row.addEventListener('mousedown', (e) => {
             this.$editorClick = e.currentTarget;
             if (this.$editor && this.$editor.editors)
-                this.$editor.editors.map(ed => ed.editorClick = this.$editorClick);
+                this.$editor.editors.forEach(ed => ed.editorClick = this.$editorClick);
         });
         row.addEventListener('mouseup', (e) => {
             this.$editorClick = null;
             if (this.$editor && this.$editor.editors)
-                this.$editor.editors.map(ed => ed.editorClick = null);
+                this.$editor.editors.forEach(ed => ed.editorClick = null);
         });
         row.addEventListener('contextmenu', (e) => {
             this.emit('row-contextmenu', e);
@@ -1658,7 +1658,7 @@ export class DataGrid extends EventEmitter {
                         const sl = this.$springCols.length;
                         for (let s = 0; s < sl; s++) {
                             const children: HTMLElement[] = Array.from(this.$body.querySelectorAll('.datagrid-cell-spring:nth-child(' + (this.$springCols[s].index + 1 - this.$hiddenColumnCount) + ')'));
-                            children.map(c2 => {
+                            children.forEach(c2 => {
                                 c2.style.width = this.$springCols[s].width + 'px';
                                 c2.style.minWidth = this.$springCols[s].width + 'px';
                                 c2.style.maxWidth = this.$springCols[s].width + 'px';
@@ -1881,7 +1881,7 @@ export class DataGrid extends EventEmitter {
         let style;
 
         const spring: HTMLElement[] = Array.from(this.$header.querySelectorAll('.datagrid-cell-spring'));
-        spring.map(s => {
+        spring.forEach(s => {
             s.style.width = '0px';
             s.style.minWidth = '0px';
         });
@@ -1900,7 +1900,7 @@ export class DataGrid extends EventEmitter {
                 if (hWidth < this.$dataWidth) {
                     (<HTMLElement>cols[s]).style.width = this.$springCols[s].width + 'px';
                     (<HTMLElement>cols[s]).style.minWidth = this.$springCols[s].width + 'px';
-                    children.map(c => {
+                    children.forEach(c => {
                         c.style.width = this.$springCols[s].width + 'px';
                         c.style.minWidth = this.$springCols[s].width + 'px';
                         c.style.maxWidth = this.$springCols[s].width + 'px';
@@ -1911,7 +1911,7 @@ export class DataGrid extends EventEmitter {
                         sw++;
                     (<HTMLElement>cols[s]).style.width = sw + this.$springCols[s].width + 'px';
                     (<HTMLElement>cols[s]).style.minWidth = sw + this.$springCols[s].width + 'px';
-                    children.map(c => {
+                    children.forEach(c => {
                         c.style.width = sw + this.$springCols[s].width + 'px';
                         c.style.minWidth = sw + this.$springCols[s].width + 'px';
                         c.style.maxWidth = sw + this.$springCols[s].width + 'px';
@@ -1921,14 +1921,14 @@ export class DataGrid extends EventEmitter {
             }
         }
         else if (hWidth < this.$dataWidth) {
-            spring.map(s => {
+            spring.forEach(s => {
                 s.style.width = '0px';
                 s.style.minWidth = '0px';
                 s.style.display = 'none';
             });
         }
         else {
-            spring.map(s => {
+            spring.forEach(s => {
                 s.style.width = '';
                 s.style.minWidth = (helper.offsetWidth - this.$dataWidth) + 'px';
                 s.style.display = (helper.offsetWidth - this.$dataWidth) + 'px';
@@ -2038,12 +2038,12 @@ export class DataGrid extends EventEmitter {
         }
         if (!Array.isArray(rows))
             rows = [rows];
-        rows.map(r => {
+        rows.forEach(r => {
             if (typeof r !== 'number')
                 return this.$sortedRows.indexOf(this.$rows.indexOf(rows));
             return r;
         });
-        rows.map(r => {
+        rows.forEach(r => {
             const e = this.$body.firstElementChild.querySelector('[data-row="' + r + '"][data-parent="-1"]');
             if (!e) return;
             const nl = e.children[0].getElementsByClassName('datagrid-collapse');
@@ -2062,12 +2062,12 @@ export class DataGrid extends EventEmitter {
             }
             if (!Array.isArray(rows))
                 rows = [rows];
-            rows.map(r => {
+            rows.forEach(r => {
                 if (typeof r !== 'number')
                     return this.$sortedRows.indexOf(this.$rows.indexOf(rows));
                 return r;
             });
-            rows.map(r => {
+            rows.forEach(r => {
                 if (this.$viewState[this.$sortedRows[r]])
                     return;
                 //const e = this.$body.firstElementChild.children[r];
@@ -2091,12 +2091,12 @@ export class DataGrid extends EventEmitter {
             }
             if (!Array.isArray(rows))
                 rows = [rows];
-            rows.map(r => {
+            rows.forEach(r => {
                 if (typeof r !== 'number')
                     return this.$sortedRows.indexOf(this.$rows.indexOf(rows));
                 return r;
             });
-            rows.map(r => {
+            rows.forEach(r => {
                 if (!this.$viewState[this.$sortedRows[r]])
                     return;
                 const e = this.$body.firstElementChild.querySelector('[data-row="' + r + '"][data-parent="-1"]');

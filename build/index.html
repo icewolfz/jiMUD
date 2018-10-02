@@ -22,7 +22,7 @@
         //spell-checker:ignore ismap hellip selectall lagmeter repeatnum buttonvisible statusvisible limbsmenu partyhealth combathealth limb armor limbhealth
         if (window.module) module.module;
 
-        ['repeatnum'].map((a) => {
+        ['repeatnum'].forEach((a) => {
             Object.defineProperty(window, a, {
                 get: function () {
                     if (!client || !client.variables) return undefined;
@@ -38,7 +38,7 @@
             });
         });
 
-        ['$selectedword', '$selword'].map((a) => {
+        ['$selectedword', '$selword'].forEach((a) => {
             Object.defineProperty(window, a, {
                 get: function () {
                     if (!lastMouse) return '';
@@ -65,7 +65,7 @@
             });
         });
 
-        ['$selectedurl', '$selurl'].map((a) => {
+        ['$selectedurl', '$selurl'].forEach((a) => {
             Object.defineProperty(window, a, {
                 get: function () {
                     if (!lastMouse) return '';
@@ -80,7 +80,7 @@
             });
         });
 
-        ['$selectedline', '$selline'].map((a) => {
+        ['$selectedline', '$selline'].forEach((a) => {
             Object.defineProperty(window, a, {
                 get: function () {
                     if (!lastMouse) return '';
@@ -645,7 +645,7 @@
                 var c = new Menu();
                 if (!_context)
                     buildContextMenu();
-                _context.map((item) => {
+                _context.forEach((item) => {
                     c.append(item);
                 });
 

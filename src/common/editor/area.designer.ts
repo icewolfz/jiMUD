@@ -12338,12 +12338,8 @@ export class AreaDesigner extends EditorBase {
                 tmp = (obj.limbs || 'torso').split(',').map(l => l.trim());
                 tmp2 = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) === -1);
                 tmp = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) !== -1);
-                tmp = tmp.map(l => {
-                    return l.replace(/ /g, '').toUpperCase();
-                });
-                tmp2 = tmp2.map(l => {
-                    return `"${l}"`;
-                });
+                tmp = tmp.map(l => l.replace(/ /g, '').toUpperCase());
+                tmp2 = tmp2.map(l => `"${l}"`);
                 tmp = tmp.filter((value, index, self) => self.indexOf(value) === index);
                 tmp2 = tmp.filter((value, index, self) => self.indexOf(value) === index);
                 if (tmp.length === 0 && tmp2.length === 0)
@@ -12365,7 +12361,7 @@ export class AreaDesigner extends EditorBase {
                     data.includes += '\n#include <limbsdamaged.h>';
                     //name
                     tmp = obj.damaged.filter(d => d.type === 0).sort((a, b) => a.limbs.localeCompare(b));
-                    tmp.map(d => {
+                    tmp = tmp.map(d => {
                         if (limbsDamaged[d.limbs.trim()])
                             return `${limbsDamaged[d.limbs.trim()]} : "${d.description}"`;
                         return `LIMBS_DAM( ({ ${d.limbs.split(',').map(l => `"${l.trim()}"`).join(', ')} }) ) : "${d.description}"`;
@@ -12379,7 +12375,7 @@ export class AreaDesigner extends EditorBase {
                     }
                     //short
                     tmp = obj.damaged.filter(d => d.type === 1).sort((a, b) => a.limbs.localeCompare(b));
-                    tmp.map(d => {
+                    tmp = tmp.map(d => {
                         if (limbsDamaged[d.limbs.trim()])
                             return `${limbsDamaged[d.limbs.trim()]} : "${d.description}"`;
                         return `LIMBS_DAM( ({ ${d.limbs.split(',').map(l => `"${l.trim()}"`).join(', ')} }) ) : "${d.description}"`;
@@ -12393,7 +12389,7 @@ export class AreaDesigner extends EditorBase {
                     }
                     //long
                     tmp = obj.damaged.filter(d => d.type === 2).sort((a, b) => a.limbs.localeCompare(b));
-                    tmp.map(d => {
+                    tmp = tmp.map(d => {
                         if (limbsDamaged[d.limbs.trim()])
                             return `${limbsDamaged[d.limbs.trim()]} : "${d.description}"`;
                         return `LIMBS_DAM( ({ ${d.limbs.split(',').map(l => `"${l.trim()}"`).join(', ')} }) ) : "${d.description}"`;
@@ -12407,7 +12403,7 @@ export class AreaDesigner extends EditorBase {
                     }
                     //nouns
                     tmp = obj.damaged.filter(d => d.type === 3).sort((a, b) => a.limbs.localeCompare(b));
-                    tmp.map(d => {
+                    tmp = tmp.map(d => {
                         if (limbsDamaged[d.limbs.trim()])
                             return `${limbsDamaged[d.limbs.trim()]} : ${d.description.split(',').map(l => `({ ${l.trim()}"`).join(', ')} }) `;
                         return `LIMBS_DAM( ({ ${d.limbs.split(',').map(l => `"${l.trim()}"`).join(', ')} }) ) : ({ ${d.description.split(',').map(l => `"${l.trim()}"`).join(', ')} }) `;
@@ -12421,7 +12417,7 @@ export class AreaDesigner extends EditorBase {
                     }
                     //adjectives
                     tmp = obj.damaged.filter(d => d.type === 4).sort((a, b) => a.limbs.localeCompare(b));
-                    tmp.map(d => {
+                    tmp = tmp.map(d => {
                         if (limbsDamaged[d.limbs.trim()])
                             return `${limbsDamaged[d.limbs.trim()]} : ${d.description.split(',').map(l => `({ ${l.trim()}"`).join(', ')} }) `;
                         return `LIMBS_DAM( ({ ${d.limbs.split(',').map(l => `"${l.trim()}"`).join(', ')} }) ) : ({ ${d.description.split(',').map(l => `"${l.trim()}"`).join(', ')} }) `;
@@ -12435,7 +12431,7 @@ export class AreaDesigner extends EditorBase {
                     }
                     //id
                     tmp = obj.damaged.filter(d => d.type === 5).sort((a, b) => a.limbs.localeCompare(b));
-                    tmp.map(d => {
+                    tmp = tmp.map(d => {
                         if (limbsDamaged[d.limbs.trim()])
                             return `${limbsDamaged[d.limbs.trim()]} : ${d.description.split(',').map(l => `({ ${l.trim()}"`).join(', ')} }) `;
                         return `LIMBS_DAM( ({ ${d.limbs.split(',').map(l => `"${l.trim()}"`).join(', ')} }) ) : ({ ${d.description.split(',').map(l => `"${l.trim()}"`).join(', ')} }) `;
@@ -12682,12 +12678,8 @@ export class AreaDesigner extends EditorBase {
                 tmp = (obj.limbs || 'LEFTLEG').split(',').map(l => l.trim());
                 tmp2 = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) === -1);
                 tmp = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) !== -1);
-                tmp = tmp.map(l => {
-                    return l.replace(/ /g, '').toUpperCase();
-                });
-                tmp2 = tmp2.map(l => {
-                    return `"${l}"`;
-                });
+                tmp = tmp.map(l => l.replace(/ /g, '').toUpperCase());
+                tmp2 = tmp2.map(l => `"${l}"`);
                 tmp = tmp.filter((value, index, self) => self.indexOf(value) === index);
                 tmp2 = tmp.filter((value, index, self) => self.indexOf(value) === index);
 
@@ -13066,7 +13058,7 @@ export class AreaDesigner extends EditorBase {
         //#endregion
         if (bonuses && obj.bonuses && obj.bonuses.length !== 0) {
             tmp = obj.bonus.filter(b => b.type === 0 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
-            tmp.map(b => {
+            tmp = tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
                     return `"${b.adjust}" : ${b.amount}`;
                 else if (b.amount === true || b.amount === 'true')
@@ -13081,7 +13073,7 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += '\n     ]) );\n';
             }
             tmp = obj.bonus.filter(b => b.type === 1 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
-            tmp.map(b => {
+            tmp = tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
                     return `"${b.adjust}" : ${b.amount}`;
                 else if (b.amount === true || b.amount === 'true')
@@ -13096,7 +13088,7 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += '\n     ]) );\n';
             }
             tmp = obj.bonus.filter(b => b.type === 2 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
-            tmp.map(b => {
+            tmp = tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
                     return `"${b.adjust}" : ${b.amount}`;
                 else if (b.amount === true || b.amount === 'true')
@@ -13111,7 +13103,7 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += '\n     ]) );\n';
             }
             tmp = obj.bonus.filter(b => b.type === 3 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
-            tmp.map(b => {
+            tmp = tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
                     return `"${b.adjust}" : ${b.amount}`;
                 else if (b.amount === true || b.amount === 'true')

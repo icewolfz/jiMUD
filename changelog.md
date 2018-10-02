@@ -9,6 +9,7 @@
         - Fix displaying climbs as normal exits.
         - Fix room and base room climbs being combined
         - Fix flying monsters by append (flying) to monsters
+      - Fix some code generation not being generated right
   - Only display copy url text if different from url for link context menu
 
 ## v0.6.0 2018-10-01
