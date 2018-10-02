@@ -656,13 +656,15 @@
                     if (parent && parent.hasClass('URLLink')) {
                         c.append(new MenuItem({ label: 'Open url', click: () => { doLink(parent.attr('title')); } }));
                         c.append(new MenuItem({ label: 'Copy url', click: () => { window.writeClipboard(parent.attr('title')); } }));
-                        c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
+                        if (parent.text() !== parent.attr('title'))
+                            c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
                         c.append(new MenuItem({ type: 'separator' }));
                     }
                     else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0) {
                         c.append(new MenuItem({ label: 'Open url', click: () => { parent.trigger('click'); } }));
                         c.append(new MenuItem({ label: 'Copy url', click: () => { window.writeClipboard(parent.data('href')); } }));
-                        c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
+                        if (parent.text() !== parent.attr('href'))
+                            c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
                         c.append(new MenuItem({ type: 'separator' }));
                     }
                     else if (parent && parent.hasClass('MXPLink')) {
@@ -1239,7 +1241,7 @@
             _backup.on('finish-load', () => {
                 client.raise('backup-loaded');
             });
-            
+
             _backup.on('finish-save', () => {
                 client.raise('backup-saved');
             });
