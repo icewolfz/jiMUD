@@ -2,6 +2,10 @@
 
 ## v0.6.1
 
+- **New:**
+  - [#notify](docs/commands.md) - add icon argument {icon}
+- **Changed:**
+  - [#notify](docs/commands.md) - make silent
 - **Fixed:**
   - Code editor:
     - Area designer:
@@ -11,6 +15,7 @@
         - Fix flying monsters by append (flying) to monsters
       - Fix some code generation not being generated right
   - Only display copy url text if different from url for link context menu
+  - Fix [#notify](docs/commands.md) displaying the word null when no message body
 
 ## v0.6.0 2018-10-01
 

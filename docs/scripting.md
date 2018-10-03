@@ -41,6 +41,7 @@ To use scripting you just have to select script as the type from the type dropdo
   - `options` additional options to customize the display [Notification Options](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification)
     - `dir` - auto, rtl, ltr
     - `icon` - full icon path, supports {variables}
+    - `silent` - play sound or not, default false
 - `client.raise(event, args, delay)` fire an event with optional delay and arguments
   - `event` the event name to fire
   - `args` an optional array of arguments to pass to the event, if you do not want to pass arguments but want a delay just pass 0 or []

@@ -28,7 +28,7 @@
 |#soundinfo|||display currently playing sound effect, current position, and total length
 |#idletime|#idle||Display time a command was last sent
 |#connecttime|#connect||display time since connected
-|#notify|#not|title message|display a notification popup
+|#notify|#not|title message *{icon}*|display a notification popup with no sound, use [client.notify](scriptind.md#basic-function-list) to turn off silent option or #playsound
 |#raiseevent|#raise|name arguments|fire a custom event|`#raiseevent "test" 1 2 3 "4 5"` will fire an event named test with arguments 1, 2, 3, and 4 5
 |#raisedelayed|#raisede|amount name arguments|fire a custom event with a delay|`#raisedelayed 3000 "test" 1 2 3 "4 5"` will fire and event named test with arguments 1, 2, 3, and 4 5 after waiting 3 seconds
 |#showclient|#showcl||Show client window
@@ -76,6 +76,7 @@ Explain what each argument does and if it is optional
 |{time pattern}||A valid time pattern <sup>1</sup>
 |{pattern}|Sometimes| A valid trigger pattern
 |caption|the caption to display when mouse hovers over button
+|{icon}|Yes|a path to an image file, supports {assets} path
 
 **Note** All quoted arguments will be processed based on [scripting quote preference](preferences.md#scripting) when required
 
