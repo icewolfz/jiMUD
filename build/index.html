@@ -930,7 +930,9 @@
             });
 
             client.on('notify', (title, message, options) => {
-                options = options || {};
+                options = options || { silent: true };
+                if(!options.hasOwnProperty('silent'))
+                    options.silent = true;
                 if (options.icon)
                     options.icon = parseTemplate(options.icon);
                 else
@@ -1877,14 +1879,14 @@
                     if (!item.enabled) continue;
                     var button;
                     var p = '';
-                    if(item.profile) {
+                    if (item.profile) {
                         p = ' data-profile="' + (item.profile ? item.profile.name : '') + '"';
                         p += ' data-index="' + client.profiles.items[item.profile.name.toLowerCase()].buttons.indexOf(item) + '"';
                     }
                     if (item.name && item.name.length > 0)
-                        button = $('<a id="' + item.name + '" href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"'+p+'></a>');
+                        button = $('<a id="' + item.name + '" href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"' + p + '></a>');
                     else
-                        button = $('<a href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"'+p+'></a>');
+                        button = $('<a href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"' + p + '></a>');
                     if (item.stretch)
                         button.addClass('button-stretch');
                     button.prop('title', item.caption);
@@ -2217,7 +2219,7 @@
                 $('#pasteSpecial-replace').val(client.options.pasteSpecialReplace);
                 $('#pasteSpecial-replace').prop('disabled', !client.options.pasteSpecialReplaceEnabled);
                 $('#pasteSpecial-replace-enable').prop('checked', client.options.pasteSpecialReplaceEnabled);
-                if(!$('#pasteSpecial')[0].open)
+                if (!$('#pasteSpecial')[0].open)
                     $('#pasteSpecial')[0].showModal();
             }
             else
@@ -2486,7 +2488,7 @@
         <div class="dialog-header" style="font-weight: bold">
             <button type="button" class="close" data-dismiss="modal" onclick="$('#pasteSpecial')[0].close();$('#commandinput').focus();">&times;</button>
             <div style="padding-top: 2px;">Paste special...</div>
-        </div>        
+        </div>
         <div class="dialog-body" style="margin-top: 32px;">
             <div class="form-group">
                 <label class="control-label" for="pasteSpecial-replace">Replace with</label>

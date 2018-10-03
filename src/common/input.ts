@@ -1712,10 +1712,9 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid syntax use \x1b[4m#not\x1b[0;-11;-12mify title \x1b[3mmessage icon\x1b[0;-11;-12m');
                 else {
                     args[0] = this.stripQuotes(args[0]);
-                    n = { silent: true };
                     if (args[args.length - 1].match(/^\{.*\}$/g)) {
                         item = args.pop();
-                        n.icon = parseTemplate(this.parseOutgoing(item.substr(1, item.length - 2), false));
+                        n = { icon: parseTemplate(this.parseOutgoing(item.substr(1, item.length - 2), false)) };
                     }
                     if (args.length === 0)
                         throw new Error('Invalid syntax use \x1b[4m#not\x1b[0;-11;-12mify title \x1b[3mmessage icon\x1b[0;-11;-12m');
