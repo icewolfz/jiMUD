@@ -1558,6 +1558,7 @@
 
             $('#buttonbar').on('contextmenu', (e) => {
                 e.preventDefault();
+                console.log(e);
                 var c = new Menu();
                 c.append(new MenuItem({
                     label: 'Visible',
@@ -1658,6 +1659,22 @@
                         toggleView('button.user');
                     }
                 }));
+                var b;
+                if (e.target && e.target.tagName === 'IMG')
+                    b = e.target.parentElement;
+                else if (e.target && e.target.tagName === 'A')
+                    b = e.target;
+                if (b && b.dataset && b.dataset.profile && b.dataset.profile.length !== 0 && b.dataset.index !== '-1') {
+                    c.append(new MenuItem({ type: 'separator' }));
+                    c.append(new MenuItem({
+                        label: 'Edit button',
+                        profile: b.dataset.profile,
+                        bIndex: b.dataset.index,
+                        click: (item) => {
+                            ipcRenderer.send('profile-edit-item', item.profile, 'buttons', +item.bIndex);
+                        }
+                    }));
+                }
                 if (client.options.enableDebug || remote.getGlobal('debug')) {
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
@@ -1859,13 +1876,17 @@
                     var item = pButtons[b];
                     if (!item.enabled) continue;
                     var button;
+                    var p = '';
+                    if(item.profile) {
+                        p = ' data-profile="' + (item.profile ? item.profile.name : '') + '"';
+                        p += ' data-index="' + client.profiles.items[item.profile.name.toLowerCase()].buttons.indexOf(item) + '"';
+                    }
                     if (item.name && item.name.length > 0)
-                        button = $('<a id="' + item.name + '" href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"></a>');
+                        button = $('<a id="' + item.name + '" href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"'+p+'></a>');
                     else
-                        button = $('<a href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"></a>');
+                        button = $('<a href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"'+p+'></a>');
                     if (item.stretch)
                         button.addClass('button-stretch');
-
                     button.prop('title', item.caption);
                     if (item.icon.startsWith('fa-'))
                         button.html('<i class="fa ' + item.icon + '"></i>');

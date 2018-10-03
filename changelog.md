@@ -5,6 +5,7 @@
 - **New:**
   - [#notify](docs/commands.md) - add icon argument {icon}
   - Add search box to help browser
+  - Add edit button context menu when right clicking a button on the button bar
 - **Changed:**
   - [#notify](docs/commands.md) - make silent
 - **Fixed:**

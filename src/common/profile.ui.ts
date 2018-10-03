@@ -3792,6 +3792,14 @@ function insertItem(type: string, key: string, item, idx: number, profile?: Prof
     _loading--;
 }
 
+ipcRenderer.on('profile-edit-item', (event, profile, type, index) => {
+    if (!profile || !profiles.items[profile.toLowerCase()]) return;
+    let n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + type + '$', 'id']);
+    $('#profile-tree').treeview('expandNode', [n, { levels: 1, silent: false }]);
+    n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + type + index + '$', 'id']);
+    $('#profile-tree').treeview('selectNode', [n, { silent: false }]);
+});
+
 ipcRenderer.on('reload-options', (event) => {
     loadOptions();
 });

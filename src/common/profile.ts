@@ -213,8 +213,9 @@ export class Item {
     public group: string = '';
     public enabled: boolean = true;
     public notes: string = '';
+    public profile: Profile;
 
-    constructor(data?) {
+    constructor(data?, profile?) {
         if (typeof data === 'object') {
             let prop;
             for (prop in data) {
@@ -224,6 +225,7 @@ export class Item {
                 this[prop] = data[prop];
             }
         }
+        this.profile = profile;
     }
 
     public clone() {
@@ -238,7 +240,7 @@ export class Button extends Item {
     public send: boolean = true;
     public chain: boolean = false;
     public stretch: boolean = false;
-    constructor(data?) {
+    constructor(data?, profile?) {
         super(data);
         this.caption = 'NewButton';
         this.display = 'caption';
@@ -251,6 +253,7 @@ export class Button extends Item {
                 this[prop] = data[prop];
             }
         }
+        this.profile = profile;
     }
 
     public clone() {
@@ -267,7 +270,7 @@ export class Macro extends Item {
     public gamepad: number = 0;
     public gamepadAxes: number = 0;
 
-    constructor(data?) {
+    constructor(data?, profile?) {
         super();
         this.display = 'return MacroDisplay(item)';
         this.displaytype = ItemDisplayType.Function;
@@ -280,6 +283,7 @@ export class Macro extends Item {
                 this[prop] = data[prop];
             }
         }
+        this.profile = profile;
     }
 
     public clone() {
@@ -294,7 +298,7 @@ export class Alias extends Item {
     public append: boolean = true;
     public params: string = '';
 
-    constructor(pattern?: any, value?: string) {
+    constructor(pattern?: any, value?: string, profile?) {
         super();
         if (typeof pattern === 'string')
             this.pattern = pattern;
@@ -310,6 +314,7 @@ export class Alias extends Item {
                 this[prop] = pattern[prop];
             }
         }
+        this.profile = profile;
     }
 
     public clone() {
@@ -324,9 +329,9 @@ export class Trigger extends Item {
     public triggerPrompt: boolean = false;
     public type: TriggerType = TriggerType.Regular;
     public temp: boolean = false;
-    public caseSensitive : boolean = false;
+    public caseSensitive: boolean = false;
 
-    constructor(data?) {
+    constructor(data?, profile?) {
         super(data);
         this.display = 'pattern';
         if (typeof data === 'object') {
@@ -338,6 +343,7 @@ export class Trigger extends Item {
                 this[prop] = data[prop];
             }
         }
+        this.profile = profile;
     }
 
     public clone() {
@@ -353,7 +359,7 @@ export class Context extends Item {
     public chain: boolean = false;
     public parent: string = '';
     public items: Context[] = [];
-    constructor(data?) {
+    constructor(data?, profile?) {
         super(data);
         this.caption = 'NewContext';
         this.display = 'caption';
@@ -373,6 +379,7 @@ export class Context extends Item {
                     this[prop] = data[prop];
             }
         }
+        this.profile = profile;
     }
 
     public clone() {
@@ -599,32 +606,32 @@ export class Profile {
         if (data.aliases && data.aliases.length > 0) {
             il = data.aliases.length;
             for (i = 0; i < il; i++) {
-                profile.aliases.push(new Alias(data.aliases[i]));
+                profile.aliases.push(new Alias(data.aliases[i], null, profile));
             }
         }
         if (data.triggers && data.triggers.length > 0) {
             il = data.triggers.length;
             for (i = 0; i < il; i++) {
-                profile.triggers.push(new Trigger(data.triggers[i]));
+                profile.triggers.push(new Trigger(data.triggers[i], profile));
             }
         }
         if (data.macros && data.macros.length > 0) {
             il = data.macros.length;
             profile.macros = [];
             for (i = 0; i < il; i++) {
-                profile.macros.push(new Macro(data.macros[i]));
+                profile.macros.push(new Macro(data.macros[i], profile));
             }
         }
         if (data.buttons && data.buttons.length > 0) {
             il = data.buttons.length;
             for (i = 0; i < il; i++) {
-                profile.buttons.push(new Button(data.buttons[i]));
+                profile.buttons.push(new Button(data.buttons[i], profile));
             }
         }
         if (data.contexts && data.contexts.length > 0) {
             il = data.contexts.length;
             for (i = 0; i < il; i++) {
-                profile.contexts.push(new Context(data.contexts[i]));
+                profile.contexts.push(new Context(data.contexts[i], profile));
             }
         }
         profile.file = profile.name;
@@ -637,7 +644,10 @@ export class Profile {
                 fs.unlinkSync(path.join(p, this.file + '.json'));
             this.file = this.name.toLowerCase();
         }
-        fs.writeFileSync(path.join(p, this.file + '.json'), JSON.stringify(this));
+        fs.writeFileSync(path.join(p, this.file + '.json'), JSON.stringify(this, (key, value) => {
+            if (key === 'profile') return undefined;
+            return value;
+        }));
     }
 
     public clone(version?: number) {

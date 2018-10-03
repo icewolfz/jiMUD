@@ -18,7 +18,7 @@ const { TrayClick } = require('./js/types');
 let win, winWho, winMap, winProfiles, winEditor, winChat, winCode, winProgress;
 let set, mapperMax = false, editorMax = false, chatMax = false, codeMax = false;
 let edset;
-let chatReady = 0, codeReady = 0, editorReady = 0, progressReady = 0;
+let chatReady = 0, codeReady = 0, editorReady = 0, progressReady = 0, profilesReady = 0;
 let reload = null;
 let tray = null;
 let overlay = 0;
@@ -1963,6 +1963,20 @@ function sendChat(text) {
         winChat.webContents.send('chat', text);
 }
 
+ipcMain.on('profile-edit-item', (event, profile, type, index) => {
+    showProfiles();
+    profileEditItem(profile, type, index);
+});
+
+function profileEditItem(profile, type, index) {
+    if (profilesReady !== 2 || !winProfiles) {
+        setTimeout(() => { profileEditItem(profile, type, index); }, 100);
+        return;
+    }
+    else
+    winProfiles.webContents.send('profile-edit-item', profile, type, index);
+}
+
 ipcMain.on('setting-changed', (event, data) => {
     if (data.type === 'mapper' && data.name === 'alwaysOnTopClient') {
         if (winMap.setParentWindow)
@@ -2686,9 +2700,14 @@ function showProfiles() {
     if (global.debug)
         winProfiles.webContents.openDevTools();
 
+    winProfiles.webContents.on('did-finish-load', () => {
+        profilesReady = 2;
+    });
+
     winProfiles.setMenu(null);
     winProfiles.on('closed', () => {
         winProfiles = null;
+        profilesReady = 0;
     });
     winProfiles.loadURL(url.format({
         pathname: path.join(__dirname, 'profiles.html'),
@@ -2701,6 +2720,7 @@ function showProfiles() {
         if (s.maximized)
             winProfiles.maximize();
         winProfiles.show();
+        profilesReady = 1;
     });
 
     winProfiles.on('close', () => {
