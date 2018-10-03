@@ -22,8 +22,8 @@
 |#stopsound|#stops||Stop the current sound effect
 |#stopmusic|#stopm||Stop the current background music
 |#stopallsound|#stopa||stop all sound effects and background music
-|#playsound|#plays|soundfile|Play a sound effect
-|#playmusic|#playm|soundfile|Play background music
+|#playsound|#plays|soundfile|Play a sound effect, to play local files use file://path/file.ext
+|#playmusic|#playm|soundfile|Play background music, to play local files use file://path/file.ext
 |#musiciinfo|||display currently playing background music, current position, and total length
 |#soundinfo|||display currently playing sound effect, current position, and total length
 |#idletime|#idle||Display time a command was last sent
