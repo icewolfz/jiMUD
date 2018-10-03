@@ -6,6 +6,7 @@
   - [#notify](docs/commands.md) - add icon argument {icon}
   - Add search box to help browser
   - Add edit button context menu when right clicking a button on the button bar
+  - Add title bar to paste special dialog to identify what the dialog is fore
 - **Changed:**
   - [#notify](docs/commands.md) - make silent
 - **Fixed:**
@@ -17,8 +18,9 @@
         - Fix flying monsters by append (flying) to monsters
       - Fix some code generation not being generated right
   - Only display copy url text if different from url for link context menu
-  - Fix [#notify](docs/commands.md) displaying the word null when no message body
-  - Fix MSP system not correctly clearing previous file url
+  - Fixed [#notify](docs/commands.md) displaying the word null when no message body
+  - Fixed MSP system not correctly clearing previous file url
+  - Fixed Paste special error when trying to open the dialog when already open
 
 ## v0.6.0 2018-10-01
 

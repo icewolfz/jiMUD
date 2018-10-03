@@ -2217,8 +2217,8 @@
                 $('#pasteSpecial-replace').val(client.options.pasteSpecialReplace);
                 $('#pasteSpecial-replace').prop('disabled', !client.options.pasteSpecialReplaceEnabled);
                 $('#pasteSpecial-replace-enable').prop('checked', client.options.pasteSpecialReplaceEnabled);
-
-                $('#pasteSpecial')[0].showModal();
+                if(!$('#pasteSpecial')[0].open)
+                    $('#pasteSpecial')[0].showModal();
             }
             else
                 pasteSpecialOk(true);
@@ -2482,8 +2482,12 @@
             <progress max="100" id="update-progressbar"></progress>
         </div>
     </dialog>
-    <dialog id="pasteSpecial" style="z-index:1000;height:285px;width:350px;">
-        <div class="dialog-body">
+    <dialog id="pasteSpecial" style="z-index:1000;height:317px;width:350px;">
+        <div class="dialog-header" style="font-weight: bold">
+            <button type="button" class="close" data-dismiss="modal" onclick="$('#pasteSpecial')[0].close();$('#commandinput').focus();">&times;</button>
+            <div style="padding-top: 2px;">Paste special...</div>
+        </div>        
+        <div class="dialog-body" style="margin-top: 32px;">
             <div class="form-group">
                 <label class="control-label" for="pasteSpecial-replace">Replace with</label>
                 <div class="input-group">
