@@ -4,6 +4,7 @@
 
 - **New:**
   - [#notify](docs/commands.md) - add icon argument {icon}
+  - Add search box to help browser
 - **Changed:**
   - [#notify](docs/commands.md) - make silent
 - **Fixed:**

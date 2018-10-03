@@ -1,3 +1,9 @@
+$images: "./../../assets";
+$borderColor: "rgb(204, 204, 204)";
+$color: "#333";
+$panelBackground: "rgb(240, 240, 240)";
+$panelInsetBackground: "rgb(240, 240, 240)";
+
 html,
 body {
     overflow: hidden;
@@ -72,7 +78,7 @@ body {
     position: absolute;
     top: 4px;
     right: 5px;
-    left: 72px;
+    left: 103px;
 }
 
 .path-container .btn-group {
@@ -135,8 +141,7 @@ body {
 }
 
 #container {
-    overflow: auto;
-    padding: 5px;
+    padding: 0px;
     top: 31px;
     bottom: 0px;
     left: 0px;
@@ -147,120 +152,147 @@ body {
     -webkit-user-select: text;
     user-select: text;
     word-wrap: break-word;
+    border: 0;
 }
 
-#container img {
+#container-frame {
+    border: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    padding: 0px;
+    margin: 0px;
+}
+
+
+#container-display {
+    font-family: "Segoe WPC", "Segoe UI", "SFUIText-Light", "HelveticaNeue-Light", sans-serif, "Droid Sans Fallback";
+    font-size: 14px;    
+    -webkit-user-select: text;
+    user-select: text;
+    word-wrap: break-word;
+    border: 0;
+    overflow: auto;
+    padding: 0px;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    position: absolute;    
+}
+
+#container-display img {
 	max-width: 100%;
 	max-height: 100%;
 }
 
-#container a {
+#container-display a {
 	text-decoration: none;
 }
 
-#container a:hover {
+#container-display a:hover {
 	text-decoration: underline;
 }
 
-#container a:focus,
-#container input:focus,
-#container select:focus,
-#container textarea:focus {
+#container-display a:focus,
+#container-display input:focus,
+#container-display select:focus,
+#container-display textarea:focus {
 	outline: 1px solid -webkit-focus-ring-color;
 	outline-offset: -1px;
 }
 
-#container hr {
+#container-display hr {
 	border: 0;
 	height: 2px;
 	border-bottom: 2px solid;
 }
 
-#container h1 {
+#container-display h1 {
 	padding-bottom: 0.3em;
 	line-height: 1.2;
 	border-bottom-width: 1px;
 	border-bottom-style: solid;
 }
 
-#container h1:first-of-type {
+#container-display h1:first-of-type {
     padding-top: 0px;
     margin-top: 0px;
 }
 
-#container h1, 
-#container h2, 
-#container h3 {
+#container-display h1, 
+#container-display h2, 
+#container-display h3 {
 	font-weight: normal;
 }
 
-#container h1 code,
-#container h2 code,
-#container h3 code,
-#container h4 code,
-#container h5 code,
-#container h6 code {
+#container-display h1 code,
+#container-display h2 code,
+#container-display h3 code,
+#container-display h4 code,
+#container-display h5 code,
+#container-display h6 code {
 	font-size: inherit;
 	line-height: auto;
 }
 
-#container table {
+#container-display table {
 	border-collapse: collapse;
 }
 
-#container table > thead > tr > th {
+#container-display table > thead > tr > th {
 	text-align: left;
 	border-bottom: 1px solid;
 }
 
-#container table > thead > tr > th,
-#container table > thead > tr > td,
-#container table > tbody > tr > th,
-#container table > tbody > tr > td {
+#container-display table > thead > tr > th,
+#container-display table > thead > tr > td,
+#container-display table > tbody > tr > th,
+#container-display table > tbody > tr > td {
 	padding: 5px 10px;
 }
 
-#container table > tbody > tr + tr > td {
+#container-display table > tbody > tr + tr > td {
 	border-top: 1px solid;
 }
 
-#container table > tbody > tr:last-child {
+#container-display table > tbody > tr:last-child {
     border-bottom: 1px solid;
 }
 
-#container blockquote {
+#container-display blockquote {
 	margin: 0 7px 0 5px;
 	padding: 0 16px 0 10px;
 	border-left-width: 5px;
 	border-left-style: solid;
 }
 
-#container code {
+#container-display code {
 	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
 	font-size: 14px;
 	line-height: 19px;
 }
 
-#container code {
+#container-display code {
 	background-color: rgba(220, 220, 220, 0.4);
 }
 
-#container pre {
+#container-display pre {
     word-wrap: break-word;
     word-break: break-word;
 }
 
-#container pre > code {
+#container-display pre > code {
     background-color: inherit;
 }
 
-#container table > thead > tr > th {
+#container-display table > thead > tr > th {
 	border-color: rgba(0, 0, 0, 0.69);
 }
 
-#container h1,
-#container hr,
-#container table > tbody > tr + tr > td {
+#container-display h1,
+#container-display hr,
+#container-display table > tbody > tr + tr > td {
 	border-color: rgba(0, 0, 0, 0.18);
 }
 
@@ -268,6 +300,129 @@ body {
     min-width: auto !important;
     padding: 1px 2px;
 }
+
+
+.find {
+    top: 28px;
+    right: 20px;
+    padding: 2px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1em;
+    border-radius: 4px;
+    border: 1px solid #{$borderColor};
+    background-color: #{$panelBackground};
+    color: #{$color};
+    text-shadow: 0 1px 0 #fff;
+    position: absolute;
+    z-index: 100;  
+    display: none;
+}
+
+.find input,
+.find input:focus {
+    border: 1px solid #{$borderColor};
+    width: 100px;
+    background-color: white;
+    color: black;
+    padding: 2px 2px;
+    height: 22px;
+    top: -1px;
+    border-radius: 2px;
+}
+
+.find input:focus {
+    border: 1px solid adadad;
+    color: #{$color};
+}
+
+.find button .fa {
+    margin-top: 3px;
+}
+
+.find button {
+    width: 22px;
+    height: 22px;
+    border: 1px solid transparent;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+    vertical-align: top;
+    line-height: 16px;
+    color: inherit;
+    background-color: inherit;
+    padding: 0px;
+    margin-left: 2px;
+    margin-right: 2px;
+    border-radius: 2px;
+}
+
+.find button:hover,
+.find button.active:hover {
+    color: #{$color};
+    background-color: #e0e0e0;
+    background-position: 0 -15px;
+    color: #333;
+    border-color: #adadad;
+    text-shadow: 0 1px 0 #fff;
+}
+
+.find button.active:hover {
+    color: #{$color};
+    background-color: #a0a0a0;
+    background-position: 0 -15px;
+    color: #fff;
+    border-color: #adadad;
+    text-shadow: 0 1px 0 #333;
+}
+
+.find button:active {
+    border: 1px solid #0052A4;
+}
+
+.find button:disabled,
+.find button:disabled:hover {
+    background-color: inherit !important;
+    background-image: none;
+    box-shadow: none;
+    opacity: .25;
+    border: 1px solid transparent;
+    color: #666;
+}
+
+.find button.active {
+    background-color: #666;
+    border-color: #ccc;
+    text-shadow: 0 1px 0 #{$color};
+    color: #fff;
+}
+
+.find-count {
+    padding: 0px;
+    display: inline-block;
+}
+
+.find-case {
+    font-size: 10px;
+}
+
+.find-word {
+    text-decoration: overline underline;
+    font-size: 10px;
+}
+
+.find-highlight {
+    border-radius: 4px;
+    background: rgb(171, 102, 31);
+}
+
+.find-no-results {
+    color: #F08080;
+}
+
+.find-highlight.current {
+    border-radius: 4px;
+    background: rgb(116, 192, 114);
+}
+
 
 
 /*https://github.com/Microsoft/vscode/blob/4e4e6f9b44dd9e6a53d1f08565c52b8ea9f61a5e/extensions/markdown-language-features/media/markdown.css*/

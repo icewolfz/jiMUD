@@ -20,6 +20,7 @@
     <script>
         const { remote } = require('electron');
         const { Menu } = remote;
+        const { Search } = require('./js/search');
         const path = require('path');
         const fs = require('fs');
         const md = require('markdown-it')({ html: true, typographer: true });
@@ -34,7 +35,7 @@
                     tokens[idx].attrPush(['target', '_blank']);
                 else {
                     tokens[idx].attrs[tokens[idx].attrIndex('href')][1] = '#';
-                    tokens[idx].attrPush(['onclick', `openLink('${ref}')`]);
+                    tokens[idx].attrPush(['onclick', `event.preventDefault();openLink('${ref}');return false;`]);
                 }
             }
             return old_render(tokens, idx, options, env, self);
@@ -44,12 +45,14 @@
         var contents;
         var _history = [];
         var _current = 0;
+        var $search;
 
         // eslint-disable-next-line no-unused-vars
         function openLink(url) {
             url = url.split('#');
             contents.val(url[0].substr(0, url[0].length - 3)).selectpicker('render');
             contents.change();
+
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -80,6 +83,7 @@
             container[0].scrollTop = 0;
             var data = fs.readFileSync(path.join(__dirname, '..', 'docs', url.replace('///g', path.sep) + '.md'), 'utf8');
             container.html(md.render(data));
+            $search.find();
         }
 
         function loadUrl(url) {
@@ -97,9 +101,37 @@
             $(id).blur();
         }
 
+        function doFind() {
+            var flag = 0;
+            var ow = container[0].ownerDocument.defaultView;
+            var sel = ow.getSelection();
+            if (sel.rangeCount > 0 && container[0].contains(sel.getRangeAt(0).startContainer))
+                sel = ow.getSelection().toString();
+            else
+                sel = 0;
+            $search.search = container[0];
+            $search.show(sel);
+        }
+
+        $(document).keydown((event) => {
+            if (event.key === 'f' && !event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey) {
+                doFind();
+                event.preventDefault();
+            }
+        });
+
         $(document).ready(() => {
-            container = $('#container');
+            container = $('#container-frame');
+            container[0].onload = () => {
+                var oDoc = (document.all) ? container[0].contentWindow.document : container[0].contentDocument;
+                container = document.createElement('div');
+                container.id = 'container-display';
+                oDoc.body.appendChild(container);
+                container = $(container);
+                loadUrl('README');
+            };
             contents = $('#contents');
+            $search = new Search(document.body);
             contents.on('change', () => {
                 loadContents(contents.val());
                 if (_history.length !== 0)
@@ -108,7 +140,7 @@
                 _current = _history.length - 1;
                 updateButtons();
             });
-            loadUrl('README');
+
             container[0].addEventListener('contextmenu', e => {
                 e.preventDefault();
                 const sel = getSelection();
@@ -126,7 +158,6 @@
                     ]);
                 inputMenu.popup({ window: remote.getCurrentWindow() });
             });
-
 
             $('#btn-history-dropdown').click(function () {
                 $(this).addClass('open');
@@ -160,6 +191,9 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <span class="path-buttons">
+                <button id="btn-find" type="button" class="btn btn-default btn-xs" title="Find" onclick="doFind()">
+                    <i class="fa fa-search"></i>
+                </button>
                 <div class="btn-group" role="group">
                     <button id="btn-back" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Back" onclick="navigate(-1)">
                         <i class="fa fa-arrow-left"></i>
@@ -192,7 +226,9 @@
                 </select>
             </span>
         </div>
-        <div id="container" class="panel-body"></div>
+        <div id="container">
+            <iframe id="container-frame" class="panel-body" src="help.display.html"></iframe>
+        </div>
     </div>
 </body>
 
