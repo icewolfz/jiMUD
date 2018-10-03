@@ -124,6 +124,11 @@ class SoundState extends EventEmitter {
     }
 }
 
+export interface MSPOptions {
+    forcedDefaultMusicURL?: string;
+    forcedDefaultSoundURL?: string;
+}
+
 /**
  * Implementation of the MSP (MUD Sound Protocol)
  *
@@ -157,8 +162,14 @@ export class MSP extends EventEmitter {
     public SoundState: SoundState = new SoundState();
     public parseMode: ParseMode = ParseMode.default;
 
-    constructor() {
+    constructor(options?: MSPOptions) {
         super();
+        if (options) {
+            if (options.hasOwnProperty('forcedDefaultMusicURL'))
+                this.forcedDefaultMusicURL = options.forcedDefaultMusicURL;
+            if (options.hasOwnProperty('forcedDefaultSoundURL'))
+                this.forcedDefaultSoundURL = options.forcedDefaultSoundURL;
+        }
         this.MusicState.on('playing', (data) => { data.type = 1; this.emit('playing', data); });
         this.SoundState.on('playing', (data) => { data.type = 0; this.emit('playing', data); });
     }
@@ -351,6 +362,8 @@ export class MSP extends EventEmitter {
             this.MusicState.url = this.forcedDefaultMusicURL;
         else if (this.defaultMusicURL && this.defaultMusicURL.length > 0)
             this.MusicState.url = this.defaultMusicURL;
+        else
+            this.MusicState.url = '';
         if (this.MusicState.url.length > 0 && !this.MusicState.url.endsWith('/'))
             this.MusicState.url += '/';
         if (data.type && data.type.length > 0) {
@@ -388,7 +401,6 @@ export class MSP extends EventEmitter {
         this.SoundState.volume = data.volume;
         this.SoundState.repeats = data.repeat;
         this.SoundState.priority = data.priority;
-        const old = this.SoundState.file;
         if (data.file.lastIndexOf('.') === -1)
             this.SoundState.file = data.file + this.defaultSoundExt;
         else
@@ -399,6 +411,8 @@ export class MSP extends EventEmitter {
             this.SoundState.url = this.forcedDefaultSoundURL;
         else if (this.defaultSoundURL && this.defaultSoundURL.length > 0)
             this.SoundState.url = this.defaultSoundURL;
+        else
+            this.SoundState.url = '';
         if (this.SoundState.url.length > 0 && !this.SoundState.url.endsWith('/'))
             this.SoundState.url += '/';
         if (data.type && data.type.length > 0) {
