@@ -191,9 +191,6 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <span class="path-buttons">
-                <button id="btn-find" type="button" class="btn btn-default btn-xs" title="Find" onclick="doFind()">
-                    <i class="fa fa-search"></i>
-                </button>
                 <div class="btn-group" role="group">
                     <button id="btn-back" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Back" onclick="navigate(-1)">
                         <i class="fa fa-arrow-left"></i>
@@ -225,6 +222,9 @@
                     <option value="codeeditor.designer" style="padding-left: 40px">Area designer</option>
                 </select>
             </span>
+            <button id="btn-find" type="button" class="btn btn-default btn-xs" title="Find" onclick="doFind()" style="position: absolute;top: 4px;right: 4px;">
+                <i class="fa fa-search"></i>
+            </button>
         </div>
         <div id="container">
             <iframe id="container-frame" class="panel-body" src="help.display.html"></iframe>
