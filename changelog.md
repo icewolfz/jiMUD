@@ -7,6 +7,7 @@
   - Add search box to help browser
   - Add edit button context menu when right clicking a button on the button bar
   - Add title bar to paste special dialog to identify what the dialog is fore
+  - Paste special, when hitting enter it will move to the next input box, if in last last input will run paste special
 - **Changed:**
   - [#notify](docs/commands.md) - make silent
   - [client.notify](docs/scripting.md) - make silent by default, add silent: false to options argument, eg: client.notify('test', 'test2', {silent: false})

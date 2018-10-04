@@ -147,6 +147,23 @@
                 //67 - c
                 //68 - d
             }
+            else if($('#pasteSpecial')[0].open) {
+                if(event.which === 13) {
+                    var i;
+                    if(document.activeElement.id === 'pasteSpecial-replace') {
+                        if(!$('#pasteSpecial-prefix').prop('disabled'))
+                            i = document.getElementById('pasteSpecial-prefix');
+                        else if(!$('#pasteSpecial-postfix').prop('disabled'))
+                            i = document.getElementById('pasteSpecial-postfix');
+                    }
+                    else if(document.activeElement.id === 'pasteSpecial-prefix' && !$('#pasteSpecial-postfix').prop('disabled'))
+                        i = document.getElementById('pasteSpecial-postfix');
+                    if(i)
+                        i.focus();
+                    else
+                        $('#pasteSpecial-ok').trigger('click');
+                }
+            }
         });
         const Client = require('./js/client.js').Client;
         const Status = require('./js/status.js').Status;
@@ -931,7 +948,7 @@
 
             client.on('notify', (title, message, options) => {
                 options = options || { silent: true };
-                if(!options.hasOwnProperty('silent'))
+                if (!options.hasOwnProperty('silent'))
                     options.silent = true;
                 if (options.icon)
                     options.icon = parseTemplate(options.icon);
@@ -2221,6 +2238,15 @@
                 $('#pasteSpecial-replace-enable').prop('checked', client.options.pasteSpecialReplaceEnabled);
                 if (!$('#pasteSpecial')[0].open)
                     $('#pasteSpecial')[0].showModal();
+                if (!$('#pasteSpecial-replace').prop('disabled'))
+                    $('#pasteSpecial-replace').focus();
+                else if (!$('#pasteSpecial-prefix').prop('disabled'))
+                    $('#pasteSpecial-prefix').focus();
+                else if (!$('#pasteSpecial-postfix').prop('disabled'))
+                    $('#pasteSpecial-postfix').focus();
+                else
+                    $('#pasteSpecial-cancel').focus();
+
             }
             else
                 pasteSpecialOk(true);
@@ -2520,8 +2546,8 @@
         </div>
         <div class="dialog-footer">
             <button style="float: left" type="button" class="btn btn-default" onclick="$('#pasteSpecial-replace').prop('disabled', false);$('#pasteSpecial-replace-enable').prop('checked', true);$('#pasteSpecial-replace').val('');$('#pasteSpecial-prefix').prop('disabled', false);$('#pasteSpecial-postfix').prop('disabled', false);$('#pasteSpecial-prefix').val('');$('#pasteSpecial-postfix').val('');$('#pasteSpecial-prefix-enable').prop('checked', true);$('#pasteSpecial-postfix-enable').prop('checked', true);">Reset</button>
-            <button style="float: right" type="button" class="btn btn-default" onclick="$('#pasteSpecial')[0].close();$('#commandinput').focus();">Cancel</button>
-            <button style="float: right" type="button" class="btn btn-primary" onclick="pasteSpecialOk()">Ok</button>
+            <button id="pasteSpecial-cancel" style="float: right" type="button" class="btn btn-default" onclick="$('#pasteSpecial')[0].close();$('#commandinput').focus();">Cancel</button>
+            <button id="pasteSpecial-ok"  style="float: right" type="button" class="btn btn-primary" onclick="pasteSpecialOk()">Ok</button>
         </div>
     </dialog>
     <dialog id="disconnectDialog" style="z-index:1000;height:205px;width:525px;">
