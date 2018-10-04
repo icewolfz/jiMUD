@@ -2171,6 +2171,7 @@ function buildTreeview(data) {
                     UpdateEditor('context', currentProfile.contexts[node.dataAttr.index], { post: UpdateContextSample });
                     break;
             }
+            document.getElementById('btn-new').title = 'New ' + ((t === 'alias' || t === 'aliases') ? 'alias' : (t.endsWith('s') ? t.substr(0, t.length - 1) : t));
             _loading--;
         },
         lazyLoad: (node, add) => {

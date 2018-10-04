@@ -23,6 +23,9 @@
   - Fixed [#notify](docs/commands.md) displaying the word null when no message body
   - Fixed MSP system not correctly clearing previous file url
   - Fixed Paste special error when trying to open the dialog when already open
+  - Profile manager:
+    - Fix add button to create new item based on currently selected item
+    - Fix add button tool tip shows type of new item to be created
 
 ## v0.6.0 2018-10-01
 
