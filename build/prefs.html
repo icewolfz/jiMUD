@@ -15,6 +15,7 @@
         body {
       -webkit-user-select: none;
       user-select: none;
+      overflow: hidden;
     }
 
 
@@ -79,6 +80,10 @@
       margin-top: 20px;
       margin-bottom: 20px;
       width: 75%;
+    }
+
+    .bootstrap-select .dropdown-menu {
+        max-height: 200px !important;
     }
   </style>
     <script>
@@ -1265,7 +1270,7 @@
                 <div role="tabpanel" class="pref-pane" id="colors">
                     <div class="col-sm-4 form-group">
                         <label>Color scheme
-                            <select id="colorScheme" style="width:100%" name="colorScheme" class="form-control selectpicker" data-container="body" data-width="auto">
+                            <select id="colorScheme" style="width:100%" name="colorScheme" class="form-control selectpicker" data-container="body" data-width="100%">
                                 <option value="0">Current</option>
                                 <option value="1">Default</option>
                                 <option value="2">Classic</option>

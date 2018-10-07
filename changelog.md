@@ -31,6 +31,9 @@
     - Fixed pasting or cutting text into find search box
     - Fixed unicode spacing issues when different colors or font styles are used
     - Fixed split section not firing click event
+  - Preferences dialog:
+    - Fixed drop down font selection height not being correct
+    - Fixed color scheme drop down width
 
 ## v0.6.0 2018-10-01
 
