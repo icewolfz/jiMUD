@@ -10,7 +10,7 @@ import { Size, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, Ima
 import EventEmitter = require('events');
 import { Parser } from './parser';
 import { AnsiColorCode } from './ansi';
-import { htmlEncode } from './library';
+import { htmlEncode, splitQuoted } from './library';
 import { Finder } from './finder';
 import { DisplayOptions, OverlayRange } from './types';
 
@@ -938,7 +938,7 @@ export class Display extends EventEmitter {
 
     public updateFont(font?: string, size?: string) {
         if (!font || font.length === 0)
-            font = '\'Courier New\', Courier, monospace';
+            font = '"Courier New", Courier, monospace';
         else //fall back just incase
             font += ', monospace';
         if (!size || size.length === 0)
@@ -949,7 +949,7 @@ export class Display extends EventEmitter {
             this._el.style.fontFamily = font;
             this._character.style.fontSize = size;
             this._character.style.fontFamily = font;
-            this._context.font = `${size} ${font}`;
+            this._context.font = `${size} ${splitQuoted(font, ',')[0]}`;
             //recalculate height/width of characters so display can be calculated
             this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
             this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
@@ -1826,6 +1826,7 @@ export class Display extends EventEmitter {
                 }
                 */
                 eText = htmlEncode(text.substring(offset, end));
+                if (eText.length === 0) continue;
                 //TODO variable character height is not supported
                 //TODO once supported update parser support tag to add font
                 /*
@@ -1877,6 +1878,7 @@ export class Display extends EventEmitter {
             }
             else if (format.formatType === FormatType.Link) {
                 eText = htmlEncode(text.substring(offset, end));
+                if (eText.length === 0) continue;
                 width = this._context.measureText(eText).width;
                 fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
                 fore.push(format.href);
@@ -1894,6 +1896,7 @@ export class Display extends EventEmitter {
                 fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
                 eText = htmlEncode(text.substring(offset, end));
+                if (eText.length === 0) continue;
                 width = this._context.measureText(eText).width;
                 fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" data-href="');
                 fore.push(format.href);
@@ -1921,6 +1924,7 @@ export class Display extends EventEmitter {
             }
             else if (format.formatType === FormatType.MXPSend) {
                 eText = htmlEncode(text.substring(offset, end));
+                if (eText.length === 0) continue;
                 width = this._context.measureText(eText).width;
                 fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" href="javascript:void(0);" title="');
                 fore.push(format.hint);
@@ -1947,6 +1951,7 @@ export class Display extends EventEmitter {
             }
             else if (format.formatType === FormatType.MXPExpired) {
                 eText = htmlEncode(text.substring(offset, end));
+                if (eText.length === 0) continue;
                 width = this._context.measureText(eText).width;
                 back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
                 fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');

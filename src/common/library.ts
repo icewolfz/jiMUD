@@ -1288,7 +1288,7 @@ function testWhite(x) {
     return /^\s$/.test(x.charAt(0));
 }
 
-export function splitQuoted(str, sep, t, e) {
+export function splitQuoted(str, sep, t?, e?) {
     if (typeof (t) === 'undefined') t = 1 | 2;
     if (typeof (e) === 'undefined') e = 0;
     if (!str || str.length === 0 || !sep || sep.length === 0)
