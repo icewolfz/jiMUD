@@ -2,7 +2,7 @@
 //spell-checker:ignore Wsctrl, Cusel, Enlw, Backtab, Crsel, Exsel, Ereof rtrim ltrim rgbcolor Dropdown DBLUNDERLINE noflash
 const path = require('path');
 const fs = require('fs');
-const crypto = require('crypto');
+let crypto;
 const { app } = require('electron').remote;
 
 declare global {
@@ -82,9 +82,8 @@ export function htmlEntities(str) {
 }
 
 export function stripHTML(html) {
-    const tmp = document.createElement('DIV');
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || '';
+    _edCache.innerHTML = html;
+    return _edCache.textContent || _edCache.innerText || '';
 }
 
 export function stripParentheses(str) {
@@ -932,6 +931,7 @@ export function encrypt(text, key, iv, algorithm, input_encoding, output_encodin
     if (output_encoding == null) {
         output_encoding = 'hex';
     }
+    if (!crypto) crypto = require('crypto');
     cipher = crypto.createCipheriv(algorithm, key, iv);
     encrypted = cipher.update(text, input_encoding, output_encoding);
     encrypted += cipher.final(output_encoding);
@@ -950,6 +950,7 @@ export function decrypt(encrypted, key, iv, algorithm, input_encoding, output_en
     if (output_encoding == null) {
         output_encoding = 'utf-8';
     }
+    if (!crypto) crypto = require('crypto');
     decipher = crypto.createDecipheriv(algorithm, key, iv);
     decrypted = decipher.update(encrypted, input_encoding, output_encoding);
     decrypted += decipher.final(output_encoding);
@@ -1980,4 +1981,25 @@ export function initEditDropdown(d) {
         else
             parent.classList.remove('open', 'autocomplete');
     });
+}
+
+function isObject(item) {
+    return (item && typeof item === 'object' && !Array.isArray(item));
+}
+
+function mergeDeep(target, ...sources) {
+    if (!sources.length) return target;
+    const source = sources.shift();
+
+    if (isObject(target) && isObject(source)) {
+        for (const key in source) {
+            if (isObject(source[key])) {
+                if (!target[key]) Object.assign(target, { [key]: {} });
+                mergeDeep(target[key], source[key]);
+            } else {
+                Object.assign(target, { [key]: source[key] });
+            }
+        }
+    }
+    return mergeDeep(target, ...sources);
 }

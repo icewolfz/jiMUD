@@ -2,8 +2,8 @@
 import EventEmitter = require('events');
 import RGBColor = require('rgbcolor');
 import { ParserLine, FormatType, ParserOptions, FontStyle, LineFormat, LinkFormat, ImageFormat, Size } from './types';
-import { cloneObject, stripQuotes, CharAllowedInURL } from './library';
-const buzz = require('buzz');
+import { stripQuotes, CharAllowedInURL } from './library';
+//const buzz = require('buzz');
 
 interface MXPBlock {
   format: LineFormat | LinkFormat | ImageFormat;
@@ -2233,7 +2233,7 @@ export class Parser extends EventEmitter {
     tmp = this.mxpStyles[this.mxpStyles.length - 1];
     if (this.mxpLines[this.mxpState.lineType] && this.mxpLines[this.mxpState.lineType].enabled)
       tmp.gagged = this.mxpLines[this.mxpState.lineType].gag;
-    return tmp;
+    return <MXPStyle>Object.assign({}, tmp);
   }
 
   private GetCurrentStyle() {
@@ -2243,7 +2243,7 @@ export class Parser extends EventEmitter {
     tmp = this.mxpStyles[this.mxpStyles.length - 1];
     if (this.mxpLines[this.mxpState.lineType] && this.mxpLines[this.mxpState.lineType].enabled)
       tmp.gagged = this.mxpLines[this.mxpState.lineType].gag;
-    return <MXPStyle>cloneObject(tmp);
+    return tmp;
   }
 
   private DecreaseColor(clr, p) {
@@ -3122,7 +3122,7 @@ export class Parser extends EventEmitter {
                 this.mxpState.noBreak = false;
               }
               this.emit('bell');
-              this.playBell();
+              //this.playBell();
             }
             /*
             else if(e && c === '\b')
@@ -3742,11 +3742,13 @@ export class Parser extends EventEmitter {
     return entity;
   }
 
+  /*
   public playBell() {
     if (this.enableBell) {
       const bell = new buzz.sound(this.bell);
       bell.play();
     }
   }
+  */
 
 }
