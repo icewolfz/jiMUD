@@ -56,13 +56,25 @@ export function FilterArrayByKeyValue(array, k, v) {
     return res.sort(SortArrayByPriority);
 }
 
-const _edCache = $('<div/>');
+/*
 export function htmlEncode(value) {
-    return _edCache.text(value).html();
+    return $('<div/>').text(value).html();
 }
 
 export function htmlDecode(value) {
-    return _edCache.html(value).text();
+    return $('<div/>').html(value).text();
+}
+*/
+
+const _edCache = document.createElement('div');
+export function htmlEncode(value) {
+    _edCache.textContent = value;
+    return _edCache.innerHTML;
+}
+
+export function htmlDecode(value) {
+    _edCache.innerHTML = value;
+    return _edCache.textContent;
 }
 
 export function htmlEntities(str) {
