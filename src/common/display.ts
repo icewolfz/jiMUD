@@ -248,6 +248,10 @@ export class Display extends EventEmitter {
                 this._el.removeEventListener('mouseup', this.split.moveDone);
                 this._el.removeEventListener('mouseleave', this.split.moveDone);
             };
+            this.split.addEventListener('mouseup', (e) => {
+                if (!e.button)
+                    this._el.click();
+            });
         }
         else if (this.split && !value) {
             this._el.removeEventListener('mouseup', this.split.moveDone);
