@@ -2,7 +2,7 @@
 import EventEmitter = require('events');
 import RGBColor = require('rgbcolor');
 import { ParserLine, FormatType, ParserOptions, FontStyle, LineFormat, LinkFormat, ImageFormat, Size } from './types';
-import { clone, stripQuotes, CharAllowedInURL } from './library';
+import { cloneObject, stripQuotes, CharAllowedInURL } from './library';
 const buzz = require('buzz');
 
 interface MXPBlock {
@@ -931,7 +931,7 @@ export class Parser extends EventEmitter {
     switch (tag) {
       case 'C':
       case 'COLOR':
-        tmp = this.GetCurrentStyle();
+        tmp = this.CloneCurrentStyle();
         tmp.tag = MXPTag[tag];
         if (xl > 0) {
           arg = args[0].split('=');
@@ -972,14 +972,14 @@ export class Parser extends EventEmitter {
       case 'B':
       case 'BOLD':
       case 'STRONG':
-        tmp = this.GetCurrentStyle();
+        tmp = this.CloneCurrentStyle();
         tmp.tag = MXPTag[tag];
         tmp.style |= FontStyle.Bold;
         tmp.custom = '';
         this.mxpStyles.push(tmp);
         return null;
       case 'FONT':
-        tmp = this.GetCurrentStyle();
+        tmp = this.CloneCurrentStyle();
         tmp.tag = MXPTag[tag];
         for (x = 0; x < xl; x++) {
           arg = args[x].split('=');
@@ -1049,7 +1049,7 @@ export class Parser extends EventEmitter {
         return null;
       case 'H':
       case 'HIGH':
-        tmp = this.GetCurrentStyle();
+        tmp = this.CloneCurrentStyle();
         tmp.tag = MXPTag[tag];
         tmp.high = true;
         tmp.custom = '';
@@ -1058,7 +1058,7 @@ export class Parser extends EventEmitter {
       case 'I':
       case 'ITALIC':
       case 'EM':
-        tmp = this.GetCurrentStyle();
+        tmp = this.CloneCurrentStyle();
         tmp.tag = MXPTag[tag];
         tmp.style |= FontStyle.Italic;
         tmp.custom = '';
@@ -1066,7 +1066,7 @@ export class Parser extends EventEmitter {
         return null;
       case 'U':
       case 'UNDERLINE':
-        tmp = this.GetCurrentStyle();
+        tmp = this.CloneCurrentStyle();
         tmp.tag = MXPTag[tag];
         tmp.style |= FontStyle.Underline;
         tmp.custom = '';
@@ -1074,7 +1074,7 @@ export class Parser extends EventEmitter {
         return null;
       case 'S':
       case 'STRIKEOUT':
-        tmp = this.GetCurrentStyle();
+        tmp = this.CloneCurrentStyle();
         tmp.tag = MXPTag[tag];
         tmp.style |= FontStyle.Strikeout;
         tmp.custom = '';
@@ -1464,7 +1464,7 @@ export class Parser extends EventEmitter {
         case 'VAR':
           this.mxpState.captured.push([]);
           this.mxpState.capture++;
-          tmp = this.GetCurrentStyle();
+          tmp = this.CloneCurrentStyle();
           tmp.tag = MXPTag[tag];
           tmp.obj = args;
           tmp.custom = '';
@@ -1928,7 +1928,7 @@ export class Parser extends EventEmitter {
           this.emit('MXP-tag-reply', tag, sArgs);
           break;
         case 'A':
-          tmp = this.GetCurrentStyle();
+          tmp = this.CloneCurrentStyle();
           tmp.tag = MXPTag[tag];
           for (x = 0; x < xl; x++) {
             arg = args[x].split('=');
@@ -1969,7 +1969,7 @@ export class Parser extends EventEmitter {
             text: null
           };
         case 'SEND':
-          tmp = this.GetCurrentStyle();
+          tmp = this.CloneCurrentStyle();
           tmp.tag = MXPTag[tag];
           for (x = 0; x < xl; x++) {
             arg = args[x].split('=');
@@ -2039,7 +2039,7 @@ export class Parser extends EventEmitter {
         case 'H4':
         case 'H5':
         case 'H6':
-          tmp = this.GetCurrentStyle();
+          tmp = this.CloneCurrentStyle();
           tmp.tag = MXPTag[tag];
           tmp.style |= FontStyle.Bold;
           tmp.custom = '';
@@ -2075,7 +2075,7 @@ export class Parser extends EventEmitter {
           this.mxpState.paragraph = false;
           return null;
         case 'P':
-          tmp = this.GetCurrentStyle();
+          tmp = this.CloneCurrentStyle();
           tmp.tag = MXPTag[tag];
           tmp.custom = '';
           this.mxpStyles.push(tmp);
@@ -2112,7 +2112,7 @@ export class Parser extends EventEmitter {
       //not open and not in correct lineType
       if (!e.open && this.mxpState.lineType !== lineType.Secure && this.mxpState.lineType !== lineType.LockSecure && this.mxpState.lineType !== lineType.TempSecure)
         return null;
-      tmp = this.GetCurrentStyle();
+      tmp = this.CloneCurrentStyle();
       tmp.tag = MXPTag.Custom;
       tmp.custom = e.name;
       arg = e.definition;
@@ -2226,6 +2226,16 @@ export class Parser extends EventEmitter {
     return '</' + ts.reverse().join('></') + '>';
   }
 
+  private CloneCurrentStyle() {
+    let tmp: MXPStyle;
+    if (this.mxpStyles.length === 0)
+      this.mxpStyles.push(new MXPStyle(FontStyle.None, '', '', false));
+    tmp = this.mxpStyles[this.mxpStyles.length - 1];
+    if (this.mxpLines[this.mxpState.lineType] && this.mxpLines[this.mxpState.lineType].enabled)
+      tmp.gagged = this.mxpLines[this.mxpState.lineType].gag;
+    return tmp;
+  }
+
   private GetCurrentStyle() {
     let tmp: MXPStyle;
     if (this.mxpStyles.length === 0)
@@ -2233,7 +2243,7 @@ export class Parser extends EventEmitter {
     tmp = this.mxpStyles[this.mxpStyles.length - 1];
     if (this.mxpLines[this.mxpState.lineType] && this.mxpLines[this.mxpState.lineType].enabled)
       tmp.gagged = this.mxpLines[this.mxpState.lineType].gag;
-    return clone(tmp);
+    return <MXPStyle>cloneObject(tmp);
   }
 
   private DecreaseColor(clr, p) {

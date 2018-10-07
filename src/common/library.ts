@@ -502,8 +502,8 @@ export function clone(obj) {
 export function cloneObject(obj) {
     const nObj = {};
     let prop;
-    for (prop in this) {
-        if (!this.hasOwnProperty(prop)) continue;
+    for (prop in obj) {
+        if (!obj.hasOwnProperty(prop)) continue;
         if (typeof obj[prop] === 'object')
             nObj[prop] = cloneObject(obj[prop]);
         else if (Array.isArray(obj[prop]))
