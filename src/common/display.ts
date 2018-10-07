@@ -1349,6 +1349,7 @@ export class Display extends EventEmitter {
         this.doUpdate(UpdateType.overlays);
     }
 
+    //TODO add font support, as different blocks of text could have different font formats, need to not just measure with but measure based on format block data
     public addOverlays(ranges: OverlayRange[], cls?: string, type?: string) {
         let s;
         let e;
@@ -1521,6 +1522,7 @@ export class Display extends EventEmitter {
         this.doUpdate(UpdateType.overlays);
     }
 
+    //TODO add font support, as different blocks of text could have different font formats, need to not just measure with but measure based on format block data
     private updateSelection() {
         const sel = this._currentSelection;
         let s;
@@ -1780,6 +1782,8 @@ export class Display extends EventEmitter {
         let fCls;
         const height = this._charHeight;
         const len = formats.length;
+        let width = 0;
+        let left = 0;
         let ol;
         for (ol in this._expire) {
             if (!this._expire.hasOwnProperty(ol))
@@ -1794,8 +1798,9 @@ export class Display extends EventEmitter {
             let nFormat;
             let end;
             const td = [];
-            let oSize;
-            let oFont;
+            //let oSize;
+            //let oFont;
+            let eText;
             if (f < len - 1) {
                 nFormat = formats[f + 1];
                 //skip empty blocks
@@ -1814,28 +1819,28 @@ export class Display extends EventEmitter {
                     bStyle.push('background:', format.background, ';');
                 if (format.color)
                     fStyle.push('color:', format.color, ';');
+                /*
                 if (format.font || format.size) {
                     oSize = this._character.style.fontSize;
                     oFont = this._character.style.fontFamily;
                 }
-                //TODO variable character width/height is not supported
+                */
+                eText = htmlEncode(text.substring(offset, end));
+                //TODO variable character height is not supported
                 //TODO once supported update parser support tag to add font
                 /*
-                if (format.font) {
-
-                    fStyle.push("font-family: ", format.font, ";")
-                    this._character.style.fontFamily = format.font;
-                }
-                if (format.size) {
-                    fStyle.push("font-size: ", format.size, ";")
-                    this._character.style.fontSize = format.size;
-                }
                 if (format.font || format.size) {
-                    height = Math.max(height, Math.ceil($(this._character).innerHeight() + 0.5));
-                    this._character.style.fontSize = oSize;
-                    this._character.style.fontFamily = oFont;
+                    if (format.font) fStyle.push('font-family: ', format.font, ';');
+                    if (format.size) fStyle.push('font-size: ', format.size, ';');
+                    //height = Math.max(height, Math.ceil($(this._character).innerHeight() + 0.5));
+                    this._context.font = `${format.size || oSize} ${format.font || oFont}`;
+                    width = this._context.measureText(eText).width;
+                    this._context.font = `${oSize} ${oFont}`;
                 }
+                else
                 */
+                width = this._context.measureText(eText).width;
+
                 if (format.style !== FontStyle.None) {
                     if ((format.style & FontStyle.Bold) === FontStyle.Bold)
                         fStyle.push('font-weight: bold;');
@@ -1865,18 +1870,22 @@ export class Display extends EventEmitter {
                     fore.push('<span style="left:0;width:{max}px;', fStyle.join(''), '" class="ansi', fCls.join(''), '"><div class="hr" style="background-color:', format.color, '"></div></span>');
                 }
                 else {
-                    back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
-                    fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
+                    back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
+                    fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">', eText, '</span>');
                 }
+                left += width;
             }
             else if (format.formatType === FormatType.Link) {
+                eText = htmlEncode(text.substring(offset, end));
+                width = this._context.measureText(eText).width;
                 fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
                 fore.push(format.href);
                 fore.push('" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
-                back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
-                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
-                fore.push(htmlEncode(text.substring(offset, end)));
+                back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
+                fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
+                fore.push(eText);
                 fore.push('</span>');
+                left += width;
             }
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
                 fore.push('</a>');
@@ -1884,6 +1893,8 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.WordBreak)
                 fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
+                eText = htmlEncode(text.substring(offset, end));
+                width = this._context.measureText(eText).width;
                 fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" data-href="');
                 fore.push(format.href);
                 fore.push('" href="javascript:void(0);" title="');
@@ -1902,12 +1913,15 @@ export class Display extends EventEmitter {
                     this._expire2[idx].push(f);
                 }
                 fore.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
-                back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
-                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
-                fore.push(htmlEncode(text.substring(offset, end)));
+                back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
+                fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
+                fore.push(eText);
                 fore.push('</span>');
+                left += width;
             }
             else if (format.formatType === FormatType.MXPSend) {
+                eText = htmlEncode(text.substring(offset, end));
+                width = this._context.measureText(eText).width;
                 fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" href="javascript:void(0);" title="');
                 fore.push(format.hint);
                 fore.push('"');
@@ -1925,16 +1939,20 @@ export class Display extends EventEmitter {
                 }
                 fore.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
                 fore.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
-                back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
-                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
-                fore.push(htmlEncode(text.substring(offset, end)));
+                back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
+                fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
+                fore.push(eText);
                 fore.push('</span>');
+                left += width;
             }
             else if (format.formatType === FormatType.MXPExpired) {
-                back.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', bStyle.join(''), '" class="ansi"></span>');
-                fore.push('<span style="left:', offset * this._charWidth, 'px;width:', (end - offset) * this._charWidth, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
-                fore.push(htmlEncode(text.substring(offset, end)));
+                eText = htmlEncode(text.substring(offset, end));
+                width = this._context.measureText(eText).width;
+                back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
+                fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
+                fore.push(eText);
                 fore.push('</span>');
+                left += width;
             }
             //TODO add image
             //TODO once supported update parser support tag to add image

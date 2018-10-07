@@ -56,12 +56,13 @@ export function FilterArrayByKeyValue(array, k, v) {
     return res.sort(SortArrayByPriority);
 }
 
+const _edCache = $('<div/>');
 export function htmlEncode(value) {
-    return $('<div/>').text(value).html();
+    return _edCache.text(value).html();
 }
 
 export function htmlDecode(value) {
-    return $('<div/>').html(value).text();
+    return _edCache.html(value).text();
 }
 
 export function htmlEntities(str) {

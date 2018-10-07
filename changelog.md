@@ -29,6 +29,7 @@
   - Display:
     - Fix overlay and selection highlighting for unicode half and full width characters
     - Fix pasting or cutting text into find search box
+    - Fix unicode spacing issues when different colors or font styles are used
 
 ## v0.6.0 2018-10-01
 
