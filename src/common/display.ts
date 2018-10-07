@@ -106,6 +106,8 @@ export class Display extends EventEmitter {
     private _wMove;
     private _wUp;
     private _wResize;
+    private _canvas: HTMLCanvasElement;
+    private _context: CanvasRenderingContext2D;
 
     get roundedRanges(): boolean { return this._roundedRanges; }
     set roundedRanges(value: boolean) {
@@ -328,6 +330,9 @@ export class Display extends EventEmitter {
         this._view.setAttribute('role', 'log');
         fragment.appendChild(this._view);
         this._el.appendChild(fragment);
+
+        this._canvas = document.createElement('canvas');
+        this._context = this._canvas.getContext('2d', { alpha: false });
 
         this._character = document.createElement('div');
         this._character.id = this.id + '-Character';
@@ -944,6 +949,7 @@ export class Display extends EventEmitter {
             this._el.style.fontFamily = font;
             this._character.style.fontSize = size;
             this._character.style.fontFamily = font;
+            this._context.font = `${size} ${font}`;
             //recalculate height/width of characters so display can be calculated
             this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
             this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
@@ -1357,6 +1363,7 @@ export class Display extends EventEmitter {
         if (!cls || cls.length === 0)
             cls = 'overlay-default';
         this._overlays[type] = [];
+        const fl = Math.floor;
         for (r = 0; r < rl; r++) {
             range = ranges[r];
             if (range.start.y > range.end.y) {
@@ -1385,8 +1392,10 @@ export class Display extends EventEmitter {
                 if (s < 0) s = 0;
                 if (e > this.lines[sL].length)
                     e = this.lines[sL].length;
-                e = (e - s) * this._charWidth;
-                s *= this._charWidth;
+                //e = (e - s) * this._charWidth;
+                //s *= this._charWidth;
+                e = this._context.measureText(this.lines[sL].substring(s, e)).width;
+                s = this._context.measureText(this.lines[sL].substring(0, s)).width;
                 if (!this._overlays[type][sL])
                     this._overlays[type][sL] = [];
                 if (this.roundedRanges)
@@ -1423,21 +1432,28 @@ export class Display extends EventEmitter {
                     else
                         cl = s;
                 }
+                if (sL === line)
+                    w = this._context.measureText(this.lines[sL].substr(s)).width;
+                else if (eL === line)
+                    w = this._context.measureText(this.lines[line].substring(0, e)).width;
+                else
+                    w = this._context.measureText(this.lines[line]).width;
+                cl = this._context.measureText(this.lines[line].substring(0, cl)).width;
                 if (this.roundedRanges) {
-                    const cr = eL === line ? e : (this.lines[line].length || 1);
+                    const cr = fl(eL === line ? this._context.measureText(this.lines[line].substring(0, e)).width : (this._context.measureText(this.lines[line]).width || this._charWidth));
                     if (line > sL) {
                         let pl = 0;
                         if (sL === line - 1) {
-                            if (s >= this.lines[line - 1].length)
-                                pl = this.lines[line - 1].length;
+                            if (fl(this._context.measureText(this.lines[sL].substr(0, s)).width) >= fl(this._context.measureText(this.lines[line - 1]).width))
+                                pl = fl(this._context.measureText(this.lines[line - 1]).width);
                             else
-                                pl = s;
+                                pl = fl(this._context.measureText(this.lines[sL].substring(0, s)).width);
                         }
-                        const pr = this.lines[line - 1].length || 1;
+                        const pr = fl(this._context.measureText(this.lines[line - 1]).width || this._charWidth);
 
-                        if (cl === pl)
+                        if (fl(cl) === pl)
                             startStyle.top = CornerType.Flat;
-                        else if (cl > pl)
+                        else if (fl(cl) > pl)
                             startStyle.top = CornerType.Intern;
                         if (cr === pr) {
                             if (line === sL + 1 && this.lines[sL].length === 0)
@@ -1453,10 +1469,10 @@ export class Display extends EventEmitter {
 
                     if (line < eL) {
                         const nl = 0;
-                        const nr = eL === line + 1 ? e : (this.lines[line + 1].length || 1);
-                        if (cl === nl)
+                        const nr = fl(eL === line + 1 ? this._context.measureText(this.lines[line + 1].substring(0, e)).width : (this._context.measureText(this.lines[line + 1]).width || this._charWidth));
+                        if (fl(cl) === nl)
                             startStyle.bottom = CornerType.Flat;
-                        else if (nl < cl && cl < nr)
+                        else if (nl < fl(cl) && fl(cl) < nr)
                             startStyle.bottom = CornerType.Intern;
 
                         if (cr === nr) {
@@ -1483,18 +1499,6 @@ export class Display extends EventEmitter {
                     if (endStyle.bottom === CornerType.Extern) {
                         rCls += ' brc';
                     }
-                }
-                if (sL === line) {
-                    if (s >= this.lines[line].length)
-                        w = 0;
-                    else
-                        w = ((this.lines[line].length || 1) - s) * this._charWidth;
-                }
-                else if (eL === line) {
-                    w = e * this._charWidth;
-                }
-                else {
-                    w = (this.lines[line].length || 1) * this._charWidth;
                 }
 
                 if (!this._overlays[type][line])
@@ -1552,8 +1556,11 @@ export class Display extends EventEmitter {
             if (e > this.lines[sL].length)
                 e = this.lines[sL].length;
 
-            e = (e - s) * this._charWidth;
-            s *= this._charWidth;
+            e = this._context.measureText(this.lines[sL].substring(s, e)).width;
+            s = this._context.measureText(this.lines[sL].substring(0, s)).width;
+
+            //e = (e - s) * this._charWidth;
+            //s *= this._charWidth;
             if (this.roundedRanges)
                 this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
             else
@@ -1571,7 +1578,7 @@ export class Display extends EventEmitter {
             s = 0;
         if (e > this.lines[eL].length)
             e = this.lines[eL].length;
-
+        const fl = Math.floor;
         for (let line = sL; line < eL + 1; line++) {
             const startStyle = {
                 top: CornerType.Extern,
@@ -1590,21 +1597,29 @@ export class Display extends EventEmitter {
                 else
                     cl = s;
             }
+            if (sL === line)
+                w = this._context.measureText(this.lines[sL].substr(s)).width;
+            else if (eL === line)
+                w = this._context.measureText(this.lines[line].substring(0, e)).width;
+            else
+                w = this._context.measureText(this.lines[line]).width;
+            cl = this._context.measureText(this.lines[line].substring(0, cl)).width;
+
             if (this.roundedRanges) {
-                const cr = eL === line ? e : (this.lines[line].length || 1);
+                const cr = fl(eL === line ? this._context.measureText(this.lines[line].substring(0, e)).width : (this._context.measureText(this.lines[line]).width || this._charWidth));
                 if (line > sL) {
                     let pl = 0;
                     if (sL === line - 1) {
-                        if (s >= this.lines[line - 1].length)
-                            pl = this.lines[line - 1].length;
+                        if (fl(this._context.measureText(this.lines[sL].substr(0, s)).width) >= fl(this._context.measureText(this.lines[line - 1]).width))
+                            pl = fl(this._context.measureText(this.lines[line - 1]).width);
                         else
-                            pl = s;
+                            pl = fl(this._context.measureText(this.lines[sL].substring(0, s)).width);
                     }
-                    const pr = this.lines[line - 1].length || 1;
+                    const pr = fl(this._context.measureText(this.lines[line - 1]).width || this._charWidth);
 
-                    if (cl === pl)
+                    if (fl(cl) === pl)
                         startStyle.top = CornerType.Flat;
-                    else if (cl > pl)
+                    else if (fl(cl) > pl)
                         startStyle.top = CornerType.Intern;
                     if (cr === pr) {
                         if (line === sL + 1 && this.lines[sL].length === 0)
@@ -1620,10 +1635,10 @@ export class Display extends EventEmitter {
 
                 if (line < eL) {
                     const nl = 0;
-                    const nr = eL === line + 1 ? e : (this.lines[line + 1].length || 1);
-                    if (cl === nl)
+                    const nr = fl(eL === line + 1 ? this._context.measureText(this.lines[line + 1].substring(0, e)).width : (this._context.measureText(this.lines[line + 1]).width || this._charWidth));
+                    if (fl(cl) === nl)
                         startStyle.bottom = CornerType.Flat;
-                    else if (nl < cl && cl < nr)
+                    else if (nl < fl(cl) && fl(cl) < nr)
                         startStyle.bottom = CornerType.Intern;
 
                     if (cr === nr) {
@@ -1651,25 +1666,15 @@ export class Display extends EventEmitter {
                     cls += ' brc';
                 }
             }
-            if (sL === line) {
-                if (s >= this.lines[line].length)
-                    w = 0;
-                else
-                    w = ((this.lines[line].length || 1) - s) * this._charWidth;
-            }
-            else if (eL === line)
-                w = e * this._charWidth;
-            else
-                w = (this.lines[line].length || 1) * this._charWidth;
 
-            parts.push(`<span class="${cls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
+            parts.push(`<span class="${cls}" style="left:${cl}px;width: ${w}px;"></span>`);
 
             if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern)
-                parts.push(`<span class="select-text isb" style="top:${this._charHeight - 7}px;left:${(cl * this._charWidth - 7)}px;"></span>`);
+                parts.push(`<span class="select-text isb" style="top:${this._charHeight - 7}px;left:${(cl - 7)}px;"></span>`);
             if (endStyle.top === CornerType.Intern)
-                parts.push(`<span class="select-text iet" style="top:0px;left:${(cl * this._charWidth) + w}px;"></span>`);
+                parts.push(`<span class="select-text iet" style="top:0px;left:${(cl) + w}px;"></span>`);
             if (endStyle.bottom === CornerType.Intern)
-                parts.push(`<span class="select-text ieb" style="top:${this._charHeight - 7}px;left:${(cl * this._charWidth) + w}px;"></span>`);
+                parts.push(`<span class="select-text ieb" style="top:${this._charHeight - 7}px;left:${(cl) + w}px;"></span>`);
 
             this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
         }
@@ -2377,8 +2382,8 @@ export class ScrollBar extends EventEmitter {
     public dispose() {
         if (this.track)
             this._parent.removeChild(this.track);
-            window.removeEventListener('mousemove', this._wMove);
-            window.removeEventListener('mouseup', this._wUp);
-            window.removeEventListener('resize', this._wResize);
+        window.removeEventListener('mousemove', this._wMove);
+        window.removeEventListener('mouseup', this._wUp);
+        window.removeEventListener('resize', this._wResize);
     }
 }
