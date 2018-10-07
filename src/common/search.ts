@@ -51,6 +51,19 @@ export class Search extends EventEmitter {
             //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
             this._timer = setTimeout(() => { this.find(); }, this._regex ? 500 : 250);
         });
+
+        this._control.on('paste', (e) => {
+            clearTimeout(this._timer);
+            //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
+            this._timer = setTimeout(() => { this.find(); }, this._regex ? 500 : 250);
+        });
+
+        this._control.on('cut', (e) => {
+            clearTimeout(this._timer);
+            //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
+            this._timer = setTimeout(() => { this.find(); }, this._regex ? 500 : 250);
+        });
+
         this.$canvas = document.createElement('canvas');
         this.$ctx = this.$canvas.getContext('2d');
     }

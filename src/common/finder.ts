@@ -43,6 +43,18 @@ export class Finder extends EventEmitter {
             this._timer = setTimeout(() => { this.find(); }, this._regex ? 500 : 250);
         });
 
+        this._control.on('paste', (e) => {
+            clearTimeout(this._timer);
+            //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
+            this._timer = setTimeout(() => { this.find(); }, this._regex ? 500 : 250);
+        });
+
+        this._control.on('cut', (e) => {
+            clearTimeout(this._timer);
+            //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
+            this._timer = setTimeout(() => { this.find(); }, this._regex ? 500 : 250);
+        });
+
         //create box
     }
 
