@@ -1361,8 +1361,29 @@ export class Display extends EventEmitter {
             y += this._VScroll.position;
         y = Math.floor(y / this._charHeight);
 
-        let x = (e.pageX - os.left) + this._HScroll.position;
-        x = Math.floor(x / this._charWidth);
+        const xPos = (e.pageX - os.left) + this._HScroll.position;
+        let x = Math.floor(xPos / this._charWidth);
+        if (y >= 0) {
+            let text;
+            if (y < this.lines.length)
+                text = this.lines[y];
+            else
+                text = this.lines[this.lines.length - 1];
+            const tl = text.length;
+            let w = this.textWidth(text.substr(0, x));
+            if (w > xPos) {
+                while (w > xPos && x > 0) {
+                    x--;
+                    w = this.textWidth(text.substr(0, x));
+                }
+            }
+            else if (w < xPos) {
+                while (w < xPos && x < tl) {
+                    x++;
+                    w = this.textWidth(text.substr(0, x));
+                }
+            }
+        }
         return { x: x, y: y };
     }
 
@@ -1388,7 +1409,7 @@ export class Display extends EventEmitter {
         // if given, use cached canvas for better performance
         // else, create new canvas
         const canvas = this._canvas || (this._canvas = document.createElement('canvas'));
-        const context = canvas.getContext('2d');
+        const context = this._context || (this._context = canvas.getContext('2d', { alpha: false }));
         context.font = font;
         const metrics = context.measureText(text);
         return metrics.width;
