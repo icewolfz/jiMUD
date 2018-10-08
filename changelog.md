@@ -2,6 +2,9 @@
 
 ## v0.6.2
 
+- **Fixed:**
+  - Fixed Unicode corruption when receiving split packets when UTF-8 or charset telnet option is enabled
+
 ## v0.6.1 2018-10-08
 
 - **New:**

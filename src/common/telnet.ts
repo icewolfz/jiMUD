@@ -447,6 +447,36 @@ export class Telnet extends EventEmitter {
                             _sb.push(i);
                             state = 1;
                         }
+                        else if (this.UTF8 || (this.options.CHARSET)) {
+                            //If current byte has first bit on unicode
+                            if ((i & 0x80) === 0x80 && idx >= len - 4) {
+                                let uLen = 0;
+                                //Get byte count based on bits turned on
+                                if ((i & 0xC0) === 0xC0)
+                                    uLen = 1;
+                                else if ((i & 0xE0) === 0xE0)
+                                    uLen = 2;
+                                else if ((i & 0xF0) === 0xF0)
+                                    uLen = 3;
+                                //if idx + length larger then current length, good chance the unicode character is split so store and end process
+                                if (idx + uLen >= len) {
+                                    _sb.push(...data.slice(idx));
+                                    if (this.enableDebug) {
+                                        this.emit('debug', 'Unicode split length: ' + uLen, 1);
+                                        this.emit('debug', 'Split buffer length: ' + _sb.length, 1);
+                                    }
+                                    break;
+                                }
+                                /**
+                                 * https://stackoverflow.com/questions/22404493/is-there-a-drastic-difference-between-utf-8-and-utf-16/22404874
+                                    0xxxxxxx // 1 byte
+                                    110xxxxx 10xxxxxx //2 bytes  0xC0
+                                    1110xxxx 10xxxxxx 10xxxxxx //3 bytes 0xE0
+                                    11110xxx 10xxxxxx 10xxxxxx 10xxxxxx //4 bytes 0xF0
+                                 */
+                            }
+                            processed.push(i);
+                        }
                         else
                             processed.push(i);
                         break;
