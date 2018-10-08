@@ -31,9 +31,6 @@ declare let $selword: string;
 declare let $copied: string;
 
 interface JQuery {
-	hasHorizontalScrollBar(): boolean;
-	innerText(msg): string;
-	textContents(msg): string;
 	treeview: any;
 	selectpicker: any
 }

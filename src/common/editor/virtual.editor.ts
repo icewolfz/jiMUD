@@ -1,3 +1,4 @@
+//spellchecker:ignore datagrid propertygrid rgbcolor consolas lucida bitstream dropdown selectall varargs baseroom
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { formatArgumentList } from './lpc';
 import { Splitter, Orientation } from '../splitter';
@@ -245,8 +246,8 @@ export class VirtualEditor extends EditorBase {
     private _wMove;
     private _wUp;
     private _scrollTimer: NodeJS.Timer;
-    private $resizer;
-    private $resizerCache;
+    private $resizeObserver;
+    private $resizeObserverCache;
     private $observer: MutationObserver;
     private $allowResize: boolean = false;
     private $allowExitWalk: boolean = true;
@@ -282,7 +283,7 @@ export class VirtualEditor extends EditorBase {
     private $drawCache;
 
     private $depth;
-    private $rcount;
+    private $roomCount;
     private $depthToolbar: HTMLInputElement;
 
     private $selectedRooms: Room[] = [];
@@ -636,7 +637,7 @@ export class VirtualEditor extends EditorBase {
         this.$externalRaw = this.createRawControl(View.exitsRaw);
         frag.appendChild(this.$externalRaw);
         //#endregion
-        //#region create datagrids
+        //#region create data grids
         el = document.createElement('div');
         el.classList.add('datagrid-standard');
         el.style.display = 'none';
@@ -698,6 +699,7 @@ export class VirtualEditor extends EditorBase {
                 editor: {
                     type: EditorType.dropdown,
                     options: {
+                        //spellchecker:disable
                         data: [
                             'beach',
                             'bog',
@@ -733,6 +735,7 @@ export class VirtualEditor extends EditorBase {
                             'underwater',
                             'water'
                         ]
+                        //spellchecker:enable
                     }
                 }
             },
@@ -1520,11 +1523,11 @@ export class VirtualEditor extends EditorBase {
             //Remove old exits
             let r;
             let ex = 0;
-            const elen = e.data.length;
+            const eLength = e.data.length;
             let sr = false;
             const v = [];
             const rs = [];
-            for (; ex < elen; ex++) {
+            for (; ex < eLength; ex++) {
                 //Add new exits
                 const exit = e.data[ex].data;
                 if (!exit.enabled) continue;
@@ -3899,6 +3902,7 @@ export class VirtualEditor extends EditorBase {
                 editor: {
                     type: EditorType.dropdown,
                     options: {
+                        //spellchecker:disable
                         data: [
                             'beach',
                             'bog',
@@ -3935,6 +3939,7 @@ export class VirtualEditor extends EditorBase {
                             'water'
                         ],
                         container: document.body
+                        //spellchecker:enable
                     }
                 },
                 sort: 3
@@ -3963,16 +3968,16 @@ export class VirtualEditor extends EditorBase {
             }
         ]);
         this.resize();
-        this.$resizer = new ResizeObserver((entries, observer) => {
+        this.$resizeObserver = new ResizeObserver((entries, observer) => {
             if (entries.length === 0) return;
             if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
                 return;
-            if (!this.$resizerCache || this.$resizerCache.width !== entries[0].contentRect.width || this.$resizerCache.height !== entries[0].contentRect.height) {
-                this.$resizerCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
+            if (!this.$resizeObserverCache || this.$resizeObserverCache.width !== entries[0].contentRect.width || this.$resizeObserverCache.height !== entries[0].contentRect.height) {
+                this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
                 this.doUpdate(UpdateType.resize);
             }
         });
-        this.$resizer.observe(this.$mapContainer);
+        this.$resizeObserver.observe(this.$mapContainer);
         this.$observer = new MutationObserver((mutationsList) => {
             let mutation;
             for (mutation of mutationsList) {
@@ -5190,8 +5195,8 @@ export class VirtualEditor extends EditorBase {
                             values[l] = this.getRoom(undo.data[l].x, undo.data[l].y, undo.data[l].z).clone();
                             this.setRoom(undo.data[l]);
                             this.RoomChanged(undo.data[l]);
-                            if (values[l].exits) this.$rcount--;
-                            if (undo.data[l].exits) this.$rcount++;
+                            if (values[l].exits) this.$roomCount--;
+                            if (undo.data[l].exits) this.$roomCount++;
                             this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
@@ -5290,8 +5295,8 @@ export class VirtualEditor extends EditorBase {
                             room[undo.data.property] = undo.data.values[l];
                             this.RoomChanged(room);
                             if (undo.data.property === 'exits') {
-                                if (values[l].exits) this.$rcount--;
-                                if (room.exits) this.$rcount++;
+                                if (values[l].exits) this.$roomCount--;
+                                if (room.exits) this.$roomCount++;
                             }
                             this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
                         }
@@ -5446,8 +5451,8 @@ export class VirtualEditor extends EditorBase {
                             values[l] = this.getRoom(undo.data[l].x, undo.data[l].y, undo.data[l].z).clone();
                             this.setRoom(undo.data[l]);
                             this.RoomChanged(undo.data[l]);
-                            if (values[l].exits) this.$rcount--;
-                            if (undo.data[l].exits) this.$rcount++;
+                            if (values[l].exits) this.$roomCount--;
+                            if (undo.data[l].exits) this.$roomCount++;
                             this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
@@ -5546,8 +5551,8 @@ export class VirtualEditor extends EditorBase {
                             room[undo.data.property] = undo.data.values[l];
                             this.RoomChanged(room);
                             if (undo.data.property === 'exits') {
-                                if (values[l].exits) this.$rcount--;
-                                if (room.exits) this.$rcount++;
+                                if (values[l].exits) this.$roomCount--;
+                                if (room.exits) this.$roomCount++;
                             }
                             this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
                         }
@@ -6719,7 +6724,7 @@ export class VirtualEditor extends EditorBase {
 
     private updateStatus() {
         if (this.$view === View.map)
-            this.emit('status-message', `Rooms ${this.$rcount}, Empty rooms ${(this.$mapSize.width * this.$mapSize.height * this.$mapSize.depth) - this.$rcount}, Total rooms ${this.$mapSize.width * this.$mapSize.height * this.$mapSize.depth}`);
+            this.emit('status-message', `Rooms ${this.$roomCount}, Empty rooms ${(this.$mapSize.width * this.$mapSize.height * this.$mapSize.depth) - this.$roomCount}, Total rooms ${this.$mapSize.width * this.$mapSize.height * this.$mapSize.depth}`);
         else
             this.emit('status-message', '');
     }
@@ -6799,7 +6804,7 @@ export class VirtualEditor extends EditorBase {
         //see if selected
         const idx = this.$selectedRooms.indexOf(this.$rooms[r.z][r.y][r.x]);
         this.$rooms[r.z][r.y][r.x] = r;
-        //if selected update the selected systm to point to new room object
+        //if selected update the selected system to point to new room object
         if (idx !== -1) {
             this.$selectedRooms[idx] = this.$rooms[r.z][r.y][r.x];
             this.UpdateEditor(this.$selectedRooms);
@@ -7210,16 +7215,16 @@ export class VirtualEditor extends EditorBase {
         if (val < min) val = min;
 
         const cl = colors.length;
-        const nspan = (max - min) / cl;
+        const nSpan = (max - min) / cl;
         let curr = min;
         let start;
         let end;
         let c;
 
         for (c = 0; c < cl; c++) {
-            if (val >= curr && val < curr + nspan)
+            if (val >= curr && val < curr + nSpan)
                 break;
-            curr += nspan;
+            curr += nSpan;
         }
         if (c >= cl - 1) {
             start = new RGBColor(colors[cl - 1]);
@@ -7233,7 +7238,7 @@ export class VirtualEditor extends EditorBase {
         let r;
         let g;
         let b;
-        const vp = (val - curr) / nspan;
+        const vp = (val - curr) / nSpan;
         r = start.r + ((end.r - start.r) * vp);
         g = start.g + ((end.g - start.g) * vp);
         b = start.b + ((end.b - start.b) * vp);
@@ -8207,8 +8212,8 @@ export class VirtualEditor extends EditorBase {
         if (old) {
             if (room.state === old.state && room.exits === old.exits && room.terrain === old.terrain && room.item === old.item)
                 return;
-            if (old.exits) this.$rcount--;
-            if (room.exits) this.$rcount++;
+            if (old.exits) this.$roomCount--;
+            if (room.exits) this.$roomCount++;
             this.doUpdate(UpdateType.status);
         }
         const y = room.y + 1 + room.z * (this.$mapSize.height + 1);
@@ -8307,7 +8312,7 @@ export class VirtualEditor extends EditorBase {
         const xl = this.$mapSize.width;
         const yl = this.$mapSize.height;
         const maxLines = 1 + (yl + 1) * zl;
-        this.$rcount = 0;
+        this.$roomCount = 0;
         let sLines = null;
         let tLines = null;
         let mLines = null;
@@ -8387,7 +8392,7 @@ export class VirtualEditor extends EditorBase {
                     if (mLine[x] === '000:000' || mLine[x] === '000:000:000' || mLine[x] === '000:000:000:000')
                         mLine[x] = '000';
                     //this.RoomChanged(room, null, true);
-                    if (room.exits) this.$rcount++;
+                    if (room.exits) this.$roomCount++;
                 }
                 if (sLine)
                     sLines[yLine] = sLine.join(' ');
@@ -8414,7 +8419,7 @@ export class VirtualEditor extends EditorBase {
     private UpdateEditor(rooms) {
         if (this.selectedFocusedRoom)
             this.$depthToolbar.value = '' + this.selectedFocusedRoom.z;
-        const objs = [];
+        const objects = [];
         if (rooms) {
             let rl = rooms.length;
             const ri = {};
@@ -8462,10 +8467,10 @@ export class VirtualEditor extends EditorBase {
                     if (o.external.length === 0)
                         o.external = re;
                 }
-                objs.unshift(o);
+                objects.unshift(o);
             }
         }
-        this.$roomEditor.objects = objs;
+        this.$roomEditor.objects = objects;
     }
 
     private UpdatePreview(room) {
@@ -8744,8 +8749,8 @@ export class VirtualEditor extends EditorBase {
         let z = 0;
         let zl;
         let line;
-        let tline;
-        let sline;
+        let terrainLine;
+        let stateLine;
         let dl;
         let r;
         let ry;
@@ -8756,19 +8761,19 @@ export class VirtualEditor extends EditorBase {
         let rd;
         let rt;
         const data = this.$mapRaw.value.split('\n');
-        const tdata = this.$terrainRaw.value.split('\n');
-        const sdata = this.$stateRaw.value.split('\n');
-        const edata = this.$externalRaw.value.split('\n');
+        const terrainData = this.$terrainRaw.value.split('\n');
+        const stateData = this.$stateRaw.value.split('\n');
+        const exitData = this.$externalRaw.value.split('\n');
         const root = path.dirname(this.file);
         const files = fs.readdirSync(root);
         const ee = {};
-        this.$rcount = 0;
+        this.$roomCount = 0;
         this.$maxTerrain = 0;
         this.$colorCache = 0;
         this.$drawCache = null;
-        if (edata.length > 0) {
-            for (x = 0, xl = edata.length; x < xl; x++) {
-                line = edata[x].split(':');
+        if (exitData.length > 0) {
+            for (x = 0, xl = exitData.length; x < xl; x++) {
+                line = exitData[x].split(':');
                 if (line.length > 2)
                     ee[line[0]] = line[1];
             }
@@ -8777,11 +8782,11 @@ export class VirtualEditor extends EditorBase {
         this.$rooms = [];
         if (data.length > 0) {
             line = data.shift().split(' ');
-            tline = tdata.shift().split(' ');
-            sline = sdata.shift().split(' ');
+            terrainLine = terrainData.shift().split(' ');
+            stateLine = stateData.shift().split(' ');
             dl = data.length;
-            sl = sdata.length;
-            tl = tdata.length;
+            sl = stateData.length;
+            tl = terrainData.length;
             if (line.length === 1) {
                 xl = +line[0];
                 yl = xl;
@@ -8809,7 +8814,7 @@ export class VirtualEditor extends EditorBase {
             this.$selectedRooms.length = 0;
             if (xl > 0 && yl > 0 && zl > 0) {
                 const rooms = this.$rooms;
-                let rcount = 0;
+                let roomCount = 0;
                 let maxTerrain = 0;
                 let cname;
                 for (; z < zl; z++) {
@@ -8825,15 +8830,15 @@ export class VirtualEditor extends EditorBase {
                         else
                             line = [];
 
-                        if (li < tl && tdata[li].length > 0)
-                            tline = tdata[li].split(' ');
+                        if (li < tl && terrainData[li].length > 0)
+                            terrainLine = terrainData[li].split(' ');
                         else
-                            tline = [];
+                            terrainLine = [];
 
-                        if (li < sl && sdata[li].length > 0)
-                            sline = sdata[li].split(' ');
+                        if (li < sl && stateData[li].length > 0)
+                            stateLine = stateData[li].split(' ');
                         else
-                            sline = [];
+                            stateLine = [];
 
                         for (x = 0; x < xl; x++) {
                             if (x >= line.length) {
@@ -8847,14 +8852,14 @@ export class VirtualEditor extends EditorBase {
                                 t = rd.length > 1 ? +rd[1] : 0;
                                 i = rd.length > 2 ? +rd[2] : t;
                                 s = rd.length > 3 ? +rd[3] : 0;
-                                if (x < tline.length) {
-                                    rt = tline[x].split(':');
+                                if (x < terrainLine.length) {
+                                    rt = terrainLine[x].split(':');
                                     t = rt.length > 0 ? +rt[0] : 0;
                                     i = rt.length > 1 ? +rt[1] : t;
                                     s = rt.length > 2 ? +rt[2] : 0;
                                 }
-                                if (x < sline.length)
-                                    s = sline[x];
+                                if (x < stateLine.length)
+                                    s = stateLine[x];
                                 if (t > maxTerrain) maxTerrain = t;
                             }
                             r = new Room(x, y, z, e, t, i, s);
@@ -8868,11 +8873,11 @@ export class VirtualEditor extends EditorBase {
                             r.ef = files.indexOf(cname + '.c') !== -1;
                             this.loadRoom(r);
                             ry.push(r);
-                            if (r.exits) rcount++;
+                            if (r.exits) roomCount++;
                         }
                     }
                 }
-                this.$rcount = rcount;
+                this.$roomCount = roomCount;
                 this.$maxTerrain = maxTerrain;
             }
             if (selected.length !== 0 || this.$selectedRooms.length !== 0)
@@ -9300,8 +9305,10 @@ export class VirtualEditor extends EditorBase {
             }
             d = d.substr(0, d.length - 2);
             d += '\n     ]) );\n';
+            //spellchecker:disable
             if (eh.length)
                 d += `   add_invis_exits(${formatArgumentList(eh.join(', '), 61)});\n`;
+            //spellchecker:enable
         }
         if ((r.state & RoomStates.Cold) === RoomStates.Cold)
             d += '   set_temperature(-200);\n';
@@ -9366,7 +9373,7 @@ export class VirtualEditor extends EditorBase {
                     (v3, x) => new Room(x, y, z, 0, 0, 0))
             ));
 
-        this.$rcount = 0;
+        this.$roomCount = 0;
         for (let z = 0; z < zl; z++) {
             for (let y = 0; y < yl; y++) {
                 for (let x = 0; x < xl; x++) {
@@ -9392,7 +9399,7 @@ export class VirtualEditor extends EditorBase {
                             this.$selectedRooms[idx] = rooms[room.z][room.y][room.x];
                         if (this.$focusedRoom && this.$focusedRoom.at(x, y, z))
                             this.$focusedRoom = rooms[room.z][room.y][room.x];
-                        if (room.exits) this.$rcount++;
+                        if (room.exits) this.$roomCount++;
                     }
                     else {
                         if (room.exits) {

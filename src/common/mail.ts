@@ -1,7 +1,7 @@
 /**
  * Mail
  *
- * Hand GMCP ShadowMUD Post protocol
+ * Handle GMCP ShadowMUD Post protocol
  *
  * @arthur William
  * @created 2018-01-05

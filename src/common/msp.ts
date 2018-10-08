@@ -1,7 +1,12 @@
-//spell-checker:ignore fname
+//TODO re-code to download sounds and store in proper folder format based on MSP spec
+// http://www.zuggsoft.com/zmud/msp.htm
+// http://amylaar.pages.de/doc/other/msp.htm
+// https://www.gammon.com.au/forum/bbshowpost.php?bbsubject_id=783
+// http://www.gammon.com.au/forum/?id=12542&reply=6#reply6
+// spell-checker:ignore fname
 const buzz = require('buzz');
-const path = require('path');
-const fs = require('fs');
+//const path = require('path');
+//const fs = require('fs');
 import EventEmitter = require('events');
 import { stripQuotes } from './library';
 import { TelnetOption } from './telnet';

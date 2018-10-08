@@ -1,3 +1,4 @@
+//spellchecker:ignore datagrid dropdown
 import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
 import { DataGrid } from './datagrid';

@@ -1,4 +1,4 @@
-
+//spellchecker:ignore Consolas
 const fs = require('fs-extra');
 
 export class EditorSettings {

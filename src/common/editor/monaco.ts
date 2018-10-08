@@ -1,4 +1,5 @@
 /// <reference path="../../../node_modules/monaco-editor/monaco.d.ts" />
+//spellchecker:ignore sefuns efuns efun sefun lfuns lfun nroff ormatting selectall
 import { EditorBase, EditorOptions, FileState, Source } from './editor.base';
 import { conf, language, loadCompletion, LPCIndenter, LPCFormatter } from './lpc';
 import { isFileSync, isDirSync, parseTemplate, stripPinkfish } from '../library';
@@ -924,7 +925,6 @@ export class MonacoCodeEditor extends EditorBase {
         switch (what) {
             case 'cut':
             case 'delete':
-            case 'pasteadvanced':
             case 'paste-advanced':
                 if (this.$oEditor && this.$oEditor.hasTextFocus())
                     return false;
@@ -990,13 +990,13 @@ export class MonacoCodeEditor extends EditorBase {
                         label: '&Insert Color...',
                         click: () => {
                             ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
-                            const setcolor = (event, type, color, code, window) => {
+                            const setColor = (event, type, color, code, window) => {
                                 if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
                                     return;
                                 this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
-                                ipcRenderer.removeListener('set-color', setcolor);
+                                ipcRenderer.removeListener('set-color', setColor);
                             };
-                            ipcRenderer.on('set-color', setcolor);
+                            ipcRenderer.on('set-color', setColor);
                         }
                     },
                     { type: 'separator' },
@@ -1121,13 +1121,13 @@ export class MonacoCodeEditor extends EditorBase {
                             label: '&Insert Color...',
                             click: () => {
                                 ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
-                                const setcolor = (event, type, color, code, window) => {
+                                const setColor = (event, type, color, code, window) => {
                                     if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
                                         return;
                                     this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
-                                    ipcRenderer.removeListener('set-color', setcolor);
+                                    ipcRenderer.removeListener('set-color', setColor);
                                 };
-                                ipcRenderer.on('set-color', setcolor);
+                                ipcRenderer.on('set-color', setColor);
                             }
                         },
                         { type: 'separator' },

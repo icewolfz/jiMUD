@@ -1,8 +1,7 @@
 //spell-checker:ignore pathfinding, vscroll, hscroll, AUTOINCREMENT, Arial, isdoor, isclosed, prevroom, islocked, cmds
 //spell-checker:ignore watersource, dirtroad, sanddesert, icesheet, highmountain, pavedroad, rockdesert
 import EventEmitter = require('events');
-import { Size } from './types';
-import { parseTemplate, clone, copy } from './library';
+import { parseTemplate, copy } from './library';
 const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('better-sqlite3');
@@ -327,9 +326,9 @@ export class Mapper extends EventEmitter {
                 const room = this.findActiveRoomByCoords(x, y);
                 if (this.selected && room && room.ID === this.selected.ID)
                     return;
-                this.emit('room-before-selected', clone(this.selected));
+                this.emit('room-before-selected', copy(this.selected));
                 this.selected = room;
-                this.emit('room-selected', clone(room));
+                this.emit('room-selected', copy(room));
                 this.doUpdate(UpdateType.draw);
             }
             this.MouseDrag.state = false;
@@ -350,7 +349,7 @@ export class Mapper extends EventEmitter {
         $(this._canvas).bind('contextmenu', (event) => {
             event.preventDefault();
             const m = this.getMapMousePos(event);
-            this.emit('context-menu', clone(this.findActiveRoomByCoords(m.x, m.y)));
+            this.emit('context-menu', copy(this.findActiveRoomByCoords(m.x, m.y)));
             return false;
         });
         $(this._canvas).click((event) => {
@@ -652,8 +651,8 @@ export class Mapper extends EventEmitter {
 
     public focusCurrentRoom() {
         if (this.current.ID) {
-            this.setActive(clone(this.current));
-            this.emit('active-room-changed', clone(this.active));
+            this.setActive(copy(this.current));
+            this.emit('active-room-changed', copy(this.active));
         }
         this.focusActiveRoom();
     }
@@ -664,13 +663,13 @@ export class Mapper extends EventEmitter {
 
     public setActive(room) {
         this.active = room;
-        this.emit('active-room-changed', clone(this.active));
+        this.emit('active-room-changed', copy(this.active));
     }
 
     public setCurrent(room?: Room) {
         this.emit('path-cleared');
         if (!room || !room.ID) room = this.selected;
-        this.current = this.sanitizeRoom(clone(room));
+        this.current = this.sanitizeRoom(copy(room));
         this.markers = {};
         this.doUpdate(UpdateType.draw);
         this.emit('current-room-changed', this.current);
@@ -679,7 +678,7 @@ export class Mapper extends EventEmitter {
     public setArea(area: string) {
         this.active.area = area;
         if (this.current.ID !== null && this.current.area === this.active.area) {
-            this.setActive(this.sanitizeRoom(clone(this.current)));
+            this.setActive(this.sanitizeRoom(copy(this.current)));
             this.focusActiveRoom();
             this.emit('setting-changed', 'active', this.active);
         }
@@ -932,11 +931,11 @@ export class Mapper extends EventEmitter {
         this.current.zone = room.zone;
         this.emit('current-room-changed', this.current);
         if (this.selected && this.selected.ID === room.ID)
-            this.emit('room-selected', clone(room));
+            this.emit('room-selected', copy(room));
         if (this.follow)
             this.focusCurrentRoom();
         else
-            this.setActive(clone(this.current));
+            this.setActive(copy(this.current));
         this.refresh();
     }
 
@@ -1968,7 +1967,7 @@ export class Mapper extends EventEmitter {
                         };
                     }
                     else {
-                        rooms[rows[r].ID] = clone(rows[r]);
+                        rooms[rows[r].ID] = copy(rows[r]);
                         rooms[rows[r].ID].exits = {};
                         if (!rows[r].Exit) continue;
                         rooms[rows[r].ID].exits[rows[r].Exit] = {

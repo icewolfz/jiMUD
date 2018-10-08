@@ -1,7 +1,6 @@
-//spell-checker:ignore MONTYPE ROOMTYPE datagrid propertygrid dropdown polyfill rgbcolor, MODROOM, SUBCLASSER LOCKPICK selectall waterbreathing
-//spell-checker:ignore consolas lucida bitstream tabbable varargs
-//spell-checker:ignore dirtroad highmountain icesheet pavedroad rockdesert sanddesert
-//spell-checker:ignore bandedmail splintmail chainmail ringmail scalemail overclothing
+//spell-checker:ignore MONTYPE ROOMTYPE datagrid propertygrid dropdown polyfill MODROOM, SUBCLASSER LOCKPICK selectall waterbreathing
+//spell-checker:ignore consolas lucida bitstream tabbable varargs crafter mgive blacksmithing glasssmithing stonemasonry doublewielding warhammer flamberge nodachi
+//spell-checker:ignore bandedmail splintmail chainmail ringmail scalemail overclothing polearm tekagi shuko tekko bardiche katana wakizashi pilum warstaff
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { createFunction, formatFunctionPointer, formatArgumentList, formatMapping } from './lpc';
 import { Splitter, Orientation } from '../splitter';
@@ -15,8 +14,6 @@ const path = require('path');
 const fs = require('fs-extra');
 import { Wizard, WizardPage, WizardDataGridPage } from '../wizard';
 import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit } from './virtual.editor';
-
-import RGBColor = require('rgbcolor');
 
 declare global {
     interface Window {
@@ -3435,6 +3432,7 @@ export class AreaDesigner extends EditorBase {
                 editor: {
                     type: EditorType.dropdown,
                     options: {
+                        //spellchecker:disable
                         data: [
                             'beach',
                             'bog',
@@ -3471,6 +3469,7 @@ export class AreaDesigner extends EditorBase {
                             'water'
                         ],
                         container: document.body
+                        //spellchecker:enable
                     }
                 },
                 sort: 3
@@ -6070,7 +6069,7 @@ export class AreaDesigner extends EditorBase {
                                 hidden: e => {
                                     /*
                                     const stats = ['charisma', 'constitution', 'dexterity', 'intelligence', 'strength', 'wisdom'];
-                                    const skills = ['axe', 'blunt', 'flail', 'knife', 'largesword', 'melee', 'miscellaneous', 'missile', 'polearm', 'smallsword', 'spear', 'staff', 'climbing', 'fishing', 'mining', 'riding', 'survival', 'conjuring', 'elementals', 'magic', 'necromancy', 'planes', 'sorcery', 'acrobatics', 'devices', 'murder', 'performance', 'stealth', 'streetwise', 'subterfuge', 'artistry', 'blacksmithing', 'brewing', 'cooking', 'crafting', 'glasssmithing', 'leathering', 'sewing', 'stonemasonry', 'woodworking', 'discipline', 'kicks', 'mind', 'punches', 'sweeps', 'throws', 'archery', 'armour', 'attack', 'defense', 'doublewielding', 'shield', 'tactics', 'thrown', 'two-handed', 'weapons', 'combat', 'death', 'elements', 'faith', 'knowledge', 'life', 'nature', 'protection'];
+                                    const skills = ['axe', 'blunt', 'flail', 'knife', 'large sword', 'melee', 'miscellaneous', 'missile', 'polearm', 'small sword', 'spear', 'staff', 'climbing', 'fishing', 'mining', 'riding', 'survival', 'conjuring', 'elementals', 'magic', 'necromancy', 'planes', 'sorcery', 'acrobatics', 'devices', 'murder', 'performance', 'stealth', 'streetwise', 'subterfuge', 'artistry', 'blacksmithing', 'brewing', 'cooking', 'crafting', 'glasssmithing', 'leathering', 'sewing', 'stonemasonry', 'woodworking', 'discipline', 'kicks', 'mind', 'punches', 'sweeps', 'throws', 'archery', 'armour', 'attack', 'defense', 'double wielding', 'shield', 'tactics', 'thrown', 'two-handed', 'weapons', 'combat', 'death', 'elements', 'faith', 'knowledge', 'life', 'nature', 'protection'];
                                     e.page.dataGrid.rows.forEach((r, i) => {
                                         if (r.type === 1) {
                                             if (r.adjust && r.adjust.length !== 0 && stats.indexOf(r.adjust) === -1) {
@@ -9525,6 +9524,7 @@ export class AreaDesigner extends EditorBase {
             f = true;
         }
         else if (room.terrain && room.terrain.length) {
+            //spellchecker:disable
             switch (room.terrain) {
                 case 'wood':
                     ctx.fillStyle = '#966F33';
@@ -9606,6 +9606,7 @@ export class AreaDesigner extends EditorBase {
                     f = false;
                     break;
             }
+            //spellchecker:enable
         }
         else
             f = false;

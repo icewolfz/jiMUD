@@ -1,3 +1,4 @@
+//spellchecker:ignore datagrid
 import EventEmitter = require('events');
 import { DataGrid } from './datagrid';
 const { remote } = require('electron');

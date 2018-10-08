@@ -1,3 +1,4 @@
+//spellchecker:ignore textbox filesize modelist selectall
 import { EditorBase, EditorOptions, FileState } from './editor.base';
 import { LPCIndenter, LPCFormatter } from './lpc';
 import { existsSync, formatSize, capitalize } from '../library';
@@ -304,13 +305,13 @@ export class AceCodeEditor extends EditorBase {
                             label: 'Insert Color...',
                             click: () => {
                                 ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
-                                const setcolor = (event, type, color, code, window) => {
+                                const setColor = (event, type, color, code, window) => {
                                     if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
                                         return;
                                     this.$editor.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
-                                    ipcRenderer.removeListener('set-color', setcolor);
+                                    ipcRenderer.removeListener('set-color', setColor);
                                 };
-                                ipcRenderer.on('set-color', setcolor);
+                                ipcRenderer.on('set-color', setColor);
                             }
                         },
                         { type: 'separator' },
@@ -451,13 +452,13 @@ export class AceCodeEditor extends EditorBase {
                             label: 'Insert Color...',
                             click: () => {
                                 ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
-                                const setcolor = (event, type, color, code, window) => {
+                                const setColor = (event, type, color, code, window) => {
                                     if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
                                         return;
                                     this.$editor.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
-                                    ipcRenderer.removeListener('set-color', setcolor);
+                                    ipcRenderer.removeListener('set-color', setColor);
                                 };
-                                ipcRenderer.on('set-color', setcolor);
+                                ipcRenderer.on('set-color', setColor);
                             }
                         },
                         { type: 'separator' },

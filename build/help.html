@@ -102,7 +102,6 @@
         }
 
         function doFind() {
-            var flag = 0;
             var ow = container[0].ownerDocument.defaultView;
             var sel = ow.getSelection();
             if (sel.rangeCount > 0 && container[0].contains(sel.getRangeAt(0).startContainer))

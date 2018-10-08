@@ -64,7 +64,7 @@
 <script>
     const { DockManager } = require('./js/dockmanager');
     const { remote, ipcRenderer, clipboard } = require('electron');
-    const { dialog, Menu, MenuItem, app } = remote;
+    const { dialog, Menu, app } = remote;
     const { Menubar } = require('./js/menubar');
     const { Settings } = require('./js/settings');
     const { Display } = require('./js/display');
@@ -207,37 +207,29 @@
     //menubar.enabled = false;
     var manager = new DockManager();
     manager.hideTabstrip = false;
-    manager.on('add', () => {
-    });
-    manager.on('add-pane', (idx, pane) => {
-    });
-    manager.on('destroy-pane', (idx) => {
-    });
     manager.on('tab-moved', (e) => {
         if (e.panel && e.panel.editor)
             e.panel.editor.focus();
     });
-    manager.on('remove', (e) => {
-    });
-    manager.on('removed', (e, pane) => {
+    manager.on('removed', (e) => {
         closeViewer(e.panel);
         $search.search = null;
         doUpdate(1);
     });
-    manager.on('dock-changed', (e, pane, oPane) => {
+    manager.on('dock-changed', () => {
         doUpdate(1);
     });
     manager.on('resize', () => {
 
     });
-    manager.on('activated', (e, pane) => {
+    manager.on('activated', (e) => {
         $search.search = e.panel.viewer;
         doUpdate(1);
     });
     manager.on('pane-activated', () => {
         doUpdate(1);
     });
-    manager.on('deactivated', (e, pane) => {
+    manager.on('deactivated', () => {
         $search.search = null;
     });
     manager.on('dragenter', (e) => {
@@ -836,7 +828,6 @@
 
     function doFind() {
         if (manager.active && manager.active.viewer) {
-            var flag = 0;
             var ow = manager.active.viewer.ownerDocument.defaultView;
             var sel = ow.getSelection();
             if (sel.rangeCount > 0 && manager.active.viewer.contains(sel.getRangeAt(0).startContainer))
@@ -892,7 +883,6 @@
         while (s--) {
             var panels = manager.panes[s].panels;
             var k = panels.length;
-            var p;
             opened[s] = [];
             while (k--)
                 opened[s].unshift(panels[k].file);

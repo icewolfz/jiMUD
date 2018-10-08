@@ -1,4 +1,5 @@
 
+//spellchecker:ignore dropdown dropdownmenu tabpane
 import EventEmitter = require('events');
 
 export enum UpdateType {
@@ -50,7 +51,7 @@ export class DockManager extends EventEmitter {
     public panelID: number = 0;
     private $layout;
     private $bars: HTMLElement[] = [];
-    private $ghostbar: HTMLElement = null;
+    private $ghostBar: HTMLElement = null;
 
     constructor(options?: any | DockManagerOptions) {
         super();
@@ -291,29 +292,29 @@ export class DockManager extends EventEmitter {
             this.freezePanes();
             el.focus();
             e.preventDefault();
-            this.$ghostbar = document.createElement('div');
-            this.$ghostbar.classList.add('splitter-ghost-bar');
-            this.$ghostbar.style.left = el.style.left;
-            this.$ghostbar.style.top = '0';
-            this.$ghostbar.style.bottom = '0';
-            this.$ghostbar.style.right = '';
-            this.$ghostbar.style.height = '';
-            this.$ghostbar.style.width = '4px';
-            this.$ghostbar.style.cursor = 'col-resize';
-            (<any>this.$ghostbar).index = this.$bars.indexOf(el);
-            (<any>this.$ghostbar).bounds = this.$el.getBoundingClientRect();
-            (<any>this.$ghostbar).move = (ge) => {
-                const idx = (<any>this.$ghostbar).index;
+            this.$ghostBar = document.createElement('div');
+            this.$ghostBar.classList.add('splitter-ghost-bar');
+            this.$ghostBar.style.left = el.style.left;
+            this.$ghostBar.style.top = '0';
+            this.$ghostBar.style.bottom = '0';
+            this.$ghostBar.style.right = '';
+            this.$ghostBar.style.height = '';
+            this.$ghostBar.style.width = '4px';
+            this.$ghostBar.style.cursor = 'col-resize';
+            (<any>this.$ghostBar).index = this.$bars.indexOf(el);
+            (<any>this.$ghostBar).bounds = this.$el.getBoundingClientRect();
+            (<any>this.$ghostBar).move = (ge) => {
+                const idx = (<any>this.$ghostBar).index;
                 const lBounds = this.panes[idx].bounds;
                 const rBounds = this.panes[idx + 1].bounds;
                 const l = ge.pageX - lBounds.left;
                 const s = lBounds.width + rBounds.width + 4;
                 if (l < 150)
-                    this.$ghostbar.style.left = (lBounds.left + 150) + 'px';
+                    this.$ghostBar.style.left = (lBounds.left + 150) + 'px';
                 else if (l > s - 150)
-                    this.$ghostbar.style.left = (lBounds.left + s - 150) + 'px';
+                    this.$ghostBar.style.left = (lBounds.left + s - 150) + 'px';
                 else
-                    this.$ghostbar.style.left = (lBounds.left + l - 2) + 'px';
+                    this.$ghostBar.style.left = (lBounds.left + l - 2) + 'px';
                 let d;
                 if (l < 150)
                     d = 150;
@@ -328,8 +329,8 @@ export class DockManager extends EventEmitter {
                 this.$widths[idx + 1] = w / tw;
                 this.doUpdate(UpdateType.resize);
             };
-            this.$el.appendChild(this.$ghostbar);
-            document.addEventListener('mousemove', (<any>this.$ghostbar).move);
+            this.$el.appendChild(this.$ghostBar);
+            document.addEventListener('mousemove', (<any>this.$ghostBar).move);
         });
         el.style.top = '0';
         el.style.bottom = '0';
@@ -369,12 +370,12 @@ export class DockManager extends EventEmitter {
         this.$el.appendChild(this.$dropOutline);
         this.doUpdate(UpdateType.resize);
         document.addEventListener('mouseup', (e) => {
-            if (!this.$ghostbar) return;
+            if (!this.$ghostBar) return;
             e.preventDefault();
             e.stopPropagation();
             e.cancelBubble = true;
 
-            const idx = (<any>this.$ghostbar).index;
+            const idx = (<any>this.$ghostBar).index;
             const lBounds = this.panes[idx].bounds;
             const rBounds = this.panes[idx + 1].bounds;
             const l = e.pageX - lBounds.left;
@@ -392,9 +393,9 @@ export class DockManager extends EventEmitter {
             w = this.panes[idx + 1].width + w - d;
             this.$widths[idx + 1] = w / tw;
 
-            this.$ghostbar.remove();
-            document.removeEventListener('mousemove', (<any>this.$ghostbar).move);
-            this.$ghostbar = null;
+            this.$ghostBar.remove();
+            document.removeEventListener('mousemove', (<any>this.$ghostBar).move);
+            this.$ghostBar = null;
             this.freePanes();
         });
         document.addEventListener('keyup', (e) => {
@@ -696,14 +697,14 @@ export class DockPane extends EventEmitter {
     public manager: DockManager;
 
     private $tabstrip: HTMLElement;
-    private $tabpane: HTMLElement;
+    private $tabPane: HTMLElement;
     public panels: Panel[] = [];
 
     public active: Panel;
     private _hideTabstrip: boolean = true;
     private $scrollLeft: HTMLAnchorElement;
     private $scrollRight: HTMLAnchorElement;
-    private $scrollDropdown: HTMLButtonElement;
+    private $scrollDropDown: HTMLButtonElement;
     private $scrollMenu: HTMLUListElement;
 
     private _updating: UpdateType = UpdateType.none;
@@ -757,10 +758,10 @@ export class DockPane extends EventEmitter {
     }
 
     public get paneBounds() {
-        return this.$tabpane.getBoundingClientRect();
+        return this.$tabPane.getBoundingClientRect();
     }
 
-    public get pane() { return this.$tabpane; }
+    public get pane() { return this.$tabPane; }
 
     constructor(container?: any) {
         super();
@@ -791,7 +792,7 @@ export class DockPane extends EventEmitter {
             tl = 1;
         this.$scrollLeft.classList.add('hidden');
         this.$scrollRight.classList.add('hidden');
-        this.$scrollDropdown.classList.add('hidden');
+        this.$scrollDropDown.classList.add('hidden');
         let tWidth = 100;
         let w = 100;
         const m = this.$measure;
@@ -823,25 +824,25 @@ export class DockPane extends EventEmitter {
         if (this.$tabstrip.scrollWidth > this.$el.clientWidth) {
             this.$scrollLeft.classList.remove('hidden');
             this.$scrollRight.classList.remove('hidden');
-            this.$scrollDropdown.classList.remove('hidden');
+            this.$scrollDropDown.classList.remove('hidden');
             if (this.$tabstrip.scrollLeft === 0)
                 this.$scrollLeft.classList.add('disabled');
             else
                 this.$scrollLeft.classList.remove('disabled');
             if (this.$tabstrip.scrollLeft >= this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth) {
                 this.$scrollRight.classList.add('disabled');
-                this.$scrollDropdown.classList.add('single');
+                this.$scrollDropDown.classList.add('single');
             }
             else {
                 this.$scrollRight.classList.remove('disabled');
-                this.$scrollDropdown.classList.remove('single');
+                this.$scrollDropDown.classList.remove('single');
             }
         }
         else {
             this.$tabstrip.classList.remove('scroll');
             this.$scrollLeft.classList.add('hidden');
             this.$scrollRight.classList.add('hidden');
-            this.$scrollDropdown.classList.add('hidden');
+            this.$scrollDropDown.classList.add('hidden');
             $('.dropdown.open').removeClass('open');
         }
         this.updateScrollMenu();
@@ -868,7 +869,7 @@ export class DockPane extends EventEmitter {
             this.$measure.parentElement.removeChild(this.$measure);
         if (this.$el) {
             this.$el.removeChild(this.$tabstrip);
-            this.$el.removeChild(this.$tabpane);
+            this.$el.removeChild(this.$tabPane);
             this.$parent.removeChild(this.$el);
         }
     }
@@ -877,23 +878,23 @@ export class DockPane extends EventEmitter {
         const menu = $(this.$scrollMenu);
         menu.empty();
         const tl = this.panels.length;
-        const w = this._scroll + this.$tabstrip.clientWidth - this.$scrollLeft.offsetWidth - this.$scrollRight.offsetWidth - this.$scrollDropdown.offsetWidth;
+        const w = this._scroll + this.$tabstrip.clientWidth - this.$scrollLeft.offsetWidth - this.$scrollRight.offsetWidth - this.$scrollDropDown.offsetWidth;
         const l = this._scroll + this.$scrollLeft.offsetWidth;
         for (let t = 0; t < tl; t++) {
             let icon = '';
             if (this.panels[t].iconSrc)
                 icon = ` style="background-image: url(${this.panels[t].iconSrc})"`;
             if (this.panels[t].tab.offsetLeft + this.panels[t].tab.clientWidth >= l && this.panels[t].tab.offsetLeft < w)
-                menu.append(`<li class="visible"><a title="${this.panels[t].tab.title}" href="#" data-index="${t}" class="visible ${this.panels[t].tab.className}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
+                menu.append(`<li class="visible"><a title="${this.panels[t].tab.title}" href="#" data-index="${t}" class="visible ${this.panels[t].tab.className}"><div id="cm-scroll-dropdown-menu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdown-menu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
             else
-                menu.append(`<li><a title="${this.panels[t].tab.title}" href="#" data-index="${t}" class="${this.panels[t].tab.className}"><div id="cm-scroll-dropdownmenu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdownmenu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
+                menu.append(`<li><a title="${this.panels[t].tab.title}" href="#" data-index="${t}" class="${this.panels[t].tab.className}"><div id="cm-scroll-dropdown-menu-${t}-icon" class="${this.panels[t].icon.className}"${icon}></div> <span id="cm-scroll-dropdown-menu-${t}-title">${this.panels[t].title.innerHTML}</span></a></li>`);
         }
     }
 
     private updateScrollMenu() {
         if (!this.$scrollMenu || this.$scrollMenu.children.length !== this.panels.length || this.$scrollMenu.children.length === 0 || !this.$scrollMenu.parentElement.classList.contains('open')) return;
         const tl = this.panels.length;
-        const w = this._scroll + this.$tabstrip.clientWidth - this.$scrollLeft.offsetWidth - this.$scrollRight.offsetWidth - this.$scrollDropdown.offsetWidth;
+        const w = this._scroll + this.$tabstrip.clientWidth - this.$scrollLeft.offsetWidth - this.$scrollRight.offsetWidth - this.$scrollDropDown.offsetWidth;
         const l = this._scroll + this.$scrollLeft.offsetWidth;
         for (let t = 0; t < tl; t++) {
             if (this.panels[t].tab.offsetLeft + this.panels[t].tab.clientWidth >= l && this.panels[t].tab.offsetLeft < w)
@@ -996,20 +997,20 @@ export class DockPane extends EventEmitter {
         d.classList.add('dropdown');
         d.id = 'cm-scroll-dropdown-container';
 
-        this.$scrollDropdown = document.createElement('button');
-        this.$scrollDropdown.innerHTML = '<i class="fa fa-caret-down"></i>';
-        this.$scrollDropdown.id = 'cm-scroll-dropdown';
-        this.$scrollDropdown.classList.add('dropdown-toggle', 'hidden');
-        this.$scrollDropdown.dataset.toggle = 'dropdown';
-        this.$scrollDropdown.setAttribute('aria-haspopup', 'true');
-        this.$scrollDropdown.setAttribute('aria-expanded', 'true');
-        this.$scrollDropdown.onclick = (e) => {
+        this.$scrollDropDown = document.createElement('button');
+        this.$scrollDropDown.innerHTML = '<i class="fa fa-caret-down"></i>';
+        this.$scrollDropDown.id = 'cm-scroll-dropdown';
+        this.$scrollDropDown.classList.add('dropdown-toggle', 'hidden');
+        this.$scrollDropDown.dataset.toggle = 'dropdown';
+        this.$scrollDropDown.setAttribute('aria-haspopup', 'true');
+        this.$scrollDropDown.setAttribute('aria-expanded', 'true');
+        this.$scrollDropDown.onclick = (e) => {
             e.stopPropagation();
             e.preventDefault();
             this.buildScrollMenu();
-            //$(this.$scrollDropdown).trigger('click.bs.dropdown');
+            //$(this.$scrollDropDown).trigger('click.bs.dropdown');
         };
-        d.appendChild(this.$scrollDropdown);
+        d.appendChild(this.$scrollDropDown);
 
         this.$scrollMenu = document.createElement('ul');
         this.$scrollMenu.id = 'cm-scroll-menu';
@@ -1031,20 +1032,20 @@ export class DockPane extends EventEmitter {
         this.$el.appendChild(d);
         this.$el.appendChild(this.$tabstrip);
 
-        this.$tabpane = document.createElement('div');
-        this.$tabpane.id = 'cm-tabpane';
-        this.$tabpane.className = 'cm-tabpane-container';
-        this.$el.appendChild(this.$tabpane);
+        this.$tabPane = document.createElement('div');
+        this.$tabPane.id = 'cm-tabpane';
+        this.$tabPane.className = 'cm-tabpane-container';
+        this.$el.appendChild(this.$tabPane);
         if (this.panels.length > 0) {
             const tl = this.panels.length;
             for (let t = 0; t < tl; t++) {
                 this.$tabstrip.appendChild(this.panels[t].tab);
-                this.$tabpane.appendChild(this.panels[t].pane);
+                this.$tabPane.appendChild(this.panels[t].pane);
             }
             if (!this.active)
                 this.switchToPanelByIndex(this.panels.length - 1);
         }
-        this.$scrollMenu.style.maxHeight = (this.$tabpane.clientHeight - 4) + 'px';
+        this.$scrollMenu.style.maxHeight = (this.$tabPane.clientHeight - 4) + 'px';
         this.doUpdate(UpdateType.stripState);
         $('.dropdown-toggle').dropdown();
     }
@@ -1071,7 +1072,7 @@ export class DockPane extends EventEmitter {
         const idx = this.getPanelIndex(panel);
         if (idx === -1) return;
         let i = 0;
-        //TODO formual should be width - padding + borders, caluatle padding/border sizes
+        //TODO formula should be width - padding + borders, calculate padding/border sizes
         i = idx * (panel.tab.clientWidth - 8);
         if (i <= this._scroll) {
             this._scroll = i - 10;
@@ -1238,7 +1239,7 @@ export class DockPane extends EventEmitter {
             cl++;
         }
         this.$tabstrip.appendChild(ts);
-        this.$tabpane.appendChild(tp);
+        this.$tabPane.appendChild(tp);
         this.switchToPanelByIndex(this.panels.length - 1);
         this.doUpdate(UpdateType.resize | UpdateType.stripState);
     }
@@ -1258,7 +1259,7 @@ export class DockPane extends EventEmitter {
             return;
         $('.dropdown.open').removeClass('open');
         this.$tabstrip.removeChild(panel.tab);
-        this.$tabpane.removeChild(panel.pane);
+        this.$tabPane.removeChild(panel.pane);
         this.panels.splice(idx, 1);
         if (this.panels.length === 0)
             this.active = null;
@@ -1289,7 +1290,7 @@ export class DockPane extends EventEmitter {
             if (panel === this.active)
                 this.active = null;
             this.$tabstrip.removeChild(panel.tab);
-            this.$tabpane.removeChild(panel.pane);
+            this.$tabPane.removeChild(panel.pane);
             this.panels.splice(idx, 1);
             this.emit('removed', { index: idx, id: panel.id, panel: panel });
         }
@@ -1320,7 +1321,7 @@ export class DockPane extends EventEmitter {
             if (panel === this.active)
                 this.active = null;
             this.$tabstrip.removeChild(panel.tab);
-            this.$tabpane.removeChild(panel.pane);
+            this.$tabPane.removeChild(panel.pane);
             this.panels.splice(idx, 1);
             this.emit('removed', { index: idx, id: panel.id, panel: panel });
         }
@@ -1352,7 +1353,7 @@ export class DockPane extends EventEmitter {
             if (panel === this.active)
                 this.active = null;
             this.$tabstrip.removeChild(panel.tab);
-            this.$tabpane.removeChild(panel.pane);
+            this.$tabPane.removeChild(panel.pane);
             this.panels.splice(idx, 1);
             this.emit('removed', { index: idx, id: panel.id, panel: panel });
         }
@@ -1418,7 +1419,7 @@ export class DockPane extends EventEmitter {
         tab.tab.title = tab.title.innerText;
         if (!noMenu) return;
         const idx = this.getPanelIndex(tab);
-        $(`#cm-scroll-dropdownmenu-${idx}-title`).html(text);
+        $(`#cm-scroll-dropdown-menu-${idx}-title`).html(text);
     }
 
     public setPanelIconClass(icon: string, tab?, noMenu?: boolean) {
@@ -1435,9 +1436,9 @@ export class DockPane extends EventEmitter {
         tab.iconCls = icon;
         tab.iconSrc = 0;
         const idx = this.getPanelIndex(tab);
-        $(`#cm-scroll-dropdownmenu-${idx}-icon`).removeClass();
-        $(`#cm-scroll-dropdownmenu-${idx}-icon`).addClass(tab.icon.className);
-        $(`#cm-scroll-dropdownmenu-${idx}-icon`).css('background-image', '');
+        $(`#cm-scroll-dropdown-menu-${idx}-icon`).removeClass();
+        $(`#cm-scroll-dropdown-menu-${idx}-icon`).addClass(tab.icon.className);
+        $(`#cm-scroll-dropdown-menu-${idx}-icon`).css('background-image', '');
     }
 
     public setPanelIcon(icon: string, tab?, noMenu?: boolean) {
@@ -1452,8 +1453,8 @@ export class DockPane extends EventEmitter {
         tab.iconSrc = icon;
         tab.icon.style.backgroundImage = `url(${icon})`;
         const idx = this.getPanelIndex(tab);
-        $(`#cm-scroll-dropdownmenu-${idx}-icon`).removeClass();
-        $(`#cm-scroll-dropdownmenu-${idx}-icon`).css('background-image', `url(${icon})`);
+        $(`#cm-scroll-dropdown-menu-${idx}-icon`).removeClass();
+        $(`#cm-scroll-dropdown-menu-${idx}-icon`).css('background-image', `url(${icon})`);
     }
 
     public getPanel(idx) {
@@ -1509,20 +1510,20 @@ export class DockPane extends EventEmitter {
         if (!this._hideTabstrip && this.panels.length === 0) {
             if (!this.$tabstrip.classList.contains('hidden')) {
                 this.$tabstrip.classList.add('hidden');
-                this.$tabpane.classList.add('full');
+                this.$tabPane.classList.add('full');
                 this.emit('tab-strip-hidden');
             }
         }
         else if (!this._hideTabstrip || this.panels.length > 1) {
             if (this.$tabstrip.classList.contains('hidden')) {
                 this.$tabstrip.classList.remove('hidden');
-                this.$tabpane.classList.remove('full');
+                this.$tabPane.classList.remove('full');
                 this.emit('tab-strip-shown');
             }
         }
         else if (!this.$tabstrip.classList.contains('hidden')) {
             this.$tabstrip.classList.add('hidden');
-            this.$tabpane.classList.add('full');
+            this.$tabPane.classList.add('full');
             this.emit('tab-strip-hidden');
         }
     }
@@ -1543,7 +1544,7 @@ export class DockPane extends EventEmitter {
             }
             if ((this._updating & UpdateType.resize) === UpdateType.resize) {
                 this.resize();
-                this.$scrollMenu.style.maxHeight = (this.$tabpane.clientHeight - 4) + 'px';
+                this.$scrollMenu.style.maxHeight = (this.$tabPane.clientHeight - 4) + 'px';
                 this.$tabstrip.scrollLeft = this._scroll;
                 this.updateScrollButtons();
                 this._updating &= ~UpdateType.resize;
@@ -1573,7 +1574,7 @@ export class DockPane extends EventEmitter {
             tp.appendChild(this.$addCache[p].pane);
         }
         this.$tabstrip.appendChild(ts);
-        this.$tabpane.appendChild(tp);
+        this.$tabPane.appendChild(tp);
         this.$addCache = [];
         this.switchToPanelByIndex(this.panels.length - 1);
         this.doUpdate(UpdateType.resize | UpdateType.stripState);

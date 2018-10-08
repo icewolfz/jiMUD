@@ -1,7 +1,6 @@
 // spell-checker:word omud
 // spell-checker:ignore hasmembers, hpmax, spmax, mpmax,
 // spell-checker:ignore righthoof, rightfoot, lefthoof, leftfoot, rightarm, leftarm, rightleg, leftleg, righthand, lefthand, leftwing, rightwing
-// spell-checker:word
 import EventEmitter = require('events');
 import { Client } from './client';
 

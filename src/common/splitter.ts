@@ -1,3 +1,4 @@
+//spellchecker:ignore
 import EventEmitter = require('events');
 
 export interface SplitterOptions {
@@ -22,14 +23,14 @@ export class Splitter extends EventEmitter {
     private $panel1MinSize = 200;
     private $panel2MinSize = 200;
     private $splitterWidth = 4;
-    private $dragbar: HTMLElement;
-    private $ghostbar: HTMLElement;
+    private $dragBar: HTMLElement;
+    private $ghostBar: HTMLElement;
     private $splitterDistance = 200;
     private $dragging = false;
     private $id;
     private $collapsed = 0;
-    private $resizer;
-    private $resizerCache;
+    private $resizeObserver;
+    private $resizeObserverCache;
     private $observer: MutationObserver;
 
     public live = true;
@@ -71,9 +72,9 @@ export class Splitter extends EventEmitter {
         this.$el.id = this.id + '-splitter';
         this.$panel1.id = this.id + '-splitter-panel1';
         this.$panel2.id = this.id + '-splitter-panel2';
-        this.$dragbar.id = this.id + '-splitter-drag-bar';
-        if (this.$ghostbar)
-            this.$ghostbar.id = this.id + '-ghost-bar';
+        this.$dragBar.id = this.id + '-splitter-drag-bar';
+        if (this.$ghostBar)
+            this.$ghostBar.id = this.id + '-ghost-bar';
     }
 
     set parent(parent) {
@@ -183,32 +184,32 @@ export class Splitter extends EventEmitter {
             this.$panel2.style.right = '0';
             this.$panel2.style.bottom = '0';
 
-            this.$dragbar.style.left = '0';
-            this.$dragbar.style.right = '0';
-            this.$dragbar.style.top = '';
-            this.$dragbar.style.bottom = (this.$splitterDistance - this.$splitterWidth) + 'px';
-            this.$dragbar.style.height = this.$splitterWidth + 'px';
-            this.$dragbar.style.cursor = 'row-resize';
+            this.$dragBar.style.left = '0';
+            this.$dragBar.style.right = '0';
+            this.$dragBar.style.top = '';
+            this.$dragBar.style.bottom = (this.$splitterDistance - this.$splitterWidth) + 'px';
+            this.$dragBar.style.height = this.$splitterWidth + 'px';
+            this.$dragBar.style.cursor = 'row-resize';
 
             if (this.$collapsed === 1) {
                 this.$panel1.style.display = 'none';
                 this.$panel2.style.display = '';
                 this.$panel2.style.top = '0';
                 this.$panel2.style.height = '';
-                this.$dragbar.style.display = 'none';
+                this.$dragBar.style.display = 'none';
             }
             else if (this.$collapsed === 2) {
                 this.$panel1.style.display = '';
                 this.$panel1.style.bottom = '0';
                 this.$panel2.style.display = 'none';
-                this.$dragbar.style.display = 'none';
+                this.$dragBar.style.display = 'none';
             }
             else {
                 this.$panel1.style.display = '';
                 this.$panel1.style.bottom = this.$splitterDistance + 'px';
                 this.$panel2.style.display = '';
                 this.$panel2.style.height = (this.$splitterDistance - this.$splitterWidth) + 'px';
-                this.$dragbar.style.display = '';
+                this.$dragBar.style.display = '';
             }
 
             this.$el.classList.remove('vertical');
@@ -226,32 +227,32 @@ export class Splitter extends EventEmitter {
             this.$panel2.style.right = '0';
             this.$panel2.style.bottom = '0';
 
-            this.$dragbar.style.left = '';
-            this.$dragbar.style.right = (this.$splitterDistance - this.$splitterWidth) + 'px';
-            this.$dragbar.style.top = '0';
-            this.$dragbar.style.bottom = '0';
-            this.$dragbar.style.width = this.$splitterWidth + 'px';
-            this.$dragbar.style.cursor = 'col-resize';
+            this.$dragBar.style.left = '';
+            this.$dragBar.style.right = (this.$splitterDistance - this.$splitterWidth) + 'px';
+            this.$dragBar.style.top = '0';
+            this.$dragBar.style.bottom = '0';
+            this.$dragBar.style.width = this.$splitterWidth + 'px';
+            this.$dragBar.style.cursor = 'col-resize';
 
             if (this.$collapsed === 1) {
                 this.$panel1.style.display = 'none';
                 this.$panel2.style.display = '';
                 this.$panel2.style.left = '0';
                 this.$panel2.style.width = '';
-                this.$dragbar.style.display = 'none';
+                this.$dragBar.style.display = 'none';
             }
             else if (this.$collapsed === 2) {
                 this.$panel1.style.display = '';
                 this.$panel1.style.right = '0';
                 this.$panel2.style.display = 'none';
-                this.$dragbar.style.display = 'none';
+                this.$dragBar.style.display = 'none';
             }
             else {
                 this.$panel1.style.display = '';
                 this.$panel1.style.right = this.$splitterDistance + 'px';
                 this.$panel2.style.display = '';
                 this.$panel2.style.width = this.$splitterDistance - this.$splitterWidth + 'px';
-                this.$dragbar.style.display = '';
+                this.$dragBar.style.display = '';
             }
 
             this.$el.classList.remove('horizontal');
@@ -276,47 +277,47 @@ export class Splitter extends EventEmitter {
         }
         this.$panel2.classList.add('splitter-panel', 'splitter-panel-2');
         this.$el.appendChild(this.$panel2);
-        this.$dragbar = document.createElement('div');
-        this.$dragbar.id = this.id + '-splitter-drag-bar';
-        this.$dragbar.classList.add('spitter-drag-bar');
-        this.$el.appendChild(this.$dragbar);
-        this.$dragbar.tabIndex = 1;
-        this.$dragbar.addEventListener('mousedown', (e) => {
-            this.$dragbar.focus();
+        this.$dragBar = document.createElement('div');
+        this.$dragBar.id = this.id + '-splitter-drag-bar';
+        this.$dragBar.classList.add('spitter-drag-bar');
+        this.$el.appendChild(this.$dragBar);
+        this.$dragBar.tabIndex = 1;
+        this.$dragBar.addEventListener('mousedown', (e) => {
+            this.$dragBar.focus();
             e.preventDefault();
             this.$dragging = true;
-            this.$ghostbar = document.createElement('div');
-            this.$ghostbar.id = this.id + '-ghost-bar';
-            this.$ghostbar.classList.add('splitter-ghost-bar');
+            this.$ghostBar = document.createElement('div');
+            this.$ghostBar.id = this.id + '-ghost-bar';
+            this.$ghostBar.classList.add('splitter-ghost-bar');
             const bnd = this.$panel2.getBoundingClientRect();
             if (this.$orientation === Orientation.horizontal) {
-                this.$ghostbar.style.left = '0';
-                this.$ghostbar.style.top = (bnd.top - this.$elBounds.top - this.$splitterWidth) + 'px';
-                this.$ghostbar.style.right = '0';
-                this.$ghostbar.style.bottom = '';
-                this.$ghostbar.style.width = '';
-                this.$ghostbar.style.height = this.$splitterWidth + 'px';
-                this.$ghostbar.style.cursor = 'row-resize';
+                this.$ghostBar.style.left = '0';
+                this.$ghostBar.style.top = (bnd.top - this.$elBounds.top - this.$splitterWidth) + 'px';
+                this.$ghostBar.style.right = '0';
+                this.$ghostBar.style.bottom = '';
+                this.$ghostBar.style.width = '';
+                this.$ghostBar.style.height = this.$splitterWidth + 'px';
+                this.$ghostBar.style.cursor = 'row-resize';
             }
             else {
-                this.$ghostbar.style.left = (bnd.left - this.$elBounds.left - this.$splitterWidth) + 'px';
-                this.$ghostbar.style.top = '0';
-                this.$ghostbar.style.bottom = '0';
-                this.$ghostbar.style.right = '';
-                this.$ghostbar.style.height = '';
-                this.$ghostbar.style.width = this.$splitterWidth + 'px';
-                this.$ghostbar.style.cursor = 'col-resize';
+                this.$ghostBar.style.left = (bnd.left - this.$elBounds.left - this.$splitterWidth) + 'px';
+                this.$ghostBar.style.top = '0';
+                this.$ghostBar.style.bottom = '0';
+                this.$ghostBar.style.right = '';
+                this.$ghostBar.style.height = '';
+                this.$ghostBar.style.width = this.$splitterWidth + 'px';
+                this.$ghostBar.style.cursor = 'col-resize';
             }
-            (<any>this.$ghostbar).move = (ge) => {
+            (<any>this.$ghostBar).move = (ge) => {
                 let l;
                 if (this.$orientation === Orientation.horizontal) {
                     l = ge.pageY - this.$elBounds.top;
                     if (l < this.$panel1MinSize)
-                        this.$ghostbar.style.top = this.$panel1MinSize + 'px';
+                        this.$ghostBar.style.top = this.$panel1MinSize + 'px';
                     else if (l > this.parent.clientHeight - this.$panel2MinSize)
-                        this.$ghostbar.style.top = (this.parent.clientHeight - this.$panel2MinSize) + 'px';
+                        this.$ghostBar.style.top = (this.parent.clientHeight - this.$panel2MinSize) + 'px';
                     else
-                        this.$ghostbar.style.top = (l - 2) + 'px';
+                        this.$ghostBar.style.top = (l - 2) + 'px';
                     if (this.live) {
                         if (l < this.$panel1MinSize)
                             this.SplitterDistance = this.parent.clientHeight - this.$panel1MinSize;
@@ -329,11 +330,11 @@ export class Splitter extends EventEmitter {
                 else {
                     l = ge.pageX - this.$elBounds.left;
                     if (l < this.$panel1MinSize)
-                        this.$ghostbar.style.left = this.$panel1MinSize + 'px';
+                        this.$ghostBar.style.left = this.$panel1MinSize + 'px';
                     else if (l > this.parent.clientWidth - this.$panel2MinSize)
-                        this.$ghostbar.style.left = (this.parent.clientWidth - this.$panel2MinSize) + 'px';
+                        this.$ghostBar.style.left = (this.parent.clientWidth - this.$panel2MinSize) + 'px';
                     else
-                        this.$ghostbar.style.left = (l - 2) + 'px';
+                        this.$ghostBar.style.left = (l - 2) + 'px';
                     if (this.live) {
                         if (l < this.$panel1MinSize)
                             this.SplitterDistance = this.parent.clientWidth - this.$panel1MinSize;
@@ -345,10 +346,10 @@ export class Splitter extends EventEmitter {
                 }
                 this.emit('splitter-moving', l);
             };
-            this.parent.appendChild(this.$ghostbar);
-            document.addEventListener('mousemove', (<any>this.$ghostbar).move);
+            this.parent.appendChild(this.$ghostBar);
+            document.addEventListener('mousemove', (<any>this.$ghostBar).move);
         });
-        this.$dragbar.addEventListener('dblclick', (e) => {
+        this.$dragBar.addEventListener('dblclick', (e) => {
             this.emit('dblclick', e);
         });
         window.addEventListener('resize', () => {
@@ -378,9 +379,9 @@ export class Splitter extends EventEmitter {
                 else
                     this.SplitterDistance = this.parent.clientWidth - l + 2;
             }
-            this.parent.removeChild(this.$ghostbar);
-            document.removeEventListener('mousemove', (<any>this.$ghostbar).move);
-            this.$ghostbar = null;
+            this.parent.removeChild(this.$ghostBar);
+            document.removeEventListener('mousemove', (<any>this.$ghostBar).move);
+            this.$ghostBar = null;
             this.$dragging = false;
         });
         this.parent.appendChild(this.$el);
@@ -388,16 +389,16 @@ export class Splitter extends EventEmitter {
             this.$elBounds = this.$el.getBoundingClientRect();
         }, 10);
 
-        this.$resizer = new ResizeObserver((entries, observer) => {
+        this.$resizeObserver = new ResizeObserver((entries, observer) => {
             if (entries.length === 0) return;
             if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
                 return;
-            if (!this.$resizerCache || this.$resizerCache.width !== entries[0].contentRect.width || this.$resizerCache.height !== entries[0].contentRect.height) {
-                this.$resizerCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
+            if (!this.$resizeObserverCache || this.$resizeObserverCache.width !== entries[0].contentRect.width || this.$resizeObserverCache.height !== entries[0].contentRect.height) {
+                this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
                 this.resize();
             }
         });
-        this.$resizer.observe(this.$el);
+        this.$resizeObserver.observe(this.$el);
         this.$observer = new MutationObserver((mutationsList) => {
             let mutation;
             for (mutation of mutationsList) {

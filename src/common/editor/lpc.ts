@@ -1,3 +1,5 @@
+//spellchecker:ignore sefun sefuns lfuns lfun efuns efun precompiler ltrim rtrim
+//spellchecker:ignore lbracket rbracket loperator roperator rhook lhook xeot
 import EventEmitter = require('events');
 import { parseTemplate, walkSync } from '../library';
 const fs = require('fs-extra');
@@ -5,7 +7,7 @@ const path = require('path');
 
 import IRichLanguageConfiguration = monaco.languages.LanguageConfiguration;
 import ILanguage = monaco.languages.IMonarchLanguage;
-import { DebugTimer } from './editor.base';
+//import { DebugTimer } from './editor.base';
 
 //https://github.com/Microsoft/vscode/blob/master/extensions/typescript-language-features/src/features/languageConfiguration.ts
 export const conf: IRichLanguageConfiguration = {
@@ -41,8 +43,10 @@ export const conf: IRichLanguageConfiguration = {
     ],
     folding: {
         markers: {
+            //spellchecker:disable
             start: new RegExp(/^\s*\/\/#[rR]egion\b/),
             end: new RegExp(/^\s*\/\/#[eE]nd[rR]egion\b/)
+            //spellchecker:enable
         }
     },
     onEnterRules: [
@@ -71,7 +75,7 @@ export const conf: IRichLanguageConfiguration = {
         }
     ]
 };
-
+//spellchecker:disable
 export const language = <ILanguage>{
     defaultToken: '',
     tokenPostfix: '.c',
@@ -787,6 +791,7 @@ export const language = <ILanguage>{
         ]
     }
 };
+//spellchecker:enable
 
 export function loadCompletion(): monaco.languages.CompletionItem[] {
     let list: monaco.languages.CompletionItem[] = [
@@ -899,7 +904,7 @@ class Stack {
         return this.$stack[p];
     }
 
-    public getnext(p) {
+    public getNext(p) {
         if (!p) p = 0;
         return this.query(p + this.position);
     }
@@ -952,12 +957,11 @@ export class LPCIndenter extends EventEmitter {
     private $stack: Stack; /* token stack */
     private $ind: Stack; /* indent stack */
     private $quote; /* ' or " */
-    private $in_ppcontrol;
+    private $in_pp_control;
     private $after_keyword_t;
-    private $in_mblock; /* status */
+    private $in_mBlock; /* status */
     private $in_comment;
     private $last_term;
-    private $last_term_len;
     private $shi; /* the current shift (negative for left shift) */
     //            0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17
     private $f = [8, 1, 8, 1, 2, 1, 5, 1, 7, 4, 2, 7, 8, 8, 8, 8, 2, 0];
@@ -994,53 +998,52 @@ export class LPCIndenter extends EventEmitter {
         return newline + line.substring(ptr);
     }
 
-    private strncmp(str1, str2, n) {
+    private stringNCompare(str1, str2, n) {
         str1 = str1.substring(0, n);
         str2 = str2.substring(0, n);
         return ((str1 === str2) ? 0 : ((str1 > str2) ? 1 : -1));
     }
 
-    private isalpha(c) {
+    private is_alpha(c) {
         return (((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')));
     }
 
-    private isdigit(c) {
+    private is_digit(c) {
         return ((c >= '0') && (c <= '9'));
     }
 
-    private isalnum(c) {
-        return (this.isalpha(c) || this.isdigit(c));
+    private is_alphanumeric(c) {
+        return (this.is_alpha(c) || this.is_digit(c));
     }
     private indent_line(line, lineNo) {
         if (!line || line.length === 0) return line;
         let pl = line.length;
-        const opl = line.length;
         let p = 0;
         let do_indent = false;
         let indent_index = 0;
         let ident;
         let token;
         let top;
-        let ip;
-        let sp;
+        let ip: Stack;
+        let sp: Stack;
         let newLine;
 
         if (this.$quote)
             this.$shi = 0;
-        else if (this.$in_ppcontrol || line.charAt(p) === '#') {
+        else if (this.$in_pp_control || line.charAt(p) === '#') {
             while (p < pl) {
                 if (line.charAt(p) === '\\' && p + 1 === pl) {
-                    this.$in_ppcontrol = true;
+                    this.$in_pp_control = true;
                     return newLine || line;
                 }
                 p++;
             }
-            this.$in_ppcontrol = false;
+            this.$in_pp_control = false;
             return newLine || line;
         }
-        else if (this.$in_mblock) {
-            if (!this.strncmp(line, this.$last_term, this.$last_term.length)) {
-                this.$in_mblock = false;
+        else if (this.$in_mBlock) {
+            if (!this.stringNCompare(line, this.$last_term, this.$last_term.length)) {
+                this.$in_mBlock = false;
                 p += this.$last_term.length;
             }
             else
@@ -1117,11 +1120,11 @@ export class LPCIndenter extends EventEmitter {
                         if (c === '@')
                             c = line.charAt(p++);
                         this.$last_term = '';
-                        while (this.isalnum(c) || c === '_') {
+                        while (this.is_alphanumeric(c) || c === '_') {
                             this.$last_term += c;
                             c = line.charAt(++p);
                         }
-                        this.$in_mblock = true;
+                        this.$in_mBlock = true;
                         return newLine || line;
                     case '/':
                         if (line.charAt(p) === '*' || line.charAt(p) === '/') {
@@ -1197,10 +1200,10 @@ export class LPCIndenter extends EventEmitter {
                         if (line.charAt(p) === ')' &&
                             (this.$stack.current === TokenType.LHOOK2 ||
                                 (this.$stack.current !== TokenType.XEOT && (
-                                    this.$stack.getnext(1) === TokenType.LHOOK2 ||
-                                    (this.$stack.getnext(1) === TokenType.ROPERATOR && this.$stack.getnext(2) === TokenType.LHOOK2) ||
-                                    (this.$stack.getnext(1) === TokenType.LHOOK && this.$stack.getnext(2) === TokenType.LHOOK2) || // handle nested array in mapping no token
-                                    (this.$stack.getnext(1) === TokenType.LHOOK && this.$stack.getnext(2) === TokenType.TOKEN && this.$stack.getnext(3) === TokenType.LHOOK2) //handled nested array in mapping
+                                    this.$stack.getNext(1) === TokenType.LHOOK2 ||
+                                    (this.$stack.getNext(1) === TokenType.ROPERATOR && this.$stack.getNext(2) === TokenType.LHOOK2) ||
+                                    (this.$stack.getNext(1) === TokenType.LHOOK && this.$stack.getNext(2) === TokenType.LHOOK2) || // handle nested array in mapping no token
+                                    (this.$stack.getNext(1) === TokenType.LHOOK && this.$stack.getNext(2) === TokenType.TOKEN && this.$stack.getNext(3) === TokenType.LHOOK2) //handled nested array in mapping
                                 )))) {
                             p++;
                             token = TokenType.RHOOK2;
@@ -1210,14 +1213,14 @@ export class LPCIndenter extends EventEmitter {
                             let n = 0;
                             const l = this.$stack.length;
                             while (n + 1 < l) {
-                                if (this.$stack.getnext(n) === TokenType.RHOOK && this.$stack.getnext(n + 1) === TokenType.LHOOK)
+                                if (this.$stack.getNext(n) === TokenType.RHOOK && this.$stack.getNext(n + 1) === TokenType.LHOOK)
                                     n += 2;
-                                else if (this.$stack.getnext(n) === TokenType.TOKEN)
+                                else if (this.$stack.getNext(n) === TokenType.TOKEN)
                                     n++;
                                 else
                                     break;
                             }
-                            if (this.$stack.getnext(n) === TokenType.LHOOK2) {
+                            if (this.$stack.getNext(n) === TokenType.LHOOK2) {
                                 p++;
                                 token = TokenType.RHOOK2;
                             }
@@ -1234,12 +1237,12 @@ export class LPCIndenter extends EventEmitter {
                         token = TokenType.SEMICOLON;
                         break;
                     default:
-                        if (this.isalpha(line.charAt(--p)) || line.charAt(p) === '_') {
+                        if (this.is_alpha(line.charAt(--p)) || line.charAt(p) === '_') {
                             ident = '';
                             do {
                                 ident += line.charAt(p++);
                             }
-                            while (this.isalnum(line.charAt(p)) || line.charAt(p) === '_');
+                            while (this.is_alphanumeric(line.charAt(p)) || line.charAt(p) === '_');
                             if (ident === 'switch')
                                 token = TokenType.SWITCH;
                             //track case and default for more indenting
@@ -1300,16 +1303,16 @@ export class LPCIndenter extends EventEmitter {
                         //if in a switch and { shift back just for this line
                         else if (token === TokenType.LBRACKET &&
                             sp.current === TokenType.ROPERATOR &&
-                            sp.getnext(1) === TokenType.LOPERATOR &&
-                            sp.getnext(2) === TokenType.SWITCH
+                            sp.getNext(1) === TokenType.LOPERATOR &&
+                            sp.getNext(2) === TokenType.SWITCH
                         )
                             this.$shi -= this.shift;
                         //if in a switch and ending } shift back just for this line
                         else if (token === TokenType.RBRACKET &&
                             sp.current === TokenType.LBRACKET &&
-                            sp.getnext(1) === TokenType.ROPERATOR &&
-                            sp.getnext(2) === TokenType.LOPERATOR &&
-                            sp.getnext(3) === TokenType.SWITCH
+                            sp.getNext(1) === TokenType.ROPERATOR &&
+                            sp.getNext(2) === TokenType.LOPERATOR &&
+                            sp.getNext(3) === TokenType.SWITCH
                         )
                             this.$shi -= this.shift;
                         newLine = this.shiftLine(newLine || line);
@@ -1398,9 +1401,9 @@ export class LPCIndenter extends EventEmitter {
         this.$stack.last(TokenType.XEOT);
         this.$ind = new Stack(2048);
         this.$ind.last(0);
-        this.$in_ppcontrol = 0;
+        this.$in_pp_control = 0;
         this.$in_comment = 0;
-        this.$in_mblock = 0;
+        this.$in_mBlock = 0;
         this.$quote = 0;
         this.emit('start');
     }
@@ -1428,18 +1431,18 @@ enum FormatTokenType {
     datatype,
     modifier,
     constant,
-    parenLmapping,
-    parenLarray,
-    parenLclosure,
-    parenLparen,
-    parenLbrace,
-    parenLbracket,
-    parenRarray,
-    parenRbrace,
-    parenRbracket,
-    parenRmapping,
-    parenRclosure,
-    parenRparen,
+    parenLMapping,
+    parenLArray,
+    parenLClosure,
+    parenLParen,
+    parenLBrace,
+    parenLBracket,
+    parenRArray,
+    parenRBrace,
+    parenRBracket,
+    parenRMapping,
+    parenRClosure,
+    parenRParen,
     string,
     char,
     whitespace,
@@ -1455,7 +1458,7 @@ enum FormatTokenType {
     semicolon,
     precompiler,
     comma,
-    stringblock
+    stringBlock
 }
 
 interface FormatToken {
@@ -1493,12 +1496,12 @@ export class LPCFormatter extends EventEmitter {
         let t3;
         let t1;
         let pc;
-        let incase;
-        let incomment = 0;
-        let inclosure = 0;
-        let inif = 0;
+        let inCase;
+        let inComment = 0;
+        let inClosure = 0;
+        let inIf = 0;
         let p = 0;
-        let mblock = 0;
+        let mBlock = 0;
         let leading;
         let tokenLine;
         for (; tp < tl; tp++) {
@@ -1512,25 +1515,25 @@ export class LPCFormatter extends EventEmitter {
             }
             s = t;
             pc = tokenLine[t].type === FormatTokenType.precompiler ? 1 : 0;
-            incase = 0;
-            if (incomment === 1) incomment = 0;
+            inCase = 0;
+            if (inComment === 1) inComment = 0;
             while (t < tll) {
-                if (incomment === 0 && tokenLine[t].type === FormatTokenType.stringblock && t + 1 < tll)
-                    mblock = tokenLine[t + 1].value;
-                if (!mblock) {
-                    if (incomment === 0 && inif && tokenLine[t].type === FormatTokenType.parenLparen)
+                if (inComment === 0 && tokenLine[t].type === FormatTokenType.stringBlock && t + 1 < tll)
+                    mBlock = tokenLine[t + 1].value;
+                if (!mBlock) {
+                    if (inComment === 0 && inIf && tokenLine[t].type === FormatTokenType.parenLParen)
                         p++;
-                    else if (tokenLine[t].type === FormatTokenType.parenLclosure)
-                        inclosure++;
-                    else if (tokenLine[t].type === FormatTokenType.parenRclosure)
-                        inclosure--;
-                    else if (incomment === 0 && tokenLine[t].type === FormatTokenType.commentInline)
-                        incomment = 1;
-                    else if (incomment === 0 && tokenLine[t].type === FormatTokenType.commentLeft)
-                        incomment = 2;
+                    else if (tokenLine[t].type === FormatTokenType.parenLClosure)
+                        inClosure++;
+                    else if (tokenLine[t].type === FormatTokenType.parenRClosure)
+                        inClosure--;
+                    else if (inComment === 0 && tokenLine[t].type === FormatTokenType.commentInline)
+                        inComment = 1;
+                    else if (inComment === 0 && tokenLine[t].type === FormatTokenType.commentLeft)
+                        inComment = 2;
                     else if (tokenLine[t].type === FormatTokenType.commentRight)
-                        incomment = 0;
-                    else if (!pc && incomment === 0 && inclosure === 0 && s !== t && tokenLine[t].type === FormatTokenType.keyword) {
+                        inComment = 0;
+                    else if (!pc && inComment === 0 && inClosure === 0 && s !== t && tokenLine[t].type === FormatTokenType.keyword) {
                         switch (tokenLine[t].value) {
                             case 'break':
                             case 'case':
@@ -1558,8 +1561,8 @@ export class LPCFormatter extends EventEmitter {
                         }
                     }
                 }
-                incase = (incase || tokenLine[t].value === 'case' || tokenLine[t].value === 'default') ? 1 : 0;
-                if (!mblock && incomment === 0) {
+                inCase = (inCase || tokenLine[t].value === 'case' || tokenLine[t].value === 'default') ? 1 : 0;
+                if (!mBlock && inComment === 0) {
                     if (tokenLine[t].type === FormatTokenType.semicolon) {
                         op = op.trimRight();
                         if (op.endsWith('{'))
@@ -1577,9 +1580,9 @@ export class LPCFormatter extends EventEmitter {
                             }
                             if (tokenLine[t3].type === FormatTokenType.operatorNot && tokenLine[t3].value === '!')
                                 op = op.rtrim();
-                            else if (tokenLine[t3].type === FormatTokenType.parenLparen)
+                            else if (tokenLine[t3].type === FormatTokenType.parenLParen)
                                 op = op.rtrim();
-                            else if (tokenLine[t3].type !== FormatTokenType.text || tokenLine[t3].type === FormatTokenType.parenLclosure || tokenLine[t3].type === FormatTokenType.parenRclosure || tokenLine[t3].type === FormatTokenType.parenLmapping || tokenLine[t3].type === FormatTokenType.parenRmapping || tokenLine[t3].type === FormatTokenType.parenRarray || tokenLine[t3].type === FormatTokenType.parenLarray) {
+                            else if (tokenLine[t3].type !== FormatTokenType.text || tokenLine[t3].type === FormatTokenType.parenLClosure || tokenLine[t3].type === FormatTokenType.parenRClosure || tokenLine[t3].type === FormatTokenType.parenLMapping || tokenLine[t3].type === FormatTokenType.parenRMapping || tokenLine[t3].type === FormatTokenType.parenRArray || tokenLine[t3].type === FormatTokenType.parenLArray) {
                                 op = op.rtrim();
                                 op += ' ';
                             }
@@ -1587,7 +1590,7 @@ export class LPCFormatter extends EventEmitter {
                                 op = op.rtrim();
                         }
                         else if (!pc && tokenLine[t].type === FormatTokenType.operator) {
-                            if (!incase || (incase && tokenLine[t].value !== ':')) {
+                            if (!inCase || (inCase && tokenLine[t].value !== ':')) {
                                 if (tokenLine[t].value === '-') {
                                     t3 = t - 1;
                                     while (t3 >= 0 && tokenLine[t3].type === FormatTokenType.whitespace) {
@@ -1595,11 +1598,11 @@ export class LPCFormatter extends EventEmitter {
                                         if (t3 <= 0)
                                             break;
                                     }
-                                    if (t3 < 0 || (tokenLine[t3].type !== FormatTokenType.operatorNot && tokenLine[t3].type !== FormatTokenType.parenLparen)) {
+                                    if (t3 < 0 || (tokenLine[t3].type !== FormatTokenType.operatorNot && tokenLine[t3].type !== FormatTokenType.parenLParen)) {
                                         op = op.rtrim();
                                         op += ' ';
                                     }
-                                    else if (t3 >= 0 && tokenLine[t3].type === FormatTokenType.parenLparen)
+                                    else if (t3 >= 0 && tokenLine[t3].type === FormatTokenType.parenLParen)
                                         op.rtrim();
                                 }
                                 else if (tokenLine[t].value === '--' || tokenLine[t].value === '++')
@@ -1610,18 +1613,18 @@ export class LPCFormatter extends EventEmitter {
                                 }
                             }
                         }
-                        else if (tokenLine[t].type === FormatTokenType.parenLclosure || tokenLine[t].type === FormatTokenType.parenRclosure || tokenLine[t].type === FormatTokenType.parenLmapping || tokenLine[t].type === FormatTokenType.parenRmapping || tokenLine[t].type === FormatTokenType.parenRarray || tokenLine[t].type === FormatTokenType.parenLarray) {
+                        else if (tokenLine[t].type === FormatTokenType.parenLClosure || tokenLine[t].type === FormatTokenType.parenRClosure || tokenLine[t].type === FormatTokenType.parenLMapping || tokenLine[t].type === FormatTokenType.parenRMapping || tokenLine[t].type === FormatTokenType.parenRArray || tokenLine[t].type === FormatTokenType.parenLArray) {
                             op = op.rtrim();
                             op += ' ';
                         }
-                        else if (tokenLine[t].type === FormatTokenType.parenRparen) {
+                        else if (tokenLine[t].type === FormatTokenType.parenRParen) {
                             t3 = t - 1;
                             while (t3 >= 0 && tokenLine[t3].type === FormatTokenType.whitespace) {
                                 t3--;
                                 if (t3 <= 0)
                                     break;
                             }
-                            if (tokenLine[t3].type === FormatTokenType.parenLclosure || tokenLine[t3].type === FormatTokenType.parenRclosure || tokenLine[t3].type === FormatTokenType.parenLmapping || tokenLine[t3].type === FormatTokenType.parenRmapping || tokenLine[t3].type === FormatTokenType.parenRarray || tokenLine[t3].type === FormatTokenType.parenLarray) {
+                            if (tokenLine[t3].type === FormatTokenType.parenLClosure || tokenLine[t3].type === FormatTokenType.parenRClosure || tokenLine[t3].type === FormatTokenType.parenLMapping || tokenLine[t3].type === FormatTokenType.parenRMapping || tokenLine[t3].type === FormatTokenType.parenRArray || tokenLine[t3].type === FormatTokenType.parenLArray) {
                                 op = op.rtrim();
                                 op += ' ';
                             }
@@ -1633,9 +1636,9 @@ export class LPCFormatter extends EventEmitter {
                         op = op.trimRight();
                     else if (tokenLine[t].type === FormatTokenType.newline)
                         op = op.rtrim();
-                    if (tokenLine[t].type === FormatTokenType.parenRbrace && s !== t && !op.rtrim().endsWith('\n'))
+                    if (tokenLine[t].type === FormatTokenType.parenRBrace && s !== t && !op.rtrim().endsWith('\n'))
                         op += '\n' + leading;
-                    else if (tokenLine[t].type === FormatTokenType.parenLbrace) {
+                    else if (tokenLine[t].type === FormatTokenType.parenLBrace) {
                         if (op.trimRight().endsWith(' catch') || op.trimRight().endsWith('\ncatch') || op.trimRight() === 'catch') {
                             op = op.trimRight();
                             op += ' ';
@@ -1650,9 +1653,9 @@ export class LPCFormatter extends EventEmitter {
                 }
                 op += tokenLine[t].value;
                 e = t;
-                if (!mblock && incomment === 0) {
+                if (!mBlock && inComment === 0) {
                     if (t + 1 < tll) {
-                        if (tokenLine[t].type === FormatTokenType.parenLbrace || tokenLine[t].type === FormatTokenType.parenRbrace) {
+                        if (tokenLine[t].type === FormatTokenType.parenLBrace || tokenLine[t].type === FormatTokenType.parenRBrace) {
                             t++;
                             for (; t < tll; t++) {
                                 if (tokenLine[t].type === FormatTokenType.whitespace) {
@@ -1686,11 +1689,11 @@ export class LPCFormatter extends EventEmitter {
                                     if (tokenLine[t1].value === '-') {
                                         //previous is text so should add a space
                                         if (t3 >= 0 && (tokenLine[t3].type === FormatTokenType.text ||
-                                            tokenLine[t3].type === FormatTokenType.parenRparen ||
-                                            tokenLine[t3].type === FormatTokenType.parenRbracket ||
-                                            tokenLine[t3].type === FormatTokenType.parenRmapping ||
-                                            tokenLine[t3].type === FormatTokenType.parenRclosure ||
-                                            tokenLine[t3].type === FormatTokenType.parenRarray
+                                            tokenLine[t3].type === FormatTokenType.parenRParen ||
+                                            tokenLine[t3].type === FormatTokenType.parenRBracket ||
+                                            tokenLine[t3].type === FormatTokenType.parenRMapping ||
+                                            tokenLine[t3].type === FormatTokenType.parenRClosure ||
+                                            tokenLine[t3].type === FormatTokenType.parenRArray
                                         )) {
                                             op = op.rtrim();
                                             op += ' ';
@@ -1705,10 +1708,10 @@ export class LPCFormatter extends EventEmitter {
                                     }
                                     else if (tokenLine[t].value === '--' || tokenLine[t].value === '++')
                                         op = op.trimRight();
-                                    else if (incase && tokenLine[t1].value === ':') {
+                                    else if (inCase && tokenLine[t1].value === ':') {
                                         op = op.trimRight();
                                         op += '\n';
-                                        incase = 0;
+                                        inCase = 0;
                                     }
                                     else {
                                         op = op.trimRight();
@@ -1741,7 +1744,7 @@ export class LPCFormatter extends EventEmitter {
                                 }
                             }
                         }
-                        else if ((tokenLine[t].type === FormatTokenType.parenLclosure || tokenLine[t].type === FormatTokenType.parenRclosure || tokenLine[t].type === FormatTokenType.parenLmapping || tokenLine[t].type === FormatTokenType.parenRmapping || tokenLine[t].type === FormatTokenType.parenRarray || tokenLine[t].type === FormatTokenType.parenLarray)) {
+                        else if ((tokenLine[t].type === FormatTokenType.parenLClosure || tokenLine[t].type === FormatTokenType.parenRClosure || tokenLine[t].type === FormatTokenType.parenLMapping || tokenLine[t].type === FormatTokenType.parenRMapping || tokenLine[t].type === FormatTokenType.parenRArray || tokenLine[t].type === FormatTokenType.parenLArray)) {
                             t2 = t + 1;
                             if (tokenLine[t2].type !== FormatTokenType.newline) {
                                 while (tokenLine[t2].type === FormatTokenType.whitespace) {
@@ -1757,7 +1760,7 @@ export class LPCFormatter extends EventEmitter {
                                 }
                             }
                         }
-                        else if ((tokenLine[t].type === FormatTokenType.parenLparen)) {
+                        else if ((tokenLine[t].type === FormatTokenType.parenLParen)) {
                             t2 = t + 1;
                             if (tokenLine[t2].type !== FormatTokenType.newline) {
                                 while (tokenLine[t2].type === FormatTokenType.whitespace) {
@@ -1788,7 +1791,7 @@ export class LPCFormatter extends EventEmitter {
                                 }
                             }
                         }
-                        else if (!pc && inclosure === 0 && tokenLine[t].type === FormatTokenType.keyword) {
+                        else if (!pc && inClosure === 0 && tokenLine[t].type === FormatTokenType.keyword) {
                             t2 = t + 1;
                             switch (tokenLine[t].value) {
                                 case 'return':
@@ -1834,16 +1837,16 @@ export class LPCFormatter extends EventEmitter {
                                         if (t2 >= tll)
                                             break;
                                     }
-                                    inif = 1;
+                                    inIf = 1;
                                     break;
                             }
                         }
                     }
-                    if (inif && tokenLine[t].type === FormatTokenType.parenRparen) {
+                    if (inIf && tokenLine[t].type === FormatTokenType.parenRParen) {
                         p--;
                         if (p === 0) {
                             t2 = t + 1;
-                            if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t].type !== FormatTokenType.parenLbrace && tokenLine[t].type !== FormatTokenType.keyword) {
+                            if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t].type !== FormatTokenType.parenLBrace && tokenLine[t].type !== FormatTokenType.keyword) {
                                 while (tokenLine[t2].type === FormatTokenType.whitespace) {
                                     t++;
                                     e++;
@@ -1851,17 +1854,17 @@ export class LPCFormatter extends EventEmitter {
                                     if (t2 >= tll)
                                         break;
                                 }
-                                if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t2].type !== FormatTokenType.parenLbrace && tokenLine[t2].type !== FormatTokenType.keyword) {
+                                if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t2].type !== FormatTokenType.parenLBrace && tokenLine[t2].type !== FormatTokenType.keyword) {
                                     op = op.rtrim();
                                     op += '\n' + leading;
                                 }
                             }
-                            inif = 0;
+                            inIf = 0;
                         }
                     }
                 }
-                if (t === s && mblock === tokenLine[t].value && t + 1 < tll && tokens[tp][t + 1].value === ';')
-                    mblock = 0;
+                if (t === s && mBlock === tokenLine[t].value && t + 1 < tll && tokens[tp][t + 1].value === ';')
+                    mBlock = 0;
                 t = e;
                 t++;
             }
@@ -1870,7 +1873,8 @@ export class LPCFormatter extends EventEmitter {
         return op;
     }
 
-    private typetoken(txt) {
+    //spellchecker:disable
+    private tokenType(txt) {
         switch (txt) {
             case 'break':
             case 'case':
@@ -1945,6 +1949,7 @@ export class LPCFormatter extends EventEmitter {
         }
         return { value: txt, type: FormatTokenType.text };
     }
+    //spellchecker:enable
 
     private getToken(): FormatToken {
         const len = this.$src.length;
@@ -1962,11 +1967,11 @@ export class LPCFormatter extends EventEmitter {
                         case '[':
                             this.$position = idx + 1;
                             state = 0;
-                            return { value: '([', type: FormatTokenType.parenLmapping };
+                            return { value: '([', type: FormatTokenType.parenLMapping };
                         case '{':
                             state = 0;
                             this.$position = idx + 1;
-                            return { value: '({', type: FormatTokenType.parenLarray };
+                            return { value: '({', type: FormatTokenType.parenLArray };
                         case ':':
                             state = 0;
                             //(::key
@@ -1974,30 +1979,30 @@ export class LPCFormatter extends EventEmitter {
                                 //(::)
                                 if (s.charAt(idx + 1) === ':' && s.charAt(idx + 2) === ')') {
                                     this.$position = idx + 1;
-                                    return { value: '(:', type: FormatTokenType.parenLclosure };
+                                    return { value: '(:', type: FormatTokenType.parenLClosure };
                                 }
                                 else if (s.charAt(idx + 1) === ':' && s.charAt(idx + 2) !== ':') {
                                     this.$position = idx;
-                                    return { value: '(', type: FormatTokenType.parenLparen };
+                                    return { value: '(', type: FormatTokenType.parenLParen };
                                 }
                             }
                             this.$position = idx + 1;
-                            return { value: '(:', type: FormatTokenType.parenLclosure };
+                            return { value: '(:', type: FormatTokenType.parenLClosure };
                         default:
                             state = 0;
                             this.$position = idx;
-                            return { value: '(', type: FormatTokenType.parenLparen };
+                            return { value: '(', type: FormatTokenType.parenLParen };
                     }
                 case 2:
                     switch (c) {
                         case ')':
                             state = 0;
                             this.$position = idx + 1;
-                            return { value: '})', type: FormatTokenType.parenRarray };
+                            return { value: '})', type: FormatTokenType.parenRArray };
                         default:
                             state = 0;
                             this.$position = idx;
-                            return { value: '}', type: FormatTokenType.parenRbrace };
+                            return { value: '}', type: FormatTokenType.parenRBrace };
                     }
                 case 3:
                     switch (c) {
@@ -2006,15 +2011,15 @@ export class LPCFormatter extends EventEmitter {
                             if (this.b.length) {
                                 this.$position = idx;
                                 this.b.pop();
-                                return { value: ']', type: FormatTokenType.parenRbracket };
+                                return { value: ']', type: FormatTokenType.parenRBracket };
                             }
                             this.$position = idx + 1;
-                            return { value: '])', type: FormatTokenType.parenRmapping };
+                            return { value: '])', type: FormatTokenType.parenRMapping };
                         default:
                             state = 0;
                             this.$position = idx;
                             this.b.pop();
-                            return { value: ']', type: FormatTokenType.parenRbracket };
+                            return { value: ']', type: FormatTokenType.parenRBracket };
                     }
                 case 4:
                     if (c === '\\') {
@@ -2053,7 +2058,7 @@ export class LPCFormatter extends EventEmitter {
                         case ')':
                             state = 0;
                             this.$position = idx + 1;
-                            return { value: ':)', type: FormatTokenType.parenRclosure };
+                            return { value: ':)', type: FormatTokenType.parenRClosure };
                         case ':':
                             state = 0;
                             this.$position = idx + 1;
@@ -2195,31 +2200,31 @@ export class LPCFormatter extends EventEmitter {
                 default:
                     switch (c) {
                         case '(':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             state = 1;
                             if (idx + 1 >= len) {
                                 this.$position = idx + 1;
-                                return { value: '(', type: FormatTokenType.parenLparen };
+                                return { value: '(', type: FormatTokenType.parenLParen };
                             }
                             break;
                         case ')':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             this.$position = idx + 1;
-                            return { value: ')', type: FormatTokenType.parenRparen };
+                            return { value: ')', type: FormatTokenType.parenRParen };
                         case '{':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             this.$position = idx + 1;
-                            return { value: '{', type: FormatTokenType.parenLbrace };
+                            return { value: '{', type: FormatTokenType.parenLBrace };
                         case '}':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             state = 2;
                             if (idx + 1 >= len) {
                                 this.$position = idx + 1;
-                                return { value: '}', type: FormatTokenType.parenRbrace };
+                                return { value: '}', type: FormatTokenType.parenRBrace };
                             }
                             break;
                         case ':':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             state = 7;
                             if (idx + 1 >= len) {
                                 this.$position = idx + 1;
@@ -2227,7 +2232,7 @@ export class LPCFormatter extends EventEmitter {
                             }
                             break;
                         case '/':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             state = 8;
                             if (idx + 1 >= len) {
                                 this.$position = idx + 1;
@@ -2235,7 +2240,7 @@ export class LPCFormatter extends EventEmitter {
                             }
                             break;
                         case '*':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             state = 9;
                             if (idx + 1 >= len) {
                                 this.$position = idx + 1;
@@ -2243,21 +2248,21 @@ export class LPCFormatter extends EventEmitter {
                             }
                             break;
                         case '[':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             this.$position = idx + 1;
                             this.b.push('[');
-                            return { value: '[', type: FormatTokenType.parenLbracket };
+                            return { value: '[', type: FormatTokenType.parenLBracket };
                         case ']':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             state = 3;
                             if (idx + 1 >= len) {
                                 this.$position = idx + 1;
                                 this.b.pop();
-                                return { value: ']', type: FormatTokenType.parenRbracket };
+                                return { value: ']', type: FormatTokenType.parenRBracket };
                             }
                             break;
                         case '"':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             state = 4;
                             val = '"';
                             if (idx + 1 >= len) {
@@ -2266,7 +2271,7 @@ export class LPCFormatter extends EventEmitter {
                             }
                             break;
                         case '\'':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             state = 15;
                             val = '\'';
                             if (idx + 1 >= len) {
@@ -2278,18 +2283,18 @@ export class LPCFormatter extends EventEmitter {
                             this.$position = idx + 1;
                             break;
                         case '\n':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             this.$position = idx + 1;
                             return { value: '\n', type: FormatTokenType.newline };
                         case ' ':
                         case '\t':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             val += c;
                             this.$position = idx + 1;
                             state = 6;
                             break;
                         case '#':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             this.$position = idx + 1;
                             return { value: c, type: FormatTokenType.precompiler };
                         case '&': //&& &=
@@ -2297,7 +2302,7 @@ export class LPCFormatter extends EventEmitter {
                         case '+': // ++ +=
                         case '<': // << <=
                         case '>': // >> >=
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             state = 10;
                             val = c;
                             if (idx + 1 >= len) {
@@ -2306,7 +2311,7 @@ export class LPCFormatter extends EventEmitter {
                             }
                             break;
                         case '-': // -- -= ->
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             state = 11;
                             val = c;
                             if (idx + 1 >= len) {
@@ -2316,7 +2321,7 @@ export class LPCFormatter extends EventEmitter {
                             break;
                         case '=': // ==
                         case '%': // %=
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             state = 12;
                             val = c;
                             if (idx + 1 >= len) {
@@ -2325,7 +2330,7 @@ export class LPCFormatter extends EventEmitter {
                             }
                             break;
                         case '!': // !=
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             state = 13;
                             val = c;
                             if (idx + 1 >= len) {
@@ -2334,7 +2339,7 @@ export class LPCFormatter extends EventEmitter {
                             }
                             break;
                         case '.': //...
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
 
                             state = 14;
                             val = c;
@@ -2344,11 +2349,11 @@ export class LPCFormatter extends EventEmitter {
                             }
                             break;
                         case '?':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             this.$position = idx + 1;
                             return { value: c, type: FormatTokenType.operator };
                         case ';':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             this.$position = idx + 1;
                             return { value: c, type: FormatTokenType.semicolon };
                         case '\\':
@@ -2356,24 +2361,24 @@ export class LPCFormatter extends EventEmitter {
                         case '~':
                         case '.':
                         case '^':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             this.$position = idx + 1;
                             return { value: c, type: FormatTokenType.text };
                         case ',':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             this.$position = idx + 1;
                             return { value: c, type: FormatTokenType.comma };
                         case '@':
-                            if (val.length > 0) return this.typetoken(val);
+                            if (val.length > 0) return this.tokenType(val);
                             this.$position = idx + 1;
-                            return { value: c, type: FormatTokenType.stringblock };
+                            return { value: c, type: FormatTokenType.stringBlock };
                         default:
                             if (c === '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
                                 val += c;
                                 this.$position = idx + 1;
                             }
                             else {
-                                if (val.length > 0) return this.typetoken(val);
+                                if (val.length > 0) return this.tokenType(val);
                                 this.$position = idx + 1;
                                 return { value: c, type: FormatTokenType.unknown };
                             }
@@ -2386,7 +2391,7 @@ export class LPCFormatter extends EventEmitter {
             return null;
         if (state === 6)
             return { value: val, type: FormatTokenType.whitespace };
-        return this.typetoken(val);
+        return this.tokenType(val);
     }
 
     private tokenize() {

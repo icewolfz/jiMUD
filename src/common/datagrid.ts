@@ -1,4 +1,4 @@
-//https://developers.google.com/web/updates/2016/10/resizeobserver
+//spellchecker:ignore datagrid dropdown
 import EventEmitter = require('events');
 import { capitalize, clone } from './library';
 import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, SelectValueEditor, CollectionValueEditor, ButtonValueEditor } from './value.editors';
@@ -85,8 +85,8 @@ export class DataGrid extends EventEmitter {
     private $dataWidth = 0;
     private $dataHeight = 0;
     private $headerWidth = 0;
-    private $resizer;
-    private $resizerCache;
+    private $resizeObserver;
+    private $resizeObserverCache;
     private $observer: MutationObserver;
     private $sort = { order: SortOrder.ascending, column: -1 };
     private $focused = -1;
@@ -98,7 +98,7 @@ export class DataGrid extends EventEmitter {
 
     private $asc: HTMLElement;
     private $desc: HTMLElement;
-    private $nosort: HTMLElement;
+    private $noSort: HTMLElement;
     private $viewState = [];
     private $firstColumn = 0;
 
@@ -186,9 +186,9 @@ export class DataGrid extends EventEmitter {
         this.$asc.classList.add('datagrid-column-sorted-asc', 'fa', 'fa-caret-up');
         this.$desc = document.createElement('span');
         this.$desc.classList.add('datagrid-column-sorted-desc', 'fa', 'fa-caret-down');
-        this.$nosort = document.createElement('span');
-        this.$nosort.classList.add('datagrid-column-sorted-nosort');
-        this.$nosort.innerHTML = '<span class="fa fa-caret-up"></span><span class="fa fa-caret-down"></span>';
+        this.$noSort = document.createElement('span');
+        this.$noSort.classList.add('datagrid-column-sorted-none');
+        this.$noSort.innerHTML = '<span class="fa fa-caret-up"></span><span class="fa fa-caret-down"></span>';
 
         this.$parent.dataset.datagrid = 'true';
         this.$parent.classList.add('datagrid');
@@ -573,16 +573,16 @@ export class DataGrid extends EventEmitter {
         window.addEventListener('resize', () => {
             this.doUpdate(UpdateType.resize);
         });
-        this.$resizer = new ResizeObserver((entries, observer) => {
+        this.$resizeObserver = new ResizeObserver((entries, observer) => {
             if (entries.length === 0) return;
             if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
                 return;
-            if (!this.$resizerCache || this.$resizerCache.width !== entries[0].contentRect.width || this.$resizerCache.height !== entries[0].contentRect.height) {
-                this.$resizerCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
+            if (!this.$resizeObserverCache || this.$resizeObserverCache.width !== entries[0].contentRect.width || this.$resizeObserverCache.height !== entries[0].contentRect.height) {
+                this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
                 this.doUpdate(UpdateType.columns | UpdateType.buildRows | UpdateType.resize);
             }
         });
-        this.$resizer.observe(this.$parent);
+        this.$resizeObserver.observe(this.$parent);
         this.$observer = new MutationObserver((mutationsList) => {
             let mutation;
             for (mutation of mutationsList) {
@@ -1221,7 +1221,7 @@ export class DataGrid extends EventEmitter {
             if (order !== oldOrder && this.$header.children.length) {
                 Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-desc'), a => a.parentElement.removeChild(a));
                 Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-asc'), a => a.parentElement.removeChild(a));
-                Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-nosort'), a => a.parentElement.removeChild(a));
+                Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-none'), a => a.parentElement.removeChild(a));
                 if (this.$sort.order)
                     this.$header.children[0].children[this.$sort.column].appendChild(this.$desc.cloneNode());
                 else
@@ -1793,7 +1793,7 @@ export class DataGrid extends EventEmitter {
                 cell.addEventListener('click', (e) => {
                     Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-desc'), a => a.parentElement.removeChild(a));
                     Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-asc'), a => a.parentElement.removeChild(a));
-                    Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-nosort'), a => a.parentElement.removeChild(a));
+                    Array.from(this.$header.querySelectorAll('.datagrid-column-sorted-none'), a => a.parentElement.removeChild(a));
                     const idx = +(<HTMLElement>e.currentTarget).dataset.index;
                     if (this.$sort.column === idx) {
                         if (this.$sort.order)
@@ -1837,7 +1837,7 @@ export class DataGrid extends EventEmitter {
                 else if (c === sCol)
                     cell.appendChild(this.$asc.cloneNode());
                 else if (sCol === -1)
-                    cell.appendChild(this.$nosort.cloneNode(true));
+                    cell.appendChild(this.$noSort.cloneNode(true));
 
             }
             row.appendChild(cell);
