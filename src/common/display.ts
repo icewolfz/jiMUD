@@ -109,6 +109,16 @@ export class Display extends EventEmitter {
     private _context: CanvasRenderingContext2D;
     private _contextFont: string;
     private _ruler: HTMLElement;
+    private _enableUTF8: boolean = false;
+
+    get enableUTF8() { return this._enableUTF8; }
+    set enableUTF8(value) {
+        if (value === this._enableUTF8) return;
+        this._enableUTF8 = value;
+        this.rebuildLines();
+        this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollView | UpdateType.overlays);
+        this.updateWindow();
+    }
 
     get roundedRanges(): boolean { return this._roundedRanges; }
     set roundedRanges(value: boolean) {
@@ -1366,10 +1376,10 @@ export class Display extends EventEmitter {
 
     private textWidth(txt) {
         if (txt.length === 0) return 0;
-        //return txt.length === 0 ? 0 : txt.split('').map(t => this._context.measureText(t).width).reduce((a, c) => a + c);
-        return this._context.measureText(txt).width;
-        //this._ruler.textContent = txt;
-        //return this._ruler.clientWidth;
+        if (!this._enableUTF8)
+            return this._context.measureText(txt).width;
+        this._ruler.textContent = txt;
+        return this._ruler.clientWidth;
     }
 
     private textSize(txt) {
