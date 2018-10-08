@@ -1396,34 +1396,21 @@ export class Display extends EventEmitter {
         };
     }
 
-    private textWidth(txt) {
+    private textWidth(txt, font?) {
         if (txt.length === 0) return 0;
-        //if (!this._enableUTF8)
-        return this.getTextWidth(txt); //this._context.measureText(txt).width;
-        //this._ruler.textContent = txt;
-        //return this._ruler.clientWidth;
-    }
-
-    private getTextWidth(text, font?) {
         font = font || this._contextFont;
-        // if given, use cached canvas for better performance
-        // else, create new canvas
         const canvas = this._canvas || (this._canvas = document.createElement('canvas'));
         const context = this._context || (this._context = canvas.getContext('2d', { alpha: false }));
         context.font = font;
-        const metrics = context.measureText(text);
+        const metrics = context.measureText(txt);
         return metrics.width;
     }
 
-    private textSize(txt) {
+    private textHeight(txt, font?, size?) {
         this._ruler.textContent = txt;
-        return [this._ruler.clientWidth, this._ruler.clientHeight];
-    }
-
-    private textHeight(txt) {
-        if (txt.length === 0) return 0;
-        this._ruler.textContent = txt;
-        return this._ruler.clientHeight;
+        this._ruler.style.fontFamily = font || this._character.style.fontFamily;
+        this._ruler.style.fontSize = size || this._character.style.fontSize;
+        return parseInt(window.getComputedStyle(this._ruler).fontSize, 10);
     }
 
     public clearOverlay(type?: string) {
@@ -1882,8 +1869,6 @@ export class Display extends EventEmitter {
             let nFormat;
             let end;
             const td = [];
-            //let oSize;
-            //let oFont;
             let eText;
             if (f < len - 1) {
                 nFormat = formats[f + 1];
@@ -1903,12 +1888,6 @@ export class Display extends EventEmitter {
                     bStyle.push('background:', format.background, ';');
                 if (format.color)
                     fStyle.push('color:', format.color, ';');
-                /*
-                if (format.font || format.size) {
-                    oSize = this._character.style.fontSize;
-                    oFont = this._character.style.fontFamily;
-                }
-                */
                 eText = text.substring(offset, end);
                 if (eText.length === 0) continue;
                 //TODO variable character height is not supported
@@ -1917,10 +1896,8 @@ export class Display extends EventEmitter {
                 if (format.font || format.size) {
                     if (format.font) fStyle.push('font-family: ', format.font, ';');
                     if (format.size) fStyle.push('font-size: ', format.size, ';');
-                    //height = Math.max(height, Math.ceil($(this._character).innerHeight() + 0.5));
-                    this._context.font = `${format.size || oSize} ${format.font || oFont}`;
-                    width = this.textWidth(eText);
-                    this._context.font = `${oSize} ${oFont}`;
+                    height = this.textHeight(eText, format.font, format.size);
+                    width = this.textWidth(eText, `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily});
                 }
                 else
                 */
