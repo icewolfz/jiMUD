@@ -447,7 +447,7 @@ export class Telnet extends EventEmitter {
                             _sb.push(i);
                             state = 1;
                         }
-                        else if (this.UTF8 || (this.options.CHARSET)) {
+                        else if (this.UTF8 || (this.options.CHARSET && this.server.CHARSET)) {
                             //If current byte has first bit on unicode
                             if ((i & 0x80) === 0x80 && idx >= len - 4) {
                                 let uLen = 0;
@@ -1567,7 +1567,7 @@ export class Telnet extends EventEmitter {
             return processed;
         processed = Buffer.from(processed);
         //force UTF8 or if charset is enabled and type is UTF8 process data as UTF8 data
-        if (this.UTF8 || (this.options.CHARSET))
+        if (this.UTF8 || (this.options.CHARSET && this.server.CHARSET))
             return processed.toString('UTF8');
         return processed;
     }
