@@ -42,6 +42,11 @@ interface Window {
 	ResizeObserver: ResizeObserver;
 }
 
+interface CanvasRenderingContext2D {
+	webkitImageSmoothingEnabled: boolean;
+	mozImageSmoothingEnabled: boolean;
+}
+
 /**
  * Remove once typscript nativly supports ResizeObserver 
  */
@@ -52,8 +57,8 @@ interface ResizeObserver {
 }
 
 declare var ResizeObserver: {
-    prototype: ResizeObserver;
-    new(callback: ResizeObserverCallback): ResizeObserver;
+	prototype: ResizeObserver;
+	new(callback: ResizeObserverCallback): ResizeObserver;
 };
 
 interface ResizeObserverCallback {
@@ -66,7 +71,7 @@ interface ResizeObserverEntry {
 }
 
 declare var ResizeObserverEntry: {
-    prototype: ResizeObserverEntry;
-    new(): ResizeObserverEntry;
+	prototype: ResizeObserverEntry;
+	new(): ResizeObserverEntry;
 };
 /** End ResizeObserver */
