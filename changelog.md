@@ -11,6 +11,7 @@
 - **Changed:**
   - [#notify](docs/commands.md) - make silent
   - [client.notify](docs/scripting.md) - make silent by default, add silent: false to options argument, eg: client.notify('test', 'test2', {silent: false})
+  - Update electron from 3.0.2 to 3.0.3
 - **Fixed:**
   - Code editor:
     - Area designer:
