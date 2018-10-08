@@ -109,8 +109,8 @@ export class Display extends EventEmitter {
     private _context: CanvasRenderingContext2D;
     private _contextFont: string;
     private _ruler: HTMLElement;
-    private _enableUTF8: boolean = false;
-
+    //private _enableUTF8: boolean = false;
+    /*
     get enableUTF8() { return this._enableUTF8; }
     set enableUTF8(value) {
         if (value === this._enableUTF8) return;
@@ -119,6 +119,7 @@ export class Display extends EventEmitter {
         this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollView | UpdateType.overlays);
         this.updateWindow();
     }
+    */
 
     get roundedRanges(): boolean { return this._roundedRanges; }
     set roundedRanges(value: boolean) {
@@ -980,7 +981,7 @@ export class Display extends EventEmitter {
             this._ruler.style.fontSize = size;
             this._ruler.style.fontFamily = font;
 
-            this._contextFont = `${size} ${splitQuoted(font, ',')[0]}`;
+            this._contextFont = `${size} ${font}`;
             this._context.font = this._contextFont;
             //recalculate height/width of characters so display can be calculated
             this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
@@ -1376,10 +1377,21 @@ export class Display extends EventEmitter {
 
     private textWidth(txt) {
         if (txt.length === 0) return 0;
-        if (!this._enableUTF8)
-            return this._context.measureText(txt).width;
-        this._ruler.textContent = txt;
-        return this._ruler.clientWidth;
+        //if (!this._enableUTF8)
+        return this.getTextWidth(txt); //this._context.measureText(txt).width;
+        //this._ruler.textContent = txt;
+        //return this._ruler.clientWidth;
+    }
+
+    private getTextWidth(text, font?) {
+        font = font || this._contextFont;
+        // if given, use cached canvas for better performance
+        // else, create new canvas
+        const canvas = this._canvas || (this._canvas = document.createElement('canvas'));
+        const context = canvas.getContext('2d');
+        context.font = font;
+        const metrics = context.measureText(text);
+        return metrics.width;
     }
 
     private textSize(txt) {
@@ -1876,7 +1888,7 @@ export class Display extends EventEmitter {
                     oFont = this._character.style.fontFamily;
                 }
                 */
-                eText = htmlEncode(text.substring(offset, end));
+                eText = text.substring(offset, end);
                 if (eText.length === 0) continue;
                 //TODO variable character height is not supported
                 //TODO once supported update parser support tag to add font
@@ -1892,6 +1904,7 @@ export class Display extends EventEmitter {
                 else
                 */
                 width = this.textWidth(eText);
+                eText = htmlEncode(eText);
 
                 if (format.style !== FontStyle.None) {
                     if ((format.style & FontStyle.Bold) === FontStyle.Bold)
@@ -1928,9 +1941,10 @@ export class Display extends EventEmitter {
                 left += width;
             }
             else if (format.formatType === FormatType.Link) {
-                eText = htmlEncode(text.substring(offset, end));
+                eText = text.substring(offset, end);
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
+                eText = htmlEncode(eText);
                 fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
                 fore.push(format.href);
                 fore.push('" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
@@ -1946,9 +1960,10 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.WordBreak)
                 fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
-                eText = htmlEncode(text.substring(offset, end));
+                eText = text.substring(offset, end);
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
+                eText = htmlEncode(eText);
                 fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" data-href="');
                 fore.push(format.href);
                 fore.push('" href="javascript:void(0);" title="');
@@ -1974,9 +1989,10 @@ export class Display extends EventEmitter {
                 left += width;
             }
             else if (format.formatType === FormatType.MXPSend) {
-                eText = htmlEncode(text.substring(offset, end));
+                eText = text.substring(offset, end);
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
+                eText = htmlEncode(eText);
                 fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" href="javascript:void(0);" title="');
                 fore.push(format.hint);
                 fore.push('"');
@@ -2001,9 +2017,10 @@ export class Display extends EventEmitter {
                 left += width;
             }
             else if (format.formatType === FormatType.MXPExpired) {
-                eText = htmlEncode(text.substring(offset, end));
+                eText = text.substring(offset, end);
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
+                eText = htmlEncode(eText);
                 back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
                 fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
                 fore.push(eText);
