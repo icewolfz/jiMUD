@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.1
+## v0.6.1 2018-10-08
 
 - **New:**
   - [#notify](docs/commands.md) - add icon argument {icon}
