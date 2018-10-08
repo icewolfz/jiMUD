@@ -499,11 +499,14 @@ export function clone(obj) {
 }
 
 export function cloneObject(obj) {
+    if (!obj) return obj;
     const nObj = {};
     let prop;
     for (prop in obj) {
         if (!obj.hasOwnProperty(prop)) continue;
-        if (typeof obj[prop] === 'object')
+        if (obj[prop])
+            nObj[prop] = obj[prop];
+        else if (typeof obj[prop] === 'object')
             nObj[prop] = cloneObject(obj[prop]);
         else if (Array.isArray(obj[prop]))
             nObj[prop] = cloneArray(obj[prop]);
@@ -532,13 +535,13 @@ export function copy(o) {
     let output;
     let v;
     let key;
-    if (typeof o !== 'object' && !Array.isArray(o))
+    if (!o || (typeof o !== 'object' && !Array.isArray(o)))
         return o;
     output = Array.isArray(o) ? [] : {};
     for (key in o) {
         if (!o.hasOwnProperty(key)) continue;
         v = o[key];
-        output[key] = (typeof v === 'object' || Array.isArray(v)) ? copy(v) : v;
+        output[key] = (v && (typeof v === 'object' || Array.isArray(v))) ? copy(v) : v;
     }
     return output;
 }
