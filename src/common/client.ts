@@ -630,6 +630,25 @@ export class Client extends EventEmitter {
             this.debug('GMCP Module: ' + mod);
             this.debug('GMCP Data: ' + val);
             let obj;
+            if (mod.toLowerCase() === 'client.gui') {
+                obj = val.split('/n');
+                if (val.length >= 2) {
+                    obj = {
+                        version: parseInt(obj[0], 10),
+                        url: obj[1]
+                    };
+                }
+                else if (val.length > 0) {
+                    obj = {
+                        version: parseInt(obj[0], 10),
+                        url: obj[1]
+                    };
+                }
+                else
+                    obj = { version: obj, url: '' };
+                this.emit('received-GMCP', mod, obj);
+                return;
+            }
             try {
                 if (val.length > 0)
                     obj = JSON.parse(val);
