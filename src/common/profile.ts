@@ -736,13 +736,19 @@ export class Profile {
             if (this.buttons.length > 0) {
                 il = this.buttons.length;
                 for (i = 0; i < il; i++) {
-                    data.buttons.push(clone(this.buttons[i]));
+                    data.buttons.push(clone(this.buttons[i], (key, value) => {
+                        if (key === 'profile') return undefined;
+                        return value;
+                    }));
                 }
             }
             if (this.contexts.length > 0) {
                 il = this.contexts.length;
                 for (i = 0; i < il; i++) {
-                    data.contexts.push(clone(this.contexts[i]));
+                    data.contexts.push(clone(this.contexts[i], (key, value) => {
+                        if (key === 'profile') return undefined;
+                        return value;
+                    }));
                 }
             }
             return data;
@@ -762,32 +768,34 @@ export class Profile {
         if (data.aliases && data.aliases.length > 0) {
             il = data.aliases.length;
             for (i = 0; i < il; i++) {
-                profile.aliases.push(new Alias(data.aliases[i]));
+                profile.aliases.push(new Alias(data.aliases[i], null, profile));
             }
         }
         if (data.triggers && data.triggers.length > 0) {
             il = data.triggers.length;
             for (i = 0; i < il; i++) {
-                profile.triggers.push(new Trigger(data.triggers[i]));
+                profile.triggers.push(new Trigger(data.triggers[i], profile));
             }
         }
         if (data.macros && data.macros.length > 0) {
             il = data.macros.length;
             profile.macros = [];
             for (i = 0; i < il; i++) {
-                profile.macros.push(new Macro(data.macros[i]));
+                profile.macros.push(new Macro(data.macros[i], profile));
             }
         }
         if (data.buttons && data.buttons.length > 0) {
             il = data.buttons.length;
             for (i = 0; i < il; i++) {
-                profile.buttons.push(new Button(data.buttons[i]));
+                profile.buttons.push(new Button(data.buttons[i], profile));
             }
         }
         if (data.contexts && data.contexts.length > 0) {
             il = data.contexts.length;
             for (i = 0; i < il; i++) {
-                profile.contexts.push(data.contexts[i].clone());
+                const item = data.contexts[i].clone();
+                item.profile = profile;
+                profile.contexts.push(item);
             }
         }
         return profile;

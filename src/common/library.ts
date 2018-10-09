@@ -494,8 +494,8 @@ export let keyCharToCode = {
 
 };
 
-export function clone(obj) {
-    return JSON.parse(JSON.stringify(obj));
+export function clone(obj, replacer?) {
+    return JSON.parse(JSON.stringify(obj, replacer));
 }
 
 export function cloneObject(obj) {

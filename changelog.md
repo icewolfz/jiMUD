@@ -6,6 +6,7 @@
   - Fixed Unicode corruption when receiving split packets when UTF-8 or charset telnet option is enabled
   - Fixed Telnet charset option being on even if server did not turn it on
   - Fixed properly parse Client.GUI GMCP
+  - Backup: Fixed serializing of profiles not ignoring new profile key
 
 ## v0.6.1 2018-10-08
 
