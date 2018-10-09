@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.2
+## v0.6.2 2018-10-09
 
 - **Fixed:**
   - Fixed Unicode corruption when receiving split packets when UTF-8 or charset telnet option is enabled
