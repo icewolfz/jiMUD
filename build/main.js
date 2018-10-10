@@ -3033,13 +3033,13 @@ function createChat(show, loading) {
                 return;
             if (result === 0) {
                 winChat.reload();
-                logError('Chat capture  unresponsive, reload.\n', true);
+                logError('Chat capture unresponsive, reload.\n', true);
             }
             else if (result === 2) {
                 winChat.destroy();
             }
             else
-                logError('Chat capture  unresponsive, waiting.\n', true);
+                logError('Chat capture unresponsive, waiting.\n', true);
         });
     });
 
