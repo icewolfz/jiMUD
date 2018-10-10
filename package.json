@@ -128,7 +128,7 @@
     "drivelist": "^6.4.3",
     "electron-updater": "^3.1.2",
     "font-manager": "^0.3.0",
-    "fs-extra": "^6.0.1",
+    "fs-extra": "^7.0.0",
     "fswin": "^3.18.918",
     "lz-string": "^1.4.4",
     "markdown-it": "^8.4.2",
@@ -138,6 +138,6 @@
     "rgbcolor": "^1.0.1",
     "spellchecker": "^3.5.0",
     "tmp": "0.0.33",
-    "yargs-parser": "^10.1.0"
+    "yargs-parser": "^11.0.0"
   }
 }

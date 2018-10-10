@@ -4,6 +4,8 @@
 
 - **Changed:**
   - Update better-sqlite from 4.1.4 to 5.0.1
+  - Update fs-extra from 6.0.1 to 7.0.0
+  - Update yargs-parser from 10.1.0 to 11.0.0
 
 ## v0.6.2 2018-10-09
 
