@@ -238,7 +238,7 @@ export class Mapper extends EventEmitter {
         this.ready = false;
         try {
             if (this._memory) {
-                this._db = new sqlite3(':memory', { memory: true });
+                this._db = new sqlite3(':memory:', { memory: true });
                 this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
             }
             else
