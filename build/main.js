@@ -947,6 +947,26 @@ function createTray() {
                             logError(`About crashed, killed: ${killed}\n`, true);
                         });
 
+                        about.on('unresponsive', () => {
+                            dialog.showMessageBox({
+                                type: 'info',
+                                message: 'Unresponsive',
+                                buttons: ['Reopen', 'Keep waiting', 'Close']
+                            }, result => {
+                                if (!about)
+                                    return;
+                                if (result === 0) {
+                                    about.reload();
+                                    logError('About unresponsive, reload.\n', true);
+                                }
+                                else if (result === 2) {
+                                    about.destroy();
+                                }
+                                else
+                                    logError('About unresponsive, waiting.\n', true);
+                            });
+                        });                        
+
                         about.setMenu(null);
                         about.on('closed', () => {
                             about = null;
@@ -1251,6 +1271,25 @@ function createWindow() {
         });
         w.webContents.on('crashed', (event, killed) => {
             logError(`${url} crashed, killed: ${killed}\n`, true);
+        });
+        w.on('unresponsive', () => {
+            dialog.showMessageBox({
+                type: 'info',
+                message: 'Unresponsive',
+                buttons: ['Reopen', 'Keep waiting', 'Close']
+            }, result => {
+                if (!w)
+                    return;
+                if (result === 0) {
+                    w.reload();
+                    logError(`${url} unresponsive, reload.\n`, true);
+                }
+                else if (result === 2) {
+                    w.destroy();
+                }
+                else
+                    logError(`${url} unresponsive, waiting.\n`, true);
+            });
         });
 
         w.on('closed', () => {
@@ -1974,7 +2013,7 @@ function profileEditItem(profile, type, index) {
         return;
     }
     else
-    winProfiles.webContents.send('profile-edit-item', profile, type, index);
+        winProfiles.webContents.send('profile-edit-item', profile, type, index);
 }
 
 ipcMain.on('setting-changed', (event, data) => {
@@ -2156,6 +2195,25 @@ ipcMain.on('progress-show', (event, title) => {
 
         winProgress.webContents.on('crashed', (event, killed) => {
             logError(`Progress crashed, killed: ${killed}\n`, true);
+        });
+        winProgress.on('unresponsive', () => {
+            dialog.showMessageBox({
+                type: 'info',
+                message: 'Unresponsive',
+                buttons: ['Reopen', 'Keep waiting', 'Close']
+            }, result => {
+                if (!winProgress)
+                    return;
+                if (result === 0) {
+                    winProgress.reload();
+                    logError('Progress unresponsive, reload.\n', true);
+                }
+                else if (result === 2) {
+                    winProgress.destroy();
+                }
+                else
+                    logError('Progress unresponsive, waiting.\n', true);
+            });
         });
     }
 });
@@ -2554,6 +2612,25 @@ function showPrefs() {
     pref.webContents.on('crashed', (event, killed) => {
         logError(`Preferences crashed, killed: ${killed}\n`, true);
     });
+    pref.on('unresponsive', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Unresponsive',
+            buttons: ['Reopen', 'Keep waiting', 'Close']
+        }, result => {
+            if (!pref)
+                return;
+            if (result === 0) {
+                pref.reload();
+                logError('Preferences unresponsive, reload.\n', true);
+            }
+            else if (result === 2) {
+                pref.destroy();
+            }
+            else
+                logError('Preferences unresponsive, waiting.\n', true);
+        });
+    });
     addInputContext(pref);
 }
 
@@ -2586,6 +2663,26 @@ function createMapper(show, loading, loaded) {
 
     winMap.webContents.on('crashed', (event, killed) => {
         logError(`Mapper crashed, killed: ${killed}\n`, true);
+    });
+
+    winMap.on('unresponsive', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Unresponsive',
+            buttons: ['Reopen', 'Keep waiting', 'Close']
+        }, result => {
+            if (!winMap)
+                return;
+            if (result === 0) {
+                winMap.reload();
+                logError('Mapper unresponsive, reload.\n', true);
+            }
+            else if (result === 2) {
+                winMap.destroy();
+            }
+            else
+                logError('Mapper unresponsive, waiting.\n', true);
+        });
     });
 
     winMap.on('closed', (e) => {
@@ -2694,6 +2791,26 @@ function showProfiles() {
         logError(`Profile manager crashed, killed: ${killed}\n`, true);
     });
 
+    winProfiles.on('unresponsive', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Unresponsive',
+            buttons: ['Reopen', 'Keep waiting', 'Close']
+        }, result => {
+            if (!winProfiles)
+                return;
+            if (result === 0) {
+                winProfiles.reload();
+                logError('Profile manager unresponsive, reload.\n', true);
+            }
+            else if (result === 2) {
+                winProfiles.destroy();
+            }
+            else
+                logError('Profile manager unresponsive, waiting.\n', true);
+        });
+    });
+
     if (s.fullscreen)
         winProfiles.setFullScreen(s.fullscreen);
 
@@ -2768,6 +2885,26 @@ function createEditor(show, loading) {
 
     winEditor.webContents.on('crashed', (event, killed) => {
         logError(`Advanced editor crashed, killed: ${killed}\n`, true);
+    });
+
+    winEditor.on('unresponsive', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Unresponsive',
+            buttons: ['Reopen', 'Keep waiting', 'Close']
+        }, result => {
+            if (!winEditor)
+                return;
+            if (result === 0) {
+                winEditor.reload();
+                logError('Advanced editor unresponsive, reload.\n', true);
+            }
+            else if (result === 2) {
+                winEditor.destroy();
+            }
+            else
+                logError('Advanced editor unresponsive, waiting.\n', true);
+        });
     });
 
     if (s.fullscreen)
@@ -2886,6 +3023,26 @@ function createChat(show, loading) {
         logError(`Chat capture crashed, killed: ${killed}\n`, true);
     });
 
+    winChat.on('unresponsive', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Unresponsive',
+            buttons: ['Reopen', 'Keep waiting', 'Close']
+        }, result => {
+            if (!winChat)
+                return;
+            if (result === 0) {
+                winChat.reload();
+                logError('Chat capture  unresponsive, reload.\n', true);
+            }
+            else if (result === 2) {
+                winChat.destroy();
+            }
+            else
+                logError('Chat capture  unresponsive, waiting.\n', true);
+        });
+    });
+
     if (s.fullscreen)
         winChat.setFullScreen(s.fullscreen);
 
@@ -3002,6 +3159,26 @@ function createNewWindow(name, options) {
         logError(`${name} crashed, killed: ${killed}\n`, true);
     });
 
+    windows[name].window.on('unresponsive', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Unresponsive',
+            buttons: ['Reopen', 'Keep waiting', 'Close']
+        }, result => {
+            if (!windows[name].window)
+                return;
+            if (result === 0) {
+                windows[name].window.reload();
+                logError(`${name} unresponsive, reload.\n`, true);
+            }
+            else if (result === 2) {
+                windows[name].window.destroy();
+            }
+            else
+                logError(`${name} unresponsive, waiting.\n`, true);
+        });
+    });
+
     if (s.fullscreen)
         windows[name].window.setFullScreen(s.fullscreen);
 
@@ -3077,6 +3254,26 @@ function createNewWindow(name, options) {
         });
         w.webContents.on('crashed', (event, killed) => {
             logError(`${URL} crashed, killed: ${killed}\n`, true);
+        });
+
+        w.on('unresponsive', () => {
+            dialog.showMessageBox({
+                type: 'info',
+                message: 'Unresponsive',
+                buttons: ['Reopen', 'Keep waiting', 'Close']
+            }, result => {
+                if (!w)
+                    return;
+                if (result === 0) {
+                    w.reload();
+                    logError(`${URL} unresponsive, reload.\n`, true);
+                }
+                else if (result === 2) {
+                    w.destroy();
+                }
+                else
+                    logError(`${URL} unresponsive, waiting.\n`, true);
+            });
         });
 
         w.on('close', () => {
@@ -3160,6 +3357,26 @@ function showColor(args) {
     });
     cp.webContents.on('crashed', (event, killed) => {
         logError(`Colorpicker crashed, killed: ${killed}\n`, true);
+    });
+
+    cp.on('unresponsive', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Unresponsive',
+            buttons: ['Reopen', 'Keep waiting', 'Close']
+        }, result => {
+            if (!cp)
+                return;
+            if (result === 0) {
+                cp.reload();
+                logError('Colorpicker unresponsive, reload.\n', true);
+            }
+            else if (result === 2) {
+                cp.destroy();
+            }
+            else
+                logError('Colorpicker unresponsive, waiting.\n', true);
+        });
     });
 
     cp.setMenu(null);
@@ -3324,6 +3541,26 @@ function createCodeEditor(show, loading, loaded) {
         icon: path.join(__dirname, '../assets/icons/win/code.ico')
     });
 
+    winCode.on('unresponsive', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Unresponsive',
+            buttons: ['Reopen', 'Keep waiting', 'Close']
+        }, result => {
+            if (!winCode)
+                return;
+            if (result === 0) {
+                winCode.reload();
+                logError('Code editor unresponsive, reload.\n', true);
+            }
+            else if (result === 2) {
+                winCode.destroy();
+            }
+            else
+                logError('Code editor unresponsive, waiting.\n', true);
+        });
+    });
+
     if (s.fullscreen)
         winCode.setFullScreen(s.fullscreen);
     winCode.setMenu(null);
@@ -3447,6 +3684,26 @@ function createCodeEditor(show, loading, loaded) {
         });
         w.webContents.on('crashed', (event, killed) => {
             logError(`${URL} crashed, killed: ${killed}\n`, true);
+        });
+
+        w.on('unresponsive', () => {
+            dialog.showMessageBox({
+                type: 'info',
+                message: 'Unresponsive',
+                buttons: ['Reopen', 'Keep waiting', 'Close']
+            }, result => {
+                if (!w)
+                    return;
+                if (result === 0) {
+                    w.reload();
+                    logError(`${URL} unresponsive, reload.\n`, true);
+                }
+                else if (result === 2) {
+                    w.destroy();
+                }
+                else
+                    logError(`${URL} unresponsive, waiting.\n`, true);
+            });
         });
 
         w.on('close', () => {
@@ -3639,6 +3896,26 @@ function showAbout() {
     });
     about.webContents.on('crashed', (event, killed) => {
         logError(`About crashed, killed: ${killed}\n`, true);
+    });
+
+    about.on('unresponsive', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Unresponsive',
+            buttons: ['Reopen', 'Keep waiting', 'Close']
+        }, result => {
+            if (!about)
+                return;
+            if (result === 0) {
+                about.reload();
+                logError('About unresponsive, reload.\n', true);
+            }
+            else if (result === 2) {
+                about.destroy();
+            }
+            else
+                logError('About unresponsive, waiting.\n', true);
+        });
     });
 
     about.setMenu(null);
