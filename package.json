@@ -5,7 +5,7 @@
   "website": "https://github.com/icewolfz/jiMUD",
   "homepage": "https://github.com/icewolfz/jiMUD",
   "url": "https://github.com/icewolfz/jiMUD/issues",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "main": "build/main.js",
   "description": "MUD client coded in javascript.",
   "author": "Icewolfz",
@@ -46,8 +46,8 @@
   },
   "devDependencies": {
     "@types/bootstrap": "^3.3.40",
-    "@types/jquery": "^3.3.13",
-    "@types/node": "^10.11.5",
+    "@types/jquery": "^3.3.14",
+    "@types/node": "^10.11.6",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
     "electron": "^3.0.3",
@@ -122,7 +122,7 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^4.1.4",
+    "better-sqlite3": "^5.0.1",
     "buzz": "^1.2.1",
     "chokidar": "^2.0.4",
     "drivelist": "^6.4.3",
