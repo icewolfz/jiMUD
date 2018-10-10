@@ -217,6 +217,8 @@ class MXPStyle {
 
 }
 
+//const CONTAINS_RTL = /(?:[\u05BE\u05C0\u05C3\u05C6\u05D0-\u05F4\u0608\u060B\u060D\u061B-\u064A\u066D-\u066F\u0671-\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u0710\u0712-\u072F\u074D-\u07A5\u07B1-\u07EA\u07F4\u07F5\u07FA-\u0815\u081A\u0824\u0828\u0830-\u0858\u085E-\u08BD\u200F\uFB1D\uFB1F-\uFB28\uFB2A-\uFD3D\uFD50-\uFDFC\uFE70-\uFEFC]|\uD802[\uDC00-\uDD1B\uDD20-\uDE00\uDE10-\uDE33\uDE40-\uDEE4\uDEEB-\uDF35\uDF40-\uDFFF]|\uD803[\uDC00-\uDCFF]|\uD83A[\uDC00-\uDCCF\uDD00-\uDD43\uDD50-\uDFFF]|\uD83B[\uDC00-\uDEBB])/;
+
 /**
  * An Ansi/MXP parser, requires requires the modules src/lib/rgbcolor for color processing and validation
  *
@@ -3107,7 +3109,8 @@ export class Parser extends EventEmitter {
             break;
             /*
           case ParserState.RTL:
-            if (!((i >= 1426 && i <= 2047) || i === 8207 || i === 8235 || i === 8238 || (i >= 64285 && i <= 65021) || i >= 65136 && i <= 65276) && c !== ' ') {
+            //if (!((i >= 1426 && i <= 2047) || i === 8207 || i === 8235 || i === 8238 || (i >= 64285 && i <= 65021) || i >= 65136 && i <= 65276) && c !== ' ') {
+            if (!CONTAINS_RTL.test(c) && c !== ' ') {
               formatBuilder.push(this.getFormatBlock(lineLength));
               state = ParserState.None;
               idx--;
@@ -3445,6 +3448,15 @@ export class Parser extends EventEmitter {
             else {
               /*
               if ((i >= 1426 && i <= 2047) || i === 8207 || i === 8235 || i === 8238 || (i >= 64285 && i <= 65021) || i >= 65136 && i <= 65276) {
+                if (formatBuilder[formatBuilder.length - 1].offset === lineLength)
+                  formatBuilder[formatBuilder.length - 1].rtl = true;
+                else
+                  formatBuilder.push(this.getFormatBlock(lineLength, true));
+                state = ParserState.RTL;
+              }
+              */
+             /*
+              if (CONTAINS_RTL.test(c)) {
                 if (formatBuilder[formatBuilder.length - 1].offset === lineLength)
                   formatBuilder[formatBuilder.length - 1].rtl = true;
                 else
