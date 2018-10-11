@@ -1149,7 +1149,7 @@
             });
             client.on('parse-done', () => {
                 client.display.find(false);
-                ipcRenderer.send('chat-done');
+                //ipcRenderer.send('chat-done');
             });
 
             client.on('received-GMCP', (mod, obj) => {
