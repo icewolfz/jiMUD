@@ -36,7 +36,7 @@
     "package:linux": "npm run package:linux32 && npm run package:linux64",
     "package:linux32": "./node_modules/.bin/build --linux deb AppImage rpm tar.xz --ia32",
     "package:linux64": "./node_modules/.bin/build --linux deb AppImage rpm tar.xz --x64",
-    "min": "./node_modules/.bin/minify out -d build/js --mangle",
+    "min": "./node_modules/.bin/minify out -d build/js --mangle --simplify",
     "release:win": "npm run compile && npm run package:win",
     "release:linux": "npm run compile && npm run package:linux",
     "release:mac": "npm run compile && npm run package:mac",
