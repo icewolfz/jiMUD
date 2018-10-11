@@ -3107,24 +3107,31 @@ export class Parser extends EventEmitter {
             else
               _MXPArgs[_MXPArgs.length - 1] += c;
             break;
-            /*
-          case ParserState.RTL:
-            //if (!((i >= 1426 && i <= 2047) || i === 8207 || i === 8235 || i === 8238 || (i >= 64285 && i <= 65021) || i >= 65136 && i <= 65276) && c !== ' ') {
-            if (!CONTAINS_RTL.test(c) && c !== ' ') {
-              formatBuilder.push(this.getFormatBlock(lineLength));
-              state = ParserState.None;
-              idx--;
-              rawBuilder.pop();
-            }
-            else {
-              stringBuilder.push(c);
-              this.MXPCapture(c);
-              lineLength++;
-              this.textLength++;
-              this.mxpState.noBreak = false;
-            }
-            break;
-            */
+          /*
+        case ParserState.RTL:
+          //if (!((i >= 1426 && i <= 2047) || i === 8207 || i === 8235 || i === 8238 || (i >= 64285 && i <= 65021) || i >= 65136 && i <= 65276) && c !== ' ') {
+          if (!CONTAINS_RTL.test(c) && c !== ' ') {
+            formatBuilder.push(this.getFormatBlock(lineLength));
+            state = ParserState.None;
+            idx--;
+            rawBuilder.pop();
+          }
+          else if (c === ' ' || (this._CurrentAttributes > 0 && (this._CurrentAttributes & FontStyle.Hidden) === FontStyle.Hidden)) {
+            stringBuilder.push('\u00A0');
+            this.MXPCapture('\u00A0');
+            lineLength++;
+            this.textLength++;
+            this.mxpState.noBreak = false;
+          }
+          else {
+            stringBuilder.push(c);
+            this.MXPCapture(c);
+            lineLength++;
+            this.textLength++;
+            this.mxpState.noBreak = false;
+          }
+          break;
+          */
           default:
             if (e && i === 7) {
               if (f) {
@@ -3455,15 +3462,15 @@ export class Parser extends EventEmitter {
                 state = ParserState.RTL;
               }
               */
-             /*
-              if (CONTAINS_RTL.test(c)) {
-                if (formatBuilder[formatBuilder.length - 1].offset === lineLength)
-                  formatBuilder[formatBuilder.length - 1].rtl = true;
-                else
-                  formatBuilder.push(this.getFormatBlock(lineLength, true));
-                state = ParserState.RTL;
-              }
-              */
+              /*
+               if (CONTAINS_RTL.test(c)) {
+                 if (formatBuilder[formatBuilder.length - 1].offset === lineLength)
+                   formatBuilder[formatBuilder.length - 1].rtl = true;
+                 else
+                   formatBuilder.push(this.getFormatBlock(lineLength, true));
+                 state = ParserState.RTL;
+               }
+               */
               if (f && i > 127 && i < 255) {
                 if (i === 128)
                   c = '\u00C7';
