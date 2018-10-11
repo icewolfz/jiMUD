@@ -6,6 +6,7 @@
   - Update better-sqlite from 4.1.4 to 5.0.1
   - Update fs-extra from 6.0.1 to 7.0.0
   - Update yargs-parser from 10.1.0 to 11.0.0
+  - Update electron from 3.0.3 to 3.0.4
 - **Fixed:**
   - Fixed a Unicode display issue by converting spaces to non-breaking spaces  
 
