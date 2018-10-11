@@ -3301,8 +3301,8 @@ export class Parser extends EventEmitter {
                 continue;
             }
             else if (c === ' ' || (this._CurrentAttributes > 0 && (this._CurrentAttributes & FontStyle.Hidden) === FontStyle.Hidden)) {
-              stringBuilder.push(' ');
-              this.MXPCapture(' ');
+              stringBuilder.push('\u00A0');
+              this.MXPCapture('\u00A0');
               lineLength++;
               this.textLength++;
               this.mxpState.noBreak = false;
