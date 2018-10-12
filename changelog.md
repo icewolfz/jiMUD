@@ -9,9 +9,10 @@
   - Update electron from 3.0.3 to 3.0.4
 - **Fixed:**
   - Display:
-    - Fixed a Unicode display issue by converting spaces to non-breaking spaces 
+    - Fixed a Unicode display issue by converting spaces to non-breaking spaces
     - Fixed bug when selection the first letter of a line of text
   - Fixed command input context menu copy/cut actions not working when display has selected text
+  - Improved load times
 
 ## v0.6.2 2018-10-09
 

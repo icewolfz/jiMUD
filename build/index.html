@@ -346,62 +346,52 @@
                 case 'button.codeEditor':
                     view = view.split('.');
                     client.options.buttons[view[1]] = !client.options.buttons[view[1]];
-                    updateInterface();
-                    client.saveOptions();
+                    doUpdate(33);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', view[1] + 'button'], checked: client.options.buttons[view[1]] });
                     break;
                 case 'buttons':
                     client.options.showButtonBar = !client.options.showButtonBar;
-                    updateInterface();
-                    client.saveOptions();
+                    doUpdate(33);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], checked: client.options.showButtonBar });
                     break;
                 case 'status':
                     client.options.showStatus = !client.options.showStatus;
-                    updateInterface();
-                    client.saveOptions();
+                    doUpdate(33);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], checked: client.options.showStatus });
                     break;
                 case 'lagmeter':
                     client.options.lagMeter = !client.options.lagMeter;
-                    updateInterface();
-                    client.saveOptions();
+                    doUpdate(33);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], checked: client.options.lagMeter });
                     break;
                 case 'weather':
                     client.options.showStatusWeather = !client.options.showStatusWeather;
-                    updateInterface();
-                    client.saveOptions();
+                    doUpdate(33);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'weather'], checked: client.options.showStatusWeather });
                     break;
                 case 'limbs':
                     client.options.showStatusLimbs = !client.options.showStatusLimbs;
-                    updateInterface();
-                    client.saveOptions();
+                    doUpdate(33);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: client.options.showStatusLimbs });
                     break;
                 case 'health':
                     client.options.showStatusHealth = !client.options.showStatusHealth;
-                    updateInterface();
-                    client.saveOptions();
+                    doUpdate(33);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'health'], checked: client.options.showStatusHealth });
                     break;
                 case 'experience':
                     client.options.showStatusExperience = !client.options.showStatusExperience;
-                    updateInterface();
-                    client.saveOptions();
+                    doUpdate(33);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'experience'], checked: client.options.showStatusExperience });
                     break;
                 case 'partyhealth':
                     client.options.showStatusPartyHealth = !client.options.showStatusPartyHealth;
-                    updateInterface();
-                    client.saveOptions();
+                    doUpdate(33);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'partyhealth'], checked: client.options.showStatusPartyHealth });
                     break;
                 case 'combathealth':
                     client.options.showStatusCombatHealth = !client.options.showStatusCombatHealth;
-                    updateInterface();
-                    client.saveOptions();
+                    doUpdate(33);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'combathealth'], checked: client.options.showStatusCombatHealth });
                     break;
                 case 'limbhealth':
@@ -413,7 +403,6 @@
             }
         }
 
-
         function loadTheme(theme) {
             theme = parseTemplate(theme) + '.css';
             if (!isFileSync(theme))
@@ -422,7 +411,6 @@
             if (el.attr('href') != theme)
                 el.attr('href', theme);
         }
-
 
         function updateInterface() {
             loadTheme(client.options.theme);
@@ -616,7 +604,7 @@
                     case 'toggled':
                         if (client) {
                             client.options.logEnabled = e.data.args;
-                            client.saveOptions();
+                            doUpdate(32);
                         }
                         break;
                     case 'startInternal':
@@ -747,21 +735,18 @@
             });
             client.on('profile-updated', (profile) => {
                 ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
-                buildContextMenu();
-                buildButtons();
+                doUpdate(24);
                 ipcRenderer.send('profile-updated', profile);
             });
 
             client.on('profile-toggled', (profile, enabled) => {
                 ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: enabled });
-                buildContextMenu();
-                buildButtons();
+                doUpdate(24);
                 ipcRenderer.send('profile-toggled', profile, enabled);
             });
 
             client.on('profiles-updated', () => {
-                updateMenu();
-                buildButtons();
+                doUpdate(12);
             });
             client.on('add-line', (data) => {
                 var res, re, c, cl;
@@ -975,11 +960,11 @@
                     client.raise('notify-closed', [title, message]);
                 };
             });
+
             client.on('options-loaded', () => {
                 _backup.loadSelection = client.options.backupLoad;
                 _backup.saveSelection = client.options.backupSave;
-                updateInterface();
-                buildCaptures();
+                doUpdate(3);
                 if (client.options.spellchecking)
                     loadSpellchecker();
                 client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
@@ -998,6 +983,7 @@
                         }
                     });
             });
+
             client.on('scroll-lock', (lock) => {
                 ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: lock });
                 if (lock) {
@@ -1013,8 +999,9 @@
                     $('#lock i').removeClass('fa-unlock');
                 }
                 client.options.scrollLocked = lock;
-                client.saveOptions();
+                doUpdate(32);
             });
+
             client.on('connecting', () => {
                 if (client.options.buttons.connect) {
                     $('#connect').css('display', 'none');
@@ -1149,6 +1136,7 @@
                 if (!active && client.connected && data.value.length > 0)
                     ipcRenderer.send('set-overlay', 2);
             });
+
             client.on('parse-done', () => {
                 client.display.find(false);
                 //ipcRenderer.send('chat-done');
@@ -1179,25 +1167,26 @@
 
             client.on('item-added', (type, profile, item) => {
                 if (type === 'button')
-                    buildButtons();
+                    doUpdate(8);
                 ipcRenderer.send('profile-item-added', type, profile, item);
             });
 
             client.on('item-updated', (type, profile, item) => {
                 if (type === 'button')
-                    buildButtons();
+                    doUpdate(8);
                 ipcRenderer.send('profile-item-updated', type, profile, item);
             });
 
             client.on('item-removed', (type, profile, idx) => {
                 if (type === 'button')
-                    buildButtons();
+                    doUpdate(8);
                 ipcRenderer.send('profile-item-removed', type, profile, idx);
             });
 
             client.on('options-saved', () => {
                 ipcRenderer.send('options-changed');
             });
+
             _backup = new Backup(client, remote.getGlobal('mapFile'));
             _backup.loadSelection = client.options.backupLoad;
             _backup.saveSelection = client.options.backupSave;
@@ -1257,8 +1246,7 @@
             });
 
             _backup.on('imported-settings', () => {
-                updateInterface();
-                buildCaptures();
+                doUpdate(3);
             });
 
             _backup.on('finish-load', () => {
@@ -1281,7 +1269,7 @@
                 }
                 if (client.options.showArmor != _status.ac) {
                     client.options.showArmor = _status.ac;
-                    client.saveOptions();
+                    doUpdate(32);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !client.options.showArmor });
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: client.options.showArmor });
                 }
@@ -1297,9 +1285,8 @@
                 _logger.postMessage({ action: 'name', args: remote.getGlobal('character') });
                 $('#character-name').text(remote.getGlobal('character'));
             }
-            updateMenu();
             updateInterface();
-            buildCaptures();
+            doUpdate(7);
             _logger.postMessage({
                 action: 'options', args: {
                     path: parseTemplate(client.options.logPath),
@@ -1769,29 +1756,29 @@
             });
             client.display.on('word', () => {
                 client.options.find.word = client.display.MatchWord;
-                client.saveOptions();
+                doUpdate(32);
             });
             client.display.on('case', () => {
                 client.options.find.case = client.display.MatchCase;
-                client.saveOptions();
+                doUpdate(32);
 
             });
             client.display.on('reverse', () => {
                 client.options.find.reverse = client.display.Reverse;
-                client.saveOptions();
+                doUpdate(32);
             });
             client.display.on('regex', () => {
                 client.options.find.regex = client.display.RegularExpression;
-                client.saveOptions();
+                doUpdate(32);
             });
 
             client.display.on('shown', () => {
                 client.options.find.show = true;
-                client.saveOptions();
+                doUpdate(32);
             });
             client.display.on('closed', () => {
                 client.options.find.show = false;
-                client.saveOptions();
+                doUpdate(32);
             });
 
             client.display.MatchCase = client.options.find.case;
@@ -1933,7 +1920,7 @@
         }
 
         function updateMenu() {
-            buildContextMenu();
+            doUpdate(16);
             for (var profile in client.profiles.items)
                 ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
 
@@ -2055,21 +2042,21 @@
         ipcRenderer.on('setting-changed', (event, data) => {
             if (data.type === 'mapper') {
                 client.options.mapper[data.name] = data.value;
-                client.saveOptions();
+                doUpdate(32);
             }
             else if (data.type === 'profiles') {
                 client.options.profiles[data.name] = data.value;
                 if (data.name === 'enabled')
                     updateMenu();
-                client.saveOptions();
+                doUpdate(32);
             }
             else if (data.type === 'chat') {
                 client.options.chat[data.name] = data.value;
-                client.saveOptions();
+                doUpdate(32);
             }
             else if (data.type === 'extensions') {
                 client.options.extensions[data.name] = data.value;
-                client.saveOptions();
+                doUpdate(32);
             }
             else if (data.type === 'windows') {
                 if (!client.options.windows[data.name])
@@ -2079,7 +2066,7 @@
                 client.options.windows[data.name].options.alwaysOnTopClient = data.value.alwaysOnTopClient;
                 client.options.windows[data.name].options.persistent = data.value.persistent;
                 client.options.windows[data.name].options.alwaysOnTop = data.value.alwaysOnTop;
-                client.saveOptions();
+                doUpdate(32);
             }
         });
 
@@ -2105,7 +2092,7 @@
 
         ipcRenderer.on('menu-reload', () => {
             if (!client) return;
-            updateMenu();
+            doUpdate(4);
         });
 
         ipcRenderer.on('reload-profiles', () => {
@@ -2124,8 +2111,7 @@
                     format: client.options.logTimeFormat
                 }
             });
-            buildButtons();
-            updateMenu();
+            doUpdate(12);
         });
 
         ipcRenderer.on('reload-options', () => {
@@ -2143,8 +2129,7 @@
                     format: client.options.logTimeFormat
                 }
             });
-            buildButtons();
-            updateMenu();
+            doUpdate(12);
             client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
         });
 
@@ -2270,7 +2255,7 @@
                 client.options.pasteSpecialReplace = $('#pasteSpecial-replace').val();
                 client.options.pasteSpecialReplaceEnabled = $('#pasteSpecial-replace-enable').prop('checked');
 
-                client.saveOptions();
+                doUpdate(32);
                 $('#pasteSpecial')[0].close();
                 $('#commandinput').focus();
             }
@@ -2336,6 +2321,41 @@
         }
 
         $(document).ready(init);
+
+        document.addEventListener('load', () => doUpdate(1));
+
+        var $updating = 0;
+        function doUpdate(type) {
+            $updating |= type;
+            if ($updating == 0) return;
+            window.requestAnimationFrame(() => {
+                if (($updating & 1) === 1) {
+                    updateInterface();
+                    $updating &= ~1;
+                }
+                if (($updating & 2) === 2) {
+                    buildCaptures();
+                    $updating &= ~2;
+                }
+                if (($updating & 4) === 4) {
+                    updateMenu();
+                    $updating &= ~4;
+                }
+                if (($updating & 8) === 8) {
+                    buildButtons();
+                    $updating &= ~8;
+                }
+                if (($updating & 16) === 16) {
+                    buildContextMenu();
+                    $updating &= ~16;
+                }
+                if (($updating & 32) === 32) {
+                    client.saveOptions();
+                    $updating &= ~32;
+                }
+                this.doUpdate($updating);
+            });
+        }
     </script>
 </head>
 
