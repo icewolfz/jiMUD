@@ -1377,7 +1377,7 @@ export class Display extends EventEmitter {
                     w = this.textWidth(text.substr(0, x));
                 }
             }
-            else if (w < xPos) {
+            else if (w >= xPos && w < xPos) {
                 while (w < xPos && x < tl) {
                     x++;
                     w = this.textWidth(text.substr(0, x));
