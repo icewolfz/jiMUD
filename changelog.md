@@ -8,7 +8,8 @@
   - Update yargs-parser from 10.1.0 to 11.0.0
   - Update electron from 3.0.3 to 3.0.4
 - **Fixed:**
-  - Fixed a Unicode display issue by converting spaces to non-breaking spaces  
+  - Fixed a Unicode display issue by converting spaces to non-breaking spaces
+  - Fixed command input context menu copy/cut actions not working when display has selected text
 
 ## v0.6.2 2018-10-09
 

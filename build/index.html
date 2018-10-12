@@ -147,18 +147,18 @@
                 //67 - c
                 //68 - d
             }
-            else if($('#pasteSpecial')[0].open) {
-                if(event.which === 13) {
+            else if ($('#pasteSpecial')[0].open) {
+                if (event.which === 13) {
                     var i;
-                    if(document.activeElement.id === 'pasteSpecial-replace') {
-                        if(!$('#pasteSpecial-prefix').prop('disabled'))
+                    if (document.activeElement.id === 'pasteSpecial-replace') {
+                        if (!$('#pasteSpecial-prefix').prop('disabled'))
                             i = document.getElementById('pasteSpecial-prefix');
-                        else if(!$('#pasteSpecial-postfix').prop('disabled'))
+                        else if (!$('#pasteSpecial-postfix').prop('disabled'))
                             i = document.getElementById('pasteSpecial-postfix');
                     }
-                    else if(document.activeElement.id === 'pasteSpecial-prefix' && !$('#pasteSpecial-postfix').prop('disabled'))
+                    else if (document.activeElement.id === 'pasteSpecial-prefix' && !$('#pasteSpecial-postfix').prop('disabled'))
                         i = document.getElementById('pasteSpecial-postfix');
-                    if(i)
+                    if (i)
                         i.focus();
                     else
                         $('#pasteSpecial-ok').trigger('click');
@@ -719,6 +719,8 @@
 
             ['cut', 'copy'].forEach(function (event) {
                 document.addEventListener(event, function (e) {
+                    if ($('#commandinput').data('context'))
+                        return;
                     if (client.display.hasSelection) {
                         window.writeClipboard(client.display.selection);
                         e.preventDefault();
@@ -1718,6 +1720,12 @@
                     { type: 'separator' },
                     { role: 'selectall' },
                 ]);
+                inputMenu.on('menu-will-show', () => {
+                    $('#commandinput').data('context', true);
+                });
+                inputMenu.on('menu-will-close', () => {
+                    setTimeout(() => $('#commandinput').data('context', false), 200);
+                });
                 if (client.options.enableDebug || remote.getGlobal('debug')) {
                     inputMenu.append(new MenuItem({ type: 'separator' }));
                     inputMenu.append(new MenuItem({
@@ -2547,7 +2555,7 @@
         <div class="dialog-footer">
             <button style="float: left" type="button" class="btn btn-default" onclick="$('#pasteSpecial-replace').prop('disabled', false);$('#pasteSpecial-replace-enable').prop('checked', true);$('#pasteSpecial-replace').val('');$('#pasteSpecial-prefix').prop('disabled', false);$('#pasteSpecial-postfix').prop('disabled', false);$('#pasteSpecial-prefix').val('');$('#pasteSpecial-postfix').val('');$('#pasteSpecial-prefix-enable').prop('checked', true);$('#pasteSpecial-postfix-enable').prop('checked', true);">Reset</button>
             <button id="pasteSpecial-cancel" style="float: right" type="button" class="btn btn-default" onclick="$('#pasteSpecial')[0].close();$('#commandinput').focus();">Cancel</button>
-            <button id="pasteSpecial-ok"  style="float: right" type="button" class="btn btn-primary" onclick="pasteSpecialOk()">Ok</button>
+            <button id="pasteSpecial-ok" style="float: right" type="button" class="btn btn-primary" onclick="pasteSpecialOk()">Ok</button>
         </div>
     </dialog>
     <dialog id="disconnectDialog" style="z-index:1000;height:205px;width:525px;">
