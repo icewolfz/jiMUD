@@ -68,13 +68,13 @@ export function htmlDecode(value) {
 
 const _edCache = document.createElement('div');
 export function htmlEncode(value) {
-    _edCache.textContent = value;
+    _edCache.textContent = value.replace(/ /g, '\u00A0');
     return _edCache.innerHTML;
 }
 
 export function htmlDecode(value) {
     _edCache.innerHTML = value;
-    return _edCache.textContent;
+    return _edCache.textContent.replace(/\u00A0/g, ' ');
 }
 
 export function htmlEntities(str) {

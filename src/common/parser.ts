@@ -3117,8 +3117,8 @@ export class Parser extends EventEmitter {
             rawBuilder.pop();
           }
           else if (c === ' ' || (this._CurrentAttributes > 0 && (this._CurrentAttributes & FontStyle.Hidden) === FontStyle.Hidden)) {
-            stringBuilder.push('\u00A0');
-            this.MXPCapture('\u00A0');
+            stringBuilder.push(' ');
+            this.MXPCapture(' ');
             lineLength++;
             this.textLength++;
             this.mxpState.noBreak = false;
@@ -3308,8 +3308,8 @@ export class Parser extends EventEmitter {
                 continue;
             }
             else if (c === ' ' || (this._CurrentAttributes > 0 && (this._CurrentAttributes & FontStyle.Hidden) === FontStyle.Hidden)) {
-              stringBuilder.push('\u00A0');
-              this.MXPCapture('\u00A0');
+              stringBuilder.push(' ');
+              this.MXPCapture(' ');
               lineLength++;
               this.textLength++;
               this.mxpState.noBreak = false;
