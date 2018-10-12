@@ -1785,7 +1785,7 @@ export class Display extends EventEmitter {
         else {
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
-            return this.lines[sel.start.y].substring(s, e);
+            return this.lines[sel.start.y].substring(s, e).replace(/\u00A0/g, ' ');
         }
         const len = this.lines.length;
 
@@ -1803,7 +1803,7 @@ export class Display extends EventEmitter {
         if (eL - sL > 0)
             txt.push.apply(txt, this.lines.slice(sL, eL));
         txt.push(this.lines[eL].substring(0, e));
-        return txt.join('\n');
+        return txt.join('\n').replace(/\u00A0/g, ' ');
     }
 
     public selectAll() {
