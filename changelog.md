@@ -9,6 +9,7 @@
   - Update electron from 3.0.3 to 3.0.4
 - **Fixed:**
   - Display:
+    - Fixed a font spacing issue when using em font size
     - Fixed a Unicode display issue by converting spaces to non-breaking spaces
     - Fixed bug when selection the first letter of a line of text
   - Fixed command input context menu copy/cut actions not working when display has selected text

@@ -329,7 +329,9 @@ export class Display extends EventEmitter {
             this._el = display;
         else
             throw new Error('Display must be an id, element or jquery object');
-
+        this._canvas = document.createElement('canvas');
+        this._canvas.style.position = 'absolute';
+        this._canvas.style.left = '-1000px';
         this._elJ = $(this._el);
         const fragment = document.createDocumentFragment();
         this._background = document.createElement('div');
@@ -724,7 +726,7 @@ export class Display extends EventEmitter {
             if (options.enableRoundedRanges != null)
                 this.roundedRanges = options.enableRoundedRanges;
         }
-
+        this._el.appendChild(this._canvas);
         this.doUpdate(UpdateType.update);
         //setTimeout(() => { this.update(); }, 0);
         //this.update();
@@ -1888,7 +1890,7 @@ export class Display extends EventEmitter {
                     bStyle.push('background:', format.background, ';');
                 if (format.color)
                     fStyle.push('color:', format.color, ';');
-                eText = text.substring(offset, end);
+                eText = text.substring(offset, end).replace(/ /g, '\u00A0');
                 if (eText.length === 0) continue;
                 //TODO variable character height is not supported
                 //TODO once supported update parser support tag to add font
@@ -1939,7 +1941,7 @@ export class Display extends EventEmitter {
                 left += width;
             }
             else if (format.formatType === FormatType.Link) {
-                eText = text.substring(offset, end);
+                eText = text.substring(offset, end).replace(/ /g, '\u00A0');
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
                 eText = htmlEncode(eText);
@@ -1958,7 +1960,7 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.WordBreak)
                 fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
-                eText = text.substring(offset, end);
+                eText = text.substring(offset, end).replace(/ /g, '\u00A0');
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
                 eText = htmlEncode(eText);
@@ -1987,7 +1989,7 @@ export class Display extends EventEmitter {
                 left += width;
             }
             else if (format.formatType === FormatType.MXPSend) {
-                eText = text.substring(offset, end);
+                eText = text.substring(offset, end).replace(/ /g, '\u00A0');
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
                 eText = htmlEncode(eText);
@@ -2015,7 +2017,7 @@ export class Display extends EventEmitter {
                 left += width;
             }
             else if (format.formatType === FormatType.MXPExpired) {
-                eText = text.substring(offset, end);
+                eText = text.substring(offset, end).replace(/ /g, '\u00A0');
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
                 eText = htmlEncode(eText);
