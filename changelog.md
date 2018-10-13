@@ -2,6 +2,10 @@
 
 ## v0.6.4
 
+- **Fixed:**
+  - Display:
+    - Fixed selection width for unicode fonts
+
 ## v0.6.3 2018-10-12
 
 - **Changed:**

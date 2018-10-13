@@ -6,13 +6,14 @@
  * @arthur Icewolfz
  * @todo Add MXP image, font (requires variable char width), font size(requires variable line height) support
  */
-import { Size, ParserLine, ParserOptions, LineFormat, FormatType, FontStyle, ImageFormat, LinkFormat } from './types';
+import { Size, ParserLine, FormatType, FontStyle } from './types';
 import EventEmitter = require('events');
 import { Parser } from './parser';
-import { AnsiColorCode } from './ansi';
-import { htmlEncode, splitQuoted } from './library';
+import { htmlEncode } from './library';
 import { Finder } from './finder';
 import { DisplayOptions, OverlayRange } from './types';
+
+const CONTAINS_RTL = /(?:[\u05BE\u05C0\u05C3\u05C6\u05D0-\u05F4\u0608\u060B\u060D\u061B-\u064A\u066D-\u066F\u0671-\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u0710\u0712-\u072F\u074D-\u07A5\u07B1-\u07EA\u07F4\u07F5\u07FA-\u0815\u081A\u0824\u0828\u0830-\u0858\u085E-\u08BD\u200F\uFB1D\uFB1F-\uFB28\uFB2A-\uFD3D\uFD50-\uFDFC\uFE70-\uFEFC]|\uD802[\uDC00-\uDD1B\uDD20-\uDE00\uDE10-\uDE33\uDE40-\uDEE4\uDEEB-\uDF35\uDF40-\uDFFF]|\uD803[\uDC00-\uDCFF]|\uD83A[\uDC00-\uDCCF\uDD00-\uDD43\uDD50-\uDFFF]|\uD83B[\uDC00-\uDEBB])/;
 
 interface Overlays {
     selection: any[];
@@ -76,6 +77,7 @@ export class Display extends EventEmitter {
     private _roundedRanges: boolean = true;
 
     public lines: string[] = [];
+    private displayLines: string[] = [];
     public rawLines: string[] = [];
     public scrollToEnd: boolean = true;
     private lineFormats = [];
@@ -1103,10 +1105,14 @@ export class Display extends EventEmitter {
         this.emit('add-line-done', data);
         if (data.gagged)
             return;
-        if (data.line === '\n' || data.line.length === 0)
+        if (data.line === '\n' || data.line.length === 0) {
             this.lines.push('');
-        else
+            this.displayLines.push('');
+        }
+        else {
             this.lines.push(data.line);
+            this.displayLines.push(data.line.replace(/ /g, '\u00A0'));
+        }
         this.rawLines.push(data.raw);
         this.lineFormats.push(data.formats);
         if (data.formats[0].hr) {
@@ -1140,6 +1146,7 @@ export class Display extends EventEmitter {
         if (line < 0 || line >= this.lines.length) return;
         this.emit('line-removed', line, this.lines[line]);
         this.lines.splice(line, 1);
+        this.displayLines.splice(line, 1);
         this.rawLines.splice(line, 1);
         this.lineFormats.splice(line, 1);
         this._backgroundLines.splice(line, 1);
@@ -1201,6 +1208,7 @@ export class Display extends EventEmitter {
         if (amt < 1) amt = 1;
         this.emit('lines-removed', line, this.lines.slice(line, amt));
         this.lines.splice(line, amt);
+        this.displayLines.splice(line, amt);
         this.rawLines.splice(line, amt);
         this.lineFormats.splice(line, amt);
         this._backgroundLines.splice(line, amt);
@@ -1290,6 +1298,7 @@ export class Display extends EventEmitter {
         if (this.lines.length > this._maxLines) {
             const amt = this.lines.length - this._maxLines;
             this.lines.splice(0, amt);
+            this.displayLines.splice(0, amt);
             this.rawLines.splice(0, amt);
             this.lineFormats.splice(0, amt);
             this._viewLines.splice(0, amt);
@@ -1368,21 +1377,21 @@ export class Display extends EventEmitter {
         if (y >= 0) {
             let text;
             if (y < this.lines.length)
-                text = this.lines[y];
+                text = this.displayLines[y];
             else
-                text = this.lines[this.lines.length - 1];
+                text = this.displayLines[this.lines.length - 1];
             const tl = text.length;
-            let w = this.textWidth(text.substr(0, x));
+            let w = Math.ceil(this.textWidth(text.substr(0, x)));
             if (w > xPos) {
                 while (w > xPos && x > 0) {
                     x--;
-                    w = this.textWidth(text.substr(0, x));
+                    w = Math.ceil(this.textWidth(text.substr(0, x)));
                 }
             }
-            else if (w >= xPos && w < xPos) {
+            else if (w > 0 && w < xPos) {
                 while (w < xPos && x < tl) {
                     x++;
-                    w = this.textWidth(text.substr(0, x));
+                    w = Math.ceil(this.textWidth(text.substr(0, x)));
                 }
             }
         }
@@ -1468,8 +1477,8 @@ export class Display extends EventEmitter {
                     e = this.lines[sL].length;
                 //e = (e - s) * this._charWidth;
                 //s *= this._charWidth;
-                e = this.textWidth(this.lines[sL].substring(s, e));
-                s = this.textWidth(this.lines[sL].substring(0, s));
+                e = this.textWidth(this.displayLines[sL].substring(s, e));
+                s = this.textWidth(this.displayLines[sL].substring(0, s));
                 if (!this._overlays[type][sL])
                     this._overlays[type][sL] = [];
                 if (this.roundedRanges)
@@ -1507,30 +1516,30 @@ export class Display extends EventEmitter {
                         cl = s;
                 }
                 if (sL === line)
-                    w = this.textWidth(this.lines[sL].substr(s));
+                    w = this.textWidth(this.displayLines[sL].substr(s));
                 else if (eL === line)
-                    w = this.textWidth(this.lines[line].substring(0, e));
+                    w = this.textWidth(this.displayLines[line].substring(0, e));
                 else
-                    w = this.textWidth(this.lines[line]);
-                cl = this.textWidth(this.lines[line].substring(0, cl));
+                    w = this.textWidth(this.displayLines[line]);
+                cl = this.textWidth(this.displayLines[line].substring(0, cl));
                 if (this.roundedRanges) {
-                    const cr = fl(eL === line ? this.textWidth(this.lines[line].substring(0, e)) : (this.textWidth(this.lines[line]) || this._charWidth));
+                    const cr = fl(eL === line ? this.textWidth(this.displayLines[line].substring(0, e)) : (this.textWidth(this.displayLines[line]) || this._charWidth));
                     if (line > sL) {
                         let pl = 0;
                         if (sL === line - 1) {
-                            if (fl(this.textWidth(this.lines[sL].substr(0, s))) >= fl(this.textWidth(this.lines[line - 1])))
-                                pl = fl(this.textWidth(this.lines[line - 1]));
+                            if (fl(this.textWidth(this.displayLines[sL].substr(0, s))) >= fl(this.textWidth(this.displayLines[line - 1])))
+                                pl = fl(this.textWidth(this.displayLines[line - 1]));
                             else
-                                pl = fl(this.textWidth(this.lines[sL].substring(0, s)));
+                                pl = fl(this.textWidth(this.displayLines[sL].substring(0, s)));
                         }
-                        const pr = fl(this.textWidth(this.lines[line - 1]) || this._charWidth);
+                        const pr = fl(this.textWidth(this.displayLines[line - 1]) || this._charWidth);
 
                         if (fl(cl) === pl)
                             startStyle.top = CornerType.Flat;
                         else if (fl(cl) > pl)
                             startStyle.top = CornerType.Intern;
                         if (cr === pr) {
-                            if (line === sL + 1 && this.lines[sL].length === 0)
+                            if (line === sL + 1 && this.displayLines[sL].length === 0)
                                 endStyle.top = CornerType.Extern;
                             else
                                 endStyle.top = CornerType.Flat;
@@ -1543,7 +1552,7 @@ export class Display extends EventEmitter {
 
                     if (line < eL) {
                         const nl = 0;
-                        const nr = fl(eL === line + 1 ? this.textWidth(this.lines[line + 1].substring(0, e)) : (this.textWidth(this.lines[line + 1]) || this._charWidth));
+                        const nr = fl(eL === line + 1 ? this.textWidth(this.displayLines[line + 1].substring(0, e)) : (this.textWidth(this.displayLines[line + 1]) || this._charWidth));
                         if (fl(cl) === nl)
                             startStyle.bottom = CornerType.Flat;
                         else if (nl < fl(cl) && fl(cl) < nr)
@@ -1604,6 +1613,7 @@ export class Display extends EventEmitter {
         let eL;
         let parts;
         let w;
+        let text;
         this._overlays.selection = [];
         if (sel.start.y > sel.end.y) {
             sL = sel.end.y;
@@ -1627,15 +1637,42 @@ export class Display extends EventEmitter {
                 return;
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
+            text = this.displayLines[sL];
             if (s < 0) s = 0;
-            if (e > this.lines[sL].length)
-                e = this.lines[sL].length;
+            if (e > text.length)
+                e = text.length;
 
-            e = this.textWidth(this.lines[sL].substring(s, e));
-            s = this.textWidth(this.lines[sL].substring(0, s));
+            /*
+w = e;
+            while (w >= s) {
+                if (!CONTAINS_RTL.test(text[w])) {
+                    break;
+                }
+                w--;
+            }
+            if (w !== e) {
+                eL = e;
+                e = this.textWidth(text.substring(s, w));
+                s = this.textWidth(text.substring(0, s));
+                parts = [`<span class="select-text" style="left: ${s}px;width: ${e}px"></span>`];
+                w = this.textWidth(text.substring(w, eL));
+                s += e - w;
+                parts.push(`<span class="select-text" style="left: ${s}px;width: ${w}px"></span>`);
+            }
+            else {
+                e = this.textWidth(text.substring(s, e));
+                s = this.textWidth(text.substring(0, s));
+                if (this.roundedRanges)
+                    parts = [`<span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`];
+                else
+                    parts = [`<span class="select-text" style="left: ${s}px;width: ${e}px"></span>`];
+            }
+            this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
+            */
 
-            //e = (e - s) * this._charWidth;
-            //s *= this._charWidth;
+            e = this.textWidth(text.substring(s, e));
+            s = this.textWidth(text.substring(0, s));
+
             if (this.roundedRanges)
                 this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
             else
@@ -1673,31 +1710,31 @@ export class Display extends EventEmitter {
                     cl = s;
             }
             if (sL === line)
-                w = this.textWidth(this.lines[sL].substr(s));
+                w = this.textWidth(this.displayLines[sL].substr(s));
             else if (eL === line)
-                w = this.textWidth(this.lines[line].substring(0, e));
+                w = this.textWidth(this.displayLines[line].substring(0, e));
             else
-                w = this.textWidth(this.lines[line]);
-            cl = this.textWidth(this.lines[line].substring(0, cl));
+                w = this.textWidth(this.displayLines[line]);
+            cl = this.textWidth(this.displayLines[line].substring(0, cl));
 
             if (this.roundedRanges) {
-                const cr = fl(eL === line ? this.textWidth(this.lines[line].substring(0, e)) : (this.textWidth(this.lines[line]) || this._charWidth));
+                const cr = fl(eL === line ? this.textWidth(this.displayLines[line].substring(0, e)) : (this.textWidth(this.displayLines[line]) || this._charWidth));
                 if (line > sL) {
                     let pl = 0;
                     if (sL === line - 1) {
-                        if (fl(this.textWidth(this.lines[sL].substr(0, s))) >= fl(this.textWidth(this.lines[line - 1])))
-                            pl = fl(this.textWidth(this.lines[line - 1]));
+                        if (fl(this.textWidth(this.displayLines[sL].substr(0, s))) >= fl(this.textWidth(this.displayLines[line - 1])))
+                            pl = fl(this.textWidth(this.displayLines[line - 1]));
                         else
-                            pl = fl(this.textWidth(this.lines[sL].substring(0, s)));
+                            pl = fl(this.textWidth(this.displayLines[sL].substring(0, s)));
                     }
-                    const pr = fl(this.textWidth(this.lines[line - 1]) || this._charWidth);
+                    const pr = fl(this.textWidth(this.displayLines[line - 1]) || this._charWidth);
 
                     if (fl(cl) === pl)
                         startStyle.top = CornerType.Flat;
                     else if (fl(cl) > pl)
                         startStyle.top = CornerType.Intern;
                     if (cr === pr) {
-                        if (line === sL + 1 && this.lines[sL].length === 0)
+                        if (line === sL + 1 && this.displayLines[sL].length === 0)
                             endStyle.top = CornerType.Extern;
                         else
                             endStyle.top = CornerType.Flat;
@@ -1710,7 +1747,7 @@ export class Display extends EventEmitter {
 
                 if (line < eL) {
                     const nl = 0;
-                    const nr = fl(eL === line + 1 ? this.textWidth(this.lines[line + 1].substring(0, e)) : (this.textWidth(this.lines[line + 1]) || this._charWidth));
+                    const nr = fl(eL === line + 1 ? this.textWidth(this.displayLines[line + 1].substring(0, e)) : (this.textWidth(this.displayLines[line + 1]) || this._charWidth));
                     if (fl(cl) === nl)
                         startStyle.bottom = CornerType.Flat;
                     else if (nl < fl(cl) && fl(cl) < nr)
@@ -1847,7 +1884,7 @@ export class Display extends EventEmitter {
             idx = this.lines.length - 1;
         const back = [];
         const fore = [];
-        const text = this.lines[idx];
+        const text = this.displayLines[idx];
         const formats = this.lineFormats[idx];
         let offset = 0;
         let bStyle = [];
@@ -1890,7 +1927,7 @@ export class Display extends EventEmitter {
                     bStyle.push('background:', format.background, ';');
                 if (format.color)
                     fStyle.push('color:', format.color, ';');
-                eText = text.substring(offset, end).replace(/ /g, '\u00A0');
+                eText = text.substring(offset, end);
                 if (eText.length === 0) continue;
                 //TODO variable character height is not supported
                 //TODO once supported update parser support tag to add font
@@ -1941,7 +1978,7 @@ export class Display extends EventEmitter {
                 left += width;
             }
             else if (format.formatType === FormatType.Link) {
-                eText = text.substring(offset, end).replace(/ /g, '\u00A0');
+                eText = text.substring(offset, end);
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
                 eText = htmlEncode(eText);
@@ -1960,7 +1997,7 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.WordBreak)
                 fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
-                eText = text.substring(offset, end).replace(/ /g, '\u00A0');
+                eText = text.substring(offset, end);
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
                 eText = htmlEncode(eText);
@@ -1989,7 +2026,7 @@ export class Display extends EventEmitter {
                 left += width;
             }
             else if (format.formatType === FormatType.MXPSend) {
-                eText = text.substring(offset, end).replace(/ /g, '\u00A0');
+                eText = text.substring(offset, end);
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
                 eText = htmlEncode(eText);
@@ -2017,7 +2054,7 @@ export class Display extends EventEmitter {
                 left += width;
             }
             else if (format.formatType === FormatType.MXPExpired) {
-                eText = text.substring(offset, end).replace(/ /g, '\u00A0');
+                eText = text.substring(offset, end);
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
                 eText = htmlEncode(eText);
