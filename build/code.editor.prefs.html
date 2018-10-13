@@ -112,6 +112,7 @@
                     var f = 0;
                     var sFont = {};
                     var ops = [];
+                    fonts.sort((a,b) => a.family.localeCompare(b.family));
                     for (f = 0; f < fl; f++) {
                         if (sFont[fonts[f].family]) continue;
                         if (fonts[f].monospace)

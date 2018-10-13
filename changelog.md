@@ -14,6 +14,7 @@
     - Fixed bug when selection the first letter of a line of text
   - Fixed command input context menu copy/cut actions not working when display has selected text
   - Improved load times
+  - Preferences: Sort fonts by alphabetic
 
 ## v0.6.2 2018-10-09
 
