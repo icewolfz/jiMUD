@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.3
+## v0.6.3 2018-10-12
 
 - **Changed:**
   - Update better-sqlite from 4.1.4 to 5.0.1
