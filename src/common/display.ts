@@ -1641,42 +1641,41 @@ export class Display extends EventEmitter {
             if (s < 0) s = 0;
             if (e > text.length)
                 e = text.length;
-
             /*
-w = e;
-            while (w >= s) {
-                if (!CONTAINS_RTL.test(text[w])) {
-                    break;
-                }
-                w--;
-            }
-            if (w !== e) {
-                eL = e;
-                e = this.textWidth(text.substring(s, w));
-                s = this.textWidth(text.substring(0, s));
-                parts = [`<span class="select-text" style="left: ${s}px;width: ${e}px"></span>`];
-                w = this.textWidth(text.substring(w, eL));
-                s += e - w;
-                parts.push(`<span class="select-text" style="left: ${s}px;width: ${w}px"></span>`);
-            }
-            else {
-                e = this.textWidth(text.substring(s, e));
-                s = this.textWidth(text.substring(0, s));
-                if (this.roundedRanges)
-                    parts = [`<span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`];
-                else
-                    parts = [`<span class="select-text" style="left: ${s}px;width: ${e}px"></span>`];
-            }
-            this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
+                        w = e;
+                        while (w >= s) {
+                            if (!CONTAINS_RTL.test(text[w])) {
+                                break;
+                            }
+                            w--;
+                        }
+                        if (w !== e) {
+                            eL = e;
+                            e = this.textWidth(text.substring(s, w));
+                            s = this.textWidth(text.substring(0, s));
+                            parts = [`<span class="select-text" style="left: ${s}px;width: ${e}px"></span>`];
+                            w = this.textWidth(text.substring(w, eL));
+                            s += e - w;
+                            parts.push(`<span class="select-text" style="left: ${s}px;width: ${w}px"></span>`);
+                        }
+                        else {
+                            e = this.textWidth(text.substring(s, e));
+                            s = this.textWidth(text.substring(0, s));
+                            if (this.roundedRanges)
+                                parts = [`<span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`];
+                            else
+                                parts = [`<span class="select-text" style="left: ${s}px;width: ${e}px"></span>`];
+                        }
+                        this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
             */
 
             e = this.textWidth(text.substring(s, e));
             s = this.textWidth(text.substring(0, s));
-
             if (this.roundedRanges)
                 this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
             else
                 this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text" style="left: ${s}px;width: ${e}px"></span></div>`;
+
             this.doUpdate(UpdateType.overlays);
             return;
         }
