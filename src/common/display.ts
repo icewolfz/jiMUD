@@ -14,6 +14,7 @@ import { Finder } from './finder';
 import { DisplayOptions, OverlayRange } from './types';
 
 const CONTAINS_RTL = /(?:[\u05BE\u05C0\u05C3\u05C6\u05D0-\u05F4\u0608\u060B\u060D\u061B-\u064A\u066D-\u066F\u0671-\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u0710\u0712-\u072F\u074D-\u07A5\u07B1-\u07EA\u07F4\u07F5\u07FA-\u0815\u081A\u0824\u0828\u0830-\u0858\u085E-\u08BD\u200F\uFB1D\uFB1F-\uFB28\uFB2A-\uFD3D\uFD50-\uFDFC\uFE70-\uFEFC]|\uD802[\uDC00-\uDD1B\uDD20-\uDE00\uDE10-\uDE33\uDE40-\uDEE4\uDEEB-\uDF35\uDF40-\uDFFF]|\uD803[\uDC00-\uDCFF]|\uD83A[\uDC00-\uDCCF\uDD00-\uDD43\uDD50-\uDFFF]|\uD83B[\uDC00-\uDEBB])/;
+const CONTAINS_LTR = /(?:[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02B8\u0300-\u0590\u0800-\u1FFF'+'\u2C00-\uFB1C\uFDFE-\uFE6F\uFEFD-\uFFFF])/;
 //https://www.compart.com/en/unicode/bidiclass
 //http://www.unicode.org/reports/tr44/tr44-18.html
 const CONTAINS_WEAK = /(?:[\d\s\u002b\u002d\u207a\u207b\u208a\u208b\u2212\ufb29\ufe62\ufe63\uff0b\uff0d\,\.\/\:\u00a0\u060c\u202e\u2044\ufe50\ufe52\ufe55\uff0c\uff0e\uff0f\uff1a\u0300-\u036f\u0483-\u0489\u0591-\u05c7\u0610-\u065f\u0670\u06d6-\u06ed\u0711\u0730-\u074a\u074a\u07a6-\u07b0\u07eb-\u07f3\u0816-\u0819\u081b-\u0823\u0825-\u0829\u082a-\u082d\u0859-\u085b\u08d4-\u0902\u093a\u093c\u0941-\u0948\u094d\u0951-\u0957\u0962\u0963])/;
@@ -1687,13 +1688,14 @@ export class Display extends EventEmitter {
              }
              this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
  */
+
             e = this.textWidth(text.substring(s, e));
             s = this.textWidth(text.substring(0, s));
-
             if (this.roundedRanges)
                 this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
             else
                 this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text" style="left: ${s}px;width: ${e}px"></span></div>`;
+
             /*
                         const ranges = [];
                         let range = { start: s, end: s, direction: CONTAINS_RTL.test(text[w]) ? 1 : 0 };
@@ -1702,11 +1704,13 @@ export class Display extends EventEmitter {
                         w = s + 1;
                         while (w <= e) {
                             if (state === 0 && CONTAINS_RTL.test(text[w])) {
+                                range.end++;
                                 range = { start: w, end: w, direction: 1 };
                                 ranges.push(range);
                                 state = 1;
                             }
-                            else if (state === 1 && !CONTAINS_RTL.test(text[w]) && !CONTAINS_WEAK.test(text[w])) {
+                            else if (state === 1 && CONTAINS_LTR.test(text[w])) {
+                                range.end++;
                                 range = { start: w, end: w, direction: 0 };
                                 ranges.push(range);
                                 state = 0;
