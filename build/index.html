@@ -642,6 +642,8 @@
 
             client.display._el.addEventListener('contextmenu', (e) => {
                 lastMouse = e;
+                $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
+                $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
                 e.preventDefault();
                 var parent = $(e.srcElement.parentNode);
                 _selword = window.$selword;
@@ -1696,6 +1698,8 @@
 
             $('#commandinput').on('contextmenu', (e) => {
                 e.preventDefault();
+                $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
+                $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
                 var inputMenu = Menu.buildFromTemplate([
                     { role: 'undo' },
                     { role: 'redo' },
@@ -2257,7 +2261,6 @@
 
                 doUpdate(32);
                 $('#pasteSpecial')[0].close();
-                $('#commandinput').focus();
             }
             var post = client.options.pasteSpecialPostfixEnabled ? client.options.pasteSpecialPostfix : 0;
             var pre = client.options.pasteSpecialPrefixEnabled ? client.options.pasteSpecialPrefix : 0;
@@ -2277,26 +2280,32 @@
                 txt = pre + txt.replace(/\n/g, `\n${pre}`);
             else if (post && post.length)
                 txt = txt.replace(/\n/g, `${post}\n`) + post;
-            if (client.commandInput[0].selectionStart || client.commandInput[0].selectionStart === '0') {
-                var startPos = client.commandInput[0].selectionStart;
-                var endPos = client.commandInput[0].selectionEnd;
+            if (client.commandInput.data('selStart') || client.commandInput.data('selStart') === '0') {
+                var startPos = client.commandInput.data('selStart');
+                var endPos = client.commandInput.data('selEnd');
                 client.commandInput[0].value = client.commandInput[0].value.substring(0, startPos)
                     + txt
                     + client.commandInput[0].value.substring(endPos, client.commandInput[0].value.length);
+                client.commandInput[0].selectionStart = startPos;
+                client.commandInput[0].selectionEnd = startPos + txt.length;
             } else {
                 client.commandInput[0].value += txt;
             }
+
+            client.commandInput[0].focus();
         }
 
         function paste() {
             if (clipboard.readText().length === 0)
                 return;
-            if (client.commandInput[0].selectionStart || client.commandInput[0].selectionStart === '0') {
-                var startPos = client.commandInput[0].selectionStart;
-                var endPos = client.commandInput[0].selectionEnd;
+            if (client.commandInput.data('selStart') || client.commandInput.data('selStart') === '0') {
+                var startPos = client.commandInput.data('selStart');
+                var endPos = client.commandInput.data('selEnd');
                 client.commandInput[0].value = client.commandInput[0].value.substring(0, startPos)
                     + clipboard.readText()
                     + client.commandInput[0].value.substring(endPos, client.commandInput[0].value.length);
+                client.commandInput[0].selectionStart = startPos;
+                client.commandInput[0].selectionEnd = startPos + clipboard.readText().length;
             } else {
                 client.commandInput[0].value += clipboard.readText();
             }
@@ -2316,7 +2325,7 @@
                 _disconnectTimer = 0;
                 _disconnectCounter = 0;
             }
-            $('#disconnectDialog')[0].close();
+            $('#1234')[0].close();
             $('#commandinput').focus();
         }
 

@@ -7,6 +7,7 @@
 - **Fixed:**
   - Display:
     - Fixed selection width for unicode fonts
+  - Fixed paste special not correctly replacing selected text in command input box
 
 ## v0.6.3 2018-10-12
 
