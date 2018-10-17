@@ -2,6 +2,8 @@
 
 ## v0.6.4
 
+- **New:**
+  - Code editor: Add hover effects to tabs to make it easier to know what your clicking
 - **Fixed:**
   - Display:
     - Fixed selection width for unicode fonts

@@ -76,6 +76,12 @@ $tabHeight: 26;
     outline: none;
 }
 
+.cm-tabstrip li:hover {
+    background-color: #dedede;
+    color: white;
+    text-shadow: none;
+}
+
 /*
 .cm-tabstrip li:before,
 .cm-tabstrip li:after {

@@ -271,9 +271,23 @@ body {
     color: black;
 }
 
+.cm-tabstrip li.changed:hover {
+    background-color: rgb(218, 255, 181) !important;
+    border-color: rgb(119, 168, 69) !important;
+    opacity: 1;
+    color: black;
+}
+
 .cm-tabstrip li.new {
     background-color: lighten(rgb(178, 226, 255), 10%) !important;
     border-color: lighten(rgb(94, 185, 242), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.new:hover {
+    background-color: rgb(178, 226, 255) !important;
+    border-color: rgb(94, 185, 242) !important;
     opacity: 1;
     color: black;
 }
@@ -295,6 +309,27 @@ body {
 .focused .cm-tabstrip li.active {
     background-color: rgb(249, 242, 217);
     border-color: rgb(247, 216, 106);
+    opacity: 1;
+    color: black;
+}
+
+.focused .cm-tabstrip li.changed.active:hover {
+    background-color: darken(rgb(218, 255, 181), 10%) !important;
+    border-color: darken(rgb(119, 168, 69), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.focused .cm-tabstrip li.new.active:hover {
+    background-color: darken(rgb(178, 226, 255), 10%) !important;
+    border-color: darken(rgb(94, 185, 242), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.focused .cm-tabstrip li.active:hover {
+    background-color: darken(rgb(249, 242, 217), 10%);
+    border-color: darken(rgb(247, 216, 106), 10%);
     opacity: 1;
     color: black;
 }
