@@ -233,7 +233,7 @@ var menuTemp = [
                 label: 'Paste special',
                 accelerator: 'CmdOrCtrl+Shift+V',
                 click: () => {
-                    win.webContents.executeJavaScript('pasteSpecial()');
+                    win.webContents.executeJavaScript('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);pasteSpecial()');
                 }
             },
             /*
@@ -965,7 +965,7 @@ function createTray() {
                                 else
                                     logError('About unresponsive, waiting.\n', true);
                             });
-                        });                        
+                        });
 
                         about.setMenu(null);
                         about.on('closed', () => {
