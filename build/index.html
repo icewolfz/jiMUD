@@ -684,10 +684,10 @@
                         c.append(new MenuItem({ role: 'copy' }));
                     }
                     if (window.$copied.length) {
-                        c.append(new MenuItem({ label: 'Paste', click: paste }));
-                        c.append(new MenuItem({ label: 'Paste special', click: () => { pasteSpecial(); } }));
+                        c.append(new MenuItem({ label: 'Paste', click: paste, accelerator: 'CmdOrCtrl+V' }));
+                        c.append(new MenuItem({ label: 'Paste special', click: () => { pasteSpecial(); }, accelerator: 'CmdOrCtrl+Shift+V' }));
                     }
-                    c.append(new MenuItem({ label: 'Select All', click: selectAll }));
+                    c.append(new MenuItem({ label: 'Select All', click: selectAll, accelerator: 'CmdOrCtrl+A' }));
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Clear', click: () => {
@@ -1701,15 +1701,15 @@
                 $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
                 $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
                 var inputMenu = Menu.buildFromTemplate([
-                    { role: 'undo' },
-                    { role: 'redo' },
+                    { role: 'undo', accelerator: 'CmdOrCtrl+Z' },
+                    { role: 'redo', accelerator: 'CmdOrCtrl+Y' },
                     { type: 'separator' },
-                    { role: 'cut' },
-                    { role: 'copy' },
-                    { role: 'paste' },
-                    { label: 'Paste special', click: () => { pasteSpecial(); } },
+                    { role: 'cut', accelerator: 'CmdOrCtrl+C' },
+                    { role: 'copy', accelerator: 'CmdOrCtrl+X' },
+                    { label: 'Paste', accelerator: 'CmdOrCtrl+V', click: paste },
+                    { label: 'Paste special', accelerator: 'CmdOrCtrL+Shift+V',click: () => { pasteSpecial(); } },
                     { type: 'separator' },
-                    { role: 'selectall' },
+                    { role: 'selectall', accelerator: 'CmdOrCtrl+A' },
                 ]);
                 inputMenu.on('menu-will-show', () => {
                     $('#commandinput').data('context', true);
@@ -1756,7 +1756,6 @@
                     }
                 }
                 inputMenu.popup({ window: remote.getCurrentWindow() });
-
             });
             client.display.on('word', () => {
                 client.options.find.word = client.display.MatchWord;
@@ -2293,8 +2292,8 @@
         function paste() {
             if (clipboard.readText().length === 0)
                 return;
-            var startPos = client.commandInput[0].selectionStart;
-            var endPos = client.commandInput[0].selectionEnd;
+            var startPos = client.commandInput.data('selStart');
+            var endPos = client.commandInput.data('selEnd');
             client.commandInput[0].value = client.commandInput[0].value.substring(0, startPos)
                 + clipboard.readText()
                 + client.commandInput[0].value.substring(endPos, client.commandInput[0].value.length);

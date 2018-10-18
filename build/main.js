@@ -226,7 +226,7 @@ var menuTemp = [
                 label: 'Paste',
                 accelerator: 'CmdOrCtrl+V',
                 click: () => {
-                    win.webContents.executeJavaScript('paste()');
+                    win.webContents.executeJavaScript('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);paste()');
                 }
             },
             {
