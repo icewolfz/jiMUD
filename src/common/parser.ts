@@ -222,8 +222,8 @@ class MXPStyle {
 /**
  * An Ansi/MXP parser, requires requires the modules src/lib/rgbcolor for color processing and validation
  *
- * @author Icewolfz
- * @copyright Icewolfz 2013
+ * @author William
+ * @copyright William 2013
  * @version 1.1
  * @requires module:src/lib/rgbcolor
  * @namespace Parser

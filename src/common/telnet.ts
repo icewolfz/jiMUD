@@ -50,8 +50,8 @@ export interface TelnetOptionsServer {
  * the base telnet protocol. In addition to the base protocol it also handles MCCP 1 & 2,
  * NAWS, MXP, GMCP, MSSP, CHARSET for UTF-8. To support MCCP it requires the module {@link module:./lib/inflate_Stream.min}.
  *
- * @author Icewolfz
- * @copyright Icewolfz 2013
+ * @author William
+ * @copyright William 2013
  * @class Telnet
  * @extends {EventEmitter}
  * @version 2.0

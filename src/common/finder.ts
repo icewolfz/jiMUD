@@ -5,7 +5,7 @@ import { OverlayRange } from './types';
 
 export class Finder extends EventEmitter {
     private _display: Display;
-    private _document;
+    //private _document;
     private _control;
 
     private _timer;
@@ -21,7 +21,7 @@ export class Finder extends EventEmitter {
     constructor(display) {
         super();
         this._display = display;
-        this._document = display._el.ownerDocument;
+        //this._document = display._el.ownerDocument;
         this.createControl();
         this._key = (e) => {
             if (e.keyCode === 27) { // escape key maps to keycode `27`

@@ -7,6 +7,14 @@ export enum ItemType {
     both = 2
 }
 
+/**
+ * Menubar controller
+ *
+ * extends native menu system and provides ability to update items
+ *
+ * @export
+ * @class Menubar
+ */
 export class Menubar {
     public window: Electron.BrowserWindow;
     public menu: any[];

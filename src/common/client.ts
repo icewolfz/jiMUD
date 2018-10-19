@@ -27,6 +27,13 @@ interface ItemCache {
     defaultContext: boolean;
 }
 
+/**
+ * Mud client
+ *
+ * @export
+ * @class Client
+ * @extends {EventEmitter}
+ */
 export class Client extends EventEmitter {
     private _enableDebug: boolean = false;
     private _input: Input;

@@ -4,6 +4,13 @@
 import EventEmitter = require('events');
 import { Client } from './client';
 
+/**
+ * Status display control
+ *
+ * @export
+ * @class Status
+ * @extends {EventEmitter}
+ */
 export class Status extends EventEmitter {
     private info = [];
     private infoAC = [];
@@ -31,8 +38,6 @@ export class Status extends EventEmitter {
         });
         this.client.on('options-loaded', () => {
             this.info['EXPERIENCE_NEED'] = this.info['EXPERIENCE_NEED_RAW'] - this.info['EXPERIENCE'];
-            //if (this.info['EXPERIENCE_NEED'] < 0 && !this.client.options.allowNegativeNumberNeeded)
-            //this.info['EXPERIENCE_NEED'] = 0;
         });
 
         this.client.on('received-GMCP', (mod, obj) => {

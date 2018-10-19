@@ -1,6 +1,13 @@
 //spell-checker:words keycode
 import EventEmitter = require('events');
 
+/**
+ * Simple search box dialog
+ *
+ * @export
+ * @class Search
+ * @extends {EventEmitter}
+ */
 export class Search extends EventEmitter {
     private $parent;
     private _control;

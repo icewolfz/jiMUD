@@ -137,8 +137,8 @@ export interface MSPOptions {
 /**
  * Implementation of the MSP (MUD Sound Protocol)
  *
- * @author Icewolfz
- * @copyright Icewolfz 2013
+ * @author William
+ * @copyright William 2013
  * @version 1.1
  * MSP requires the modules {@link module:telnet}.
  * MSP requires the modules {@link module:buzz}.

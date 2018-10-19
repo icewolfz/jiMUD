@@ -2,7 +2,7 @@
  * IED
  *
  * send and receive IED gmcp protocol
- * @arthur William
+ * @author William
  */
 //spell-checker:words fswin, chunksize
 import EventEmitter = require('events');

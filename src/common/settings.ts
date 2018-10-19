@@ -4,6 +4,12 @@ import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect } from './ty
 const path = require('path');
 const fs = require('fs');
 
+/**
+ * Class that contains all mapper related options
+ *
+ * @export
+ * @class Mapper
+ */
 export class Mapper {
     public enabled: boolean = true;
     public follow: boolean = true;
@@ -31,6 +37,12 @@ export class Mapper {
     public persistent: boolean = true;
 }
 
+/**
+ * Class that contains all profile manager related options
+ *
+ * @export
+ * @class Profiles
+ */
 export class Profiles {
     public split: number = -1;
     public askoncancel: boolean = true;
@@ -44,6 +56,12 @@ export class Profiles {
     public watchFiles: boolean = true;
 }
 
+/**
+ * Class that contains all chat capture related options
+ *
+ * @export
+ * @class Chat
+ */
 export class Chat {
     //chat lines
     public captureLines: boolean = false;
@@ -109,6 +127,22 @@ var fmt = (arr, obj, prefix) => {
 }
 fmt(props, s);
 */
+/**
+ * Array that contains details about setting values
+ * [settingKey, object property, setting data type, default value, max length
+ *
+ * settingKey - unique key value, object property value if object property undefined, 0 or null
+ * object property - the value used to access setting if settingKey is not property, can use . to denote nested properties
+ * setting data type - the data type of setting
+ *      0 string
+ *      1 boolean
+ *      2 number
+ *      3 raw setting
+ *      4 custom
+ *      5 combo-box
+ * default value - the default value of setting
+ * max length - optional max length
+ */
 export let SettingList: any[] = [
     ['bufferSize', 0, 2, 5000],
     ['commandDelay', 0, 2, 500],
@@ -286,6 +320,12 @@ export let SettingList: any[] = [
     ['pasteSpecialReplaceEnabled', 0, 1, true]
 ];
 
+/**
+ * Class that contains all options, sets default values and allows loading and saving to json files
+ *
+ * @export
+ * @class Settings
+ */
 export class Settings {
     public checkForUpdates: boolean = false;
     public editorPersistent: boolean = false;

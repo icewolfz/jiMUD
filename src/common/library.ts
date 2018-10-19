@@ -1,3 +1,8 @@
+/**
+ * @file Core functions and helpers
+ *
+ * @author William
+ */
 //spell-checker:ignore Eisu, Junja, Hanja, Nonconvert, Modechange, printscreen, jisho, Masshou, Touroku, loya, roya
 //spell-checker:ignore Wsctrl, Cusel, Enlw, Backtab, Crsel, Exsel, Ereof rtrim ltrim rgbcolor Dropdown DBLUNDERLINE noflash
 const path = require('path');

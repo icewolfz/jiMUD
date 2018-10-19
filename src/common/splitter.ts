@@ -14,6 +14,13 @@ export enum Orientation {
     horizontal, vertical
 }
 
+/**
+ * Spliiter display control
+ *
+ * @export
+ * @class Splitter
+ * @extends {EventEmitter}
+ */
 export class Splitter extends EventEmitter {
     private $el: HTMLElement;
     private $parent: HTMLElement;

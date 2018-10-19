@@ -9,7 +9,7 @@ import { AnsiColorCode, Ansi } from './ansi';
  * Functions that can be executed from the command line to display information
  * or display formatted text to ensure it looks or functions correctly
  *
- * @author Icewolfz
+ * @author William
  * @export
  * @class Tests
  * @extends {EventEmitter}

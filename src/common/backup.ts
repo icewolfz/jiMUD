@@ -9,11 +9,18 @@ const path = require('path');
 const sqlite3 = require('better-sqlite3');
 const LZString = require('lz-string');
 
+/**
+ * Control loading and saving system for ShadowMUD remote storage protocols
+ *
+ * @export
+ * @class Backup
+ * @extends {EventEmitter}
+ */
 export class Backup extends EventEmitter {
     private client: Client = null;
     private _abort: boolean = false;
     private _user;
-    private _action;
+    //private _action;
     private _save;
     private _port;
 
@@ -49,7 +56,7 @@ export class Backup extends EventEmitter {
                 case 'save':
                     if (this._abort) return;
                     this._user = obj.user;
-                    this._action = obj.action;
+                    //this._action = obj.action;
                     this.emit('progress-start', 'Saving data');
                     this._abort = false;
                     //this.save(2);
@@ -58,7 +65,7 @@ export class Backup extends EventEmitter {
                     this.client.debug(`Starting load\n    Chunks: ${obj.chunks}\n    Start chunk: ${obj.chunk}\n    Size: ${obj.size}\n`);
                     this._abort = false;
                     this._user = obj.user;
-                    this._action = obj.action;
+                    //this._action = obj.action;
                     this.emit('progress-start', 'Loading data');
                     this._save = [obj.chunks || 1, obj.chunk || 0, obj.size, ''];
                     //this.getChunk();

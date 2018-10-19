@@ -3,7 +3,7 @@
  *
  * Handle GMCP ShadowMUD Post protocol
  *
- * @arthur William
+ * @author William
  * @created 2018-01-05
  * @change 2018-01-09 William Set file in constructor
  */
