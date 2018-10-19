@@ -46,11 +46,11 @@
   },
   "devDependencies": {
     "@types/bootstrap": "^3.3.40",
-    "@types/jquery": "^3.3.17",
+    "@types/jquery": "^3.3.21",
     "@types/node": "^10.12.0",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^3.0.4",
+    "electron": "^3.0.5",
     "electron-builder": "^20.28.4",
     "eslint": "^5.7.0",
     "eslint-plugin-html": "^4.0.6"

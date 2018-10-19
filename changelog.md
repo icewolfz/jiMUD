@@ -4,6 +4,8 @@
 
 - **New:**
   - Code editor: Add hover effects to tabs to make it easier to know what your clicking
+- **Changed:**
+  - Update electron from 3.0.4 to 3.0.5
 - **Fixed:**
   - Display:
     - Fixed selection width for unicode fonts
