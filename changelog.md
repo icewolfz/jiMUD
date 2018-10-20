@@ -10,6 +10,7 @@
   - Display:
     - Fixed selection width for unicode fonts
   - Fixed paste and paste special not correctly replacing selected text in command input box
+  - Status: Fix sleet weather overlay
 
 ## v0.6.3 2018-10-12
 
