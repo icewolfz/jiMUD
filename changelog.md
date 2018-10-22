@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.4
+## v0.6.4 2018-10-22
 
 - **New:**
   - Code editor: Add hover effects to tabs to make it easier to know what your clicking
