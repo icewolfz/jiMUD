@@ -8,7 +8,7 @@
   - Update electron from 3.0.4 to 3.0.5
 - **Fixed:**
   - Display:
-    - Fixed selection width for unicode fonts
+    - Fixed selection width for Unicode fonts
   - Fixed paste and paste special not correctly replacing selected text in command input box
   - Status: Fix sleet weather overlay
 
