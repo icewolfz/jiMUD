@@ -65,6 +65,7 @@ interface ContextEvent extends PointerEvent {
  * @todo fix RTL unicode selection display
  */
 export class Display extends EventEmitter {
+    private _lineID = 0;
     private _parser: Parser;
     private _el: HTMLElement;
     private _elJ: JQuery;
@@ -92,6 +93,7 @@ export class Display extends EventEmitter {
 
     public lines: string[] = [];
     private displayLines: string[] = [];
+    private lineIDs: number[] = [];
     public rawLines: string[] = [];
     public scrollToEnd: boolean = true;
     private lineFormats = [];
@@ -204,6 +206,9 @@ export class Display extends EventEmitter {
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
+
+                    this.split.view.style.width = this._maxLineLength * this._charWidth + 'px';
+                    this.split.view.style.minWidth = this._elJ.innerWidth() - 16 + 'px';
                     this.split.overlay.innerHTML = overlays.join('');
                     this.split.view.innerHTML = lines.join('');
                     this.split.background.innerHTML = bLines.join('');
@@ -966,6 +971,9 @@ export class Display extends EventEmitter {
         };
         this._viewLines = [];
         this._backgroundLines = [];
+        this.displayLines = [];
+        this.lineIDs = [];
+        this._lineID = 0;
         this._viewRange = { start: 0, end: 0 };
         this._maxLineLength = 0;
         this._overlay.innerHTML = null;
@@ -1042,6 +1050,7 @@ export class Display extends EventEmitter {
 
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
+        this._view.style.minWidth = this._elJ.innerWidth() - 16 + 'px';
 
         this._overlay.style.height = Math.max(h, this._el.clientHeight) + 'px';
         this._overlay.style.width = mw + 'px';
@@ -1136,9 +1145,13 @@ export class Display extends EventEmitter {
         }
         else if (data.line.length > this._maxLineLength)
             this._maxLineLength = data.line.length;
+        this.lineIDs.push(this._lineID);
+        this._lineID++;
         t = this.createLine();
         this._viewLines.push(t[0]);
         this._backgroundLines.push(t[1]);
+
+
 
         if (!noUpdate) {
             //disable animation
@@ -1161,6 +1174,7 @@ export class Display extends EventEmitter {
         this.emit('line-removed', line, this.lines[line]);
         this.lines.splice(line, 1);
         this.displayLines.splice(line, 1);
+        this.lineIDs.splice(line, 1);
         this.rawLines.splice(line, 1);
         this.lineFormats.splice(line, 1);
         this._backgroundLines.splice(line, 1);
@@ -1223,6 +1237,7 @@ export class Display extends EventEmitter {
         this.emit('lines-removed', line, this.lines.slice(line, amt));
         this.lines.splice(line, amt);
         this.displayLines.splice(line, amt);
+        this.lineIDs.splice(line, amt);
         this.rawLines.splice(line, amt);
         this.lineFormats.splice(line, amt);
         this._backgroundLines.splice(line, amt);
@@ -1313,6 +1328,7 @@ export class Display extends EventEmitter {
             const amt = this.lines.length - this._maxLines;
             this.lines.splice(0, amt);
             this.displayLines.splice(0, amt);
+            this.lineIDs.splice(0, amt);
             this.rawLines.splice(0, amt);
             this.lineFormats.splice(0, amt);
             this._viewLines.splice(0, amt);
@@ -1958,6 +1974,7 @@ export class Display extends EventEmitter {
         let width = 0;
         let left = 0;
         let ol;
+        const id = this.lineIDs[idx];
         for (ol in this._expire) {
             if (!this._expire.hasOwnProperty(ol))
                 continue;
@@ -1999,7 +2016,7 @@ export class Display extends EventEmitter {
                     if (format.font) fStyle.push('font-family: ', format.font, ';');
                     if (format.size) fStyle.push('font-size: ', format.size, ';');
                     height = this.textHeight(eText, format.font, format.size);
-                    width = this.textWidth(eText, `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily});
+                    width = this.textWidth(eText, `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
                 }
                 else
                 */
@@ -2064,7 +2081,7 @@ export class Display extends EventEmitter {
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
                 eText = htmlEncode(eText);
-                fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" data-href="');
+                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="');
                 fore.push(format.href);
                 fore.push('" href="javascript:void(0);" title="');
                 fore.push(format.hint);
@@ -2093,7 +2110,7 @@ export class Display extends EventEmitter {
                 if (eText.length === 0) continue;
                 width = this.textWidth(eText);
                 eText = htmlEncode(eText);
-                fore.push('<a draggable="false" data-index="', idx, '" class="MXPLink" href="javascript:void(0);" title="');
+                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" href="javascript:void(0);" title="');
                 fore.push(format.hint);
                 fore.push('"');
                 if (format.expire && format.expire.length > 0) {
@@ -2127,10 +2144,98 @@ export class Display extends EventEmitter {
                 fore.push('</span>');
                 left += width;
             }
-            //TODO add image
+            else if (format.formatType === FormatType.Image) {
+                eText = '';
+                fore.push('<img src="');
+                if (format.url.length > 0) {
+                    fore.push(format.url);
+                    eText += format.url;
+                    if (!format.url.endsWith('/')) {
+                        fore.push('/');
+                        eText += '/';
+                    }
+                }
+                if (format.t.length > 0) {
+                    fore.push(format.t);
+                    eText += format.t;
+                    if (!format.t.endsWith('/')) {
+                        fore.push('/');
+                        eText += '/';
+                    }
+                }
+                eText += format.name;
+                fore.push(format.name, '" style="');
+                if (format.width)
+                    fore.push('width:', format.width, 'px;');
+                else if (format.w.length > 0)
+                    fore.push('width:', format.w, ';');
+
+                if (format.height)
+                    fore.push('height:', format.height, 'px;');
+                else if (format.h.length > 0)
+                    fore.push('height:', format.h, ';');
+
+                switch (format.align.toLowerCase()) {
+                    case 'left':
+                        fore.push('float:left;');
+                        break;
+                    case 'right':
+                        fore.push('float:right;');
+                        break;
+                    case 'top':
+                    case 'middle':
+                    case 'bottom':
+                        fore.push('vertical-align:', format.align, ';');
+                        break;
+                }
+                if (format.hspace.length > 0 && format.vspace.length > 0) {
+                    fore.push('margin:');
+                    if (this.isNumber(format.vspace))
+                        format.vspace = parseInt(format.vspace, 10) + 'px';
+                    fore.push(format.vspace, ' ');
+                    if (this.isNumber(format.hspace))
+                        format.hspace = parseInt(format.hspace, 10) + 'px';
+                    fore.push(format.hspace, ';');
+                }
+                else if (format.hspace.length > 0) {
+                    fore.push('margin:');
+                    if (this.isNumber(format.hspace))
+                        format.hspace = parseInt(format.hspace, 10) + 'px';
+                    fore.push('0px ', format.hspace, ';');
+                }
+                else if (format.vspace.length > 0) {
+                    fore.push('margin:');
+                    if (this.isNumber(format.vspace))
+                        format.vspace = parseInt(format.vspace, 10) + 'px';
+                    fore.push(format.vspace, ' 0px;');
+                }
+                //TODO remove max-height when variable height supported
+                fore.push('max-height:', height, 'px;"');
+                if (format.ismap) fore.push(' ismap onclick="return false;"');
+                fore.push(`src="${eText}"/>`);
+                if (!format.width) {
+                    const img = new Image();
+                    if (format.w.length > 0)
+                        img.style.width = format.w;
+                    if (format.h.length > 0)
+                        img.style.height = format.w;
+                    img.src = eText;
+                    img.dataset.id = '' + id;
+                    img.onload = () => {
+                        const lIdx = this.lineIDs.indexOf(+img.dataset.id);
+                        if (lIdx === -1 || lIdx >= this.lines.length) return;
+                        this.lineFormats[lIdx][f].width = img.width;
+                        this.lineFormats[lIdx][f].height = img.height;
+                        const t = this.createLine(lIdx);
+                        this._viewLines[lIdx] = t[0];
+                        this._backgroundLines[lIdx] = t[1];
+                        this.doUpdate(UpdateType.view);
+                    };
+                }
+            }
             //TODO once supported update parser support tag to add image
         }
-        return [`<span class="line" data-index="${idx}" style="top:{top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${height}px;">${back.join('')}<br></span>`];
+        return [`<span class="line" data-id="${id}" style="top:{top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${height}px;">${back.join('')}<br></span>`];
     }
 
     public rebuildLines() {
@@ -2269,6 +2374,10 @@ export class Display extends EventEmitter {
         window.removeEventListener('mouseup', this._wUp);
 
         window.removeEventListener('resize', this._wResize);
+    }
+
+    private isNumber(str) {
+        return (/^\d+$/).test(str);
     }
 }
 

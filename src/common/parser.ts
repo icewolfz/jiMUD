@@ -1739,9 +1739,8 @@ export class Parser extends EventEmitter {
                 arg = arg.toUpperCase();
                 switch (arg) {
                   //TODO re-enable once font size/face  are supported
-                  //case "FONT":
-                  //TODO re-enable once images are supported
-                  //case "IMAGE":
+                  //case 'FONT':
+                  case 'IMAGE':
                   case 'HR':
                   case 'A':
                   case 'SEND':
@@ -1793,36 +1792,19 @@ export class Parser extends EventEmitter {
                 arg[0] = arg[0].toUpperCase();
                 switch (arg[0]) {
                   case 'IMAGE':
-                    //TODO switch to + when supported
                     if (arg[1] !== '*')
-                      sArgs.push('-' + arg[0] + '.' + arg[1]);
+                      sArgs.push('+' + arg[0] + '.' + arg[1]);
                     else {
-                      sArgs.push('-image.fname');
-                      sArgs.push('-image.url');
-                      sArgs.push('-image.t');
-                      sArgs.push('-image.h');
-                      sArgs.push('-image.w');
-                      sArgs.push('-image.hspace');
-                      sArgs.push('-image.vspace');
-                      sArgs.push('-image.align');
-                      sArgs.push('-image.ismap');
+                      sArgs.push('+image.fname');
+                      sArgs.push('+image.url');
+                      sArgs.push('+image.t');
+                      sArgs.push('+image.h');
+                      sArgs.push('+image.w');
+                      sArgs.push('+image.hspace');
+                      sArgs.push('+image.vspace');
+                      sArgs.push('+image.align');
+                      sArgs.push('+image.ismap');
                     }
-
-                    /*
-                    if (arg[1] != "*")
-                      sArgs.push("+" + arg[0] + "." + arg[1]);
-                    else {
-                      sArgs.push("+image.fname");
-                      sArgs.push("+image.url");
-                      sArgs.push("+image.t");
-                      sArgs.push("+image.h");
-                      sArgs.push("+image.w");
-                      sArgs.push("+image.hspace");
-                      sArgs.push("+image.vspace");
-                      sArgs.push("+image.align");
-                      sArgs.push("+image.ismap");
-                    }
-                    */
                     break;
                   case 'SOUND':
                     if (arg[1] !== '*')
@@ -1927,8 +1909,7 @@ export class Parser extends EventEmitter {
           }
           else
             //TODO enable font once font face/size are supported
-            //TODO enable images once supported
-            sArgs = ['+A', '+SEND', '+B', '+I', '+COLOR', '+C', '+EM', '+ITALIC', '+STRONG', '+BOLD', '+UNDERLINE', '+U', '+S', '+STRIKEOUT', '+H', '+HIGH', '-FONT', '+EXPIRE', '+VERSION', '+SUPPORT', '+NOBR', '+P', '+BR', '+SBR', '+VAR', '+SOUND', '+MUSIC', '+USER', '+PASSWORD', '+RESET', '+STRIKE', '+H1', '+H2', '+H3', '+H4', '+H5', '+H6', '-IMAGE', '+STAT', '+GAUGE'];
+            sArgs = ['+A', '+SEND', '+B', '+I', '+COLOR', '+C', '+EM', '+ITALIC', '+STRONG', '+BOLD', '+UNDERLINE', '+U', '+S', '+STRIKEOUT', '+H', '+HIGH', '-FONT', '+EXPIRE', '+VERSION', '+SUPPORT', '+NOBR', '+P', '+BR', '+SBR', '+VAR', '+SOUND', '+MUSIC', '+USER', '+PASSWORD', '+RESET', '+STRIKE', '+H1', '+H2', '+H3', '+H4', '+H5', '+H6', '+IMAGE', '+STAT', '+GAUGE'];
           this.emit('MXP-tag-reply', tag, sArgs);
           break;
         case 'A':

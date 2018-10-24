@@ -783,8 +783,69 @@
                 parts.push(htmlEncode(text.substring(offset, end)));
                 parts.push('</span>');
             }
-            //TODO add image
-            //TODO once supported update parser support tag to add image
+            else if (format.formatType === FormatType.Image) {
+                let tmp = '';
+                parts.push('<img src="');
+                if (format.url.length > 0) {
+                    parts.push(format.url);
+                    tmp += format.url;
+                    if (!format.url.endsWith('/')) {
+                        parts.push('/');
+                        tmp += '/';
+                    }
+                }
+                if (format.t.length > 0) {
+                    parts.push(format.t);
+                    tmp += format.t;
+                    if (!format.t.endsWith('/')) {
+                        parts.push('/');
+                        tmp += '/';
+                    }
+                }
+                tmp += format.name;
+                parts.push(format.name, '"  style="');
+                if (format.w.length > 0)
+                    parts.push('width:', format.w, ';');
+                if (format.h.length > 0)
+                    parts.push('height:', format.h, ';');
+                switch (format.align.toLowerCase()) {
+                    case 'left':
+                        parts.push('float:left;');
+                        break;
+                    case 'right':
+                        parts.push('float:right;');
+                        break;
+                    case 'top':
+                    case 'middle':
+                    case 'bottom':
+                        parts.push('vertical-align:', format.align, ';');
+                        break;
+                }
+                if (format.hspace.length > 0 && format.vspace.length > 0) {
+                    parts.push('margin:');
+                    if (this.isNumber(format.vspace))
+                        format.vspace = parseInt(format.vspace, 10) + 'px';
+                    parts.push(format.vspace, ' ');
+                    if (this.isNumber(format.hspace))
+                        format.hspace = parseInt(format.hspace, 10) + 'px';
+                    parts.push(format.hspace, ';');
+                }
+                else if (format.hspace.length > 0) {
+                    parts.push('margin:');
+                    if (this.isNumber(format.hspace))
+                        format.hspace = parseInt(format.hspace, 10) + 'px';
+                    parts.push('0px ', format.hspace, ';');
+                }
+                else if (format.vspace.length > 0) {
+                    parts.push('margin:');
+                    if (this.isNumber(format.vspace))
+                        format.vspace = parseInt(format.vspace, 10) + 'px';
+                    parts.push(format.vspace, ' 0px;');
+                }
+                parts.push('"');
+                if (format.ismap) parts.push(' ismap onclick="return false;"');
+                parts.push(`src="${tmp}"/>`);
+            }
         }
         return `<span class="line">${parts.join('')}<br></span>`;
     }

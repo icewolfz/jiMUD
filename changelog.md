@@ -1,9 +1,13 @@
 # Changelog
 
 ## v0.6.5
-  
+
+- **New:**  
+  - Logger: Add support for MXP images
+  - Display: Add basic MXP image support, does not correctly calculate width/height
 - **Fixed:**
   - Status: Fix sleet weather overlay for all themes
+  - Display: Not correctly clearing text
 
 ## v0.6.4 2018-10-22
 

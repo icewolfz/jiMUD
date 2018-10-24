@@ -225,7 +225,7 @@ function writeHeader() {
     if (!isFileSync(currentFile + '.htm') && (options.what & Log.Html) === Log.Html && !writingHeader) {
         writingHeader = true;
         appendFile(currentFile + '.htm', '<style>\nbody\n{\n	font-family: \'Courier New\', Courier, monospace;\n	text-align: left;\n	font-size: 1em;\n	white-space: pre;\n	background-color: black;	\n}\n/* --- Start CSS for ansi display --- */\n@-webkit-keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n@keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n.ansi-blink { \n	text-decoration:blink;\n	animation-name: blinker;\n	animation-iteration-count: infinite; \n	animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	animation-duration: 1s; \n	-webkit-animation-name: blinker;\n	-webkit-animation-iteration-count: infinite; \n	-webkit-animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	-webkit-animation-duration: 1s; \n}\n\n.ansi\n{\n	padding: 0px;\n	margin:0px;\n	\n}\n\n.line \n{\n	word-wrap:break-word;\n	word-break:break-all;\n	width: 100%;\n	display: block;\n	padding-bottom:1px;\n	clear:both;\n	line-height: normal;\n  padding-bottom:2px\n}	\n\n.line hr{ border: 0px; }\n/* --- End CSS for ansi display --- */\n\n.line a, .line a:link \n{\n	color: inherit;\n	font-weight: inherit;\n	text-decoration: underline;\n}\n\n.URLLink, .URLLink:link\n{\n	text-decoration: underline;\n	cursor: pointer;\n}\n</style>\n\n');
-            writingHeader = false;
+        writingHeader = false;
     }
 }
 
@@ -396,8 +396,69 @@ function createLine(text: string, formats: any[]) {
             parts.push(htmlEncode(text.substring(offset, end)));
             parts.push('</span>');
         }
-        //TODO add image
-        //TODO once supported update parser support tag to add image
+        else if (format.formatType === FormatType.Image) {
+            let tmp = '';
+            parts.push('<img src="');
+            if (format.url.length > 0) {
+                parts.push(format.url);
+                tmp += format.url;
+                if (!format.url.endsWith('/')) {
+                    parts.push('/');
+                    tmp += '/';
+                }
+            }
+            if (format.t.length > 0) {
+                parts.push(format.t);
+                tmp += format.t;
+                if (!format.t.endsWith('/')) {
+                    parts.push('/');
+                    tmp += '/';
+                }
+            }
+            tmp += format.name;
+            parts.push(format.name, '"  style="');
+            if (format.w.length > 0)
+                parts.push('width:', format.w, ';');
+            if (format.h.length > 0)
+                parts.push('height:', format.h, ';');
+            switch (format.align.toLowerCase()) {
+                case 'left':
+                    parts.push('float:left;');
+                    break;
+                case 'right':
+                    parts.push('float:right;');
+                    break;
+                case 'top':
+                case 'middle':
+                case 'bottom':
+                    parts.push('vertical-align:', format.align, ';');
+                    break;
+            }
+            if (format.hspace.length > 0 && format.vspace.length > 0) {
+                parts.push('margin:');
+                if (this.isNumber(format.vspace))
+                    format.vspace = parseInt(format.vspace, 10) + 'px';
+                parts.push(format.vspace, ' ');
+                if (this.isNumber(format.hspace))
+                    format.hspace = parseInt(format.hspace, 10) + 'px';
+                parts.push(format.hspace, ';');
+            }
+            else if (format.hspace.length > 0) {
+                parts.push('margin:');
+                if (this.isNumber(format.hspace))
+                    format.hspace = parseInt(format.hspace, 10) + 'px';
+                parts.push('0px ', format.hspace, ';');
+            }
+            else if (format.vspace.length > 0) {
+                parts.push('margin:');
+                if (this.isNumber(format.vspace))
+                    format.vspace = parseInt(format.vspace, 10) + 'px';
+                parts.push(format.vspace, ' 0px;');
+            }
+            parts.push('"');
+            if (format.ismap) parts.push(' ismap onclick="return false;"');
+            parts.push(`src="${tmp}"/>`);
+        }
     }
     return `<span class="line">${parts.join('')}<br></span>`;
 }
