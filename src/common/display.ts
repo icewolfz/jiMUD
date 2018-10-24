@@ -1928,6 +1928,52 @@ export class Display extends EventEmitter {
         return txt.join('\n');
     }
 
+    //TODO, need to loop format blocks for each line and "build" the correct html, basilcy createLine but with sub block support
+    get selectionAsHTML(): string {
+        const sel = this._currentSelection;
+        let s;
+        let e;
+        let sL;
+        let eL;
+        if (sel.start.y > sel.end.y) {
+            sL = sel.end.y;
+            eL = sel.start.y;
+            s = sel.end.x;
+            e = sel.start.x;
+        }
+        else if (sel.start.y < sel.end.y) {
+            sL = sel.start.y;
+            eL = sel.end.y;
+            s = sel.start.x;
+            e = sel.end.x;
+        }
+        else if (sel.start.x === sel.end.x) {
+            return '';
+        }
+        else {
+            s = Math.min(sel.start.x, sel.end.x);
+            e = Math.max(sel.start.x, sel.end.x);
+            return this.lines[sel.start.y].substring(s, e);
+        }
+        const len = this.lines.length;
+
+        if (sL < 0)
+            sL = 0;
+        if (eL >= len)
+            eL = len - 1;
+        if (s < 0)
+            s = 0;
+        if (e > this.lines[eL].length)
+            e = this.lines[eL].length;
+
+        const txt = [this.lines[sL].substring(s)];
+        sL++;
+        if (eL - sL > 0)
+            txt.push.apply(txt, this.lines.slice(sL, eL));
+        txt.push(this.lines[eL].substring(0, e));
+        return txt.join('\n');
+    }
+
     public selectAll() {
         let ll = this.lines.length;
         if (ll === 0) return;
