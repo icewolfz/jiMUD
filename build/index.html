@@ -725,6 +725,11 @@
             client.readClipboard = window.readClipboard;
             client.writeClipboard = window.writeClipboard;
 
+            window.readClipboardHTML = () => { return clipboard.readHTML('selection') || clipboard.readHTML() || ''; };
+            window.writeClipboardHTML = (txt) => { clipboard.writeHTML(txt || ''); clipboard.writeHTML(txt || '', 'selection'); };
+            client.readClipboardHTML = window.readClipboardHTML;
+            client.writeClipboardHTML = window.writeClipboardHTML;
+
             client.version = version;
             client.host = 'www.shadowmud.com';
             client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
@@ -1707,7 +1712,7 @@
                     { role: 'cut', accelerator: 'CmdOrCtrl+C' },
                     { role: 'copy', accelerator: 'CmdOrCtrl+X' },
                     { label: 'Paste', accelerator: 'CmdOrCtrl+V', click: paste },
-                    { label: 'Paste special', accelerator: 'CmdOrCtrL+Shift+V',click: () => { pasteSpecial(); } },
+                    { label: 'Paste special', accelerator: 'CmdOrCtrL+Shift+V', click: () => { pasteSpecial(); } },
                     { type: 'separator' },
                     { role: 'selectall', accelerator: 'CmdOrCtrl+A' },
                 ]);

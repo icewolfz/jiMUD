@@ -20,6 +20,8 @@ To use scripting you just have to select script as the type from the type dropdo
 - `client.beep()` play system beep sound
 - `client.readClipboard()` read text from clipboard, can also access from window.readClipboard()
 - `client.writeClipboard(text)` write text to clipboard, can also access from window.writeClipboard(text)
+- `client.readClipboardHTML()` read HTML from clipboard, can also access from window.readClipboardHTML()
+- `client.writeClipboardHTML(HTML)` write HTML to clipboard, can also access from window.writeClipboardHTML(HTML)
 - `client.send(text, echo?)` send text directly to the mud, telnet code IAC is escaped, note you should always try and append a new line as most muds require it to process any text.
   - `text` the text to send
   - `echo` echo text to display
