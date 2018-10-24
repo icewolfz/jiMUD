@@ -1,6 +1,9 @@
 # Changelog
 
 ## v0.6.5
+  
+- **Fixed:**
+  - Status: Fix sleet weather overlay for all themes
 
 ## v0.6.4 2018-10-22
 
