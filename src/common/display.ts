@@ -209,6 +209,9 @@ export class Display extends EventEmitter {
 
                     this.split.view.style.width = this._maxLineLength * this._charWidth + 'px';
                     this.split.view.style.minWidth = this._elJ.innerWidth() - 16 + 'px';
+                    this.split.background.style.width = this._maxLineLength * this._charWidth + 'px';
+                    this.split.background.style.minWidth = this._elJ.innerWidth() - 16 + 'px';
+
                     this.split.overlay.innerHTML = overlays.join('');
                     this.split.view.innerHTML = lines.join('');
                     this.split.background.innerHTML = bLines.join('');
@@ -1051,6 +1054,9 @@ export class Display extends EventEmitter {
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
         this._view.style.minWidth = this._elJ.innerWidth() - 16 + 'px';
+        this._background.style.height = h + 'px';
+        this._background.style.width = w + 'px';
+        this._background.style.minWidth = this._elJ.innerWidth() - 16 + 'px';
 
         this._overlay.style.height = Math.max(h, this._el.clientHeight) + 'px';
         this._overlay.style.width = mw + 'px';
@@ -1150,8 +1156,6 @@ export class Display extends EventEmitter {
         t = this.createLine();
         this._viewLines.push(t[0]);
         this._backgroundLines.push(t[1]);
-
-
 
         if (!noUpdate) {
             //disable animation
@@ -2146,73 +2150,70 @@ export class Display extends EventEmitter {
             }
             else if (format.formatType === FormatType.Image) {
                 eText = '';
-                fore.push('<img src="');
+                const tmp = ['<img style="'];
                 if (format.url.length > 0) {
-                    fore.push(format.url);
                     eText += format.url;
-                    if (!format.url.endsWith('/')) {
-                        fore.push('/');
+                    if (!format.url.endsWith('/'))
                         eText += '/';
-                    }
                 }
                 if (format.t.length > 0) {
-                    fore.push(format.t);
                     eText += format.t;
-                    if (!format.t.endsWith('/')) {
-                        fore.push('/');
+                    if (!format.t.endsWith('/'))
                         eText += '/';
-                    }
                 }
                 eText += format.name;
-                fore.push(format.name, '" style="');
                 if (format.width)
-                    fore.push('width:', format.width, 'px;');
+                    tmp.push('width:', format.width, 'px;');
                 else if (format.w.length > 0)
-                    fore.push('width:', format.w, ';');
+                    tmp.push('width:', format.w, ';');
 
                 if (format.height)
-                    fore.push('height:', format.height, 'px;');
+                    tmp.push('height:', format.height, 'px;');
                 else if (format.h.length > 0)
-                    fore.push('height:', format.h, ';');
+                    tmp.push('height:', format.h, ';');
 
                 switch (format.align.toLowerCase()) {
                     case 'left':
-                        fore.push('float:left;');
+                        tmp.push('float:left;');
                         break;
                     case 'right':
-                        fore.push('float:right;');
+                        tmp.push('float:right;');
                         break;
                     case 'top':
                     case 'middle':
                     case 'bottom':
-                        fore.push('vertical-align:', format.align, ';');
+                        tmp.push('vertical-align:', format.align, ';');
                         break;
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0) {
-                    fore.push('margin:');
+                    tmp.push('margin:');
                     if (this.isNumber(format.vspace))
                         format.vspace = parseInt(format.vspace, 10) + 'px';
-                    fore.push(format.vspace, ' ');
+                    tmp.push(format.vspace, ' ');
                     if (this.isNumber(format.hspace))
                         format.hspace = parseInt(format.hspace, 10) + 'px';
-                    fore.push(format.hspace, ';');
+                    tmp.push(format.hspace, ';');
                 }
                 else if (format.hspace.length > 0) {
-                    fore.push('margin:');
+                    tmp.push('margin:');
                     if (this.isNumber(format.hspace))
                         format.hspace = parseInt(format.hspace, 10) + 'px';
-                    fore.push('0px ', format.hspace, ';');
+                    tmp.push('0px ', format.hspace, ';');
                 }
                 else if (format.vspace.length > 0) {
-                    fore.push('margin:');
+                    tmp.push('margin:');
                     if (this.isNumber(format.vspace))
                         format.vspace = parseInt(format.vspace, 10) + 'px';
-                    fore.push(format.vspace, ' 0px;');
+                    tmp.push(format.vspace, ' 0px;');
                 }
                 //TODO remove max-height when variable height supported
-                fore.push('max-height:', height, 'px;"');
-                if (format.ismap) fore.push(' ismap onclick="return false;"');
-                fore.push(`src="${eText}"/>`);
+                tmp.push('max-height:', '' + height, 'px;');
+                //back.push(...tmp, bStyle.join(''), `" src="./../assets/blank.png"/>`);
+                back.push(...tmp, `" src="./../assets/blank.png"/>`);
+                //tmp.push(fStyle.join(''), '"');
+                tmp.push('"');
+                if (format.ismap) tmp.push(' ismap onclick="return false;"');
+                fore.push(...tmp, ` src="${eText}"/>`);
                 if (!format.width) {
                     const img = new Image();
                     if (format.w.length > 0)
