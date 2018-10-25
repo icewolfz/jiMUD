@@ -1716,9 +1716,14 @@ export class Display extends EventEmitter {
              }
              this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
  */
-
-            e = this.textWidth(text.substring(s, e));
-            s = this.textWidth(text.substring(0, s));
+            if (this.lineFormats[sel.start.x][this.lineFormats[sel.start.x].length - 1].hr) {
+                s = 0;
+                e = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
+            }
+            else {
+                e = this.textWidth(text.substring(s, e));
+                s = this.textWidth(text.substring(0, s));
+            }
             if (this.roundedRanges)
                 this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
             else
@@ -1764,6 +1769,7 @@ export class Display extends EventEmitter {
             return;
         }
         const len = this.lines.length;
+        const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
 
         if (sL < 0)
             sL = 0;
@@ -1792,7 +1798,9 @@ export class Display extends EventEmitter {
                 else
                     cl = s;
             }
-            if (sL === line)
+            if (this.lineFormats[line][this.lineFormats[line].length - 1].hr)
+                w = mw;
+            else if (sL === line)
                 w = this.textWidth(this.displayLines[sL].substr(s));
             else if (eL === line)
                 w = this.textWidth(this.displayLines[line].substring(0, e));
@@ -1805,12 +1813,14 @@ export class Display extends EventEmitter {
                 if (line > sL) {
                     let pl = 0;
                     if (sL === line - 1) {
-                        if (fl(this.textWidth(this.displayLines[sL].substr(0, s))) >= fl(this.textWidth(this.displayLines[line - 1])))
+                        if (this.lineFormats[line - 1][this.lineFormats[line - 1].length - 1].hr)
+                            pl = 0;
+                        else if (fl(this.textWidth(this.displayLines[sL].substr(0, s))) >= fl(this.textWidth(this.displayLines[line - 1])))
                             pl = fl(this.textWidth(this.displayLines[line - 1]));
                         else
                             pl = fl(this.textWidth(this.displayLines[sL].substring(0, s)));
                     }
-                    const pr = fl(this.textWidth(this.displayLines[line - 1]) || this._charWidth);
+                    const pr = this.lineFormats[line - 1][this.lineFormats[line - 1].length - 1].hr ? mw : fl(this.textWidth(this.displayLines[line - 1]) || this._charWidth);
 
                     if (fl(cl) === pl)
                         startStyle.top = CornerType.Flat;
@@ -1830,7 +1840,11 @@ export class Display extends EventEmitter {
 
                 if (line < eL) {
                     const nl = 0;
-                    const nr = fl(eL === line + 1 ? this.textWidth(this.displayLines[line + 1].substring(0, e)) : (this.textWidth(this.displayLines[line + 1]) || this._charWidth));
+                    let nr;
+                    if (this.lineFormats[line + 1][this.lineFormats[line + 1].length - 1].hr)
+                        nr = mw;
+                    else
+                        nr = fl(eL === line + 1 ? this.textWidth(this.displayLines[line + 1].substring(0, e)) : (this.textWidth(this.displayLines[line + 1]) || this._charWidth));
                     if (fl(cl) === nl)
                         startStyle.bottom = CornerType.Flat;
                     else if (nl < fl(cl) && fl(cl) < nr)
@@ -2060,7 +2074,7 @@ export class Display extends EventEmitter {
                 if (format.color)
                     fStyle.push('color:', format.color, ';');
                 eText = text.substring(offset, end);
-                if (eText.length === 0) continue;
+                if (eText.length === 0 && !format.hr) continue;
                 //TODO variable character height is not supported
                 //TODO once supported update parser support tag to add font
                 /*
@@ -2364,7 +2378,7 @@ export class Display extends EventEmitter {
                 if (offset < start || offset >= len || end < start)
                     continue;
                 if (format.hr)
-                    parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '"><div class="hr" style="background-color:', format.color, '"></div></span>');
+                    parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '"><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', format.color, '"></div></span>');
                 else
                     parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
             }

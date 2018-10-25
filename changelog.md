@@ -13,7 +13,11 @@
   - Update electron from 3.0.5 to 3.0.6
 - **Fixed:**
   - Status: Fix sleet weather overlay for all themes
-  - Display: Not correctly clearing text
+  - Display:
+    - Not correctly clearing text
+    - MXP:
+      - Fix horizontal rulers display
+      - Fix selection highlighting of horizontal rulers
 
 ## v0.6.4 2018-10-22
 
