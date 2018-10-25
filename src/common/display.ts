@@ -84,6 +84,7 @@ export class Display extends EventEmitter {
     private _view: HTMLElement;
     private _background: HTMLElement;
     private _finder: Finder;
+    private _height: number = 0;
 
     private _maxLineLength: number = 0;
     private _currentSelection: Selection = {
@@ -204,9 +205,10 @@ export class Display extends EventEmitter {
                     const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
                     let l;
                     const ll = lines.length;
+                    const _lines = this._lines;
                     for (l = 0; l < ll; l++) {
-                        lines[l] = lines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
-                        bLines[l] = bLines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
+                        lines[l] = lines[l].replace(/\{top\}/, `${this._lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
+                        bLines[l] = bLines[l].replace(/\{top\}/, `${this._lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
                     }
                     const overlays = [];
                     let ol;
@@ -1059,7 +1061,7 @@ export class Display extends EventEmitter {
 
     public updateView() {
         const w = this._maxLineLength * this._charWidth;
-        const h = this.lines.length * this._charHeight;
+        const h = this._height;
         const mw = Math.max(w, this._el.clientWidth);
 
         this._view.style.height = h + 'px';
@@ -1074,8 +1076,8 @@ export class Display extends EventEmitter {
 
         //this._viewRange.start = Math.floor(this._el.scrollTop / this._charHeight) - 6;
         //this._viewRange.end = Math.ceil((this._el.scrollTop + this._elJ.innerHeight()) / this._charHeight) + 6;
-        this._viewRange.start = Math.floor(this._VScroll.position / this._charHeight);
-        this._viewRange.end = Math.ceil((this._VScroll.position + this._elJ.innerHeight()) / this._charHeight);
+        this._viewRange.start = this.getLineIndexFromY(this._VScroll.position);
+        this._viewRange.end = this.getLineIndexFromY(this._VScroll.position + this._elJ.innerHeight());
 
         if (this._viewRange.start < 0)
             this._viewRange.start = 0;
@@ -1086,17 +1088,9 @@ export class Display extends EventEmitter {
         const start = this._viewRange.start;
         const ll = lines.length;
         for (let l = 0; l < ll; l++) {
-            lines[l] = lines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
-            bLines[l] = bLines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
+            lines[l] = lines[l].replace(/\{top\}/, `${this._lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
+            bLines[l] = bLines[l].replace(/\{top\}/, `${this._lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
         }
-        /*
-                lines = lines.map((value, idx) => {
-                    return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
-                })
-                bLines = bLines.map((value, idx) => {
-                    return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
-                })*/
-
         this._view.innerHTML = lines.join('');
         this._background.innerHTML = bLines.join('');
         this.doUpdate(UpdateType.overlays);
@@ -1163,9 +1157,10 @@ export class Display extends EventEmitter {
         else if (data.line.length > this._maxLineLength)
             this._maxLineLength = data.line.length;
         this.lineIDs.push(this._lineID);
-        this._lines.push({height: 0, top: 0});
+        this._lines.push({ height: 0, top: 0 });
         this._lineID++;
         t = this.getLineDisplay();
+        this._height += this._lines[this._lines.length - 1].height;
         this._viewLines.push(t[0]);
         this._backgroundLines.push(t[1]);
 
@@ -1423,7 +1418,7 @@ export class Display extends EventEmitter {
         }
         else
             y += this._VScroll.position;
-        y = Math.floor(y / this._charHeight);
+        y = this.getLineIndexFromY(y);
 
         const xPos = (e.pageX - os.left) + this._HScroll.position;
         let x = Math.floor(xPos / this._charWidth);
@@ -1458,6 +1453,28 @@ export class Display extends EventEmitter {
             top: rect.top + bodyElt.scrollTop,
             left: rect.left + bodyElt.scrollLeft
         };
+    }
+
+    private getLineIndexFromY(y: number) {
+        let idx = Math.trunc(y / this._charHeight);
+        if (idx <= 0) return 0;
+        if (idx >= this._lines.length) return this._lines.length;
+        if (y < this._lines[idx].top) {
+            const l = this._lines.length;
+            while (idx < l) {
+                if (y >= this._lines[idx].top && y < this._lines[idx].top + this._lines[idx].height)
+                    return idx;
+                idx++;
+            }
+            return idx;
+        }
+        while (idx >= 0) {
+            if (y >= this._lines[idx].top && y < this._lines[idx].top + this._lines[idx].height)
+                return idx;
+            idx--;
+        }
+        if (idx <= 0) return 0;
+        return idx;
     }
 
     private textWidth(txt, font?) {
@@ -1499,7 +1516,7 @@ export class Display extends EventEmitter {
         if (!cls || cls.length === 0)
             cls = 'overlay-default';
         this._overlays[type] = [];
-        const fl = Math.floor;
+        const fl = Math.trunc;
         const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
         const len = this.lines.length;
         for (r = 0; r < rl; r++) {
@@ -1820,7 +1837,7 @@ export class Display extends EventEmitter {
             s = 0;
         if (e > this.lines[eL].length)
             e = this.lines[eL].length;
-        const fl = Math.floor;
+        const fl = Math.trunc;
         for (let line = sL; line < eL + 1; line++) {
             const startStyle = {
                 top: CornerType.Extern,
@@ -2093,7 +2110,7 @@ export class Display extends EventEmitter {
         let bStyle = [];
         let fStyle = [];
         let fCls;
-        const height = this._charHeight;
+        let height = this._charHeight;
         const len = formats.length;
         let width = 0;
         let left = 0;
@@ -2135,16 +2152,14 @@ export class Display extends EventEmitter {
                 if (eText.length === 0 && !format.hr) continue;
                 //TODO variable character height is not supported
                 //TODO once supported update parser support tag to add font
-                /*
                 if (format.font || format.size) {
                     if (format.font) fStyle.push('font-family: ', format.font, ';');
                     if (format.size) fStyle.push('font-size: ', format.size, ';');
-                    height = this.textHeight(eText, format.font, format.size);
+                    height = Math.max(height, this.textHeight(eText, format.font, format.size));
                     width = this.textWidth(eText, `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
                 }
                 else
-                */
-                width = this.textWidth(eText);
+                    width = this.textWidth(eText);
                 eText = htmlEncode(eText);
 
                 if (format.style !== FontStyle.None) {
@@ -2319,7 +2334,7 @@ export class Display extends EventEmitter {
                     tmp.push(formatUnit(format.vspace), ' 0px;');
                 }
                 //TODO remove max-height when variable height supported
-                tmp.push('max-height:', '' + height, 'px;');
+                //tmp.push('max-height:', '' + height, 'px;');
                 //back.push(...tmp, bStyle.join(''), `" src="./../assets/blank.png"/>`);
                 back.push(...tmp, `" src="./../assets/blank.png"/>`);
                 //tmp.push(fStyle.join(''), '"');
@@ -2335,8 +2350,9 @@ export class Display extends EventEmitter {
                     img.style.top = (this._el.clientWidth + 100) + 'px';
                     this._el.appendChild(img);
                     img.onload = () => {
-                        const lIdx = this.lineIDs.indexOf(+img.dataset.id);
+                        let lIdx = this.lineIDs.indexOf(+img.dataset.id);
                         if (lIdx === -1 || lIdx >= this.lines.length) return;
+                        const pHeight = this._lines[lIdx].height;
                         const fIdx = +img.dataset.f;
                         const fmt = this.lineFormats[lIdx][fIdx];
                         if (fmt.w.length > 0)
@@ -2347,14 +2363,25 @@ export class Display extends EventEmitter {
                         fmt.width = bounds.width || img.width;
                         fmt.height = bounds.height || img.height;
                         const t = this.getLineDisplay(lIdx);
+                        this._height += this._lines[lIdx].height - pHeight;
                         this._viewLines[lIdx] = t[0];
                         this._backgroundLines[lIdx] = t[1];
-                        this.doUpdate(UpdateType.view);
+                        const l = this._lines.length;
+                        lIdx++;
+                        while (lIdx < l) {
+                            this._lines[lIdx].top = this._lines[lIdx - 1].top + this._lines[lIdx - 1].height;
+                            lIdx++;
+                        }
+                        this.doUpdate(UpdateType.scrollbars | UpdateType.view);
                         img.remove();
                     };
                 }
+                height = Math.max(height, format.height || 0);
             }
         }
+        this._lines[idx].height = height;
+        if (idx > 0)
+            this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
         return [`<span class="line" data-id="${id}" style="top:{top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${height}px;">${back.join('')}<br></span>`];
     }
 
