@@ -2312,22 +2312,29 @@ export class Display extends EventEmitter {
                 fore.push(...tmp, ` src="${eText}"/>`);
                 if (!format.width) {
                     const img = new Image();
-                    if (format.w.length > 0)
-                        img.style.width = formatUnit(format.w);
-                    if (format.h.length > 0)
-                        img.style.height = formatUnit(format.h, this._charHeight);
                     img.src = eText;
                     img.dataset.id = '' + id;
+                    img.dataset.f = '' + f;
+                    img.style.position = 'absolute';
+                    img.style.top = (this._el.clientWidth + 100) + 'px';
+                    this._el.appendChild(img);
                     img.onload = () => {
                         const lIdx = this.lineIDs.indexOf(+img.dataset.id);
                         if (lIdx === -1 || lIdx >= this.lines.length) return;
+                        const fIdx = +img.dataset.f;
+                        const fmt = this.lineFormats[lIdx][fIdx];
+                        if (fmt.w.length > 0)
+                            img.style.width = formatUnit(fmt.w);
+                        if (fmt.h.length > 0)
+                            img.style.height = formatUnit(fmt.h, this._charHeight);
                         const bounds = img.getBoundingClientRect();
-                        this.lineFormats[lIdx][f].width = bounds.width;
-                        this.lineFormats[lIdx][f].height = bounds.height;
+                        fmt.width = bounds.width || img.width;
+                        fmt.height = bounds.height || img.height;
                         const t = this.createLine(lIdx);
                         this._viewLines[lIdx] = t[0];
                         this._backgroundLines[lIdx] = t[1];
                         this.doUpdate(UpdateType.view);
+                        img.remove();
                     };
                 }
             }
