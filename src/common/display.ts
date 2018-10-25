@@ -1156,7 +1156,7 @@ export class Display extends EventEmitter {
             this._maxLineLength = data.line.length;
         this.lineIDs.push(this._lineID);
         this._lineID++;
-        t = this.createLine();
+        t = this.getLineDisplay();
         this._viewLines.push(t[0]);
         this._backgroundLines.push(t[1]);
 
@@ -1317,7 +1317,11 @@ export class Display extends EventEmitter {
     }
 
     get html(): string {
-        return $(this._view).html();
+        const l = this.lines.length;
+        const html = [];
+        for (let idx = 0; idx < l; idx++)
+            html.push(this.getLineHTML(idx));
+        return html.join('');
     }
 
     get text(): string {
@@ -2009,7 +2013,7 @@ export class Display extends EventEmitter {
         else {
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
-            return this.createHTMLLine(sel.start.y, s, e);
+            return this.getLineHTML(sel.start.y, s, e);
         }
         const len = this.lines.length;
 
@@ -2022,13 +2026,13 @@ export class Display extends EventEmitter {
         if (e > this.lines[eL].length)
             e = this.lines[eL].length;
 
-        const txt = [this.createHTMLLine(sL, s)];
+        const txt = [this.getLineHTML(sL, s)];
         sL++;
         while (sL < eL) {
-            txt.push(this.createHTMLLine(sL));
+            txt.push(this.getLineHTML(sL));
             sL++;
         }
-        txt.push(this.createHTMLLine(eL, 0, e));
+        txt.push(this.getLineHTML(eL, 0, e));
         return txt.join('\n');
     }
 
@@ -2066,7 +2070,7 @@ export class Display extends EventEmitter {
         this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
     }
 
-    private createLine(idx?: number) {
+    private getLineDisplay(idx?: number) {
         if (idx === undefined)
             idx = this.lines.length - 1;
         const back = [];
@@ -2330,7 +2334,7 @@ export class Display extends EventEmitter {
                         const bounds = img.getBoundingClientRect();
                         fmt.width = bounds.width || img.width;
                         fmt.height = bounds.height || img.height;
-                        const t = this.createLine(lIdx);
+                        const t = this.getLineDisplay(lIdx);
                         this._viewLines[lIdx] = t[0];
                         this._backgroundLines[lIdx] = t[1];
                         this.doUpdate(UpdateType.view);
@@ -2342,7 +2346,7 @@ export class Display extends EventEmitter {
         return [`<span class="line" data-id="${id}" style="top:{top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${height}px;">${back.join('')}<br></span>`];
     }
 
-    private createHTMLLine(idx?: number, start?: number, len?: number) {
+    public getLineHTML(idx?: number, start?: number, len?: number) {
         if (idx === undefined || idx >= this.lines.length)
             idx = this.lines.length - 1;
         else if (idx < 0)
@@ -2542,7 +2546,7 @@ export class Display extends EventEmitter {
         let t;
         const ll = this.lines.length;
         for (let l = 0; l < ll; l++) {
-            t = this.createLine(l);
+            t = this.getLineDisplay(l);
             this._viewLines[l] = t[0];
             this._backgroundLines[l] = t[1];
         }
@@ -2656,7 +2660,7 @@ export class Display extends EventEmitter {
                 else if (this.lineFormats[idx][f] === type)
                     n++;
             }
-            t = this.createLine(idx);
+            t = this.getLineDisplay(idx);
             this._viewLines[idx] = t[0];
             this._backgroundLines[idx] = t[1];
         }

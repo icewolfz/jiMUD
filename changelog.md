@@ -19,6 +19,7 @@
       - Fix horizontal rulers display
       - Fix selection highlighting of horizontal rulers
       - Fix copying horizontal rulers and use --- on own line in text
+    - Fixed HTML property to return correct HTML markup
 
 ## v0.6.4 2018-10-22
 
