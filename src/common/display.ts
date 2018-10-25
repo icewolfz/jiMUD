@@ -1953,7 +1953,7 @@ export class Display extends EventEmitter {
         else {
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
-            return this.lines[sel.start.y].substring(s, e);
+            return this.createHTMLLine(sel.start.y, s, e);
         }
         const len = this.lines.length;
 
@@ -1966,11 +1966,13 @@ export class Display extends EventEmitter {
         if (e > this.lines[eL].length)
             e = this.lines[eL].length;
 
-        const txt = [this.lines[sL].substring(s)];
+        const txt = [this.createHTMLLine(sL, s)];
         sL++;
-        if (eL - sL > 0)
-            txt.push.apply(txt, this.lines.slice(sL, eL));
-        txt.push(this.lines[eL].substring(0, e));
+        while (sL < eL) {
+            txt.push(this.createHTMLLine(sL));
+            sL++;
+        }
+        txt.push(this.createHTMLLine(eL, 0, e));
         return txt.join('\n');
     }
 
@@ -2280,9 +2282,212 @@ export class Display extends EventEmitter {
                     };
                 }
             }
-            //TODO once supported update parser support tag to add image
         }
         return [`<span class="line" data-id="${id}" style="top:{top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${height}px;">${back.join('')}<br></span>`];
+    }
+
+    private createHTMLLine(idx?: number, start?: number, len?: number) {
+        if (idx === undefined || idx >= this.lines.length)
+            idx = this.lines.length - 1;
+        else if (idx < 0)
+            idx = 0;
+        if (start === undefined)
+            start = 0;
+        if (len === undefined)
+            len = this.lines[idx].length;
+        const parts = [];
+        let offset = 0;
+        let style = [];
+        let fCls;
+        const text = this.displayLines[idx];
+        const formats = this.lineFormats[idx];
+        const fLen = formats.length;
+
+        for (let f = 0; f < fLen; f++) {
+            const format = formats[f];
+            let nFormat;
+            let end;
+            const td = [];
+            //let oSize;
+            //let oFont;
+            if (f < fLen - 1) {
+                nFormat = formats[f + 1];
+                //skip empty blocks
+                if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                    continue;
+                end = nFormat.offset;
+            }
+            else
+                end = text.length;
+            offset = format.offset;
+
+            if (end > len)
+                end = len;
+            if (offset < start)
+                offset = start;
+
+            if (format.formatType === FormatType.Normal) {
+                style = [];
+                fCls = [];
+                if (format.background)
+                    style.push('background:', format.background, ';');
+                if (format.color)
+                    style.push('color:', format.color, ';');
+                if (format.font)
+                    style.push('font-family: ', format.font, ';');
+                if (format.size)
+                    style.push('font-size: ', format.size, ';');
+                if (format.style !== FontStyle.None) {
+                    if ((format.style & FontStyle.Bold) === FontStyle.Bold)
+                        style.push('font-weight: bold;');
+                    if ((format.style & FontStyle.Italic) === FontStyle.Italic)
+                        style.push('font-style: italic;');
+                    if ((format.style & FontStyle.Overline) === FontStyle.Overline)
+                        td.push('overline ');
+                    if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) === FontStyle.Underline)
+                        td.push('underline ');
+                    if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
+                        style.push('border-bottom: 1px solid ', format.color, ';');
+                    else
+                        style.push('padding-bottom: 1px;');
+                    if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
+                        if (this.enableFlashing)
+                            fCls.push(' ansi-blink');
+                        else if ((format.style & FontStyle.DoubleUnderline) !== FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) !== FontStyle.Underline)
+                            td.push('underline ');
+                    }
+                    if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
+                        td.push('line-through ');
+                    if (td.length > 0)
+                        style.push('text-decoration:', td.join(''), ';');
+                }
+                if (offset < start || offset >= len || end < start)
+                    continue;
+                if (format.hr)
+                    parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '"><div class="hr" style="background-color:', format.color, '"></div></span>');
+                else
+                    parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
+            }
+            else if (format.formatType === FormatType.Link) {
+                if (offset < start || offset >= len || end < start)
+                    continue;
+                parts.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
+                parts.push(format.href);
+                parts.push('" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
+                parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
+                parts.push(htmlEncode(text.substring(offset, end)));
+                parts.push('</span>');
+            }
+            else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
+                if (offset < start || offset >= len || end < start)
+                    continue;
+                parts.push('</a>');
+
+            }
+            else if (format.formatType === FormatType.WordBreak) {
+                if (offset < start || offset >= len || end < start)
+                    continue;
+                parts.push('<wbr>');
+            }
+            else if (format.formatType === FormatType.MXPLink) {
+                if (offset < start || offset >= len || end < start)
+                    continue;
+                parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="');
+                parts.push(format.href);
+                parts.push('"');
+                parts.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
+                parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
+                parts.push(htmlEncode(text.substring(offset, end)));
+                parts.push('</span>');
+            }
+            else if (format.formatType === FormatType.MXPSend) {
+                if (offset < start || offset >= len || end < start)
+                    continue;
+                parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="');
+                parts.push(format.hint);
+                parts.push('"');
+                parts.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
+                parts.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
+                parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
+                parts.push(htmlEncode(text.substring(offset, end)));
+                parts.push('</span>');
+            }
+            else if (format.formatType === FormatType.MXPExpired) {
+                if (offset < start || offset >= len || end < start)
+                    continue;
+                parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
+                parts.push(htmlEncode(text.substring(offset, end)));
+                parts.push('</span>');
+            }
+            else if (format.formatType === FormatType.Image) {
+                if (offset < start || offset >= len || end < start)
+                    continue;
+                let tmp = '';
+                parts.push('<img src="');
+                if (format.url.length > 0) {
+                    parts.push(format.url);
+                    tmp += format.url;
+                    if (!format.url.endsWith('/')) {
+                        parts.push('/');
+                        tmp += '/';
+                    }
+                }
+                if (format.t.length > 0) {
+                    parts.push(format.t);
+                    tmp += format.t;
+                    if (!format.t.endsWith('/')) {
+                        parts.push('/');
+                        tmp += '/';
+                    }
+                }
+                tmp += format.name;
+                parts.push(format.name, '"  style="');
+                if (format.w.length > 0)
+                    parts.push('width:', format.w, ';');
+                if (format.h.length > 0)
+                    parts.push('height:', format.h, ';');
+                switch (format.align.toLowerCase()) {
+                    case 'left':
+                        parts.push('float:left;');
+                        break;
+                    case 'right':
+                        parts.push('float:right;');
+                        break;
+                    case 'top':
+                    case 'middle':
+                    case 'bottom':
+                        parts.push('vertical-align:', format.align, ';');
+                        break;
+                }
+                if (format.hspace.length > 0 && format.vspace.length > 0) {
+                    parts.push('margin:');
+                    if (this.isNumber(format.vspace))
+                        format.vspace = parseInt(format.vspace, 10) + 'px';
+                    parts.push(format.vspace, ' ');
+                    if (this.isNumber(format.hspace))
+                        format.hspace = parseInt(format.hspace, 10) + 'px';
+                    parts.push(format.hspace, ';');
+                }
+                else if (format.hspace.length > 0) {
+                    parts.push('margin:');
+                    if (this.isNumber(format.hspace))
+                        format.hspace = parseInt(format.hspace, 10) + 'px';
+                    parts.push('0px ', format.hspace, ';');
+                }
+                else if (format.vspace.length > 0) {
+                    parts.push('margin:');
+                    if (this.isNumber(format.vspace))
+                        format.vspace = parseInt(format.vspace, 10) + 'px';
+                    parts.push(format.vspace, ' 0px;');
+                }
+                parts.push('"');
+                if (format.ismap) parts.push(' ismap onclick="return false;"');
+                parts.push(`src="${tmp}"/>`);
+            }
+        }
+        if (len < this.lines[idx].length)
+            return `<span class="line">${parts.join('')}</span>`;
+        return `<span class="line">${parts.join('')}<br></span>`;
     }
 
     public rebuildLines() {

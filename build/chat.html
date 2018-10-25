@@ -80,8 +80,14 @@
 
             display.on('selection-done', () => {
                 if (options.AutoCopySelectedToClipboard && display.hasSelection) {
-                    clipboard.writeText(display.selection, 'selection');
-                    clipboard.writeText(display.selection);
+                    clipboard.write({
+                        text: display.selection,
+                        html: display.selectionAsHTML
+                    });
+                    clipboard.write({
+                        text: display.selection,
+                        html: display.selectionAsHTML
+                    }, 'selection');
                     display.clearSelection();
                 }
             });
@@ -125,8 +131,14 @@
             ['copy'].forEach(function (event) {
                 document.addEventListener(event, function () {
                     if (display.hasSelection) {
-                        clipboard.writeText(display.selection, 'selection');
-                        clipboard.writeText(display.selection);
+                        clipboard.write({
+                            text: display.selection,
+                            html: display.selectionAsHTML
+                        });
+                        clipboard.write({
+                            text: display.selection,
+                            html: display.selectionAsHTML
+                        }, 'selection');
                     }
                 });
             });
@@ -135,8 +147,14 @@
         // eslint-disable-next-line no-unused-vars
         function doCopy() {
             if (display.hasSelection) {
-                clipboard.writeText(display.selection, 'selection');
-                clipboard.writeText(display.selection);
+                clipboard.write({
+                    text: display.selection,
+                    html: display.selectionAsHTML
+                });
+                clipboard.write({
+                    text: display.selection,
+                    html: display.selectionAsHTML
+                }, 'selection');
             }
         }
 

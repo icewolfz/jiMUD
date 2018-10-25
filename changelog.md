@@ -2,11 +2,15 @@
 
 ## v0.6.5
 
-- **New:**  
+- **New:**
+  - Add copy support as HTML format to allow copying colors and formats and paste into applications that support HTML markup
   - Logger: Add support for MXP images
-  - Display: Add basic MXP image support, does not correctly calculate width/height
-  - Added [client.writeClipboardHTML](docs/scripting.md) write HTML markup to clipboard to produce formated text for applications that support HTML pasting
-  - Added [client.readClipboardHTML](docs/scripting.md) read HTML markup from clipboard if clipboard has HTML support
+  - Display: Add basic MXP image support, limits height to line height
+  - Expanded [client.writeClipboard](docs/scripting.md) added html argument to add formated html as well as plain text
+  - Expanded [client.writeClipboardHTML](docs/scripting.md) write HTML markup to clipboard to produce formated text for applications that support HTML pasting
+  - Expanded [client.readClipboardHTML](docs/scripting.md) read HTML markup from clipboard if clipboard has HTML support
+- **Changed:**
+  - Update electron from 3.0.5 to 3.0.6
 - **Fixed:**
   - Status: Fix sleet weather overlay for all themes
   - Display: Not correctly clearing text

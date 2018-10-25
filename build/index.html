@@ -635,7 +635,7 @@
 
             client.display.on('selection-done', () => {
                 if (client.options.AutoCopySelectedToClipboard && client.display.hasSelection) {
-                    window.writeClipboard(client.display.selection);
+                    window.writeClipboard(client.display.selection, client.display.selectionAsHTML);
                     client.display.clearSelection();
                 }
             });
@@ -712,7 +712,7 @@
                     if ($('#commandinput').data('context'))
                         return;
                     if (client.display.hasSelection) {
-                        window.writeClipboard(client.display.selection);
+                        window.writeClipboard(client.display.selection, client.display.selectionAsHTML);
                         e.preventDefault();
                         e.stopPropagation();
                     }
@@ -721,14 +721,27 @@
             window.client = client;
             window.OoMUD = client;
             window.readClipboard = () => { return clipboard.readText('selection') || clipboard.readText() || ''; };
-            window.writeClipboard = (txt) => { clipboard.writeText(txt || ''); clipboard.writeText(txt || '', 'selection'); };
+            window.writeClipboard = (txt, html) => {
+                if (html) {
+                    clipboard.write({
+                        text: txt || '',
+                        html: html || ''
+                    });
+                    clipboard.write({
+                        text: txt || '',
+                        html: html || ''
+                    }, 'selection');
+                }
+                else {
+                    clipboard.writeText(txt || '');
+                    clipboard.writeText(txt || '', 'selection');
+                }
+            };
             client.readClipboard = window.readClipboard;
             client.writeClipboard = window.writeClipboard;
 
             window.readClipboardHTML = () => { return clipboard.readHTML('selection') || clipboard.readHTML() || ''; };
-            window.writeClipboardHTML = (txt) => { clipboard.writeHTML(txt || ''); clipboard.writeHTML(txt || '', 'selection'); };
             client.readClipboardHTML = window.readClipboardHTML;
-            client.writeClipboardHTML = window.writeClipboardHTML;
 
             client.version = version;
             client.host = 'www.shadowmud.com';
