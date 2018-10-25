@@ -55,6 +55,11 @@ interface ContextEvent extends PointerEvent {
     line: string;
 }
 
+interface Line {
+    height: number;
+    top: number;
+}
+
 /**
  * Ansi display control
  *
@@ -93,6 +98,8 @@ export class Display extends EventEmitter {
     private _enableDebug: boolean = false;
     private _lastMouse: MouseEvent;
     private _roundedRanges: boolean = true;
+
+    private _lines: Line[] = [];
 
     public lines: string[] = [];
     private displayLines: string[] = [];
@@ -979,6 +986,7 @@ export class Display extends EventEmitter {
         this._backgroundLines = [];
         this.displayLines = [];
         this.lineIDs = [];
+        this._lines = [];
         this._lineID = 0;
         this._viewRange = { start: 0, end: 0 };
         this._maxLineLength = 0;
@@ -1155,6 +1163,7 @@ export class Display extends EventEmitter {
         else if (data.line.length > this._maxLineLength)
             this._maxLineLength = data.line.length;
         this.lineIDs.push(this._lineID);
+        this._lines.push({height: 0, top: 0});
         this._lineID++;
         t = this.getLineDisplay();
         this._viewLines.push(t[0]);
@@ -1182,6 +1191,7 @@ export class Display extends EventEmitter {
         this.lines.splice(line, 1);
         this.displayLines.splice(line, 1);
         this.lineIDs.splice(line, 1);
+        this._lines.splice(line, 1);
         this.rawLines.splice(line, 1);
         this.lineFormats.splice(line, 1);
         this._backgroundLines.splice(line, 1);
@@ -1245,6 +1255,7 @@ export class Display extends EventEmitter {
         this.lines.splice(line, amt);
         this.displayLines.splice(line, amt);
         this.lineIDs.splice(line, amt);
+        this._lines.splice(line, amt);
         this.rawLines.splice(line, amt);
         this.lineFormats.splice(line, amt);
         this._backgroundLines.splice(line, amt);
@@ -1340,6 +1351,7 @@ export class Display extends EventEmitter {
             this.lines.splice(0, amt);
             this.displayLines.splice(0, amt);
             this.lineIDs.splice(0, amt);
+            this._lines.splice(0, amt);
             this.rawLines.splice(0, amt);
             this.lineFormats.splice(0, amt);
             this._viewLines.splice(0, amt);
