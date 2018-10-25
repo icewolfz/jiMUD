@@ -8,7 +8,7 @@
 import { Size, ParserLine, FormatType, FontStyle } from './types';
 import EventEmitter = require('events');
 import { Parser } from './parser';
-import { htmlEncode } from './library';
+import { htmlEncode, formatUnit } from './library';
 import { Finder } from './finder';
 import { DisplayOptions, OverlayRange } from './types';
 
@@ -2269,12 +2269,12 @@ export class Display extends EventEmitter {
                 if (format.width)
                     tmp.push('width:', format.width, 'px;');
                 else if (format.w.length > 0)
-                    tmp.push('width:', format.w, ';');
+                    tmp.push('width:', formatUnit(format.w), ';');
 
                 if (format.height)
                     tmp.push('height:', format.height, 'px;');
                 else if (format.h.length > 0)
-                    tmp.push('height:', format.h, ';');
+                    tmp.push('height:', formatUnit(format.h, this._charHeight), ';');
 
                 switch (format.align.toLowerCase()) {
                     case 'left':
@@ -2291,24 +2291,16 @@ export class Display extends EventEmitter {
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0) {
                     tmp.push('margin:');
-                    if (this.isNumber(format.vspace))
-                        format.vspace = parseInt(format.vspace, 10) + 'px';
-                    tmp.push(format.vspace, ' ');
-                    if (this.isNumber(format.hspace))
-                        format.hspace = parseInt(format.hspace, 10) + 'px';
-                    tmp.push(format.hspace, ';');
+                    tmp.push(formatUnit(format.vspace), ' ');
+                    tmp.push(formatUnit(format.hspace, this._charHeight), ';');
                 }
                 else if (format.hspace.length > 0) {
                     tmp.push('margin:');
-                    if (this.isNumber(format.hspace))
-                        format.hspace = parseInt(format.hspace, 10) + 'px';
-                    tmp.push('0px ', format.hspace, ';');
+                    tmp.push('0px ', formatUnit(format.hspace, this._charHeight), ';');
                 }
                 else if (format.vspace.length > 0) {
                     tmp.push('margin:');
-                    if (this.isNumber(format.vspace))
-                        format.vspace = parseInt(format.vspace, 10) + 'px';
-                    tmp.push(format.vspace, ' 0px;');
+                    tmp.push(formatUnit(format.vspace), ' 0px;');
                 }
                 //TODO remove max-height when variable height supported
                 tmp.push('max-height:', '' + height, 'px;');
@@ -2321,16 +2313,17 @@ export class Display extends EventEmitter {
                 if (!format.width) {
                     const img = new Image();
                     if (format.w.length > 0)
-                        img.style.width = format.w;
+                        img.style.width = formatUnit(format.w);
                     if (format.h.length > 0)
-                        img.style.height = format.w;
+                        img.style.height = formatUnit(format.h, this._charHeight);
                     img.src = eText;
                     img.dataset.id = '' + id;
                     img.onload = () => {
                         const lIdx = this.lineIDs.indexOf(+img.dataset.id);
                         if (lIdx === -1 || lIdx >= this.lines.length) return;
-                        this.lineFormats[lIdx][f].width = img.width;
-                        this.lineFormats[lIdx][f].height = img.height;
+                        const bounds = img.getBoundingClientRect();
+                        this.lineFormats[lIdx][f].width = bounds.width;
+                        this.lineFormats[lIdx][f].height = bounds.height;
                         const t = this.createLine(lIdx);
                         this._viewLines[lIdx] = t[0];
                         this._backgroundLines[lIdx] = t[1];
@@ -2499,9 +2492,9 @@ export class Display extends EventEmitter {
                 tmp += format.name;
                 parts.push(format.name, '"  style="');
                 if (format.w.length > 0)
-                    parts.push('width:', format.w, ';');
+                    parts.push('width:', formatUnit(format.w), ';');
                 if (format.h.length > 0)
-                    parts.push('height:', format.h, ';');
+                    parts.push('height:', formatUnit(format.h, this._charHeight), ';');
                 switch (format.align.toLowerCase()) {
                     case 'left':
                         parts.push('float:left;');
@@ -2517,24 +2510,16 @@ export class Display extends EventEmitter {
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0) {
                     parts.push('margin:');
-                    if (this.isNumber(format.vspace))
-                        format.vspace = parseInt(format.vspace, 10) + 'px';
-                    parts.push(format.vspace, ' ');
-                    if (this.isNumber(format.hspace))
-                        format.hspace = parseInt(format.hspace, 10) + 'px';
-                    parts.push(format.hspace, ';');
+                    parts.push(formatUnit(format.vspace), ' ');
+                    parts.push(formatUnit(format.hspace, this._charHeight), ';');
                 }
                 else if (format.hspace.length > 0) {
                     parts.push('margin:');
-                    if (this.isNumber(format.hspace))
-                        format.hspace = parseInt(format.hspace, 10) + 'px';
-                    parts.push('0px ', format.hspace, ';');
+                    parts.push('0px ', formatUnit(format.hspace, this._charHeight), ';');
                 }
                 else if (format.vspace.length > 0) {
                     parts.push('margin:');
-                    if (this.isNumber(format.vspace))
-                        format.vspace = parseInt(format.vspace, 10) + 'px';
-                    parts.push(format.vspace, ' 0px;');
+                    parts.push(formatUnit(format.vspace), ' 0px;');
                 }
                 parts.push('"');
                 if (format.ismap) parts.push(' ismap onclick="return false;"');
@@ -2682,10 +2667,6 @@ export class Display extends EventEmitter {
         window.removeEventListener('mouseup', this._wUp);
 
         window.removeEventListener('resize', this._wResize);
-    }
-
-    private isNumber(str) {
-        return (/^\d+$/).test(str);
     }
 }
 

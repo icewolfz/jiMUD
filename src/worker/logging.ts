@@ -418,9 +418,9 @@ function createLine(text: string, formats: any[]) {
             tmp += format.name;
             parts.push(format.name, '"  style="');
             if (format.w.length > 0)
-                parts.push('width:', format.w, ';');
+                parts.push('width:', formatUnit(format.w), ';');
             if (format.h.length > 0)
-                parts.push('height:', format.h, ';');
+                parts.push('height:', formatUnit(format.h), ';');
             switch (format.align.toLowerCase()) {
                 case 'left':
                     parts.push('float:left;');
@@ -436,24 +436,16 @@ function createLine(text: string, formats: any[]) {
             }
             if (format.hspace.length > 0 && format.vspace.length > 0) {
                 parts.push('margin:');
-                if (this.isNumber(format.vspace))
-                    format.vspace = parseInt(format.vspace, 10) + 'px';
-                parts.push(format.vspace, ' ');
-                if (this.isNumber(format.hspace))
-                    format.hspace = parseInt(format.hspace, 10) + 'px';
-                parts.push(format.hspace, ';');
+                parts.push(formatUnit(format.vspace), ' ');
+                parts.push(formatUnit(format.hspace), ';');
             }
             else if (format.hspace.length > 0) {
                 parts.push('margin:');
-                if (this.isNumber(format.hspace))
-                    format.hspace = parseInt(format.hspace, 10) + 'px';
-                parts.push('0px ', format.hspace, ';');
+                parts.push('0px ', formatUnit(format.hspace), ';');
             }
             else if (format.vspace.length > 0) {
                 parts.push('margin:');
-                if (this.isNumber(format.vspace))
-                    format.vspace = parseInt(format.vspace, 10) + 'px';
-                parts.push(format.vspace, ' 0px;');
+                parts.push(formatUnit(format.vspace), ' 0px;');
             }
             parts.push('"');
             if (format.ismap) parts.push(' ismap onclick="return false;"');
@@ -484,4 +476,13 @@ function isFileSync(aPath) {
             throw e;
         }
     }
+}
+
+function formatUnit(str) {
+    if (!str) return str;
+    if (/^\d+c$/.test(str))
+        return str + 'h';
+    if (/^\d+$/.test(str))
+        return parseInt(str, 10) + 'px';
+    return str;
 }

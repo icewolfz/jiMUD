@@ -71,7 +71,7 @@
     const { Search } = require('./js/search');
     const { FormatType, FontStyle } = require('./js/types');
     // eslint-disable-next-line no-unused-vars
-    const { parseTemplate, existsSync, isDirSync, walkSync } = require('./js/library');
+    const { parseTemplate, existsSync, isDirSync, walkSync, formatUnit } = require('./js/library');
 
     const path = require('path');
     const fs = require('fs');
@@ -805,9 +805,9 @@
                 tmp += format.name;
                 parts.push(format.name, '"  style="');
                 if (format.w.length > 0)
-                    parts.push('width:', format.w, ';');
+                    parts.push('width:', formatUnit(format.w), ';');
                 if (format.h.length > 0)
-                    parts.push('height:', format.h, ';');
+                    parts.push('height:', formatUnit(format.h), ';');
                 switch (format.align.toLowerCase()) {
                     case 'left':
                         parts.push('float:left;');
@@ -823,24 +823,16 @@
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0) {
                     parts.push('margin:');
-                    if (this.isNumber(format.vspace))
-                        format.vspace = parseInt(format.vspace, 10) + 'px';
-                    parts.push(format.vspace, ' ');
-                    if (this.isNumber(format.hspace))
-                        format.hspace = parseInt(format.hspace, 10) + 'px';
-                    parts.push(format.hspace, ';');
+                    parts.push(formatUnit(format.vspace), ' ');
+                    parts.push(formatUnit(format.hspace), ';');
                 }
                 else if (format.hspace.length > 0) {
                     parts.push('margin:');
-                    if (this.isNumber(format.hspace))
-                        format.hspace = parseInt(format.hspace, 10) + 'px';
-                    parts.push('0px ', format.hspace, ';');
+                    parts.push('0px ', formatUnit(format.hspace), ';');
                 }
                 else if (format.vspace.length > 0) {
                     parts.push('margin:');
-                    if (this.isNumber(format.vspace))
-                        format.vspace = parseInt(format.vspace, 10) + 'px';
-                    parts.push(format.vspace, ' 0px;');
+                    parts.push(formatUnit(format.vspace), ' 0px;');
                 }
                 parts.push('"');
                 if (format.ismap) parts.push(' ismap onclick="return false;"');

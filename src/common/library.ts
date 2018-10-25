@@ -2011,3 +2011,15 @@ function mergeDeep(target, ...sources) {
     }
     return mergeDeep(target, ...sources);
 }
+
+export function formatUnit(str, ch?) {
+    if (!str) return str;
+    if (/^\d+c$/.test(str)) {
+        if (ch)
+            return (parseInt(str, 10) * ch) + 'px';
+        return str + 'h';
+    }
+    if (/^\d+$/.test(str))
+        return parseInt(str, 10) + 'px';
+    return str;
+}

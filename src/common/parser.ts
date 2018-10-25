@@ -1122,13 +1122,16 @@ export class Parser extends EventEmitter {
               case 'URL':
                 e.url = stripQuotes(arg[1]);
                 break;
+              case 'TYPE':
               case 'T':
                 if (arg[1].length > 0)
                   e.type = arg[1];
                 break;
+              case 'HEIGHT':
               case 'H':
                 e.h = stripQuotes(arg[1]);
                 break;
+              case 'WIDTH':
               case 'W':
                 e.w = stripQuotes(arg[1]);
                 break;
