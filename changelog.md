@@ -6,7 +6,6 @@
   - Display:
     - Add MXP image height and better width support
     - Add MXP font size and family support
-    - Throttle selection mouse moving to improve performance
 
 ## v0.6.5
 
@@ -33,6 +32,7 @@
       - Fixed MXP send tags
     - Fixed HTML property to return correct HTML markup
     - Match would unicode words on context or double click
+    - Throttle selection mouse moving to improve performance
   - ANSI Parser: Fixed extra characters being added after : is detected, fixes raw ansi logging
 
 ## v0.6.4 2018-10-22
