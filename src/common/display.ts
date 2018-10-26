@@ -191,8 +191,8 @@ export class Display extends EventEmitter {
             this.split.updateView = () => {
                 this.split.style.bottom = this._HScroll.size + 'px';
                 if (this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
-                    this.split._viewRange.start = Math.floor(this._VScroll.scrollSize / this._charHeight);
-                    this.split._viewRange.end = Math.ceil((this._VScroll.scrollSize + this._elJ.innerHeight()) / this._charHeight);
+                    this.split._viewRange.start = this.getLineIndexFromY(this._VScroll.scrollSize);
+                    this.split._viewRange.end = this.getLineIndexFromY(this._VScroll.scrollSize + this._elJ.innerHeight());
 
                     if (this.split._viewRange.start < 0)
                         this.split._viewRange.start = 0;
@@ -1068,8 +1068,6 @@ export class Display extends EventEmitter {
         this._overlay.style.height = Math.max(h, this._el.clientHeight) + 'px';
         this._overlay.style.width = mw + 'px';
 
-        //this._viewRange.start = Math.floor(this._el.scrollTop / this._charHeight) - 6;
-        //this._viewRange.end = Math.ceil((this._el.scrollTop + this._elJ.innerHeight()) / this._charHeight) + 6;
         this._viewRange.start = this.getLineIndexFromY(this._VScroll.position);
         this._viewRange.end = this.getLineIndexFromY(this._VScroll.position + this._elJ.innerHeight());
 
