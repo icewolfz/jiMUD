@@ -11,10 +11,12 @@
   - Expanded [client.readClipboardHTML](docs/scripting.md) read HTML markup from clipboard if clipboard has HTML support
 - **Changed:**
   - Update electron from 3.0.5 to 3.0.6
+  - Log viewer uses simpler HTML generation
 - **Fixed:**
   - Status: Fix sleet weather overlay for all themes
   - Display:
     - Not correctly clearing text
+    - Improve performance by generating cleaning HTML markup
     - MXP:
       - Fixed horizontal rulers display
       - Fixed selection highlighting of horizontal rulers
@@ -22,6 +24,7 @@
       - Fixed closing of custom defined tags
       - Fixed MXP send tags
     - Fixed HTML property to return correct HTML markup
+  - ANSI Parser: Fixed extra characters being added after : is detected, fixes raw ansi logging
 
 ## v0.6.4 2018-10-22
 

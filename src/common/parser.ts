@@ -2908,6 +2908,8 @@ export class Parser extends EventEmitter {
             if (idx > lnk + 2) {
               stringBuilder.pop();
               stringBuilder.pop();
+              rawBuilder.pop();
+              rawBuilder.pop();
               lineLength -= 2;
               this.textLength -= 2;
               this.MXPDeCapture(2);
@@ -2943,6 +2945,7 @@ export class Parser extends EventEmitter {
             }
             else if (idx > lnk + 1) {
               stringBuilder.pop();
+              rawBuilder.pop();
               lineLength--;
               this.textLength--;
               this.MXPDeCapture(1);
@@ -2952,6 +2955,7 @@ export class Parser extends EventEmitter {
             else {
               idx = lnk;
               state = ParserState.None;
+              rawBuilder.pop();
             }
             break;
           case ParserState.URLFound:

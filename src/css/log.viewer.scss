@@ -458,6 +458,7 @@ dialog .close {
 
 pre.viewer {
     padding: 5px;
+    white-space: normal;
 }
 
 .html-viewer .line, 
@@ -467,11 +468,13 @@ pre.viewer {
     position: relative;
 }
 
+/*
 .html-viewer .ansi, 
 .text-viewer .ansi,
 .ansi {
     display: inline;
 }
+*/
 
 .line:last-child {
     margin-right: 5px;
