@@ -1139,13 +1139,13 @@ export class Display extends EventEmitter {
     }
 
     get WindowWidth(): number {
-        return Math.floor((this._elJ.innerWidth() - 12) / parseFloat(window.getComputedStyle(this._character).width)) - 1;
+        return Math.trunc((this._elJ.innerWidth() - 12) / parseFloat(window.getComputedStyle(this._character).width)) - 1;
     }
 
     get WindowHeight(): number {
         if (this._HScroll.visible)
-            return Math.floor((this._elJ.innerHeight() - 12 - 4) / ($(this._character).innerHeight() + 0.5)) - 1;
-        return Math.floor((this._elJ.innerHeight() - 4) / ($(this._character).innerHeight() + 0.5)) - 1;
+            return Math.trunc((this._elJ.innerHeight() - 12 - 4) / ($(this._character).innerHeight() + 0.5)) - 1;
+        return Math.trunc((this._elJ.innerHeight() - 4) / ($(this._character).innerHeight() + 0.5)) - 1;
     }
 
     public click(callback) {
@@ -1443,7 +1443,7 @@ export class Display extends EventEmitter {
         y = this.getLineIndexFromY(y);
 
         const xPos = (e.pageX - os.left) + this._HScroll.position;
-        let x = Math.floor(xPos / this._charWidth);
+        let x = Math.trunc(xPos / this._charWidth);
         if (y >= 0) {
             let text;
             if (y < this.lines.length)
