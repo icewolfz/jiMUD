@@ -41,7 +41,7 @@ interface ScrollState {
 }
 
 export enum ScrollType { vertical = 0, horizontal = 1 }
-export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256 }
+export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512 }
 
 enum CornerType {
     Flat = 0,
@@ -58,6 +58,7 @@ interface ContextEvent extends PointerEvent {
 interface Line {
     height: number;
     top: number;
+    width: number;
 }
 
 /**
@@ -410,11 +411,11 @@ export class Display extends EventEmitter {
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
 
         this._VScroll = new ScrollBar(this._el, this._view);
-        this._VScroll.on('scroll', (amt) => {
+        this._VScroll.on('scroll', () => {
             this.doUpdate(UpdateType.scroll | UpdateType.view);
         });
         this._HScroll = new ScrollBar(this._el, this._view, ScrollType.horizontal);
-        this._HScroll.on('scroll', (amt) => {
+        this._HScroll.on('scroll', () => {
             this.doUpdate(UpdateType.scroll);
         });
         //this.update();
@@ -499,12 +500,12 @@ export class Display extends EventEmitter {
                     return;
                 this._currentSelection.drag = true;
                 if (e.shiftKey) {
-                    this._currentSelection.end = this.getLineOffset(e);
+                    this._currentSelection.end = this.getLineOffset(e.pageX, e.pageY);
                     this.emit('selection-start');
                     this.doUpdate(UpdateType.selection);
                 }
                 else {
-                    this._currentSelection.start = this.getLineOffset(e);
+                    this._currentSelection.start = this.getLineOffset(e.pageX, e.pageY);
                     this._currentSelection.end = this._currentSelection.start;
                     this.emit('selection-start');
                     this.doUpdate(UpdateType.selection);
@@ -516,7 +517,7 @@ export class Display extends EventEmitter {
         this._el.addEventListener('mouseup', (e) => {
             if (this.lines.length === 0 || e.button !== 0) return;
             if (e.detail === 2) {
-                const o = this.getLineOffset(e);
+                const o = this.getLineOffset(e.pageX, e.pageY);
                 if (o.y >= 0 && o.y < this.lines.length) {
                     const line = this.lines[o.y];
                     const len = line.length;
@@ -547,7 +548,7 @@ export class Display extends EventEmitter {
                 }
             }
             else if (e.detail === 3) {
-                const o = this.getLineOffset(e);
+                const o = this.getLineOffset(e.pageX, e.pageY);
                 if (o.y >= 0 && o.y < this.lines.length) {
                     this._currentSelection = {
                         start: { x: 0, y: o.y },
@@ -632,7 +633,7 @@ export class Display extends EventEmitter {
             let line: string = '';
             let url: string = '';
             if (this.lines.length > 0) {
-                const o = this.getLineOffset(e);
+                const o = this.getLineOffset(e.pageX, e.pageY);
                 if (o.y >= 0 && o.y < this.lines.length) {
                     line = this.lines[o.y];
                     const len = line.length;
@@ -682,20 +683,18 @@ export class Display extends EventEmitter {
         });
 
         this._wMove = (e) => {
-            this._lastMouse = e;
             if (this._currentSelection.drag) {
-                this._currentSelection.end = this.getLineOffset(e);
-                this.emit('selection-changed');
-                this.doUpdate(UpdateType.selection);
+                this._lastMouse = e;
+                this.doUpdate(UpdateType.selectionChanged | UpdateType.selection);
             }
         };
         this._wUp = (e) => {
-            this._lastMouse = e;
             if (this._currentSelection.drag) {
+                this._lastMouse = e;
                 clearInterval(this._currentSelection.scrollTimer);
                 this._currentSelection.scrollTimer = null;
                 this._currentSelection.drag = false;
-                this._currentSelection.end = this.getLineOffset(e);
+                this._currentSelection.end = this.getLineOffset(e.pageX, e.pageY);
                 this.emit('selection-done');
                 this.doUpdate(UpdateType.selection);
             }
@@ -836,6 +835,11 @@ export class Display extends EventEmitter {
                 if (this.split)
                     this.split.updateView();
                 this._updating &= ~UpdateType.scrollView;
+            }
+            if ((this._updating & UpdateType.selectionChanged) === UpdateType.selectionChanged) {
+                this._currentSelection.end = this.getLineOffset(this._lastMouse.pageX, this._lastMouse.pageY);
+                this.emit('selection-changed');
+                this._updating &= ~UpdateType.selectionChanged;
             }
             if ((this._updating & UpdateType.selection) === UpdateType.selection) {
                 this.updateSelection();
@@ -1065,8 +1069,6 @@ export class Display extends EventEmitter {
         this._overlay.style.height = Math.max(h, this._el.clientHeight) + 'px';
         this._overlay.style.width = mw + 'px';
 
-        //this._viewRange.start = Math.trunc(this._el.scrollTop / this._charHeight) - 6;
-        //this._viewRange.end = Math.ceil((this._el.scrollTop + this._elJ.innerHeight()) / this._charHeight) + 6;
         this._viewRange.start = Math.trunc(this._VScroll.position / this._charHeight);
         this._viewRange.end = Math.ceil((this._VScroll.position + this._elJ.innerHeight()) / this._charHeight);
 
@@ -1082,14 +1084,6 @@ export class Display extends EventEmitter {
             lines[l] = lines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
             bLines[l] = bLines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
         }
-        /*
-                lines = lines.map((value, idx) => {
-                    return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
-                })
-                bLines = bLines.map((value, idx) => {
-                    return value.replace(/\{top\}/, `${(start + idx) * this._charHeight}`).replace(/\{max\}/, `${mw}`);
-                })*/
-
         this._view.innerHTML = lines.join('');
         this._background.innerHTML = bLines.join('');
         this.doUpdate(UpdateType.overlays);
@@ -1171,7 +1165,7 @@ export class Display extends EventEmitter {
         else if (data.line.length > this._maxLineLength)
             this._maxLineLength = data.line.length;
         this.lineIDs.push(this._lineID);
-        this._lines.push({ height: 0, top: 0 });
+        this._lines.push({ height: 0, top: 0, width: 0 });
         this._lineID++;
         t = this.getLineDisplay();
         this._viewLines.push(t[0]);
@@ -1406,11 +1400,11 @@ export class Display extends EventEmitter {
         }
     }
 
-    private getLineOffset(e) {
+    private getLineOffset(pageX, pageY) {
         if (this.lines.length === 0)
             return { x: 0, y: 0 };
         const os = this._os;
-        let y = (e.pageY - os.top);
+        let y = (pageY - os.top);
         if (this.split && this.split.shown) {
             if (y >= this._VScroll.track.clientHeight - this.split.clientHeight)
                 y += this._VScroll.scrollSize;
@@ -1421,7 +1415,7 @@ export class Display extends EventEmitter {
             y += this._VScroll.position;
         y = Math.trunc(y / this._charHeight);
 
-        const xPos = (e.pageX - os.left) + this._HScroll.position;
+        const xPos = (pageX - os.left) + this._HScroll.position;
         let x = Math.trunc(xPos / this._charWidth);
         if (y >= 0) {
             let text;
@@ -1457,7 +1451,7 @@ export class Display extends EventEmitter {
     }
 
     private textWidth(txt, font?) {
-        if (txt.length === 0) return 0;
+        if (!txt || txt.length === 0) return 0;
         font = font || this._contextFont;
         const canvas = this._canvas || (this._canvas = document.createElement('canvas'));
         const context = this._context || (this._context = canvas.getContext('2d', { alpha: false }));
@@ -1532,8 +1526,6 @@ export class Display extends EventEmitter {
                     if (s < 0) s = 0;
                     if (e > this.lines[sL].length)
                         e = this.lines[sL].length;
-                    //e = (e - s) * this._charWidth;
-                    //s *= this._charWidth;
                     e = this.textWidth(this.displayLines[sL].substring(s, e));
                     s = this.textWidth(this.displayLines[sL].substring(0, s));
                 }
@@ -1554,7 +1546,6 @@ export class Display extends EventEmitter {
                 s = 0;
             if (e > this.lines[eL].length)
                 e = this.lines[eL].length;
-
             for (let line = sL; line < eL + 1; line++) {
                 const startStyle = {
                     top: CornerType.Extern,
@@ -2125,6 +2116,7 @@ export class Display extends EventEmitter {
                     bStyle.push('background:', format.background, ';');
                 if (format.color)
                     fStyle.push('color:', format.color, ';');
+                eText = text.substring(offset, end);
                 //TODO variable character height is not supported
                 //TODO once supported update parser support tag to add font
                 /*
@@ -2136,6 +2128,7 @@ export class Display extends EventEmitter {
                 }
                 else
                 */
+                width = this.textWidth(eText);
 
                 if (format.style !== FontStyle.None) {
                     if ((format.style & FontStyle.Bold) === FontStyle.Bold)
@@ -2166,8 +2159,6 @@ export class Display extends EventEmitter {
                     fore.push('<span style="left:0;width:{max}px;', fStyle.join(''), '" class="ansi', fCls.join(''), '"><div class="hr" style="background-color:', format.color, '"></div></span>');
                 }
                 else if (end - offset !== 0) {
-                    eText = text.substring(offset, end);
-                    width = this.textWidth(eText);
                     eText = htmlEncode(eText);
                     back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
                     fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">', eText, '</span>');
