@@ -500,12 +500,12 @@ export class Display extends EventEmitter {
                     return;
                 this._currentSelection.drag = true;
                 if (e.shiftKey) {
-                    this._currentSelection.end = this.getLineOffset(e);
+                    this._currentSelection.end = this.getLineOffset(e.pageX, e.pageY);
                     this.emit('selection-start');
                     this.doUpdate(UpdateType.selection);
                 }
                 else {
-                    this._currentSelection.start = this.getLineOffset(e);
+                    this._currentSelection.start = this.getLineOffset(e.pageX, e.pageY);
                     this._currentSelection.end = this._currentSelection.start;
                     this.emit('selection-start');
                     this.doUpdate(UpdateType.selection);
@@ -517,7 +517,7 @@ export class Display extends EventEmitter {
         this._el.addEventListener('mouseup', (e) => {
             if (this.lines.length === 0 || e.button !== 0) return;
             if (e.detail === 2) {
-                const o = this.getLineOffset(e);
+                const o = this.getLineOffset(e.pageX, e.pageY);
                 if (o.y >= 0 && o.y < this.lines.length) {
                     const line = this.lines[o.y];
                     const len = line.length;
@@ -548,7 +548,7 @@ export class Display extends EventEmitter {
                 }
             }
             else if (e.detail === 3) {
-                const o = this.getLineOffset(e);
+                const o = this.getLineOffset(e.pageX, e.pageY);
                 if (o.y >= 0 && o.y < this.lines.length) {
                     this._currentSelection = {
                         start: { x: 0, y: o.y },
@@ -633,7 +633,7 @@ export class Display extends EventEmitter {
             let line: string = '';
             let url: string = '';
             if (this.lines.length > 0) {
-                const o = this.getLineOffset(e);
+                const o = this.getLineOffset(e.pageX, e.pageY);
                 if (o.y >= 0 && o.y < this.lines.length) {
                     line = this.lines[o.y];
                     const len = line.length;
@@ -694,7 +694,7 @@ export class Display extends EventEmitter {
                 clearInterval(this._currentSelection.scrollTimer);
                 this._currentSelection.scrollTimer = null;
                 this._currentSelection.drag = false;
-                this._currentSelection.end = this.getLineOffset(e);
+                this._currentSelection.end = this.getLineOffset(e.pageX, e.pageY);
                 this.emit('selection-done');
                 this.doUpdate(UpdateType.selection);
             }
@@ -837,7 +837,7 @@ export class Display extends EventEmitter {
                 this._updating &= ~UpdateType.scrollView;
             }
             if ((this._updating & UpdateType.selectionChanged) === UpdateType.selectionChanged) {
-                this._currentSelection.end = this.getLineOffset(this._lastMouse);
+                this._currentSelection.end = this.getLineOffset(this._lastMouse.pageX, this._lastMouse.pageY);
                 this.emit('selection-changed');
                 this._updating &= ~UpdateType.selectionChanged;
             }
@@ -1438,11 +1438,11 @@ export class Display extends EventEmitter {
         }
     }
 
-    private getLineOffset(e) {
+    private getLineOffset(pageX, pageY) {
         if (this.lines.length === 0)
             return { x: 0, y: 0 };
         const os = this._os;
-        let y = (e.pageY - os.top);
+        let y = (pageY - os.top);
         if (this.split && this.split.shown) {
             if (y >= this._VScroll.track.clientHeight - this.split.clientHeight)
                 y += this._VScroll.scrollSize;
@@ -1453,7 +1453,7 @@ export class Display extends EventEmitter {
             y += this._VScroll.position;
         y = this.getLineFromPosition(y);
 
-        const xPos = (e.pageX - os.left) + this._HScroll.position;
+        const xPos = (pageX - os.left) + this._HScroll.position;
 
         let x = Math.trunc(xPos / this._charWidth);
         if (xPos > 0 && y >= 0) {
@@ -1526,8 +1526,8 @@ export class Display extends EventEmitter {
     }
 
     private getLineFromPosition(y: number) {
-        let idx = Math.trunc(y / this._charHeight);
         if (this._lines.length === 0) return 0;
+        let idx = Math.trunc(y / this._charHeight);
         if (idx <= 0) idx = 0;
         if (idx >= this._lines.length) idx = this._lines.length - 1;
         if (y >= this._lines[idx].top + this._lines[idx].height) {
