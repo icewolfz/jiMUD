@@ -472,19 +472,8 @@ export class Display extends EventEmitter {
         });
 
         this._parser.on('parse-done', () => {
-            //disable animation
-            this._el.classList.remove('animate');
-            const bar = this._HScroll.visible;
-            this.trimLines();
-            if (this.scrollToEnd)
-                this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd | UpdateType.scrollView);
-            else
-                this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollView);
-            if (bar !== this._HScroll.visible)
-                this.updateWindow();
+            this.updateDisplay();
             this.emit('parse-done');
-            //re-enable animation so they are all synced
-            this._el.classList.add('animate');
         });
 
         this._parser.on('set-title', (title, type) => {
@@ -1113,6 +1102,21 @@ export class Display extends EventEmitter {
         this.doUpdate(UpdateType.scrollView);
     }
 
+    private updateDisplay() {
+        //disable animation
+        this._el.classList.remove('animate');
+        const bar = this._HScroll.visible;
+        this.trimLines();
+        if (this.scrollToEnd)
+            this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd | UpdateType.scrollView);
+        else
+            this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollView);
+        if (bar !== this._HScroll.visible)
+            this.updateWindow();
+        //re-enable animation so they are all synced
+        this._el.classList.add('animate');
+    }
+
     get WindowSize(): Size {
         return new Size(this.WindowWidth, this.WindowHeight);
     }
@@ -1164,20 +1168,8 @@ export class Display extends EventEmitter {
         this._viewLines.push(t[0]);
         this._backgroundLines.push(t[1]);
 
-        if (!noUpdate) {
-            //disable animation
-            this._el.classList.remove('animate');
-            const bar = this._HScroll.visible;
-            this.trimLines();
-            if (this.scrollToEnd)
-                this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollEnd | UpdateType.scrollView);
-            else
-                this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.scrollView);
-            if (bar !== this._HScroll.visible)
-                this.updateWindow();
-            //re-enable animation so they are all synced
-            this._el.classList.add('animate');
-        }
+        if (!noUpdate)
+            this.updateDisplay();
     }
 
     public removeLine(line: number) {
@@ -2372,8 +2364,8 @@ export class Display extends EventEmitter {
                             this._lines[lIdx].top = this._lines[lIdx - 1].top + this._lines[lIdx - 1].height;
                             lIdx++;
                         }
-                        this.doUpdate(UpdateType.scrollbars | UpdateType.view);
                         img.remove();
+                        this.updateDisplay();
                     };
                 }
                 height = Math.max(height, format.height || 0);
