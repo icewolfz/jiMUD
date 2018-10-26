@@ -207,8 +207,8 @@ export class Display extends EventEmitter {
                     const ll = lines.length;
                     const _lines = this._lines;
                     for (l = 0; l < ll; l++) {
-                        lines[l] = lines[l].replace(/\{top\}/, `${this._lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
-                        bLines[l] = bLines[l].replace(/\{top\}/, `${this._lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
+                        lines[l] = lines[l].replace(/\{top\}/, `${_lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
+                        bLines[l] = bLines[l].replace(/\{top\}/, `${_lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
                     }
                     const overlays = [];
                     let ol;
@@ -1080,9 +1080,10 @@ export class Display extends EventEmitter {
         const bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
         const start = this._viewRange.start;
         const ll = lines.length;
+        const _lines = this._lines;
         for (let l = 0; l < ll; l++) {
-            lines[l] = lines[l].replace(/\{top\}/, `${this._lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
-            bLines[l] = bLines[l].replace(/\{top\}/, `${this._lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
+            lines[l] = lines[l].replace(/\{top\}/, `${_lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
+            bLines[l] = bLines[l].replace(/\{top\}/, `${_lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
         }
         this._view.innerHTML = lines.join('');
         this._background.innerHTML = bLines.join('');
@@ -1119,6 +1120,19 @@ export class Display extends EventEmitter {
             this.updateWindow();
         //re-enable animation so they are all synced
         this._el.classList.add('animate');
+    }
+
+    private updateTops(line: number) {
+        const l = this._lines.length;
+        if (line === 0) {
+            this._lines[line].top = 0;
+            this._lines[line].top = this._lines[line - 1].top + this._lines[line - 1].height;
+            line++;
+        }
+        while (line < l) {
+            this._lines[line].top = this._lines[line - 1].top + this._lines[line - 1].height;
+            line++;
+        }
     }
 
     get WindowSize(): Size {
@@ -1235,7 +1249,7 @@ export class Display extends EventEmitter {
                 continue;
             this._expire[ol].splice(line, 1);
         }
-
+        this.updateTops(line);
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
 
@@ -1302,7 +1316,7 @@ export class Display extends EventEmitter {
                 continue;
             this._expire[ol].splice(line, amt);
         }
-
+        this.updateTops(line);
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
 
@@ -1395,6 +1409,10 @@ export class Display extends EventEmitter {
                 }
                 else if (lines[l].length > m)
                     m = lines[l].length;
+                if (l === 0)
+                    this._lines[l].top = 0;
+                else
+                    this._lines[l].top = this._lines[l - 1].top + this._lines[l - 1].height;
             }
             this._maxLineLength = m;
             this.doUpdate(UpdateType.selection | UpdateType.overlays);
@@ -1453,8 +1471,9 @@ export class Display extends EventEmitter {
 
     private getLineIndexFromY(y: number) {
         let idx = Math.trunc(y / this._charHeight);
-        if (idx <= 0) return 0;
-        if (idx >= this._lines.length) return this._lines.length;
+        if (this._lines.length === 0) return 0;
+        if (idx <= 0) idx = 0;
+        if (idx >= this._lines.length) idx = this._lines.length - 1;
         if (y >= this._lines[idx].top + this._lines[idx].height) {
             idx++;
             const l = this._lines.length;
@@ -1516,6 +1535,7 @@ export class Display extends EventEmitter {
         const fl = Math.trunc;
         const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
         const len = this.lines.length;
+        const _lines = this._lines;
         for (r = 0; r < rl; r++) {
             range = ranges[r];
             if (range.start.y > range.end.y) {
@@ -1573,7 +1593,6 @@ export class Display extends EventEmitter {
                 s = 0;
             if (e > this.lines[eL].length)
                 e = this.lines[eL].length;
-
             for (let line = sL; line < eL + 1; line++) {
                 const startStyle = {
                     top: CornerType.Extern,
@@ -1676,18 +1695,18 @@ export class Display extends EventEmitter {
                     this._overlays[type][line] = [];
                 this._overlays[type][line].push(`<span id="${type}-${r}" class="${rCls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
                 if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} isb" style="top:${this._charHeight - 7}px;left:${(cl * this._charWidth - 7)}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${cls} isb" style="top:${_lines[line].height - 7}px;left:${(cl * this._charWidth - 7)}px;"></span>`);
                 if (endStyle.top === CornerType.Intern)
                     this._overlays[type][line].push(`<span class="${cls} iet" style="top:0px;left:${(cl * this._charWidth) + w}px;"></span>`);
                 if (endStyle.bottom === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} ieb" style="top:${this._charHeight - 7}px;left:${(cl * this._charWidth) + w}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${cls} ieb" style="top:${_lines[line].height - 7}px;left:${(cl * this._charWidth) + w}px;"></span>`);
             }
         }
         let ol;
         for (ol in this._overlays[type]) {
             if (!this._overlays[type].hasOwnProperty(ol))
                 continue;
-            this._overlays[type][ol] = `<div style="top: ${(parseInt(ol, 10) || 0) * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
+            this._overlays[type][ol] = `<div style="top: ${_lines[parseInt(ol, 10) || 0].top}px;height:${_lines[parseInt(ol, 10) || 0].height}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
         }
         this.doUpdate(UpdateType.overlays);
     }
@@ -1780,9 +1799,9 @@ export class Display extends EventEmitter {
                 s = this.textWidth(text.substring(0, s));
             }
             if (this.roundedRanges)
-                this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
+                this._overlays.selection[sL] = `<div style="top: ${this._lines[sL].top}px;height:${this._lines[sL].height}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
             else
-                this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text" style="left: ${s}px;width: ${e}px"></span></div>`;
+                this._overlays.selection[sL] = `<div style="top: ${this._lines[sL].top}px;height:${this._lines[sL].height}px;" class="overlay-line"><span class="select-text" style="left: ${s}px;width: ${e}px"></span></div>`;
 
             /*
                         const ranges = [];
@@ -1835,6 +1854,7 @@ export class Display extends EventEmitter {
         if (e > this.lines[eL].length)
             e = this.lines[eL].length;
         const fl = Math.trunc;
+        const _lines = this._lines;
         for (let line = sL; line < eL + 1; line++) {
             const startStyle = {
                 top: CornerType.Extern,
@@ -1938,13 +1958,13 @@ export class Display extends EventEmitter {
             parts.push(`<span class="${cls}" style="left:${cl}px;width: ${w}px;"></span>`);
 
             if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern)
-                parts.push(`<span class="select-text isb" style="top:${this._charHeight - 7}px;left:${(cl - 7)}px;"></span>`);
+                parts.push(`<span class="select-text isb" style="top:${_lines[line].height - 7}px;left:${(cl - 7)}px;"></span>`);
             if (endStyle.top === CornerType.Intern)
                 parts.push(`<span class="select-text iet" style="top:0px;left:${(cl) + w}px;"></span>`);
             if (endStyle.bottom === CornerType.Intern)
-                parts.push(`<span class="select-text ieb" style="top:${this._charHeight - 7}px;left:${(cl) + w}px;"></span>`);
+                parts.push(`<span class="select-text ieb" style="top:${_lines[line].height - 7}px;left:${(cl) + w}px;"></span>`);
 
-            this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
+            this._overlays.selection[line] = `<div style="top: ${_lines[line].top}px;height:${_lines[line].height}px;" class="overlay-line">${parts.join('')}</div>`;
         }
         this.doUpdate(UpdateType.overlays);
     }
