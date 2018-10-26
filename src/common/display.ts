@@ -2159,9 +2159,8 @@ export class Display extends EventEmitter {
                     fore.push('<span style="left:0;width:{max}px;', fStyle.join(''), '" class="ansi', fCls.join(''), '"><div class="hr" style="background-color:', format.color, '"></div></span>');
                 }
                 else if (end - offset !== 0) {
-                    eText = htmlEncode(eText);
                     back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
-                    fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">', eText, '</span>');
+                    fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(eText), '</span>');
                     left += width;
                 }
             }
@@ -2172,10 +2171,9 @@ export class Display extends EventEmitter {
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
                 width = this.textWidth(eText);
-                eText = htmlEncode(eText);
                 back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
                 fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
-                fore.push(eText);
+                fore.push(htmlEncode(eText));
                 fore.push('</span>');
                 left += width;
             }
@@ -2206,10 +2204,9 @@ export class Display extends EventEmitter {
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
                 width = this.textWidth(eText);
-                eText = htmlEncode(eText);
                 back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
                 fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
-                fore.push(eText);
+                fore.push(htmlEncode(eText));
                 fore.push('</span>');
                 left += width;
             }
@@ -2234,20 +2231,18 @@ export class Display extends EventEmitter {
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
                 width = this.textWidth(eText);
-                eText = htmlEncode(eText);
                 back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
                 fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
-                fore.push(eText);
+                fore.push(htmlEncode(eText));
                 fore.push('</span>');
                 left += width;
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 width = this.textWidth(eText);
-                eText = htmlEncode(eText);
                 back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
                 fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
-                fore.push(eText);
+                fore.push(htmlEncode(eText));
                 fore.push('</span>');
                 left += width;
             }
