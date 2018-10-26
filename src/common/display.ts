@@ -58,6 +58,7 @@ interface ContextEvent extends PointerEvent {
 interface Line {
     height: number;
     top: number;
+    width: number;
 }
 
 /**
@@ -1178,7 +1179,7 @@ export class Display extends EventEmitter {
         else if (data.line.length > this._maxLineLength)
             this._maxLineLength = data.line.length;
         this.lineIDs.push(this._lineID);
-        this._lines.push({ height: 0, top: 0 });
+        this._lines.push({ height: 0, top: 0, width: 0 });
         this._lineID++;
         t = this.getLineDisplay();
         this._height += this._lines[this._lines.length - 1].height;
@@ -1445,7 +1446,7 @@ export class Display extends EventEmitter {
         const xPos = (e.pageX - os.left) + this._HScroll.position;
 
         let x = Math.trunc(xPos / this._charWidth);
-        if (y >= 0) {
+        if (xPos > 0 && y >= 0) {
             if (y >= this._lines.length)
                 y = this.lines.length - 1;
             const formats = this.lineFormats[y];
@@ -1553,6 +1554,57 @@ export class Display extends EventEmitter {
         this._ruler.style.fontFamily = font || this._character.style.fontFamily;
         this._ruler.style.fontSize = size || this._character.style.fontSize;
         return parseInt(window.getComputedStyle(this._ruler).fontSize, 10);
+    }
+
+    private lineWidth(line, start?, len?) {
+        if (line < 0 || line >= this._lines.length)
+            return 0;
+        if (start === undefined)
+            return this._lines[line].width;
+        if (len === undefined || len > this.lines[line].length)
+            len = this.lines[line].length;
+        const text = this.lines[line];
+        const formats = this.lineFormats[line];
+        const fLen = formats.length;
+        const tl = text.length;
+        let f = 0;
+        let end;
+        let font;
+        let offset;
+        let width = 0;
+        for (; f < fLen; f++) {
+            //no width so ignore these blocks
+            if (!formats[f].width || formats[f].formatType === FormatType.WordBreak || formats[f].formatType === FormatType.LinkEnd || formats[f].formatType === FormatType.MXPLinkEnd || formats[f].formatType === FormatType.MXPSendEnd)
+                continue;
+            //find end
+            if (f < fLen - 1)
+                end = formats[f + 1].offset;
+            else
+                end = tl;
+            //not in this block so move to next
+            if (start >= end)
+                continue;
+            offset = formats[f].offset;
+            //block is between start/end so whole width and move on
+            if (offset >= start && len >= end) {
+                width += formats[f].width;
+                continue;
+            }
+            //get font
+            if (formats[f].font || formats[f].size)
+                font = `${formats[f].size || this._character.style.fontSize} ${formats[f].font || this._character.style.fontFamily}`;
+            else
+                font = 0;
+            if (offset > start)
+                start = offset;
+            if (len < end)
+                end = len;
+            width += this.textWidth(text.substring(start, end), font);
+            //len is in block so quit
+            if (len <= end)
+                break;
+        }
+        return width;
     }
 
     public clearOverlay(type?: string) {
@@ -1840,8 +1892,8 @@ export class Display extends EventEmitter {
                 if (s < 0) s = 0;
                 if (e > text.length)
                     e = text.length;
-                e = this.textWidth(text.substring(s, e));
-                s = this.textWidth(text.substring(0, s));
+                e = this.lineWidth(sL, s, e);
+                s = this.lineWidth(sL, 0, s);
             }
             if (this.roundedRanges)
                 this._overlays.selection[sL] = `<div style="top: ${this._lines[sL].top}px;height:${this._lines[sL].height}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
@@ -1921,30 +1973,30 @@ export class Display extends EventEmitter {
             if (this.lineFormats[line][this.lineFormats[line].length - 1].hr)
                 w = mw - (this.roundedRanges ? 14 : 0);
             else if (sL === line)
-                w = this.textWidth(this.displayLines[sL].substr(s));
+                w = this.lineWidth(sL, s);
             else if (eL === line)
-                w = this.textWidth(this.displayLines[line].substring(0, e));
+                w = this.lineWidth(line, 0, e);
             else
-                w = this.textWidth(this.displayLines[line]);
-            cl = this.textWidth(this.displayLines[line].substring(0, cl));
+                w = this.lineWidth(line);
+            cl = this.lineWidth(line, 0, cl);
 
             if (this.roundedRanges) {
                 let cr;
                 if (this.lineFormats[line][this.lineFormats[line].length - 1].hr)
                     cr = mw - 14;
                 else
-                    cr = fl(eL === line ? this.textWidth(this.displayLines[line].substring(0, e)) : (this.textWidth(this.displayLines[line]) || this._charWidth));
+                    cr = fl(eL === line ? this.lineWidth(line, 0, e) : (this.lineWidth(line) || this._charWidth));
                 if (line > sL) {
                     let pl = 0;
                     if (sL === line - 1) {
                         if (this.lineFormats[line - 1][this.lineFormats[line - 1].length - 1].hr)
                             pl = 0;
-                        else if (fl(this.textWidth(this.displayLines[sL].substr(0, s))) >= fl(this.textWidth(this.displayLines[line - 1])))
-                            pl = fl(this.textWidth(this.displayLines[line - 1]));
+                        else if (fl(this.lineWidth(sL, 0, s)) >= fl(this.lineWidth(line - 1)))
+                            pl = fl(this.lineWidth(line - 1));
                         else
-                            pl = fl(this.textWidth(this.displayLines[sL].substring(0, s)));
+                            pl = fl(this.lineWidth(sL, 0, s));
                     }
-                    const pr = this.lineFormats[line - 1][this.lineFormats[line - 1].length - 1].hr ? mw - 14 : fl(this.textWidth(this.displayLines[line - 1]) || this._charWidth);
+                    const pr = this.lineFormats[line - 1][this.lineFormats[line - 1].length - 1].hr ? mw - 14 : fl(this.lineWidth(line - 1) || this._charWidth);
 
                     if (fl(cl) === pl)
                         startStyle.top = CornerType.Flat;
@@ -1968,7 +2020,7 @@ export class Display extends EventEmitter {
                     if (this.lineFormats[line + 1][this.lineFormats[line + 1].length - 1].hr)
                         nr = mw - 14;
                     else
-                        nr = fl(eL === line + 1 ? this.textWidth(this.displayLines[line + 1].substring(0, e)) : (this.textWidth(this.displayLines[line + 1]) || this._charWidth));
+                        nr = fl(eL === line + 1 ? this.lineWidth(line + 1, 0, e) : (this.lineWidth(line + 1) || this._charWidth));
                     if (fl(cl) === nl)
                         startStyle.bottom = CornerType.Flat;
                     else if (nl < fl(cl) && fl(cl) < nr)
@@ -2176,6 +2228,7 @@ export class Display extends EventEmitter {
         const len = formats.length;
         let left = 0;
         let ol;
+        let iWidth = 0;
         const id = this.lineIDs[idx];
         for (ol in this._expire) {
             if (!this._expire.hasOwnProperty(ol))
@@ -2436,9 +2489,11 @@ export class Display extends EventEmitter {
                     };
                 }
                 height = Math.max(height, format.height || 0);
+                iWidth += format.width || 0;
             }
         }
         this._lines[idx].height = height;
+        this._lines[idx].width = left + iWidth;
         if (idx > 0)
             this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
         return [`<span class="line" data-id="${id}" style="top:{top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${height}px;">${back.join('')}<br></span>`];
