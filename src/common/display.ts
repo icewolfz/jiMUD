@@ -41,7 +41,7 @@ interface ScrollState {
 }
 
 export enum ScrollType { vertical = 0, horizontal = 1 }
-export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128 }
+export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256 }
 
 enum CornerType {
     Flat = 0,
@@ -472,7 +472,7 @@ export class Display extends EventEmitter {
         });
 
         this._parser.on('parse-done', () => {
-            this.updateDisplay();
+            this.doUpdate(UpdateType.display);
             this.emit('parse-done');
         });
 
@@ -802,6 +802,10 @@ export class Display extends EventEmitter {
         if (this._updating === UpdateType.none)
             return;
         window.requestAnimationFrame(() => {
+            if ((this._updating & UpdateType.display) === UpdateType.display) {
+                this.updateDisplay();
+                this._updating &= ~UpdateType.display;
+            }
             if ((this._updating & UpdateType.scroll) === UpdateType.scroll) {
                 if (this.split) {
                     if (this._VScroll.position >= this._VScroll.scrollSize - this._padding[0]) {
@@ -1169,7 +1173,7 @@ export class Display extends EventEmitter {
         this._backgroundLines.push(t[1]);
 
         if (!noUpdate)
-            this.updateDisplay();
+            this.doUpdate(UpdateType.display);
     }
 
     public removeLine(line: number) {
@@ -2365,7 +2369,7 @@ export class Display extends EventEmitter {
                             lIdx++;
                         }
                         img.remove();
-                        this.updateDisplay();
+                        this.doUpdate(UpdateType.display);
                     };
                 }
                 height = Math.max(height, format.height || 0);
