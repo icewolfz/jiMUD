@@ -523,13 +523,13 @@ export class Display extends EventEmitter {
                     if (o.x >= 0 || o.x < len) {
                         let sPos = o.x;
                         let ePos = o.x;
-                        while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
+                        while (line.substr(sPos, 1).match(/([^\s.,\/#!$%\^&\*;:{}=\-_`~()])/gu) && sPos >= 0) {
                             sPos--;
                             if (sPos < 0)
                                 break;
                         }
                         sPos++;
-                        while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < len) {
+                        while (line.substr(ePos, 1).match(/([^\s.,\/#!$%\^&\*;:{}=\-_`~()])/gu) && ePos < len) {
                             ePos++;
                         }
                         if (sPos >= 0 && ePos <= len) {
@@ -639,13 +639,13 @@ export class Display extends EventEmitter {
                     if (o.x >= 0 || o.x < len) {
                         let sPos = o.x;
                         let ePos = o.x;
-                        while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
+                        while (line.substr(sPos, 1).match(/([^\s.,\/#!$%\^&\*;:{}=\-_`~()])/gu) && sPos >= 0) {
                             sPos--;
                             if (sPos < 0)
                                 break;
                         }
                         sPos++;
-                        while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < len) {
+                        while (line.substr(ePos, 1).match(/([^\s.,\/#!$%\^&\*;:{}=\-_`~()])/gu) && ePos < len) {
                             ePos++;
                         }
                         if (sPos >= 0 && ePos <= len)
