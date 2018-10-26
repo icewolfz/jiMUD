@@ -524,13 +524,13 @@ export class Display extends EventEmitter {
                     if (o.x >= 0 || o.x < len) {
                         let sPos = o.x;
                         let ePos = o.x;
-                        while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
+                        while (line.substr(sPos, 1).match(/(\S)/g) && sPos >= 0) {
                             sPos--;
                             if (sPos < 0)
                                 break;
                         }
                         sPos++;
-                        while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < len) {
+                        while (line.substr(ePos, 1).match(/(\S)/g) && ePos < len) {
                             ePos++;
                         }
                         if (sPos >= 0 && ePos <= len) {
@@ -640,13 +640,13 @@ export class Display extends EventEmitter {
                     if (o.x >= 0 || o.x < len) {
                         let sPos = o.x;
                         let ePos = o.x;
-                        while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
+                        while (line.substr(sPos, 1).match(/(\S)/g) && sPos >= 0) {
                             sPos--;
                             if (sPos < 0)
                                 break;
                         }
                         sPos++;
-                        while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < len) {
+                        while (line.substr(ePos, 1).match(/(\S)/g) && ePos < len) {
                             ePos++;
                         }
                         if (sPos >= 0 && ePos <= len)
@@ -1482,13 +1482,13 @@ export class Display extends EventEmitter {
                 else
                     end = tl;
                 x = offset;
-                let w = left;
                 let font;
                 if (formats[f].font || formats[f].size)
                     font = `${formats[f].size || this._character.style.fontSize} ${formats[f].font || this._character.style.fontFamily}`;
+                let w = left + Math.ceil(this.textWidth(text.substring(offset, x + 1), font));
                 while (w < xPos && x < end) {
                     x++;
-                    w = left + Math.ceil(this.textWidth(text.substring(offset, x), font));
+                    w = left + Math.ceil(this.textWidth(text.substring(offset, x + 1), font));
                 }
             }
             /*

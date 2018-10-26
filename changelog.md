@@ -6,6 +6,7 @@
   - Display:
     - Add MXP image height and better width support
     - Add MXP font size and family support
+    - Match would unicode words on context or double click
 
 ## v0.6.5
 
