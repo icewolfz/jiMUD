@@ -15,6 +15,7 @@
   - Status: Fix sleet weather overlay for all themes
   - Display:
     - Not correctly clearing text
+    - Improve performance by generating cleaning HTML markup
     - MXP:
       - Fixed horizontal rulers display
       - Fixed selection highlighting of horizontal rulers

@@ -2127,8 +2127,6 @@ export class Display extends EventEmitter {
                     bStyle.push('background:', format.background, ';');
                 if (format.color)
                     fStyle.push('color:', format.color, ';');
-                eText = text.substring(offset, end);
-                if (eText.length === 0 && !format.hr) continue;
                 //TODO variable character height is not supported
                 //TODO once supported update parser support tag to add font
                 /*
@@ -2140,8 +2138,6 @@ export class Display extends EventEmitter {
                 }
                 else
                 */
-                width = this.textWidth(eText);
-                eText = htmlEncode(eText);
 
                 if (format.style !== FontStyle.None) {
                     if ((format.style & FontStyle.Bold) === FontStyle.Bold)
@@ -2171,20 +2167,23 @@ export class Display extends EventEmitter {
                     back.push('<span style="left:0;width:{max}px;', bStyle.join(''), '" class="ansi"></span>');
                     fore.push('<span style="left:0;width:{max}px;', fStyle.join(''), '" class="ansi', fCls.join(''), '"><div class="hr" style="background-color:', format.color, '"></div></span>');
                 }
-                else {
+                else if (end - offset !== 0) {
+                    eText = text.substring(offset, end);
+                    width = this.textWidth(eText);
+                    eText = htmlEncode(eText);
                     back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
                     fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">', eText, '</span>');
+                    left += width;
                 }
-                left += width;
             }
             else if (format.formatType === FormatType.Link) {
-                eText = text.substring(offset, end);
-                if (eText.length === 0) continue;
-                width = this.textWidth(eText);
-                eText = htmlEncode(eText);
                 fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
                 fore.push(format.href);
                 fore.push('" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
+                if (end - offset === 0) continue;
+                eText = text.substring(offset, end);
+                width = this.textWidth(eText);
+                eText = htmlEncode(eText);
                 back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
                 fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
                 fore.push(eText);
@@ -2197,7 +2196,6 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.WordBreak)
                 fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
-
                 fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="');
                 fore.push(format.href);
                 fore.push('" href="javascript:void(0);" title="');
@@ -2216,8 +2214,8 @@ export class Display extends EventEmitter {
                     this._expire2[idx].push(f);
                 }
                 fore.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
+                if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                if (eText.length === 0) continue;
                 width = this.textWidth(eText);
                 eText = htmlEncode(eText);
                 back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
@@ -2244,8 +2242,8 @@ export class Display extends EventEmitter {
                 }
                 fore.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
                 fore.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
+                if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                if (eText.length === 0) continue;
                 width = this.textWidth(eText);
                 eText = htmlEncode(eText);
                 back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
@@ -2254,9 +2252,8 @@ export class Display extends EventEmitter {
                 fore.push('</span>');
                 left += width;
             }
-            else if (format.formatType === FormatType.MXPExpired) {
+            else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 eText = text.substring(offset, end);
-                if (eText.length === 0) continue;
                 width = this.textWidth(eText);
                 eText = htmlEncode(eText);
                 back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle.join(''), '" class="ansi"></span>');
@@ -2432,9 +2429,10 @@ export class Display extends EventEmitter {
                 }
                 if (offset < start || offset >= len || end < start)
                     continue;
+
                 if (format.hr)
                     parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '"><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', format.color, '"></div></span>');
-                else
+                else if (end - offset !== 0)
                     parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
             }
             else if (format.formatType === FormatType.Link) {
@@ -2443,6 +2441,7 @@ export class Display extends EventEmitter {
                 parts.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
                 parts.push(format.href);
                 parts.push('" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
+                if (end - offset === 0) continue;
                 parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
                 parts.push(htmlEncode(text.substring(offset, end)));
                 parts.push('</span>');
@@ -2451,7 +2450,6 @@ export class Display extends EventEmitter {
                 if (offset < start || offset >= len || end < start)
                     continue;
                 parts.push('</a>');
-
             }
             else if (format.formatType === FormatType.WordBreak) {
                 if (offset < start || offset >= len || end < start)
@@ -2465,6 +2463,7 @@ export class Display extends EventEmitter {
                 parts.push(format.href);
                 parts.push('"');
                 parts.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
+                if (end - offset === 0) continue;
                 parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
                 parts.push(htmlEncode(text.substring(offset, end)));
                 parts.push('</span>');
@@ -2477,11 +2476,12 @@ export class Display extends EventEmitter {
                 parts.push('"');
                 parts.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
                 parts.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
+                if (end - offset === 0) continue;
                 parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
                 parts.push(htmlEncode(text.substring(offset, end)));
                 parts.push('</span>');
             }
-            else if (format.formatType === FormatType.MXPExpired) {
+            else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 if (offset < start || offset >= len || end < start)
                     continue;
                 parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');

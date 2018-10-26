@@ -356,13 +356,14 @@ function createLine(text: string, formats: any[]) {
             }
             if (format.hr)
                 parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '"><div class="hr" style="background-color:', format.color, '"></div></span>');
-            else
+            else if (end - offset !== 0)
                 parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
         else if (format.formatType === FormatType.Link) {
             parts.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
             parts.push(format.href);
             parts.push('" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
+            if (end - offset === 0) continue;
             parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
             parts.push(htmlEncode(text.substring(offset, end)));
             parts.push('</span>');
@@ -377,6 +378,7 @@ function createLine(text: string, formats: any[]) {
             parts.push(format.href);
             parts.push('"');
             parts.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
+            if (end - offset === 0) continue;
             parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
             parts.push(htmlEncode(text.substring(offset, end)));
             parts.push('</span>');
@@ -387,11 +389,12 @@ function createLine(text: string, formats: any[]) {
             parts.push('"');
             parts.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
             parts.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
+            if (end - offset === 0) continue;
             parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
             parts.push(htmlEncode(text.substring(offset, end)));
             parts.push('</span>');
         }
-        else if (format.formatType === FormatType.MXPExpired) {
+        else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
             parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
             parts.push(htmlEncode(text.substring(offset, end)));
             parts.push('</span>');
