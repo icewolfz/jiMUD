@@ -41,7 +41,7 @@ interface ScrollState {
 }
 
 export enum ScrollType { vertical = 0, horizontal = 1 }
-export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256 }
+export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512 }
 
 enum CornerType {
     Flat = 0,
@@ -683,16 +683,14 @@ export class Display extends EventEmitter {
         });
 
         this._wMove = (e) => {
-            this._lastMouse = e;
             if (this._currentSelection.drag) {
-                this._currentSelection.end = this.getLineOffset(e);
-                this.emit('selection-changed');
-                this.doUpdate(UpdateType.selection);
+                this._lastMouse = e;
+                this.doUpdate(UpdateType.selectionChanged | UpdateType.selection);
             }
         };
         this._wUp = (e) => {
-            this._lastMouse = e;
             if (this._currentSelection.drag) {
+                this._lastMouse = e;
                 clearInterval(this._currentSelection.scrollTimer);
                 this._currentSelection.scrollTimer = null;
                 this._currentSelection.drag = false;
@@ -837,6 +835,11 @@ export class Display extends EventEmitter {
                 if (this.split)
                     this.split.updateView();
                 this._updating &= ~UpdateType.scrollView;
+            }
+            if ((this._updating & UpdateType.selectionChanged) === UpdateType.selectionChanged) {
+                this._currentSelection.end = this.getLineOffset(this._lastMouse);
+                this.emit('selection-changed');
+                this._updating &= ~UpdateType.selectionChanged;
             }
             if ((this._updating & UpdateType.selection) === UpdateType.selection) {
                 this.updateSelection();
