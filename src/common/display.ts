@@ -191,8 +191,8 @@ export class Display extends EventEmitter {
             this.split.updateView = () => {
                 this.split.style.bottom = this._HScroll.size + 'px';
                 if (this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
-                    this.split._viewRange.start = this.getLineIndexFromY(this._VScroll.scrollSize);
-                    this.split._viewRange.end = this.getLineIndexFromY(this._VScroll.scrollSize + this._elJ.innerHeight());
+                    this.split._viewRange.start = this.getLineFromPosition(this._VScroll.scrollSize);
+                    this.split._viewRange.end = this.getLineFromPosition(this._VScroll.scrollSize + this._elJ.innerHeight());
 
                     if (this.split._viewRange.start < 0)
                         this.split._viewRange.start = 0;
@@ -1068,8 +1068,8 @@ export class Display extends EventEmitter {
         this._overlay.style.height = Math.max(h, this._el.clientHeight) + 'px';
         this._overlay.style.width = mw + 'px';
 
-        this._viewRange.start = this.getLineIndexFromY(this._VScroll.position);
-        this._viewRange.end = this.getLineIndexFromY(this._VScroll.position + this._elJ.innerHeight());
+        this._viewRange.start = this.getLineFromPosition(this._VScroll.position);
+        this._viewRange.end = this.getLineFromPosition(this._VScroll.position + this._elJ.innerHeight());
 
         if (this._viewRange.start < 0)
             this._viewRange.start = 0;
@@ -1440,7 +1440,7 @@ export class Display extends EventEmitter {
         }
         else
             y += this._VScroll.position;
-        y = this.getLineIndexFromY(y);
+        y = this.getLineFromPosition(y);
 
         const xPos = (e.pageX - os.left) + this._HScroll.position;
         let x = Math.trunc(xPos / this._charWidth);
@@ -1477,7 +1477,7 @@ export class Display extends EventEmitter {
         };
     }
 
-    private getLineIndexFromY(y: number) {
+    private getLineFromPosition(y: number) {
         let idx = Math.trunc(y / this._charHeight);
         if (this._lines.length === 0) return 0;
         if (idx <= 0) idx = 0;
