@@ -190,7 +190,7 @@ export class Display extends EventEmitter {
 
             this.split.updateView = () => {
                 this.split.style.bottom = this._HScroll.size + 'px';
-                if (this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
+                if (this.split.shown && this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
                     this.split._viewRange.start = Math.trunc(this._VScroll.scrollSize / this._charHeight);
                     this.split._viewRange.end = Math.ceil((this._VScroll.scrollSize + this._elJ.innerHeight()) / this._charHeight);
 
