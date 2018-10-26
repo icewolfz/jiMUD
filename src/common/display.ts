@@ -67,11 +67,9 @@ interface Line {
  * @export
  * @class Display
  * @extends {EventEmitter}
- * @todo Add MXP font - requires selection to measure using format fonts not default font
- * @todo Add MXP font size - requires variable line height, selection requires using format block to get correct size
  * @todo fix RTL unicode selection display
- * @todo Add MXP image height - requires variable line height support
- * @todo Add/fox MXP image selection hightlighting
+ * @todo Add/fix MXP image selection highlighting
+ * @todo MXP Font once supported update parser support tag to add font
  */
 export class Display extends EventEmitter {
     private _lineID = 0;
@@ -1573,7 +1571,7 @@ export class Display extends EventEmitter {
             return this._lines[line].width;
         if (len === undefined || len > this.lines[line].length)
             len = this.lines[line].length;
-        const text = this.lines[line];
+        const text = this.displayLines[line];
         const formats = this.lineFormats[line];
         const fLen = formats.length;
         const tl = text.length;
@@ -1624,7 +1622,6 @@ export class Display extends EventEmitter {
         this.doUpdate(UpdateType.overlays);
     }
 
-    //TODO add font support, as different blocks of text could have different font formats, need to not just measure with but measure based on format block data
     public addOverlays(ranges: OverlayRange[], cls?: string, type?: string) {
         let s;
         let e;
@@ -2268,7 +2265,6 @@ export class Display extends EventEmitter {
                 if (format.color)
                     fStyle.push('color:', format.color, ';');
                 eText = text.substring(offset, end);
-                //TODO once supported update parser support tag to add font
                 if (format.font || format.size) {
                     if (format.font) fStyle.push('font-family: ', format.font, ';');
                     if (format.size) fStyle.push('font-size: ', format.size, ';');
