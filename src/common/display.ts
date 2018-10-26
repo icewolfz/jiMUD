@@ -1443,8 +1443,44 @@ export class Display extends EventEmitter {
         y = this.getLineFromPosition(y);
 
         const xPos = (e.pageX - os.left) + this._HScroll.position;
+
         let x = Math.trunc(xPos / this._charWidth);
         if (y >= 0) {
+            if (y >= this._lines.length)
+                y = this.lines.length - 1;
+            const formats = this.lineFormats[y];
+            const fLen = formats.length;
+            const text = this.displayLines[y];
+            const tl = text.length;
+            let left = 0;
+            let f = 0;
+            for (; f < fLen; f++) {
+                if (!formats[f].width || formats[f].formatType === FormatType.WordBreak || formats[f].formatType === FormatType.LinkEnd || formats[f].formatType === FormatType.MXPLinkEnd || formats[f].formatType === FormatType.MXPSendEnd)
+                    continue;
+                if (xPos >= left && xPos <= left + formats[f].width)
+                    break;
+                left += formats[f].width;
+            }
+            if (f >= fLen)
+                x = tl;
+            else {
+                const offset = formats[f].offset;
+                let end;
+                if (f < fLen - 1)
+                    end = formats[f + 1].offset;
+                else
+                    end = tl;
+                x = offset;
+                let w = left;
+                let font;
+                if (formats[f].font || formats[f].size)
+                    font = `${formats[f].size || this._character.style.fontSize} ${formats[f].font || this._character.style.fontFamily}`;
+                while (w < xPos && x < end) {
+                    x++;
+                    w = left + Math.ceil(this.textWidth(text.substring(offset, x), font));
+                }
+            }
+            /*
             let text;
             if (y < this.lines.length)
                 text = this.displayLines[y];
@@ -1464,6 +1500,7 @@ export class Display extends EventEmitter {
                     w = Math.ceil(this.textWidth(text.substr(0, x)));
                 }
             }
+            */
         }
         return { x: x, y: y };
     }
@@ -2357,8 +2394,6 @@ export class Display extends EventEmitter {
                     tmp.push('margin:');
                     tmp.push(formatUnit(format.vspace), ' 0px;');
                 }
-                //TODO remove max-height when variable height supported
-                //tmp.push('max-height:', '' + height, 'px;');
                 //back.push(...tmp, bStyle.join(''), `" src="./../assets/blank.png"/>`);
                 back.push(...tmp, `" src="./../assets/blank.png"/>`);
                 //tmp.push(fStyle.join(''), '"');
