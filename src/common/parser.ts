@@ -2128,7 +2128,7 @@ export class Parser extends EventEmitter {
       }
       this.mxpState.gagged = tmp.gagged;
       this.mxpState.expanded = true;
-      this.mxpStyles.push(tmp);
+      //this.mxpStyles.push(tmp);
       return { format: null, text: arg };
     }
     else if (tag.startsWith('/') && this.mxpElements[tag.substring(1)] && !this.mxpElements[tag.substring(1)].empty) {
@@ -2139,14 +2139,14 @@ export class Parser extends EventEmitter {
       if (!e.open && this.mxpState.lineType !== lineType.Secure && this.mxpState.lineType !== lineType.LockSecure && this.mxpState.lineType !== lineType.TempSecure)
         return null;
 
-      //get captured text]
+      //get captured text
       if (!e.empty && this.mxpState.capture > 0) {
         if (this.mxpState.captured.length > 0)
           sArg = this.mxpState.captured.pop().join('');
         this.mxpState.capture--;
       }
 
-      tmp = this.ClearMXPToTag(MXPTag.Custom, tag.substring(1));
+      //tmp = this.ClearMXPToTag(MXPTag.Custom, tag);
       arg = e.closeDefinition;
 
       if (e.flag.length > 0) {

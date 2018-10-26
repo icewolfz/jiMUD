@@ -16,9 +16,11 @@
   - Display:
     - Not correctly clearing text
     - MXP:
-      - Fix horizontal rulers display
-      - Fix selection highlighting of horizontal rulers
-      - Fix copying horizontal rulers and use --- on own line in text
+      - Fixed horizontal rulers display
+      - Fixed selection highlighting of horizontal rulers
+      - Fixed copying horizontal rulers and use --- on own line in text
+      - Fixed closing of custom defined tags
+      - Fixed MXP send tags
     - Fixed HTML property to return correct HTML markup
 
 ## v0.6.4 2018-10-22

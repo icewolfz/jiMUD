@@ -2330,10 +2330,6 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.WordBreak)
                 fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
-                eText = text.substring(offset, end);
-                if (eText.length === 0) continue;
-                format.width = format.width || this.textWidth(eText);
-                eText = htmlEncode(eText);
                 fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="');
                 fore.push(format.href);
                 fore.push('" href="javascript:void(0);" title="');
@@ -2352,6 +2348,10 @@ export class Display extends EventEmitter {
                     this._expire2[idx].push(f);
                 }
                 fore.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
+                eText = text.substring(offset, end);
+                if (eText.length === 0) continue;
+                format.width = format.width || this.textWidth(eText);
+                eText = htmlEncode(eText);
                 back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle.join(''), '" class="ansi"></span>');
                 fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
                 fore.push(eText);
@@ -2359,10 +2359,6 @@ export class Display extends EventEmitter {
                 left += format.width;
             }
             else if (format.formatType === FormatType.MXPSend) {
-                eText = text.substring(offset, end);
-                if (eText.length === 0) continue;
-                format.width = format.width || this.textWidth(eText);
-                eText = htmlEncode(eText);
                 fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" href="javascript:void(0);" title="');
                 fore.push(format.hint);
                 fore.push('"');
@@ -2380,6 +2376,10 @@ export class Display extends EventEmitter {
                 }
                 fore.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
                 fore.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
+                eText = text.substring(offset, end);
+                if (eText.length === 0) continue;
+                format.width = format.width || this.textWidth(eText);
+                eText = htmlEncode(eText);
                 back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle.join(''), '" class="ansi"></span>');
                 fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle.join(''), '" class="ansi', fCls.join(''), '">');
                 fore.push(eText);
