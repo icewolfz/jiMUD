@@ -86,6 +86,7 @@ export class Display extends EventEmitter {
     private _background: HTMLElement;
     private _finder: Finder;
     private _height: number = 0;
+    private _maxWidth: number = 0;
 
     private _maxLineLength: number = 0;
     private _currentSelection: Selection = {
@@ -203,7 +204,7 @@ export class Display extends EventEmitter {
                     const bLines = this._backgroundLines.slice(this.split._viewRange.start, this.split._viewRange.end + 1);
                     const start = this.split._viewRange.start;
                     const end = this.split._viewRange.end;
-                    const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
+                    const mw = Math.max(this._maxWidth, this._el.clientWidth);
                     let l;
                     const ll = lines.length;
                     const _lines = this._lines;
@@ -220,9 +221,9 @@ export class Display extends EventEmitter {
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
 
-                    this.split.view.style.width = this._maxLineLength * this._charWidth + 'px';
+                    this.split.view.style.width = this._maxWidth + 'px';
                     this.split.view.style.minWidth = this._elJ.innerWidth() - 16 + 'px';
-                    this.split.background.style.width = this._maxLineLength * this._charWidth + 'px';
+                    this.split.background.style.width = this._maxWidth + 'px';
                     this.split.background.style.minWidth = this._elJ.innerWidth() - 16 + 'px';
 
                     this.split.overlay.innerHTML = overlays.join('');
@@ -985,6 +986,7 @@ export class Display extends EventEmitter {
         this._lines = [];
         this._lineID = 0;
         this._height = 0;
+        this._maxWidth = 0;
         this._viewRange = { start: 0, end: 0 };
         this._maxLineLength = 0;
         this._overlay.innerHTML = null;
@@ -1055,7 +1057,7 @@ export class Display extends EventEmitter {
     }
 
     public updateView() {
-        const w = this._maxLineLength * this._charWidth;
+        const w = this._maxWidth;
         const h = this._height;
         const mw = Math.max(w, this._el.clientWidth);
 
@@ -1124,6 +1126,7 @@ export class Display extends EventEmitter {
 
     private updateTops(line: number) {
         const l = this._lines.length;
+        if (l === 0) return;
         if (line === 0) {
             this._lines[line].top = 0;
             this._lines[line].top = this._lines[line - 1].top + this._lines[line - 1].height;
@@ -1183,6 +1186,8 @@ export class Display extends EventEmitter {
         this._lineID++;
         t = this.getLineDisplay();
         this._height += this._lines[this._lines.length - 1].height;
+        if (this._lines[this._lines.length - 1].width > this._maxWidth)
+            this._maxWidth = this._lines[this._lines.length - 1].width;
         this._viewLines.push(t[0]);
         this._backgroundLines.push(t[1]);
 
@@ -1407,6 +1412,8 @@ export class Display extends EventEmitter {
             const lines = this.lines;
             const formats = this.lineFormats;
             const ll = lines.length;
+            const _lines = this._lines;
+            let mw = 0;
             for (let l = 0; l < ll; l++) {
                 if (formats[0].hr) {
                     if (this.WindowWidth > m)
@@ -1415,12 +1422,15 @@ export class Display extends EventEmitter {
                 else if (lines[l].length > m)
                     m = lines[l].length;
                 if (l === 0)
-                    this._lines[l].top = 0;
+                    _lines[l].top = 0;
                 else
-                    this._lines[l].top = this._lines[l - 1].top + this._lines[l - 1].height;
+                    _lines[l].top = _lines[l - 1].top + _lines[l - 1].height;
+                if (_lines[l].width > mw)
+                    mw = _lines[l].width;
             }
+            this._maxWidth = mw;
             if (ll > 0)
-                this._height = this._lines[ll - 1].top + this._lines[ll - 1].height;
+                this._height = _lines[ll - 1].top + _lines[ll - 1].height;
             else
                 this._height = 0;
             this._maxLineLength = m;
@@ -1540,7 +1550,7 @@ export class Display extends EventEmitter {
     }
 
     private textWidth(txt, font?) {
-        if (txt.length === 0) return 0;
+        if (!txt || txt.length === 0) return 0;
         font = font || this._contextFont;
         const canvas = this._canvas || (this._canvas = document.createElement('canvas'));
         const context = this._context || (this._context = canvas.getContext('2d', { alpha: false }));
@@ -1630,7 +1640,7 @@ export class Display extends EventEmitter {
             cls = 'overlay-default';
         this._overlays[type] = [];
         const fl = Math.trunc;
-        const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
+        const mw = Math.max(this._maxWidth, this._el.clientWidth);
         const len = this.lines.length;
         const _lines = this._lines;
         for (r = 0; r < rl; r++) {
@@ -1881,7 +1891,7 @@ export class Display extends EventEmitter {
  */
             if (this.lineFormats[sL][this.lineFormats[sL].length - 1].hr) {
                 s = 0;
-                e = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
+                e = Math.max(this._maxWidth, this._el.clientWidth);
                 if (this.roundedRanges) e -= 14;
             }
             else {
@@ -1939,7 +1949,7 @@ export class Display extends EventEmitter {
             return;
         }
         const len = this.lines.length;
-        const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
+        const mw = Math.max(this._maxWidth, this._el.clientWidth);
 
         if (sL < 0)
             sL = 0;
@@ -2261,6 +2271,7 @@ export class Display extends EventEmitter {
                     bStyle.push('background:', format.background, ';');
                 if (format.color)
                     fStyle.push('color:', format.color, ';');
+                eText = text.substring(offset, end);
                 //TODO once supported update parser support tag to add font
                 if (format.font || format.size) {
                     if (format.font) fStyle.push('font-family: ', format.font, ';');
