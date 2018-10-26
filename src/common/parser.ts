@@ -1737,8 +1737,7 @@ export class Parser extends EventEmitter {
               if (arg.indexOf('.') === -1) {
                 arg = arg.toUpperCase();
                 switch (arg) {
-                  //TODO re-enable once font size/face  are supported
-                  //case 'FONT':
+                  case 'FONT':
                   case 'IMAGE':
                   case 'HR':
                   case 'A':
@@ -1866,9 +1865,8 @@ export class Parser extends EventEmitter {
                     if (arg[1] !== '*')
                       sArgs.push('+' + arg[0] + '.' + arg[1]);
                     else {
-                      //TODO switch to + when face and size supported
-                      sArgs.push('-font.face');
-                      sArgs.push('-font.size');
+                      sArgs.push('+font.face');
+                      sArgs.push('+font.size');
                       sArgs.push('+font.color');
                       sArgs.push('+font.back');
                     }
@@ -1907,8 +1905,7 @@ export class Parser extends EventEmitter {
             }
           }
           else
-            //TODO enable font once font face/size are supported
-            sArgs = ['+A', '+SEND', '+B', '+I', '+COLOR', '+C', '+EM', '+ITALIC', '+STRONG', '+BOLD', '+UNDERLINE', '+U', '+S', '+STRIKEOUT', '+H', '+HIGH', '-FONT', '+EXPIRE', '+VERSION', '+SUPPORT', '+NOBR', '+P', '+BR', '+SBR', '+VAR', '+SOUND', '+MUSIC', '+USER', '+PASSWORD', '+RESET', '+STRIKE', '+H1', '+H2', '+H3', '+H4', '+H5', '+H6', '+IMAGE', '+STAT', '+GAUGE'];
+            sArgs = ['+A', '+SEND', '+B', '+I', '+COLOR', '+C', '+EM', '+ITALIC', '+STRONG', '+BOLD', '+UNDERLINE', '+U', '+S', '+STRIKEOUT', '+H', '+HIGH', '+FONT', '+EXPIRE', '+VERSION', '+SUPPORT', '+NOBR', '+P', '+BR', '+SBR', '+VAR', '+SOUND', '+MUSIC', '+USER', '+PASSWORD', '+RESET', '+STRIKE', '+H1', '+H2', '+H3', '+H4', '+H5', '+H6', '+IMAGE', '+STAT', '+GAUGE'];
           this.emit('MXP-tag-reply', tag, sArgs);
           break;
         case 'A':

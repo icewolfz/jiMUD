@@ -69,7 +69,6 @@ interface Line {
  * @extends {EventEmitter}
  * @todo fix RTL unicode selection display
  * @todo Add/fix MXP image selection highlighting
- * @todo MXP Font once supported update parser support tag to add font
  */
 export class Display extends EventEmitter {
     private _lineID = 0;
