@@ -800,6 +800,10 @@ export class Display extends EventEmitter {
         if (this._updating === UpdateType.none)
             return;
         window.requestAnimationFrame(() => {
+            if ((this._updating & UpdateType.display) === UpdateType.display) {
+                this.updateDisplay();
+                this._updating &= ~UpdateType.display;
+            }
             if ((this._updating & UpdateType.scroll) === UpdateType.scroll) {
                 if (this.split) {
                     if (this._VScroll.position >= this._VScroll.scrollSize - this._padding[0]) {
@@ -854,10 +858,6 @@ export class Display extends EventEmitter {
             if ((this._updating & UpdateType.scrollEnd) === UpdateType.scrollEnd) {
                 this.scrollDisplay();
                 this._updating &= ~UpdateType.scrollEnd;
-            }
-            if ((this._updating & UpdateType.display) === UpdateType.display) {
-                this.updateDisplay();
-                this._updating &= ~UpdateType.display;
             }
             this.doUpdate(this._updating);
         });
