@@ -605,7 +605,50 @@
                     selected = !sel.isCollapsed && sel.type === 'Range' && manager.active.viewer.contains(sel.anchorNode);
                 }
                 let inputMenu;
-                if (selected) {
+                if (remote.getGlobal('debug')) {
+                    if (selected) {
+                        inputMenu = Menu.buildFromTemplate([
+                            {
+                                label: '&Copy',
+                                accelerator: 'CmdOrCtrl+C',
+                                click: doCopy
+                            },
+                            { type: 'separator' },
+                            {
+                                label: '&Select All',
+                                accelerator: 'CmdOrCtrl+A',
+                                click: () => {
+                                    if (manager.active && manager.active.viewer)
+                                        selectText(manager.active.viewer);
+                                }
+                            },
+                            { type: 'separator' },
+                            {
+                                label: 'Inspect', click: () => {
+                                    remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                                }
+                            }
+                        ]);
+                    }
+                    else {
+                        inputMenu = Menu.buildFromTemplate([
+                            {
+                                label: '&Select All',
+                                accelerator: 'CmdOrCtrl+A',
+                                click: () => {
+                                    if (manager.active && manager.active.viewer)
+                                        selectText(manager.active.viewer);
+                                }
+                            },
+                            { type: 'separator' },
+                            {
+                                label: 'Inspect', click: () => {
+                                    remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                                }
+                            }]);
+                    }
+                }
+                else if (selected) {
                     inputMenu = Menu.buildFromTemplate([
                         {
                             label: '&Copy',
@@ -669,15 +712,10 @@
             var contents = '';
             p.displayFunction = () => {
                 display.removeListener('parse-done', p.displayFunction);
-                display.removeListener('add-line-done', p.displayAdd);
-                p.viewer.innerHTML = contents;
+                p.viewer.innerHTML = display.html;
                 display.clear();
             };
-            p.displayAdd = (data) => {
-                contents += createLine(data.line, data.formats);
-            };
             display.on('parse-done', p.displayFunction);
-            display.on('add-line-done', p.displayAdd);
             display.append(fs.readFileSync(p.file, 'utf8'));
         }
     }

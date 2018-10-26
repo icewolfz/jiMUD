@@ -2427,7 +2427,7 @@ export class Display extends EventEmitter {
                     if (td.length > 0)
                         style.push('text-decoration:', td.join(''), ';');
                 }
-                if (offset < start || offset >= len || end < start)
+                if (offset < start || end < start)
                     continue;
 
                 if (format.hr)
@@ -2436,7 +2436,7 @@ export class Display extends EventEmitter {
                     parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
             }
             else if (format.formatType === FormatType.Link) {
-                if (offset < start || offset >= len || end < start)
+                if (offset < start || end < start)
                     continue;
                 parts.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
                 parts.push(format.href);
@@ -2447,17 +2447,17 @@ export class Display extends EventEmitter {
                 parts.push('</span>');
             }
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
-                if (offset < start || offset >= len || end < start)
+                if (offset < start || end < start)
                     continue;
                 parts.push('</a>');
             }
             else if (format.formatType === FormatType.WordBreak) {
-                if (offset < start || offset >= len || end < start)
+                if (offset < start || end < start)
                     continue;
                 parts.push('<wbr>');
             }
             else if (format.formatType === FormatType.MXPLink) {
-                if (offset < start || offset >= len || end < start)
+                if (offset < start || end < start)
                     continue;
                 parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="');
                 parts.push(format.href);
@@ -2469,7 +2469,7 @@ export class Display extends EventEmitter {
                 parts.push('</span>');
             }
             else if (format.formatType === FormatType.MXPSend) {
-                if (offset < start || offset >= len || end < start)
+                if (offset < start || end < start)
                     continue;
                 parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="');
                 parts.push(format.hint);
@@ -2482,14 +2482,14 @@ export class Display extends EventEmitter {
                 parts.push('</span>');
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
-                if (offset < start || offset >= len || end < start)
+                if (offset < start || end < start)
                     continue;
                 parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
                 parts.push(htmlEncode(text.substring(offset, end)));
                 parts.push('</span>');
             }
             else if (format.formatType === FormatType.Image) {
-                if (offset < start || offset >= len || end < start)
+                if (offset < start || end < start)
                     continue;
                 let tmp = '';
                 parts.push('<img src="');

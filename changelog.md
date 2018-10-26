@@ -11,6 +11,7 @@
   - Expanded [client.readClipboardHTML](docs/scripting.md) read HTML markup from clipboard if clipboard has HTML support
 - **Changed:**
   - Update electron from 3.0.5 to 3.0.6
+  - Log viewer uses simpler HTML generation
 - **Fixed:**
   - Status: Fix sleet weather overlay for all themes
   - Display:
