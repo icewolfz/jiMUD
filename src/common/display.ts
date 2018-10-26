@@ -983,6 +983,7 @@ export class Display extends EventEmitter {
         this.lineIDs = [];
         this._lines = [];
         this._lineID = 0;
+        this._height = 0;
         this._viewRange = { start: 0, end: 0 };
         this._maxLineLength = 0;
         this._overlay.innerHTML = null;
@@ -1193,6 +1194,7 @@ export class Display extends EventEmitter {
     public removeLine(line: number) {
         if (line < 0 || line >= this.lines.length) return;
         this.emit('line-removed', line, this.lines[line]);
+        this._height -= this._lines[line].height;
         this.lines.splice(line, 1);
         this.displayLines.splice(line, 1);
         this.lineIDs.splice(line, 1);
@@ -1316,6 +1318,10 @@ export class Display extends EventEmitter {
                 continue;
             this._expire[ol].splice(line, amt);
         }
+        if (this._lines.length > 0)
+            this._height = this._lines[this._lines.length - 1].top + this._lines[this._lines.length - 1].height;
+        else
+            this._height = 0;
         this.updateTops(line);
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
@@ -1414,8 +1420,12 @@ export class Display extends EventEmitter {
                 else
                     this._lines[l].top = this._lines[l - 1].top + this._lines[l - 1].height;
             }
+            if (ll > 0)
+                this._height = this._lines[ll - 1].top + this._lines[ll - 1].height;
+            else
+                this._height = 0;
             this._maxLineLength = m;
-            this.doUpdate(UpdateType.selection | UpdateType.overlays);
+            this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.overlays);
         }
     }
 
