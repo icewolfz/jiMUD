@@ -190,7 +190,7 @@ export class Display extends EventEmitter {
             this.split.updateView = () => {
                 this.split.style.bottom = this._HScroll.size + 'px';
                 if (this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
-                    this.split._viewRange.start = Math.floor(this._VScroll.scrollSize / this._charHeight);
+                    this.split._viewRange.start = Math.trunc(this._VScroll.scrollSize / this._charHeight);
                     this.split._viewRange.end = Math.ceil((this._VScroll.scrollSize + this._elJ.innerHeight()) / this._charHeight);
 
                     if (this.split._viewRange.start < 0)
@@ -1065,9 +1065,9 @@ export class Display extends EventEmitter {
         this._overlay.style.height = Math.max(h, this._el.clientHeight) + 'px';
         this._overlay.style.width = mw + 'px';
 
-        //this._viewRange.start = Math.floor(this._el.scrollTop / this._charHeight) - 6;
+        //this._viewRange.start = Math.trunc(this._el.scrollTop / this._charHeight) - 6;
         //this._viewRange.end = Math.ceil((this._el.scrollTop + this._elJ.innerHeight()) / this._charHeight) + 6;
-        this._viewRange.start = Math.floor(this._VScroll.position / this._charHeight);
+        this._viewRange.start = Math.trunc(this._VScroll.position / this._charHeight);
         this._viewRange.end = Math.ceil((this._VScroll.position + this._elJ.innerHeight()) / this._charHeight);
 
         if (this._viewRange.start < 0)
@@ -1132,13 +1132,13 @@ export class Display extends EventEmitter {
     }
 
     get WindowWidth(): number {
-        return Math.floor((this._elJ.innerWidth() - 12) / parseFloat(window.getComputedStyle(this._character).width)) - 1;
+        return Math.trunc((this._elJ.innerWidth() - 12) / parseFloat(window.getComputedStyle(this._character).width)) - 1;
     }
 
     get WindowHeight(): number {
         if (this._HScroll.visible)
-            return Math.floor((this._elJ.innerHeight() - 12 - 4) / ($(this._character).innerHeight() + 0.5)) - 1;
-        return Math.floor((this._elJ.innerHeight() - 4) / ($(this._character).innerHeight() + 0.5)) - 1;
+            return Math.trunc((this._elJ.innerHeight() - 12 - 4) / ($(this._character).innerHeight() + 0.5)) - 1;
+        return Math.trunc((this._elJ.innerHeight() - 4) / ($(this._character).innerHeight() + 0.5)) - 1;
     }
 
     public click(callback) {
@@ -1419,10 +1419,10 @@ export class Display extends EventEmitter {
         }
         else
             y += this._VScroll.position;
-        y = Math.floor(y / this._charHeight);
+        y = Math.trunc(y / this._charHeight);
 
         const xPos = (e.pageX - os.left) + this._HScroll.position;
-        let x = Math.floor(xPos / this._charWidth);
+        let x = Math.trunc(xPos / this._charWidth);
         if (y >= 0) {
             let text;
             if (y < this.lines.length)
@@ -1495,7 +1495,7 @@ export class Display extends EventEmitter {
         if (!cls || cls.length === 0)
             cls = 'overlay-default';
         this._overlays[type] = [];
-        const fl = Math.floor;
+        const fl = Math.trunc;
         const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
         const len = this.lines.length;
         for (r = 0; r < rl; r++) {
@@ -1816,7 +1816,7 @@ export class Display extends EventEmitter {
             s = 0;
         if (e > this.lines[eL].length)
             e = this.lines[eL].length;
-        const fl = Math.floor;
+        const fl = Math.trunc;
         for (let line = sL; line < eL + 1; line++) {
             const startStyle = {
                 top: CornerType.Extern,
