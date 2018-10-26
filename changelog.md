@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.x
+
+- **Fixed:**
+  - Display:
+    - Add MXP image height and better width support
+    - Add MXP font size and family support
+
 ## v0.6.5
 
 - **New:**
