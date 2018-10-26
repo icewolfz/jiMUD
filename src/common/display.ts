@@ -412,11 +412,11 @@ export class Display extends EventEmitter {
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
 
         this._VScroll = new ScrollBar(this._el, this._view);
-        this._VScroll.on('scroll', (amt) => {
+        this._VScroll.on('scroll', () => {
             this.doUpdate(UpdateType.scroll | UpdateType.view);
         });
         this._HScroll = new ScrollBar(this._el, this._view, ScrollType.horizontal);
-        this._HScroll.on('scroll', (amt) => {
+        this._HScroll.on('scroll', () => {
             this.doUpdate(UpdateType.scroll);
         });
         //this.update();
@@ -1455,7 +1455,8 @@ export class Display extends EventEmitter {
         let idx = Math.trunc(y / this._charHeight);
         if (idx <= 0) return 0;
         if (idx >= this._lines.length) return this._lines.length;
-        if (y < this._lines[idx].top) {
+        if (y >= this._lines[idx].top + this._lines[idx].height) {
+            idx++;
             const l = this._lines.length;
             while (idx < l) {
                 if (y >= this._lines[idx].top && y < this._lines[idx].top + this._lines[idx].height)
