@@ -372,7 +372,7 @@ export class Display extends EventEmitter {
         this._canvas.style.left = '-1000px';
         this._elJ = $(this._el);
         this._innerHeight = this._elJ.innerHeight();
-        this._innerHeight = this._elJ.innerWidth();
+        this._innerWidth = this._elJ.innerWidth();
         const fragment = document.createDocumentFragment();
         this._background = document.createElement('div');
         this._background.id = this._el.id + '-background';
@@ -2068,7 +2068,7 @@ export class Display extends EventEmitter {
     private update() {
         this._os = this.offset(this._el);
         this._innerHeight = this._elJ.innerHeight();
-        this._innerHeight = this._elJ.innerWidth();
+        this._innerWidth = this._elJ.innerWidth();
         const t = window.getComputedStyle(this._el);
         this._borderSize.height = parseInt(t.borderTopWidth) || 0;
         this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
