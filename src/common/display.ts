@@ -2301,35 +2301,22 @@ export class Display extends EventEmitter {
                             td.push('underline ');
                         if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
                             fStyle.push('border-bottom: 1px solid ', format.color, ';');
-
-                        if (format.style !== FontStyle.None) {
-                            if ((format.style & FontStyle.Bold) === FontStyle.Bold)
-                                fStyle.push('font-weight: bold;');
-                            if ((format.style & FontStyle.Italic) === FontStyle.Italic)
-                                fStyle.push('font-style: italic;');
-                            if ((format.style & FontStyle.Overline) === FontStyle.Overline)
-                                td.push('overline ');
-                            if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) === FontStyle.Underline)
+                        else
+                            fStyle.push('padding-bottom: 1px;');
+                        if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
+                            if (this.enableFlashing)
+                                fCls.push(' ansi-blink');
+                            else if ((format.style & FontStyle.DoubleUnderline) !== FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) !== FontStyle.Underline)
                                 td.push('underline ');
-                            if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
-                                fStyle.push('border-bottom: 1px solid ', format.color, ';');
-                            else
-                                fStyle.push('padding-bottom: 1px;');
-                            if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
-                                if (this.enableFlashing)
-                                    fCls.push(' ansi-blink');
-                                else if ((format.style & FontStyle.DoubleUnderline) !== FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) !== FontStyle.Underline)
-                                    td.push('underline ');
-                            }
-                            if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
-                                td.push('line-through ');
-                            if (td.length > 0)
-                                fStyle.push('text-decoration:', td.join(''), ';');
                         }
-                        format.bStyle = (bStyle = bStyle.join(''));
-                        format.fStyle = (fStyle = fStyle.join(''));
-                        format.fCls = (fCls = fCls.join(''));
+                        if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
+                            td.push('line-through ');
+                        if (td.length > 0)
+                            fStyle.push('text-decoration:', td.join(''), ';');
                     }
+                    format.bStyle = (bStyle = bStyle.join(''));
+                    format.fStyle = (fStyle = fStyle.join(''));
+                    format.fCls = (fCls = fCls.join(''));
                 }
                 if (format.hr) {
                     back.push('<span style="left:0;width:100%;min-width:100%;', bStyle, '" class="ansi"></span>');
