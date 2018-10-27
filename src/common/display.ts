@@ -519,6 +519,10 @@ export class Display extends EventEmitter {
                 if (e.pageY - os.top > this._el.clientHeight)
                     return;
                 this._currentSelection.drag = true;
+                this._prevSelection = {
+                    start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
+                    end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                };
                 if (e.shiftKey) {
                     this._currentSelection.end = this.getLineOffset(e.pageX, e.pageY);
                     this.emit('selection-start');
@@ -554,6 +558,10 @@ export class Display extends EventEmitter {
                             ePos++;
                         }
                         if (sPos >= 0 && ePos <= len) {
+                            this._prevSelection = {
+                                start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
+                                end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                            };
                             this._currentSelection = {
                                 start: { x: sPos, y: o.y },
                                 end: { x: ePos, y: o.y },
@@ -570,6 +578,10 @@ export class Display extends EventEmitter {
             else if (e.detail === 3) {
                 const o = this.getLineOffset(e.pageX, e.pageY);
                 if (o.y >= 0 && o.y < this.lines.length) {
+                    this._prevSelection = {
+                        start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
+                        end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                    };
                     this._currentSelection = {
                         start: { x: 0, y: o.y },
                         end: { x: this.lines[o.y].length, y: o.y },
@@ -602,6 +614,10 @@ export class Display extends EventEmitter {
             if (this._currentSelection.drag) {
                 this._lastMouse = e;
                 this._currentSelection.scrollTimer = setInterval(() => {
+                    this._prevSelection = {
+                        start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
+                        end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                    };
                     /// pull as long as you can scroll either direction
 
                     if (!this._lastMouse) {
@@ -866,6 +882,7 @@ export class Display extends EventEmitter {
             }
 
             if ((this._updating & UpdateType.selectionChanged) === UpdateType.selectionChanged) {
+                this._prevSelection.end = this._currentSelection.end;
                 this._currentSelection.end = this.getLineOffset(this._lastMouse.pageX, this._lastMouse.pageY);
                 this.emit('selection-changed');
                 this._updating &= ~UpdateType.selectionChanged;
@@ -1132,8 +1149,10 @@ export class Display extends EventEmitter {
         }
         overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
         this._overlay.innerHTML = overlays.join('');
-        if (this.split && (start >= this.split._viewRange.start || end >= this.split._viewRange.start))
+        if (this.split && (start >= this.split._viewRange.start || end >= this.split._viewRange.start)) {
+            this.split.dirty = true;
             this.doUpdate(UpdateType.scrollViewOverlays);
+        }
     }
 
     private updateDisplay() {
@@ -1706,7 +1725,10 @@ export class Display extends EventEmitter {
             if (!this._overlays[type].hasOwnProperty(ol))
                 continue;
             this._overlays[type][ol] = `<div style="top: ${(parseInt(ol, 10) || 0) * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
-            if (this.split && ol >= this.split._viewRange.start) this.split.dirty = true;
+            if (this.split && ol >= this.split._viewRange.start) {
+                this.split.dirty = true;
+                this.doUpdate(UpdateType.scrollViewOverlays);
+            }
         }
         this.doUpdate(UpdateType.overlays);
     }
@@ -1735,7 +1757,10 @@ export class Display extends EventEmitter {
             e = sel.end.x;
         }
         else if (sel.start.x === sel.end.x) {
-            if (this.split && (sel.start.y >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) this.split.dirty = true;
+            if (this.split && (sel.start.y >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) {
+                this.split.dirty = true;
+                this.doUpdate(UpdateType.scrollViewOverlays);
+            }
             this.doUpdate(UpdateType.overlays);
             this._prevSelection = {
                 start: { x: sel.end.x, y: sel.end.y },
@@ -1848,7 +1873,10 @@ export class Display extends EventEmitter {
                         }
                         this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
             */
-            if (this.split && (sL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) this.split.dirty = true;
+            if (this.split && (sL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) {
+                this.split.dirty = true;
+                this.doUpdate(UpdateType.scrollViewOverlays);
+            }
             this.doUpdate(UpdateType.overlays);
             this._prevSelection = {
                 start: { x: sel.end.x, y: sel.end.y },
@@ -1979,7 +2007,10 @@ export class Display extends EventEmitter {
 
             this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
         }
-        if (this.split && (sL >= this.split._viewRange.start || eL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start || this._prevSelection.end.y >= this.split._viewRange.start)) this.split.dirty = true;
+        if (this.split && (sL >= this.split._viewRange.start || eL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start || this._prevSelection.end.y >= this.split._viewRange.start)) {
+            this.split.dirty = true;
+            this.doUpdate(UpdateType.scrollViewOverlays);
+        }
         this.doUpdate(UpdateType.overlays);
         this._prevSelection = {
             start: { x: sel.end.x, y: sel.end.y },
@@ -2104,6 +2135,10 @@ export class Display extends EventEmitter {
         let ll = this.lines.length;
         if (ll === 0) return;
         ll--;
+        this._prevSelection = {
+            start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
+            end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+        };
         this._currentSelection = {
             start: { x: 0, y: 0 },
             end: { x: this.lines[ll].length, y: ll },
@@ -2116,6 +2151,10 @@ export class Display extends EventEmitter {
     }
 
     public clearSelection() {
+        this._prevSelection = {
+            start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
+            end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+        };
         this._currentSelection = {
             start: { x: null, y: null },
             end: { x: null, y: null },
