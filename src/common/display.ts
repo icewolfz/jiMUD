@@ -204,13 +204,12 @@ export class Display extends EventEmitter {
                     const bLines = this._backgroundLines.slice(this.split._viewRange.start, this.split._viewRange.end + 1);
                     const start = this.split._viewRange.start;
                     const end = this.split._viewRange.end;
-                    const mw = Math.max(this._maxWidth, this._el.clientWidth);
                     let l;
                     const ll = lines.length;
                     const _lines = this._lines;
                     for (l = 0; l < ll; l++) {
-                        lines[l] = lines[l].replace(/\{top\}/, `${_lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
-                        bLines[l] = bLines[l].replace(/\{top\}/, `${_lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
+                        lines[l] = lines[l].replace(/\{top\}/, `${_lines[start + l].top}`);
+                        bLines[l] = bLines[l].replace(/\{top\}/, `${_lines[start + l].top}`);
                     }
                     const overlays = [];
                     let ol;
@@ -1089,8 +1088,8 @@ export class Display extends EventEmitter {
         const ll = lines.length;
         const _lines = this._lines;
         for (let l = 0; l < ll; l++) {
-            lines[l] = lines[l].replace(/\{top\}/, `${_lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
-            bLines[l] = bLines[l].replace(/\{top\}/, `${_lines[start + l].top}`).replace(/\{max\}/, `${mw}`);
+            lines[l] = lines[l].replace(/\{top\}/, `${_lines[start + l].top}`);
+            bLines[l] = bLines[l].replace(/\{top\}/, `${_lines[start + l].top}`);
         }
         this._view.innerHTML = lines.join('');
         this._background.innerHTML = bLines.join('');
@@ -2333,8 +2332,8 @@ export class Display extends EventEmitter {
                     }
                 }
                 if (format.hr) {
-                    back.push('<span style="left:0;width:{max}px;', bStyle, '" class="ansi"></span>');
-                    fore.push('<span style="left:0;width:{max}px;', fStyle, '" class="ansi', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
+                    back.push('<span style="left:0;width:100%;min-width:100%;', bStyle, '" class="ansi"></span>');
+                    fore.push('<span style="left:0;width:100%;min-width:100%;', fStyle, '" class="ansi', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
                 }
                 else if (end - offset !== 0) {
                     back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" class="ansi"></span>');
