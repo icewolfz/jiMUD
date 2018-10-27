@@ -114,6 +114,9 @@
 }
 
 .scroll-corner {
+    position: absolute;
+    right: 0;
+    bottom: 0;
     box-sizing: border-box;
     width: 12px;
     height: 12px;
