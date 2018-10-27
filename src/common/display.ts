@@ -41,7 +41,7 @@ interface ScrollState {
 }
 
 export enum ScrollType { vertical = 0, horizontal = 1 }
-export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512 }
+export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512, scrollViewOverlays = 1024 }
 
 enum CornerType {
     Flat = 0,
@@ -92,6 +92,10 @@ export class Display extends EventEmitter {
         end: { x: null, y: null },
         scrollTimer: null,
         drag: false
+    };
+    private _prevSelection = {
+        start: { x: null, y: null },
+        end: { x: null, y: null }
     };
     private _borderSize: Size = { width: 0, height: 0 };
     private _character: HTMLElement;
@@ -198,12 +202,6 @@ export class Display extends EventEmitter {
                     const bLines = this._backgroundLines.slice(this.split._viewRange.start, this.split._viewRange.end + 1);
                     const start = this.split._viewRange.start;
                     const end = this.split._viewRange.end;
-                    let l;
-                    const ll = lines.length;
-                    for (l = 0; l < ll; l++) {
-                        lines[l] = lines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`);
-                        bLines[l] = bLines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`);
-                    }
                     const overlays = [];
                     let ol;
                     for (ol in this._overlays) {
@@ -226,6 +224,22 @@ export class Display extends EventEmitter {
                     this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
                     this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
                     this.split.dirty = false;
+                }
+            };
+            this.split.updateOverlays = () => {
+                if (this.split.shown && this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
+                    const start = this.split._viewRange.start;
+                    const end = this.split._viewRange.end;
+                    const overlays = [];
+                    let ol;
+                    for (ol in this._overlays) {
+                        if (!this._overlays.hasOwnProperty(ol) || ol === 'selection')
+                            continue;
+                        overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
+                    }
+                    overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
+
+                    this.split.overlay.innerHTML = overlays.join('');
                 }
             };
             this.split.bar.addEventListener('mousedown', (e) => {
@@ -834,6 +848,12 @@ export class Display extends EventEmitter {
                     this.split.updateView();
                 this._updating &= ~UpdateType.scrollView;
             }
+            else if ((this._updating & UpdateType.scrollViewOverlays) === UpdateType.scrollViewOverlays) {
+                if (this.split)
+                    this.split.updateOverlays();
+                this._updating &= ~UpdateType.scrollViewOverlays;
+            }
+
             if ((this._updating & UpdateType.selectionChanged) === UpdateType.selectionChanged) {
                 this._currentSelection.end = this.getLineOffset(this._lastMouse.pageX, this._lastMouse.pageY);
                 this.emit('selection-changed');
@@ -1077,12 +1097,6 @@ export class Display extends EventEmitter {
             this._viewRange.end = this.lines.length;
         const lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
         const bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
-        const start = this._viewRange.start;
-        const ll = lines.length;
-        for (let l = 0; l < ll; l++) {
-            lines[l] = lines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`);
-            bLines[l] = bLines[l].replace(/\{top\}/, `${(start + l) * this._charHeight}`);
-        }
         this._view.innerHTML = lines.join('');
         this._background.innerHTML = bLines.join('');
         this.doUpdate(UpdateType.overlays);
@@ -1102,7 +1116,8 @@ export class Display extends EventEmitter {
         }
         overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
         this._overlay.innerHTML = overlays.join('');
-        this.doUpdate(UpdateType.scrollView);
+        if (this.split && (start >= this.split._viewRange.start || end >= this.split._viewRange.start))
+            this.doUpdate(UpdateType.scrollViewOverlays);
     }
 
     private updateDisplay() {
@@ -1118,6 +1133,16 @@ export class Display extends EventEmitter {
             this.updateWindow();
         //re-enable animation so they are all synced
         this._el.classList.add('animate');
+    }
+
+    private updateTops(line: number) {
+        const l = this._lines.length;
+        if (l === 0) return;
+        while (line < l) {
+            this._viewLines[l] = this._viewLines[l].replace(/top:\d+px/, `top:${l * this._charHeight}px`);
+            this._backgroundLines[l] = this._backgroundLines[l].replace(/top:\d+px/, `top:${l * this._charHeight}px`);
+            line++;
+        }
     }
 
     get WindowSize(): Size {
@@ -1234,6 +1259,7 @@ export class Display extends EventEmitter {
             this._expire[ol].splice(line, 1);
         }
         if (this.split) this.split.dirty = true;
+        this.updateTops(line);
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
 
@@ -1301,6 +1327,7 @@ export class Display extends EventEmitter {
             this._expire[ol].splice(line, amt);
         }
         if (this.split) this.split.dirty = true;
+        this.updateTops(line);
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
 
@@ -1393,6 +1420,8 @@ export class Display extends EventEmitter {
                 }
                 else if (lines[l].length > m)
                     m = lines[l].length;
+                this._viewLines[l] = this._viewLines[l].replace(/top:\d+px/, `top:${l * this._charHeight}px`);
+                this._backgroundLines[l] = this._backgroundLines[l].replace(/top:\d+px/, `top:${l * this._charHeight}px`);
             }
             this._maxLineLength = m;
             if (this.split) this.split.dirty = true;
@@ -1690,14 +1719,23 @@ export class Display extends EventEmitter {
             e = sel.end.x;
         }
         else if (sel.start.x === sel.end.x) {
-            if (this.split && sel.start.x >= this.split._viewRange.start) this.split.dirty = true;
+            if (this.split && (sel.start.y >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) this.split.dirty = true;
             this.doUpdate(UpdateType.overlays);
+            this._prevSelection = {
+                start: { x: sel.end.x, y: sel.end.y },
+                end: { x: sel.end.x, y: sel.end.y }
+            };
             return;
         }
         else {
             sL = sel.start.y;
-            if (sL < 0 || sL >= this.lines.length)
+            if (sL < 0 || sL >= this.lines.length) {
+                this._prevSelection = {
+                    start: { x: sel.end.x, y: sel.end.y },
+                    end: { x: sel.end.x, y: sel.end.y }
+                };
                 return;
+            }
             /*
                         w = e;
                         while (w >= s) {
@@ -1794,8 +1832,12 @@ export class Display extends EventEmitter {
                         }
                         this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
             */
-            if (this.split && sL >= this.split._viewRange.start) this.split.dirty = true;
+            if (this.split && (sL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) this.split.dirty = true;
             this.doUpdate(UpdateType.overlays);
+            this._prevSelection = {
+                start: { x: sel.end.x, y: sel.end.y },
+                end: { x: sel.end.x, y: sel.end.y }
+            };
             return;
         }
         const len = this.lines.length;
@@ -1921,8 +1963,12 @@ export class Display extends EventEmitter {
 
             this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
         }
-        if (this.split && (sL >= this.split._viewRange.start || eL >= this.split._viewRange.start)) this.split.dirty = true;
+        if (this.split && (sL >= this.split._viewRange.start || eL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start || this._prevSelection.end.y >= this.split._viewRange.start)) this.split.dirty = true;
         this.doUpdate(UpdateType.overlays);
+        this._prevSelection = {
+            start: { x: sel.end.x, y: sel.end.y },
+            end: { x: sel.end.x, y: sel.end.y }
+        };
     }
 
     get hasSelection(): boolean {
@@ -2334,7 +2380,7 @@ export class Display extends EventEmitter {
                 }
             }
         }
-        return [`<span class="line" data-id="${id}" style="top:{top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${height}px;">${back.join('')}<br></span>`];
+        return [`<span class="line" data-id="${id}" style="top:${idx * this._charHeight}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${idx * this._charHeight}px;height:${height}px;">${back.join('')}<br></span>`];
     }
 
     public getLineHTML(idx?: number, start?: number, len?: number) {

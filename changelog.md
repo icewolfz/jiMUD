@@ -9,6 +9,7 @@
   - Expanded [client.writeClipboard](docs/scripting.md) added html argument to add formated html as well as plain text
   - Expanded [client.writeClipboardHTML](docs/scripting.md) write HTML markup to clipboard to produce formated text for applications that support HTML pasting
   - Expanded [client.readClipboardHTML](docs/scripting.md) read HTML markup from clipboard if clipboard has HTML support
+  - Added total time to [#testspeed](docs/commands.md) command
 - **Changed:**
   - Update electron from 3.0.5 to 3.0.6
   - Log viewer uses simpler HTML generation
@@ -25,8 +26,9 @@
       - Fixed MXP send tags
     - Fixed HTML property to return correct HTML markup
     - Match whole unicode words on context or double click
-    - Throttle selection mouse moving to improve performance
+    - Debounce selection mouse moving to improve performance
     - Fixed updating split view when scrolling
+    - Fixed split view selection performance issues
   - ANSI Parser: Fixed extra characters being added after : is detected, fixes raw ansi logging
 
 ## v0.6.4 2018-10-22
