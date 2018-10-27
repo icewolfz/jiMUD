@@ -47,6 +47,8 @@ export class Tests extends EventEmitter {
                 if (!this.TestFunctions.hasOwnProperty(t)) continue;
                 sample += `\t${this.Client.options.commandChar + t}\n`;
             }
+            sample += `\t${this.Client.options.commandChar}testfile file\n`;
+            sample += `\t${this.Client.options.commandChar}testspeedfile file\n`;
             this.Client.print(sample, true);
         };
 

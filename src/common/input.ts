@@ -4,7 +4,7 @@
 //spell-checker:ignore togglecl raiseevent raisedelayed raisede diceavg dicemin dicemax zdicedev dicedev zmud
 import EventEmitter = require('events');
 import { MacroModifiers } from './profile';
-import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate } from './library';
+import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType } from './profile';
@@ -14,6 +14,7 @@ const mathjs = require('mathjs-expression-parser');
 const buzz = require('buzz');
 const path = require('path');
 const moment = require('moment');
+const fs = require('fs');
 
 function ProperCase(str) {
     return str.replace(/\w*\S*/g, (txt) => { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
@@ -554,6 +555,53 @@ export class Input extends EventEmitter {
         let reload;
         let trigger;
         switch (fun.toLowerCase()) {
+            case 'testfile':
+                args = this.parseOutgoing(args.join(' '), false);
+                items = [];
+                if (!args || args.length === 0)
+                    throw new Error('Invalid syntax use #testfile file');
+                if (!isFileSync(args))
+                    throw new Error('Invalid file "' + args + '"');
+                tmp = fs.readFileSync(args, 'utf-8');
+                n = this.client.options.enableCommands;
+                this.client.options.enableCommands = true;
+                i = new Date().getTime();
+                this.client.sendCommand(tmp);
+                p = new Date().getTime();
+                this.client.options.enableCommands = n;
+                items.push(`Time: ${p - i}`);
+                this.client.print(items.join('\n') + '\n', true);
+                return null;
+            case 'testspeedfile':
+                args = this.parseOutgoing(args.join(' '), false);
+                items = [];
+                if (!args || args.length === 0)
+                    throw new Error('Invalid syntax use #testspeedfile file');
+                if (!isFileSync(args))
+                    throw new Error('Invalid file "' + args + '"');
+                tmp = fs.readFileSync(args, 'utf-8');
+                n = this.client.options.enableCommands;
+                this.client.options.enableCommands = true;
+                let avg = 0;
+                let max = 0;
+                let min = 0;
+                for (i = 0; i < 10; i++) {
+                    const start = new Date().getTime();
+                    this.client.sendCommand(tmp);
+                    const end = new Date().getTime();
+                    p = end - start;
+                    avg += p;
+                    if (p > max) max = p;
+                    if (!min || p < min) min = p;
+                    items.push(`${i} - ${p}`);
+                }
+                items.push(`Total - ${avg}`);
+                items.push(`Average - ${avg / 10}`);
+                items.push(`Min - ${min}`);
+                items.push(`Max - ${max}`);
+                this.client.print(items.join('\n') + '\n', true);
+                this.client.options.enableCommands = n;
+                return null;
             //spell-checker:ignore chatprompt chatp
             case 'chatprompt':
             case 'chatp':

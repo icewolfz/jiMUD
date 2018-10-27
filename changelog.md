@@ -10,6 +10,8 @@
   - Expanded [client.writeClipboardHTML](docs/scripting.md) write HTML markup to clipboard to produce formated text for applications that support HTML pasting
   - Expanded [client.readClipboardHTML](docs/scripting.md) read HTML markup from clipboard if clipboard has HTML support
   - Added total time to [#testspeed](docs/commands.md) command
+  - Added [#testspeedfile](docs/commands.md) to load a file and run timed test
+  - Added [#testfile](docs/commands.md) to load a file
 - **Changed:**
   - Update electron from 3.0.5 to 3.0.6
   - Log viewer uses simpler HTML generation
