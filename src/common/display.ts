@@ -210,19 +210,25 @@ export class Display extends EventEmitter {
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
-                    const eW = this._innerWidth - 16;
+                    const ll = lines.length;
+                    const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
+                    for (let l = 0; l < ll; l++) {
+                        lines[l] = lines[l].replace(/\{max\}/, `${mw}`);
+                        bLines[l] = bLines[l].replace(/\{max\}/, `${mw}`);
+                    }
+
                     this.split.view.style.width = this._maxLineLength * this._charWidth + 'px';
-                    this.split.view.style.minWidth = eW + 'px';
                     this.split.background.style.width = this._maxLineLength * this._charWidth + 'px';
-                    this.split.background.style.minWidth = eW + 'px';
 
                     this.split.overlay.innerHTML = overlays.join('');
                     this.split.view.innerHTML = lines.join('');
                     this.split.background.innerHTML = bLines.join('');
                     this.split.top = Math.ceil(this.offset(this.split).top + 0.5);
-                    this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
-                    this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
-                    this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
+                    const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
+                    //const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top
+                    this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                    this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                    this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                     this.split.dirty = false;
                 }
             };
@@ -293,9 +299,11 @@ export class Display extends EventEmitter {
                     h = (h / this._el.clientHeight * 100);
                     this.split.style.height = h + '%';
                     this.split.top = Math.ceil(this.offset(this.split).top + 0.5);
-                    this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
-                    this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
-                    this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
+                    const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
+                    //const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
+                    this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                    this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                    this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                     this._el.removeChild(this.split.ghostBar);
                     delete this.split.ghostBar;
                     this.emit('split-move-done', h);
@@ -826,9 +834,11 @@ export class Display extends EventEmitter {
                         this.split.style.display = 'block';
                         this.split.shown = true;
                         this.emit('scroll-lock', true);
-                        this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
-                        this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
-                        this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
+                        const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
+                        //const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
+                        this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                        this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                        this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                     }
                 }
                 this._view.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
@@ -1077,13 +1087,11 @@ export class Display extends EventEmitter {
         const w = this._maxLineLength * this._charWidth;
         const h = this.lines.length * this._charHeight;
         const mw = Math.max(w, this._el.clientWidth);
-        const eW = this._innerWidth - 16;
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
-        this._view.style.minWidth = eW + 'px';
+
         this._background.style.height = h + 'px';
         this._background.style.width = w + 'px';
-        this._background.style.minWidth = eW + 'px';
 
         this._overlay.style.height = Math.max(h, this._el.clientHeight) + 'px';
         this._overlay.style.width = mw + 'px';
@@ -1097,6 +1105,13 @@ export class Display extends EventEmitter {
             this._viewRange.end = this.lines.length;
         const lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
         const bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
+
+        const ll = lines.length;
+        for (let l = 0; l < ll; l++) {
+            lines[l] = lines[l].replace(/\{max\}/, `${mw}`);
+            bLines[l] = bLines[l].replace(/\{max\}/, `${mw}`);
+        }
+
         this._view.innerHTML = lines.join('');
         this._background.innerHTML = bLines.join('');
         this.doUpdate(UpdateType.overlays);
@@ -2218,8 +2233,8 @@ export class Display extends EventEmitter {
                     format.fCls = (fCls = fCls.join(''));
                 }
                 if (format.hr) {
-                    back.push('<span style="left:0;width:100%;min-width:100%;', bStyle, '" class="ansi"></span>');
-                    fore.push('<span style="left:0;width:100%;min-width:100%;', fStyle, '" class="ansi', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
+                    back.push('<span style="left:0;width:{max}px;', bStyle, '" class="ansi"></span>');
+                    fore.push('<span style="left:0;width:{max}px;', fStyle, '" class="ansi', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
                 }
                 else if (end - offset !== 0) {
                     back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" class="ansi"></span>');
