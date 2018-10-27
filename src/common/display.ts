@@ -720,6 +720,7 @@ export class Display extends EventEmitter {
             }
         };
         this._wResize = (e) => {
+            if (this.split) this.split.dirty = true;
             this.doUpdate(UpdateType.update);
         };
 
@@ -2629,7 +2630,7 @@ export class Display extends EventEmitter {
         this._HScroll.resize();
         this._HScroll.visible = this._HScroll.scrollSize >= 0;
         this._VScroll.offset = this._HScroll.visible ? this._HScroll.track.clientHeight : 0;
-        this._VScroll.resize(this.split ? this.split.shown : this.scrollLock);
+        this._VScroll.resize();
 
         if (!this._HScroll.visible && this._scrollCorner) {
             this._el.removeChild(this._scrollCorner);
@@ -2640,6 +2641,7 @@ export class Display extends EventEmitter {
             this._scrollCorner.className = 'scroll-corner';
             this._el.appendChild(this._scrollCorner);
         }
+        if (this.split) this.split.dirty = true;
     }
 
     public showFind() {
@@ -2953,15 +2955,13 @@ export class ScrollBar extends EventEmitter {
     public scrollBy(amount: number) {
         if (amount === 0) return;
         amount = this.position + (amount < 0 ? Math.floor(amount) : Math.ceil(amount));
-        amount = Math.ceil(amount * this._ratio2);
-        //this.updatePosition(amount / this.scrollSize * this.maxPosition);
+        amount = amount * this._ratio2;
         this.updatePosition(amount);
     }
 
     public scrollTo(position: number) {
         position = (position < 0 ? Math.floor(position) : Math.ceil(position));
-        position = Math.ceil(position * this._ratio2);
-        //this.updatePosition(position / this.scrollSize * this.maxPosition);
+        position = position * this._ratio2;
         this.updatePosition(position);
     }
 
@@ -2973,7 +2973,7 @@ export class ScrollBar extends EventEmitter {
         this.updatePosition(0);
     }
 
-    public resize(locked?: boolean) {
+    public resize(scrollToEnd?) {
         const pc = window.getComputedStyle(this._parent);
         this._padding = [
             parseInt(pc.getPropertyValue('padding-top')) || 0,
@@ -2981,11 +2981,7 @@ export class ScrollBar extends EventEmitter {
             parseInt(pc.getPropertyValue('padding-bottom')) || 0,
             parseInt(pc.getPropertyValue('padding-left')) || 0
         ];
-
-        //const m = this.maxPosition;
-        const p = Math.ceil(this._position / this._ratio);
-        //p = (this.position / this.scrollSize) * this.maxPosition;
-        //p = (p < 0 ? Math.floor(p) : Math.ceil(p));
+        const bottom = this.position >= this.scrollSize - this._padding[0];
         if (this._type === ScrollType.horizontal) {
             this._contentSize = this._content.clientWidth + this._padding[1] + this._padding[3];
             this._parentSize = this._parent.clientWidth - this.offset - this._scrollOffset;
@@ -3001,10 +2997,11 @@ export class ScrollBar extends EventEmitter {
         this.maxPosition = this._parentSize - Math.ceil(1 / this._percentView * this._parentSize);
         if (this.maxPosition < 0)
             this.maxPosition = 0;
-        //p = Math.ceil(p * (this.maxPosition / m));
         this.update();
-        if (!locked)
-            this.updatePosition(p || 0);
+        if (bottom)
+            this.updatePosition(this.maxPosition);
+        else
+            this.updatePosition(this._position * this._ratio2);
     }
 
     public currentPosition() {

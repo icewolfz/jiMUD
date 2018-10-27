@@ -528,7 +528,8 @@ export class Client extends EventEmitter {
         this._input = new Input(this);
         this._input.on('scroll-lock', (lock) => {
             this.display.scrollLock = lock;
-            this.display.scrollDisplay(true);
+            if (this.display.split)
+                this.display.scrollDisplay(true);
             this.emit('scroll-lock', lock);
         });
 
