@@ -1661,8 +1661,8 @@ export class Display extends EventEmitter {
             if (!this._overlays[type].hasOwnProperty(ol))
                 continue;
             this._overlays[type][ol] = `<div style="top: ${(parseInt(ol, 10) || 0) * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
+            if (this.split && ol >= this.split._viewRange.start) this.split.dirty = true;
         }
-        if (this.split) this.split.dirty = true;
         this.doUpdate(UpdateType.overlays);
     }
 
@@ -1690,7 +1690,7 @@ export class Display extends EventEmitter {
             e = sel.end.x;
         }
         else if (sel.start.x === sel.end.x) {
-            if (this.split) this.split.dirty = true;
+            if (this.split && sel.start.x >= this.split._viewRange.start) this.split.dirty = true;
             this.doUpdate(UpdateType.overlays);
             return;
         }
@@ -1794,7 +1794,7 @@ export class Display extends EventEmitter {
                         }
                         this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
             */
-            if (this.split) this.split.dirty = true;
+            if (this.split && sL >= this.split._viewRange.start) this.split.dirty = true;
             this.doUpdate(UpdateType.overlays);
             return;
         }
@@ -1921,7 +1921,7 @@ export class Display extends EventEmitter {
 
             this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
         }
-        if (this.split) this.split.dirty = true;
+        if (this.split && (sL >= this.split._viewRange.start || eL >= this.split._viewRange.start)) this.split.dirty = true;
         this.doUpdate(UpdateType.overlays);
     }
 
