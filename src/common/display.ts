@@ -2270,7 +2270,7 @@ export class Display extends EventEmitter {
                     bStyle = format.bStyle;
                     fStyle = format.fStyle;
                     fCls = format.fCls;
-                    height = format.height || this._charHeight;
+                    height =  Math.max(height, format.height || this._charHeight);
                 }
                 else {
                     bStyle = [];
@@ -2284,7 +2284,7 @@ export class Display extends EventEmitter {
                     if (format.font || format.size) {
                         if (format.font) fStyle.push('font-family: ', format.font, ';');
                         if (format.size) fStyle.push('font-size: ', format.size, ';');
-                        height = (format.height = Math.max(height, this.textHeight(eText, format.font, format.size)));
+                        height = Math.max(height, format.height = this.textHeight(eText, format.font, format.size));
                         format.width = format.width || this.textWidth(eText, `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
                     }
                     else
