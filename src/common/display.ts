@@ -71,7 +71,7 @@ interface Line {
  * @todo Add MXP font size - requires variable line height, selection requires using format block to get correct size
  * @todo fix RTL unicode selection display
  * @todo Add MXP image height - requires variable line height support
- * @todo Add/fox MXP image selection hightlighting
+ * @todo Add/fox MXP image selection highlighting
  */
 export class Display extends EventEmitter {
     private _lineID = 0;
@@ -205,7 +205,6 @@ export class Display extends EventEmitter {
                     const bLines = this._backgroundLines.slice(this.split._viewRange.start, this.split._viewRange.end + 1);
                     const start = this.split._viewRange.start;
                     const end = this.split._viewRange.end;
-                    const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
                     let l;
                     const ll = lines.length;
                     for (l = 0; l < ll; l++) {
