@@ -16,7 +16,7 @@
   - Status: Fix sleet weather overlay for all themes
   - Display:
     - Not correctly clearing text
-    - Improve performance by generating cleaning HTML markup
+    - Improve performance by generating cleaner HTML markup
     - MXP:
       - Fixed horizontal rulers display
       - Fixed selection highlighting of horizontal rulers
@@ -26,6 +26,7 @@
     - Fixed HTML property to return correct HTML markup
     - Match whole unicode words on context or double click
     - Throttle selection mouse moving to improve performance
+    - Fixed updating split view when scrolling
   - ANSI Parser: Fixed extra characters being added after : is detected, fixes raw ansi logging
 
 ## v0.6.4 2018-10-22

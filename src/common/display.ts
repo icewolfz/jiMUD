@@ -141,17 +141,6 @@ export class Display extends EventEmitter {
 
     private _innerWidth;
     private _innerHeight;
-    //private _enableUTF8: boolean = false;
-    /*
-    get enableUTF8() { return this._enableUTF8; }
-    set enableUTF8(value) {
-        if (value === this._enableUTF8) return;
-        this._enableUTF8 = value;
-        this.rebuildLines();
-        this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollView | UpdateType.overlays);
-        this.updateWindow();
-    }
-    */
 
     get roundedRanges(): boolean { return this._roundedRanges; }
     set roundedRanges(value: boolean) {
@@ -175,6 +164,7 @@ export class Display extends EventEmitter {
         const id = this._el.id;
         if (!this.split && value) {
             this.split = document.createElement('div');
+            this.split.dirty = true;
             this.split.id = id + '-split-frame';
             this.split.bar = document.createElement('div');
             this.split.bar.id = id + '-split-bar';
@@ -192,8 +182,11 @@ export class Display extends EventEmitter {
                 this.split.style.height = this._splitHeight + '%';
 
             this.split.updateView = () => {
-                this.split.style.bottom = this._HScroll.size + 'px';
-                if (this.split.shown && this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
+                if (this._HScroll.size !== this.split.bottom) {
+                    this.split.style.bottom = this._HScroll.size + 'px';
+                    this.split.bottom = this._HScroll.size;
+                }
+                if (this.split.dirty && this.split.shown && this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
                     this.split._viewRange.start = Math.trunc(this._VScroll.scrollSize / this._charHeight);
                     this.split._viewRange.end = Math.ceil((this._VScroll.scrollSize + this._innerHeight) / this._charHeight);
 
@@ -232,6 +225,7 @@ export class Display extends EventEmitter {
                     this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
                     this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
                     this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
+                    this.split.dirty = false;
                 }
             };
             this.split.bar.addEventListener('mousedown', (e) => {
@@ -983,6 +977,7 @@ export class Display extends EventEmitter {
         this._overlays = {
             selection: []
         };
+        if (this.split) this.split.dirty = true;
         this._viewLines = [];
         this._backgroundLines = [];
         this.displayLines = [];
@@ -1171,10 +1166,10 @@ export class Display extends EventEmitter {
         this.lineIDs.push(this._lineID);
         this._lines.push({ height: 0, top: 0, width: 0 });
         this._lineID++;
-        t = this.getLineDisplay();
+        t = this.buildLineDisplay();
         this._viewLines.push(t[0]);
         this._backgroundLines.push(t[1]);
-
+        if (this.split) this.split.dirty = true;
         if (!noUpdate)
             this.doUpdate(UpdateType.display);
     }
@@ -1238,7 +1233,7 @@ export class Display extends EventEmitter {
                 continue;
             this._expire[ol].splice(line, 1);
         }
-
+        if (this.split) this.split.dirty = true;
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
 
@@ -1305,7 +1300,7 @@ export class Display extends EventEmitter {
                 continue;
             this._expire[ol].splice(line, amt);
         }
-
+        if (this.split) this.split.dirty = true;
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
 
@@ -1400,6 +1395,7 @@ export class Display extends EventEmitter {
                     m = lines[l].length;
             }
             this._maxLineLength = m;
+            if (this.split) this.split.dirty = true;
             this.doUpdate(UpdateType.selection | UpdateType.overlays);
         }
     }
@@ -1475,6 +1471,7 @@ export class Display extends EventEmitter {
         if (!type)
             type = 'default';
         this._overlays[type] = [];
+        if (this.split) this.split.dirty = true;
         this.doUpdate(UpdateType.overlays);
     }
 
@@ -1665,6 +1662,7 @@ export class Display extends EventEmitter {
                 continue;
             this._overlays[type][ol] = `<div style="top: ${(parseInt(ol, 10) || 0) * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
         }
+        if (this.split) this.split.dirty = true;
         this.doUpdate(UpdateType.overlays);
     }
 
@@ -1692,6 +1690,7 @@ export class Display extends EventEmitter {
             e = sel.end.x;
         }
         else if (sel.start.x === sel.end.x) {
+            if (this.split) this.split.dirty = true;
             this.doUpdate(UpdateType.overlays);
             return;
         }
@@ -1795,6 +1794,7 @@ export class Display extends EventEmitter {
                         }
                         this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
             */
+            if (this.split) this.split.dirty = true;
             this.doUpdate(UpdateType.overlays);
             return;
         }
@@ -1921,6 +1921,7 @@ export class Display extends EventEmitter {
 
             this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
         }
+        if (this.split) this.split.dirty = true;
         this.doUpdate(UpdateType.overlays);
     }
 
@@ -2073,7 +2074,7 @@ export class Display extends EventEmitter {
         this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
     }
 
-    private getLineDisplay(idx?: number) {
+    private buildLineDisplay(idx?: number) {
         if (idx === undefined)
             idx = this.lines.length - 1;
         const back = [];
@@ -2323,10 +2324,11 @@ export class Display extends EventEmitter {
                         const bounds = img.getBoundingClientRect();
                         fmt.width = bounds.width || img.width;
                         fmt.height = bounds.height || img.height;
-                        const t = this.getLineDisplay(lIdx);
+                        const t = this.buildLineDisplay(lIdx);
                         this._viewLines[lIdx] = t[0];
                         this._backgroundLines[lIdx] = t[1];
                         img.remove();
+                        if (this.split) this.split.dirty = true;
                         this.doUpdate(UpdateType.display);
                     };
                 }
@@ -2538,10 +2540,11 @@ export class Display extends EventEmitter {
         let t;
         const ll = this.lines.length;
         for (let l = 0; l < ll; l++) {
-            t = this.getLineDisplay(l);
+            t = this.buildLineDisplay(l);
             this._viewLines[l] = t[0];
             this._backgroundLines[l] = t[1];
         }
+        if (this.split) this.split.dirty = true;
     }
 
     public scrollDisplay(force?: boolean) {
@@ -2649,10 +2652,11 @@ export class Display extends EventEmitter {
                 else if (this.lineFormats[idx][f] === type)
                     n++;
             }
-            t = this.getLineDisplay(idx);
+            t = this.buildLineDisplay(idx);
             this._viewLines[idx] = t[0];
             this._backgroundLines[idx] = t[1];
         }
+        if (this.split) this.split.dirty = true;
     }
 
     public dispose() {
