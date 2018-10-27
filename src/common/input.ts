@@ -557,7 +557,6 @@ export class Input extends EventEmitter {
         switch (fun.toLowerCase()) {
             case 'testfile':
                 args = this.parseOutgoing(args.join(' '), false);
-                items = [];
                 if (!args || args.length === 0)
                     throw new Error('Invalid syntax use #testfile file');
                 if (!isFileSync(args))
@@ -569,8 +568,7 @@ export class Input extends EventEmitter {
                 this.client.sendCommand(tmp);
                 p = new Date().getTime();
                 this.client.options.enableCommands = n;
-                items.push(`Time: ${p - i}`);
-                this.client.print(items.join('\n') + '\n', true);
+                this.client.print(`Time: ${p - i}\n`, true);
                 return null;
             case 'testspeedfile':
                 args = this.parseOutgoing(args.join(' '), false);
