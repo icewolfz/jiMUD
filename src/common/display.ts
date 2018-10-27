@@ -2082,9 +2082,9 @@ export class Display extends EventEmitter {
         const text = this.displayLines[idx];
         const formats = this.lineFormats[idx];
         let offset = 0;
-        let bStyle: any = [];
-        let fStyle: any = [];
-        let fCls: any;
+        let bStyle: any = '';
+        let fStyle: any = '';
+        let fCls: any = '';
         const height = this._charHeight;
         const len = formats.length;
         let left = 0;
