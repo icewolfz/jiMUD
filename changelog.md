@@ -31,7 +31,7 @@
       - Fixed closing of custom defined tags
       - Fixed MXP send tags
     - Fixed HTML property to return correct HTML markup
-    - Match would unicode words on context or double click
+    - Match whole unicode words on context or double click
     - Throttle selection mouse moving to improve performance
   - ANSI Parser: Fixed extra characters being added after : is detected, fixes raw ansi logging
 
