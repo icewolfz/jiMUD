@@ -42,6 +42,7 @@
   - ANSI Parser:
     - Fixed extra characters being added after : in text, fixes raw ansi logging
     - Fixed loss of some raw data when line only contains control characters resulting in loss of blank lines
+  - Status: Fix issue with losing spacing when status display is hidden
 
 ## v0.6.4 2018-10-22
 

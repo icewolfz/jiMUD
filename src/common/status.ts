@@ -566,36 +566,47 @@ export class Status extends EventEmitter {
     }
 
     public updateInterface() {
-        $('#display').css('right', '');
-        $('#display-border').css('right', '');
-        $('#command').css('right', '');
-        if (this.client.options.showStatus) {
-            $('#status').css('visibility', '');
-            $('#status').css('display', '');
-            $('#status-border').css('visibility', '');
-            $('#status-border').css('display', '');
-        }
-        else {
-            const w = $('#status-border').outerWidth();
+        const display = $('#display');
+        const displayBorder = $('#display-border');
+        const command = $('#command');
+        const status = $('#status');
+        const statusBorder = $('#status-border');
+        display.css('right', '');
+        displayBorder.css('right', '');
+        command.css('right', '');
+        if (!this.client.options.showStatus) {
+            const w = statusBorder.outerWidth();
             let r;
-            $('#status').css('visibility', 'hidden');
-            $('#status').css('display', 'none');
-            $('#status-border').css('visibility', 'hidden');
-            $('#status-border').css('display', 'none');
-            r = parseInt($('#display').css('right'), 10) || 0;
-            if (r > w)
-                r = w;
-            $('#display').css('right', (r - w) + 'px');
-            r = parseInt($('#display-border').css('right'), 10) || 0;
-            if (r > w)
-                r = w;
-            $('#display-border').css('right', (r - w) + 'px');
-            r = parseInt($('#command').css('right'), 10) || 0;
-            if (r > w)
-                r = w;
-            $('#command').css('right', (r - w) + 'px');
+            status.css('visibility', 'hidden');
+            status.css('display', 'none');
+            statusBorder.css('visibility', 'hidden');
+            statusBorder.css('display', 'none');
+            r = parseInt(display.css('right'), 10) || 0;
+            if (w > 0)
+                r -= w;
+            else
+                r = 0;
+            display.css('right', r + 'px');
+            r = parseInt(displayBorder.css('right'), 10) || 0;
+            if (w > 0)
+                r -= w;
+            else
+                r = 0;
+                displayBorder.css('right', r + 'px');
+            r = parseInt(command.css('right'), 10) || 0;
+            r -= w;
+            if (w > 0)
+                r -= w;
+            else
+                r = 0;
+                command.css('right', r + 'px');
             return;
         }
+
+        status.css('visibility', '');
+        status.css('display', '');
+        statusBorder.css('visibility', '');
+        statusBorder.css('display', '');
 
         if (this.client.options.statusExperienceNeededProgressbar) {
             $('#need-value').css('display', 'none');
