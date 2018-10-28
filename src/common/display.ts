@@ -210,14 +210,13 @@ export class Display extends EventEmitter {
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
                     const ll = lines.length;
-                    const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
+                    const mw = Math.max(this._maxWidth, this._el.clientWidth);
                     for (let l = 0; l < ll; l++) {
                         lines[l] = lines[l].replace(/\{max\}/, `${mw}`);
                         bLines[l] = bLines[l].replace(/\{max\}/, `${mw}`);
                     }
-
-                    this.split.view.style.width = this._maxLineLength * this._charWidth + 'px';
-                    this.split.background.style.width = this._maxLineLength * this._charWidth + 'px';
+                    this.split.view.style.width = this._maxWidth + 'px';
+                    this.split.background.style.width = this._maxWidth + 'px';
 
                     this.split.overlay.innerHTML = overlays.join('');
                     this.split.view.innerHTML = lines.join('');
@@ -1478,8 +1477,8 @@ export class Display extends EventEmitter {
                     _lines[l].top = _lines[l - 1].top + _lines[l - 1].height;
                 if (_lines[l].width > mw)
                     mw = _lines[l].width;
-                this._viewLines[l] = this._viewLines[l].replace(/top:\d+px/, `top:${l * this._charHeight}px`);
-                this._backgroundLines[l] = this._backgroundLines[l].replace(/top:\d+px/, `top:${l * this._charHeight}px`);
+                this._viewLines[l] = this._viewLines[l].replace(/top:\d+px/, `top:${_lines[l].top}px`);
+                this._backgroundLines[l] = this._backgroundLines[l].replace(/top:\d+px/, `top:${_lines[l].top}px`);
             }
             this._maxWidth = mw;
             if (ll > 0)
@@ -2411,8 +2410,8 @@ export class Display extends EventEmitter {
                     format.fCls = (fCls = fCls.join(''));
                 }
                 if (format.hr) {
-                    back.push('<span style="left:0;width:{max};', bStyle, '" class="ansi"></span>');
-                    fore.push('<span style="left:0;width:{max};', fStyle, '" class="ansi', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
+                    back.push('<span style="left:0;width:{max}px;', bStyle, '" class="ansi"></span>');
+                    fore.push('<span style="left:0;width:{max}px;', fStyle, '" class="ansi', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
                 }
                 else if (end - offset !== 0) {
                     back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" class="ansi"></span>');
@@ -2542,7 +2541,7 @@ export class Display extends EventEmitter {
                     });
                     this._el.appendChild(img);
                     img.onload = () => {
-                        let lIdx = this.lineIDs.indexOf(+img.dataset.id);
+                        const lIdx = this.lineIDs.indexOf(+img.dataset.id);
                         if (lIdx === -1 || lIdx >= this.lines.length) return;
                         const pHeight = this._lines[lIdx].height;
                         const fIdx = +img.dataset.f;
@@ -2565,11 +2564,7 @@ export class Display extends EventEmitter {
                         this._viewLines[lIdx] = t[0];
                         this._backgroundLines[lIdx] = t[1];
                         const l = this._lines.length;
-                        lIdx++;
-                        while (lIdx < l) {
-                            this._lines[lIdx].top = this._lines[lIdx - 1].top + this._lines[lIdx - 1].height;
-                            lIdx++;
-                        }
+                        this.updateTops(lIdx);
                         img.remove();
                         if (this.split) this.split.dirty = true;
                         this.doUpdate(UpdateType.display);
