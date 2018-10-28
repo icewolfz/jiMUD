@@ -34,7 +34,9 @@
     - Fixed scroll position on resize
     - Fixed scrolling
   - Fixed scroll lock scrolling to end when not in split screen mode
-  - ANSI Parser: Fixed extra characters being added after : is detected, fixes raw ansi logging
+  - ANSI Parser:
+    - Fixed extra characters being added after : is detected, fixes raw ansi logging
+    - Fixed loss of some raw data when line only contains none visible text and loss some blank lines
 
 ## v0.6.4 2018-10-22
 

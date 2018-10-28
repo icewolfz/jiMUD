@@ -3677,7 +3677,7 @@ export class Parser extends EventEmitter {
             break;
         }
       }
-      if (lineLength > 0) {
+      if (lineLength > 0 || rawBuilder.length > 0) {
         this.AddLine(stringBuilder.join(''), rawBuilder.join(''), true, false, formatBuilder);
       }
     }
