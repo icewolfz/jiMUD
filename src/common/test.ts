@@ -47,6 +47,8 @@ export class Tests extends EventEmitter {
                 if (!this.TestFunctions.hasOwnProperty(t)) continue;
                 sample += `\t${this.Client.options.commandChar + t}\n`;
             }
+            sample += `\t${this.Client.options.commandChar}testfile file\n`;
+            sample += `\t${this.Client.options.commandChar}testspeedfile file\n`;
             this.Client.print(sample, true);
         };
 
@@ -649,15 +651,15 @@ export class Tests extends EventEmitter {
                 if (!min || t < min) min = t;
                 sample.push(`${i} - ${t}`);
             }
-            avg /= 10;
-            sample.push(`Average - ${avg}`);
+            sample.push(`Total - ${avg}`);
+            sample.push(`Average - ${avg / 10}`);
             sample.push(`Min - ${min}`);
             sample.push(`Max - ${max}`);
             this.Client.print(sample.join('\n') + '\n', true);
             this.Client.options.enableCommands = e;
         };
 
-        this.TestFunctions['testutf8'] = function() {
+        this.TestFunctions['testutf8'] = function () {
             const sample = `Armenian
 Ա Բ Գ Դ Ե Զ Է Ը Թ Ժ Ի Լ Խ Ծ Կ Հ Ձ Ղ Ճ Մ Յ Ն Շ Ո Չ Պ Ջ Ռ Ս Վ Տ Ր Ց Ւ Փ Ք Օ Ֆ ՙ ՚ ՛ ՜ ՝ ՞ ՟ ա բ գ դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն շ ո չ պ ջ ռ ս վ տ ր ց ւ փ ք օ ֆ և ։
 Hebrew

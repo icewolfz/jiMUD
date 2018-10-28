@@ -41,7 +41,7 @@ interface ScrollState {
 }
 
 export enum ScrollType { vertical = 0, horizontal = 1 }
-export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512 }
+export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512, scrollViewOverlays = 1024 }
 
 enum CornerType {
     Flat = 0,
@@ -92,6 +92,10 @@ export class Display extends EventEmitter {
         scrollTimer: null,
         drag: false
     };
+    private _prevSelection = {
+        start: { x: null, y: null },
+        end: { x: null, y: null }
+    };
     private _borderSize: Size = { width: 0, height: 0 };
     private _character: HTMLElement;
     private _viewRange: Range = { start: 0, end: 0 };
@@ -140,17 +144,6 @@ export class Display extends EventEmitter {
 
     private _innerWidth;
     private _innerHeight;
-    //private _enableUTF8: boolean = false;
-    /*
-    get enableUTF8() { return this._enableUTF8; }
-    set enableUTF8(value) {
-        if (value === this._enableUTF8) return;
-        this._enableUTF8 = value;
-        this.rebuildLines();
-        this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollView | UpdateType.overlays);
-        this.updateWindow();
-    }
-    */
 
     get roundedRanges(): boolean { return this._roundedRanges; }
     set roundedRanges(value: boolean) {
@@ -174,6 +167,7 @@ export class Display extends EventEmitter {
         const id = this._el.id;
         if (!this.split && value) {
             this.split = document.createElement('div');
+            this.split.dirty = true;
             this.split.id = id + '-split-frame';
             this.split.bar = document.createElement('div');
             this.split.bar.id = id + '-split-bar';
@@ -191,8 +185,11 @@ export class Display extends EventEmitter {
                 this.split.style.height = this._splitHeight + '%';
 
             this.split.updateView = () => {
-                this.split.style.bottom = this._HScroll.size + 'px';
-                if (this.split.shown && this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
+                if (this._HScroll.size !== this.split.bottom) {
+                    this.split.style.bottom = this._HScroll.size + 'px';
+                    this.split.bottom = this._HScroll.size;
+                }
+                if (this.split.dirty && this.split.shown && this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
                     this.split._viewRange.start = this.getLineFromPosition(this._VScroll.scrollSize);
                     this.split._viewRange.end = this.getLineFromPosition(this._VScroll.scrollSize + this._elJ.innerHeight());
 
@@ -204,13 +201,6 @@ export class Display extends EventEmitter {
                     const bLines = this._backgroundLines.slice(this.split._viewRange.start, this.split._viewRange.end + 1);
                     const start = this.split._viewRange.start;
                     const end = this.split._viewRange.end;
-                    let l;
-                    const ll = lines.length;
-                    const _lines = this._lines;
-                    for (l = 0; l < ll; l++) {
-                        lines[l] = lines[l].replace(/\{top\}/, `${_lines[start + l].top}`);
-                        bLines[l] = bLines[l].replace(/\{top\}/, `${_lines[start + l].top}`);
-                    }
                     const overlays = [];
                     let ol;
                     for (ol in this._overlays) {
@@ -219,19 +209,42 @@ export class Display extends EventEmitter {
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
-                    const eW = this._innerWidth - 16;
-                    this.split.view.style.width = this._maxWidth + 'px';
-                    this.split.view.style.minWidth = eW + 'px';
-                    this.split.background.style.width = this._maxWidth + 'px';
-                    this.split.background.style.minWidth = eW + 'px';
+                    const ll = lines.length;
+                    const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth);
+                    for (let l = 0; l < ll; l++) {
+                        lines[l] = lines[l].replace(/\{max\}/, `${mw}`);
+                        bLines[l] = bLines[l].replace(/\{max\}/, `${mw}`);
+                    }
+
+                    this.split.view.style.width = this._maxLineLength * this._charWidth + 'px';
+                    this.split.background.style.width = this._maxLineLength * this._charWidth + 'px';
 
                     this.split.overlay.innerHTML = overlays.join('');
                     this.split.view.innerHTML = lines.join('');
                     this.split.background.innerHTML = bLines.join('');
-                    this.split.top = Math.ceil(this.offset(this.split).top + 0.5);
-                    this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
-                    this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
-                    this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
+                    this.split.top = this.offset(this.split).top + 1;
+                    //const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
+                    const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
+                    this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                    this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                    this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                    this.split.dirty = false;
+                }
+            };
+            this.split.updateOverlays = () => {
+                if (this.split.shown && this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
+                    const start = this.split._viewRange.start;
+                    const end = this.split._viewRange.end;
+                    const overlays = [];
+                    let ol;
+                    for (ol in this._overlays) {
+                        if (!this._overlays.hasOwnProperty(ol) || ol === 'selection')
+                            continue;
+                        overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
+                    }
+                    overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
+
+                    this.split.overlay.innerHTML = overlays.join('');
                 }
             };
             this.split.bar.addEventListener('mousedown', (e) => {
@@ -284,10 +297,12 @@ export class Display extends EventEmitter {
                         h = this._el.clientHeight - e.pageY + 4; //TODO change the 4 to calculate split bar height
                     h = (h / this._el.clientHeight * 100);
                     this.split.style.height = h + '%';
-                    this.split.top = Math.ceil(this.offset(this.split).top + 0.5);
-                    this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
-                    this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
-                    this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
+                    this.split.top = this.offset(this.split).top + 1;
+                    //const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
+                    const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
+                    this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                    this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                    this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                     this._el.removeChild(this.split.ghostBar);
                     delete this.split.ghostBar;
                     this.emit('split-move-done', h);
@@ -503,6 +518,10 @@ export class Display extends EventEmitter {
                 if (e.pageY - os.top > this._el.clientHeight)
                     return;
                 this._currentSelection.drag = true;
+                this._prevSelection = {
+                    start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
+                    end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                };
                 if (e.shiftKey) {
                     this._currentSelection.end = this.getLineOffset(e.pageX, e.pageY);
                     this.emit('selection-start');
@@ -538,6 +557,10 @@ export class Display extends EventEmitter {
                             ePos++;
                         }
                         if (sPos >= 0 && ePos <= len) {
+                            this._prevSelection = {
+                                start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
+                                end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                            };
                             this._currentSelection = {
                                 start: { x: sPos, y: o.y },
                                 end: { x: ePos, y: o.y },
@@ -554,6 +577,10 @@ export class Display extends EventEmitter {
             else if (e.detail === 3) {
                 const o = this.getLineOffset(e.pageX, e.pageY);
                 if (o.y >= 0 && o.y < this.lines.length) {
+                    this._prevSelection = {
+                        start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
+                        end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                    };
                     this._currentSelection = {
                         start: { x: 0, y: o.y },
                         end: { x: this.lines[o.y].length, y: o.y },
@@ -586,6 +613,10 @@ export class Display extends EventEmitter {
             if (this._currentSelection.drag) {
                 this._lastMouse = e;
                 this._currentSelection.scrollTimer = setInterval(() => {
+                    this._prevSelection = {
+                        start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
+                        end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                    };
                     /// pull as long as you can scroll either direction
 
                     if (!this._lastMouse) {
@@ -704,6 +735,7 @@ export class Display extends EventEmitter {
             }
         };
         this._wResize = (e) => {
+            if (this.split) this.split.dirty = true;
             this.doUpdate(UpdateType.update);
         };
 
@@ -818,9 +850,11 @@ export class Display extends EventEmitter {
                         this.split.style.display = 'block';
                         this.split.shown = true;
                         this.emit('scroll-lock', true);
-                        this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
-                        this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
-                        this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-(this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top)}px)`;
+                        //const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
+                        const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
+                        this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                        this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                        this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                     }
                 }
                 this._view.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
@@ -840,7 +874,14 @@ export class Display extends EventEmitter {
                     this.split.updateView();
                 this._updating &= ~UpdateType.scrollView;
             }
+            else if ((this._updating & UpdateType.scrollViewOverlays) === UpdateType.scrollViewOverlays) {
+                if (this.split)
+                    this.split.updateOverlays();
+                this._updating &= ~UpdateType.scrollViewOverlays;
+            }
+
             if ((this._updating & UpdateType.selectionChanged) === UpdateType.selectionChanged) {
+                this._prevSelection.end = this._currentSelection.end;
                 this._currentSelection.end = this.getLineOffset(this._lastMouse.pageX, this._lastMouse.pageY);
                 this.emit('selection-changed');
                 this._updating &= ~UpdateType.selectionChanged;
@@ -983,6 +1024,7 @@ export class Display extends EventEmitter {
         this._overlays = {
             selection: []
         };
+        if (this.split) this.split.dirty = true;
         this._viewLines = [];
         this._backgroundLines = [];
         this.displayLines = [];
@@ -1064,13 +1106,11 @@ export class Display extends EventEmitter {
         const w = this._maxWidth;
         const h = this._height;
         const mw = Math.max(w, this._el.clientWidth);
-        const eW = this._innerWidth - 16;
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
-        this._view.style.minWidth = eW + 'px';
+
         this._background.style.height = h + 'px';
         this._background.style.width = w + 'px';
-        this._background.style.minWidth = eW + 'px';
 
         this._overlay.style.height = Math.max(h, this._el.clientHeight) + 'px';
         this._overlay.style.width = mw + 'px';
@@ -1084,12 +1124,11 @@ export class Display extends EventEmitter {
             this._viewRange.end = this.lines.length;
         const lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
         const bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
-        const start = this._viewRange.start;
+
         const ll = lines.length;
-        const _lines = this._lines;
         for (let l = 0; l < ll; l++) {
-            lines[l] = lines[l].replace(/\{top\}/, `${_lines[start + l].top}`);
-            bLines[l] = bLines[l].replace(/\{top\}/, `${_lines[start + l].top}`);
+            lines[l] = lines[l].replace(/\{max\}/, `${mw}`);
+            bLines[l] = bLines[l].replace(/\{max\}/, `${mw}`);
         }
         this._view.innerHTML = lines.join('');
         this._background.innerHTML = bLines.join('');
@@ -1110,7 +1149,10 @@ export class Display extends EventEmitter {
         }
         overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
         this._overlay.innerHTML = overlays.join('');
-        this.doUpdate(UpdateType.scrollView);
+        if (this.split && (start >= this.split._viewRange.start || end >= this.split._viewRange.start)) {
+            this.split.dirty = true;
+            this.doUpdate(UpdateType.scrollViewOverlays);
+        }
     }
 
     private updateDisplay() {
@@ -1133,11 +1175,14 @@ export class Display extends EventEmitter {
         if (l === 0) return;
         if (line === 0) {
             this._lines[line].top = 0;
-            this._lines[line].top = this._lines[line - 1].top + this._lines[line - 1].height;
+            this._viewLines[line] = this._viewLines[l].replace(/{top:\d+px}/, `top:0px`);
+            this._backgroundLines[line] = this._backgroundLines[l].replace(/top:\d+px/, `top:0px`);
             line++;
         }
         while (line < l) {
             this._lines[line].top = this._lines[line - 1].top + this._lines[line - 1].height;
+            this._viewLines[line] = this._viewLines[line].replace(/top:\d+px/, `top:${this._lines[line].top}px`);
+            this._backgroundLines[line] = this._backgroundLines[line].replace(/top:\d+px/, `top:${this._lines[line].top}px`);
             line++;
         }
     }
@@ -1188,13 +1233,13 @@ export class Display extends EventEmitter {
         this.lineIDs.push(this._lineID);
         this._lines.push({ height: 0, top: 0, width: 0 });
         this._lineID++;
-        t = this.getLineDisplay();
+        t = this.buildLineDisplay();
         this._height += this._lines[this._lines.length - 1].height;
         if (this._lines[this._lines.length - 1].width > this._maxWidth)
             this._maxWidth = this._lines[this._lines.length - 1].width;
         this._viewLines.push(t[0]);
         this._backgroundLines.push(t[1]);
-
+        if (this.split) this.split.dirty = true;
         if (!noUpdate)
             this.doUpdate(UpdateType.display);
     }
@@ -1259,6 +1304,7 @@ export class Display extends EventEmitter {
                 continue;
             this._expire[ol].splice(line, 1);
         }
+        if (this.split) this.split.dirty = true;
         this.updateTops(line);
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
@@ -1330,6 +1376,7 @@ export class Display extends EventEmitter {
             this._height = this._lines[this._lines.length - 1].top + this._lines[this._lines.length - 1].height;
         else
             this._height = 0;
+        if (this.split) this.split.dirty = true;
         this.updateTops(line);
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
@@ -1431,6 +1478,8 @@ export class Display extends EventEmitter {
                     _lines[l].top = _lines[l - 1].top + _lines[l - 1].height;
                 if (_lines[l].width > mw)
                     mw = _lines[l].width;
+                this._viewLines[l] = this._viewLines[l].replace(/top:\d+px/, `top:${l * this._charHeight}px`);
+                this._backgroundLines[l] = this._backgroundLines[l].replace(/top:\d+px/, `top:${l * this._charHeight}px`);
             }
             this._maxWidth = mw;
             if (ll > 0)
@@ -1438,6 +1487,7 @@ export class Display extends EventEmitter {
             else
                 this._height = 0;
             this._maxLineLength = m;
+            if (this.split) this.split.dirty = true;
             this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.overlays);
         }
     }
@@ -1625,6 +1675,7 @@ export class Display extends EventEmitter {
         if (!type)
             type = 'default';
         this._overlays[type] = [];
+        if (this.split) this.split.dirty = true;
         this.doUpdate(UpdateType.overlays);
     }
 
@@ -1814,6 +1865,10 @@ export class Display extends EventEmitter {
             if (!this._overlays[type].hasOwnProperty(ol))
                 continue;
             this._overlays[type][ol] = `<div style="top: ${_lines[parseInt(ol, 10) || 0].top}px;height:${_lines[parseInt(ol, 10) || 0].height}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
+            if (this.split && ol >= this.split._viewRange.start) {
+                this.split.dirty = true;
+                this.doUpdate(UpdateType.scrollViewOverlays);
+            }
         }
         this.doUpdate(UpdateType.overlays);
     }
@@ -1841,13 +1896,26 @@ export class Display extends EventEmitter {
             e = sel.end.x;
         }
         else if (sel.start.x === sel.end.x) {
+            if (this.split && (sel.start.y >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) {
+                this.split.dirty = true;
+                this.doUpdate(UpdateType.scrollViewOverlays);
+            }
             this.doUpdate(UpdateType.overlays);
+            this._prevSelection = {
+                start: { x: sel.end.x, y: sel.end.y },
+                end: { x: sel.end.x, y: sel.end.y }
+            };
             return;
         }
         else {
             sL = sel.start.y;
-            if (sL < 0 || sL >= this.lines.length)
+            if (sL < 0 || sL >= this.lines.length) {
+                this._prevSelection = {
+                    start: { x: sel.end.x, y: sel.end.y },
+                    end: { x: sel.end.x, y: sel.end.y }
+                };
                 return;
+            }
             /*
                         w = e;
                         while (w >= s) {
@@ -1944,7 +2012,15 @@ export class Display extends EventEmitter {
                         }
                         this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
             */
+            if (this.split && (sL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) {
+                this.split.dirty = true;
+                this.doUpdate(UpdateType.scrollViewOverlays);
+            }
             this.doUpdate(UpdateType.overlays);
+            this._prevSelection = {
+                start: { x: sel.end.x, y: sel.end.y },
+                end: { x: sel.end.x, y: sel.end.y }
+            };
             return;
         }
         const len = this.lines.length;
@@ -2071,7 +2147,15 @@ export class Display extends EventEmitter {
 
             this._overlays.selection[line] = `<div style="top: ${_lines[line].top}px;height:${_lines[line].height}px;" class="overlay-line">${parts.join('')}</div>`;
         }
+        if (this.split && (sL >= this.split._viewRange.start || eL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start || this._prevSelection.end.y >= this.split._viewRange.start)) {
+            this.split.dirty = true;
+            this.doUpdate(UpdateType.scrollViewOverlays);
+        }
         this.doUpdate(UpdateType.overlays);
+        this._prevSelection = {
+            start: { x: sel.end.x, y: sel.end.y },
+            end: { x: sel.end.x, y: sel.end.y }
+        };
     }
 
     get hasSelection(): boolean {
@@ -2191,6 +2275,10 @@ export class Display extends EventEmitter {
         let ll = this.lines.length;
         if (ll === 0) return;
         ll--;
+        this._prevSelection = {
+            start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
+            end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+        };
         this._currentSelection = {
             start: { x: 0, y: 0 },
             end: { x: this.lines[ll].length, y: ll },
@@ -2203,6 +2291,10 @@ export class Display extends EventEmitter {
     }
 
     public clearSelection() {
+        this._prevSelection = {
+            start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
+            end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+        };
         this._currentSelection = {
             start: { x: null, y: null },
             end: { x: null, y: null },
@@ -2223,7 +2315,7 @@ export class Display extends EventEmitter {
         this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
     }
 
-    private getLineDisplay(idx?: number) {
+    private buildLineDisplay(idx?: number) {
         if (idx === undefined)
             idx = this.lines.length - 1;
         const back = [];
@@ -2270,7 +2362,7 @@ export class Display extends EventEmitter {
                     bStyle = format.bStyle;
                     fStyle = format.fStyle;
                     fCls = format.fCls;
-                    height =  Math.max(height, format.height || this._charHeight);
+                    height = Math.max(height, format.height || this._charHeight);
                 }
                 else {
                     bStyle = [];
@@ -2468,7 +2560,7 @@ export class Display extends EventEmitter {
                         const bounds = img.getBoundingClientRect();
                         fmt.width = bounds.width || img.width;
                         fmt.height = bounds.height || img.height;
-                        const t = this.getLineDisplay(lIdx);
+                        const t = this.buildLineDisplay(lIdx);
                         this._height += this._lines[lIdx].height - pHeight;
                         this._viewLines[lIdx] = t[0];
                         this._backgroundLines[lIdx] = t[1];
@@ -2479,6 +2571,7 @@ export class Display extends EventEmitter {
                             lIdx++;
                         }
                         img.remove();
+                        if (this.split) this.split.dirty = true;
                         this.doUpdate(UpdateType.display);
                     };
                 }
@@ -2490,7 +2583,7 @@ export class Display extends EventEmitter {
         this._lines[idx].width = left + iWidth;
         if (idx > 0)
             this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
-        return [`<span class="line" data-id="${id}" style="top:{top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:{top}px;height:${height}px;">${back.join('')}<br></span>`];
+        return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;">${back.join('')}<br></span>`];
     }
 
     public getLineHTML(idx?: number, start?: number, len?: number) {
@@ -2696,10 +2789,11 @@ export class Display extends EventEmitter {
         let t;
         const ll = this.lines.length;
         for (let l = 0; l < ll; l++) {
-            t = this.getLineDisplay(l);
+            t = this.buildLineDisplay(l);
             this._viewLines[l] = t[0];
             this._backgroundLines[l] = t[1];
         }
+        if (this.split) this.split.dirty = true;
     }
 
     public scrollDisplay(force?: boolean) {
@@ -2723,7 +2817,7 @@ export class Display extends EventEmitter {
         this._HScroll.resize();
         this._HScroll.visible = this._HScroll.scrollSize >= 0;
         this._VScroll.offset = this._HScroll.visible ? this._HScroll.track.clientHeight : 0;
-        this._VScroll.resize(this.split ? this.split.shown : this.scrollLock);
+        this._VScroll.resize();
 
         if (!this._HScroll.visible && this._scrollCorner) {
             this._el.removeChild(this._scrollCorner);
@@ -2734,6 +2828,7 @@ export class Display extends EventEmitter {
             this._scrollCorner.className = 'scroll-corner';
             this._el.appendChild(this._scrollCorner);
         }
+        if (this.split) this.split.dirty = true;
     }
 
     public showFind() {
@@ -2807,10 +2902,11 @@ export class Display extends EventEmitter {
                 else if (this.lineFormats[idx][f] === type)
                     n++;
             }
-            t = this.getLineDisplay(idx);
+            t = this.buildLineDisplay(idx);
             this._viewLines[idx] = t[0];
             this._backgroundLines[idx] = t[1];
         }
+        if (this.split) this.split.dirty = true;
     }
 
     public dispose() {
@@ -3046,15 +3142,13 @@ export class ScrollBar extends EventEmitter {
     public scrollBy(amount: number) {
         if (amount === 0) return;
         amount = this.position + (amount < 0 ? Math.floor(amount) : Math.ceil(amount));
-        amount = Math.ceil(amount * this._ratio2);
-        //this.updatePosition(amount / this.scrollSize * this.maxPosition);
+        amount = amount * this._ratio2;
         this.updatePosition(amount);
     }
 
     public scrollTo(position: number) {
         position = (position < 0 ? Math.floor(position) : Math.ceil(position));
-        position = Math.ceil(position * this._ratio2);
-        //this.updatePosition(position / this.scrollSize * this.maxPosition);
+        position = position * this._ratio2;
         this.updatePosition(position);
     }
 
@@ -3066,7 +3160,7 @@ export class ScrollBar extends EventEmitter {
         this.updatePosition(0);
     }
 
-    public resize(locked?: boolean) {
+    public resize(scrollToEnd?) {
         const pc = window.getComputedStyle(this._parent);
         this._padding = [
             parseInt(pc.getPropertyValue('padding-top')) || 0,
@@ -3074,11 +3168,7 @@ export class ScrollBar extends EventEmitter {
             parseInt(pc.getPropertyValue('padding-bottom')) || 0,
             parseInt(pc.getPropertyValue('padding-left')) || 0
         ];
-
-        //const m = this.maxPosition;
-        const p = Math.ceil(this._position / this._ratio);
-        //p = (this.position / this.scrollSize) * this.maxPosition;
-        //p = (p < 0 ? Math.floor(p) : Math.ceil(p));
+        const bottom = this.position >= this.scrollSize - this._padding[0];
         if (this._type === ScrollType.horizontal) {
             this._contentSize = this._content.clientWidth + this._padding[1] + this._padding[3];
             this._parentSize = this._parent.clientWidth - this.offset - this._scrollOffset;
@@ -3094,10 +3184,11 @@ export class ScrollBar extends EventEmitter {
         this.maxPosition = this._parentSize - Math.ceil(1 / this._percentView * this._parentSize);
         if (this.maxPosition < 0)
             this.maxPosition = 0;
-        //p = Math.ceil(p * (this.maxPosition / m));
         this.update();
-        if (!locked)
-            this.updatePosition(p || 0);
+        if (bottom)
+            this.updatePosition(this.maxPosition);
+        else
+            this.updatePosition(this._position * this._ratio2);
     }
 
     public currentPosition() {
