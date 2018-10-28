@@ -2411,8 +2411,8 @@ export class Display extends EventEmitter {
                     format.fCls = (fCls = fCls.join(''));
                 }
                 if (format.hr) {
-                    back.push('<span style="left:0;width:100%;min-width:100%;', bStyle, '" class="ansi"></span>');
-                    fore.push('<span style="left:0;width:100%;min-width:100%;', fStyle, '" class="ansi', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
+                    back.push('<span style="left:0;width:{max};', bStyle, '" class="ansi"></span>');
+                    fore.push('<span style="left:0;width:{max};', fStyle, '" class="ansi', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
                 }
                 else if (end - offset !== 0) {
                     back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" class="ansi"></span>');
