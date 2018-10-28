@@ -94,6 +94,36 @@ body {
     background-color: #{$panelBackground};
 }
 
+.scroll-split-button {
+    color: #{$color};
+    background-color: #252526 !important;
+    border-top: 1px solid #{$borderColor};
+    border-left: 1px solid #{$borderColor};
+    border-right: 0;
+    border-bottom: 0;
+}
+
+.scroll-split-button:hover, .scroll-split-button.active:hover {
+    background-color: #5a5d5e !important;
+    color: #fff;
+}
+
+.scroll-split-button:active, .scroll-split-button:focus {
+    color: #3f3f46;
+    background-color: #{$color} !important;
+}
+
+.scroll-split-button.active {
+    color: #5a5d5e;
+    background-color: #{$color} !important;
+    border: 1px solid transparent !important;
+}
+
+.scroll-split-button.active:active {
+    background-color: #3f3f46 !important;
+    color: #{$color};
+}
+
 .scroll-horizontal {
     border-top: 1px solid #{$borderColor};
 }

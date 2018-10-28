@@ -204,6 +204,7 @@ pasteSpecialReplace               | string  |
 pasteSpecialPrefixEnabled         | boolean | true
 pasteSpecialPostfixEnabled        | boolean | true
 pasteSpecialReplaceEnabled        | boolean | true
+display.showSplitButton           | boolean | true
 
 ### trayClick and trayDblClick values
 

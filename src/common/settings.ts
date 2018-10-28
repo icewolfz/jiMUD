@@ -317,7 +317,8 @@ export let SettingList: any[] = [
     ['pasteSpecialReplace', 0, 0, ''],
     ['pasteSpecialPrefixEnabled', 0, 1, true],
     ['pasteSpecialPostfixEnabled', 0, 1, true],
-    ['pasteSpecialReplaceEnabled', 0, 1, true]
+    ['pasteSpecialReplaceEnabled', 0, 1, true],
+    ['display.showSplitButton', 0, 1, true]
 ];
 
 /**
@@ -443,7 +444,8 @@ export class Settings {
         split: false,
         splitHeight: -1,
         splitLive: true,
-        roundedOverlays: true
+        roundedOverlays: true,
+        showSplitButton: true
     };
 
     public extensions = {

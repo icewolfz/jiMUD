@@ -97,6 +97,42 @@ body {
     display:none;
 }
 
+.scroll-split-button {
+    display: block !important;
+    color: wheat;
+    background-color: maroon !important;
+    border: 1px solid #{$borderColor} !important;    
+}
+
+.scroll-split-button.active {
+    background-color: #d70000 !important;
+    color: wheat;
+}
+
+.scroll-split-button.active:hover {
+    background-color: #790000 !important;
+    color: wheat;
+}
+
+.scroll-split-button.active:active {
+    background-color: maroon !important;
+    color: wheat;
+}
+
+.scroll-split-button:hover {
+    background-color: #d70000 !important;
+    color: wheat;
+}
+
+.scroll-split-button:active {
+    background-color: #790000 !important;
+    color: wheat;
+}
+
+.scroll-split-button:focus {
+    color: wheat;
+}
+
 .scroll-horizontal {
     border-top: 1px solid #494238;
 }

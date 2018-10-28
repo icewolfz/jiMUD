@@ -146,6 +146,15 @@ export class Display extends EventEmitter {
     private _innerWidth;
     private _innerHeight;
 
+    private _showSplitButton = true;
+
+    get showSplitButton() { return this._showSplitButton; }
+    set showSplitButton(value) {
+        if (value === this._showSplitButton) return;
+        this._showSplitButton = value;
+        this.updateScrollbars();
+    }
+
     get roundedRanges(): boolean { return this._roundedRanges; }
     set roundedRanges(value: boolean) {
         if (value !== this._roundedRanges) {
@@ -842,11 +851,13 @@ export class Display extends EventEmitter {
                     if (this._VScroll.position >= this._VScroll.scrollSize - this._padding[0]) {
                         this.split.style.display = '';
                         this.split.shown = false;
+                        if (this._scrollCorner) this._scrollCorner.classList.remove('active');
                         this.emit('scroll-lock', false);
                     }
                     else {
                         this.split.style.display = 'block';
                         this.split.shown = true;
+                        if (this._scrollCorner) this._scrollCorner.classList.add('active');
                         this.emit('scroll-lock', true);
                         //const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
                         const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
@@ -2647,6 +2658,7 @@ export class Display extends EventEmitter {
             if (this.scrollLock && !this.split.shown && this._VScroll.scrollSize > 0) {
                 this.split.style.display = 'block';
                 this.split.shown = true;
+                if (this._scrollCorner) this._scrollCorner.classList.add('active');
                 this.doUpdate(UpdateType.scrollView);
             }
         }
@@ -2660,19 +2672,34 @@ export class Display extends EventEmitter {
         this._HScroll.offset = this._VScroll.track.clientWidth;
         this._HScroll.resize();
         this._HScroll.visible = this._HScroll.scrollSize >= 0;
-        this._VScroll.offset = this._HScroll.visible ? this._HScroll.track.clientHeight : 0;
+        this._VScroll.offset = this.split || this._HScroll.visible ? (this._HScroll.track.clientHeight || this._VScroll.track.clientWidth) : 0;
         this._VScroll.resize();
 
-        if (!this._HScroll.visible && this._scrollCorner) {
+        if (!this._HScroll.visible && this._scrollCorner && !this.split) {
             this._el.removeChild(this._scrollCorner);
             this._scrollCorner = null;
         }
-        else if (this._HScroll.visible && !this._scrollCorner) {
+        else if ((this.split || this._HScroll.visible) && !this._scrollCorner) {
             this._scrollCorner = document.createElement('div');
-            this._scrollCorner.className = 'scroll-corner';
+            if (this._showSplitButton && this.split) {
+                this._scrollCorner.classList.add('scroll-corner', 'scroll-split-button');
+                this._scrollCorner.innerHTML = '<i class="fa fa-minus"></i>';
+                this._scrollCorner.addEventListener('click', () => {
+                    this.scrollLock = !this.scrollLock;
+                    this.scrollDisplay(true);
+                });
+            }
+            else
+                this._scrollCorner.className = 'scroll-corner';
             this._el.appendChild(this._scrollCorner);
         }
-        if (this.split) this.split.dirty = true;
+        if (this.split) {
+            this.split.dirty = true;
+            if (this._VScroll.scrollSize >= 0)
+                this._scrollCorner.classList.remove('disabled');
+            else
+                this._scrollCorner.classList.add('disabled');
+        }
     }
 
     public showFind() {

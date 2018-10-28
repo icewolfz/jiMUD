@@ -32,6 +32,7 @@ Reset - Resetting will revert all settings back to default values
 - `Enable rounded overlays` disable or enable rounded corner effect for selection and find highlighting
 - `Split scroll` Enable split screen scroll, this will allow you to scroll while displaying the most recent lines at the bottom, has known issues with text selection and find system scroll to view
 - `Split scroll live update` determines how the split screen updates as resize bar is adjusted, if on it will update once resize bar released, if slow resizing enable this as it should reduce cpu load during drag
+- `Show split button` Show or hide split toggle button in split scroll to allow for quick toggling
 - `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
 
 ## Colors

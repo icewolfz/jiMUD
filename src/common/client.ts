@@ -792,6 +792,7 @@ export class Client extends EventEmitter {
         this.display.splitLive = this.options.display.splitLive;
         this.display.splitHeight = this.options.display.splitHeight;
         this.display.roundedRanges = this.options.display.roundedOverlays;
+        this.display.showSplitButton = this.options.display.showSplitButton;
         this.UpdateFonts();
         this.display.scrollDisplay();
         this.loadProfiles();

@@ -8,12 +8,14 @@
   - Display:
     - Add basic MXP image support, limits height to line height
     - Add more color attributes for color tag: hidden, strikeout, overline, and doubleunderline
+    - Added a split toggle button at the end of scroll bar for quick off/on, similar to clicking scroll lock button
   - Expanded [client.writeClipboard](docs/scripting.md) added html argument to add formated html as well as plain text
   - Expanded [client.writeClipboardHTML](docs/scripting.md) write HTML markup to clipboard to produce formated text for applications that support HTML pasting
   - Expanded [client.readClipboardHTML](docs/scripting.md) read HTML markup from clipboard if clipboard has HTML support
   - Added total time to [#testspeed](docs/commands.md) command
   - Added [#testspeedfile](docs/commands.md) to load a file and run timed test
   - Added [#testfile](docs/commands.md) to load a file
+  - Preference: Show split button, Show or hide split toggle button in split scroll to allow for quick toggling
 - **Changed:**
   - Update electron from 3.0.5 to 3.0.6
   - Log viewer uses simpler HTML generation
