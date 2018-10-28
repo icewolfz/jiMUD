@@ -18,6 +18,7 @@
   - Preference: Show split button, Show or hide split toggle button in split scroll to allow for quick toggling
 - **Changed:**
   - Update electron from 3.0.5 to 3.0.6
+  - Update electron-updater 3.1.2 to 3.1.5
   - Log viewer uses simpler HTML generation
 - **Fixed:**
   - Status: Fix sleet weather overlay for all themes
