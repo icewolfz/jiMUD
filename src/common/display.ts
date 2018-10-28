@@ -209,14 +209,11 @@ export class Display extends EventEmitter {
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
-                    const ll = lines.length;
                     const mw = Math.max(this._maxWidth, this._el.clientWidth);
-                    for (let l = 0; l < ll; l++) {
-                        lines[l] = lines[l].replace(/\{max\}/, `${mw}`);
-                        bLines[l] = bLines[l].replace(/\{max\}/, `${mw}`);
-                    }
                     this.split.view.style.width = this._maxWidth + 'px';
                     this.split.background.style.width = this._maxWidth + 'px';
+                    this.split.view.style.minWidth = (mw - 16) + 'px';
+                    this.split.background.style.minWidth = (mw - 16) + 'px';
 
                     this.split.overlay.innerHTML = overlays.join('');
                     this.split.view.innerHTML = lines.join('');
@@ -1107,9 +1104,11 @@ export class Display extends EventEmitter {
         const mw = Math.max(w, this._el.clientWidth);
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
+        this._view.style.minWidth = (mw - 16) + 'px';
 
         this._background.style.height = h + 'px';
         this._background.style.width = w + 'px';
+        this._background.style.minWidth = (mw - 16) + 'px';
 
         this._overlay.style.height = Math.max(h, this._el.clientHeight) + 'px';
         this._overlay.style.width = mw + 'px';
@@ -1124,11 +1123,6 @@ export class Display extends EventEmitter {
         const lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
         const bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
 
-        const ll = lines.length;
-        for (let l = 0; l < ll; l++) {
-            lines[l] = lines[l].replace(/\{max\}/, `${mw}`);
-            bLines[l] = bLines[l].replace(/\{max\}/, `${mw}`);
-        }
         this._view.innerHTML = lines.join('');
         this._background.innerHTML = bLines.join('');
         this.doUpdate(UpdateType.overlays);
@@ -2410,8 +2404,8 @@ export class Display extends EventEmitter {
                     format.fCls = (fCls = fCls.join(''));
                 }
                 if (format.hr) {
-                    back.push('<span style="left:0;width:{max}px;', bStyle, '" class="ansi"></span>');
-                    fore.push('<span style="left:0;width:{max}px;', fStyle, '" class="ansi', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
+                    back.push('<span style="left:0;width:100%;min-width:100%;', bStyle, '" class="ansi"></span>');
+                    fore.push('<span style="left:0;width:100%;min-width:100%;', fStyle, '" class="ansi', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
                 }
                 else if (end - offset !== 0) {
                     back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" class="ansi"></span>');
