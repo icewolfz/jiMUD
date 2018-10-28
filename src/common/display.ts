@@ -223,9 +223,9 @@ export class Display extends EventEmitter {
                     this.split.overlay.innerHTML = overlays.join('');
                     this.split.view.innerHTML = lines.join('');
                     this.split.background.innerHTML = bLines.join('');
-                    this.split.top = Math.ceil(this.offset(this.split).top + 0.5);
-                    const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
-                    //const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top
+                    this.split.top = this.offset(this.split).top + 1;
+                    //const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
+                    const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
                     this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                     this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                     this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
@@ -298,9 +298,9 @@ export class Display extends EventEmitter {
                         h = this._el.clientHeight - e.pageY + 4; //TODO change the 4 to calculate split bar height
                     h = (h / this._el.clientHeight * 100);
                     this.split.style.height = h + '%';
-                    this.split.top = Math.ceil(this.offset(this.split).top + 0.5);
-                    const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
-                    //const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
+                    this.split.top = this.offset(this.split).top + 1;
+                    //const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
+                    const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
                     this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                     this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                     this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
@@ -851,8 +851,8 @@ export class Display extends EventEmitter {
                         this.split.style.display = 'block';
                         this.split.shown = true;
                         this.emit('scroll-lock', true);
-                        const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
-                        //const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
+                        //const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
+                        const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
                         this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                         this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                         this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
