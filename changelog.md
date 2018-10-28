@@ -5,7 +5,9 @@
 - **New:**
   - Add copy support as HTML format to allow copying colors and formats and paste into applications that support HTML markup
   - Logger: Add support for MXP images
-  - Display: Add basic MXP image support, limits height to line height
+  - Display:
+    - Add basic MXP image support, limits height to line height
+    - Add more color attributes for color tag: hidden, strikeout, overline, and doubleunderline
   - Expanded [client.writeClipboard](docs/scripting.md) added html argument to add formated html as well as plain text
   - Expanded [client.writeClipboardHTML](docs/scripting.md) write HTML markup to clipboard to produce formated text for applications that support HTML pasting
   - Expanded [client.readClipboardHTML](docs/scripting.md) read HTML markup from clipboard if clipboard has HTML support
