@@ -84,6 +84,14 @@ export class Chat {
     public zoom: number = 1.0;
     public font: string = '\'Courier New\', Courier, monospace';
     public fontSize: string = '1em';
+
+    public split: boolean = false;
+    public splitHeight: number = -1;
+    public splitLive: boolean = true;
+    public roundedOverlays: boolean = true;
+    public showSplitButton: boolean = true;
+    public bufferSize: number = 5000;
+    public flashing: boolean = false;
 }
 
 /*
@@ -318,7 +326,14 @@ export let SettingList: any[] = [
     ['pasteSpecialPrefixEnabled', 0, 1, true],
     ['pasteSpecialPostfixEnabled', 0, 1, true],
     ['pasteSpecialReplaceEnabled', 0, 1, true],
-    ['display.showSplitButton', 0, 1, true]
+    ['display.showSplitButton', 0, 1, true],
+    ['chat.split', 0, 1, false],
+    ['chat.splitHeight', 0, 2, -1],
+    ['chat.splitLive', 0, 1, true],
+    ['chat.roundedOverlays', 0, 1, true],
+    ['chat.showSplitButton', 0, 1, true],
+    ['chat.bufferSize', 0, 2, 5000],
+    ['chat.flashing', 0, 1, false]
 ];
 
 /**

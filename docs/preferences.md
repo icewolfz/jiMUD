@@ -122,6 +122,17 @@ Controls what is captured into the chat window
 
 **Note:** line names are case sensitive.
 
+## Chat > Display
+
+- `Font` The font for the display area, mono spaced fonts work the best.
+- `Font size` The font size for the display area
+- `Enable flashing text` Enable ansi flashing/blinking text, when disabled flashing text appears as underlined text **note** this can cause a performance hit when enabled.
+- `Enable rounded overlays` disable or enable rounded corner effect for selection and find highlighting
+- `Split scroll` Enable split screen scroll, this will allow you to scroll while displaying the most recent lines at the bottom, has known issues with text selection and find system scroll to view
+- `Split scroll live update` determines how the split screen updates as resize bar is adjusted, if on it will update once resize bar released, if slow resizing enable this as it should reduce cpu load during drag
+- `Show split button` Show or hide split toggle button in split scroll to allow for quick toggling
+- `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
+
 ## Chat > Window
 
 - `Always on top of the main window` Force chat window to always be above main client window, when ever client window is focused it will bring the chat window along with it. _When disabled requires chat to be closed to fully exits client_ **Requires restart on windows**

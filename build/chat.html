@@ -33,7 +33,14 @@
             options = Settings.load(remote.getGlobal('settingsFile'));
             if (display) {
                 display.updateFont(options.chat.font, options.chat.fontSize);
-                display.maxLines = options.bufferSize;
+                display.maxLines = options.chat.bufferSize;
+                display.splitLive = options.chat.splitLive;
+                display.splitHeight = options.chat.splitHeight;
+                display.roundedRanges = options.chat.roundedOverlays;
+                display.showSplitButton = options.chat.showSplitButton;
+                display.enableFlashing = options.chat.flashing;
+                display.enableMXP = options.enableMXP;
+                display.enableURLDetection = options.enableURLDetection;
             }
             if (_logger) {
                 _logger.postMessage({
@@ -77,6 +84,10 @@
 
         $(document).ready(function () {
             display = new Display($('#display'));
+
+            display.on('split-move-done', (h) => {
+                ipcRenderer.send('setting-changed', { type: 'chat', name: 'splitHeight', value: h });
+            });
 
             display.on('selection-done', () => {
                 if (options.AutoCopySelectedToClipboard && display.hasSelection) {

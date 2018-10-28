@@ -15,7 +15,13 @@
   - Added total time to [#testspeed](docs/commands.md) command
   - Added [#testspeedfile](docs/commands.md) to load a file and run timed test
   - Added [#testfile](docs/commands.md) to load a file
-  - Preference: Show split button, Show or hide split toggle button in split scroll to allow for quick toggling
+  - Preference:
+    - Show split button, Show or hide split toggle button in split scroll to allow for quick toggling
+    - Add display sub area for chat display preferences
+  - Chat:
+    - Add split scroll support, allow enabling of split scrolling for chat window
+    - Add Independent buffer size instead of using the same one as main display
+    - Add flashing preference
 - **Changed:**
   - Update electron from 3.0.5 to 3.0.6
   - Update electron-updater 3.1.2 to 3.1.5
@@ -43,6 +49,7 @@
     - Fixed extra characters being added after : in text, fixes raw ansi logging
     - Fixed loss of some raw data when line only contains control characters resulting in loss of blank lines
   - Status: Fix issue with losing spacing when status display is hidden
+  - Chat: Fix display not using URL detection settings and MXP settings
 
 ## v0.6.4 2018-10-22
 

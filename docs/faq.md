@@ -205,6 +205,13 @@ pasteSpecialPrefixEnabled         | boolean | true
 pasteSpecialPostfixEnabled        | boolean | true
 pasteSpecialReplaceEnabled        | boolean | true
 display.showSplitButton           | boolean | true
+chat.split                        | boolean | false
+chat.splitHeight                  | integer | -1
+chat.splitLive                    | boolean | true
+chat.roundedOverlays              | boolean | true
+chat.showSplitButton              | boolean | true
+chat.bufferSize                   | integer | 5000
+chat.flashing                     | boolean | false
 
 ### trayClick and trayDblClick values
 
