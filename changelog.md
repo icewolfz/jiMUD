@@ -29,14 +29,13 @@
     - Fixed HTML property to return correct HTML markup
     - Match whole unicode words on context or double click
     - Debounce selection mouse moving to improve performance
-    - Fixed updating split view when scrolling
     - Fixed split view selection performance issues
     - Fixed scroll position on resize
-    - Fixed scrolling
+    - Fixed scrolling issues with large line numbers
   - Fixed scroll lock scrolling to end when not in split screen mode
   - ANSI Parser:
-    - Fixed extra characters being added after : is detected, fixes raw ansi logging
-    - Fixed loss of some raw data when line only contains none visible text and loss some blank lines
+    - Fixed extra characters being added after : in text, fixes raw ansi logging
+    - Fixed loss of some raw data when line only contains control characters resulting in loss of blank lines
 
 ## v0.6.4 2018-10-22
 
