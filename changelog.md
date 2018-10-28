@@ -36,6 +36,7 @@
     - Fixed split view selection performance issues
     - Fixed scroll position on resize
     - Fixed scrolling issues with large line numbers
+    - Fixed resize issues when status display/button bar hidden
   - Fixed scroll lock scrolling to end when not in split screen mode
   - ANSI Parser:
     - Fixed extra characters being added after : in text, fixes raw ansi logging
