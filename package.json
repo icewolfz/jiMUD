@@ -22,7 +22,7 @@
     "build:debug": "./node_modules/.bin/build --dir",
     "build:debug-compile": "npm run compile && npm run build:debug",
     "build:debug-quick": "./node_modules/.bin/build --dir --c.npmRebuild=false",
-    "build:debug-quick-compile": "npm run compile && npm run build-quick:debug",
+    "build:debug-quick-compile": "npm run compile && npm run build:debug-quick",
     "clean": "npm run clean:code && npm run clean:css",
     "compile": "npm run compile:css && npm run compile:themes && npm run compile:worker && npm run compile:common && npm run min && echo Compile Done",
     "compile:debug": "npm run compile:css && npm run compile:themes && npm run compile:worker && npm run compile:common && copy out\\*.js build\\js\\ && xcopy /Y /E /I out\\editor build\\js\\editor && echo Compile Done",
