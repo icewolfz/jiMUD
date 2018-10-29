@@ -25,7 +25,30 @@ let overlay = 0;
 let windows = {};
 let loadid;
 
-var argv = require('yargs-parser')(process.argv, {
+let argv;
+
+//check if previous command line arguments where stored load and use those instead
+if (isFileSync(path.join(app.getPath('userData'), 'argv.json'))) {
+    argv = fs.readFileSync(path.join(app.getPath('userData'), 'argv.json'), 'utf-8');
+    try {
+        argv = JSON.parse(argv);
+        //make sure using correct execute path
+        argv[0] = process.argv[0];
+    }
+    catch (e) {
+        logError(e);
+        argv = process.argv;
+    }
+    //remove file as no longer needed
+    fs.unlink(path.join(app.getPath('userData'), 'argv.json'), err => {
+        if (err)
+            logError(err);
+    });
+}
+else //not found use native
+    argv = process.argv;
+
+argv = require('yargs-parser')(argv, {
     string: ['data-dir', 's', 'setting', 'm', 'mf', 'map', 'c', 'character', 'pf', 'profiles'],
     boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?'],
     alias: {
@@ -3799,6 +3822,8 @@ function checkForUpdates() {
                 winCode.setProgressBar(-1);
                 winCode.webContents.send('update-downloaded');
             }
+            //store current line arguments to use on nextload
+            fs.writeFileSync(path.join(app.getPath('userData'), 'argv.json'), JSON.stringify(process.argv));
         });
         autoUpdater.checkForUpdatesAndNotify();
     }
@@ -3861,6 +3886,8 @@ function checkForUpdatesManual() {
             title: 'Install Updates',
             message: 'Updates downloaded, application will be quit for update...'
         }, () => {
+            //store current line arguments to use on nextload
+            fs.writeFileSync(path.join(app.getPath('userData'), 'argv.json'), JSON.stringify(process.argv));
             setImmediate(() => autoUpdater.quitAndInstall());
         });
     });

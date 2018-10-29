@@ -27,6 +27,7 @@
   - Update electron-updater 3.1.2 to 3.1.5
   - Log viewer uses simpler HTML generation
 - **Fixed:**
+  - Auto updater: Attempt to preserve command line arguments when restarted
   - Status:
     - Fixed sleet weather overlay for all themes
     - Fixed issue with lost right spacing when status display is hidden
