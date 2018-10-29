@@ -226,13 +226,14 @@ export class Display extends EventEmitter {
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
-                    const mw = '' + (this._maxLineLength === 0 ? 0 : Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth));
-                    this.split.view.style.width = this._maxLineLength * this._charWidth + 'px';
-                    this.split.background.style.width = this._maxLineLength * this._charWidth + 'px';
+                    const mw = '' + (this._maxWidth === 0 ? 0 : Math.max(this._maxWidth, this._el.clientWidth - 16));
+                    const mv = '' + (this._el.clientWidth - 16);
+                    this.split.view.style.width = this._maxWidth + 'px';
+                    this.split.background.style.width = this._maxWidth + 'px';
                     let l = lines.length;
                     while (l--) {
-                        lines[l] = lines[l].replace(/\{max\}/g, mw);
-                        bLines[l] = bLines[l].replace(/\{max\}/g, mw);
+                        lines[l] = lines[l].replace(/\{max\}/g, mw).replace(/\{view\}/g, mv);
+                        bLines[l] = bLines[l].replace(/\{max\}/g, mw).replace(/\{view\}/g, mv);
                     }
                     this.split.overlay.innerHTML = overlays.join('');
                     this.split.view.innerHTML = lines.join('');
@@ -1147,14 +1148,13 @@ export class Display extends EventEmitter {
     public updateView() {
         const w = this._maxWidth;
         const h = this._height;
-        const mw = (w === 0 ? 0 : Math.max(w, this._el.clientWidth));
+        const mw = '' + (w === 0 ? 0 : Math.max(w, this._el.clientWidth - 16));
+        const mv = '' + (this._el.clientWidth - 16);
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
-        this._view.style.minWidth = (mw - 16) + 'px';
 
         this._background.style.height = h + 'px';
         this._background.style.width = w + 'px';
-        this._background.style.minWidth = (mw - 16) + 'px';
 
         this._overlay.style.height = Math.max(h, this._el.clientHeight) + 'px';
         this._overlay.style.width = mw + 'px';
@@ -1170,8 +1170,8 @@ export class Display extends EventEmitter {
         const bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
         let l = lines.length;
         while (l--) {
-            lines[l] = lines[l].replace(/\{max\}/g, mw);
-            bLines[l] = bLines[l].replace(/\{max\}/g, mw);
+            lines[l] = lines[l].replace(/\{max\}/g, mw).replace(/\{view\}/g, mv);
+            bLines[l] = bLines[l].replace(/\{max\}/g, mw).replace(/\{view\}/g, mv);
         }
 
         this._view.innerHTML = lines.join('');
@@ -2375,6 +2375,7 @@ export class Display extends EventEmitter {
         let left = 0;
         let ol;
         let iWidth = 0;
+        let right = false;
         const id = this.lineIDs[idx];
         for (ol in this._expire) {
             if (!this._expire.hasOwnProperty(ol))
@@ -2558,6 +2559,7 @@ export class Display extends EventEmitter {
                         break;
                     case 'right':
                         tmp.push('float:right;');
+                        right = true;
                         break;
                     case 'top':
                     case 'middle':
@@ -2623,6 +2625,8 @@ export class Display extends EventEmitter {
         this._lines[idx].width = left + iWidth;
         if (idx > 0)
             this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
+        if (right)
+            return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;min-width:{view}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;min-width:{view}px;">${back.join('')}<br></span>`];
         return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;">${back.join('')}<br></span>`];
     }
 
