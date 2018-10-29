@@ -1012,6 +1012,18 @@ export class Parser extends EventEmitter {
                     case 'inverse':
                       tmp.style |= FontStyle.Inverse;
                       break;
+                    case 'hidden':
+                      tmp.style |= FontStyle.Hidden;
+                      break;
+                    case 'strikeout':
+                      tmp.style |= FontStyle.Strikeout;
+                      break;
+                    case 'overline':
+                      tmp.style |= FontStyle.Overline;
+                      break;
+                    case 'doubleunderline':
+                      tmp.style |= FontStyle.DoubleUnderline;
+                      break;
                   }
                 }
                 break;
@@ -3674,7 +3686,7 @@ export class Parser extends EventEmitter {
             break;
         }
       }
-      if (lineLength > 0) {
+      if (lineLength > 0 || rawBuilder.length > 0) {
         this.AddLine(stringBuilder.join(''), rawBuilder.join(''), true, false, formatBuilder);
       }
     }

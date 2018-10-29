@@ -125,6 +125,53 @@
     cursor: default;
 }
 
+.scroll-split-button {
+    font-size: 9px;
+    text-align: center;
+    background-color: ButtonFace !important;
+    color: ButtonText;
+    box-sizing: border-box;
+    border-top: 1px solid ButtonHighlight;
+    border-left: 1px solid ButtonHighlight;
+    border-right: 1px solid ButtonShadow;
+    border-bottom: 1px solid ButtonShadow;
+    z-index: 2000;
+    cursor: default;    
+}
+
+.scroll-split-button.active:active {
+    font-size: 9px;
+    text-align: center;
+    background-color: ButtonFace !important;
+    color: ButtonText;
+    box-sizing: border-box;
+    border-top: 1px solid ButtonShadow;
+    border-left: 1px solid ButtonShadow;
+    border-right: 1px solid ButtonHighlight;
+    border-bottom: 1px solid ButtonHighlight;
+    z-index: 2000;
+    cursor: default;    
+}
+
+.scroll-split-button.disabled {
+    color: GreyText;
+    cursor: not-allowed;
+}
+
+.scroll-split-button.active {
+    background-color: ThreeDShadow !important;
+    color: ButtonText;
+    border-top: 1px solid ButtonShadow;
+    border-left: 1px solid ButtonShadow;
+    border-right: 1px solid ButtonHighlight;
+    border-bottom: 1px solid ButtonHighlight;    
+}
+
+.scroll-split-button i {
+    top: 1px;
+    position: relative;
+}
+
 .scroll-horizontal {
     border-top: 1px solid ButtonHighlight;
     cursor: default;

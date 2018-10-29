@@ -167,6 +167,7 @@
                     {
                         text: 'Chat',
                         nodes: [
+                            { text: 'Display', dataAttr: { title: 'Chat > Display', pane: 'chat-display' } },
                             { text: 'Window', dataAttr: { title: 'Chat > Window', pane: 'chat-window' } },
                         ]
                     },
@@ -1266,7 +1267,11 @@
                             <input type="checkbox" id="display-splitLive" /> Split scroll live update
                         </label>
                     </div>
-
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="display-showSplitButton" /> Show split button
+                        </label>
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="colors">
                     <div class="col-sm-4 form-group">
@@ -1789,7 +1794,7 @@
                     </div>
 
                 </div>
-                <div role="tabpanel" class="pref-pane" id="chat-window">
+                <div role="tabpanel" class="pref-pane" id="chat-display">
                     <div class="col-sm-6">
                         <div class="form-group">
                             <label class="control-label">Font
@@ -1826,7 +1831,39 @@
                             </label>
                         </div>
                     </div>
-
+                    <div class="form-group">
+                        <label class="control-label">
+                            Buffer size
+                            <input type="number" id="chat-bufferSize" class="input-sm form-control" min="100" max="1000000" />
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-flashing" /> Enable flashing text
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-roundedOverlays" /> Enable rounded overlays
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-split" /> Split scroll
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-splitLive" /> Split scroll live update
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-showSplitButton" /> Show split button
+                        </label>
+                    </div>                    
+                </div>
+                <div role="tabpanel" class="pref-pane" id="chat-window">
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="chat-alwaysOnTopClient" /> Always on top of the main window

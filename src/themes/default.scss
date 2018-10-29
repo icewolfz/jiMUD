@@ -3,7 +3,7 @@ $borderColor: "#908271";
 $color: "wheat";
 
 body {
-    background-color:black;
+    background-color: black;
 }
 
 #display {
@@ -111,7 +111,43 @@ body {
 
 .scroll-corner {
     background-color: black;
-    display:none;
+    display: none;
+}
+
+.scroll-split-button {
+    display: block !important;
+    color: wheat;
+    background-color: maroon !important;
+    border: 1px solid #{$borderColor} !important;    
+}
+
+.scroll-split-button.active {
+    background-color: #d70000 !important;
+    color: wheat;
+}
+
+.scroll-split-button.active:hover {
+    background-color: #790000 !important;
+    color: wheat;
+}
+
+.scroll-split-button.active:active {
+    background-color: maroon !important;
+    color: wheat;
+}
+
+.scroll-split-button:hover {
+    background-color: #d70000 !important;
+    color: wheat;
+}
+
+.scroll-split-button:active {
+    background-color: #790000 !important;
+    color: wheat;
+}
+
+.scroll-split-button:focus {
+    color: wheat;
 }
 
 .scroll-horizontal {
@@ -250,7 +286,6 @@ body {
     background: rgba(128, 0, 0, 0.5);
     color: #{$color};
 }
-
 
 .find-case {
     font-size: 10px;

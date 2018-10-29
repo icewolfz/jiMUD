@@ -33,7 +33,14 @@
             options = Settings.load(remote.getGlobal('settingsFile'));
             if (display) {
                 display.updateFont(options.chat.font, options.chat.fontSize);
-                display.maxLines = options.bufferSize;
+                display.maxLines = options.chat.bufferSize;
+                display.splitLive = options.chat.splitLive;
+                display.splitHeight = options.chat.splitHeight;
+                display.roundedRanges = options.chat.roundedOverlays;
+                display.showSplitButton = options.chat.showSplitButton;
+                display.enableFlashing = options.chat.flashing;
+                display.enableMXP = options.enableMXP;
+                display.enableURLDetection = options.enableURLDetection;
             }
             if (_logger) {
                 _logger.postMessage({
@@ -77,6 +84,10 @@
 
         $(document).ready(function () {
             display = new Display($('#display'));
+
+            display.on('split-move-done', (h) => {
+                ipcRenderer.send('setting-changed', { type: 'chat', name: 'splitHeight', value: h });
+            });
 
             display.on('selection-done', () => {
                 if (options.AutoCopySelectedToClipboard && display.hasSelection) {
@@ -225,6 +236,7 @@
                 z = 0.5;
             else if (z > 3.0)
                 z = 3.0;
+            if(z === _zoom) return;
             _zoom = z;
             webFrame.setZoomFactor(z);
             ipcRenderer.send('setting-changed', { chat: 'chat', name: 'zoom', value: z });
@@ -257,16 +269,16 @@
             <i class="fa fa-copy"></i>
         </button>
         <div class="btn-group" role="group">
-            <button id="btn-zoom-in" type="button" class="btn btn-default btn-xs" title="Zoom out" onclick="_zoom -= 0.05; updateZoom(_zoom);">
+            <button id="btn-zoom-in" type="button" class="btn btn-default btn-xs" title="Zoom out" onclick="updateZoom(_zoom - 0.05);">
                 <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                     <i class="fa fa-television fa-stack-2x" style="font-size: 1em"></i>
                     <i class="fa fa-minus fa-stack-1x" style="font-size: 0.5em;margin-top: -1px;"></i>
                 </span>
             </button>
-            <button id="btn-zoom-reset" type="button" class="btn btn-default btn-xs" title="Zoom reset" onclick="_zoom = 1; webFrame.setZoomFactor(_zoom);">
+            <button id="btn-zoom-reset" type="button" class="btn btn-default btn-xs" title="Zoom reset" onclick="updateZoom(1);">
                 <i class="fa fa-television"></i>
             </button>
-            <button id="btn-zoom-out" type="button" class="btn btn-default btn-xs" title="Zoom in" onclick="_zoom += 0.05; updateZoom(_zoom);">
+            <button id="btn-zoom-out" type="button" class="btn btn-default btn-xs" title="Zoom in" onclick="updateZoom(_zoom + 0.05);">
                 <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                     <i class="fa fa-television fa-stack-2x" style="font-size: 1em"></i>
                     <i class="fa fa-plus fa-stack-1x" style="font-size: 0.5em;margin-top: -1px;"></i>

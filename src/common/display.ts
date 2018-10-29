@@ -145,6 +145,23 @@ export class Display extends EventEmitter {
     private _innerWidth;
     private _innerHeight;
 
+    private $resizeObserver;
+    private $resizeObserverCache;
+    private $observer: MutationObserver;
+
+    private _showSplitButton = true;
+
+    get showSplitButton() { return this._showSplitButton; }
+    set showSplitButton(value) {
+        if (value === this._showSplitButton) return;
+        this._showSplitButton = value;
+        if (this._scrollCorner) {
+            this._el.removeChild(this._scrollCorner);
+            this._scrollCorner = null;
+        }
+        this.updateScrollbars();
+    }
+
     get roundedRanges(): boolean { return this._roundedRanges; }
     set roundedRanges(value: boolean) {
         if (value !== this._roundedRanges) {
@@ -209,12 +226,14 @@ export class Display extends EventEmitter {
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
-                    const mw = Math.max(this._maxWidth, this._el.clientWidth);
-                    this.split.view.style.width = this._maxWidth + 'px';
-                    this.split.background.style.width = this._maxWidth + 'px';
-                    this.split.view.style.minWidth = (mw - 16) + 'px';
-                    this.split.background.style.minWidth = (mw - 16) + 'px';
-
+                    const mw = '' + (this._maxLineLength === 0 ? 0 : Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth));
+                    this.split.view.style.width = this._maxLineLength * this._charWidth + 'px';
+                    this.split.background.style.width = this._maxLineLength * this._charWidth + 'px';
+                    let l = lines.length;
+                    while (l--) {
+                        lines[l] = lines[l].replace(/\{max\}/g, mw);
+                        bLines[l] = bLines[l].replace(/\{max\}/g, mw);
+                    }
                     this.split.overlay.innerHTML = overlays.join('');
                     this.split.view.innerHTML = lines.join('');
                     this.split.background.innerHTML = bLines.join('');
@@ -419,6 +438,7 @@ export class Display extends EventEmitter {
         this._character.className = 'ansi';
         this._character.style.borderBottom = '1px solid black';
         this._character.innerText = 'W';
+        this._character.style.visibility = 'hidden';
         this._ruler.style.visibility = 'hidden';
         document.body.appendChild(this._character);
 
@@ -782,6 +802,30 @@ export class Display extends EventEmitter {
         }
         this._el.appendChild(this._canvas);
         this.doUpdate(UpdateType.update);
+
+        this.$resizeObserver = new ResizeObserver((entries, observer) => {
+            if (entries.length === 0) return;
+            if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
+                return;
+            if (!this.$resizeObserverCache || this.$resizeObserverCache.width !== entries[0].contentRect.width || this.$resizeObserverCache.height !== entries[0].contentRect.height) {
+                this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
+                if (this.split) this.split.dirty = true;
+                this.doUpdate(UpdateType.update | UpdateType.view);
+            }
+        });
+        this.$resizeObserver.observe(this._el);
+        this.$observer = new MutationObserver((mutationsList) => {
+            let mutation;
+            for (mutation of mutationsList) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    if (mutation.oldValue === 'display: none;') {
+                        if (this.split) this.split.dirty = true;
+                        this.doUpdate(UpdateType.update | UpdateType.view);
+                    }
+                }
+            }
+        });
+        this.$observer.observe(this._el, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
         //setTimeout(() => { this.update(); }, 0);
         //this.update();
     }
@@ -840,11 +884,13 @@ export class Display extends EventEmitter {
                     if (this._VScroll.position >= this._VScroll.scrollSize - this._padding[0]) {
                         this.split.style.display = '';
                         this.split.shown = false;
+                        if (this._scrollCorner) this._scrollCorner.classList.remove('active');
                         this.emit('scroll-lock', false);
                     }
                     else {
                         this.split.style.display = 'block';
                         this.split.shown = true;
+                        if (this._scrollCorner) this._scrollCorner.classList.add('active');
                         this.emit('scroll-lock', true);
                         //const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
                         const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
@@ -1101,7 +1147,7 @@ export class Display extends EventEmitter {
     public updateView() {
         const w = this._maxWidth;
         const h = this._height;
-        const mw = Math.max(w, this._el.clientWidth);
+        const mw = (w === 0 ? 0 : Math.max(w, this._el.clientWidth));
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
         this._view.style.minWidth = (mw - 16) + 'px';
@@ -1122,6 +1168,11 @@ export class Display extends EventEmitter {
             this._viewRange.end = this.lines.length;
         const lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
         const bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
+        let l = lines.length;
+        while (l--) {
+            lines[l] = lines[l].replace(/\{max\}/g, mw);
+            bLines[l] = bLines[l].replace(/\{max\}/g, mw);
+        }
 
         this._view.innerHTML = lines.join('');
         this._background.innerHTML = bLines.join('');
@@ -2792,6 +2843,7 @@ export class Display extends EventEmitter {
             if (this.scrollLock && !this.split.shown && this._VScroll.scrollSize > 0) {
                 this.split.style.display = 'block';
                 this.split.shown = true;
+                if (this._scrollCorner) this._scrollCorner.classList.add('active');
                 this.doUpdate(UpdateType.scrollView);
             }
         }
@@ -2804,20 +2856,39 @@ export class Display extends EventEmitter {
     public updateScrollbars() {
         this._HScroll.offset = this._VScroll.track.clientWidth;
         this._HScroll.resize();
-        this._HScroll.visible = this._HScroll.scrollSize >= 0;
+        this._HScroll.visible = this._HScroll.scrollSize > 0;
         this._VScroll.offset = this._HScroll.visible ? this._HScroll.track.clientHeight : 0;
         this._VScroll.resize();
+        if (this._VScroll.offset === 0 && this._showSplitButton && this.split && !this._HScroll.visible)
+            this._VScroll.padding = this._HScroll.track.clientHeight || this._VScroll.track.clientWidth;
+        else
+            this._VScroll.padding = 0;
 
-        if (!this._HScroll.visible && this._scrollCorner) {
+        if (!this._HScroll.visible && this._scrollCorner && !this.split && !this._showSplitButton) {
             this._el.removeChild(this._scrollCorner);
             this._scrollCorner = null;
         }
-        else if (this._HScroll.visible && !this._scrollCorner) {
+        else if ((this.split || this._HScroll.visible) && !this._scrollCorner) {
             this._scrollCorner = document.createElement('div');
-            this._scrollCorner.className = 'scroll-corner';
+            if (this._showSplitButton && this.split) {
+                this._scrollCorner.classList.add('scroll-corner', 'scroll-split-button');
+                this._scrollCorner.innerHTML = '<i class="fa fa-minus"></i>';
+                this._scrollCorner.addEventListener('click', () => {
+                    this.scrollLock = !this.scrollLock;
+                    this.scrollDisplay(true);
+                });
+            }
+            else
+                this._scrollCorner.className = 'scroll-corner';
             this._el.appendChild(this._scrollCorner);
         }
-        if (this.split) this.split.dirty = true;
+        if (this.split) {
+            this.split.dirty = true;
+            if (this._VScroll.scrollSize >= 0)
+                this._scrollCorner.classList.remove('disabled');
+            else
+                this._scrollCorner.classList.add('disabled');
+        }
     }
 
     public showFind() {
@@ -2928,6 +2999,7 @@ export class ScrollBar extends EventEmitter {
     private _percentView;
     private _visible = true;
     private _offset = 0;
+    private $padding = 0;
     private _os = { left: 0, top: 0 };
     private _padding = [0, 0, 0, 0];
     private _position: number = 0;
@@ -2966,6 +3038,14 @@ export class ScrollBar extends EventEmitter {
             this.updateLocation();
         }
     }
+    get padding(): number { return this.$padding; }
+    set padding(value: number) {
+        if (value !== this.$padding) {
+            this.$padding = value;
+            this.updateLocation();
+        }
+    }
+
     get type(): ScrollType { return this._type; }
     set type(value: ScrollType) {
         if (this._type !== value) {
@@ -3009,7 +3089,7 @@ export class ScrollBar extends EventEmitter {
     private updateLocation() {
         if (this._type === ScrollType.horizontal) {
             this.track.style.top = '';
-            this.track.style.right = this.offset + 'px';
+            this.track.style.right = (this.offset + this.padding) + 'px';
             this.track.style.left = '0';
             this.track.style.bottom = '0';
             this.track.style.width = 'auto';
@@ -3022,7 +3102,7 @@ export class ScrollBar extends EventEmitter {
             this.track.style.top = '0';
             this.track.style.right = '0';
             this.track.style.left = '';
-            this.track.style.bottom = this.offset + 'px';
+            this.track.style.bottom = (this.offset + this.padding) + 'px';
             this.track.style.width = '';
             this.track.style.height = 'auto';
 
