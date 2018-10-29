@@ -1154,7 +1154,7 @@ export class Parser extends EventEmitter {
                 e.vspace = arg[1];
                 break;
               case 'ALIGN':
-                e.align = arg[1];
+                e.align = arg[1].toLowerCase();
                 break;
               case 'ISMAP':
                 e.ismap = true;
@@ -1175,7 +1175,7 @@ export class Parser extends EventEmitter {
                 else if (x === 6)
                   e.vspace = args[x];
                 else if (x === 7)
-                  e.align = args[x];
+                  e.align = args[x].toLowerCase();
                 break;
             }
           }
