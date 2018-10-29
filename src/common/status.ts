@@ -585,21 +585,20 @@ export class Status extends EventEmitter {
             if (w > 0)
                 r -= w;
             else
-                r = 0;
+                r = 2;
             display.css('right', r + 'px');
             r = parseInt(displayBorder.css('right'), 10) || 0;
             if (w > 0)
                 r -= w;
             else
-                r = 0;
-                displayBorder.css('right', r + 'px');
+                r = 2;
+            displayBorder.css('right', r + 'px');
             r = parseInt(command.css('right'), 10) || 0;
-            r -= w;
             if (w > 0)
                 r -= w;
             else
-                r = 0;
-                command.css('right', r + 'px');
+                r = 2;
+            command.css('right', r + 'px');
             return;
         }
 
