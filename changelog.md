@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.5
+## v0.6.5 2018-10-29
 
 - **New:**
   - Added copy support as HTML format to allow copying colors and formats and paste into applications that support HTML markup
