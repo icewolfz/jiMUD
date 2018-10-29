@@ -12,7 +12,7 @@
     <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
 
-    <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css">
+    <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css" />
     <script>
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
@@ -407,9 +407,9 @@
             theme = parseTemplate(theme) + '.css';
             if (!isFileSync(theme))
                 theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
-            var el = $('#theme');
-            if (el.attr('href') != theme)
-                el.attr('href', theme);
+            var el = document.getElementById('theme');
+            if (el.getAttribute('href') !== theme)
+                el.setAttribute('href', theme);
         }
 
         function updateInterface() {
@@ -463,7 +463,6 @@
             $('#mail').css('display', client.options.buttons.mail ? '' : 'none');
             $('#compose').css('display', client.options.buttons.compose ? '' : 'none');
             $('#codeEditor').css('display', client.options.buttons.codeEditor ? '' : 'none');
-
             _status.updateInterface();
             buildButtons();
             client.display.update();
@@ -1586,7 +1585,6 @@
 
             $('#buttonbar').on('contextmenu', (e) => {
                 e.preventDefault();
-                console.log(e);
                 var c = new Menu();
                 c.append(new MenuItem({
                     label: 'Visible',

@@ -577,27 +577,33 @@ export class Status extends EventEmitter {
         if (!this.client.options.showStatus) {
             const w = statusBorder.outerWidth();
             let r;
+            let t;
             status.css('visibility', 'hidden');
             status.css('display', 'none');
             statusBorder.css('visibility', 'hidden');
             statusBorder.css('display', 'none');
             r = parseInt(display.css('right'), 10) || 0;
+            t = parseInt(display.css('top'), 10) || 2;
+            if (t < 0) t = 2;
             if (w > 0)
                 r -= w;
             else
-                r = 2;
+                r = t;
+            if (r < 0) r = t;
             display.css('right', r + 'px');
             r = parseInt(displayBorder.css('right'), 10) || 0;
             if (w > 0)
                 r -= w;
             else
                 r = 2;
+            if (r < 0) r = t;
             displayBorder.css('right', r + 'px');
             r = parseInt(command.css('right'), 10) || 0;
             if (w > 0)
                 r -= w;
             else
                 r = 2;
+            if (r < 0) r = t;
             command.css('right', r + 'px');
             return;
         }
