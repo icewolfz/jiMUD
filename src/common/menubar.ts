@@ -65,7 +65,7 @@ export class Menubar {
                 if ((items[m].id || '').toLowerCase() === menu[i] || (items[m].label || '').toLowerCase().replace(/&/g, '') === menu[i]) {
                     item = items[m];
                     tItem = tItems[m];
-                    if (item.submenu) {
+                    if (item.submenu && item.submenu.items) {
                         items = item.submenu.items;
                         tItems = tItem.submenu;
                     }
