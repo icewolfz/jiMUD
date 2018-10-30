@@ -817,9 +817,10 @@ export class Display extends EventEmitter {
             if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
                 return;
             if (!this.$resizeObserverCache || this.$resizeObserverCache.width !== entries[0].contentRect.width || this.$resizeObserverCache.height !== entries[0].contentRect.height) {
+                this.update();
                 this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
                 if (this.split) this.split.dirty = true;
-                this.doUpdate(UpdateType.update | UpdateType.view);
+                this.doUpdate(UpdateType.view);
             }
         });
         this.$resizeObserver.observe(this._el);
@@ -3058,7 +3059,7 @@ export class ScrollBar extends EventEmitter {
                 return;
             if (!this.$resizeObserverCache || this.$resizeObserverCache.width !== entries[0].contentRect.width || this.$resizeObserverCache.height !== entries[0].contentRect.height) {
                 this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
-                this.resize();
+               this.resize();
             }
         });
         this.$resizeObserver.observe(this.track);
