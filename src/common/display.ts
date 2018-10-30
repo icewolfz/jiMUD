@@ -1161,11 +1161,9 @@ export class Display extends EventEmitter {
     public updateView() {
         const w = this._maxLineLength * this._charWidth;
         let l = this.lines.length;
-        let h;
-
         if (this._hideTrailingEmptyLine && l && this.lines[l - 1].length === 0)
             l--;
-        h = l * this._charHeight;
+        const h = l * this._charHeight;
         const mw = '' + (w === 0 ? 0 : Math.max(w, this._el.clientWidth));
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
@@ -3152,9 +3150,7 @@ export class ScrollBar extends EventEmitter {
     }
 
     public currentPosition() {
-        let p = this._type === ScrollType.horizontal ? (this._lastMouse.pageX - this.state.position - this._os.left) : (this._lastMouse.pageY - this.state.position - this._os.top);
-        if (p >= this._maxDrag)
-            p = this._maxDrag;
+        const p = this._type === ScrollType.horizontal ? (this._lastMouse.pageX - this.state.position - this._os.left) : (this._lastMouse.pageY - this.state.position - this._os.top);
         if (p < 0)
             return 0;
         if (p > this.maxPosition)
