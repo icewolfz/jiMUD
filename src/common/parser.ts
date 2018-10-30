@@ -3689,9 +3689,7 @@ export class Parser extends EventEmitter {
             break;
         }
       }
-      if (lineLength > 0 || rawBuilder.length > 0) {
-        this.AddLine(stringBuilder.join(''), rawBuilder.join(''), true, false, formatBuilder);
-      }
+      this.AddLine(stringBuilder.join(''), rawBuilder.join(''), true, false, formatBuilder);
     }
     catch (ex) {
       if (this.enableDebug) this.emit('debug', ex);

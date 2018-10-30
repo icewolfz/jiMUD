@@ -6,6 +6,7 @@
   - Display:
     - Fixed vertical scroll bar when split button shown
     - Fixed show split button being shown after turning off split scroll
+  - ANSI Parser: Always append line fragment when parsing, better fix to the previous missing raw data issue
 
 ## v0.6.5 2018-10-29
 
