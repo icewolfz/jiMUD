@@ -2,6 +2,11 @@
 
 ## v0.6.6
 
+- **Fixed:**
+  - Display:
+    - Fixed vertical scroll bar when split button shown
+    - Fixed show split button being shown after turning off split scroll
+
 ## v0.6.5 2018-10-29
 
 - **New:**
