@@ -202,7 +202,7 @@
                     var f = 0;
                     var sFont = {};
                     var ops = [];
-                    fonts.sort((a,b) => a.family.localeCompare(b.family));
+                    fonts.sort((a, b) => a.family.localeCompare(b.family));
                     for (f = 0; f < fl; f++) {
                         if (sFont[fonts[f].family]) continue;
                         if (fonts[f].monospace)
@@ -1269,6 +1269,11 @@
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
+                            <input type="checkbox" id="display-hideTrailingEmptyLine" /> Hide trailing line
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
                             <input type="checkbox" id="display-showSplitButton" /> Show split button
                         </label>
                     </div>
@@ -1861,7 +1866,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="chat-showSplitButton" /> Show split button
                         </label>
-                    </div>                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="chat-window">
                     <div class="col-sm-6 form-group">

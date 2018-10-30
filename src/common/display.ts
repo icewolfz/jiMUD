@@ -150,6 +150,7 @@ export class Display extends EventEmitter {
     private $observer: MutationObserver;
 
     private _showSplitButton = true;
+    private _hideTrailingEmptyLine = true;
 
     get showSplitButton() { return this._showSplitButton; }
     set showSplitButton(value) {
@@ -160,6 +161,13 @@ export class Display extends EventEmitter {
             this._scrollCorner = null;
         }
         this.updateScrollbars();
+    }
+
+    get hideTrailingEmptyLine() { return this._hideTrailingEmptyLine; }
+    set hideTrailingEmptyLine(value) {
+        if (value === this._hideTrailingEmptyLine) return;
+        this._hideTrailingEmptyLine = value;
+        this.doUpdate(UpdateType.view | UpdateType.scrollView | UpdateType.scrollbars);
     }
 
     get roundedRanges(): boolean { return this._roundedRanges; }
@@ -339,7 +347,7 @@ export class Display extends EventEmitter {
             this._el.removeChild(this.split);
             this.split = null;
         }
-        this.doUpdate(UpdateType.scroll | UpdateType.view | UpdateType.scrollView);
+        this.doUpdate(UpdateType.scrollbars | UpdateType.scroll | UpdateType.view | UpdateType.scrollView);
     }
 
     get linkFunction(): string {
@@ -564,13 +572,13 @@ export class Display extends EventEmitter {
                     if (o.x >= 0 || o.x < len) {
                         let sPos = o.x;
                         let ePos = o.x;
-                        while (line.substr(sPos, 1).match(/([^\s.,\/#!$%\^&\*;:{}=\-_`~()])/gu) && sPos >= 0) {
+                        while (line.substr(sPos, 1).match(/([^\s.,\/#!$%\^&\*;:{}=`~()])/gu) && sPos >= 0) {
                             sPos--;
                             if (sPos < 0)
                                 break;
                         }
                         sPos++;
-                        while (line.substr(ePos, 1).match(/([^\s.,\/#!$%\^&\*;:{}=\-_`~()])/gu) && ePos < len) {
+                        while (line.substr(ePos, 1).match(/([^\s.,\/#!$%\^&\*;:{}=`~()])/gu) && ePos < len) {
                             ePos++;
                         }
                         if (sPos >= 0 && ePos <= len) {
@@ -692,13 +700,13 @@ export class Display extends EventEmitter {
                     if (o.x >= 0 || o.x < len) {
                         let sPos = o.x;
                         let ePos = o.x;
-                        while (line.substr(sPos, 1).match(/([^\s.,\/#!$%\^&\*;:{}=\-_`~()])/gu) && sPos >= 0) {
+                        while (line.substr(sPos, 1).match(/([^\s.,\/#!$%\^&\*;:{}=`~()])/gu) && sPos >= 0) {
                             sPos--;
                             if (sPos < 0)
                                 break;
                         }
                         sPos++;
-                        while (line.substr(ePos, 1).match(/([^\s.,\/#!$%\^&\*;:{}=\-_`~()])/gu) && ePos < len) {
+                        while (line.substr(ePos, 1).match(/([^\s.,\/#!$%\^&\*;:{}=`~()])/gu) && ePos < len) {
                             ePos++;
                         }
                         if (sPos >= 0 && ePos <= len)
@@ -809,9 +817,10 @@ export class Display extends EventEmitter {
             if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
                 return;
             if (!this.$resizeObserverCache || this.$resizeObserverCache.width !== entries[0].contentRect.width || this.$resizeObserverCache.height !== entries[0].contentRect.height) {
+                this.update();
                 this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
                 if (this.split) this.split.dirty = true;
-                this.doUpdate(UpdateType.update | UpdateType.view);
+                this.doUpdate(UpdateType.view);
             }
         });
         this.$resizeObserver.observe(this._el);
@@ -882,7 +891,7 @@ export class Display extends EventEmitter {
             }
             if ((this._updating & UpdateType.scroll) === UpdateType.scroll) {
                 if (this.split) {
-                    if (this._VScroll.position >= this._VScroll.scrollSize - this._padding[0]) {
+                    if (this._VScroll.atBottom) {
                         this.split.style.display = '';
                         this.split.shown = false;
                         if (this._scrollCorner) this._scrollCorner.classList.remove('active');
@@ -978,6 +987,12 @@ export class Display extends EventEmitter {
 
     get EndOfLine(): boolean {
         return this._parser.EndOfLine;
+    }
+
+    get EndOfLineLength(): number {
+        if (this.lines.length === 0)
+            return 0;
+        return this.lines[this.lines.length - 1].length;
     }
 
     set enableFlashing(value: boolean) {
@@ -1147,7 +1162,10 @@ export class Display extends EventEmitter {
 
     public updateView() {
         const w = this._maxWidth;
-        const h = this._height;
+        let l = this.lines.length;
+        if (this._hideTrailingEmptyLine && l && this.lines[l - 1].length === 0)
+            l--;
+        const h = this._height - this._lines[l].height;
         const mw = '' + (w === 0 ? 0 : Math.max(w, this._el.clientWidth - 16));
         const mv = '' + (this._el.clientWidth - 16);
         this._view.style.height = h + 'px';
@@ -1164,11 +1182,11 @@ export class Display extends EventEmitter {
 
         if (this._viewRange.start < 0)
             this._viewRange.start = 0;
-        if (this._viewRange.end > this.lines.length)
-            this._viewRange.end = this.lines.length;
+        if (this._viewRange.end > l)
+            this._viewRange.end = l;
         const lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
         const bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
-        let l = lines.length;
+        l = lines.length;
         while (l--) {
             lines[l] = lines[l].replace(/\{max\}/g, mw).replace(/\{view\}/g, mv);
             bLines[l] = bLines[l].replace(/\{max\}/g, mw).replace(/\{view\}/g, mv);
@@ -2868,7 +2886,7 @@ export class Display extends EventEmitter {
         else
             this._VScroll.padding = 0;
 
-        if (!this._HScroll.visible && this._scrollCorner && !this.split && !this._showSplitButton) {
+        if (!this._HScroll.visible && this._scrollCorner && (!this.split || !this._showSplitButton)) {
             this._el.removeChild(this._scrollCorner);
             this._scrollCorner = null;
         }
@@ -3031,6 +3049,9 @@ export class ScrollBar extends EventEmitter {
         position: 0
     };
 
+    private $resizeObserver;
+    private $resizeObserverCache;
+
     get size(): number { return this._visible ? 12 : 0; }
 
     get position(): number { return this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0]); }
@@ -3040,6 +3061,7 @@ export class ScrollBar extends EventEmitter {
         if (value !== this._offset) {
             this._offset = value;
             this.updateLocation();
+            this.resize();
         }
     }
     get padding(): number { return this.$padding; }
@@ -3047,6 +3069,7 @@ export class ScrollBar extends EventEmitter {
         if (value !== this.$padding) {
             this.$padding = value;
             this.updateLocation();
+            this.resize();
         }
     }
 
@@ -3075,6 +3098,8 @@ export class ScrollBar extends EventEmitter {
             this.resize();
         }
     }
+
+    get atBottom(): boolean { return this.position >= this.scrollSize - this._padding[0]; }
 
     constructor(parent?: HTMLElement, content?: HTMLElement, type?: ScrollType) {
         super();
@@ -3122,6 +3147,7 @@ export class ScrollBar extends EventEmitter {
         this.track = document.createElement('div');
         this.track.className = 'scroll-track scroll-' + (this._type === ScrollType.horizontal ? 'horizontal' : 'vertical');
         this.track.style.position = 'absolute';
+        this.track.style.overflow = 'hidden';
         this.track.addEventListener('mousedown', (e) => {
             if (e.button === 0 && e.buttons) {
                 this._lastMouse = e;
@@ -3176,6 +3202,16 @@ export class ScrollBar extends EventEmitter {
 
         window.addEventListener('resize', this._wResize.bind(this));
         this.resize();
+        this.$resizeObserver = new ResizeObserver((entries, observer) => {
+            if (entries.length === 0) return;
+            if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
+                return;
+            if (!this.$resizeObserverCache || this.$resizeObserverCache.width !== entries[0].contentRect.width || this.$resizeObserverCache.height !== entries[0].contentRect.height) {
+                this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
+                this.resize();
+            }
+        });
+        this.$resizeObserver.observe(this.track);
     }
 
     public reset() {
@@ -3194,9 +3230,9 @@ export class ScrollBar extends EventEmitter {
             this.track.classList.remove('scroll-disabled');
         else
             this.track.classList.add('scroll-disabled');
-        this._thumbSize = Math.ceil(1 / this._percentView * this._parentSize);
-        if (this._thumbSize > this._parentSize)
-            this._thumbSize = this._parentSize;
+        this._thumbSize = Math.ceil(1 / this._percentView * this._trackSize);
+        if (this._thumbSize > this._trackSize)
+            this._thumbSize = this._trackSize;
         if (this._thumbSize < 20)
             this._thumbSize = 20;
         this.thumb.style[this._type === ScrollType.horizontal ? 'width' : 'height'] = this._thumbSize + 'px';
@@ -3233,7 +3269,7 @@ export class ScrollBar extends EventEmitter {
         this.updatePosition(0);
     }
 
-    public resize(scrollToEnd?) {
+    public resize() {
         const pc = window.getComputedStyle(this._parent);
         this._padding = [
             parseInt(pc.getPropertyValue('padding-top')) || 0,
@@ -3241,7 +3277,7 @@ export class ScrollBar extends EventEmitter {
             parseInt(pc.getPropertyValue('padding-bottom')) || 0,
             parseInt(pc.getPropertyValue('padding-left')) || 0
         ];
-        const bottom = this.position >= this.scrollSize - this._padding[0];
+        const bottom = this.atBottom;
         if (this._type === ScrollType.horizontal) {
             this._contentSize = this._content.clientWidth + this._padding[1] + this._padding[3];
             this._parentSize = this._parent.clientWidth - this.offset - this._scrollOffset;

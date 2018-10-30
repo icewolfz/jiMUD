@@ -7,15 +7,27 @@
     - Add MXP image height and better width support
     - Add MXP font size and family support
 
-## v0.6.5
+## v0.6.6
 
 - **New:**
-  - Add copy support as HTML format to allow copying colors and formats and paste into applications that support HTML markup
-  - Logger: Add support for MXP images
+  - Added [Hide trailing line](docs/preferences.md#display) display preference to hide trailing empty line.
+- **Fixed:**
   - Display:
-    - Add basic MXP image support, limits height to line height
-    - Add more color attributes for color tag: hidden, strikeout, overline, and doubleunderline
-    - Added a split toggle button at the end of scroll bar for quick off/on, similar to clicking scroll lock button
+    - Fixed vertical scroll bar when split button shown
+    - Fixed show split button being shown after turning off split scroll
+    - Readd - and _ as selectable characters for double click and context menu word selection
+  - ANSI Parser: Always append line fragment when parsing, better fix to the previous missing raw data issue
+  - Window size not correctly sent to mud when maximizing window, broken in v0.6.5
+
+## v0.6.5 2018-10-29
+
+- **New:**
+  - Added copy support as HTML format to allow copying colors and formats and paste into applications that support HTML markup
+  - Logger: Added support for MXP images
+  - Display:
+    - Added basic MXP image support, limits height to line height
+    - Added more color attributes for color tag: hidden, strikeout, overline, and doubleunderline
+    - Added a split toggle button at the bottom right corner for quick off/on, similar to clicking scroll lock button
   - Expanded [client.writeClipboard](docs/scripting.md) added html argument to add formated html as well as plain text
   - Expanded [client.writeClipboardHTML](docs/scripting.md) write HTML markup to clipboard to produce formated text for applications that support HTML pasting
   - Expanded [client.readClipboardHTML](docs/scripting.md) read HTML markup from clipboard if clipboard has HTML support
@@ -23,18 +35,21 @@
   - Added [#testspeedfile](docs/commands.md) to load a file and run timed test
   - Added [#testfile](docs/commands.md) to load a file
   - Preference:
-    - Show split button, Show or hide split toggle button in split scroll to allow for quick toggling
-    - Add display sub area for chat display preferences
+    - Added [Show split button](docs/preferences.md#display), Show or hide split toggle button in split scroll to allow for quick toggling
+    - Added [display](docs/preferences.md#chat) sub area for chat display preferences
   - Chat:
-    - Add split scroll support, allow enabling of split scrolling for chat window
-    - Add Independent buffer size instead of using the same one as main display
-    - Add flashing preference
+    - Added split scroll support, allow enabling of split scrolling for chat window
+    - Added Independent [buffer size preference](docs/preferences.md#chat) instead of using the same one as main display
+    - Added [flashing preference](docs/preferences.md#chat)
 - **Changed:**
   - Update electron from 3.0.5 to 3.0.6
   - Update electron-updater 3.1.2 to 3.1.5
   - Log viewer uses simpler HTML generation
 - **Fixed:**
-  - Status: Fix sleet weather overlay for all themes
+  - Auto updater: Attempt to preserve command line arguments when restarted
+  - Status:
+    - Fixed sleet weather overlay for all themes
+    - Fixed issue with lost right spacing when status display is hidden
   - Display:
     - Not correctly clearing text
     - Improve performance by generating cleaner HTML markup
@@ -46,16 +61,15 @@
       - Fixed MXP send tags
     - Fixed HTML property to return correct HTML markup
     - Match whole unicode words on context or double click
-    - Debounce selection mouse moving to improve performance
+    - Debounce selection mouse dragging to improve performance
     - Fixed split view selection performance issues
-    - Fixed scroll position on resize
-    - Fixed scrolling issues with large line numbers
+    - Fixed split position on resize
+    - Fixed scrolling issues with large amount of lines
     - Fixed resize issues when status display/button bar hidden
   - Fixed scroll lock scrolling to end when not in split screen mode
   - ANSI Parser:
-    - Fixed extra characters being added after : in text, fixes raw ansi logging
-    - Fixed loss of some raw data when line only contains control characters resulting in loss of blank lines
-  - Status: Fix issue with losing spacing when status display is hidden
+    - Fixed extra characters being added after : in raw text, fixes raw ansi logging
+    - Fixed loss of some raw data when line only contains ansi control characters resulting in loss of blank lines
   - Chat:
     - Fix display not using URL detection settings and MXP settings
     - Fix zoom reset not being saved
