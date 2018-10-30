@@ -151,6 +151,7 @@ export class Display extends EventEmitter {
     private $observer: MutationObserver;
 
     private _showSplitButton = true;
+    private _hideTrailingEmptyLine = true;
 
     get showSplitButton() { return this._showSplitButton; }
     set showSplitButton(value) {
@@ -161,6 +162,13 @@ export class Display extends EventEmitter {
             this._scrollCorner = null;
         }
         this.updateScrollbars();
+    }
+
+    get hideTrailingEmptyLine() { return this._hideTrailingEmptyLine; }
+    set hideTrailingEmptyLine(value) {
+        if (value === this._hideTrailingEmptyLine) return;
+        this._hideTrailingEmptyLine = value;
+        this.doUpdate(UpdateType.view | UpdateType.scrollView | UpdateType.scrollbars);
     }
 
     get roundedRanges(): boolean { return this._roundedRanges; }
@@ -980,6 +988,12 @@ export class Display extends EventEmitter {
         return this._parser.EndOfLine;
     }
 
+    get EndOfLineLength(): number {
+        if (this.lines.length === 0)
+            return 0;
+        return this.lines[this.lines.length - 1].length;
+    }
+
     set enableFlashing(value: boolean) {
         this._parser.enableFlashing = value;
     }
@@ -1145,7 +1159,12 @@ export class Display extends EventEmitter {
 
     public updateView() {
         const w = this._maxLineLength * this._charWidth;
-        const h = this.lines.length * this._charHeight;
+        let l = this.lines.length;
+        let h;
+
+        if (this._hideTrailingEmptyLine && l && this.lines[l - 1].length === 0)
+            l--;
+        h = l * this._charHeight;
         const mw = '' + (w === 0 ? 0 : Math.max(w, this._el.clientWidth));
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
@@ -1161,11 +1180,11 @@ export class Display extends EventEmitter {
 
         if (this._viewRange.start < 0)
             this._viewRange.start = 0;
-        if (this._viewRange.end > this.lines.length)
-            this._viewRange.end = this.lines.length;
+        if (this._viewRange.end > l)
+            this._viewRange.end = l;
         const lines = this._viewLines.slice(this._viewRange.start, this._viewRange.end + 1);
         const bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
-        let l = lines.length;
+        l = lines.length;
         while (l--) {
             lines[l] = lines[l].replace(/\{max\}/g, mw);
             bLines[l] = bLines[l].replace(/\{max\}/g, mw);

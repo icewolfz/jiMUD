@@ -34,6 +34,7 @@ Reset - Resetting will revert all settings back to default values
 - `Split scroll live update` determines how the split screen updates as resize bar is adjusted, if on it will update once resize bar released, if slow resizing enable this as it should reduce cpu load during drag
 - `Show split button` Show or hide split toggle button in split scroll to allow for quick toggling
 - `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
+- `Hide trailing line`  Hide trailing empty line, **note** if more then one it will only hide the final line
 
 ## Colors
 

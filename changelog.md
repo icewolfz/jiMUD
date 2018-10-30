@@ -2,6 +2,8 @@
 
 ## v0.6.6
 
+- **New:**
+  - Added [Hide trailing line](docs/preferences.md#display) display preference to hide trailing empty line.
 - **Fixed:**
   - Display:
     - Fixed vertical scroll bar when split button shown

@@ -789,6 +789,7 @@ export class Client extends EventEmitter {
         this._input.scrollLock = this.options.scrollLocked;
         this.display.scrollLock = this.options.scrollLocked;
         this.display.enableSplit = this.options.display.split;
+        this.display.hideTrailingEmptyLine = this.options.display.hideTrailingEmptyLine;
         this.display.splitLive = this.options.display.splitLive;
         this.display.splitHeight = this.options.display.splitHeight;
         this.display.roundedRanges = this.options.display.roundedOverlays;
@@ -903,7 +904,7 @@ export class Client extends EventEmitter {
         if (txt == null || typeof txt === 'undefined') return;
         if (newline == null) newline = false;
         if (remote == null) remote = false;
-        if (newline && this.display.textLength > 0 && !this.display.EndOfLine && !this.telnet.prompt)
+        if (newline && this.display.textLength > 0 && !this.display.EndOfLine && this.display.EndOfLineLength !== 0 && !this.telnet.prompt)
             txt = '\n' + txt;
         this.parseInternal(txt, remote);
     }
