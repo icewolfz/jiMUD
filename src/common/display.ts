@@ -209,9 +209,9 @@ export class Display extends EventEmitter {
             this._el.appendChild(this.split);
             if (this._splitHeight !== -1)
                 this.split.style.height = this._splitHeight + '%';
-            this.split.updatePosition = (skipTop) => {
-                if (!skipTop)
-                    this.split.top = this.offset(this.split).top + 1;
+            this.split.updatePosition = () => {
+                //if (!skipTop)
+                    //this.split.top = this.offset(this.split).top + 1;
                 //if (this._os.top % 2 !== 0)
                 //this.split.top--;
                 const t = this._view.clientHeight - this.split.clientHeight + this._padding[2];
@@ -905,7 +905,7 @@ export class Display extends EventEmitter {
                         this.split.shown = true;
                         if (this._scrollCorner) this._scrollCorner.classList.add('active');
                         this.emit('scroll-lock', true);
-                        this.split.updatePosition(true);
+                        this.split.updatePosition();
                     }
                 }
                 this._view.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
@@ -3183,7 +3183,7 @@ export class ScrollBar extends EventEmitter {
 
         this.thumb.style[this._type === ScrollType.horizontal ? 'left' : 'top'] = p + 'px';
         this.state.dragPosition = p;
-        this._position = Math.ceil(p * this._ratio);
+        this._position = p * this._ratio;
         if (this._position < 0)
             this._position = 0;
         this.update();
