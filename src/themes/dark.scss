@@ -115,6 +115,10 @@ body {
     color: #5a5d5e;
     background-color: #{$color} !important;
     border: 1px solid transparent !important;
+    border-top: 1px solid #{$borderColor};
+    border-left: 1px solid #{$borderColor};
+    border-right: 0;
+    border-bottom: 0;    
 }
 
 .scroll-split-button.active:active {
