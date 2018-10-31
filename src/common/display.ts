@@ -2342,7 +2342,7 @@ export class Display extends EventEmitter {
                         if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
                             td.push('line-through ');
                         if (td.length > 0)
-                            fStyle.push('text-decoration:', td.join(''), ';');
+                            fStyle.push('text-decoration:', td.join('').trim(), ';');
                     }
                     format.bStyle = (bStyle = bStyle.join(''));
                     format.fStyle = (fStyle = fStyle.join(''));
@@ -2587,7 +2587,7 @@ export class Display extends EventEmitter {
                     if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
                         td.push('line-through ');
                     if (td.length > 0)
-                        style.push('text-decoration:', td.join(''), ';');
+                        style.push('text-decoration:', td.join('').trim(), ';');
                 }
                 if (offset < start || end < start)
                     continue;
