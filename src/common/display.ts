@@ -674,8 +674,13 @@ export class Display extends EventEmitter {
                         x = this._charWidth;
                         this._currentSelection.end.x++;
                     }
-                    else
+                    else if (x > 0 && this._currentSelection.end.y >= this.lines.length) {
+                        this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
+                    }
+                    else {
                         x = 0;
+                        this._currentSelection.end.x = 0;
+                    }
 
                     if (x === 0 && y === 0)
                         return;
@@ -3057,7 +3062,7 @@ export class ScrollBar extends EventEmitter {
                 return;
             if (!this.$resizeObserverCache || this.$resizeObserverCache.width !== entries[0].contentRect.width || this.$resizeObserverCache.height !== entries[0].contentRect.height) {
                 this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
-               this.resize();
+                this.resize();
             }
         });
         this.$resizeObserver.observe(this.track);
