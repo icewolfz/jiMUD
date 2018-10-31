@@ -209,7 +209,17 @@ export class Display extends EventEmitter {
             this._el.appendChild(this.split);
             if (this._splitHeight !== -1)
                 this.split.style.height = this._splitHeight + '%';
-
+            this.split.updatePosition = (skipTop) => {
+                if (!skipTop)
+                    this.split.top = this.offset(this.split).top + 1;
+                //if (this._os.top % 2 !== 0)
+                //this.split.top--;
+                const t = this._view.clientHeight - this.split.clientHeight + this._padding[2];
+                //const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
+                this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+            };
             this.split.updateView = () => {
                 if (this._HScroll.size !== this.split.bottom) {
                     this.split.style.bottom = this._HScroll.size + 'px';
@@ -246,12 +256,7 @@ export class Display extends EventEmitter {
                     this.split.overlay.innerHTML = overlays.join('');
                     this.split.view.innerHTML = lines.join('');
                     this.split.background.innerHTML = bLines.join('');
-                    this.split.top = this.offset(this.split).top + 1;
-                    //const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
-                    const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
-                    this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
-                    this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
-                    this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                    this.split.updatePosition();
                     this.split.dirty = false;
                 }
             };
@@ -321,12 +326,7 @@ export class Display extends EventEmitter {
                         h = this._el.clientHeight - e.pageY + this.split.bar.offsetHeight;
                     h = (h / this._el.clientHeight * 100);
                     this.split.style.height = h + '%';
-                    this.split.top = this.offset(this.split).top + 1;
-                    //const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
-                    const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
-                    this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
-                    this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
-                    this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                    this.split.updatePosition();
                     this._el.removeChild(this.split.ghostBar);
                     delete this.split.ghostBar;
                     this.emit('split-move-done', h);
@@ -905,11 +905,7 @@ export class Display extends EventEmitter {
                         this.split.shown = true;
                         if (this._scrollCorner) this._scrollCorner.classList.add('active');
                         this.emit('scroll-lock', true);
-                        //const t = this._view.clientHeight - this.split.clientHeight + this._os.top - (this._HScroll.visible ? 1 : 0);
-                        const t = this._VScroll.scrollSize + this.split.top - this._padding[0] - this._padding[2] - this._os.top;
-                        this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
-                        this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
-                        this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                        this.split.updatePosition(true);
                     }
                 }
                 this._view.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
@@ -2749,10 +2745,10 @@ export class Display extends EventEmitter {
         this._HScroll.offset = this._VScroll.track.clientWidth;
         this._HScroll.resize();
         this._HScroll.visible = this._HScroll.scrollSize > 0;
-        this._VScroll.offset = this._HScroll.visible ? this._HScroll.track.clientHeight : 0;
+        this._VScroll.offset = this._HScroll.visible ? this._HScroll.track.offsetHeight : 0;
         this._VScroll.resize();
         if (this._VScroll.offset === 0 && this._showSplitButton && this.split && !this._HScroll.visible)
-            this._VScroll.padding = this._HScroll.track.clientHeight || this._VScroll.track.clientWidth;
+            this._VScroll.padding = this._HScroll.track.offsetHeight || this._VScroll.track.offsetWidth;
         else
             this._VScroll.padding = 0;
 
