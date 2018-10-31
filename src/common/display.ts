@@ -235,7 +235,7 @@ export class Display extends EventEmitter {
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
-                    const mw = '' + (this._maxLineLength === 0 ? 0 : Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth));
+                    const mw = '' + (this._maxLineLength === 0 ? 0 : Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size));
                     this.split.view.style.width = this._maxLineLength * this._charWidth + 'px';
                     this.split.background.style.width = this._maxLineLength * this._charWidth + 'px';
                     let l = lines.length;
@@ -276,7 +276,7 @@ export class Display extends EventEmitter {
                 e.cancelBubble = true;
                 this.split.ghostBar = document.createElement('div');
                 this.split.ghostBar.id = id + '-split-ghost-bar';
-                this.split.ghostBar.style.top = (this.offset(this.split).top - 4) + 'px';
+                this.split.ghostBar.style.top = (this.offset(this.split).top - this.split.bar.offsetHeight) + 'px';
                 this.split.ghostBar.style.display = this.splitLive ? 'none' : 'block';
                 this._el.appendChild(this.split.ghostBar);
 
@@ -291,17 +291,17 @@ export class Display extends EventEmitter {
                 if (e.pageY < 20)
                     this.split.ghostBar.style.top = '20px';
                 else if (e.pageY > this._el.clientHeight - 150 - this._HScroll.size)
-                    this.split.ghostBar.style.top = (this._el.clientHeight - 150 - 4 - this._HScroll.size) + 'px';
+                    this.split.ghostBar.style.top = (this._el.clientHeight - 150 - this.split.bar.offsetHeight - this._HScroll.size) + 'px';
                 else
-                    this.split.ghostBar.style.top = (e.pageY - 4) + 'px';
+                    this.split.ghostBar.style.top = (e.pageY - this.split.bar.offsetHeight) + 'px';
                 let h;
                 if (this.splitLive) {
                     if (e.pageY < 20)
-                        h = this._el.clientHeight - 20 + 4; //TODO change the 4 to calculate split bar height
+                        h = this._el.clientHeight - 20 + this.split.bar.offsetHeight;
                     else if (e.pageY > this._el.clientHeight - 150)
                         h = 150;
                     else
-                        h = this._el.clientHeight - e.pageY + 4; //TODO change the 4 to calculate split bar height
+                        h = this._el.clientHeight - e.pageY + this.split.bar.offsetHeight;
 
                     h = (h / this._el.clientHeight * 100);
                     this.split.style.height = h + '%';
@@ -314,11 +314,11 @@ export class Display extends EventEmitter {
                 if (this.split.ghostBar) {
                     let h;
                     if (e.pageY < 20)
-                        h = this._el.clientHeight - 20 + 4 - this._HScroll.size; //TODO change the 4 to calculate split bar height
+                        h = this._el.clientHeight - 20 + this.split.bar.offsetHeight - this._HScroll.size;
                     else if (e.pageY > this._el.clientHeight - 150 - this._HScroll.size)
                         h = 150;
                     else
-                        h = this._el.clientHeight - e.pageY + 4; //TODO change the 4 to calculate split bar height
+                        h = this._el.clientHeight - e.pageY + this.split.bar.offsetHeight;
                     h = (h / this._el.clientHeight * 100);
                     this.split.style.height = h + '%';
                     this.split.top = this.offset(this.split).top + 1;
@@ -1169,7 +1169,7 @@ export class Display extends EventEmitter {
         if (this._hideTrailingEmptyLine && l && this.lines[l - 1].length === 0)
             l--;
         const h = l * this._charHeight;
-        const mw = '' + (w === 0 ? 0 : Math.max(w, this._el.clientWidth));
+        const mw = '' + (w === 0 ? 0 : Math.max(w, this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size));
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
 
@@ -1249,13 +1249,13 @@ export class Display extends EventEmitter {
     }
 
     get WindowWidth(): number {
-        return Math.trunc((this._innerWidth - 12) / parseFloat(window.getComputedStyle(this._character).width)) - 1;
+        return Math.trunc((this._innerWidth - this._VScroll.size - this._padding[1] - this._padding[3]) / parseFloat(window.getComputedStyle(this._character).width)) - 1;
     }
 
     get WindowHeight(): number {
         if (this._HScroll.visible)
-            return Math.trunc((this._innerHeight - 12 - 4) / ($(this._character).innerHeight() + 0.5)) - 1;
-        return Math.trunc((this._innerHeight - 4) / ($(this._character).innerHeight() + 0.5)) - 1;
+            return Math.trunc((this._innerHeight - this._HScroll.size - this._padding[0] - this._padding[2]) / ($(this._character).innerHeight() + 0.5)) - 1;
+        return Math.trunc((this._innerHeight - this._padding[0] - this._padding[2]) / ($(this._character).innerHeight() + 0.5)) - 1;
     }
 
     public click(callback) {
@@ -1619,7 +1619,7 @@ export class Display extends EventEmitter {
             cls = 'overlay-default';
         this._overlays[type] = [];
         const fl = Math.trunc;
-        const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth - (this._roundedRanges ? 14 : 0));
+        const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth - (this._roundedRanges ? (this._padding[1] + this._padding[3] + this._VScroll.size) : 0));
         const len = this.lines.length;
         for (r = 0; r < rl; r++) {
             range = ranges[r];
@@ -1884,7 +1884,7 @@ export class Display extends EventEmitter {
  */
             if (this.lineFormats[sL][this.lineFormats[sL].length - 1].hr) {
                 s = 0;
-                e = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth - (this._roundedRanges ? 14 : 0));
+                e = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth - (this._roundedRanges ? (2 + this._VScroll.size) : 0));
             }
             else {
                 s = Math.min(sel.start.x, sel.end.x);
@@ -1949,7 +1949,7 @@ export class Display extends EventEmitter {
             return;
         }
         const len = this.lines.length;
-        const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth - (this._roundedRanges ? 14 : 0));
+        const mw = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth - (this._roundedRanges ? (this._padding[1] + this._padding[3] + this._VScroll.size) : 0));
 
         if (sL < 0)
             sL = 0;
@@ -2906,7 +2906,7 @@ export class ScrollBar extends EventEmitter {
     private $resizeObserver;
     private $resizeObserverCache;
 
-    get size(): number { return this._visible ? 12 : 0; }
+    get size(): number { return this._visible ? (this._type === ScrollType.horizontal ? this.track.offsetHeight : this.track.offsetWidth) : 0; }
 
     get position(): number { return this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0]); }
 
