@@ -17,7 +17,8 @@
     - Fixed show split button being shown after turning off split scroll
     - Readd -(minus) and _(underscore) as selectable characters for double click and context menu word selection
     - Fixed selection when dragging below display window
-    - Fix split scroll window bottom padding spacing for all themes
+    - Fixed split scroll window bottom padding spacing for all themes
+    - Fixed MXP image align=right
   - ANSI Parser: Always append line fragment when parsing, better fix to the previous missing raw data issue
   - Window size not correctly sent to mud when maximizing window, broken in v0.6.5
 

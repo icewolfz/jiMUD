@@ -246,12 +246,13 @@ export class Display extends EventEmitter {
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
                     const mw = '' + (this._maxLineLength === 0 ? 0 : Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size));
+                    const mv = '' + (this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size);
                     this.split.view.style.width = this._maxLineLength * this._charWidth + 'px';
                     this.split.background.style.width = this._maxLineLength * this._charWidth + 'px';
                     let l = lines.length;
                     while (l--) {
-                        lines[l] = lines[l].replace(/\{max\}/g, mw);
-                        bLines[l] = bLines[l].replace(/\{max\}/g, mw);
+                        lines[l] = lines[l].replace(/\{max\}/g, mw).replace(/\{view\}/g, mv);
+                        bLines[l] = bLines[l].replace(/\{max\}/g, mw).replace(/\{view\}/g, mv);
                     }
                     this.split.overlay.innerHTML = overlays.join('');
                     this.split.view.innerHTML = lines.join('');
@@ -1168,6 +1169,7 @@ export class Display extends EventEmitter {
             l--;
         const h = l * this._charHeight;
         const mw = '' + (w === 0 ? 0 : Math.max(w, this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size));
+        const mv = '' + (this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size);
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
 
@@ -1188,8 +1190,8 @@ export class Display extends EventEmitter {
         const bLines = this._backgroundLines.slice(this._viewRange.start, this._viewRange.end + 1);
         l = lines.length;
         while (l--) {
-            lines[l] = lines[l].replace(/\{max\}/g, mw);
-            bLines[l] = bLines[l].replace(/\{max\}/g, mw);
+            lines[l] = lines[l].replace(/\{max\}/g, mw).replace(/\{view\}/g, mv);
+            bLines[l] = bLines[l].replace(/\{max\}/g, mw).replace(/\{view\}/g, mv);
         }
 
         this._view.innerHTML = lines.join('');
@@ -2267,6 +2269,7 @@ export class Display extends EventEmitter {
         let left = 0;
         let ol;
         const id = this.lineIDs[idx];
+        let right = false;
         for (ol in this._expire) {
             if (!this._expire.hasOwnProperty(ol))
                 continue;
@@ -2447,6 +2450,7 @@ export class Display extends EventEmitter {
                         break;
                     case 'right':
                         tmp.push('float:right;');
+                        right = true;
                         break;
                     case 'top':
                     case 'middle':
@@ -2506,6 +2510,8 @@ export class Display extends EventEmitter {
                 }
             }
         }
+        if (right)
+            return [`<span class="line" data-id="${id}" style="top:${idx * this._charHeight}px;height:${height}px;min-width:{view}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${idx * this._charHeight}px;height:${height}px;min-width:{view}px;">${back.join('')}<br></span>`];
         return [`<span class="line" data-id="${id}" style="top:${idx * this._charHeight}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${idx * this._charHeight}px;height:${height}px;">${back.join('')}<br></span>`];
     }
 
@@ -2525,6 +2531,7 @@ export class Display extends EventEmitter {
         const text = this.displayLines[idx];
         const formats = this.lineFormats[idx];
         const fLen = formats.length;
+        let right = false;
 
         for (let f = 0; f < fLen; f++) {
             const format = formats[f];
@@ -2588,7 +2595,7 @@ export class Display extends EventEmitter {
                     continue;
 
                 if (format.hr)
-                    parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '"><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', format.color, '"></div></span>');
+                    parts.push('<span style="', style.join(''), 'min-width:100%;width:100%;" class="ansi', fCls.join(''), '"><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', format.color, '"></div></span>');
                 else if (end - offset !== 0)
                     parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
             }
@@ -2678,6 +2685,7 @@ export class Display extends EventEmitter {
                         break;
                     case 'right':
                         parts.push('float:right;');
+                        right = true;
                         break;
                     case 'top':
                     case 'middle':
@@ -2703,6 +2711,10 @@ export class Display extends EventEmitter {
                 parts.push(`src="${tmp}"/>`);
             }
         }
+        if (right && len < this.lines[idx].length)
+            return `<span class="line" style="min-width:100%">${parts.join('')}</span>`;
+        if (right)
+            return `<span class="line" style="min-width:100%">${parts.join('')}<br></span>`;
         if (len < this.lines[idx].length)
             return `<span class="line">${parts.join('')}</span>`;
         return `<span class="line">${parts.join('')}<br></span>`;
