@@ -1,68 +1,69 @@
 $images: "./../../assets";
-$borderColor: "#908271";
-$color: "wheat";
+$borderColor: #445942;
+$color: #445942;
+$textColor: #445942;
+$buttonColor: #c3d3b2;
+$buttonBorder: #445942;
+$buttonDisabledBack: #a1b88d;
+$buttonDisabledText: #445942;
+$buttonTextHoverColor: #c3d3b2;
+$buttonHoverColor: #445942;
+$commandBack: #c3d3b2;
+$commandText: #445942;
+$buttonActiveText: #445942;
+$buttonActiveBack: #a1b88d;
+$background: #dad2ba;
+$panelBack: #c3d3b2;
+$panelInsetBack: #a1b88d;
+$panelInsetColor: #445942;
+$panelInsetBorder: #445942;
+$progressText: #445942;
+$progressBack: #a1b88d;
 
 body {
-    background-color: black;
+    background-color: #{$background};
 }
 
 #display {
-    left: 35px;
-    right: 181px;
-    top: 3px;
+    left: 36px;
+    right: 170px;
+    top: 2px;
     bottom: 29px;
-    border: 1px solid #{$borderColor}#{$borderColor};
+    border: 1px solid #{$borderColor};
 }
 
 #display-border {
-    border-image: url(#{$images}/border.png) 0 0 10 0 repeat;
-    border-image-slice: 95 95;
-    border-image-repeat: round;
-    background-color: transparent;
-    border-width: 95px;
-    left: 32px;
-    top: 0px;
-    right: 178px;
-    bottom: 26px;
-    border-style: solid;
+    display: none;
+    right: 168px;
 }
 
 #display-split-bar,
 #display-split-ghost-bar {
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-    background: #33302b;
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
-    border: 1px solid #{$borderColor};
+    background: #{$background};
+    border-top: 1px solid #{$borderColor};
+    border-bottom: 1px solid #{$borderColor};
 }
 
 #command {
-    height: 26px;
-    bottom: 0px;
-    left: 32px;
-    right: 178px;
-    background-color: transparent;
-    background-image: url(#{$images}/input.png);
+    height: 24px;
+    bottom: 2px;
+    left: 36px;
+    right: 170px;
+    background-color: #{$commandBack};
+    border: 1px solid #{$borderColor};
+    color: #{$commandText};
 }
 
 #commandbox {
-    left: 5px;
-    right: 24px;
+    left: 2px;
+    right: 20px;
     height: 18px;
-    bottom: 5px;
+    bottom: 2px;
 }
 
-#commandleft {
-    background-image: url(#{$images}/input.left.png);
-    height: 26px;
-    width: 5px;
-}
-
+#commandleft,
 #commandright {
-    background-image: url(#{$images}/input.right.png);
-    height: 26px;
-    width: 5px;
+    display: none;
 }
 
 #commandinput {
@@ -71,81 +72,88 @@ body {
     margin: 0px;
     border: 0px;
     background-color: transparent;
-    color: #{$color};
+    color: #{$commandText};
     box-sizing: border-box;
     padding: 0;
 }
 
 #buttonbar {
-    top: 0;
-    left: 0;
-    bottom: 0;
+    top: 2px;
+    left: 2px;
+    bottom: 2px;
 }
 
-/* Let's get this party started */
-
 .scroll-track {
-    background-color: #191814;
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    background-color: #{$panelBack};
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    border-top: 1px solid #{$borderColor};
+    border-left: 1px solid #{$borderColor};
 }
 
 .scroll-thumb {
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-    background: #33302b;
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
-    border: 1px solid #{$borderColor};
+    background: #{$buttonColor};
+    border: 1px solid #{$buttonBorder};
 }
 
 .scroll-thumb:hover {
-    background: #988f7f;
+    background: #{$buttonHoverColor};
 }
 
 .scroll-thumb:active {
-    background-color: #544f46;
+    background-color: #{$buttonActiveBack};
 }
 
 .scroll-corner {
-    background-color: black;
-    display: none;
+    background-color: #{$panelBack};
+    display:none;
 }
 
 .scroll-split-button {
     display: block !important;
-    color: wheat;
-    background-color: maroon !important;
-    border: 1px solid #{$borderColor} !important;    
+    color: #{$textColor};
+    background-color: #{$buttonColor} !important;
+    border-top: 1px solid #{$buttonBorder};
+    border-left: 1px solid #{$buttonBorder};
+    border-right: 0;
+    border-bottom: 0; 
 }
 
 .scroll-split-button.active {
-    background-color: #d70000 !important;
-    color: wheat;
+    background-color: #{$buttonHoverColor} !important;
+    color: #{$buttonTextHoverColor};
+    border-top: 1px solid #{$buttonBorder};
+    border-left: 1px solid #{$buttonBorder};
+    border-right: 0;
+    border-bottom: 0;     
 }
 
 .scroll-split-button.active:hover {
-    background-color: #790000 !important;
-    color: wheat;
+    background-color: #{$buttonColor} !important;
+    color: #{$textColor};
 }
 
 .scroll-split-button.active:active {
-    background-color: maroon !important;
-    color: wheat;
+    background-color: #{$buttonColor} !important;
+    color: #{$textColor};
 }
 
 .scroll-split-button:hover {
-    background-color: #d70000 !important;
-    color: wheat;
+    background-color: #{$buttonHoverColor} !important;
+    color: #{$buttonTextHoverColor};
 }
 
 .scroll-split-button:active {
-    background-color: #790000 !important;
-    color: wheat;
+    background-color: #{$buttonActiveBack} !important;
+    color: #{$buttonActiveText};
+}
+
+.scroll-split-button.disabled, .scroll-split-button.disabled:hover, .scroll-split-button.disabled:active {
+    background-color: #{$buttonDisabledBack} !important;
+    color: #{$buttonDisabledText};
 }
 
 .scroll-split-button:focus {
-    color: wheat;
+    color: #{$textColor};
 }
 
 .scroll-horizontal {
@@ -171,56 +179,50 @@ body {
 
 #display::-webkit-scrollbar-track,
 #bars::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    background-color: #{$panelBack};
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-    background-color: #191814;
-    border: 1px solid #494238;
+    border-top: 1px solid #{$borderColor};
+    border-left: 1px solid #{$borderColor};
 }
 
 /* Handle */
 
 #display::-webkit-scrollbar-thumb,
 #bars::-webkit-scrollbar-thumb {
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-    background: #33302b;
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
-    border: 1px solid #{$borderColor};
+    background: #{$buttonColor};
+    border: 1px solid #{$buttonBorder};
 }
 
 #display::-webkit-scrollbar-thumb:hover,
 #bars::-webkit-scrollbar-thumb:hover {
-    background: #988f7f;
+    background: #{$buttonHoverColor};
 }
 
 #display::-webkit-scrollbar-thumb:active,
 #bars::-webkit-scrollbar-thumb:active {
-    background: #544f46;
+    background-color: #{$buttonActiveBack};
 }
 
 #display::-webkit-scrollbar-thumb:window-inactive,
 #bars::-webkit-scrollbar-thumb:window-inactive {
-    background: rgba(51, 48, 43, 0.4);
+    background-color: #{$buttonColor};
 }
 
 #display::-webkit-scrollbar-corner,
 #bars::-webkit-scrollbar-corner {
-    background-color: black;
+    background-color: #{$panelBack};
 }
 
 .find {
     top: 5px;
     right: 20px;
-    color: #BBBBBB;
+    color: #{$textColor};
     padding: 2px;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 1em;
     border-radius: 4px;
     border: 1px solid #{$borderColor};
-    background-color: rgb(40, 0, 0);
+    background-color: #{$buttonColor};
 }
 
 .find input,
@@ -228,7 +230,7 @@ body {
     border: 1px solid #{$borderColor};
     width: 100px;
     background-color: inherit;
-    color: silver;
+    color: inherit;
     padding: 2px 2px;
     height: 16px;
     top: -1px;
@@ -236,9 +238,9 @@ body {
 }
 
 .find input:focus {
-    border: 1px solid maroon;
-    color: #{$color};
-    background: rgba(128, 0, 0, 0.5);
+    border: 1px solid #{$buttonActiveText};
+    color: #{$buttonActiveText};
+    background: #{$buttonActiveBack};
 }
 
 .find button .fa {
@@ -263,26 +265,26 @@ body {
 
 .find button:hover,
 .find button.active:hover {
-    border: 1px solid #{$color};
-    background-color: #d70000;
-    color: #{$color};
+    border: 1px solid #{$borderColor};
+    background-color: #{$buttonHoverColor};
+    color: #{$buttonTextHoverColor};
 }
 
 .find button:active {
-    border: 1px solid #0052A4;
+    border: 1px solid #{$borderColor};
 }
 
 .find button:disabled,
 .find button:disabled:hover {
     border: 1px solid transparent;
-    color: #555;
-    background-color: inherit;
+    color: #{$buttonDisabledText};
+    background-color: #{$buttonDisabledBack};
 }
 
 .find button.active {
-    border: 1px solid maroon;
-    background: rgba(128, 0, 0, 0.5);
-    color: #{$color};
+    border: 1px solid #{$buttonColor};
+    background: #{$buttonActiveBack};
+    color: #{$buttonActiveText};
 }
 
 .find-case {
@@ -308,30 +310,23 @@ body {
     background: rgb(116, 192, 114);
 }
 
+
 /* begin status */
 
 #status {
     width: 164px;
     text-align: center;
-    right: 7px;
-    top: 7px;
-    bottom: 7px;
-    background-color: rgb(40, 0, 0);
+    right: 2px;
+    top: 2px;
+    bottom: 2px;
+    background-color: #{$panelBack};
     border: 1px solid #{$borderColor};
     padding: 2px;
 }
 
 #status-border {
-    right: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 2;
-    width: 178px;
-    border-image: url(#{$images}/border.png) 0 0 10 0 repeat;
-    border-image-slice: 95 95;
-    border-image-repeat: round;
-    border-width: 89px;
-    border-style: solid;
+    width: 168px;
+    display: none;
 }
 
 .day {
@@ -440,12 +435,13 @@ body {
     top: 3px;
     left: 3px;
     right: 3px;
-    background-color: black;
-    border: 1px solid #{$borderColor};
+    background-color: #{$panelInsetBack};
+    border: 1px solid #{$panelInsetBorder};
+    color: #{$panelInsetColor};
 }
 
 #character-name {
-    color: #{$color};
+    color: #{$textColor};
     padding: 0 22px;
     font-size: 1.2em;
 }
@@ -516,7 +512,8 @@ body {
 
 #lefthandweapon {
     top: 85px;
-    background-color: black;
+    background-color: #{$panelBack};
+    color: #{$textColor};
     border: 1px solid #{$borderColor};
     width: 32px;
     height: 32px;
@@ -525,7 +522,8 @@ body {
 
 #righthandweapon {
     top: 85px;
-    background-color: black;
+    background-color: #{$panelBack};
+    color: #{$textColor};
     border: 1px solid #{$borderColor};
     width: 32px;
     height: 32px;
@@ -536,10 +534,10 @@ body {
     top: 3px;
     right: 3px;
     left: 3px;
-    background-color: black;
-    border: 1px solid #{$borderColor};
+    background-color: #{$panelInsetBack};
+    border: 1px solid #{$panelInsetBorder};
     padding: 2px;
-    color: #{$color};
+    color: #{$panelInsetColor};
     text-align: left;
 }
 
@@ -553,7 +551,7 @@ body {
     left: 3px;
     bottom: 3px;
     padding: 2px;
-    color: #{$color};
+    color: #{$textColor};
     text-align: left;
 }
 
@@ -590,14 +588,16 @@ body {
 
 .combat-bar .progressbar .progressbar-text {
     left: 0;
+    color: #{$progressText};
 }
 
 #body {
     top: 3px;
     right: 3px;
     left: 3px;
-    background-color: black;
-    border: 1px solid #{$borderColor};
+    background-color: #{$panelInsetBack};
+    color: #{$panelInsetColor};
+    border: 1px solid #{$panelInsetBorder};
     padding: 2px;
 }
 
@@ -731,7 +731,6 @@ body {
     width: 118px;
     -webkit-border-radius: 6px;
     border-radius: 6px;
-
     /* future proofing */
     background: -webkit-linear-gradient(left, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
     background: linear-gradient(to right, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
@@ -739,7 +738,7 @@ body {
 
 #hp-status {
     text-align: left;
-    color: #{$color};
+    color: #{$panelInsetColor};
 }
 
 .progressbar .progressbar-text {
@@ -747,13 +746,13 @@ body {
     right: 0px;
     text-align: center;
     background-color: transparent;
-    color: black;
+    color: #{$progressText};
 }
 
 .progressbar .progressbar-value {
     height: 100%;
     width: 0%;
-    background-color: #{$color};
+    background-color: #{$progressBack};
 }
 
 #lagMeter {
@@ -764,6 +763,7 @@ body {
 
 #lagMeter.progressbar .progressbar-text {
     left: 0;
+    color: #{$progressText};
 }
 
 #party.hasmembers {
@@ -771,13 +771,15 @@ body {
     padding-bottom: 4px;
 }
 
+
 /** end stats **/
+
 
 /** button stats */
 
 #advedit {
-    top: 5px;
-    right: 6px;
+    top: 3px;
+    right: 3px;
     text-align: center;
     border-radius: 4px;
     border: 0px;
@@ -786,56 +788,68 @@ body {
     width: 16px;
 }
 
+#advedit .fa {
+    margin-top: 1px;
+}
+
 #advedit:hover {
-    background-color: #d70000;
+    background-color: #{$buttonHoverColor};
+    color: #{$buttonTextHoverColor};
 }
 
 #advedit:active {
-    background-color: #790000;
+    background-color: #{$buttonActiveBack};
 }
 
 .button {
-    background-image: url(#{$images}/button.png);
-    color: #{$color};
-    background-color: maroon;
+    color: #{$textColor};
+    background-color: #{$buttonColor};
+    border: 1px solid #{$buttonBorder};
+    margin-bottom: 2px;
 }
 
 .button svg {
-    fill: #{$color};
+    fill: #{$textColor};
+}
+
+.button:hover svg {
+    fill: #{$buttonTextHoverColor};
+}
+
+.button img,
+.button-icon {
+    margin-top: 5px;
+    margin-left: 5px;
 }
 
 .button.on {
-    background-color: #d70000;
-    color: #{$color};
+    background-color: #{$buttonHoverColor};
+    color: #{$buttonTextHoverColor};
 }
 
 .button.on:hover {
-    background-color: #790000;
-    color: #{$color};
+    background-color: #{$buttonActiveBack};
+    color: #{$buttonActiveText};
 }
 
 .button.on:active {
-    background-color: maroon;
-    color: #{$color};
+    background-color: #{$buttonColor};
+    color: #{$textColor};
 }
 
 .button:hover {
-    background-color: #d70000;
-    color: #{$color};
+    background-color: #{$buttonHoverColor};
+    color: #{$buttonTextHoverColor};
 }
 
 .button:active {
-    background-color: #790000;
-    color: #{$color};
+    background-color: #{$buttonActiveBack};
+    color: #{$buttonActiveText};
 }
 
 .button:focus {
-    color: #{$color};
+    color: #{$textColor};
 }
 
-.button-sm {
-    background-image: none;
-    border: 1px solid #{$color};
-}
 
 /** button end */
