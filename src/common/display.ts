@@ -211,7 +211,7 @@ export class Display extends EventEmitter {
                 this.split.style.height = this._splitHeight + '%';
             this.split.updatePosition = () => {
                 //if (!skipTop)
-                    //this.split.top = this.offset(this.split).top + 1;
+                //this.split.top = this.offset(this.split).top + 1;
                 //if (this._os.top % 2 !== 0)
                 //this.split.top--;
                 const t = this._view.clientHeight - this.split.clientHeight + this._padding[2];
@@ -2279,7 +2279,6 @@ export class Display extends EventEmitter {
             const format = formats[f];
             let nFormat;
             let end;
-            const td = [];
             let eText;
             if (f < len - 1) {
                 nFormat = formats[f + 1];
@@ -2322,27 +2321,23 @@ export class Display extends EventEmitter {
 
                     if (format.style !== FontStyle.None) {
                         if ((format.style & FontStyle.Bold) === FontStyle.Bold)
-                            fStyle.push('font-weight: bold;');
+                            fCls.push(' b');
                         if ((format.style & FontStyle.Italic) === FontStyle.Italic)
-                            fStyle.push('font-style: italic;');
+                            fCls.push(' i');
                         if ((format.style & FontStyle.Overline) === FontStyle.Overline)
-                            td.push('overline ');
+                            fCls.push(' o');
                         if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) === FontStyle.Underline)
-                            td.push('underline ');
+                            fCls.push(' u');
                         if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
-                            fStyle.push('border-bottom: 1px solid ', format.color, ';');
-                        else
-                            fStyle.push('padding-bottom: 1px;');
+                            fCls.push(' du');
                         if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
                             if (this.enableFlashing)
-                                fCls.push(' ansi-blink');
+                                fCls.format.style(' ansi-blink');
                             else if ((format.style & FontStyle.DoubleUnderline) !== FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) !== FontStyle.Underline)
-                                td.push('underline ');
+                                fCls.push(' u');
                         }
                         if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
-                            td.push('line-through ');
-                        if (td.length > 0)
-                            fStyle.push('text-decoration:', td.join('').trim(), ';');
+                            fCls.push(' s');
                     }
                     format.bStyle = (bStyle = bStyle.join(''));
                     format.fStyle = (fStyle = fStyle.join(''));
@@ -2865,9 +2860,7 @@ export class Display extends EventEmitter {
         while (this._el.firstChild)
             this._el.removeChild(this._el.firstChild);
         window.removeEventListener('mousemove', this._wMove);
-
         window.removeEventListener('mouseup', this._wUp);
-
         window.removeEventListener('resize', this._wResize);
     }
 }
