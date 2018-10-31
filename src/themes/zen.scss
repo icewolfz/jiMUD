@@ -1,0 +1,855 @@
+$images: "./../../assets";
+$borderColor: #445942;
+$color: #445942;
+$textColor: #445942;
+$buttonColor: #c3d3b2;
+$buttonBorder: #445942;
+$buttonDisabledBack: #a1b88d;
+$buttonDisabledText: #445942;
+$buttonTextHoverColor: #c3d3b2;
+$buttonHoverColor: #445942;
+$commandBack: #c3d3b2;
+$commandText: #445942;
+$buttonActiveText: #445942;
+$buttonActiveBack: #a1b88d;
+$background: #dad2ba;
+$panelBack: #c3d3b2;
+$panelInsetBack: #a1b88d;
+$panelInsetColor: #445942;
+$panelInsetBorder: #445942;
+$progressText: #445942;
+$progressBack: #a1b88d;
+
+body {
+    background-color: #{$background};
+}
+
+#display {
+    left: 36px;
+    right: 170px;
+    top: 2px;
+    bottom: 29px;
+    border: 1px solid #{$borderColor};
+}
+
+#display-border {
+    display: none;
+    right: 168px;
+}
+
+#display-split-bar,
+#display-split-ghost-bar {
+    background: #{$background};
+    border-top: 1px solid #{$borderColor};
+    border-bottom: 1px solid #{$borderColor};
+}
+
+#command {
+    height: 24px;
+    bottom: 2px;
+    left: 36px;
+    right: 170px;
+    background-color: #{$commandBack};
+    border: 1px solid #{$borderColor};
+    color: #{$commandText};
+}
+
+#commandbox {
+    left: 2px;
+    right: 20px;
+    height: 18px;
+    bottom: 2px;
+}
+
+#commandleft,
+#commandright {
+    display: none;
+}
+
+#commandinput {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    border: 0px;
+    background-color: transparent;
+    color: #{$commandText};
+    box-sizing: border-box;
+    padding: 0;
+}
+
+#buttonbar {
+    top: 2px;
+    left: 2px;
+    bottom: 2px;
+}
+
+.scroll-track {
+    background-color: #{$panelBack};
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    border-top: 1px solid #{$borderColor};
+    border-left: 1px solid #{$borderColor};
+}
+
+.scroll-thumb {
+    background: #{$buttonColor};
+    border: 1px solid #{$buttonBorder};
+}
+
+.scroll-thumb:hover {
+    background: #{$buttonHoverColor};
+}
+
+.scroll-thumb:active {
+    background-color: #{$buttonActiveBack};
+}
+
+.scroll-corner {
+    background-color: #{$panelBack};
+    display:none;
+}
+
+.scroll-split-button {
+    display: block !important;
+    color: #{$textColor};
+    background-color: #{$buttonColor} !important;
+    border-top: 1px solid #{$buttonBorder};
+    border-left: 1px solid #{$buttonBorder};
+    border-right: 0;
+    border-bottom: 0; 
+}
+
+.scroll-split-button.active {
+    background-color: #{$buttonHoverColor} !important;
+    color: #{$buttonTextHoverColor};
+    border-top: 1px solid #{$buttonBorder};
+    border-left: 1px solid #{$buttonBorder};
+    border-right: 0;
+    border-bottom: 0;     
+}
+
+.scroll-split-button.active:hover {
+    background-color: #{$buttonColor} !important;
+    color: #{$textColor};
+}
+
+.scroll-split-button.active:active {
+    background-color: #{$buttonColor} !important;
+    color: #{$textColor};
+}
+
+.scroll-split-button:hover {
+    background-color: #{$buttonHoverColor} !important;
+    color: #{$buttonTextHoverColor};
+}
+
+.scroll-split-button:active {
+    background-color: #{$buttonActiveBack} !important;
+    color: #{$buttonActiveText};
+}
+
+.scroll-split-button.disabled, .scroll-split-button.disabled:hover, .scroll-split-button.disabled:active {
+    background-color: #{$buttonDisabledBack} !important;
+    color: #{$buttonDisabledText};
+}
+
+.scroll-split-button:focus {
+    color: #{$textColor};
+}
+
+.scroll-horizontal {
+    border-top: 1px solid #494238;
+}
+
+.scroll-vertical {
+    border-left: 1px solid #494238;
+}
+
+.scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
+    background: rgba(51, 48, 43, 0.4);
+    border: 0px;
+}
+
+#display::-webkit-scrollbar,
+#bars::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+/* Track */
+
+#display::-webkit-scrollbar-track,
+#bars::-webkit-scrollbar-track {
+    background-color: #{$panelBack};
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    border-top: 1px solid #{$borderColor};
+    border-left: 1px solid #{$borderColor};
+}
+
+/* Handle */
+
+#display::-webkit-scrollbar-thumb,
+#bars::-webkit-scrollbar-thumb {
+    background: #{$buttonColor};
+    border: 1px solid #{$buttonBorder};
+}
+
+#display::-webkit-scrollbar-thumb:hover,
+#bars::-webkit-scrollbar-thumb:hover {
+    background: #{$buttonHoverColor};
+}
+
+#display::-webkit-scrollbar-thumb:active,
+#bars::-webkit-scrollbar-thumb:active {
+    background-color: #{$buttonActiveBack};
+}
+
+#display::-webkit-scrollbar-thumb:window-inactive,
+#bars::-webkit-scrollbar-thumb:window-inactive {
+    background-color: #{$buttonColor};
+}
+
+#display::-webkit-scrollbar-corner,
+#bars::-webkit-scrollbar-corner {
+    background-color: #{$panelBack};
+}
+
+.find {
+    top: 5px;
+    right: 20px;
+    color: #{$textColor};
+    padding: 2px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1em;
+    border-radius: 4px;
+    border: 1px solid #{$borderColor};
+    background-color: #{$buttonColor};
+}
+
+.find input,
+.find input:focus {
+    border: 1px solid #{$borderColor};
+    width: 100px;
+    background-color: inherit;
+    color: inherit;
+    padding: 2px 2px;
+    height: 16px;
+    top: -1px;
+    border-radius: 2px;
+}
+
+.find input:focus {
+    border: 1px solid #{$buttonActiveText};
+    color: #{$buttonActiveText};
+    background: #{$buttonActiveBack};
+}
+
+.find button .fa {
+    margin-top: 3px;
+}
+
+.find button {
+    width: 22px;
+    height: 22px;
+    border: 1px solid transparent;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+    vertical-align: top;
+    line-height: 16px;
+    color: inherit;
+    background-color: inherit;
+    padding: 0px;
+    margin-left: 2px;
+    margin-right: 2px;
+    border-radius: 2px;
+}
+
+.find button:hover,
+.find button.active:hover {
+    border: 1px solid #{$borderColor};
+    background-color: #{$buttonHoverColor};
+    color: #{$buttonTextHoverColor};
+}
+
+.find button:active {
+    border: 1px solid #{$borderColor};
+}
+
+.find button:disabled,
+.find button:disabled:hover {
+    border: 1px solid transparent;
+    color: #{$buttonDisabledText};
+    background-color: #{$buttonDisabledBack};
+}
+
+.find button.active {
+    border: 1px solid #{$buttonColor};
+    background: #{$buttonActiveBack};
+    color: #{$buttonActiveText};
+}
+
+.find-case {
+    font-size: 10px;
+}
+
+.find-word {
+    text-decoration: overline underline;
+    font-size: 10px;
+}
+
+.find-highlight {
+    border-radius: 4px;
+    background: rgb(171, 102, 31);
+}
+
+.find-no-results {
+    color: #F08080;
+}
+
+.find-highlight.current {
+    border-radius: 4px;
+    background: rgb(116, 192, 114);
+}
+
+
+/* begin status */
+
+#status {
+    width: 164px;
+    text-align: center;
+    right: 2px;
+    top: 2px;
+    bottom: 2px;
+    background-color: #{$panelBack};
+    border: 1px solid #{$borderColor};
+    padding: 2px;
+}
+
+#status-border {
+    width: 168px;
+    display: none;
+}
+
+.day {
+    background-image: url("#{$images}/status/daybg.png");
+}
+
+.day #environmentcenter {
+    background-image: url("#{$images}/status/sun.png");
+}
+
+.night {
+    background-image: url("#{$images}/status/nightbg.png");
+}
+
+.twilight {
+    background-image: url("#{$images}/status/sunsetbg.png");
+}
+
+.dawn {
+    background-image: url("#{$images}/status/sunrisebg.png");
+}
+
+.twilight #environmentcenter,
+.dawn #environmentcenter {
+    background-image: url("#{$images}/status/sunset.png");
+}
+
+.moon1-full #environmentleft {
+    background-image: url("#{$images}/status/redmoonfull.png");
+}
+
+.moon1-waning #environmentleft {
+    background-image: url("#{$images}/status/redmoonwaning.png");
+}
+
+.moon1-waxing #environmentleft {
+    background-image: url("#{$images}/status/redmoonwaxing.png");
+}
+
+.moon2-full #environmentcenter {
+    background-image: url("#{$images}/status/bluemoonfull.png");
+}
+
+.moon2-waning #environmentcenter {
+    background-image: url("#{$images}/status/bluemoonwaning.png");
+}
+
+.moon2-waxing #environmentcenter {
+    background-image: url("#{$images}/status/bluemoonwaxing.png");
+}
+
+.moon3-full #environmentright {
+    background-image: url("#{$images}/status/greenmoonfull.png");
+}
+
+.moon3-waning #environmentright {
+    background-image: url("#{$images}/status/greenmoonwaning.png");
+}
+
+.moon3-waxing #environmentright {
+    background-image: url("#{$images}/status/greenmoonwaxing.png");
+}
+
+.weather-snow #environmentweather {
+    background-image: url("#{$images}/status/weathersnow.png");
+}
+
+.weather-snow.intensity-hard #environmentweather {
+    background-image: url("#{$images}/status/weathersnowhard.png");
+}
+
+.weather-hail #environmentweather {
+    background-image: url("#{$images}/status/weatherhail.png");
+}
+
+.weather-hail.intensity-hard #environmentweather {
+    background-image: url("#{$images}/status/weatherhailhard.png");
+}
+
+.weather-rain #environmentweather {
+    background-image: url("#{$images}/status/weatherrain.png");
+}
+
+.weather-rain.intensity-hard #environmentweather {
+    background-image: url("#{$images}/status/weatherrainhard.png");
+}
+
+.weather-sand #environmentweather {
+    background-image: url("#{$images}/status/weathersand.png");
+}
+
+.weather-sand.intensity-hard #environmentweather {
+    background-image: url("#{$images}/status/weathersandhard.png");
+}
+
+.weather-sleet #environmentweather {
+    background-image: url("#{$images}/status/weathersleet.png");
+}
+
+.weather-sleet.intensity-hard #environmentweather {
+    background-image: url("#{$images}/status/weathersleethard.png");
+}
+
+#environment {
+    height: 50px;
+    top: 3px;
+    left: 3px;
+    right: 3px;
+    background-color: #{$panelInsetBack};
+    border: 1px solid #{$panelInsetBorder};
+    color: #{$panelInsetColor};
+}
+
+#character-name {
+    color: #{$textColor};
+    padding: 0 22px;
+    font-size: 1.2em;
+}
+
+#character-name::first-letter {
+    text-transform: uppercase;
+}
+
+.weapon-dominant {
+    border-color: red !important;
+}
+
+.weapon-large-sword {
+    background-image: url(#{$images}/status/icon_sword_long2.png);
+}
+
+.weapon-shield {
+    background-image: url(#{$images}/status/icon_shield.png);
+}
+
+.weapon-melee {
+    background-image: url(#{$images}/status/icon_melee.png);
+}
+
+.weapon-miscellaneous {
+    background-image: url(#{$images}/status/icon_misc.png);
+}
+
+.weapon-polearm {
+    background-image: url(#{$images}/status/icon_halberd2.png);
+}
+
+.weapon-small-sword {
+    background-image: url(#{$images}/status/icon_sword_short3.png);
+}
+
+.weapon-spear {
+    background-image: url(#{$images}/status/icon_spear2.png);
+}
+
+.weapon-axe {
+    background-image: url(#{$images}/status/icon_axe1.png);
+}
+
+.weapon-blunt {
+    background-image: url(#{$images}/status/icon_bigclub1.png);
+}
+
+.weapon-knife {
+    background-image: url(#{$images}/status/icon_dagger1.png);
+}
+
+.weapon-bow {
+    background-image: url(#{$images}/status/icon_Bow3.png);
+}
+
+.weapon-crossbow {
+    background-image: url(#{$images}/status/icon_XBow2.png);
+}
+
+.weapon-flail {
+    background-image: url(#{$images}/status/icon_bullwhip.png);
+}
+
+.weapon-staff {
+    background-image: url(#{$images}/status/icon_staff2.png);
+}
+
+#lefthandweapon {
+    top: 85px;
+    background-color: #{$panelBack};
+    color: #{$textColor};
+    border: 1px solid #{$borderColor};
+    width: 32px;
+    height: 32px;
+    left: 5px;
+}
+
+#righthandweapon {
+    top: 85px;
+    background-color: #{$panelBack};
+    color: #{$textColor};
+    border: 1px solid #{$borderColor};
+    width: 32px;
+    height: 32px;
+    right: 5px;
+}
+
+#experience {
+    top: 3px;
+    right: 3px;
+    left: 3px;
+    background-color: #{$panelInsetBack};
+    border: 1px solid #{$panelInsetBorder};
+    padding: 2px;
+    color: #{$panelInsetColor};
+    text-align: left;
+}
+
+#experience div span:nth-child(2) {
+    padding-right: 2px;
+}
+
+#bars {
+    top: 3px;
+    right: 3px;
+    left: 3px;
+    bottom: 3px;
+    padding: 2px;
+    color: #{$textColor};
+    text-align: left;
+}
+
+.combat-bar {
+    height: 34px;
+    width: 100%;
+    margin-bottom: 2px;
+}
+
+.combat-name {
+    right: 1px;
+    left: 38px;
+    font-size: 0.75em;
+}
+
+.combat-name:first-letter {
+    text-transform: capitalize;
+}
+
+.combat-icon {
+    height: 32px;
+    width: 32px;
+    float: left;
+    background-color: black;
+    border: 1px solid #{$borderColor};
+}
+
+.combat-bar .progressbar {
+    right: 1px;
+    left: 38px;
+    font-size: 0.75em;
+    bottom: 2px;
+}
+
+.combat-bar .progressbar .progressbar-text {
+    left: 0;
+    color: #{$progressText};
+}
+
+#body {
+    top: 3px;
+    right: 3px;
+    left: 3px;
+    background-color: #{$panelInsetBack};
+    color: #{$panelInsetColor};
+    border: 1px solid #{$panelInsetBorder};
+    padding: 2px;
+}
+
+#health {
+    left: 2px;
+}
+
+#armor {
+    right: 2px;
+}
+
+.health-100 {
+    fill: rgb(255, 0, 0);
+    color: rgb(255, 0, 0);
+    stroke: rgb(255, 0, 0);
+}
+
+.health-80-99 {
+    fill: rgb(252, 71, 29);
+    color: rgb(252, 71, 29);
+    stroke: rgb(252, 71, 29);
+}
+
+.health-60-79 {
+    fill: rgb(252, 165, 40);
+    color: rgb(252, 165, 40);
+    stroke: rgb(252, 165, 40);
+}
+
+.health-40-59 {
+    fill: rgb(251, 217, 48);
+    color: rgb(251, 217, 48);
+    stroke: rgb(251, 217, 48);
+}
+
+.health-20-39 {
+    fill: rgb(251, 255, 55);
+    color: rgb(251, 255, 55);
+    stroke: rgb(251, 255, 55);
+}
+
+.health-1-19 {
+    fill: rgb(167, 255, 69);
+    color: rgb(167, 255, 69);
+    stroke: rgb(167, 255, 69);
+}
+
+.health-full {
+    fill: rgb(0, 255, 31);
+    color: rgb(0, 255, 31);
+    stroke: rgb(0, 255, 31);
+}
+
+.armor-unarmored {
+    fill: rgb(128, 0, 0);
+    color: rgb(128, 0, 0);
+    stroke: rgb(128, 0, 0);
+}
+
+.armor-barely {
+    fill: rgb(255, 0, 0);
+    color: rgb(255, 0, 0);
+    stroke: rgb(255, 0, 0);
+}
+
+.armor-slightly {
+    fill: rgb(128, 128, 0);
+    color: rgb(128, 128, 0);
+    stroke: rgb(128, 128, 0);
+}
+
+.armor-somewhat {
+    fill: rgb(255, 255, 0);
+    color: rgb(255, 255, 0);
+    stroke: rgb(255, 255, 0);
+}
+
+.armor-moderately {
+    fill: rgb(0, 128, 128);
+    color: rgb(0, 128, 128);
+    stroke: rgb(0, 128, 128);
+}
+
+.armor-fairly {
+    fill: rgb(0, 255, 255);
+    color: rgb(0, 255, 255);
+    stroke: rgb(0, 255, 255);
+}
+
+.armor-adequately {
+    fill: rgb(0, 128, 0);
+    color: rgb(0, 128, 0);
+    stroke: rgb(0, 128, 0);
+}
+
+.armor-well {
+    fill: rgb(0, 255, 0);
+    color: rgb(0, 255, 0);
+    stroke: rgb(0, 255, 0);
+}
+
+.armor-considerably {
+    fill: rgb(0, 0, 128);
+    color: rgb(0, 0, 128);
+    stroke: rgb(0, 0, 128);
+}
+
+.armor-significantly {
+    fill: rgb(0, 0, 255);
+    color: rgb(0, 0, 255);
+    stroke: rgb(0, 0, 255);
+}
+
+.armor-completely {
+    fill: rgb(128, 128, 110);
+    color: rgb(128, 128, 110);
+    stroke: rgb(128, 128, 110);
+}
+
+.armor-extensively {
+    fill: rgb(255, 255, 255);
+    color: rgb(255, 255, 255);
+    stroke: rgb(255, 255, 255);
+}
+
+.progressbar {
+    height: 13px;
+    font-size: 0.75em;
+    border: 1px solid #{$borderColor};
+    height: 13px;
+    width: 118px;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    /* future proofing */
+    background: -webkit-linear-gradient(left, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
+    background: linear-gradient(to right, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
+}
+
+#hp-status {
+    text-align: left;
+    color: #{$panelInsetColor};
+}
+
+.progressbar .progressbar-text {
+    left: 20px;
+    right: 0px;
+    text-align: center;
+    background-color: transparent;
+    color: #{$progressText};
+}
+
+.progressbar .progressbar-value {
+    height: 100%;
+    width: 0%;
+    background-color: #{$progressBack};
+}
+
+#lagMeter {
+    bottom: 3px;
+    right: 3px;
+    left: 3px;
+}
+
+#lagMeter.progressbar .progressbar-text {
+    left: 0;
+    color: #{$progressText};
+}
+
+#party.hasmembers {
+    border-bottom: 1px solid #{$borderColor};
+    padding-bottom: 4px;
+}
+
+
+/** end stats **/
+
+
+/** button stats */
+
+#advedit {
+    top: 3px;
+    right: 3px;
+    text-align: center;
+    border-radius: 4px;
+    border: 0px;
+    background-color: transparent;
+    height: 16px;
+    width: 16px;
+}
+
+#advedit .fa {
+    margin-top: 1px;
+}
+
+#advedit:hover {
+    background-color: #{$buttonHoverColor};
+    color: #{$buttonTextHoverColor};
+}
+
+#advedit:active {
+    background-color: #{$buttonActiveBack};
+}
+
+.button {
+    color: #{$textColor};
+    background-color: #{$buttonColor};
+    border: 1px solid #{$buttonBorder};
+    margin-bottom: 2px;
+}
+
+.button svg {
+    fill: #{$textColor};
+}
+
+.button:hover svg {
+    fill: #{$buttonTextHoverColor};
+}
+
+.button img,
+.button-icon {
+    margin-top: 5px;
+    margin-left: 5px;
+}
+
+.button.on {
+    background-color: #{$buttonHoverColor};
+    color: #{$buttonTextHoverColor};
+}
+
+.button.on:hover {
+    background-color: #{$buttonActiveBack};
+    color: #{$buttonActiveText};
+}
+
+.button.on:active {
+    background-color: #{$buttonColor};
+    color: #{$textColor};
+}
+
+.button:hover {
+    background-color: #{$buttonHoverColor};
+    color: #{$buttonTextHoverColor};
+}
+
+.button:active {
+    background-color: #{$buttonActiveBack};
+    color: #{$buttonActiveText};
+}
+
+.button:focus {
+    color: #{$textColor};
+}
+
+
+/** button end */

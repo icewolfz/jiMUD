@@ -4,6 +4,7 @@
 
 - **New:**
   - Added [Hide trailing line](docs/preferences.md#display) display preference to hide trailing empty line.
+  - Added new Zen theme
 - **Changed:**
   - Remove clean and default scroll track rounded corns to properly hide background text
 - **Fixed:**
