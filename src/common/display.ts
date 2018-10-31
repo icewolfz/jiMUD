@@ -674,8 +674,13 @@ export class Display extends EventEmitter {
                         x = this._charWidth;
                         this._currentSelection.end.x++;
                     }
-                    else
+                    else if (x > 0 && this._currentSelection.end.y >= this.lines.length) {
+                        this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
+                    }
+                    else {
                         x = 0;
+                        this._currentSelection.end.x = 0;
+                    }
 
                     if (x === 0 && y === 0)
                         return;

@@ -16,6 +16,7 @@
     - Fixed vertical scroll bar when split button shown
     - Fixed show split button being shown after turning off split scroll
     - Readd - and _ as selectable characters for double click and context menu word selection
+    - Fixed selection when dragging below display window
   - ANSI Parser: Always append line fragment when parsing, better fix to the previous missing raw data issue
   - Window size not correctly sent to mud when maximizing window, broken in v0.6.5
 
