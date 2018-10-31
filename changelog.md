@@ -6,6 +6,7 @@
   - Added [Hide trailing line](docs/preferences.md#display) display preference to hide trailing empty line.
 - **Fixed:**
   - Display:
+    - Detect changes to display better to handle theme changes
     - Calculate split bar movement using current split bar height
     - Use current scrollbar height/widths instead of fixed #s to allow for better theme support
     - Correctly factor in current theme display padding into available character width and height

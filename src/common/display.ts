@@ -833,10 +833,8 @@ export class Display extends EventEmitter {
             let mutation;
             for (mutation of mutationsList) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                    if (mutation.oldValue === 'display: none;') {
-                        if (this.split) this.split.dirty = true;
-                        this.doUpdate(UpdateType.update | UpdateType.view);
-                    }
+                    if (this.split) this.split.dirty = true;
+                    this.doUpdate(UpdateType.scrollbars | UpdateType.update | UpdateType.view);
                 }
             }
         });
@@ -1119,6 +1117,8 @@ export class Display extends EventEmitter {
         if (!size || size.length === 0)
             size = '1em';
         if (font !== this._el.style.fontFamily || size !== this._el.style.fontSize) {
+            //turn off observer as we are changing styles
+            this.$observer.disconnect();
             //set styles using raw javascript for minor speed
             this._el.style.fontSize = size;
             this._el.style.fontFamily = font;
@@ -1145,6 +1145,8 @@ export class Display extends EventEmitter {
             //update view to display any line height changes
             this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollView | UpdateType.overlays);
             this.updateWindow();
+            //re-enable in case something outside of font change triggers a change
+            this.$observer.observe(this._el, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
         }
         const pc = window.getComputedStyle(this._el);
         const padding = [
@@ -1159,7 +1161,7 @@ export class Display extends EventEmitter {
             padding[3] !== this._padding[3]
         ) {
             this._padding = padding;
-            this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update);
+            this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollbars);
         }
     }
 
@@ -2237,6 +2239,20 @@ export class Display extends EventEmitter {
         const t = window.getComputedStyle(this._el);
         this._borderSize.height = parseInt(t.borderTopWidth) || 0;
         this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
+        const padding = [
+            parseInt(t.getPropertyValue('padding-top')) || 0,
+            parseInt(t.getPropertyValue('padding-right')) || 0,
+            parseInt(t.getPropertyValue('padding-bottom')) || 0,
+            parseInt(t.getPropertyValue('padding-left')) || 0
+        ];
+        if (padding[0] !== this._padding[0] ||
+            padding[1] !== this._padding[1] ||
+            padding[2] !== this._padding[2] ||
+            padding[3] !== this._padding[3]
+        ) {
+            this._padding = padding;
+            this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.scrollbars);
+        }
     }
 
     private buildLineDisplay(idx?: number) {
