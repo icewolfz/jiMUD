@@ -13,18 +13,19 @@
   - Added [Hide trailing line](docs/preferences.md#display) display preference to hide trailing empty line.
   - Added new Zen theme
 - **Changed:**
-  - Remove clean and default scroll track rounded corns to properly hide background text
+  - Remove clean and default scroll track rounded corners to properly hide background text
 - **Fixed:**
   - Display:
     - Detect changes to display better to handle theme changes
     - Calculate split bar movement using current split bar height
-    - Use current scrollbar height/widths instead of fixed #s to allow for better theme support
+    - Use current scroll bar height/widths instead of fixed #s to allow for better theme support
     - Correctly factor in current theme display padding into available character width and height
     - Fixed vertical scroll bar when split button shown
     - Fixed show split button being shown after turning off split scroll
-    - Readd - and _ as selectable characters for double click and context menu word selection
+    - Readd -(minus) and _(underscore) as selectable characters for double click and context menu word selection
     - Fixed selection when dragging below display window
-    - Fix split scroll window bottom padding spacing for all themes
+    - Fixed split scroll window bottom padding spacing for all themes
+    - Fixed MXP image align=right
   - ANSI Parser: Always append line fragment when parsing, better fix to the previous missing raw data issue
   - Window size not correctly sent to mud when maximizing window, broken in v0.6.5
 

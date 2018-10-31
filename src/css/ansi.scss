@@ -4,9 +4,11 @@
     0% {
         opacity: 1.0;
     }
+
     50% {
         opacity: 0.0;
     }
+
     100% {
         opacity: 1.0;
     }
@@ -16,9 +18,11 @@
     0% {
         opacity: 1.0;
     }
+
     50% {
         opacity: 0.0;
     }
+
     100% {
         opacity: 1.0;
     }
@@ -28,11 +32,11 @@
     text-decoration: blink;
     animation-name: blinker;
     animation-iteration-count: infinite;
-    animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
+    animation-timing-function: cubic-bezier(1, 0, 0, 1);
     animation-duration: 1s;
     -webkit-animation-name: blinker;
     -webkit-animation-iteration-count: infinite;
-    -webkit-animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
+    -webkit-animation-timing-function: cubic-bezier(1, 0, 0, 1);
     -webkit-animation-duration: 1s;
 }
 
@@ -45,6 +49,7 @@
     margin: 0px;
     display: inline-block;
     padding-top: 1px;
+    padding-bottom: 1px;
 }
 
 .line, .background-line {
@@ -60,11 +65,11 @@
 }
 
 .ansi .hr {
-    position:relative;
+    position: relative;
     top: 50%;
     transform: translateY(-50%);
-    height:4px;
-    width:100%;    
+    height: 4px;
+    width: 100%;
 }
 
 .line hr {
@@ -75,6 +80,71 @@
     overflow: hidden;
 }
 
+.line .b {
+    font-weight: bold;
+}
+
+.line .i {
+    font-style: italic;
+}
+
+.line .o {
+    text-decoration: overline;
+}
+
+.line .u {
+    text-decoration: underline;
+}
+
+.line .du {
+    text-decoration: underline;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 0px;
+}
+
+.line .s {
+    text-decoration: line-through;
+}
+
+.line .o.du {
+    text-decoration: underline overline;
+}
+
+.line .u.o {
+    text-decoration: underline overline;
+}
+
+.line .o.s {
+    text-decoration: overline line-through;
+}
+
+.line .du.s {
+    text-decoration: underline line-through;
+}
+
+.line .s.u {
+    text-decoration: underline line-through;
+}
+
+.line .du.u.o {
+    text-decoration: underline overline;
+}
+
+.line .du.s.u {
+    text-decoration: underline line-through;
+}
+
+.line .du.o.s {
+    text-decoration: underline overline line-through;
+}
+
+.line .u.s.o {
+    text-decoration: underline overline line-through;
+}
+
+.line .du.o.s.u {
+    text-decoration: underline overline line-through;
+}
 
 /* --- End CSS for ansi display --- */
 

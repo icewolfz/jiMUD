@@ -210,7 +210,7 @@ export class Display extends EventEmitter {
                 this.split.style.height = this._splitHeight + '%';
             this.split.updatePosition = () => {
                 //if (!skipTop)
-                    //this.split.top = this.offset(this.split).top + 1;
+                //this.split.top = this.offset(this.split).top + 1;
                 //if (this._os.top % 2 !== 0)
                 //this.split.top--;
                 const t = this._view.clientHeight - this.split.clientHeight + this._padding[2];
@@ -2424,7 +2424,6 @@ export class Display extends EventEmitter {
             const format = formats[f];
             let nFormat;
             let end;
-            const td = [];
             let eText;
             if (f < len - 1) {
                 nFormat = formats[f + 1];
@@ -2464,27 +2463,23 @@ export class Display extends EventEmitter {
 
                     if (format.style !== FontStyle.None) {
                         if ((format.style & FontStyle.Bold) === FontStyle.Bold)
-                            fStyle.push('font-weight: bold;');
+                            fCls.push(' b');
                         if ((format.style & FontStyle.Italic) === FontStyle.Italic)
-                            fStyle.push('font-style: italic;');
+                            fCls.push(' i');
                         if ((format.style & FontStyle.Overline) === FontStyle.Overline)
-                            td.push('overline ');
+                            fCls.push(' o');
                         if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) === FontStyle.Underline)
-                            td.push('underline ');
+                            fCls.push(' u');
                         if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
-                            fStyle.push('border-bottom: 1px solid ', format.color, ';');
-                        else
-                            fStyle.push('padding-bottom: 1px;');
+                            fCls.push(' du');
                         if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
                             if (this.enableFlashing)
-                                fCls.push(' ansi-blink');
+                                fCls.format.style(' ansi-blink');
                             else if ((format.style & FontStyle.DoubleUnderline) !== FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) !== FontStyle.Underline)
-                                td.push('underline ');
+                                fCls.push(' u');
                         }
                         if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
-                            td.push('line-through ');
-                        if (td.length > 0)
-                            fStyle.push('text-decoration:', td.join(''), ';');
+                            fCls.push(' s');
                     }
                     format.bStyle = (bStyle = bStyle.join(''));
                     format.fStyle = (fStyle = fStyle.join(''));
@@ -2681,6 +2676,7 @@ export class Display extends EventEmitter {
         const text = this.displayLines[idx];
         const formats = this.lineFormats[idx];
         const fLen = formats.length;
+        let right = false;
 
         for (let f = 0; f < fLen; f++) {
             const format = formats[f];
@@ -2738,13 +2734,13 @@ export class Display extends EventEmitter {
                     if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
                         td.push('line-through ');
                     if (td.length > 0)
-                        style.push('text-decoration:', td.join(''), ';');
+                        style.push('text-decoration:', td.join('').trim(), ';');
                 }
                 if (offset < start || end < start)
                     continue;
 
                 if (format.hr)
-                    parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '"><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', format.color, '"></div></span>');
+                    parts.push('<span style="', style.join(''), 'min-width:100%;width:100%;" class="ansi', fCls.join(''), '"><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', format.color, '"></div></span>');
                 else if (end - offset !== 0)
                     parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
             }
@@ -2834,6 +2830,7 @@ export class Display extends EventEmitter {
                         break;
                     case 'right':
                         parts.push('float:right;');
+                        right = true;
                         break;
                     case 'top':
                     case 'middle':
@@ -2859,6 +2856,10 @@ export class Display extends EventEmitter {
                 parts.push(`src="${tmp}"/>`);
             }
         }
+        if (right && len < this.lines[idx].length)
+            return `<span class="line" style="min-width:100%">${parts.join('')}</span>`;
+        if (right)
+            return `<span class="line" style="min-width:100%">${parts.join('')}<br></span>`;
         if (len < this.lines[idx].length)
             return `<span class="line">${parts.join('')}</span>`;
         return `<span class="line">${parts.join('')}<br></span>`;
@@ -3016,9 +3017,7 @@ export class Display extends EventEmitter {
         while (this._el.firstChild)
             this._el.removeChild(this._el.firstChild);
         window.removeEventListener('mousemove', this._wMove);
-
         window.removeEventListener('mouseup', this._wUp);
-
         window.removeEventListener('resize', this._wResize);
     }
 }
