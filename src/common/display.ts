@@ -1882,7 +1882,7 @@ export class Display extends EventEmitter {
  */
             if (this.lineFormats[sL][this.lineFormats[sL].length - 1].hr) {
                 s = 0;
-                e = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth - (this._roundedRanges ? (2 + this._VScroll.size) : 0));
+                e = Math.max(this._maxLineLength * this._charWidth, this._el.clientWidth - (this._roundedRanges ? (this._padding[1] + this._padding[3] + this._VScroll.size) : 0));
             }
             else {
                 s = Math.min(sel.start.x, sel.end.x);
