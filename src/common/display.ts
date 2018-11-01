@@ -1234,9 +1234,9 @@ export class Display extends EventEmitter {
         const l = this._lines.length;
         if (l === 0) return;
         if (line === 0) {
-            this._lines[line].top = 0;
-            this._viewLines[line] = this._viewLines[l].replace(/{top:\d+px}/, `top:0px`);
-            this._backgroundLines[line] = this._backgroundLines[l].replace(/top:\d+px/, `top:0px`);
+            this._lines[0].top = 0;
+            this._viewLines[0] = this._viewLines[0].replace(/{top:\d+px}/, `top:0px`);
+            this._backgroundLines[0] = this._backgroundLines[0].replace(/top:\d+px/, `top:0px`);
             line++;
         }
         while (line < l) {
