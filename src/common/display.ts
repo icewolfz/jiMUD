@@ -2471,7 +2471,7 @@ export class Display extends EventEmitter {
                             fCls.push(' du');
                         if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
                             if (this.enableFlashing)
-                                fCls.format.style(' ansi-blink');
+                                fCls.push(' ansi-blink');
                             else if ((format.style & FontStyle.DoubleUnderline) !== FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) !== FontStyle.Underline)
                                 fCls.push(' u');
                         }
