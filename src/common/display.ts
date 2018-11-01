@@ -272,7 +272,6 @@ export class Display extends EventEmitter {
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
-
                     this.split.overlay.innerHTML = overlays.join('');
                 }
             };
@@ -1214,10 +1213,6 @@ export class Display extends EventEmitter {
         }
         overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
         this._overlay.innerHTML = overlays.join('');
-        if (this.split && (start >= this.split._viewRange.start || end >= this.split._viewRange.start)) {
-            this.split.dirty = true;
-            this.doUpdate(UpdateType.scrollViewOverlays);
-        }
     }
 
     private updateDisplay() {
@@ -1359,13 +1354,13 @@ export class Display extends EventEmitter {
         }
         let ol;
         for (ol in this._overlays) {
-            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
+            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
                 continue;
             this._overlays[ol].splice(line, 1);
         }
 
         for (ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0)
+            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
                 continue;
             this._expire[ol].splice(line, 1);
         }
@@ -1427,13 +1422,13 @@ export class Display extends EventEmitter {
         }
         let ol;
         for (ol in this._overlays) {
-            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
+            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
                 continue;
             this._overlays[ol].splice(line, amt);
         }
 
         for (ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0)
+            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
                 continue;
             this._expire[ol].splice(line, amt);
         }
@@ -1739,6 +1734,7 @@ export class Display extends EventEmitter {
     public clearOverlay(type?: string) {
         if (!type)
             type = 'default';
+        if (!this._overlays[type] || this._overlays[type].length === 0) return;
         this._overlays[type] = [];
         if (this.split) this.split.dirty = true;
         this.doUpdate(UpdateType.overlays);
@@ -2372,6 +2368,7 @@ export class Display extends EventEmitter {
     }
 
     private update() {
+        if (this.split) this.split.dirty = true;
         this._os = this.offset(this._el);
         this._innerHeight = this._elJ.innerHeight();
         this._innerWidth = this._elJ.innerWidth();
@@ -3041,19 +3038,23 @@ export class ScrollBar extends EventEmitter {
     private _os = { left: 0, top: 0 };
     private _padding = [0, 0, 0, 0];
     private _position: number = 0;
-    private _scrollOffset: number = 0;
     private _thumbSize: number = 0;
     private _trackSize: number = 0;
     private _ratio: number = 0;
     private _ratio2: number = 0;
 
     private _lastMouse: MouseEvent;
-    public _type: ScrollType = ScrollType.vertical;
-    public maxPosition: number = 0;
+
     private _maxDrag: number = 0;
     private _wMove;
     private _wUp;
     private _wResize;
+
+    private $resizeObserver;
+    private $resizeObserverCache;
+    private _type: ScrollType = ScrollType.vertical;
+
+    public maxPosition: number = 0;
 
     public thumb: HTMLElement;
     public track: HTMLElement;
@@ -3065,13 +3066,30 @@ export class ScrollBar extends EventEmitter {
         position: 0
     };
 
-    private $resizeObserver;
-    private $resizeObserverCache;
-
+    /**
+     * Current size of scroll bar
+     *
+     * @readonly
+     * @type {number}
+     * @memberof ScrollBar
+     */
     get size(): number { return this._visible ? (this._type === ScrollType.horizontal ? this.track.offsetHeight : this.track.offsetWidth) : 0; }
 
+    /**
+     * Current position of the scroll bar
+     *
+     * @readonly
+     * @type {number}
+     * @memberof ScrollBar
+     */
     get position(): number { return this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0]); }
 
+    /**
+     * An offset amount to adjust the whole scroll bar by that effects total size
+     *
+     * @type {number}
+     * @memberof ScrollBar
+     */
     get offset(): number { return this._offset; }
     set offset(value: number) {
         if (value !== this._offset) {
@@ -3080,6 +3098,13 @@ export class ScrollBar extends EventEmitter {
             this.resize();
         }
     }
+
+    /**
+     * A padding amount to adjust the scroll bar by and effects track size
+     *
+     * @type {number}
+     * @memberof ScrollBar
+     */
     get padding(): number { return this.$padding; }
     set padding(value: number) {
         if (value !== this.$padding) {
@@ -3089,6 +3114,12 @@ export class ScrollBar extends EventEmitter {
         }
     }
 
+    /**
+     * The type of scroll bar, either vertical or horizontal
+     *
+     * @type {ScrollType}
+     * @memberof ScrollBar
+     */
     get type(): ScrollType { return this._type; }
     set type(value: ScrollType) {
         if (this._type !== value) {
@@ -3098,6 +3129,13 @@ export class ScrollBar extends EventEmitter {
             this.resize();
         }
     }
+
+    /**
+     * Is scroll var visible
+     *
+     * @type {boolean}
+     * @memberof ScrollBar
+     */
     get visible(): boolean { return this._visible; }
     set visible(value: boolean) {
         if (!this._visible === value) {
@@ -3107,22 +3145,36 @@ export class ScrollBar extends EventEmitter {
         }
     }
 
-    get scrollOffset(): number { return this._scrollOffset; }
-    set scrollOffset(value: number) {
-        if (value !== this._scrollOffset) {
-            this._scrollOffset = value;
-            this.resize();
-        }
-    }
-
+    /**
+     * is scroll bar at the bottom
+     *
+     * @readonly
+     * @type {boolean}
+     * @memberof ScrollBar
+     */
     get atBottom(): boolean { return this.position >= this.scrollSize - this._padding[0]; }
 
+    /**
+     * Creates an instance of ScrollBar.
+     *
+     * @param {HTMLElement} [parent] element that will contain the scroll bar
+     * @param {HTMLElement} [content] element that will be scrolled, if left off will default to parent
+     * @param {ScrollType} [type=ScrollType.vertical] type of scroll bar
+     * @memberof ScrollBar
+     */
     constructor(parent?: HTMLElement, content?: HTMLElement, type?: ScrollType) {
         super();
         this.setParent(parent, content);
         this.type = type || ScrollType.vertical;
     }
 
+    /**
+     * sets the parent element with optional content element
+     *
+     * @param {HTMLElement} parent element that will contain the scroll bar
+     * @param {HTMLElement} [content] element that will be scrolled, if left off will default to parent
+     * @memberof ScrollBar
+     */
     public setParent(parent: HTMLElement, content?: HTMLElement) {
         if (this.track)
             this._parent.removeChild(this.track);
@@ -3131,6 +3183,12 @@ export class ScrollBar extends EventEmitter {
         this.createBar();
     }
 
+    /**
+     * Updates the location of the scroll bar in the parent based on type
+     *
+     * @private
+     * @memberof ScrollBar
+     */
     private updateLocation() {
         if (this._type === ScrollType.horizontal) {
             this.track.style.top = '';
@@ -3159,6 +3217,12 @@ export class ScrollBar extends EventEmitter {
         this._os = this.elOffset(this.track);
     }
 
+    /**
+     * Creates scroll bar elements
+     *
+     * @private
+     * @memberof ScrollBar
+     */
     private createBar() {
         this.track = document.createElement('div');
         this.track.className = 'scroll-track scroll-' + (this._type === ScrollType.horizontal ? 'horizontal' : 'vertical');
@@ -3230,6 +3294,11 @@ export class ScrollBar extends EventEmitter {
         this.$resizeObserver.observe(this.track);
     }
 
+    /**
+     * resets the scroll bar to 0 position
+     *
+     * @memberof ScrollBar
+     */
     public reset() {
         this.state = {
             dragging: false,
@@ -3241,6 +3310,11 @@ export class ScrollBar extends EventEmitter {
         this.update();
     }
 
+    /**
+     * Updates the scroll bar thumb and drag sizes
+     *
+     * @memberof ScrollBar
+     */
     public update() {
         if (this.scrollSize >= 0)
             this.track.classList.remove('scroll-disabled');
@@ -3264,6 +3338,13 @@ export class ScrollBar extends EventEmitter {
         }
     }
 
+    /**
+     * Scroll by a certain amount
+     *
+     * @param {number} amount the amount to scroll from current position
+     * @returns
+     * @memberof ScrollBar
+     */
     public scrollBy(amount: number) {
         if (amount === 0) return;
         amount = this.position + (amount < 0 ? Math.floor(amount) : Math.ceil(amount));
@@ -3271,20 +3352,41 @@ export class ScrollBar extends EventEmitter {
         this.updatePosition(amount);
     }
 
+    /**
+     * scroll to an exact position
+     *
+     * @param {number} position the position to scroll to
+     * @memberof ScrollBar
+     */
     public scrollTo(position: number) {
         position = (position < 0 ? Math.floor(position) : Math.ceil(position));
         position = position * this._ratio2;
         this.updatePosition(position);
     }
 
+    /**
+     * scroll to the end position of the scroll bar
+     *
+     * @memberof ScrollBar
+     */
     public scrollToEnd() {
         this.updatePosition(this.maxPosition);
     }
 
+    /**
+     * scroll to the start position
+     *
+     * @memberof ScrollBar
+     */
     public scrollToStart() {
         this.updatePosition(0);
     }
 
+    /**
+     * resize the scroll bar to the parent
+     *
+     * @memberof ScrollBar
+     */
     public resize() {
         const pc = window.getComputedStyle(this._parent);
         this._padding = [
@@ -3296,12 +3398,12 @@ export class ScrollBar extends EventEmitter {
         const bottom = this.atBottom;
         if (this._type === ScrollType.horizontal) {
             this._contentSize = this._content.clientWidth + this._padding[1] + this._padding[3];
-            this._parentSize = this._parent.clientWidth - this.offset - this._scrollOffset;
+            this._parentSize = this._parent.clientWidth - this.offset;
             this._trackSize = this.track.clientWidth;
         }
         else {
             this._contentSize = this._content.clientHeight + this._padding[0] + this._padding[2];
-            this._parentSize = this._parent.clientHeight - this.offset - this._scrollOffset;
+            this._parentSize = this._parent.clientHeight - this.offset;
             this._trackSize = this.track.clientHeight;
         }
         this.scrollSize = this._contentSize - this._parentSize;
@@ -3316,6 +3418,12 @@ export class ScrollBar extends EventEmitter {
             this.updatePosition(this._position * this._ratio2);
     }
 
+    /**
+     * current position of scroll bar
+     *
+     * @returns
+     * @memberof ScrollBar
+     */
     public currentPosition() {
         const p = this._type === ScrollType.horizontal ? (this._lastMouse.pageX - this.state.position - this._os.left) : (this._lastMouse.pageY - this.state.position - this._os.top);
         if (p < 0)
@@ -3325,6 +3433,14 @@ export class ScrollBar extends EventEmitter {
         return p;
     }
 
+    /**
+     * update position of scroll bar
+     *
+     * @private
+     * @param {*} p
+     * @memberof ScrollBar
+     * @fires ScrollBar#scroll
+     */
     private updatePosition(p) {
         if (p < 0 || this._maxDrag < 0)
             p = 0;
@@ -3340,6 +3456,14 @@ export class ScrollBar extends EventEmitter {
         this.emit('scroll', this.position);
     }
 
+    /**
+     * calculate the offset of an element
+     *
+     * @private
+     * @param {*} elt element to get offset for
+     * @returns {position} returns the top and left positions
+     * @memberof ScrollBar
+     */
     private elOffset(elt) {
         const rect = elt.getBoundingClientRect();
         const bodyElt = document.body;
@@ -3349,6 +3473,11 @@ export class ScrollBar extends EventEmitter {
         };
     }
 
+    /**
+     * remove the scroll bar
+     *
+     * @memberof ScrollBar
+     */
     public dispose() {
         if (this.track)
             this._parent.removeChild(this.track);
