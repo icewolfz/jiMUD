@@ -122,6 +122,7 @@ export class Display extends EventEmitter {
     private _overlays: Overlays = {
         selection: []
     };
+    private _overlaysDirty = false;
     private _VScroll: ScrollBar;
     private _HScroll: ScrollBar;
     private _updating: UpdateType = UpdateType.none;
@@ -273,7 +274,6 @@ export class Display extends EventEmitter {
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
-
                     this.split.overlay.innerHTML = overlays.join('');
                 }
             };
@@ -1200,6 +1200,7 @@ export class Display extends EventEmitter {
     }
 
     public updateOverlays(start?: number, end?: number) {
+        if (!this._overlaysDirty) return;
         if (start === undefined)
             start = this._viewRange.start;
         if (end === undefined)
@@ -1217,6 +1218,7 @@ export class Display extends EventEmitter {
             this.split.dirty = true;
             this.doUpdate(UpdateType.scrollViewOverlays);
         }
+        this._overlaysDirty = false;
     }
 
     private updateDisplay() {
@@ -1347,13 +1349,14 @@ export class Display extends EventEmitter {
         }
         let ol;
         for (ol in this._overlays) {
-            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
+            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
                 continue;
             this._overlays[ol].splice(line, 1);
+            this._overlaysDirty = true;
         }
 
         for (ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0)
+            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
                 continue;
             this._expire[ol].splice(line, 1);
         }
@@ -1415,13 +1418,14 @@ export class Display extends EventEmitter {
         }
         let ol;
         for (ol in this._overlays) {
-            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
+            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
                 continue;
             this._overlays[ol].splice(line, amt);
+            this._overlaysDirty = true;
         }
 
         for (ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0)
+            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
                 continue;
             this._expire[ol].splice(line, amt);
         }
@@ -1500,6 +1504,7 @@ export class Display extends EventEmitter {
                 if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
                     continue;
                 this._overlays[ol].splice(0, amt);
+                this._overlaysDirty = true;
             }
 
             for (ol in this._expire) {
@@ -1598,8 +1603,10 @@ export class Display extends EventEmitter {
     public clearOverlay(type?: string) {
         if (!type)
             type = 'default';
+        if (!this._overlays[type] || this._overlays[type].length === 0) return;
         this._overlays[type] = [];
         if (this.split) this.split.dirty = true;
+        this._overlaysDirty = true;
         this.doUpdate(UpdateType.overlays);
     }
 
@@ -1794,6 +1801,7 @@ export class Display extends EventEmitter {
                 this.doUpdate(UpdateType.scrollViewOverlays);
             }
         }
+        this._overlaysDirty = true;
         this.doUpdate(UpdateType.overlays);
     }
 
@@ -1821,6 +1829,7 @@ export class Display extends EventEmitter {
             e = sel.end.x;
         }
         else if (sel.start.x === sel.end.x) {
+            this._overlaysDirty = true;
             if (this.split && (sel.start.y >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) {
                 this.split.dirty = true;
                 this.doUpdate(UpdateType.scrollViewOverlays);
@@ -1937,6 +1946,7 @@ export class Display extends EventEmitter {
                         }
                         this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
             */
+            this._overlaysDirty = true;
             if (this.split && (sL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) {
                 this.split.dirty = true;
                 this.doUpdate(UpdateType.scrollViewOverlays);
@@ -2071,6 +2081,7 @@ export class Display extends EventEmitter {
 
             this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
         }
+        this._overlaysDirty = true;
         if (this.split && (sL >= this.split._viewRange.start || eL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start || this._prevSelection.end.y >= this.split._viewRange.start)) {
             this.split.dirty = true;
             this.doUpdate(UpdateType.scrollViewOverlays);
@@ -2231,6 +2242,8 @@ export class Display extends EventEmitter {
     }
 
     private update() {
+        this._overlaysDirty = true;
+        if (this.split) this.split.dirty = true;
         this._os = this.offset(this._el);
         this._innerHeight = this._elJ.innerHeight();
         this._innerWidth = this._elJ.innerWidth();
