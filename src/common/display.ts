@@ -1233,8 +1233,8 @@ export class Display extends EventEmitter {
         const l = this._lines.length;
         if (l === 0) return;
         while (line < l) {
-            this._viewLines[l] = this._viewLines[l].replace(/top:\d+px/, `top:${l * this._charHeight}px`);
-            this._backgroundLines[l] = this._backgroundLines[l].replace(/top:\d+px/, `top:${l * this._charHeight}px`);
+            this._viewLines[line] = this._viewLines[line].replace(/top:\d+px/, `top:${line * this._charHeight}px`);
+            this._backgroundLines[line] = this._backgroundLines[line].replace(/top:\d+px/, `top:${line * this._charHeight}px`);
             line++;
         }
     }
