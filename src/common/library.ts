@@ -72,14 +72,25 @@ export function htmlDecode(value) {
 */
 
 const _edCache = document.createElement('div');
-export function htmlEncode(value) {
+
+export function htmlEncode2(value) {
     _edCache.textContent = value.replace(/ /g, '\u00A0');
+    return _edCache.innerHTML;
+}
+
+export function htmlDecode2(value) {
+    _edCache.innerHTML = value;
+    return _edCache.textContent.replace(/\u00A0/g, ' ');
+}
+
+export function htmlEncode(value) {
+    _edCache.textContent = value;
     return _edCache.innerHTML;
 }
 
 export function htmlDecode(value) {
     _edCache.innerHTML = value;
-    return _edCache.textContent.replace(/\u00A0/g, ' ');
+    return _edCache.textContent;
 }
 
 export function htmlEntities(str) {
