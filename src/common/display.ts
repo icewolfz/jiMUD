@@ -431,14 +431,17 @@ export class Display extends EventEmitter {
         const fragment = document.createDocumentFragment();
         this._background = document.createElement('div');
         this._background.id = this._el.id + '-background';
+        this._background.classList.add('display-background');
         fragment.appendChild(this._background);
 
         this._overlay = document.createElement('div');
         this._overlay.id = this._el.id + '-overlay';
+        this._overlay.classList.add('display-overlay');
         fragment.appendChild(this._overlay);
 
         this._view = document.createElement('div');
         this._view.id = this._el.id + '-view';
+        this._view.classList.add('display-view');
         this._view.setAttribute('aria-live', 'polite');
         this._view.setAttribute('role', 'log');
         fragment.appendChild(this._view);
@@ -2314,12 +2317,10 @@ export class Display extends EventEmitter {
         let bEl;
         let child;
 
-        back.classList.add('background-line');
         back.style.top = `${idx * this._charHeight}px`;
-        back.style.height = `${height}px`;
-        fore.classList.add('line');
+        //back.style.height = `${height}px`;
         fore.style.top = `${idx * this._charHeight}px`;
-        fore.style.height = `${height}px`;
+        //fore.style.height = `${height}px`;
 
         for (ol in this._expire) {
             if (!this._expire.hasOwnProperty(ol))
@@ -2401,10 +2402,10 @@ export class Display extends EventEmitter {
                 }
                 bEl = document.createElement('span');
                 Object.assign(bEl.style, bStyle);
-                bEl.classList.add('ansi');
                 fEl = document.createElement('span');
                 Object.assign(fEl.style, fStyle);
-                fEl.classList.add('ansi', ...fCls);
+                if (fCls.length !== 0)
+                    fEl.classList.add(...fCls);
                 if (format.hr) {
                     bEl.dataset.max = '1';
                     fEl.dataset.max = '1';
