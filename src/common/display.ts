@@ -1273,8 +1273,8 @@ export class Display extends EventEmitter {
         const l = this._lines.length;
         if (l === 0) return;
         while (line < l) {
-            this._viewLines[line].style.top = `${l * this._charHeight}px`;
-            this._backgroundLines[line].style.top = `${l * this._charHeight}px`;
+            this._viewLines[line] = this._viewLines[line].replace(/top:\d+px/, `top:${line * this._charHeight}px`);
+            this._backgroundLines[line] = this._backgroundLines[line].replace(/top:\d+px/, `top:${line * this._charHeight}px`);
             line++;
         }
     }
