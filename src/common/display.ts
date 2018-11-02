@@ -450,7 +450,7 @@ export class Display extends EventEmitter {
         this._ruler.style.lineHeight = 'normal';
         this._ruler.style.borderBottom = '1px solid black';
         this._ruler.style.visibility = 'hidden';
-        document.body.appendChild(this._ruler);
+        this._el.appendChild(this._ruler);
 
         this._character = document.createElement('div');
         this._character.id = this.id + '-Character';
@@ -459,7 +459,7 @@ export class Display extends EventEmitter {
         this._character.innerText = 'W';
         this._character.style.visibility = 'hidden';
         this._ruler.style.visibility = 'hidden';
-        document.body.appendChild(this._character);
+        this._el.appendChild(this._character);
 
         this._charHeight = $(this._character).innerHeight();
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
@@ -1700,7 +1700,7 @@ export class Display extends EventEmitter {
         this._ruler.textContent = txt;
         this._ruler.style.fontFamily = font || this._character.style.fontFamily;
         this._ruler.style.fontSize = size || this._character.style.fontSize;
-        return parseInt(window.getComputedStyle(this._ruler).fontSize, 10);
+        return parseInt(window.getComputedStyle(this._ruler).height, 10);
     }
 
     private lineWidth(line, start?, len?) {
