@@ -2472,7 +2472,7 @@ export class Display extends EventEmitter {
                     fCls = format.fCls;
                     height = Math.max(height, format.height || 0);
                     if (format.font || format.size)
-                        font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`
+                        font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`;
                     else
                         font = 0;
                 }
