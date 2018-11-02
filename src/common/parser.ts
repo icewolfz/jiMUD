@@ -422,7 +422,7 @@ export class Parser extends EventEmitter {
     let i: number;
     let rgb: string;
     for (; p < pl; p++) {
-      i = parseInt(params[p], 10);
+      i = +params[p] || 0;
       switch (i) {
         case 0: //Reset/None
           this.ResetColors();
@@ -517,7 +517,7 @@ export class Parser extends EventEmitter {
           break;
         case 38:
           if (p + 2 < pl && params[p + 1] === '5') {
-            this._CurrentForeColor = parseInt(params[p + 2], 10);
+            this._CurrentForeColor = +params[p + 2];
             if (isNaN(this._CurrentForeColor))
               this._CurrentForeColor = 37;
             else {
@@ -527,15 +527,15 @@ export class Parser extends EventEmitter {
             p += 2;
           }
           else if (p + 4 < pl && params[p + 1] === '2') {
-            i = parseInt(params[p + 2], 10);
+            i = +params[p + 2] || 0;
             if (i < 0 || i > 255)
               continue;
             rgb = i + ';';
-            i = parseInt(params[p + 3], 10);
+            i = +params[p + 3] || 0;
             if (i < 0 || i > 255)
               continue;
             rgb += i + ';';
-            i = parseInt(params[p + 4], 10);
+            i = +params[p + 4] || 0;
             if (i < 0 || i > 255)
               continue;
             rgb += i;
@@ -561,7 +561,7 @@ export class Parser extends EventEmitter {
           break;
         case 48:
           if (p + 2 < pl && params[p + 1] === '5') {
-            this._CurrentBackColor = parseInt(params[p + 2], 10);
+            this._CurrentBackColor = +params[p + 2];
             if (isNaN(this._CurrentBackColor))
               this._CurrentBackColor = 40;
             else {
@@ -571,15 +571,15 @@ export class Parser extends EventEmitter {
             p += 2;
           }
           else if (p + 4 < pl && params[p + 1] === '2') {
-            i = parseInt(params[p + 2], 10);
+            i = +params[p + 2] || 0;
             if (i < 0 || i > 255)
               continue;
             rgb = i + ';';
-            i = parseInt(params[p + 3], 10);
+            i = +params[p + 3] || 0;
             if (i < 0 || i > 255)
               continue;
             rgb += i + ';';
-            i = parseInt(params[p + 4], 10);
+            i = +params[p + 4] || 0;
             if (i < 0 || i > 255)
               continue;
             rgb += i;
@@ -1231,7 +1231,7 @@ export class Parser extends EventEmitter {
                 break;
               default:
                 if (x === 0) {
-                  tmp = parseInt(args[x], 10);
+                  tmp = +args[x];
                   if (!isNaN(tmp)) e.index = tmp;
                 }
                 else if (x === 1)
@@ -1283,7 +1283,7 @@ export class Parser extends EventEmitter {
             arg = args[x].split('=');
             switch (arg[0].toUpperCase()) {
               case 'TAG':
-                tmp = parseInt(arg[1], 10);
+                tmp = +arg[1];
                 if (!isNaN(tmp)) e.tag = tmp;
                 break;
               case 'FLAG':
@@ -1327,7 +1327,7 @@ export class Parser extends EventEmitter {
                   }
                 }
                 else if (x === 3) {
-                  tmp = parseInt(args[x], 10);
+                  tmp = +args[x];
                   if (!isNaN(tmp)) e.tag = tmp;
                 }
                 else if (x === 4)
@@ -1594,13 +1594,13 @@ export class Parser extends EventEmitter {
                   }
                   break;
                 case 'V':  //volume
-                  tmp = parseInt(arg[1], 10);
+                  tmp = +arg[1];
                   if (isNaN(tmp))
                     tmp = 100;
                   e.volume = tmp;
                   break;
                 case 'L':  //repeat
-                  tmp = parseInt(arg[1], 10);
+                  tmp = +arg[1];
                   if (isNaN(tmp))
                     tmp = 1;
                   e.repeat = tmp;
@@ -1627,13 +1627,13 @@ export class Parser extends EventEmitter {
               }
             }
             else if (x === 1) {
-              tmp = parseInt(args[x], 10);
+              tmp = +args[x];
               if (isNaN(tmp))
                 tmp = 100;
               e.volume = tmp;
             }
             else if (x === 2) {
-              tmp = parseInt(args[x], 10);
+              tmp = +args[x];
               if (isNaN(tmp))
                 tmp = 1;
               e.repeat = tmp;
@@ -1666,19 +1666,19 @@ export class Parser extends EventEmitter {
                   }
                   break;
                 case 'V':  //volume
-                  tmp = parseInt(arg[1], 10);
+                  tmp = +arg[1];
                   if (isNaN(tmp))
                     tmp = 100;
                   e.volume = tmp;
                   break;
                 case 'L':  //repeat
-                  tmp = parseInt(arg[1], 10);
+                  tmp = +arg[1];
                   if (isNaN(tmp))
                     tmp = 1;
                   e.repeat = tmp;
                   break;
                 case 'P':  //priority
-                  tmp = parseInt(arg[1], 10);
+                  tmp = +arg[1];
                   if (isNaN(tmp))
                     tmp = 1;
                   e.priority = tmp;
@@ -1702,19 +1702,19 @@ export class Parser extends EventEmitter {
               }
             }
             else if (x === 1) {
-              tmp = parseInt(args[x], 10);
+              tmp = +args[x];
               if (isNaN(tmp))
                 tmp = 100;
               e.volume = tmp;
             }
             else if (x === 2) {
-              tmp = parseInt(args[x], 10);
+              tmp = +args[x];
               if (isNaN(tmp))
                 tmp = 1;
               e.repeat = tmp;
             }
             else if (x === 3) {
-              tmp = parseInt(args[x], 10);
+              tmp = +args[x];
               if (isNaN(tmp))
                 tmp = 1;
               e.priority = tmp;
@@ -2446,7 +2446,7 @@ export class Parser extends EventEmitter {
                   break;
                 }
               }
-              iTmp = parseInt(_AnsiParams, 10);
+              iTmp = +_AnsiParams;
               if (isNaN(iTmp)) iTmp = 0;
               this.mxpState.on = true;
               this.mxpState.noBreak = false;
@@ -2522,7 +2522,7 @@ export class Parser extends EventEmitter {
             {
               this.ResetMXP();
               if (_AnsiParams.length > 0) {
-                if (parseInt(_AnsiParams, 10) === 2) {
+                if (+_AnsiParams === 2) {
                   lineLength = 0;
                   iTmp = this.window.height;
                   this.AddLine(stringBuilder.join(''), rawBuilder.join(''), false, false, formatBuilder);
@@ -2562,7 +2562,7 @@ export class Parser extends EventEmitter {
               state = ParserState.None;
             }
             else if (c === ';' && _TermTitleType == null) {
-              _TermTitleType = parseInt(_TermTitle, 10);
+              _TermTitleType = +_TermTitle;
               if (isNaN(_TermTitleType))
                 _TermTitleType = 0;
               _TermTitle = '';
