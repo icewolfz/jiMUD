@@ -2355,9 +2355,9 @@ export class Display extends EventEmitter {
                         if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
                             fCls.push(' s');
                     }
-                    format.bStyle = (bStyle = bStyle);
-                    format.fStyle = (fStyle = fStyle);
-                    format.fCls = (fCls = fCls);
+                    format.bStyle = bStyle;
+                    format.fStyle = fStyle;
+                    format.fCls = fCls;
                 }
                 if (format.hr) {
                     back.push('<span style="left:0;width:{max}px;', ...bStyle, '"></span>');
