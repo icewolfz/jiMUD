@@ -131,6 +131,11 @@ body {
     color: wheat;
 }
 
+.scroll-split-button.disabled, .scroll-split-button.disabled:hover, .scroll-split-button.disabled:active, .scroll-split-button.disabled:focus {
+    background-color: maroon !important;
+    color: #A88749;
+}
+
 .scroll-horizontal {
     border-top: 1px solid #494238;
 }
@@ -142,6 +147,7 @@ body {
 .scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
     background: rgba(51, 48, 43, 0.4);
     border: 0px;
+    color: #A88749;
 }
 
 #display::-webkit-scrollbar,

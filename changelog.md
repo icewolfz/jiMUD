@@ -16,6 +16,7 @@
   - Remove clean and default scroll track rounded corners to properly hide background text
   - Update electron from 3.0.6 to 3.0.7
   - Update electron-updater 3.1.5 to 3.1.6
+  - Change show split button disabled look for all themes to not light up
 - **Fixed:**
   - Display:
     - Detect changes to display better to handle theme changes

@@ -126,6 +126,11 @@ body {
     color: #{$color};
 }
 
+.scroll-split-button.disabled, .scroll-split-button.disabled:hover, .scroll-split-button.disabled:active, .scroll-split-button.disabled:focus {
+    background-color: #252526 !important;
+    color: #3f3f46;
+}
+
 .scroll-horizontal {
     border-top: 1px solid #{$borderColor};
 }
