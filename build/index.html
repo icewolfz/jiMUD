@@ -42,19 +42,22 @@
             Object.defineProperty(window, a, {
                 get: function () {
                     if (!lastMouse) return '';
-                    var line = $(lastMouse.srcElement).closest('.line').text();
-                    var x = (lastMouse.pageX - client.display._elJ.offset().left) + client.display._elJ.scrollLeft();
-                    x = Math.floor(x / client.display._charWidth);
-
+                    var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
+                    var line = '';
+                    if (pos.y >= 0 && pos.y < client.display.lines.length)
+                        line = client.display.lines[pos.y];
+                    var x = pos.x;
+                    if (x < 0 || x >= line.length)
+                        return '';
                     var sPos = x, ePos = x;
-                    while (line.substr(sPos, 1).match(/([a-zA-Z0-9_-])/g) && sPos >= 0) {
+                    while (line.substr(sPos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()])/gu) && sPos >= 0) {
                         sPos--;
                         if (sPos < 0)
                             break;
                     }
                     sPos++;
                     var ll = line.length;
-                    while (line.substr(ePos, 1).match(/([a-zA-Z0-9_-])/g) && ePos < ll) {
+                    while (line.substr(ePos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()])/gu) && ePos < ll) {
                         ePos++;
                     }
                     if (sPos + ePos - sPos > ll)
@@ -84,7 +87,10 @@
             Object.defineProperty(window, a, {
                 get: function () {
                     if (!lastMouse) return '';
-                    return $(lastMouse.srcElement).closest('.line').text();
+                    var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
+                    if (pos.y < 0 || pos.y >= client.display.lines.length)
+                        return '';
+                    return client.display.lines[pos.y];
                 },
                 configurable: true
             });
