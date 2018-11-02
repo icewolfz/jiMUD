@@ -40,11 +40,11 @@
     -webkit-animation-duration: 1s;
 }
 
-.display-background > span > span {
+.background > span span {
     height: 100%;
 }
 
-.display-view > span > span, .display-background > span span {
+.ansi, .background > span span, .view > span span  {
     padding: 0px;
     margin: 0px;
     display: inline-block;
@@ -52,7 +52,7 @@
     padding-bottom: 1px;
 }
 
-.display-view > span, .display-background > span {
+.background > span, .view > span, .line, .background-line {
     word-wrap: break-word;
     word-break: break-all;
     display: inline-block;
@@ -64,7 +64,7 @@
     position: absolute;
 }
 
-.display-view > span > span .hr {
+.ansi .hr, .background > span .hr, .view > span .hr {
     position: relative;
     top: 50%;
     transform: translateY(-50%);
@@ -72,86 +72,90 @@
     width: 100%;
 }
 
-.display-view > span > hr {
+.view > span hr, .line hr {
     border: 0px;
 }
 
-.display-background > span {
+.background > span, .background-line {
     overflow: hidden;
 }
 
-.display-view > span .b {
+.view > span .b {
     font-weight: bold;
 }
 
-.display-view > span .i {
+.view > span .i {
     font-style: italic;
 }
 
-.display-view > span .o {
+.view > span .o {
     text-decoration: overline;
 }
 
-.display-view > span .u {
+.view > span .u {
     text-decoration: underline;
 }
 
-.display-view > span .du {
+.view > span .du {
     text-decoration: underline;
     border-bottom: 1px solid currentColor;
     padding-bottom: 0px;
 }
 
-.display-view > span .s {
+.view > span .s {
     text-decoration: line-through;
 }
 
-.display-view > span .o.du {
+.view > span .o.du {
     text-decoration: underline overline;
 }
 
-.display-view > span .u.o {
+.view > span .u.o {
     text-decoration: underline overline;
 }
 
-.display-view > span .o.s {
+.view > span .o.s {
     text-decoration: overline line-through;
 }
 
-.display-view > span .du.s {
+.view > span .du.s {
     text-decoration: underline line-through;
 }
 
-.display-view > span .s.u {
+.view > span .s.u {
     text-decoration: underline line-through;
 }
 
-.display-view > span .du.u.o {
+.view > span .du.u.o {
     text-decoration: underline overline;
 }
 
-.display-view > span .du.s.u {
+.view > span .du.s.u {
     text-decoration: underline line-through;
 }
 
-.display-view > span .du.o.s {
+.view > span .du.o.s {
     text-decoration: underline overline line-through;
 }
 
-.display-view > span .u.s.o {
+.view > span .u.s.o {
     text-decoration: underline overline line-through;
 }
 
-.display-view > span .du.o.s.u {
+.view > span .du.o.s.u {
     text-decoration: underline overline line-through;
 }
 
 /* --- End CSS for ansi display --- */
 
-.display-view > span a,
-.display-view > span a:link,
-.display-view > span a *,
-.display-view > span a:link * {
+.view > span a,
+.view > span a:link,
+.view > span a *,
+.view > span a:link *,
+.line a,
+.line a:link,
+.line a *,
+.line a:link * {
     color: inherit;
     font-weight: inherit;
     text-decoration: underline;

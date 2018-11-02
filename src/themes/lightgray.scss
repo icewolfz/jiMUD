@@ -93,6 +93,21 @@ body {
 
 .scroll-corner {
     background-color: #{$panelBackground};
+    color: #fff;
+}
+
+.scroll-split-button {
+    font-size: 9px;
+    text-align: center;
+    background-color: ButtonFace !important;
+    color: ButtonText;
+    box-sizing: border-box;
+    border-top: 1px solid ButtonHighlight;
+    border-left: 1px solid ButtonHighlight;
+    border-right: 1px solid ButtonShadow;
+    border-bottom: 1px solid ButtonShadow;
+    z-index: 2000;
+    cursor: default;    
 }
 
 .scroll-split-button:active, .scroll-split-button:focus {
@@ -128,6 +143,15 @@ body {
     color: #333;
     border-color: #adadad;
     text-decoration: none;
+}
+
+.scroll-split-button.disabled, .scroll-split-button.disabled:hover, .scroll-split-button.disabled:active, .scroll-split-button.disabled:focus {
+    background-color: #{$panelBackground};
+    color: #a0a0a0;
+    border-top: 1px solid ButtonHighlight;
+    border-left: 1px solid ButtonHighlight;
+    border-right: 1px solid ButtonShadow;
+    border-bottom: 1px solid ButtonShadow;    
 }
 
 .scroll-horizontal {

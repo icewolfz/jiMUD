@@ -142,6 +142,7 @@ export class Display extends EventEmitter {
     private _context: CanvasRenderingContext2D;
     private _contextFont: string;
     private _ruler: HTMLElement;
+    private _styles: HTMLStyleElement;
 
     private _innerWidth;
     private _innerHeight;
@@ -201,6 +202,9 @@ export class Display extends EventEmitter {
             this.split.background = document.createElement('div');
             this.split.overlay = document.createElement('div');
             this.split.view = document.createElement('div');
+            this.split.view.classList.add('view');
+            this.split.background.classList.add('background');
+            this.split.overlay.classList.add('overlay');
             this.split._viewRange = { start: 0, end: 0 };
 
             this.split.appendChild(this.split.bar);
@@ -425,23 +429,26 @@ export class Display extends EventEmitter {
         this._canvas = document.createElement('canvas');
         this._canvas.style.position = 'absolute';
         this._canvas.style.left = '-1000px';
+        this._styles = document.createElement('style');
+
         this._elJ = $(this._el);
         this._innerHeight = this._elJ.innerHeight();
         this._innerWidth = this._elJ.innerWidth();
         const fragment = document.createDocumentFragment();
+        fragment.appendChild(this._styles);
         this._background = document.createElement('div');
         this._background.id = this._el.id + '-background';
-        this._background.classList.add('display-background');
+        this._background.classList.add('background');
         fragment.appendChild(this._background);
 
         this._overlay = document.createElement('div');
         this._overlay.id = this._el.id + '-overlay';
-        this._overlay.classList.add('display-overlay');
+        this._overlay.classList.add('overlay');
         fragment.appendChild(this._overlay);
 
         this._view = document.createElement('div');
         this._view.id = this._el.id + '-view';
-        this._view.classList.add('display-view');
+        this._view.classList.add('view');
         this._view.setAttribute('aria-live', 'polite');
         this._view.setAttribute('role', 'log');
         fragment.appendChild(this._view);
@@ -465,14 +472,15 @@ export class Display extends EventEmitter {
         this._character = document.createElement('div');
         this._character.id = this.id + '-Character';
         this._character.className = 'ansi';
-        this._character.style.borderBottom = '1px solid black';
+        //this._character.style.borderBottom = '1px solid black';
         this._character.innerText = 'W';
         this._character.style.visibility = 'hidden';
         this._ruler.style.visibility = 'hidden';
         document.body.appendChild(this._character);
 
-        this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
+        this._charHeight = $(this._character).innerHeight();
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
+        this._styles.innerHTML = `.background > span, .view > span, .line, .background-line { height: ${this._charHeight}px; }`;
 
         this._VScroll = new ScrollBar(this._el, this._view);
         this._VScroll.on('scroll', () => {
@@ -1146,8 +1154,9 @@ export class Display extends EventEmitter {
             this._contextFont = `${size} ${font}`;
             this._context.font = this._contextFont;
             //recalculate height/width of characters so display can be calculated
-            this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
+            this._charHeight = $(this._character).innerHeight();
             this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
+            this._styles.innerHTML = `.background > span, .view > span, .line, .background-line { height: ${this._charHeight}px; }`;
             /*
             let html = this._htmlLines, t;
             let h = this._charHeight;
@@ -2306,6 +2315,7 @@ export class Display extends EventEmitter {
         let fCls;
         const height = this._charHeight;
         const len = formats.length;
+        const cw = this._charWidth;
         let left = 0;
         let ol;
         const id = this.lineIDs[idx];
@@ -2374,7 +2384,10 @@ export class Display extends EventEmitter {
                     }
                     else
                     */
-                    format.width = format.width || this.textWidth(eText);
+                    if (format.unicode)
+                        format.width = format.width || this.textWidth(eText);
+                    else
+                        format.width = format.width || eText.length * cw;
 
                     if (format.style !== FontStyle.None) {
                         if ((format.style & FontStyle.Bold) === FontStyle.Bold)
@@ -2431,9 +2444,12 @@ export class Display extends EventEmitter {
                 fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href, '" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                format.width = format.width || this.textWidth(eText);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" class="ansi"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '" class="ansi', fCls, '">', eText, '</span>');
+                if (format.unicode)
+                    format.width = format.width || this.textWidth(eText);
+                else
+                    format.width = format.width || eText.length * cw;
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
                 left += format.width;
             }
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
@@ -2458,9 +2474,12 @@ export class Display extends EventEmitter {
                 }
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                format.width = format.width || this.textWidth(eText);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" class="ansi"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '" class="ansi', fCls, '">', eText, '</span>');
+                if (format.unicode)
+                    format.width = format.width || this.textWidth(eText);
+                else
+                    format.width = format.width || eText.length * cw;
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
                 left += format.width;
             }
             else if (format.formatType === FormatType.MXPSend) {
@@ -2480,16 +2499,22 @@ export class Display extends EventEmitter {
                 fore.push(' onmouseover="', this.mxpTooltipFunction, '(this);"', ' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                format.width = format.width || this.textWidth(eText);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" class="ansi"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '" class="ansi', fCls, '">', eText, '</span>');
+                if (format.unicode)
+                    format.width = format.width || this.textWidth(eText);
+                else
+                    format.width = format.width || eText.length * cw;
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '" ></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
                 left += format.width;
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 eText = text.substring(offset, end);
-                format.width = format.width || this.textWidth(eText);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" class="ansi"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '" class="ansi', fCls, '">', eText, '</span>');
+                if (format.unicode)
+                    format.width = format.width || this.textWidth(eText);
+                else
+                    format.width = format.width || eText.length * cw;
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
                 left += format.width;
             }
             else if (format.formatType === FormatType.Image) {
@@ -2538,7 +2563,7 @@ export class Display extends EventEmitter {
                     tmp.push('margin:', formatUnit(format.vspace), ' 0px;');
                 //TODO remove max-height when variable height supported
                 tmp.push('max-height:', '' + height, 'px;');
-                //back.push(tmp.join(''), bStyle, `" src="./../assets/blank.png"/>`);
+                //back.push(tmp.join(''), ...bStyle, `" src="./../assets/blank.png"/>`);
                 back.push(tmp.join(''), `" src="./../assets/blank.png"/>`);
                 //tmp.push(fStyle, '"');
                 tmp.push('"');
@@ -2576,8 +2601,10 @@ export class Display extends EventEmitter {
                         this._viewLines[lIdx] = t[0];
                         this._backgroundLines[lIdx] = t[1];
                         img.remove();
-                        if (this.split) this.split.dirty = true;
-                        this.doUpdate(UpdateType.display);
+                        if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
+                            if (this.split) this.split.dirty = true;
+                            this.doUpdate(UpdateType.display);
+                        }
                     };
                 }
             }
@@ -2674,9 +2701,9 @@ export class Display extends EventEmitter {
                     continue;
 
                 if (format.hr)
-                    parts.push('<span style="', style.join(''), 'min-width:100%;width:100%;" class="ansi', fCls.join(''), '"><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', format.color, '"></div></span>');
+                    parts.push('<span style="', style.join(''), 'min-width:100%;width:100%;" class="', fCls.join(''), '"><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', format.color, '"></div></span>');
                 else if (end - offset !== 0)
-                    parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
+                    parts.push('<span style="', style.join(''), '" class="', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
             }
             else if (format.formatType === FormatType.Link) {
                 if (offset < start || end < start)
@@ -2685,7 +2712,7 @@ export class Display extends EventEmitter {
                 parts.push(format.href);
                 parts.push('" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
                 if (end - offset === 0) continue;
-                parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
+                parts.push('<span style="', style.join(''), '" class="', fCls.join(''), '">');
                 parts.push(htmlEncode(text.substring(offset, end)));
                 parts.push('</span>');
             }
@@ -2707,7 +2734,7 @@ export class Display extends EventEmitter {
                 parts.push('"');
                 parts.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
                 if (end - offset === 0) continue;
-                parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
+                parts.push('<span style="', style.join(''), '" class="', fCls.join(''), '">');
                 parts.push(htmlEncode(text.substring(offset, end)));
                 parts.push('</span>');
             }
@@ -2720,14 +2747,14 @@ export class Display extends EventEmitter {
                 parts.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
                 parts.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
                 if (end - offset === 0) continue;
-                parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
+                parts.push('<span style="', style.join(''), '" class="', fCls.join(''), '">');
                 parts.push(htmlEncode(text.substring(offset, end)));
                 parts.push('</span>');
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 if (offset < start || end < start)
                     continue;
-                parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
+                parts.push('<span style="', style.join(''), '" class="', fCls.join(''), '">');
                 parts.push(htmlEncode(text.substring(offset, end)));
                 parts.push('</span>');
             }
@@ -2828,6 +2855,8 @@ export class Display extends EventEmitter {
     private _scrollCorner: HTMLElement;
 
     public updateScrollbars() {
+        if (this._parser.busy)
+            return;
         this._HScroll.offset = this._VScroll.track.clientWidth;
         this._HScroll.resize();
         this._HScroll.visible = this._HScroll.scrollSize > 0;
@@ -3094,7 +3123,7 @@ export class ScrollBar extends EventEmitter {
      * @type {boolean}
      * @memberof ScrollBar
      */
-    get atBottom(): boolean { return this.position >= this.scrollSize - this._padding[0]; }
+    get atBottom(): boolean { return this.position >= this.scrollSize; }
 
     /**
      * Creates an instance of ScrollBar.
@@ -3342,13 +3371,15 @@ export class ScrollBar extends EventEmitter {
             this._contentSize = this._content.clientWidth + this._padding[1] + this._padding[3];
             this._parentSize = this._parent.clientWidth - this.offset;
             this._trackSize = this.track.clientWidth;
+            this.scrollSize = this._contentSize - this._parentSize - this._padding[1] - this._padding[3];
         }
         else {
             this._contentSize = this._content.clientHeight + this._padding[0] + this._padding[2];
             this._parentSize = this._parent.clientHeight - this.offset;
             this._trackSize = this.track.clientHeight;
+            this.scrollSize = this._contentSize - this._parentSize - this._padding[0] - this._padding[2];
         }
-        this.scrollSize = this._contentSize - this._parentSize;
+
         this._percentView = this._contentSize / this._parentSize;
         this.maxPosition = this._parentSize - Math.ceil(1 / this._percentView * this._parentSize);
         if (this.maxPosition < 0)
