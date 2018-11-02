@@ -22,6 +22,8 @@
     - Fixed selection when dragging below display window
     - Fixed split scroll window bottom padding spacing for all themes
     - Fixed MXP image align=right
+    - Fixed getting wrong character for mouse position
+  - Fixed matching whole unicode words on context
   - ANSI Parser: Always append line fragment when parsing, better fix to the previous missing raw data issue
   - Window size not correctly sent to mud when maximizing window, broken in v0.6.5
 

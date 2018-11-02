@@ -1565,12 +1565,14 @@ export class Display extends EventEmitter {
                     x--;
                     w = Math.ceil(this.textWidth(text.substr(0, x)));
                 }
+                x++;
             }
             else if (w > 0 && w < xPos) {
                 while (w < xPos && x < tl) {
                     x++;
                     w = Math.ceil(this.textWidth(text.substr(0, x)));
                 }
+                x--;
             }
         }
         return { x: x, y: y };
@@ -2098,6 +2100,7 @@ export class Display extends EventEmitter {
     }
 
     get selection(): string {
+        if (this.lines.length === 0) return '';
         const sel = this._currentSelection;
         let s;
         let e;
@@ -2118,7 +2121,7 @@ export class Display extends EventEmitter {
         else if (sel.start.x === sel.end.x) {
             return '';
         }
-        else if (this.lineFormats[sel.start.y][this.lineFormats[sel.start.y].length - 1].hr)
+        else if (sel.start.y > 0 && sel.start.y < this.lineFormats.length && this.lineFormats[sel.start.y][this.lineFormats[sel.start.y].length - 1].hr)
             return '---';
         else {
             s = Math.min(sel.start.x, sel.end.x);
@@ -2157,6 +2160,7 @@ export class Display extends EventEmitter {
     }
 
     get selectionAsHTML(): string {
+        if (this.lines.length === 0) return '';
         const sel = this._currentSelection;
         let s;
         let e;
