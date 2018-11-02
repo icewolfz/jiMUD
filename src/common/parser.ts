@@ -2616,12 +2616,12 @@ export class Parser extends EventEmitter {
               c === '#'
             ) {
               if (d) {
+                stringBuilder.push('\u241B');
                 if (i < 16) {
                   stringBuilder.push(String.fromCharCode(parseInt('240' + i.toString(16), 16)));
-                  this.MXPCapture('&#x240' + i.toString(16) + ';');
+                  this.MXPCapture('&#x241B&#x240' + i.toString(16) + ';');
                 }
                 else {
-                  stringBuilder.push('\u241B');
                   stringBuilder.push(String.fromCharCode(parseInt('24' + i.toString(16), 16)));
                   this.MXPCapture('&#x241B&#x24' + i.toString(16) + ';');
                 }
