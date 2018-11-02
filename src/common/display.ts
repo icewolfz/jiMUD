@@ -3019,7 +3019,7 @@ export class ScrollBar extends EventEmitter {
      * @type {boolean}
      * @memberof ScrollBar
      */
-    get atBottom(): boolean { return this.position >= this.scrollSize - this._padding[0]; }
+    get atBottom(): boolean { return this.position >= this.scrollSize; }
 
     /**
      * Creates an instance of ScrollBar.
@@ -3267,13 +3267,15 @@ export class ScrollBar extends EventEmitter {
             this._contentSize = this._content.clientWidth + this._padding[1] + this._padding[3];
             this._parentSize = this._parent.clientWidth - this.offset;
             this._trackSize = this.track.clientWidth;
+            this.scrollSize = this._contentSize - this._parentSize - this._padding[1] - this._padding[3];
         }
         else {
             this._contentSize = this._content.clientHeight + this._padding[0] + this._padding[2];
             this._parentSize = this._parent.clientHeight - this.offset;
             this._trackSize = this.track.clientHeight;
+            this.scrollSize = this._contentSize - this._parentSize - this._padding[0] - this._padding[2];
         }
-        this.scrollSize = this._contentSize - this._parentSize;
+
         this._percentView = this._contentSize / this._parentSize;
         this.maxPosition = this._parentSize - Math.ceil(1 / this._percentView * this._parentSize);
         if (this.maxPosition < 0)
