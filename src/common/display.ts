@@ -1602,6 +1602,7 @@ export class Display extends EventEmitter {
                 x = tl;
             else {
                 const offset = formats[f].offset;
+                const u = formats[f].unicode;
                 let end;
                 if (f < fLen - 1)
                     end = formats[f + 1].offset;
@@ -1611,10 +1612,17 @@ export class Display extends EventEmitter {
                 let font;
                 if (formats[f].font || formats[f].size)
                     font = `${formats[f].size || this._character.style.fontSize} ${formats[f].font || this._character.style.fontFamily}`;
-                let w = left + Math.ceil(this.textWidth(text.substring(offset, x + 1), font));
+                let w;
+                if (font || u)
+                    w = left + Math.ceil(this.textWidth(text.substring(offset, x + 1), font));
+                else
+                    w = left + text.substring(offset, x + 1).length * this._charWidth;
                 while (w < xPos && x < end) {
                     x++;
-                    w = left + Math.ceil(this.textWidth(text.substring(offset, x + 1), font));
+                    if (font || u)
+                        w = left + Math.ceil(this.textWidth(text.substring(offset, x + 1), font));
+                    else
+                        w = left + text.substring(offset, x + 1).length * this._charWidth;
                 }
             }
             /*
@@ -1701,6 +1709,8 @@ export class Display extends EventEmitter {
             return this._lines[line].width;
         if (len === undefined || len > this.lines[line].length)
             len = this.lines[line].length;
+        if (start === 0 && len >= this.lines[line].length)
+            return this._lines[line].width;
         const text = this.displayLines[line];
         const formats = this.lineFormats[line];
         const fLen = formats.length;
@@ -1737,7 +1747,11 @@ export class Display extends EventEmitter {
                 start = offset;
             if (len < end)
                 end = len;
-            width += this.textWidth(text.substring(start, end), font);
+            //if unicode or non standard font calculate width
+            if (formats[f].unicode || font)
+                width += this.textWidth(text.substring(start, end), font);
+            else
+                width += text.substring(start, end).length * this._charWidth;
             //len is in block so quit
             if (len <= end)
                 break;
@@ -2419,6 +2433,7 @@ export class Display extends EventEmitter {
         let fStyle: any = '';
         let fCls: any = '';
         let height = 0;
+        let font;
         const len = formats.length;
         const cw = this._charWidth;
         let left = 0;
@@ -2456,6 +2471,10 @@ export class Display extends EventEmitter {
                     fStyle = format.fStyle;
                     fCls = format.fCls;
                     height = Math.max(height, format.height || 0);
+                    if (format.font || format.size)
+                        font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`
+                    else
+                        font = 0;
                 }
                 else {
                     bStyle = [];
@@ -2466,11 +2485,12 @@ export class Display extends EventEmitter {
                     if (format.color)
                         fStyle.push('color:', format.color, ';');
                     eText = text.substring(offset, end);
+                    font = 0;
                     if (format.font || format.size) {
                         if (format.font) fStyle.push('font-family: ', format.font, ';');
                         if (format.size) fStyle.push('font-size: ', format.size, ';');
                         height = Math.max(height, format.height = this.textHeight(eText, format.font, format.size));
-                        format.width = format.width || this.textWidth(eText, `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
+                        format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
                     }
                     else if (format.unicode)
                         format.width = format.width || this.textWidth(eText);
@@ -2515,8 +2535,8 @@ export class Display extends EventEmitter {
                 fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href, '" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
+                if (format.unicode || font)
+                    format.width = format.width || this.textWidth(eText, font);
                 else
                     format.width = format.width || eText.length * cw;
                 back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
@@ -2544,8 +2564,8 @@ export class Display extends EventEmitter {
                 }
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
+                if (format.unicode || font)
+                    format.width = format.width || this.textWidth(eText, font);
                 else
                     format.width = format.width || eText.length * cw;
                 back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
@@ -2569,8 +2589,8 @@ export class Display extends EventEmitter {
                 fore.push(' onmouseover="', this.mxpTooltipFunction, '(this);"', ' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
+                if (format.unicode || font)
+                    format.width = format.width || this.textWidth(eText, font);
                 else
                     format.width = format.width || eText.length * cw;
                 back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '" ></span>');
@@ -2579,8 +2599,8 @@ export class Display extends EventEmitter {
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 eText = text.substring(offset, end);
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
+                if (format.unicode || font)
+                    format.width = format.width || this.textWidth(eText, font);
                 else
                     format.width = format.width || eText.length * cw;
                 back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
