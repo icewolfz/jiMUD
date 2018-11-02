@@ -1,3 +1,4 @@
+//spellchecker:ignore ismap
 /**
  * Ansi display
  *
