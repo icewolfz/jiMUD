@@ -454,13 +454,13 @@ export class Display extends EventEmitter {
         this._character = document.createElement('div');
         this._character.id = this.id + '-Character';
         this._character.className = 'ansi';
-        this._character.style.borderBottom = '1px solid black';
+        //this._character.style.borderBottom = '1px solid black';
         this._character.innerText = 'W';
         this._character.style.visibility = 'hidden';
         this._ruler.style.visibility = 'hidden';
         document.body.appendChild(this._character);
 
-        this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
+        this._charHeight = $(this._character).innerHeight();
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
         this._styles.innerHTML = `.background > span, .view > span, .line, .background-line { height: ${this._charHeight}px; }`;
 
@@ -1138,7 +1138,7 @@ export class Display extends EventEmitter {
             this._contextFont = `${size} ${font}`;
             this._context.font = this._contextFont;
             //recalculate height/width of characters so display can be calculated
-            this._charHeight = Math.ceil($(this._character).innerHeight() + 0.5);
+            this._charHeight = $(this._character).innerHeight();
             this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
             this._styles.innerHTML = `.background > span, .view > span, .line, .background-line { height: ${this._charHeight}px; }`;
             /*
@@ -2416,6 +2416,7 @@ export class Display extends EventEmitter {
         let fCls: any = '';
         let height = 0;
         const len = formats.length;
+        const cw = this._charWidth;
         let left = 0;
         let ol;
         let iWidth = 0;
@@ -2467,8 +2468,10 @@ export class Display extends EventEmitter {
                         height = Math.max(height, format.height = this.textHeight(eText, format.font, format.size));
                         format.width = format.width || this.textWidth(eText, `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
                     }
-                    else
+                    else if (format.unicode)
                         format.width = format.width || this.textWidth(eText);
+                    else
+                        format.width = format.width || eText.length * cw;
 
                     if (format.style !== FontStyle.None) {
                         if ((format.style & FontStyle.Bold) === FontStyle.Bold)
@@ -2490,17 +2493,17 @@ export class Display extends EventEmitter {
                         if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
                             fCls.push(' s');
                     }
-                    format.bStyle = (bStyle = bStyle.join(''));
-                    format.fStyle = (fStyle = fStyle.join(''));
-                    format.fCls = (fCls = fCls.join(''));
+                    format.bStyle = (bStyle = bStyle);
+                    format.fStyle = (fStyle = fStyle);
+                    format.fCls = (fCls = fCls);
                 }
                 if (format.hr) {
-                    back.push('<span style="left:0;width:{max}px;', bStyle, '"></span>');
-                    fore.push('<span style="left:0;width:{max}px;', fStyle, '" class="', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
+                    back.push('<span style="left:0;width:{max}px;', ...bStyle, '"></span>');
+                    fore.push('<span style="left:0;width:{max}px;', ...fStyle, '" class="', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
                 }
                 else if (end - offset !== 0) {
-                    back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                    fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '" class="', fCls, '">', htmlEncode(eText), '</span>');
+                    back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
+                    fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
                     left += format.width;
                 }
             }
@@ -2508,9 +2511,12 @@ export class Display extends EventEmitter {
                 fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href, '" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                format.width = format.width || this.textWidth(eText);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '" class="', fCls, '">', htmlEncode(eText), '</span>');
+                if (format.unicode)
+                    format.width = format.width || this.textWidth(eText);
+                else
+                    format.width = format.width || eText.length * cw;
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
                 left += format.width;
             }
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
@@ -2534,9 +2540,12 @@ export class Display extends EventEmitter {
                 }
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                format.width = format.width || this.textWidth(eText);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '" class="', fCls, '">', htmlEncode(eText), '</span>');
+                if (format.unicode)
+                    format.width = format.width || this.textWidth(eText);
+                else
+                    format.width = format.width || eText.length * cw;
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
                 left += format.width;
             }
             else if (format.formatType === FormatType.MXPSend) {
@@ -2556,16 +2565,22 @@ export class Display extends EventEmitter {
                 fore.push(' onmouseover="', this.mxpTooltipFunction, '(this);"', ' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                format.width = format.width || this.textWidth(eText);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" ></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '" class="', fCls, '">', htmlEncode(eText), '</span>');
+                if (format.unicode)
+                    format.width = format.width || this.textWidth(eText);
+                else
+                    format.width = format.width || eText.length * cw;
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '" ></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
                 left += format.width;
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 eText = text.substring(offset, end);
-                format.width = format.width || this.textWidth(eText);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '" class="', fCls, '">', htmlEncode(eText), '</span>');
+                if (format.unicode)
+                    format.width = format.width || this.textWidth(eText);
+                else
+                    format.width = format.width || eText.length * cw;
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
                 left += format.width;
             }
             else if (format.formatType === FormatType.Image) {
@@ -2652,8 +2667,10 @@ export class Display extends EventEmitter {
                         const l = this._lines.length;
                         this.updateTops(lIdx);
                         img.remove();
-                        if (this.split) this.split.dirty = true;
-                        this.doUpdate(UpdateType.display);
+                        if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
+                            if (this.split) this.split.dirty = true;
+                            this.doUpdate(UpdateType.display);
+                        }
                     };
                 }
                 height = Math.max(height, format.height || 0);
@@ -2908,6 +2925,8 @@ export class Display extends EventEmitter {
     private _scrollCorner: HTMLElement;
 
     public updateScrollbars() {
+        if (this._parser.busy)
+            return;
         this._HScroll.offset = this._VScroll.track.clientWidth;
         this._HScroll.resize();
         this._HScroll.visible = this._HScroll.scrollSize > 0;
