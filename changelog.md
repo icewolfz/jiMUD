@@ -29,6 +29,7 @@
   - Fixed matching whole unicode words on context
   - ANSI Parser: Always append line fragment when parsing, better fix to the previous missing raw data issue
   - Window size not correctly sent to mud when maximizing window, broken in v0.6.5
+  - Logger: Fixed MXP hr style effects
 
 ## v0.6.5 2018-10-29
 
