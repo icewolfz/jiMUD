@@ -1,3 +1,4 @@
+//spellchecker:ignore ismap
 /**
  * Ansi display
  *
@@ -513,7 +514,7 @@ export class Display extends EventEmitter {
                 for (line in this._expire2) {
                     if (!this._expire2.hasOwnProperty(line))
                         continue;
-                    this.expireLineLinkFormat(this._expire2[line], parseInt(line));
+                    this.expireLineLinkFormat(this._expire2[line], +line);
                 }
                 for (expire in this._expire) {
                     if (!this._expire.hasOwnProperty(expire))
@@ -522,7 +523,7 @@ export class Display extends EventEmitter {
                     for (line in lines) {
                         if (!lines.hasOwnProperty(line))
                             continue;
-                        this.expireLineLinkFormat(lines[line], parseInt(line));
+                        this.expireLineLinkFormat(lines[line], +line);
                     }
                 }
                 this._expire2 = [];
@@ -534,7 +535,7 @@ export class Display extends EventEmitter {
                 for (line in lines) {
                     if (!lines.hasOwnProperty(line))
                         continue;
-                    this.expireLineLinkFormat(lines[line], parseInt(line));
+                    this.expireLineLinkFormat(lines[line], +line);
                 }
                 delete this._expire[args];
                 this.doUpdate(UpdateType.view);
@@ -1605,12 +1606,14 @@ export class Display extends EventEmitter {
                     x--;
                     w = Math.ceil(this.textWidth(text.substr(0, x)));
                 }
+                x++;
             }
             else if (w > 0 && w < xPos) {
                 while (w < xPos && x < tl) {
                     x++;
                     w = Math.ceil(this.textWidth(text.substr(0, x)));
                 }
+                x--;
             }
         }
         return { x: x, y: y };
@@ -1836,7 +1839,7 @@ export class Display extends EventEmitter {
         for (ol in this._overlays[type]) {
             if (!this._overlays[type].hasOwnProperty(ol))
                 continue;
-            this._overlays[type][ol] = `<div style="top: ${(parseInt(ol, 10) || 0) * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
+            this._overlays[type][ol] = `<div style="top: ${(+ol || 0) * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
             if (this.split && ol >= this.split._viewRange.start) {
                 this.split.dirty = true;
                 this.doUpdate(UpdateType.scrollViewOverlays);
@@ -2138,6 +2141,7 @@ export class Display extends EventEmitter {
     }
 
     get selection(): string {
+        if (this.lines.length === 0) return '';
         const sel = this._currentSelection;
         let s;
         let e;
@@ -2158,7 +2162,7 @@ export class Display extends EventEmitter {
         else if (sel.start.x === sel.end.x) {
             return '';
         }
-        else if (this.lineFormats[sel.start.y][this.lineFormats[sel.start.y].length - 1].hr)
+        else if (sel.start.y > 0 && sel.start.y < this.lineFormats.length && this.lineFormats[sel.start.y][this.lineFormats[sel.start.y].length - 1].hr)
             return '---';
         else {
             s = Math.min(sel.start.x, sel.end.x);
@@ -2197,6 +2201,7 @@ export class Display extends EventEmitter {
     }
 
     get selectionAsHTML(): string {
+        if (this.lines.length === 0) return '';
         const sel = this._currentSelection;
         let s;
         let e;

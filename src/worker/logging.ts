@@ -1,3 +1,4 @@
+//spellchecker:ignore ismap yyyymmdd hmmss
 const fs = require('fs');
 const path = require('path');
 const moment = require('moment');
@@ -90,6 +91,12 @@ let fTimeStamp: string = '';
 let logging: boolean = false;
 let currentFile: string = '';
 let writingHeader = false;
+let colors = {};
+let colorsCnt = 0;
+let backgrounds = {};
+let backgroundsCnt = 0;
+let buffer = {};
+let fd = {};
 
 self.addEventListener('message', (e: MessageEvent) => {
     if (!e.data) return;
@@ -211,7 +218,37 @@ function buildFilename() {
         postMessage({ event: 'debug', args: 'Log file: "' + currentFile + '"' });
 }
 
-function appendFile(file, data) {
+function appendFile(file, data, force?) {
+    try {
+        if (!buffer[file]) buffer[file] = [];
+        if (buffer[file].length && !force) {
+            buffer[file].push({ file: file, data: data });
+            return;
+        }
+        buffer[file].unshift({ file: file, data: data });
+        if (!fd[file]) {
+            fd[file] = fs.createWriteStream(file, { flags: 'a' });
+            fd[file].on('error', err => postMessage({ event: 'error', args: err }));
+        }
+        fd[file].write(data, 'utf-8', () => {
+            buffer[file].shift();
+            if (buffer[file].length) {
+                const tmp = buffer[file].shift();
+                appendFile(tmp.file, tmp.data, true);
+            }
+            else {
+                delete buffer[file];
+                fd[file].end();
+                delete fd[file];
+            }
+        });
+    }
+    catch (err) {
+        postMessage({ event: 'error', args: err });
+    }
+}
+
+function appendFileSync(file, data) {
     try {
         fs.appendFileSync(file, data);
     }
@@ -223,8 +260,12 @@ function appendFile(file, data) {
 function writeHeader() {
     buildFilename();
     if (!isFileSync(currentFile + '.htm') && (options.what & Log.Html) === Log.Html && !writingHeader) {
+        colors = {};
+        colorsCnt = 0;
+        backgrounds = {};
+        backgroundsCnt = 0;
         writingHeader = true;
-        appendFile(currentFile + '.htm', '<style>\nbody\n{\n	font-family: \'Courier New\', Courier, monospace;\n	text-align: left;\n	font-size: 1em;\n	white-space: pre;\n	background-color: black;	\n}\n/* --- Start CSS for ansi display --- */\n@-webkit-keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n@keyframes blinker { \n 	0% { opacity: 1.0; }\n  50% { opacity: 0.0; }\n  100% { opacity: 1.0; }\n} \n\n.ansi-blink { \n	text-decoration:blink;\n	animation-name: blinker;\n	animation-iteration-count: infinite; \n	animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	animation-duration: 1s; \n	-webkit-animation-name: blinker;\n	-webkit-animation-iteration-count: infinite; \n	-webkit-animation-timing-function: cubic-bezier(1.0,0,0,1.0); \n	-webkit-animation-duration: 1s; \n}\n\n.ansi\n{\n	padding: 0px;\n	margin:0px;\n	\n}\n\n.line \n{\n	word-wrap:break-word;\n	word-break:break-all;\n	width: 100%;\n	display: block;\n	padding-bottom:1px;\n	clear:both;\n	line-height: normal;\n  padding-bottom:2px\n}	\n\n.line hr{ border: 0px; }\n/* --- End CSS for ansi display --- */\n\n.line a, .line a:link \n{\n	color: inherit;\n	font-weight: inherit;\n	text-decoration: underline;\n}\n\n.URLLink, .URLLink:link\n{\n	text-decoration: underline;\n	cursor: pointer;\n}\n</style>\n\n');
+        appendFileSync(currentFile + '.htm', fs.readFileSync(path.join(path.join(__dirname, '..', '..', 'assets'), 'log.header.html'), 'utf-8').replace(/\n|\r|\n\r|\r\n/g, ''));
         writingHeader = false;
     }
 }
@@ -295,20 +336,22 @@ function createLines(lines: string[], formats: any[]) {
     return text.join('');
 }
 
+function getClassName(str) {
+    if (!str || str.length === 0) return null;
+    return str.replace(/[,]/g, '-').replace(/[\(\)\s;]/g, '');
+}
+
 function createLine(text: string, formats: any[]) {
     const parts = [];
     let offset = 0;
-    let style = [];
     let fCls;
     const len = formats.length;
+    const styles = [];
 
     for (let f = 0; f < len; f++) {
         const format = formats[f];
         let nFormat;
         let end;
-        const td = [];
-        //let oSize;
-        //let oFont;
         if (f < len - 1) {
             nFormat = formats[f + 1];
             //skip empty blocks
@@ -320,53 +363,77 @@ function createLine(text: string, formats: any[]) {
             end = text.length;
         offset = format.offset;
         if (format.formatType === FormatType.Normal) {
-            style = [];
             fCls = [];
-            if (format.background)
-                style.push('background:', format.background, ';');
-            if (format.color)
-                style.push('color:', format.color, ';');
-            if (format.font)
-                style.push('font-family: ', format.font, ';');
-            if (format.size)
-                style.push('font-size: ', format.size, ';');
+            if (backgrounds[getClassName(format.background)])
+                fCls.push(' b', backgrounds[getClassName(format.background)]);
+            else if (format.background) {
+                backgrounds[getClassName(format.background)] = backgroundsCnt;
+                fCls.push(' b', backgroundsCnt);
+                styles.push(`.b${backgroundsCnt} { background-color: ${format.background}; }`);
+                backgroundsCnt++;
+            }
+            if (colors[getClassName(format.color)])
+                fCls.push(' c', colors[getClassName(format.color)]);
+            else if (format.color) {
+                colors[getClassName(format.color)] = colorsCnt;
+                fCls.push(' c', colorsCnt);
+                styles.push(`.c${colorsCnt} { color: ${format.color}; }`);
+                colorsCnt++;
+            }
+
+            if (colors[getClassName(format.font)])
+                fCls.push(' f', colors[getClassName(format.font)]);
+            else if (format.font) {
+                colors[getClassName(format.font)] = colorsCnt;
+                fCls.push(' f', colorsCnt);
+                styles.push(`.f${colorsCnt} { font-family: ${format.font}; }`);
+                colorsCnt++;
+            }
+            if (colors[getClassName(format.size)])
+                fCls.push(' f', colors[getClassName(format.size)]);
+            else if (format.size) {
+                colors[getClassName(format.size)] = colorsCnt;
+                fCls.push(' f', colorsCnt);
+                styles.push(`.f${colorsCnt} { font-size: ${format.size}; }`);
+                colorsCnt++;
+            }
+
             if (format.style !== FontStyle.None) {
                 if ((format.style & FontStyle.Bold) === FontStyle.Bold)
-                    style.push('font-weight: bold;');
+                    fCls.push(' b');
                 if ((format.style & FontStyle.Italic) === FontStyle.Italic)
-                    style.push('font-style: italic;');
+                    fCls.push(' i');
                 if ((format.style & FontStyle.Overline) === FontStyle.Overline)
-                    td.push('overline ');
+                    fCls.push(' o');
                 if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) === FontStyle.Underline)
-                    td.push('underline ');
+                    fCls.push(' u');
                 if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
-                    style.push('border-bottom: 1px solid ', format.color, ';');
-                else
-                    style.push('padding-bottom: 1px;');
+                    fCls.push(' du');
                 if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
                     if (this.enableFlashing)
                         fCls.push(' ansi-blink');
                     else if ((format.style & FontStyle.DoubleUnderline) !== FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) !== FontStyle.Underline)
-                        td.push('underline ');
+                        fCls.push(' u');
                 }
                 if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
-                    td.push('line-through ');
-                if (td.length > 0)
-                    style.push('text-decoration:', td.join(''), ';');
+                    fCls.push(' s');
             }
-            if (format.hr)
-                parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '"><div class="hr" style="background-color:', format.color, '"></div></span>');
+            if (format.hr) {
+                if (!backgrounds[getClassName(format.color)]) {
+                    backgrounds[getClassName(format.color)] = backgroundsCnt;
+                    fCls.push(' b', backgroundsCnt);
+                    styles.push(`.b${backgroundsCnt} { background-color: ${format.color}; }`);
+                    backgroundsCnt++;
+                }
+                parts.push('<span class="ansi', ...fCls, '"><div class="hr" class="b', backgrounds[getClassName(format.color)], '"></div></span>');
+            }
             else if (end - offset !== 0)
-                parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
+                parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
         else if (format.formatType === FormatType.Link) {
-            parts.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
-            parts.push(format.href);
-            parts.push('" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
+            parts.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href, '" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
             if (end - offset === 0) continue;
-            parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
-            parts.push(htmlEncode(text.substring(offset, end)));
-            parts.push('</span>');
+            parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
         else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
             parts.push('</a>');
@@ -374,52 +441,32 @@ function createLine(text: string, formats: any[]) {
         else if (format.formatType === FormatType.WordBreak)
             parts.push('<wbr>');
         else if (format.formatType === FormatType.MXPLink) {
-            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="');
-            parts.push(format.href);
-            parts.push('"');
-            parts.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
+            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="', format.href, '" onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
             if (end - offset === 0) continue;
-            parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
-            parts.push(htmlEncode(text.substring(offset, end)));
-            parts.push('</span>');
+            parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
         else if (format.formatType === FormatType.MXPSend) {
-            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="');
-            parts.push(format.hint);
-            parts.push('"');
-            parts.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
-            parts.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
+            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="', format.hint, '" onmouseover="', this.mxpTooltipFunction, '(this);" onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
             if (end - offset === 0) continue;
-            parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
-            parts.push(htmlEncode(text.substring(offset, end)));
-            parts.push('</span>');
+            parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
-        else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
-            parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
-            parts.push(htmlEncode(text.substring(offset, end)));
-            parts.push('</span>');
-        }
+        else if (format.formatType === FormatType.MXPExpired && end - offset !== 0)
+            parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         else if (format.formatType === FormatType.Image) {
             let tmp = '';
-            parts.push('<img src="');
+            parts.push();
             if (format.url.length > 0) {
-                parts.push(format.url);
                 tmp += format.url;
-                if (!format.url.endsWith('/')) {
-                    parts.push('/');
+                if (!tmp.endsWith('/'))
                     tmp += '/';
-                }
             }
             if (format.t.length > 0) {
-                parts.push(format.t);
                 tmp += format.t;
-                if (!format.t.endsWith('/')) {
-                    parts.push('/');
+                if (!tmp.endsWith('/'))
                     tmp += '/';
-                }
             }
             tmp += format.name;
-            parts.push(format.name, '"  style="');
+            parts.push('<img src="', tmp, '"  style="');
             if (format.w.length > 0)
                 parts.push('width:', formatUnit(format.w), ';');
             if (format.h.length > 0)
@@ -437,24 +484,19 @@ function createLine(text: string, formats: any[]) {
                     parts.push('vertical-align:', format.align, ';');
                     break;
             }
-            if (format.hspace.length > 0 && format.vspace.length > 0) {
-                parts.push('margin:');
-                parts.push(formatUnit(format.vspace), ' ');
-                parts.push(formatUnit(format.hspace), ';');
-            }
-            else if (format.hspace.length > 0) {
-                parts.push('margin:');
-                parts.push('0px ', formatUnit(format.hspace), ';');
-            }
-            else if (format.vspace.length > 0) {
-                parts.push('margin:');
-                parts.push(formatUnit(format.vspace), ' 0px;');
-            }
+            if (format.hspace.length > 0 && format.vspace.length > 0)
+                parts.push('margin:', formatUnit(format.vspace), ' ', formatUnit(format.hspace), ';');
+            else if (format.hspace.length > 0)
+                parts.push('margin:0px ', formatUnit(format.hspace), ';');
+            else if (format.vspace.length > 0)
+                parts.push('margin:', formatUnit(format.vspace), ' 0px;');
             parts.push('"');
             if (format.ismap) parts.push(' ismap onclick="return false;"');
             parts.push(`src="${tmp}"/>`);
         }
     }
+    if (styles.length)
+        parts.push('<style>', ...styles, '</style>');
     return `<span class="line">${parts.join('')}<br></span>`;
 }
 

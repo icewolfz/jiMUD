@@ -10,6 +10,9 @@
   - Update electron from 3.0.6 to 3.0.7
   - Update electron-updater 3.1.5 to 3.1.6
   - Change show split button disabled look for all themes to not light up
+  - Logger:
+    - Re-coded html logger to use classes and style blocks to reduce file sizes
+    - Convert write system to use a stream to batch write to improve write speeds
 - **Fixed:**
   - Display:
     - Detect changes to display better to handle theme changes
@@ -22,8 +25,11 @@
     - Fixed selection when dragging below display window
     - Fixed split scroll window bottom padding spacing for all themes
     - Fixed MXP image align=right
+    - Fixed getting wrong character for mouse position
+  - Fixed matching whole unicode words on context
   - ANSI Parser: Always append line fragment when parsing, better fix to the previous missing raw data issue
   - Window size not correctly sent to mud when maximizing window, broken in v0.6.5
+  - Logger: Fixed MXP hr style effects
 
 ## v0.6.5 2018-10-29
 
