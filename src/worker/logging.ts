@@ -242,18 +242,6 @@ function appendFile(file, data, force?) {
                 delete fd[file];
             }
         });
-        /*
-        fs.appendFile(file, data, (err) => {
-            if (err) postMessage({ event: 'error', args: err });
-            buffer[file].shift();
-            if (buffer[file].length) {
-                const tmp = buffer[file].shift();
-                appendFile(tmp.file, tmp.data, true);
-            }
-            else
-                delete buffer[file];
-        });
-        */
     }
     catch (err) {
         postMessage({ event: 'error', args: err });
@@ -364,8 +352,6 @@ function createLine(text: string, formats: any[]) {
         const format = formats[f];
         let nFormat;
         let end;
-        //let oSize;
-        //let oFont;
         if (f < len - 1) {
             nFormat = formats[f + 1];
             //skip empty blocks
@@ -432,19 +418,22 @@ function createLine(text: string, formats: any[]) {
                 if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
                     fCls.push(' s');
             }
-            if (format.hr)
-                parts.push('<span class="ansi', ...fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
+            if (format.hr) {
+                if (!backgrounds[getClassName(format.color)]) {
+                    backgrounds[getClassName(format.color)] = backgroundsCnt;
+                    fCls.push(' b', backgroundsCnt);
+                    styles.push(`.b${backgroundsCnt} { background-color: ${format.color}; }`);
+                    backgroundsCnt++;
+                }
+                parts.push('<span class="ansi', ...fCls, '"><div class="hr" class="b', backgrounds[getClassName(format.color)], '"></div></span>');
+            }
             else if (end - offset !== 0)
                 parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
         else if (format.formatType === FormatType.Link) {
-            parts.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
-            parts.push(format.href);
-            parts.push('" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
+            parts.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href, '" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
             if (end - offset === 0) continue;
-            parts.push('<span class="ansi', ...fCls, '">');
-            parts.push(htmlEncode(text.substring(offset, end)));
-            parts.push('</span>');
+            parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
         else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
             parts.push('</a>');
@@ -452,52 +441,32 @@ function createLine(text: string, formats: any[]) {
         else if (format.formatType === FormatType.WordBreak)
             parts.push('<wbr>');
         else if (format.formatType === FormatType.MXPLink) {
-            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="');
-            parts.push(format.href);
-            parts.push('"');
-            parts.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
+            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="', format.href, '" onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
             if (end - offset === 0) continue;
-            parts.push('<span class="ansi', ...fCls, '">');
-            parts.push(htmlEncode(text.substring(offset, end)));
-            parts.push('</span>');
+            parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
         else if (format.formatType === FormatType.MXPSend) {
-            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="');
-            parts.push(format.hint);
-            parts.push('"');
-            parts.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
-            parts.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
+            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="', format.hint, '" onmouseover="', this.mxpTooltipFunction, '(this);" onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
             if (end - offset === 0) continue;
-            parts.push('<span class="ansi', ...fCls, '">');
-            parts.push(htmlEncode(text.substring(offset, end)));
-            parts.push('</span>');
+            parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
-        else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
-            parts.push('<span class="ansi', ...fCls, '">');
-            parts.push(htmlEncode(text.substring(offset, end)));
-            parts.push('</span>');
-        }
+        else if (format.formatType === FormatType.MXPExpired && end - offset !== 0)
+            parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         else if (format.formatType === FormatType.Image) {
             let tmp = '';
-            parts.push('<img src="');
+            parts.push();
             if (format.url.length > 0) {
-                parts.push(format.url);
                 tmp += format.url;
-                if (!format.url.endsWith('/')) {
-                    parts.push('/');
+                if (!tmp.endsWith('/'))
                     tmp += '/';
-                }
             }
             if (format.t.length > 0) {
-                parts.push(format.t);
                 tmp += format.t;
-                if (!format.t.endsWith('/')) {
-                    parts.push('/');
+                if (!tmp.endsWith('/'))
                     tmp += '/';
-                }
             }
             tmp += format.name;
-            parts.push(format.name, '"  style="');
+            parts.push('<img src="', tmp, '"  style="');
             if (format.w.length > 0)
                 parts.push('width:', formatUnit(format.w), ';');
             if (format.h.length > 0)
@@ -515,19 +484,12 @@ function createLine(text: string, formats: any[]) {
                     parts.push('vertical-align:', format.align, ';');
                     break;
             }
-            if (format.hspace.length > 0 && format.vspace.length > 0) {
-                parts.push('margin:');
-                parts.push(formatUnit(format.vspace), ' ');
-                parts.push(formatUnit(format.hspace), ';');
-            }
-            else if (format.hspace.length > 0) {
-                parts.push('margin:');
-                parts.push('0px ', formatUnit(format.hspace), ';');
-            }
-            else if (format.vspace.length > 0) {
-                parts.push('margin:');
-                parts.push(formatUnit(format.vspace), ' 0px;');
-            }
+            if (format.hspace.length > 0 && format.vspace.length > 0)
+                parts.push('margin:', formatUnit(format.vspace), ' ', formatUnit(format.hspace), ';');
+            else if (format.hspace.length > 0)
+                parts.push('margin:0px ', formatUnit(format.hspace), ';');
+            else if (format.vspace.length > 0)
+                parts.push('margin:', formatUnit(format.vspace), ' 0px;');
             parts.push('"');
             if (format.ismap) parts.push(' ismap onclick="return false;"');
             parts.push(`src="${tmp}"/>`);
