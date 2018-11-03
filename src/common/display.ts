@@ -1593,7 +1593,8 @@ export class Display extends EventEmitter {
                     x++;
                     w = Math.ceil(this.textWidth(text.substr(0, x)));
                 }
-                x--;
+                if (w > xPos)
+                    x--;
             }
         }
         return { x: x, y: y };
@@ -1984,8 +1985,10 @@ export class Display extends EventEmitter {
 
         if (sL < 0)
             sL = 0;
-        if (eL >= len)
+        if (eL >= len) {
             eL = len - 1;
+            e = this.lines[eL].length;
+        }
         if (s < 0)
             s = 0;
         if (e > this.lines[eL].length)
@@ -2153,8 +2156,10 @@ export class Display extends EventEmitter {
 
         if (sL < 0)
             sL = 0;
-        if (eL >= len)
+        if (eL >= len) {
             eL = len - 1;
+            e = this.lines[eL].length;
+        }
         if (s < 0)
             s = 0;
         if (e > this.lines[eL].length)
@@ -2211,8 +2216,10 @@ export class Display extends EventEmitter {
 
         if (sL < 0)
             sL = 0;
-        if (eL >= len)
+        if (eL >= len) {
             eL = len - 1;
+            e = this.lines[eL].length;
+        }
         if (s < 0)
             s = 0;
         if (e > this.lines[eL].length)
