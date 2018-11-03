@@ -7,6 +7,8 @@ export interface DisplayOptions extends ParserOptions {
   enableSplit?: boolean;
   enableSplitLive?: boolean;
   enableRoundedRanges?: boolean;
+  colors?: boolean;
+  backgroundColors?: boolean;
 }
 
 export interface OverlayRange {

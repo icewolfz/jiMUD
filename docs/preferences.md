@@ -22,8 +22,6 @@ Reset - Resetting will revert all settings back to default values
 
 ## Display
 
-- `Font` The font for the display area, mono spaced fonts work the best.
-- `Font size` The font size for the display area
 - `Enable flashing text` Enable ansi flashing/blinking text, when disabled flashing text appears as underlined text **note** this can cause a performance hit when enabled.
 - `Auto copy selected to clipboard` This will copy selected text to the clipboard automatically when mouse released and then clear selection
 - `Echo commands` Will display commands as they are sent to the mud
@@ -35,6 +33,13 @@ Reset - Resetting will revert all settings back to default values
 - `Show split button` Show or hide split toggle button in split scroll to allow for quick toggling
 - `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
 - `Hide trailing line`  Hide trailing empty line, **note** if more then one it will only hide the final line
+- `Enable colors` disable or enable all colors
+- `Enable background colors` disable or enable just background colors
+
+## Display > Fonts
+
+- `Font` The font for the display area, mono spaced fonts work the best.
+- `Font size` The font size for the display area
 
 ## Colors
 
