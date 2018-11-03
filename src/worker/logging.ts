@@ -1,3 +1,4 @@
+//spellchecker:ignore ismap yyyymmdd hmmss
 const fs = require('fs');
 const path = require('path');
 const moment = require('moment');
@@ -90,6 +91,10 @@ let fTimeStamp: string = '';
 let logging: boolean = false;
 let currentFile: string = '';
 let writingHeader = false;
+let colors = {};
+let colorsCnt = 0;
+let backgrounds = {};
+let backgroundsCnt = 0;
 
 self.addEventListener('message', (e: MessageEvent) => {
     if (!e.data) return;
@@ -220,11 +225,24 @@ function appendFile(file, data) {
     }
 }
 
+function appendFileSync(file, data) {
+    try {
+        fs.appendFileSync(file, data);
+    }
+    catch (err) {
+        postMessage({ event: 'error', args: err });
+    }
+}
+
 function writeHeader() {
     buildFilename();
     if (!isFileSync(currentFile + '.htm') && (options.what & Log.Html) === Log.Html && !writingHeader) {
+        colors = {};
+        colorsCnt = 0;
+        backgrounds = {};
+        backgroundsCnt = 0;
         writingHeader = true;
-        appendFile(currentFile + '.htm', path.join(path.join(__dirname, '..', '..', 'assets'), 'log.header.html'));
+        appendFileSync(currentFile + '.htm', fs.readFileSync(path.join(path.join(__dirname, '..', '..', 'assets'), 'log.header.html'), 'utf-8').replace(/\n|\r|\n\r|\r\n/g, ''));
         writingHeader = false;
     }
 }
@@ -295,18 +313,22 @@ function createLines(lines: string[], formats: any[]) {
     return text.join('');
 }
 
+function getClassName(str) {
+    if (!str || str.length === 0) return null;
+    return str.replace(/[,]/g, '-').replace(/[\(\)\s;]/g, '');
+}
+
 function createLine(text: string, formats: any[]) {
     const parts = [];
     let offset = 0;
-    let style = [];
     let fCls;
     const len = formats.length;
+    const styles = [];
 
     for (let f = 0; f < len; f++) {
         const format = formats[f];
         let nFormat;
         let end;
-        const td = [];
         //let oSize;
         //let oFont;
         if (f < len - 1) {
@@ -320,51 +342,72 @@ function createLine(text: string, formats: any[]) {
             end = text.length;
         offset = format.offset;
         if (format.formatType === FormatType.Normal) {
-            style = [];
             fCls = [];
-            if (format.background)
-                style.push('background:', format.background, ';');
-            if (format.color)
-                style.push('color:', format.color, ';');
-            if (format.font)
-                style.push('font-family: ', format.font, ';');
-            if (format.size)
-                style.push('font-size: ', format.size, ';');
+            if (backgrounds[getClassName(format.background)])
+                fCls.push(' b', backgrounds[getClassName(format.background)]);
+            else if (format.background) {
+                backgrounds[getClassName(format.background)] = backgroundsCnt;
+                fCls.push(' b', backgroundsCnt);
+                styles.push(`.b${backgroundsCnt} { background-color: ${format.background}; }`);
+                backgroundsCnt++;
+            }
+            if (colors[getClassName(format.color)])
+                fCls.push(' c', colors[getClassName(format.color)]);
+            else if (format.color) {
+                colors[getClassName(format.color)] = colorsCnt;
+                fCls.push(' c', colorsCnt);
+                styles.push(`.c${colorsCnt} { color: ${format.color}; }`);
+                colorsCnt++;
+            }
+
+            if (colors[getClassName(format.font)])
+                fCls.push(' f', colors[getClassName(format.font)]);
+            else if (format.font) {
+                colors[getClassName(format.font)] = colorsCnt;
+                fCls.push(' f', colorsCnt);
+                styles.push(`.f${colorsCnt} { font-family: ${format.font}; }`);
+                colorsCnt++;
+            }
+            if (colors[getClassName(format.size)])
+                fCls.push(' f', colors[getClassName(format.size)]);
+            else if (format.size) {
+                colors[getClassName(format.size)] = colorsCnt;
+                fCls.push(' f', colorsCnt);
+                styles.push(`.f${colorsCnt} { font-size: ${format.size}; }`);
+                colorsCnt++;
+            }
+
             if (format.style !== FontStyle.None) {
                 if ((format.style & FontStyle.Bold) === FontStyle.Bold)
-                    style.push('font-weight: bold;');
+                    fCls.push(' b');
                 if ((format.style & FontStyle.Italic) === FontStyle.Italic)
-                    style.push('font-style: italic;');
+                    fCls.push(' i');
                 if ((format.style & FontStyle.Overline) === FontStyle.Overline)
-                    td.push('overline ');
+                    fCls.push(' o');
                 if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) === FontStyle.Underline)
-                    td.push('underline ');
+                    fCls.push(' u');
                 if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
-                    style.push('border-bottom: 1px solid ', format.color, ';');
-                else
-                    style.push('padding-bottom: 1px;');
+                    fCls.push(' du');
                 if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
                     if (this.enableFlashing)
                         fCls.push(' ansi-blink');
                     else if ((format.style & FontStyle.DoubleUnderline) !== FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) !== FontStyle.Underline)
-                        td.push('underline ');
+                        fCls.push(' u');
                 }
                 if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
-                    td.push('line-through ');
-                if (td.length > 0)
-                    style.push('text-decoration:', td.join(''), ';');
+                    fCls.push(' s');
             }
             if (format.hr)
-                parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '"><div class="hr" style="background-color:', format.color, '"></div></span>');
+                parts.push('<span class="ansi', ...fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
             else if (end - offset !== 0)
-                parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
+                parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
         else if (format.formatType === FormatType.Link) {
             parts.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
             parts.push(format.href);
             parts.push('" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
             if (end - offset === 0) continue;
-            parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
+            parts.push('<span class="ansi', ...fCls, '">');
             parts.push(htmlEncode(text.substring(offset, end)));
             parts.push('</span>');
         }
@@ -379,7 +422,7 @@ function createLine(text: string, formats: any[]) {
             parts.push('"');
             parts.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
             if (end - offset === 0) continue;
-            parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
+            parts.push('<span class="ansi', ...fCls, '">');
             parts.push(htmlEncode(text.substring(offset, end)));
             parts.push('</span>');
         }
@@ -390,12 +433,12 @@ function createLine(text: string, formats: any[]) {
             parts.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
             parts.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
             if (end - offset === 0) continue;
-            parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
+            parts.push('<span class="ansi', ...fCls, '">');
             parts.push(htmlEncode(text.substring(offset, end)));
             parts.push('</span>');
         }
         else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
-            parts.push('<span style="', style.join(''), '" class="ansi', fCls.join(''), '">');
+            parts.push('<span class="ansi', ...fCls, '">');
             parts.push(htmlEncode(text.substring(offset, end)));
             parts.push('</span>');
         }
@@ -455,6 +498,8 @@ function createLine(text: string, formats: any[]) {
             parts.push(`src="${tmp}"/>`);
         }
     }
+    if (styles.length)
+        parts.push('<style>', ...styles, '</style>');
     return `<span class="line">${parts.join('')}<br></span>`;
 }
 

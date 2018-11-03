@@ -51,18 +51,28 @@
     .ansi {
         padding: 0px;
         margin: 0px;
-
+        padding-top: 1px;
+        padding-bottom: 2px;
+        display: inline-block;
     }
 
     .line {
         word-wrap: break-word;
         word-break: break-all;
-        width: 100%;
-        display: block;
-        padding-bottom: 1px;
-        clear: both;
+        display: inline-block;
+        box-sizing: border-box;
         line-height: normal;
-        padding-bottom: 2px
+        white-space: pre;
+        min-width: 100%;
+        clear: both;
+    }
+
+    .ansi .hr {
+        position: relative;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 4px;
+        width: 100%;
     }
 
     .line hr {
@@ -89,7 +99,7 @@
     .line .du {
         text-decoration: underline;
         border-bottom: 1px solid currentColor;
-        padding-bottom: 0px;
+        padding-bottom: 1px;
     }
 
     .line .s {
