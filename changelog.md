@@ -5,6 +5,7 @@
 - **New:**
   - Added [Hide trailing line](docs/preferences.md#display) display preference to hide trailing empty line.
   - Added new Zen theme
+  - ANSI Parser: Added backspace character support
 - **Changed:**
   - Remove clean and default scroll track rounded corners to properly hide background text
   - Update electron from 3.0.6 to 3.0.7

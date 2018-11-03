@@ -3134,12 +3134,33 @@ export class Parser extends EventEmitter {
               this.emit('bell');
               //this.playBell();
             }
-            /*
-            else if(e && c === '\b')
-            {
-              //TODO support backspace
+            else if (e && c === '\b') {
+              skip = false;
+              //if there are characters on the line
+              if (lineLength > 0) {
+                if (stringBuilder.length) {
+                  //clean up empty ones
+                  while (stringBuilder[stringBuilder.length - 1].length === 0)
+                    stringBuilder.pop();
+                  if (stringBuilder[stringBuilder.length - 1].length === 1)
+                    stringBuilder.pop();
+                  else
+                    stringBuilder[stringBuilder.length - 1] = stringBuilder[stringBuilder.length - 1].substring(0, stringBuilder[stringBuilder.length - 1].length - 1);
+                }
+                if (format.offset === lineLength)
+                  format.offset--;
+                lineLength--;
+                this.textLength--;
+              }
+              if (d) {
+                c = '\u25D8';
+                stringBuilder.push(c);
+                this.MXPCapture(c);
+                lineLength++;
+                this.textLength++;
+              }
+              this.mxpState.noBreak = false;
             }
-            */
             else if (e && c === '\t') {
               const _Tab = 8 - lineLength % 8;
               if (_Tab > 0) {
