@@ -10,7 +10,9 @@
   - Update electron from 3.0.6 to 3.0.7
   - Update electron-updater 3.1.5 to 3.1.6
   - Change show split button disabled look for all themes to not light up
-  - Logger: Re-coded html logger to use classes and style blocks to reduce file sizes
+  - Logger:
+    - Re-coded html logger to use classes and style blocks to reduce file sizes
+    - Convert write system to use a stream to batch write to improve write speeds
 - **Fixed:**
   - Display:
     - Detect changes to display better to handle theme changes

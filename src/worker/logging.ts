@@ -95,6 +95,8 @@ let colors = {};
 let colorsCnt = 0;
 let backgrounds = {};
 let backgroundsCnt = 0;
+let buffer = {};
+let fd = {};
 
 self.addEventListener('message', (e: MessageEvent) => {
     if (!e.data) return;
@@ -216,9 +218,42 @@ function buildFilename() {
         postMessage({ event: 'debug', args: 'Log file: "' + currentFile + '"' });
 }
 
-function appendFile(file, data) {
+function appendFile(file, data, force?) {
     try {
-        fs.appendFileSync(file, data);
+        if (!buffer[file]) buffer[file] = [];
+        if (buffer[file].length && !force) {
+            buffer[file].push({ file: file, data: data });
+            return;
+        }
+        buffer[file].unshift({ file: file, data: data });
+        if (!fd[file]) {
+            fd[file] = fs.createWriteStream(file, { flags: 'a' });
+            fd[file].on('error', err => postMessage({ event: 'error', args: err }));
+        }
+        fd[file].write(data, 'utf-8', () => {
+            buffer[file].shift();
+            if (buffer[file].length) {
+                const tmp = buffer[file].shift();
+                appendFile(tmp.file, tmp.data, true);
+            }
+            else {
+                delete buffer[file];
+                fd[file].end();
+                delete fd[file];
+            }
+        });
+        /*
+        fs.appendFile(file, data, (err) => {
+            if (err) postMessage({ event: 'error', args: err });
+            buffer[file].shift();
+            if (buffer[file].length) {
+                const tmp = buffer[file].shift();
+                appendFile(tmp.file, tmp.data, true);
+            }
+            else
+                delete buffer[file];
+        });
+        */
     }
     catch (err) {
         postMessage({ event: 'error', args: err });
