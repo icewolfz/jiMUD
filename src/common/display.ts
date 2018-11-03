@@ -73,6 +73,7 @@ interface Line {
  * @todo fix RTL unicode selection display
  * @todo Add MXP image height - requires variable line height support
  * @todo Add/fox MXP image selection highlighting
+ * @todo Add enable colors/background colors - let them be turned on and off quickly, use the new styles rule to add .view > span span {color: inherit !important;} and simalrot background
  */
 export class Display extends EventEmitter {
     private _lineID = 0;
