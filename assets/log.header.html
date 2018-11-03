@@ -1,0 +1,153 @@
+<style>
+    body {
+        font-family: 'Courier New', Courier, monospace;
+        text-align: left;
+        font-size: 1em;
+        white-space: pre;
+        background-color: black;
+    }
+
+    /* --- Start CSS for ansi display --- */
+    @-webkit-keyframes blinker {
+        0% {
+            opacity: 1.0;
+        }
+
+        50% {
+            opacity: 0.0;
+        }
+
+        100% {
+            opacity: 1.0;
+        }
+    }
+
+    @keyframes blinker {
+        0% {
+            opacity: 1.0;
+        }
+
+        50% {
+            opacity: 0.0;
+        }
+
+        100% {
+            opacity: 1.0;
+        }
+    }
+
+    .ansi-blink {
+        text-decoration: blink;
+        animation-name: blinker;
+        animation-iteration-count: infinite;
+        animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
+        animation-duration: 1s;
+        -webkit-animation-name: blinker;
+        -webkit-animation-iteration-count: infinite;
+        -webkit-animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
+        -webkit-animation-duration: 1s;
+    }
+
+    .ansi {
+        padding: 0px;
+        margin: 0px;
+
+    }
+
+    .line {
+        word-wrap: break-word;
+        word-break: break-all;
+        width: 100%;
+        display: block;
+        padding-bottom: 1px;
+        clear: both;
+        line-height: normal;
+        padding-bottom: 2px
+    }
+
+    .line hr {
+        border: 0px;
+    }
+
+
+    .line .b {
+        font-weight: bold;
+    }
+
+    .line .i {
+        font-style: italic;
+    }
+
+    .line .o {
+        text-decoration: overline;
+    }
+
+    .line .u {
+        text-decoration: underline;
+    }
+
+    .line .du {
+        text-decoration: underline;
+        border-bottom: 1px solid currentColor;
+        padding-bottom: 0px;
+    }
+
+    .line .s {
+        text-decoration: line-through;
+    }
+
+    .line .o.du {
+        text-decoration: underline overline;
+    }
+
+    .line .u.o {
+        text-decoration: underline overline;
+    }
+
+    .line .o.s {
+        text-decoration: overline line-through;
+    }
+
+    .line .du.s {
+        text-decoration: underline line-through;
+    }
+
+    .line .s.u {
+        text-decoration: underline line-through;
+    }
+
+    .line .du.u.o {
+        text-decoration: underline overline;
+    }
+
+    .line .du.s.u {
+        text-decoration: underline line-through;
+    }
+
+    .line .du.o.s {
+        text-decoration: underline overline line-through;
+    }
+
+    .line .u.s.o {
+        text-decoration: underline overline line-through;
+    }
+
+    .line .du.o.s.u {
+        text-decoration: underline overline line-through;
+    }
+
+    /* --- End CSS for ansi display --- */
+
+    .line a,
+    .line a:link {
+        color: inherit;
+        font-weight: inherit;
+        text-decoration: underline;
+    }
+
+    .URLLink,
+    .URLLink:link {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+</style>
