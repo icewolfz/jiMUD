@@ -2357,9 +2357,7 @@ export class LPCFormatter extends EventEmitter {
                             this.$position = idx + 1;
                             return { value: c, type: FormatTokenType.semicolon };
                         case '\\':
-                        case '\'':
                         case '~':
-                        case '.':
                         case '^':
                             if (val.length > 0) return this.tokenType(val);
                             this.$position = idx + 1;
