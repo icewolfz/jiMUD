@@ -334,7 +334,9 @@ export let SettingList: any[] = [
     ['chat.showSplitButton', 0, 1, true],
     ['chat.bufferSize', 0, 2, 5000],
     ['chat.flashing', 0, 1, false],
-    ['display.hideTrailingEmptyLine', 0, 1, true]
+    ['display.hideTrailingEmptyLine', 0, 1, true],
+    ['display.enableColors', 0, 1, true],
+    ['display.enableBackgroundColors', 0, 1, true]
 ];
 
 /**
@@ -462,7 +464,9 @@ export class Settings {
         splitLive: true,
         roundedOverlays: true,
         showSplitButton: true,
-        hideTrailingEmptyLine: true
+        hideTrailingEmptyLine: true,
+        enableColors: true,
+        enableBackgroundColors: true
     };
 
     public extensions = {

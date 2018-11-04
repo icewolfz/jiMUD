@@ -763,6 +763,8 @@ export class Client extends EventEmitter {
         this.display.enableMXP = this.options.enableMXP;
         this.display.enableURLDetection = this.options.enableURLDetection;
         this.display.enableMSP = this.options.enableMSP;
+        this.display.enableColors = this.options.display.enableColors;
+        this.display.enableBackgroundColors = this.options.display.enableBackgroundColors;
 
         if (this.options.colors.length > 0) {
             const colors = this.options.colors;

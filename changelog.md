@@ -11,7 +11,10 @@
 
 - **New:**
   - Added [Hide trailing line](docs/preferences.md#display) display preference to hide trailing empty line.
+  - Added [Enable colors](docs/preferences.md#display) enable or disable colors.
+  - Added [Enable background colors](docs/preferences.md#display) enable or disable background colors
   - Added new Zen theme
+  - ANSI Parser: Added backspace character support
 - **Changed:**
   - Remove clean and default scroll track rounded corners to properly hide background text
   - Update electron from 3.0.6 to 3.0.7
@@ -20,6 +23,7 @@
   - Logger:
     - Re-coded html logger to use classes and style blocks to reduce file sizes
     - Convert write system to use a stream to batch write to improve write speeds
+  - Preferences: Move display font selection to own sub section under display
 - **Fixed:**
   - Display:
     - Detect changes to display better to handle theme changes

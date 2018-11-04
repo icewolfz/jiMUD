@@ -153,6 +153,22 @@ export class Display extends EventEmitter {
 
     private _showSplitButton = true;
     private _hideTrailingEmptyLine = true;
+    private _enableColors = true;
+    private _enableBackgroundColors = true;
+
+    get enableColors() { return this._enableColors; }
+    set enableColors(value) {
+        if (value === this._enableColors) return;
+        this._enableColors = value;
+        this.buildStyleSheet();
+    }
+
+    get enableBackgroundColors() { return this._enableBackgroundColors; }
+    set enableBackgroundColors(value) {
+        if (value === this._enableBackgroundColors) return;
+        this._enableBackgroundColors = value;
+        this.buildStyleSheet();
+    }
 
     get showSplitButton() { return this._showSplitButton; }
     set showSplitButton(value) {
@@ -395,6 +411,10 @@ export class Display extends EventEmitter {
     constructor(display: string | JQuery | HTMLElement, options?);
     constructor(display?: any, options?: DisplayOptions) {
         super();
+        if (options && options.hasOwnProperty('backgroundColors'))
+            this._enableBackgroundColors = options.backgroundColors;
+        if (options && options.hasOwnProperty('colors'))
+            this._enableColors = options.colors;
         if (!display)
             throw new Error('Display must be an id, element or jquery object');
         if (typeof display === 'string') {
@@ -463,7 +483,7 @@ export class Display extends EventEmitter {
 
         this._charHeight = $(this._character).innerHeight();
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
-        this._styles.innerHTML = `.background > span, .view > span, .line, .background-line { height: ${this._charHeight}px; }`;
+        this.buildStyleSheet();
 
         this._VScroll = new ScrollBar(this._el, this._view);
         this._VScroll.on('scroll', () => {
@@ -1141,7 +1161,7 @@ export class Display extends EventEmitter {
             //recalculate height/width of characters so display can be calculated
             this._charHeight = $(this._character).innerHeight();
             this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
-            this._styles.innerHTML = `.background > span, .view > span, .line, .background-line { height: ${this._charHeight}px; }`;
+            this.buildStyleSheet();
             /*
             let html = this._htmlLines, t;
             let h = this._charHeight;
@@ -1646,7 +1666,8 @@ export class Display extends EventEmitter {
                     x++;
                     w = Math.ceil(this.textWidth(text.substr(0, x)));
                 }
-                x--;
+                if (w > xPos)
+                    x--;
             }
             */
         }
@@ -2118,8 +2139,10 @@ export class Display extends EventEmitter {
 
         if (sL < 0)
             sL = 0;
-        if (eL >= len)
+        if (eL >= len) {
             eL = len - 1;
+            e = this.lines[eL].length;
+        }
         if (s < 0)
             s = 0;
         if (e > this.lines[eL].length)
@@ -2288,8 +2311,10 @@ export class Display extends EventEmitter {
 
         if (sL < 0)
             sL = 0;
-        if (eL >= len)
+        if (eL >= len) {
             eL = len - 1;
+            e = this.lines[eL].length;
+        }
         if (s < 0)
             s = 0;
         if (e > this.lines[eL].length)
@@ -2346,8 +2371,10 @@ export class Display extends EventEmitter {
 
         if (sL < 0)
             sL = 0;
-        if (eL >= len)
+        if (eL >= len) {
             eL = len - 1;
+            e = this.lines[eL].length;
+        }
         if (s < 0)
             s = 0;
         if (e > this.lines[eL].length)
@@ -2420,6 +2447,15 @@ export class Display extends EventEmitter {
             this._padding = padding;
             this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.scrollbars);
         }
+    }
+
+    private buildStyleSheet() {
+        let styles = `.background > span, .view > span, .line, .background-line { height: ${this._charHeight}px; }`;
+        if (!this._enableColors)
+            styles += '.view > span span {color: inherit !important;}';
+        if (!this._enableColors || !this._enableBackgroundColors)
+            styles += '.background > span span {background-color: inherit !important;}';
+        this._styles.innerHTML = styles;
     }
 
     private buildLineDisplay(idx?: number) {
