@@ -97,8 +97,10 @@ let backgrounds = {};
 let backgroundsCnt = 0;
 let buffer = {};
 let fd = {};
+let flushBuffer;
 
 self.addEventListener('message', (e: MessageEvent) => {
+    let c;
     if (!e.data) return;
     switch (e.data.action) {
         case 'options':
@@ -118,11 +120,37 @@ self.addEventListener('message', (e: MessageEvent) => {
                             fileChanged();
                     }
                 }
+                else if (flushBuffer && option === 'what' && options[option] !== e.data.args[option]) {
+                    c = Log.None;
+                    //Test to see what options where removed, and flush just those
+                    if ((options[option] & Log.Html) === Log.Html && (e.data.args[option] & Log.Html) !== Log.Html)
+                        c |= Log.Html;
+                    if ((options[option] & Log.Text) === Log.Text && (e.data.args[option] & Log.Text) !== Log.Text)
+                        c |= Log.Text;
+                    if ((options[option] & Log.Raw) === Log.Raw && (e.data.args[option] & Log.Raw) !== Log.Raw)
+                        c |= Log.Raw;
+                    //Options changed so flush the ones removed
+                    if (c !== Log.None) {
+                        //store old buffer data
+                        const fOld = flushBuffer;
+                        //sett options that got removed
+                        flushBuffer.what = c;
+                        //flush using those options
+                        flush(true);
+                        //set old options to new options
+                        fOld.what = options[option];
+                        //restore buffer with new options
+                        flushBuffer = fOld;
+                    }
+                    //store options
+                    options[option] = e.data.args[option];
+                }
                 else
                     options[option] = e.data.args[option];
                 if (timeStamp !== 0) {
                     fTimeStamp = new moment(timeStamp).format(options.format || 'YYYYMMDD-HHmmss');
                     buildFilename();
+                    flush(true);
                 }
                 if (options.offline)
                     postMessage({ event: 'start' });
@@ -147,7 +175,7 @@ self.addEventListener('message', (e: MessageEvent) => {
             stop();
             break;
         case 'startInternal':
-            const c = options.unique;
+            c = options.unique;
             options.unique = false;
             if (!e.data.args)
                 start([], [], [], false);
@@ -162,9 +190,23 @@ self.addEventListener('message', (e: MessageEvent) => {
             else
                 start(e.data.args.lines, e.data.args.raw, e.data.args.formats, e.data.args.fragment);
             break;
+        case 'flush':
+            flush(e.data.args.newline);
+            break;
         case 'add-line':
             const data: ParserLine = e.data.args;
-            if (data.fragment) return;
+            //if a fragment buffer as next full line will probably start with fragment
+            if (data.fragment) {
+                flushBuffer = data;
+                flushBuffer.logging = logging;
+                flushBuffer.file = currentFile;
+                flushBuffer.connected = connected;
+                flushBuffer.what = options.what;
+                flushBuffer.gagged = data.gagged || (options.gagged && data.gagged);
+                return;
+            }
+            //clear buffer
+            flushBuffer = null;
             if (!data.gagged || (options.gagged && data.gagged)) {
                 if ((options.what & Log.Html) === Log.Html)
                     writeHtml(createLine(data.line, data.formats));
@@ -178,33 +220,42 @@ self.addEventListener('message', (e: MessageEvent) => {
 }, false);
 
 function fileChanged() {
+    //previous file
+    const pFile = currentFile;
+    //generate current file
+    buildFilename();
+    //same info so move on
+    if (pFile === currentFile) return;
     if ((options.what & Log.Html) === Log.Html) {
-        const f = path.join(options.path, fTimeStamp) + '.htm';
-        buildFilename();
-        if (isFileSync(f) && f !== currentFile + '.htm')
+        const f = pFile + '.htm';
+        if (isFileSync(f))
             fs.renameSync(f, currentFile + '.htm');
         if (options.debug)
-            postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '"' });
+            postMessage({ event: 'debug', args: 'File changed: "' + f + '.htm" to "' + currentFile + '.htm"' });
     }
     if ((options.what & Log.Raw) === Log.Raw) {
-        const f = path.join(options.path, fTimeStamp) + '.raw.txt';
-        buildFilename();
-        if (isFileSync(f) && f !== currentFile + '.raw.txt')
+        const f = pFile + '.raw.txt';
+        if (isFileSync(f))
             fs.renameSync(f, currentFile + '.raw.txt');
         if (options.debug)
-            postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '"' });
+            postMessage({ event: 'debug', args: 'File changed: "' + f + '.raw.txt" to "' + currentFile + '.raw.txt"' });
     }
     if ((options.what & Log.Text) === Log.Text || options.what === Log.None) {
-        const f = path.join(options.path, fTimeStamp) + '.txt';
-        buildFilename();
-        if (isFileSync(f) && f !== currentFile + '.txt')
+        const f = pFile + '.txt';
+        if (isFileSync(f))
             fs.renameSync(f, currentFile + '.txt');
         if (options.debug)
-            postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '"' });
+            postMessage({ event: 'debug', args: 'File changed: "' + f + '.txt" to "' + currentFile + '.txt"' });
     }
+    //if flush buffer and file is not the same as previous file flush it
+    if (flushBuffer && flushBuffer.currentFile !== pFile)
+        flush(true);
+    else if (flushBuffer) // if buffer set to new file name
+        flushBuffer.currentFile = currentFile;
 }
 
 function buildFilename() {
+    const o = currentFile;
     if (options.prefix)
         currentFile = options.prefix + fTimeStamp;
     else
@@ -214,7 +265,7 @@ function buildFilename() {
     currentFile = path.join(options.path, currentFile);
     if (options.postfix)
         currentFile += options.postfix;
-    if (options.debug)
+    if (options.debug && o !== currentFile)
         postMessage({ event: 'debug', args: 'Log file: "' + currentFile + '"' });
 }
 
@@ -258,7 +309,8 @@ function appendFileSync(file, data) {
 }
 
 function writeHeader() {
-    buildFilename();
+    if (!currentFile || currentFile.length === 0)
+        buildFilename();
     if (!isFileSync(currentFile + '.htm') && (options.what & Log.Html) === Log.Html && !writingHeader) {
         colors = {};
         colorsCnt = 0;
@@ -288,6 +340,37 @@ function writeRaw(data) {
     appendFile(currentFile + '.raw.txt', data);
 }
 
+function flush(newline?) {
+    //no buffer done
+    if (!flushBuffer) return;
+    //store current state
+    const c = connected;
+    const f = currentFile;
+    const l = logging;
+    //restore state when buffer saved
+    logging = flushBuffer.logging;
+    connected = flushBuffer.connected;
+    currentFile = flushBuffer.currentFile;
+    //write buffer based on buffer state
+    if (!flushBuffer.gagged) {
+        let nl = '';
+        //some times we may want to force a new line, eg when the screen has been cleared as we do not want to lose data so the fragment becomes a full line
+        if (newline)
+            nl = '\n';
+        if ((flushBuffer.what & Log.Html) === Log.Html)
+            writeHtml(createLine(flushBuffer.line, flushBuffer.formats));
+        if ((flushBuffer.what & Log.Text) === Log.Text || flushBuffer.what === Log.None)
+            writeText(flushBuffer.line + nl);
+        if ((flushBuffer.what & Log.Raw) === Log.Raw)
+            writeRaw(flushBuffer.raw + nl);
+    }
+    //restore previous state and clear buffer
+    logging = l;
+    connected = c;
+    currentFile = f;
+    flushBuffer = null;
+}
+
 function start(lines: string[], raw: string[], formats: any[], fragment: boolean) {
     if (!options.enabled) {
         if (logging)
@@ -298,6 +381,7 @@ function start(lines: string[], raw: string[], formats: any[], fragment: boolean
     if (options.unique || timeStamp === 0) {
         timeStamp = new Date().getTime();
         fTimeStamp = new moment(timeStamp).format(options.format || 'YYYYMMDD-HHmmss');
+        flush(true);
     }
     buildFilename();
     if (options.prepend && lines && lines.length > 0) {

@@ -1028,6 +1028,7 @@ export class Client extends EventEmitter {
 
     public clear() {
         this.display.clear();
+        this.emit('cleared');
     }
 
     public parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean) {
