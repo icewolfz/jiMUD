@@ -808,7 +808,7 @@ body {
     color: wheat;
 }
 
-.button.on:active {
+.button.on:active, .button.on:focus {
     background-color: maroon;
     color: wheat;
 }

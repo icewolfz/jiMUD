@@ -827,14 +827,26 @@ body {
     color: #{$buttonTextHoverColor};
 }
 
+.button.on svg {
+    fill: #{$buttonTextHoverColor};
+}
+
+.button.on:hover svg, .button.on:focus svg {
+    fill: #{$buttonActiveText};
+}
+
 .button.on:hover {
     background-color: #{$buttonActiveBack};
     color: #{$buttonActiveText};
 }
 
-.button.on:active {
+.button.on:active, .button.on:focus {
     background-color: #{$buttonColor};
     color: #{$textColor};
+}
+
+.button.on:active svg, .button.on:focus svg {
+    fill: #{$textColor};
 }
 
 .button:hover {

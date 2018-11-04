@@ -813,7 +813,7 @@ body {
     background-color: #{$color};
 }
 
-.button:active svg {
+.button:active svg, .button:focus svg {
     fill: #3f3f46;
 }
 
@@ -827,12 +827,12 @@ body {
     fill: #5a5d5e;
 }
 
-.button.on:active {
+.button.on:active, .button.on:focus {
     background-color: #3f3f46;
     color: #{$color};
 }
 
-.button.on:active svg {
+.button.on:active svg, .button.on:focus svg {
     fill: #{$color};
 }
 
