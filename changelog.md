@@ -33,7 +33,10 @@
   - Fixed matching whole unicode words on context
   - ANSI Parser: Always append line fragment when parsing, better fix to the previous missing raw data issue
   - Window size not correctly sent to mud when maximizing window, broken in v0.6.5
-  - Logger: Fixed MXP hr style effects
+  - Logger:
+    - Fixed MXP hr style effects
+    - Flush When closing, clearing screen or logging options changed to ensure last line is saved when required
+    - Fixed When path changed in the middle of logging it failed to correctly move current logs to new path
 
 ## v0.6.5 2018-10-29
 
