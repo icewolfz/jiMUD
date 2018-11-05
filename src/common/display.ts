@@ -1581,7 +1581,7 @@ export class Display extends EventEmitter {
                 text = this.displayLines[this.lines.length - 1];
             const tl = text.length;
             let w = Math.ceil(this.textWidth(text.substr(0, x)));
-            if (w > xPos) {
+            if (w > xPos && xPos > 0) {
                 while (w > xPos && x > 0) {
                     x--;
                     w = Math.ceil(this.textWidth(text.substr(0, x)));
@@ -1595,6 +1595,12 @@ export class Display extends EventEmitter {
                 }
                 if (w > xPos)
                     x--;
+            }
+            else if (w === 0 && x > 0 && xPos >= 0) {
+                while (w <= 0 && x < tl) {
+                    x++;
+                    w = Math.ceil(this.textWidth(text.substr(0, x)));
+                }
             }
         }
         return { x: x, y: y };
