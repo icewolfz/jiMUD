@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.6
+## v0.6.6 2018-11-05
 
 - **New:**
   - Added [Hide trailing line](docs/preferences.md#display) display preference to hide trailing empty line.
