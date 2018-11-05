@@ -933,7 +933,7 @@
             */
 
             client.on('cleared', () => {
-                _logger.postMessage({ action: 'flush', args: { newline: true } });
+                _logger.postMessage({ action: 'flush', args: true });
             });
 
             client.on('show', () => {

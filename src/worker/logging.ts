@@ -191,7 +191,7 @@ self.addEventListener('message', (e: MessageEvent) => {
                 start(e.data.args.lines, e.data.args.raw, e.data.args.formats, e.data.args.fragment);
             break;
         case 'flush':
-            flush(e.data.args.newline);
+            flush(e.data.args);
             break;
         case 'add-line':
             const data: ParserLine = e.data.args;
