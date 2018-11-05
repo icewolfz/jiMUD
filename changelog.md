@@ -14,7 +14,7 @@
   - Update electron-updater 3.1.5 to 3.1.6
   - Change show split button disabled look for all themes to not light up
   - Logger:
-    - Re-coded html logger to use classes and style blocks to reduce file sizes
+    - Re-coded HTML logger to use classes and style blocks to reduce file sizes
     - Convert write system to use a stream to batch write to improve write speeds
   - Preferences: Move display font selection to own sub section under display
 - **Fixed:**
@@ -25,12 +25,12 @@
     - Correctly factor in current theme display padding into available character width and height
     - Fixed vertical scroll bar when split button shown
     - Fixed show split button being shown after turning off split scroll
-    - Readd -(minus) and _(underscore) as selectable characters for double click and context menu word selection
+    - Re-add -(minus) and _(underscore) as selectable characters for double click and context menu word selection
     - Fixed selection when dragging below display window
     - Fixed split scroll window bottom padding spacing for all themes
     - Fixed MXP image align=right
     - Fixed getting wrong character for mouse position
-  - Fixed matching whole unicode words on context
+  - Fixed matching whole Unicode words on context
   - ANSI Parser: Always append line fragment when parsing, better fix to the previous missing raw data issue
   - Window size not correctly sent to mud when maximizing window, broken in v0.6.5
   - Logger:
