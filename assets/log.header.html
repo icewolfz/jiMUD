@@ -161,3 +161,44 @@
         cursor: pointer;
     }
 </style>
+<script>
+    function doLink(url) {
+        if (confirm('Open \'' + url + '\'?') === true)
+            window.open(url, '_blank');
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    function doMXPLink(el, url) {
+        if (url.startsWith('OoMUD://') || url.startsWith('jiMUD://') || url.startsWith('client://'))
+            doMXPSend(0, el, url.substring(8));
+        else if (confirm('Open \'' + url + '\'?') === true)
+            window.open(url.replace('&text;', el.textContent || ''), '_blank');
+    }
+
+    function doMXPSend(e, el, url, pmt, tt) {
+        var im = el.querySelector('img[ismap]');
+        var extra = '';
+        if (im && im.length > 0) {
+            var offset = im.offset();
+            var x = Math.floor(e.clientX - offset.left);
+            var y = Math.floor(e.clientY - offset.top);
+            extra = '?' + x + ',' + y;
+        }
+
+        if (url.constructor === Array || url.__proto__.constructor === Array || Object.prototype.toString.call(url) === '[object Array]') {
+            alert('MXP Menu not supported');
+        }
+        else {
+            url = url.replace('&text;', el.textContent || '') + extra;
+            if (!pmt)
+                url += '\n';
+            alert(url);
+            console.log(url);
+        }
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    function doMXPTooltip(el) {
+        el.title = el.title.replace('&test;', el.textContent || '');
+    }
+</script>

@@ -4,6 +4,10 @@
 
 - **Fixed:**
   - MSP: Fixed not displaying error when file not found or unable to play
+  - Display: Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
+  - Logger:
+    - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
+    - Fixed URL click scripts by including some minor javascript to execute urls
 
 ## v0.6.6 2018-11-05
 
