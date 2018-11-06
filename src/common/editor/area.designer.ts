@@ -7745,6 +7745,8 @@ export class AreaDesigner extends EditorBase {
                 return value.map(i => i.search).join(':');
             case 'exitsDetails':
                 return value.map(v => v.exit).join(', ');
+            case 'reads':
+                return value.map(v => v.read).join(', ');
         }
         return value;
     }

@@ -7,7 +7,9 @@
     - Area designer: Exits that are closed doors are now hidden in the room preview to mimic standard door usage
 - **Fixed:**
   - Code editor:
-    - Area designer: Fixed room preview item matching generating corrupt HTML
+    - Area designer:
+      - Fixed room preview item matching generating corrupt HTML
+      - Fixed read display format in room property editor
   - MSP: Fixed not displaying error when file not found or unable to play
   - Display: Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
   - Logger:
