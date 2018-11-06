@@ -2,6 +2,9 @@
 
 ## v0.6.7
 
+- **Fixed:**
+  - MSP: Fixed not displaying error when file not found or unable to play
+
 ## v0.6.6 2018-11-05
 
 - **New:**
