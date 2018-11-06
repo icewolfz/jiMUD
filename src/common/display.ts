@@ -2600,7 +2600,7 @@ export class Display extends EventEmitter {
                 }
             }
             else if (format.formatType === FormatType.Link) {
-                fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href, '" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
+                fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href.replace(/"/g, '&quot;'), '" onclick="', this.linkFunction, '(\'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
@@ -2617,7 +2617,7 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.WordBreak)
                 fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
-                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="', format.href, '" href="javascript:void(0);" title="', format.hint, '" onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
+                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="', format.href, '" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onclick="', this.mxpLinkFunction, '(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (format.expire && format.expire.length > 0) {
                     if (!this._expire[format.expire])
                         this._expire[format.expire] = [];
@@ -2641,7 +2641,7 @@ export class Display extends EventEmitter {
                 left += format.width;
             }
             else if (format.formatType === FormatType.MXPSend) {
-                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" href="javascript:void(0);" title="', format.hint, '"');
+                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '"');
                 if (format.expire && format.expire.length > 0) {
                     if (!this._expire[format.expire])
                         this._expire[format.expire] = [];
@@ -2654,7 +2654,7 @@ export class Display extends EventEmitter {
                         this._expire2[idx] = [];
                     this._expire2[idx].push(f);
                 }
-                fore.push(' onmouseover="', this.mxpTooltipFunction, '(this);"', ' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
+                fore.push(' onmouseover="', this.mxpTooltipFunction, '(this);"', ' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ', ', format.prompt ? 1 : 0, ', ', format.tt.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
@@ -2872,8 +2872,8 @@ export class Display extends EventEmitter {
                 if (offset < start || end < start)
                     continue;
                 parts.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="');
-                parts.push(format.href);
-                parts.push('" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
+                parts.push(format.href.replace(/"/g, '&quot;'));
+                parts.push('" onclick="', this.linkFunction, '(\'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
                 parts.push('<span style="', style.join(''), '" class="', fCls.join(''), '">');
                 parts.push(htmlEncode(text.substring(offset, end)));
@@ -2893,9 +2893,9 @@ export class Display extends EventEmitter {
                 if (offset < start || end < start)
                     continue;
                 parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="');
-                parts.push(format.href);
+                parts.push(format.href.replace(/"/g, '&quot;'));
                 parts.push('"');
-                parts.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
+                parts.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
                 parts.push('<span style="', style.join(''), '" class="', fCls.join(''), '">');
                 parts.push(htmlEncode(text.substring(offset, end)));
@@ -2905,10 +2905,10 @@ export class Display extends EventEmitter {
                 if (offset < start || end < start)
                     continue;
                 parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="');
-                parts.push(format.hint);
+                parts.push(format.hint.replace(/"/g, '&quot;'));
                 parts.push('"');
                 parts.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
-                parts.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
+                parts.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ', ', format.prompt ? 1 : 0, ', ', format.tt.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ');return false;">');
                 if (end - offset === 0) continue;
                 parts.push('<span style="', style.join(''), '" class="', fCls.join(''), '">');
                 parts.push(htmlEncode(text.substring(offset, end)));

@@ -515,7 +515,7 @@ function createLine(text: string, formats: any[]) {
                 parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
         else if (format.formatType === FormatType.Link) {
-            parts.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href, '" onclick="', this.linkFunction, '(\'', format.href, '\');return false;">');
+            parts.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href.replace(/"/g, '&quot;'), '" onclick="doLink(\'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
             if (end - offset === 0) continue;
             parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
@@ -525,12 +525,12 @@ function createLine(text: string, formats: any[]) {
         else if (format.formatType === FormatType.WordBreak)
             parts.push('<wbr>');
         else if (format.formatType === FormatType.MXPLink) {
-            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="', format.href, '" onclick="', this.mxpLinkFunction, '(this, \'', format.href, '\');return false;">');
+            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="', format.href.replace(/"/g, '&quot;'), '" onclick="doMXPLink(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
             if (end - offset === 0) continue;
             parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
         else if (format.formatType === FormatType.MXPSend) {
-            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="', format.hint, '" onmouseover="', this.mxpTooltipFunction, '(this);" onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href, ', ', format.prompt ? 1 : 0, ', ', format.tt, ');return false;">');
+            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onmouseover="doMXPTooltip(this);" onclick="doMXPSend(event||window.event, this, ', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ', ', format.prompt ? 1 : 0, ', ', format.tt.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ');return false;">');
             if (end - offset === 0) continue;
             parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }

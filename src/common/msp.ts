@@ -109,6 +109,28 @@ class SoundState extends EventEmitter {
         this.sound.bind('loadeddata', (e) => {
             this.emit('playing', { file: this._file, sound: this.sound, state: this, duration: buzz.toTimer(this.sound.getDuration()) });
         });
+        this.sound.bind('error', (e) => {
+            if (e && e.currentTarget && e.currentTarget.error) {
+                switch (e.currentTarget.error.code) {
+                    case 1:
+                        this.emit('error', new Error(`MSP - Aborted: ${this.url}${this._file}`));
+                        break;
+                    case 2:
+                        this.emit('error', new Error(`MSP - Network error: ${this.url}${this._file}`));
+                        break;
+                    case 3:
+                        this.emit('error', new Error(`MSP - Could not decode: ${this.url}${this._file}`));
+                        break;
+                    case 4:
+                        this.emit('error', new Error(`MSP - Source not supported: ${this.url}${this._file}`));
+                        break;
+                }
+            }
+            else if (e && e.currentTarget && e.currentTarget.networkState === 3)
+                this.emit('error', new Error(`MSP - Source not found or unable to play: ${this.url}${this._file}`));
+            else
+                this.emit('error', new Error('MSP - Unknown error'));
+        });
         this.emit('opened');
     }
 
@@ -177,6 +199,8 @@ export class MSP extends EventEmitter {
         }
         this.MusicState.on('playing', (data) => { data.type = 1; this.emit('playing', data); });
         this.SoundState.on('playing', (data) => { data.type = 0; this.emit('playing', data); });
+        this.MusicState.on('error', (err) => { this.emit('error', err); });
+        this.SoundState.on('error', (err) => { this.emit('error', err); });
     }
 
     /**
