@@ -1347,8 +1347,12 @@ export class Display extends EventEmitter {
         else if (data.line.length > this._maxLineLength)
             this._maxLineLength = data.line.length;
         this.lineIDs.push(this._lineID);
+        this._lines.push({ height: 0, top: 0, width: 0, index: 0, offset: 0, formatOffset: 0 });
         this._lineID++;
         t = this.buildLineDisplay();
+        this._height += this._lines[this._lines.length - 1].height;
+        if (this._lines[this._lines.length - 1].width > this._maxWidth)
+            this._maxWidth = this._lines[this._lines.length - 1].width;
         this._viewLines.push(...t[0]);
         this._backgroundLines.push(...t[1]);
         if (this.split) this.split.dirty = true;
@@ -2505,7 +2509,6 @@ export class Display extends EventEmitter {
         let iWidth = 0;
         let right = false;
         const id = this.lineIDs[idx];
-        const ident = this._indent * this._charWidth;
         for (ol in this._expire) {
             if (!this._expire.hasOwnProperty(ol))
                 continue;
@@ -2513,11 +2516,6 @@ export class Display extends EventEmitter {
                 delete this._expire[ol][idx];
         }
         delete this._expire2[idx];
-        const fLines = [];
-        const bLines = [];
-        const totalWidth = 0;
-        const fOffset = 0;
-        const lOffset = 0;
 
         for (let f = 0; f < len; f++) {
             const format = formats[f];
@@ -2755,14 +2753,14 @@ export class Display extends EventEmitter {
                         fmt.width = bounds.width || img.width;
                         fmt.height = bounds.height || img.height;
                         const t = this.buildLineDisplay(lIdx);
-                        const wIdx2 = this.getWrapLine(lIdx);
-                        const amt = this.getWrapCount(wIdx2);
+                        const wIdx = this.getWrapLine(lIdx);
+                        const amt = this.getWrapCount(wIdx);
                         this._height -= pHeight;
-                        this._viewLines.splice(wIdx2, amt, ...t[0]);
-                        this._backgroundLines.splice(wIdx2, amt, ...t[1]);
-                        this.updateTops(wIdx2);
+                        this._viewLines.splice(wIdx, amt, ...t[0]);
+                        this._backgroundLines.splice(wIdx, amt, ...t[1]);
+                        this.updateTops(wIdx);
                         img.remove();
-                        if (wIdx2 >= this._viewRange.start && wIdx2 <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
+                        if (wIdx >= this._viewRange.start && wIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
                             if (this.split) this.split.dirty = true;
                             this.doUpdate(UpdateType.display);
                         }
@@ -2772,40 +2770,18 @@ export class Display extends EventEmitter {
                 iWidth += format.width || 0;
             }
         }
-        if (fore.length) {
-            const wIdx = this.buildWrapLineData(height || this._charHeight, left + iWidth, idx, lOffset, fOffset);
-            if (left + iWidth > this._maxWidth)
-                this._maxWidth = totalWidth + left + iWidth;
-            if (height) {
-                if (right) {
-                    fLines.push(`<span class="line" data-id="${id}" style="top:${this._lines[wIdx].top}px;height:${height}px;min-width:{view}px;">${fore.join('')}<br></span>`);
-                    bLines.push(`<span class="background-line" style="top:${this._lines[wIdx].top}px;height:${height}px;min-width:{view}px;">${back.join('')}<br></span>`);
-                }
-                else {
-                    fLines.push(`<span class="line" data-id="${id}" style="top:${this._lines[wIdx].top}px;height:${height}px;">${fore.join('')}<br></span>`);
-                    bLines.push(`<span class="background-line" style="top:${this._lines[wIdx].top}px;height:${height}px;">${back.join('')}<br></span>`);
-                }
-            }
-            if (right) {
-                fLines.push(`<span class="line" data-id="${id}" style="top:${this._lines[wIdx].top}px;min-width:{view}px;">${fore.join('')}<br></span>`);
-                bLines.push(`<span class="background-line" style="top:${this._lines[wIdx].top}px;min-width:{view}px;">${back.join('')}<br></span>`);
-            }
-            else {
-                fLines.push(`<span class="line" data-id="${id}" style="top:${this._lines[wIdx].top}px;">${fore.join('')}<br></span>`);
-                bLines.push(`<span class="background-line" style="top:${this._lines[wIdx].top}px;">${back.join('')}<br></span>`);
-            }
+        this._lines[idx].height = height || this._charHeight;
+        this._lines[idx].width = left + iWidth;
+        if (idx > 0)
+            this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
+        if (height) {
+            if (right)
+                return [[`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;min-width:{view}px;">${fore.join('')}<br></span>`], [`<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;min-width:{view}px;">${back.join('')}<br></span>`]];
+            return [[`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;">${fore.join('')}<br></span>`], [`<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;">${back.join('')}<br></span>`]];
         }
-        return [fLines, bLines];
-    }
-
-    private buildWrapLineData(height, width, index, offset, formatOffset) {
-        if (this.lines.length === 0)
-            this._lines.push({ height: height, top: 0, width: width, index: index, offset: offset, formatOffset: formatOffset });
-        else
-            this._lines.push({ height: height, top: this._lines[this._lines.length - 1].top + this._lines[this._lines.length - 1].height, width: width, index: index, offset: offset, formatOffset: formatOffset });
-        this._height += height;
-
-        return this._lines.length - 1;
+        if (right)
+            return [[`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;min-width:{view}px;">${fore.join('')}<br></span>`], [`<span class="background-line" style="top:${this._lines[idx].top}px;min-width:{view}px;">${back.join('')}<br></span>`]];
+        return [[`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;">${fore.join('')}<br></span>`], [`<span class="background-line" style="top:${this._lines[idx].top}px;">${back.join('')}<br></span>`]];
     }
 
     public getLineHTML(idx?: number, start?: number, len?: number) {
