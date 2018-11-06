@@ -10360,11 +10360,11 @@ export class AreaDesigner extends EditorBase {
                     if (!RoomExits[exit]) continue;
                     if ((e & RoomExits[exit]) === RoomExits[exit]) {
                         if (room.exitsDetails[exit]) {
-                            if (room.exitsDetails[exit].hidden)
+                            if (room.exitsDetails[exit].hidden || (room.exitsDetails[exit].door.length && room.exitsDetails[exit].closed))
                                 continue;
                         }
                         else if (base.exitsDetails[exit]) {
-                            if (base.exitsDetails[exit].hidden)
+                            if (base.exitsDetails[exit].hidden || (room.exitsDetails[exit].door.length && room.exitsDetails[exit].closed))
                                 continue;
                         }
                         ex.push(exit);

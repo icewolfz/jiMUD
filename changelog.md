@@ -2,6 +2,9 @@
 
 ## v0.6.7
 
+- **New:**
+  - Code editor:
+    - Area designer: Exits that are closed doors are now hidden in the room preview to mimic standard door usage
 - **Fixed:**
   - Code editor:
     - Area designer: Fixed room preview item matching generating corrupt HTML
