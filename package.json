@@ -52,7 +52,7 @@
     "@types/node": "^10.12.2",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^3.0.7",
+    "electron": "^3.0.8",
     "electron-builder": "^20.31.2",
     "eslint": "^5.8.0",
     "eslint-plugin-html": "^4.0.6"

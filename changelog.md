@@ -5,6 +5,8 @@
 - **New:**
   - Code editor:
     - Area designer: Exits that are closed doors are now hidden in the room preview to mimic standard door usage
+- **Changed:**
+  - Update electron from 3.0.7 to 3.0.8
 - **Fixed:**
   - Code editor:
     - Area designer:
