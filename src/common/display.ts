@@ -42,7 +42,7 @@ interface ScrollState {
 }
 
 export enum ScrollType { vertical = 0, horizontal = 1 }
-export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512, scrollViewOverlays = 1024, rebuild = 2048 }
+export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512, scrollViewOverlays = 1024 }
 
 enum CornerType {
     Flat = 0,
@@ -57,12 +57,9 @@ interface ContextEvent extends PointerEvent {
 }
 
 interface Line {
-    height: number; //height
-    top: number; //top
-    width: number; //width of total line
-    index: number; //raw line #
-    offset: number; //raw line offset
-    formatOffset: number; //format offset, to speed up format calculations
+    height: number;
+    top: number;
+    width: number;
 }
 
 /**
@@ -88,7 +85,6 @@ export class Display extends EventEmitter {
     private _finder: Finder;
     private _height: number = 0;
     private _maxWidth: number = 0;
-    private _maxView: number = 0;
 
     private _maxLineLength: number = 0;
     private _currentSelection: Selection = {
@@ -159,22 +155,6 @@ export class Display extends EventEmitter {
     private _hideTrailingEmptyLine = true;
     private _enableColors = true;
     private _enableBackgroundColors = true;
-    private _indent: number = 4;
-    private _wordwrap: false;
-
-    get wordWrap() { return this._wordwrap; }
-    set wordWrap(value) {
-        if (value === this._wordwrap) return;
-        this._wordwrap = value;
-        this.doUpdate(UpdateType.rebuild | UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollView | UpdateType.overlays);
-    }
-
-    get indentSize() { return this._indent; }
-    set indentSize(value) {
-        if (value === this._indent) return;
-        this._indent = value;
-        this.doUpdate(UpdateType.rebuild | UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollView | UpdateType.overlays);
-    }
 
     get enableColors() { return this._enableColors; }
     set enableColors(value) {
@@ -286,7 +266,7 @@ export class Display extends EventEmitter {
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
                     const mw = '' + (this._maxWidth === 0 ? 0 : Math.max(this._maxWidth, this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size));
-                    const mv = '' + this._maxView;
+                    const mv = '' + (this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size);
                     this.split.view.style.width = this._maxWidth + 'px';
                     this.split.background.style.width = this._maxWidth + 'px';
                     let l = lines.length;
@@ -939,10 +919,6 @@ export class Display extends EventEmitter {
         if (this._updating === UpdateType.none)
             return;
         window.requestAnimationFrame(() => {
-            if ((this._updating & UpdateType.rebuild) === UpdateType.rebuild) {
-                this.rebuildLines();
-                this._updating &= ~UpdateType.rebuild;
-            }
             if ((this._updating & UpdateType.display) === UpdateType.display) {
                 this.updateDisplay();
                 this._updating &= ~UpdateType.display;
@@ -1195,8 +1171,9 @@ export class Display extends EventEmitter {
                 html[l] = t[0].outerHTML;
             }
             */
+            this.rebuildLines();
             //update view to display any line height changes
-            this.doUpdate(UpdateType.rebuild | UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollView | UpdateType.overlays);
+            this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollView | UpdateType.overlays);
             this.updateWindow();
             //re-enable in case something outside of font change triggers a change
             this.$observer.observe(this._el, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
@@ -1225,7 +1202,7 @@ export class Display extends EventEmitter {
             l--;
         const h = this._height - (l < this._lines.length ? this._lines[l].height : 0);
         const mw = '' + (w === 0 ? 0 : Math.max(w, this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size));
-        const mv = '' + this._maxView;
+        const mv = '' + (this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size);
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
 
@@ -1347,14 +1324,14 @@ export class Display extends EventEmitter {
         else if (data.line.length > this._maxLineLength)
             this._maxLineLength = data.line.length;
         this.lineIDs.push(this._lineID);
-        this._lines.push({ height: 0, top: 0, width: 0, index: 0, offset: 0, formatOffset: 0 });
+        this._lines.push({ height: 0, top: 0, width: 0 });
         this._lineID++;
         t = this.buildLineDisplay();
         this._height += this._lines[this._lines.length - 1].height;
         if (this._lines[this._lines.length - 1].width > this._maxWidth)
             this._maxWidth = this._lines[this._lines.length - 1].width;
-        this._viewLines.push(...t[0]);
-        this._backgroundLines.push(...t[1]);
+        this._viewLines.push(t[0]);
+        this._backgroundLines.push(t[1]);
         if (this.split) this.split.dirty = true;
         if (!noUpdate)
             this.doUpdate(UpdateType.display);
@@ -2456,7 +2433,6 @@ export class Display extends EventEmitter {
 
     private update() {
         if (this.split) this.split.dirty = true;
-        this._maxView = (this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size);
         this._os = this.offset(this._el);
         this._innerHeight = this._elJ.innerHeight();
         this._innerWidth = this._elJ.innerWidth();
@@ -2495,7 +2471,6 @@ export class Display extends EventEmitter {
         const fore = [];
         const text = this.displayLines[idx];
         const formats = this.lineFormats[idx];
-        const mv = '' + this._maxView;
         let offset = 0;
         let bStyle: any = '';
         let fStyle: any = '';
@@ -2753,14 +2728,13 @@ export class Display extends EventEmitter {
                         fmt.width = bounds.width || img.width;
                         fmt.height = bounds.height || img.height;
                         const t = this.buildLineDisplay(lIdx);
-                        const wIdx = this.getWrapLine(lIdx);
-                        const amt = this.getWrapCount(wIdx);
-                        this._height -= pHeight;
-                        this._viewLines.splice(wIdx, amt, ...t[0]);
-                        this._backgroundLines.splice(wIdx, amt, ...t[1]);
-                        this.updateTops(wIdx);
+                        this._height += this._lines[lIdx].height - pHeight;
+                        this._viewLines[lIdx] = t[0];
+                        this._backgroundLines[lIdx] = t[1];
+                        const l = this._lines.length;
+                        this.updateTops(lIdx);
                         img.remove();
-                        if (wIdx >= this._viewRange.start && wIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
+                        if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
                             if (this.split) this.split.dirty = true;
                             this.doUpdate(UpdateType.display);
                         }
@@ -2776,12 +2750,12 @@ export class Display extends EventEmitter {
             this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
         if (height) {
             if (right)
-                return [[`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;min-width:{view}px;">${fore.join('')}<br></span>`], [`<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;min-width:{view}px;">${back.join('')}<br></span>`]];
-            return [[`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;">${fore.join('')}<br></span>`], [`<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;">${back.join('')}<br></span>`]];
+                return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;min-width:{view}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;min-width:{view}px;">${back.join('')}<br></span>`];
+            return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;">${back.join('')}<br></span>`];
         }
         if (right)
-            return [[`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;min-width:{view}px;">${fore.join('')}<br></span>`], [`<span class="background-line" style="top:${this._lines[idx].top}px;min-width:{view}px;">${back.join('')}<br></span>`]];
-        return [[`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;">${fore.join('')}<br></span>`], [`<span class="background-line" style="top:${this._lines[idx].top}px;">${back.join('')}<br></span>`]];
+            return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;min-width:{view}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;min-width:{view}px;">${back.join('')}<br></span>`];
+        return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;">${back.join('')}<br></span>`];
     }
 
     public getLineHTML(idx?: number, start?: number, len?: number) {
@@ -2992,12 +2966,10 @@ export class Display extends EventEmitter {
     public rebuildLines() {
         let t;
         const ll = this.lines.length;
-        this._viewLines = [];
-        this._backgroundLines = [];
         for (let l = 0; l < ll; l++) {
             t = this.buildLineDisplay(l);
-            this._viewLines.push(...t[0]);
-            this._backgroundLines.push(...t[1]);
+            this._viewLines[l] = t[0];
+            this._backgroundLines[l] = t[1];
         }
         if (this.split) this.split.dirty = true;
     }
@@ -3147,35 +3119,6 @@ export class Display extends EventEmitter {
         window.removeEventListener('mousemove', this._wMove);
         window.removeEventListener('mouseup', this._wUp);
         window.removeEventListener('resize', this._wResize);
-    }
-
-    private getWrapLine(line) {
-        if (line <= 0) return 0;
-        if (line >= this.lines.length) return this.lines.length - 1;
-        const ll = this._lines.length;
-        if (this._lines[line].index <= ll) {
-            while (this._lines[line - 1].index === line && line > 0)
-                line--;
-            return line;
-        }
-        line++;
-        const ll2 = this._lines.length;
-        while (this._lines[line + 1].index !== line || line < ll2)
-            line++;
-        return line;
-    }
-
-    private getWrapCount(line) {
-        if (line < 0 || line >= this._lines.length) return 0;
-        let c = 0;
-        const idx = this._lines[line].index;
-        const ll = this._lines.length;
-        while (line < ll && this._lines[line].index === idx) {
-            c++;
-            line++;
-        }
-        return c;
-
     }
 }
 
