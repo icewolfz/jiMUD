@@ -10277,7 +10277,7 @@ export class AreaDesigner extends EditorBase {
             if (items.length > 0) {
                 items = items.sort((a, b) => { return b.item.length - a.item.length; });
                 for (c = 0, cl = items.length; c < cl; c++)
-                    str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'gi'), m => '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + m + '</span>');
+                    str = str.replace(new RegExp('\\b(?!room-preview)(' + items[c].item + ')\\b', 'gi'), m => '<span id="' + this.parent.id + '-room-preview' + c + '">' + m + '</span>');
             }
             else
                 items = null;
@@ -10313,8 +10313,10 @@ export class AreaDesigner extends EditorBase {
             if (items && items.length > 0) {
                 for (c = 0, cl = items.length; c < cl; c++) {
                     item = document.getElementById(this.parent.id + '-room-preview' + c);
-                    if (item)
+                    if (item) {
                         item.title = items[c].description;
+                        item.classList.add('room-item');
+                    }
                 }
             }
 

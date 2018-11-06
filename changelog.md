@@ -3,6 +3,8 @@
 ## v0.6.7
 
 - **Fixed:**
+  - Code editor:
+    - Area designer: Fixed room preview item matching generating corrupt HTML
   - MSP: Fixed not displaying error when file not found or unable to play
   - Display: Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
   - Logger:
