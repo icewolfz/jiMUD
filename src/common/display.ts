@@ -1359,7 +1359,7 @@ export class Display extends EventEmitter {
     public removeLine(line: number) {
         if (line < 0 || line >= this.lines.length) return;
         this.emit('line-removed', line, this.lines[line]);
-        //this._height -= this._lines[line].height;
+        this._height -= this._lines[line].height;
         this.lines.splice(line, 1);
         this.displayLines.splice(line, 1);
         this.lineIDs.splice(line, 1);
@@ -2487,11 +2487,11 @@ export class Display extends EventEmitter {
     private buildLineDisplay(idx?: number) {
         if (idx === undefined)
             idx = this.lines.length - 1;
-        let back = [];
-        let fore = [];
+        const back = [];
+        const fore = [];
         const text = this.displayLines[idx];
         const formats = this.lineFormats[idx];
-        const mv = this._maxView;
+        const mv = '' + this._maxView;
         let offset = 0;
         let bStyle: any = '';
         let fStyle: any = '';
@@ -2504,7 +2504,8 @@ export class Display extends EventEmitter {
         let ol;
         let iWidth = 0;
         let right = false;
-        const indent = this._indent * this._charWidth;
+        const id = this.lineIDs[idx];
+        const ident = this._indent * this._charWidth;
         for (ol in this._expire) {
             if (!this._expire.hasOwnProperty(ol))
                 continue;
@@ -2514,14 +2515,9 @@ export class Display extends EventEmitter {
         delete this._expire2[idx];
         const fLines = [];
         const bLines = [];
-        let totalWidth = 0;
-        let fOffset = 0;
-        let lOffset = 0;
-        let tmp;
-        let doIndent = false;
-        let brk;
-        let tW;
-        const id = this.lineIDs[idx];
+        const totalWidth = 0;
+        const fOffset = 0;
+        const lOffset = 0;
 
         for (let f = 0; f < len; f++) {
             const format = formats[f];
@@ -2600,58 +2596,9 @@ export class Display extends EventEmitter {
                     fore.push('<span style="left:0;width:{max}px;', ...fStyle, '" class="', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
                 }
                 else if (end - offset !== 0) {
-                    totalWidth += format.width;
-                    if (left + format.width > mv) {
-                        brk = this.getBreak(eText, left, mv, font, format.unicode);
-                        doIndent = true;
-                        if (format.unicode)
-                            tW = this.textWidth(eText.substring(0, brk));
-                        else
-                            tW = brk * cw;
-                        back.push('<span style="left:', left, 'px;width:', tW, 'px;', ...bStyle, '"></span>');
-                        fore.push('<span style="left:', left, 'px;width:', tW, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText.substring(0, brk)), '</span>');
-                        tmp = this.buildWrapLineData(fore, back, right, height || this._charHeight, left + iWidth, idx, lOffset, fOffset);
-                        fLines.push(tmp[0]);
-                        bLines.push(tmp[1]);
-                        fore = [];
-                        back = [];
-                        eText = eText.substring(brk);
-                        if (format.unicode)
-                            tW = this.textWidth(eText.substring(brk));
-                        else
-                            tW = eText.length * cw;
-                        left = indent;
-                        while (left + tW > mv && brk < end) {
-                            brk = this.getBreak(eText, left, mv, font, format.unicode);
-                            doIndent = true;
-                            if (format.unicode)
-                                tW = this.textWidth(eText.substring(0, brk));
-                            else
-                                tW = brk * cw;
-                            back.push('<span style="left:', left, 'px;width:', tW, 'px;', ...bStyle, '"></span>');
-                            fore.push('<span style="left:', left, 'px;width:', tW, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText.substring(0, brk)), '</span>');
-                            tmp = this.buildWrapLineData(fore, back, right, height || this._charHeight, left + iWidth, idx, lOffset, fOffset);
-                            fLines.push(tmp[0]);
-                            bLines.push(tmp[1]);
-                            fore = [];
-                            back = [];
-                            eText = eText.substring(brk);
-                            if (format.unicode)
-                                tW = this.textWidth(eText.substring(brk));
-                            else
-                                tW = eText.length * cw;
-                            left = indent;
-                        }
-                        if (eText.length) {
-                            back.push('<span style="left:', left, 'px;width:', tW, 'px;', ...bStyle, '"></span>');
-                            fore.push('<span style="left:', left, 'px;width:', tW, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText.substring(0, brk)), '</span>');
-                        }
-                    }
-                    else {
-                        back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
-                        fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
-                        left += format.width;
-                    }
+                    back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
+                    fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
+                    left += format.width;
                 }
             }
             else if (format.formatType === FormatType.Link) {
@@ -2672,7 +2619,7 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.WordBreak)
                 fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
-                fore.push('<a draggable="false" class="MXPLink" data-href="', format.href, '" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onclick="', this.mxpLinkFunction, '(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
+                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="', format.href, '" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onclick="', this.mxpLinkFunction, '(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (format.expire && format.expire.length > 0) {
                     if (!this._expire[format.expire])
                         this._expire[format.expire] = [];
@@ -2696,7 +2643,7 @@ export class Display extends EventEmitter {
                 left += format.width;
             }
             else if (format.formatType === FormatType.MXPSend) {
-                fore.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '"');
+                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '"');
                 if (format.expire && format.expire.length > 0) {
                     if (!this._expire[format.expire])
                         this._expire[format.expire] = [];
@@ -2732,7 +2679,7 @@ export class Display extends EventEmitter {
             }
             else if (format.formatType === FormatType.Image) {
                 eText = '';
-                tmp = ['<img style="'];
+                const tmp = ['<img style="'];
                 if (format.url.length > 0) {
                     eText += format.url;
                     if (!format.url.endsWith('/'))
@@ -2826,59 +2773,39 @@ export class Display extends EventEmitter {
             }
         }
         if (fore.length) {
-            tmp = this.buildWrapLineData(fore, back, right, height || this._charHeight, left + iWidth, idx, lOffset, fOffset);
-            fLines.push(tmp[0]);
-            bLines.push(tmp[1]);
+            const wIdx = this.buildWrapLineData(height || this._charHeight, left + iWidth, idx, lOffset, fOffset);
+            if (left + iWidth > this._maxWidth)
+                this._maxWidth = totalWidth + left + iWidth;
+            if (height) {
+                if (right) {
+                    fLines.push(`<span class="line" data-id="${id}" style="top:${this._lines[wIdx].top}px;height:${height}px;min-width:{view}px;">${fore.join('')}<br></span>`);
+                    bLines.push(`<span class="background-line" style="top:${this._lines[wIdx].top}px;height:${height}px;min-width:{view}px;">${back.join('')}<br></span>`);
+                }
+                else {
+                    fLines.push(`<span class="line" data-id="${id}" style="top:${this._lines[wIdx].top}px;height:${height}px;">${fore.join('')}<br></span>`);
+                    bLines.push(`<span class="background-line" style="top:${this._lines[wIdx].top}px;height:${height}px;">${back.join('')}<br></span>`);
+                }
+            }
+            if (right) {
+                fLines.push(`<span class="line" data-id="${id}" style="top:${this._lines[wIdx].top}px;min-width:{view}px;">${fore.join('')}<br></span>`);
+                bLines.push(`<span class="background-line" style="top:${this._lines[wIdx].top}px;min-width:{view}px;">${back.join('')}<br></span>`);
+            }
+            else {
+                fLines.push(`<span class="line" data-id="${id}" style="top:${this._lines[wIdx].top}px;">${fore.join('')}<br></span>`);
+                bLines.push(`<span class="background-line" style="top:${this._lines[wIdx].top}px;">${back.join('')}<br></span>`);
+            }
         }
-        if (totalWidth + left + iWidth > this._maxWidth)
-            this._maxWidth = totalWidth + left + iWidth;
         return [fLines, bLines];
     }
 
-    private getBreak(text, left, width, font?, unicode?) {
-        if (!text || text.length === 0)
-            return 0;
-        let wBreak = 0;
-        let w;
-        const cw = this._charWidth;
-        const tl = text.length;
-        //find index at break point
-        while (wBreak < tl && w < width) {
-            wBreak++;
-            if (font || unicode)
-                w = left + this.textWidth(text.substr(0, wBreak));
-            else
-                w = left + wBreak * cw;
-        }
-        if (wBreak >= tl)
-            return tl - 1;
-        if (wBreak < tl || text[wBreak + 1] === ' ')
-            return wBreak;
-        //work back to a space
-        while (wBreak >= 0 && text[wBreak] !== ' ')
-            wBreak--;
-        if (wBreak <= 0)
-            return 0;
-        wBreak++;
-        return wBreak;
-    }
-
-    private buildWrapLineData(fore, back, right, height, width, index, offset, formatOffset) {
-        if (this._lines.length === 0)
+    private buildWrapLineData(height, width, index, offset, formatOffset) {
+        if (this.lines.length === 0)
             this._lines.push({ height: height, top: 0, width: width, index: index, offset: offset, formatOffset: formatOffset });
         else
             this._lines.push({ height: height, top: this._lines[this._lines.length - 1].top + this._lines[this._lines.length - 1].height, width: width, index: index, offset: offset, formatOffset: formatOffset });
         this._height += height;
-        const wIdx = this._lines.length - 1;
-        if (height) {
-            if (right)
-                return [`<span class="line" data-id="${this.lineIDs[index]}" style="top:${this._lines[wIdx].top}px;height:${height}px;min-width:{view}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[wIdx].top}px;height:${height}px;min-width:{view}px;">${back.join('')}<br></span>`];
-            else
-                return [`<span class="line" data-id="${this.lineIDs[index]}" style="top:${this._lines[wIdx].top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[wIdx].top}px;height:${height}px;">${back.join('')}<br></span>`];
-        }
-        if (right)
-            return [`<span class="line" data-id="${this.lineIDs[index]}" style="top:${this._lines[wIdx].top}px;min-width:{view}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[wIdx].top}px;min-width:{view}px;">${back.join('')}<br></span>`];
-        return [`<span class="line" data-id="${this.lineIDs[index]}" style="top:${this._lines[wIdx].top}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[wIdx].top}px;">${back.join('')}<br></span>`];
+
+        return this._lines.length - 1;
     }
 
     public getLineHTML(idx?: number, start?: number, len?: number) {
