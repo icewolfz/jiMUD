@@ -2671,13 +2671,11 @@ export class Display extends EventEmitter {
                     case 'bottom':
                         tmp.push('vertical-align:', format.align, ';');
                         tmp.push('left:', '' + left, 'px;');
-                        left += format.width;
-                        iWidth += format.marginWidth || 0;
+                        left += format.width + format.marginWidth || 0;
                         break;
                     default:
                         tmp.push('left:', '' + left, 'px;');
-                        left += format.width;
-                        iWidth += format.marginWidth || 0;
+                        left += format.width + format.marginWidth || 0;
                         break;
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0)
