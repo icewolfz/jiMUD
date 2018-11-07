@@ -17,6 +17,7 @@
   - Logger:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
     - Fixed URL click scripts by including some minor javascript to execute urls
+    - Fixed generating HTML when not logging to save memory and cpu time
 
 ## v0.6.6 2018-11-05
 

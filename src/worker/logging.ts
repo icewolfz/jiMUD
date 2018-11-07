@@ -207,14 +207,14 @@ self.addEventListener('message', (e: MessageEvent) => {
             }
             //clear buffer
             flushBuffer = null;
-            if (!data.gagged || (options.gagged && data.gagged)) {
-                if ((options.what & Log.Html) === Log.Html)
-                    writeHtml(createLine(data.line, data.formats));
-                if ((options.what & Log.Text) === Log.Text || options.what === Log.None)
-                    writeText(data.line + '\n');
-                if ((options.what & Log.Raw) === Log.Raw)
-                    writeRaw(data.raw);
-            }
+            if (!logging || (!options.offline && !connected)) return;
+            if (data.gagged && !options.gagged) return;
+            if ((options.what & Log.Html) === Log.Html)
+                writeHtml(createLine(data.line, data.formats));
+            if ((options.what & Log.Text) === Log.Text || options.what === Log.None)
+                writeText(data.line + '\n');
+            if ((options.what & Log.Raw) === Log.Raw)
+                writeRaw(data.raw);
             break;
     }
 }, false);
