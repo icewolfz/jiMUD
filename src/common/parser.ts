@@ -2009,7 +2009,7 @@ export class Parser extends EventEmitter {
           if (hint.length === 0)
             hint = href;
           const cmds = href.split('|');
-          let tt: (string | number) = 0;
+          let tt;
           if (cmds.length > 1) {
             const caps = hint.split('|');
             if (caps.length === cmds.length + 1) {
@@ -2028,7 +2028,7 @@ export class Parser extends EventEmitter {
               hint: hint,
               expire: expire,
               prompt: prompt,
-              tt: tt
+              tt: tt || ''
             },
             text: null
           };
