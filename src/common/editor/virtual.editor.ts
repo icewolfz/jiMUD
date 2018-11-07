@@ -8498,7 +8498,7 @@ export class VirtualEditor extends EditorBase {
                     items = room.items.slice().sort((a, b) => { return b.item.length - a.item.length; });
                     cl = items.length;
                     for (c = 0; c < cl; c++)
-                        str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'gi'), m => '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + m + '</span>');
+                        str = str.replace(new RegExp('\\b(?!room-preview)(' + items[c].item + ')\\b', 'gi'), m => '<span data-id="' + this.parent.id + '-room-preview' + c + '">' + m + '</span>');
                 }
                 e = room.climbs;
                 if (e !== RoomExit.None) {
@@ -8522,9 +8522,11 @@ export class VirtualEditor extends EditorBase {
                 this.$roomPreview.long.innerHTML = pinkfishToHTML(str);
                 if (items && items.length > 0) {
                     for (c = 0, cl = items.length; c < cl; c++) {
-                        item = document.getElementById(this.parent.id + '-room-preview' + c);
-                        if (item)
-                            item.title = items[c].description;
+                        item = document.querySelectorAll(`[data-id=${this.parent.id}-room-preview${c}]`);
+                        item.forEach(el => {
+                            el.title = items[c].description;
+                            el.classList.add('room-item');
+                        });
                     }
                 }
                 if (room.smell.length > 0 && room.smell !== '0' && room.sound.length > 0 && room.sound !== '0') {

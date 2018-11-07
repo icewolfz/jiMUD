@@ -13,6 +13,9 @@
       - Fixed room preview item matching generating corrupt HTML
       - Fixed read display format in room property editor
       - Fixed text selection for room preview
+      - Fixed room preview tool tips when item appears multiple times in long
+    - Virtual area editor:
+      - Fixed room preview tool tips when item appears multiple times in long
   - MSP: Fixed not displaying error when file not found or unable to play
   - Display:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
