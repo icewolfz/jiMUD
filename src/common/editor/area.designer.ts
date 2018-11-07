@@ -7745,6 +7745,8 @@ export class AreaDesigner extends EditorBase {
                 return value.map(i => i.search).join(':');
             case 'exitsDetails':
                 return value.map(v => v.exit).join(', ');
+            case 'reads':
+                return value.map(v => v.read).join(', ');
         }
         return value;
     }
@@ -10277,7 +10279,7 @@ export class AreaDesigner extends EditorBase {
             if (items.length > 0) {
                 items = items.sort((a, b) => { return b.item.length - a.item.length; });
                 for (c = 0, cl = items.length; c < cl; c++)
-                    str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'gi'), m => '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + m + '</span>');
+                    str = str.replace(new RegExp('\\b(?!room-preview)(' + items[c].item + ')\\b', 'gi'), m => '<span id="' + this.parent.id + '-room-preview' + c + '">' + m + '</span>');
             }
             else
                 items = null;
@@ -10313,8 +10315,10 @@ export class AreaDesigner extends EditorBase {
             if (items && items.length > 0) {
                 for (c = 0, cl = items.length; c < cl; c++) {
                     item = document.getElementById(this.parent.id + '-room-preview' + c);
-                    if (item)
+                    if (item) {
                         item.title = items[c].description;
+                        item.classList.add('room-item');
+                    }
                 }
             }
 
@@ -10358,11 +10362,11 @@ export class AreaDesigner extends EditorBase {
                     if (!RoomExits[exit]) continue;
                     if ((e & RoomExits[exit]) === RoomExits[exit]) {
                         if (room.exitsDetails[exit]) {
-                            if (room.exitsDetails[exit].hidden)
+                            if (room.exitsDetails[exit].hidden || (room.exitsDetails[exit].door.length && room.exitsDetails[exit].closed))
                                 continue;
                         }
                         else if (base.exitsDetails[exit]) {
-                            if (base.exitsDetails[exit].hidden)
+                            if (base.exitsDetails[exit].hidden || (room.exitsDetails[exit].door.length && room.exitsDetails[exit].closed))
                                 continue;
                         }
                         ex.push(exit);

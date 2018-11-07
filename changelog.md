@@ -7,12 +7,24 @@
     - Add MXP image height and better width support
     - Add MXP font size and family support
 
+- **New:**
+  - Code editor:
+    - Area designer: Exits that are closed doors are now hidden in the room preview to mimic standard door usage
+- **Changed:**
+  - Update electron from 3.0.7 to 3.0.8
 - **Fixed:**
+  - Code editor:
+    - Area designer:
+      - Fixed room preview item matching generating corrupt HTML
+      - Fixed read display format in room property editor
   - MSP: Fixed not displaying error when file not found or unable to play
-  - Display: Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
+  - Display:
+    - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
+    - Fixed overlay and selection to add extra ending space to represent newlines better
   - Logger:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
     - Fixed URL click scripts by including some minor javascript to execute urls
+    - Fixed generating HTML when not logging to save memory and cpu time
 
 ## v0.6.6 2018-11-05
 
