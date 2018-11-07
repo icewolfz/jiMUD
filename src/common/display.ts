@@ -2469,8 +2469,9 @@ export class Display extends EventEmitter {
                 delete this._expire[ol][idx];
         }
         delete this._expire2[idx];
-
-        for (let f = 0; f < len; f++) {
+        let f;
+    
+        for (f = 0; f < len; f++) {
             const format = formats[f];
             let nFormat;
             let end;
@@ -2505,7 +2506,6 @@ export class Display extends EventEmitter {
                         bStyle.push('background:', format.background, ';');
                     if (format.color)
                         fStyle.push('color:', format.color, ';');
-                    eText = text.substring(offset, end);
                     font = 0;
                     if (format.font || format.size) {
                         if (format.font) fStyle.push('font-family: ', format.font, ';');
@@ -2655,15 +2655,23 @@ export class Display extends EventEmitter {
                 switch (format.align.toLowerCase()) {
                     case 'left':
                         tmp.push('float:left;');
+                        iWidth += format.width || 0;
                         break;
                     case 'right':
                         tmp.push('float:right;');
                         right = true;
+                        iWidth += format.width || 0;
                         break;
                     case 'top':
                     case 'middle':
                     case 'bottom':
                         tmp.push('vertical-align:', format.align, ';');
+                        tmp.push('left:', '' + left, 'px;');
+                        left += format.width;
+                        break;
+                    default:
+                        tmp.push('left:', '' + left, 'px;');
+                        left += format.width;
                         break;
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0)
@@ -2712,14 +2720,11 @@ export class Display extends EventEmitter {
                         const l = this._lines.length;
                         this.updateTops(lIdx);
                         img.remove();
-                        if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
-                            if (this.split) this.split.dirty = true;
-                            this.doUpdate(UpdateType.display);
-                        }
+                        if (this.split) this.split.dirty = true;
+                        this.doUpdate(UpdateType.display);
                     };
                 }
                 height = Math.max(height, format.height || 0);
-                iWidth += format.width || 0;
             }
         }
         this._lines[idx].height = height || this._charHeight;
