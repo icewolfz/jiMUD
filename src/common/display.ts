@@ -1766,7 +1766,7 @@ export class Display extends EventEmitter {
             offset = formats[f].offset;
             //block is between start/end so whole width and move on
             if (offset >= start && len >= end) {
-                width += formats[f].width;
+                width += formats[f].width + (formats[f].marginWidth || 0);
                 continue;
             }
             //get font
@@ -2659,23 +2659,23 @@ export class Display extends EventEmitter {
                 switch (format.align.toLowerCase()) {
                     case 'left':
                         tmp.push('float:left;');
-                        iWidth += format.width || 0 + format.marginWidth || 0;
+                        iWidth += format.width || 0 + (format.marginWidth || 0);
                         break;
                     case 'right':
                         tmp.push('float:right;');
                         right = true;
-                        iWidth += format.width || 0 + format.marginWidth || 0;
+                        iWidth += format.width || 0 + (format.marginWidth || 0);
                         break;
                     case 'top':
                     case 'middle':
                     case 'bottom':
                         tmp.push('vertical-align:', format.align, ';');
                         tmp.push('left:', '' + left, 'px;');
-                        left += format.width + format.marginWidth || 0;
+                        left += format.width + (format.marginWidth || 0);
                         break;
                     default:
                         tmp.push('left:', '' + left, 'px;');
-                        left += format.width + format.marginWidth || 0;
+                        left += format.width + (format.marginWidth || 0);
                         break;
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0)
