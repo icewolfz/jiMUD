@@ -10279,7 +10279,7 @@ export class AreaDesigner extends EditorBase {
             if (items.length > 0) {
                 items = items.sort((a, b) => { return b.item.length - a.item.length; });
                 for (c = 0, cl = items.length; c < cl; c++)
-                    str = str.replace(new RegExp('\\b(?!room-preview)(' + items[c].item + ')\\b', 'gi'), m => '<span id="' + this.parent.id + '-room-preview' + c + '">' + m + '</span>');
+                    str = str.replace(new RegExp('\\b(?!room-preview)(' + items[c].item + ')\\b', 'gi'), m => '<span data-id="' + this.parent.id + '-room-preview' + c + '">' + m + '</span>');
             }
             else
                 items = null;
@@ -10314,11 +10314,11 @@ export class AreaDesigner extends EditorBase {
             this.$roomPreview.long.innerHTML = pinkfishToHTML(str);
             if (items && items.length > 0) {
                 for (c = 0, cl = items.length; c < cl; c++) {
-                    item = document.getElementById(this.parent.id + '-room-preview' + c);
-                    if (item) {
-                        item.title = items[c].description;
-                        item.classList.add('room-item');
-                    }
+                    item = document.querySelectorAll(`[data-id=${this.parent.id}-room-preview${c}]`);
+                    item.forEach(el => {
+                        el.title = items[c].description;
+                        el.classList.add('room-item');
+                    });
                 }
             }
 

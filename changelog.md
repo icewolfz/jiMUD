@@ -17,11 +17,17 @@
     - Area designer:
       - Fixed room preview item matching generating corrupt HTML
       - Fixed read display format in room property editor
+      - Fixed text selection for room preview
+      - Fixed room preview tool tips when item appears multiple times in long
+    - Virtual area editor:
+      - Fixed room preview tool tips when item appears multiple times in long
   - MSP: Fixed not displaying error when file not found or unable to play
   - Display:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
     - Fixed overlay and selection to add extra ending space to represent newlines better
     - Fixed rounded corner selection/overlay placements
+    - Fixed double click counting [ and ] as part of words
+  - Fixed context word selection to not count [ and ] as part of words
   - Logger:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
     - Fixed URL click scripts by including some minor javascript to execute urls
