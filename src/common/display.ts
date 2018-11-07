@@ -2725,11 +2725,17 @@ export class Display extends EventEmitter {
                         else if (format.vspace.length > 0)
                             img.style.margin = formatUnit(format.hspace, this._charHeight) + ' 0px';
                         const bounds = img.getBoundingClientRect();
-                        const styles = getComputedStyle(img);
                         fmt.width = bounds.width || img.width;
                         fmt.height = bounds.height || img.height;
-                        fmt.marginHeight = styles.marginTop + styles.marginBottom;
-                        fmt.marginWidth = styles.marginLeft + styles.marginRight;
+                        if(format.hspace.length > 0 || format.vspace.length > 0) {
+                            const styles = getComputedStyle(img);
+                        fmt.marginHeight = parseFloat(styles.marginTop) + parseFloat(styles.marginBottom);
+                        fmt.marginWidth = parseFloat(styles.marginLeft) + parseFloat(styles.marginRight);
+                        }
+                        else {
+                            fmt.marginHeight = 0;
+                            fmt.marginWidth = 0;
+                        }
                         //only rebuild if last image to reduce performance hits
                         if (this._lines[lIdx].images !== 0) return;
                         const t = this.buildLineDisplay(lIdx);
