@@ -60,6 +60,7 @@ interface Line {
     height: number;
     top: number;
     width: number;
+    images: number;
 }
 
 /**
@@ -85,6 +86,7 @@ export class Display extends EventEmitter {
     private _finder: Finder;
     private _height: number = 0;
     private _maxWidth: number = 0;
+    private _maxView: number = 0;
 
     private _maxLineLength: number = 0;
     private _currentSelection: Selection = {
@@ -266,7 +268,7 @@ export class Display extends EventEmitter {
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
                     const mw = '' + (this._maxWidth === 0 ? 0 : Math.max(this._maxWidth, this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size));
-                    const mv = '' + (this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size);
+                    const mv = '' + this._maxView;
                     this.split.view.style.width = this._maxWidth + 'px';
                     this.split.background.style.width = this._maxWidth + 'px';
                     let l = lines.length;
@@ -1202,7 +1204,7 @@ export class Display extends EventEmitter {
             l--;
         const h = this._height - (l < this._lines.length ? this._lines[l].height : 0);
         const mw = '' + (w === 0 ? 0 : Math.max(w, this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size));
-        const mv = '' + (this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size);
+        const mv = '' + this._maxView;
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
 
@@ -1324,7 +1326,7 @@ export class Display extends EventEmitter {
         else if (data.line.length > this._maxLineLength)
             this._maxLineLength = data.line.length;
         this.lineIDs.push(this._lineID);
-        this._lines.push({ height: 0, top: 0, width: 0 });
+        this._lines.push({ height: 0, top: 0, width: 0, images: 0 });
         this._lineID++;
         t = this.buildLineDisplay();
         this._height += this._lines[this._lines.length - 1].height;
@@ -1737,6 +1739,7 @@ export class Display extends EventEmitter {
             return this._lines[line].width;
         if (len === undefined || len > this.lines[line].length)
             len = this.lines[line].length;
+        if (len - start <= 0) return 0;
         if (start === 0 && len >= this.lines[line].length)
             return this._lines[line].width;
         const text = this.displayLines[line];
@@ -2412,6 +2415,7 @@ export class Display extends EventEmitter {
     private update() {
         if (this.split) this.split.dirty = true;
         this._os = this.offset(this._el);
+        this._maxView = this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size;
         this._innerHeight = this._elJ.innerHeight();
         this._innerWidth = this._elJ.innerWidth();
         const t = window.getComputedStyle(this._el);
@@ -2457,6 +2461,7 @@ export class Display extends EventEmitter {
         let font;
         const len = formats.length;
         const cw = this._charWidth;
+        const mv = this._maxView;
         let left = 0;
         let ol;
         let iWidth = 0;
@@ -2470,7 +2475,6 @@ export class Display extends EventEmitter {
         }
         delete this._expire2[idx];
         let f;
-    
         for (f = 0; f < len; f++) {
             const format = formats[f];
             let nFormat;
@@ -2655,12 +2659,12 @@ export class Display extends EventEmitter {
                 switch (format.align.toLowerCase()) {
                     case 'left':
                         tmp.push('float:left;');
-                        iWidth += format.width || 0;
+                        iWidth += format.width || 0 + format.marginWidth || 0;
                         break;
                     case 'right':
                         tmp.push('float:right;');
                         right = true;
-                        iWidth += format.width || 0;
+                        iWidth += format.width || 0 + format.marginWidth || 0;
                         break;
                     case 'top':
                     case 'middle':
@@ -2668,10 +2672,12 @@ export class Display extends EventEmitter {
                         tmp.push('vertical-align:', format.align, ';');
                         tmp.push('left:', '' + left, 'px;');
                         left += format.width;
+                        iWidth += format.marginWidth || 0;
                         break;
                     default:
                         tmp.push('left:', '' + left, 'px;');
                         left += format.width;
+                        iWidth += format.marginWidth || 0;
                         break;
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0)
@@ -2685,6 +2691,7 @@ export class Display extends EventEmitter {
                 if (format.ismap) tmp.push(' ismap onclick="return false;"');
                 fore.push(tmp.join(''), ` src="${eText}"/>`);
                 if (!format.width) {
+                    this._lines[idx].images++;
                     const img = new Image();
                     img.src = eText;
                     img.dataset.id = '' + id;
@@ -2696,6 +2703,7 @@ export class Display extends EventEmitter {
                     this._el.appendChild(img);
                     img.onload = () => {
                         const lIdx = this.lineIDs.indexOf(+img.dataset.id);
+                        this._lines[lIdx].images--;
                         if (lIdx === -1 || lIdx >= this.lines.length) return;
                         const pHeight = this._lines[lIdx].height;
                         const fIdx = +img.dataset.f;
@@ -2710,9 +2718,20 @@ export class Display extends EventEmitter {
                             img.style.width = formatUnit(fmt.w);
                         else if (fmt.h.length > 0)
                             img.style.height = formatUnit(fmt.h, this._charHeight);
+                        if (format.hspace.length > 0 && format.vspace.length > 0)
+                            img.style.margin = formatUnit(format.vspace) + ' ' + formatUnit(format.hspace, this._charHeight);
+                        else if (format.hspace.length > 0)
+                            img.style.margin = '0px ' + formatUnit(format.hspace, this._charHeight);
+                        else if (format.vspace.length > 0)
+                            img.style.margin = formatUnit(format.hspace, this._charHeight) + ' 0px';
                         const bounds = img.getBoundingClientRect();
+                        const styles = getComputedStyle(img);
                         fmt.width = bounds.width || img.width;
                         fmt.height = bounds.height || img.height;
+                        fmt.marginHeight = styles.marginTop + styles.marginBottom;
+                        fmt.marginWidth = styles.marginLeft + styles.marginRight;
+                        //only rebuild if last image to reduce performance hits
+                        if (this._lines[lIdx].images !== 0) return;
                         const t = this.buildLineDisplay(lIdx);
                         this._height += this._lines[lIdx].height - pHeight;
                         this._viewLines[lIdx] = t[0];
@@ -2724,7 +2743,10 @@ export class Display extends EventEmitter {
                         this.doUpdate(UpdateType.display);
                     };
                 }
-                height = Math.max(height, format.height || 0);
+                if (format.marginHeight)
+                    height = Math.max(height, format.height + format.marginHeight);
+                else
+                    height = Math.max(height, format.height || 0);
             }
         }
         this._lines[idx].height = height || this._charHeight;
