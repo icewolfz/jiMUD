@@ -13,7 +13,9 @@
       - Fixed room preview item matching generating corrupt HTML
       - Fixed read display format in room property editor
   - MSP: Fixed not displaying error when file not found or unable to play
-  - Display: Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
+  - Display:
+    - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
+    - Fixed overlay and selection to add extra ending space to represent newlines better
   - Logger:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
     - Fixed URL click scripts by including some minor javascript to execute urls

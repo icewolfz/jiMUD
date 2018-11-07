@@ -1733,29 +1733,29 @@ export class Display extends EventEmitter {
                 if (this.lineFormats[line][this.lineFormats[line].length - 1].hr)
                     w = mw;
                 else if (sL === line)
-                    w = this.textWidth(this.displayLines[sL].substr(s));
+                    w = this.textWidth(this.displayLines[sL].substr(s)) + this._charWidth;
                 else if (eL === line)
                     w = this.textWidth(this.displayLines[line].substring(0, e));
                 else
-                    w = this.textWidth(this.displayLines[line]);
+                    w = this.textWidth(this.displayLines[line]) + this._charWidth;
                 cl = this.textWidth(this.displayLines[line].substring(0, cl));
                 if (this._roundedRanges) {
                     let cr;
                     if (this.lineFormats[line][this.lineFormats[line].length - 1].hr)
                         cr = mw;
                     else
-                        cr = fl(eL === line ? this.textWidth(this.displayLines[line].substring(0, e)) : (this.textWidth(this.displayLines[line]) || this._charWidth));
+                        cr = fl(eL === line ? this.textWidth(this.displayLines[line].substring(0, e)) : (this.textWidth(this.displayLines[line]) + this._charWidth));
                     if (line > sL) {
                         let pl = 0;
                         if (sL === line - 1) {
                             if (this.lineFormats[line - 1][this.lineFormats[line - 1].length - 1].hr)
                                 pl = 0;
-                            else if (fl(this.textWidth(this.displayLines[sL].substr(0, s))) >= fl(this.textWidth(this.displayLines[line - 1])))
-                                pl = fl(this.textWidth(this.displayLines[line - 1]));
+                            else if (fl(this.textWidth(this.displayLines[sL].substr(0, s))) >= fl(this.textWidth(this.displayLines[line - 1]) + this._charWidth))
+                                pl = fl(this.textWidth(this.displayLines[line - 1])) + this._charWidth;
                             else
                                 pl = fl(this.textWidth(this.displayLines[sL].substring(0, s)));
                         }
-                        const pr = this.lineFormats[line - 1][this.lineFormats[line - 1].length - 1].hr ? mw : fl(this.textWidth(this.displayLines[line - 1]) || this._charWidth);
+                        const pr = this.lineFormats[line - 1][this.lineFormats[line - 1].length - 1].hr ? mw : fl(this.textWidth(this.displayLines[line - 1]) + this._charWidth);
 
                         if (fl(cl) === pl)
                             startStyle.top = CornerType.Flat;
@@ -1774,15 +1774,14 @@ export class Display extends EventEmitter {
                     }
 
                     if (line < eL) {
-                        const nl = 0;
                         let nr;
                         if (this.lineFormats[line + 1][this.lineFormats[line + 1].length - 1].hr)
                             nr = mw;
                         else
-                            nr = fl(eL === line + 1 ? this.textWidth(this.displayLines[line + 1].substring(0, e)) : (this.textWidth(this.displayLines[line + 1]) || this._charWidth));
-                        if (fl(cl) === nl)
+                            nr = fl(eL === line + 1 ? this.textWidth(this.displayLines[line + 1].substring(0, e)) : (this.textWidth(this.displayLines[line + 1]) + this._charWidth));
+                        if (fl(cl) === 0)
                             startStyle.bottom = CornerType.Flat;
-                        else if (nl < fl(cl) && fl(cl) < nr)
+                        else if (0 < fl(cl) && fl(cl) < nr)
                             startStyle.bottom = CornerType.Intern;
 
                         if (cr === nr) {
@@ -2021,11 +2020,11 @@ export class Display extends EventEmitter {
             if (this.lineFormats[line][this.lineFormats[line].length - 1].hr)
                 w = mw;
             else if (sL === line)
-                w = this.textWidth(this.displayLines[sL].substr(s));
+                w = this.textWidth(this.displayLines[sL].substr(s)) + this._charWidth;
             else if (eL === line)
                 w = this.textWidth(this.displayLines[line].substring(0, e));
             else
-                w = this.textWidth(this.displayLines[line]);
+                w = this.textWidth(this.displayLines[line]) + this._charWidth;
             cl = this.textWidth(this.displayLines[line].substring(0, cl));
 
             if (this._roundedRanges) {
@@ -2033,18 +2032,18 @@ export class Display extends EventEmitter {
                 if (this.lineFormats[line][this.lineFormats[line].length - 1].hr)
                     cr = mw;
                 else
-                    cr = fl(eL === line ? this.textWidth(this.displayLines[line].substring(0, e)) : (this.textWidth(this.displayLines[line]) || this._charWidth));
+                    cr = fl(eL === line ? this.textWidth(this.displayLines[line].substring(0, e)) : (this.textWidth(this.displayLines[line]) + this._charWidth));
                 if (line > sL) {
                     let pl = 0;
                     if (sL === line - 1) {
                         if (this.lineFormats[line - 1][this.lineFormats[line - 1].length - 1].hr)
                             pl = 0;
-                        else if (fl(this.textWidth(this.displayLines[sL].substr(0, s))) >= fl(this.textWidth(this.displayLines[line - 1])))
-                            pl = fl(this.textWidth(this.displayLines[line - 1]));
+                        else if (fl(this.textWidth(this.displayLines[sL].substr(0, s))) >= fl(this.textWidth(this.displayLines[line - 1]) + this._charWidth))
+                            pl = fl(this.textWidth(this.displayLines[line - 1])) + this._charWidth;
                         else
                             pl = fl(this.textWidth(this.displayLines[sL].substring(0, s)));
                     }
-                    const pr = this.lineFormats[line - 1][this.lineFormats[line - 1].length - 1].hr ? mw : fl(this.textWidth(this.displayLines[line - 1]) || this._charWidth);
+                    const pr = this.lineFormats[line - 1][this.lineFormats[line - 1].length - 1].hr ? mw : fl(this.textWidth(this.displayLines[line - 1]) + this._charWidth);
 
                     if (fl(cl) === pl)
                         startStyle.top = CornerType.Flat;
@@ -2063,15 +2062,14 @@ export class Display extends EventEmitter {
                 }
 
                 if (line < eL) {
-                    const nl = 0;
                     let nr;
                     if (this.lineFormats[line + 1][this.lineFormats[line + 1].length - 1].hr)
                         nr = mw;
                     else
-                        nr = fl(eL === line + 1 ? this.textWidth(this.displayLines[line + 1].substring(0, e)) : (this.textWidth(this.displayLines[line + 1]) || this._charWidth));
-                    if (fl(cl) === nl)
+                        nr = fl(eL === line + 1 ? this.textWidth(this.displayLines[line + 1].substring(0, e)) : (this.textWidth(this.displayLines[line + 1]) + this._charWidth));
+                    if (fl(cl) === 0)
                         startStyle.bottom = CornerType.Flat;
-                    else if (nl < fl(cl) && fl(cl) < nr)
+                    else if (0 < fl(cl) && fl(cl) < nr)
                         startStyle.bottom = CornerType.Intern;
 
                     if (cr === nr) {
