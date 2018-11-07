@@ -16,6 +16,7 @@
   - Display:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
     - Fixed overlay and selection to add extra ending space to represent newlines better
+    - Fixed rounded corner selection/overlay placements
   - Logger:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
     - Fixed URL click scripts by including some minor javascript to execute urls
