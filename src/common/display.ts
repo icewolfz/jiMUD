@@ -1916,12 +1916,8 @@ export class Display extends EventEmitter {
                             startStyle.top = CornerType.Flat;
                         else if (fl(cl) > pl)
                             startStyle.top = CornerType.Intern;
-                        if (cr === pr) {
-                            if (line === sL + 1 && this.displayLines[sL].length === 0)
-                                endStyle.top = CornerType.Extern;
-                            else
-                                endStyle.top = CornerType.Flat;
-                        }
+                        if (cr === pr)
+                            endStyle.top = CornerType.Flat;
                         else if (pl < cr && cr < pr)
                             endStyle.top = CornerType.Intern;
                         else if (cr === 0 && line === eL)
@@ -1939,15 +1935,9 @@ export class Display extends EventEmitter {
                         else if (0 < fl(cl) && fl(cl) < nr)
                             startStyle.bottom = CornerType.Intern;
 
-                        if (cr === nr) {
-                            if (line === sL && this.lines[line].length === 0)
-                                endStyle.bottom = CornerType.Intern;
-                            else
-                                endStyle.bottom = CornerType.Flat;
-                        }
+                        if (cr === nr)
+                            endStyle.bottom = CornerType.Flat;
                         else if (cr < nr)
-                            endStyle.bottom = CornerType.Intern;
-                        else if (line === sL && this.lines[line].length === 0)
                             endStyle.bottom = CornerType.Intern;
                     }
 
@@ -2204,12 +2194,8 @@ export class Display extends EventEmitter {
                         startStyle.top = CornerType.Flat;
                     else if (fl(cl) > pl)
                         startStyle.top = CornerType.Intern;
-                    if (cr === pr) {
-                        if (line === sL + 1 && this.displayLines[sL].length === 0)
-                            endStyle.top = CornerType.Extern;
-                        else
-                            endStyle.top = CornerType.Flat;
-                    }
+                    if (cr === pr)
+                        endStyle.top = CornerType.Flat;
                     else if (pl < cr && cr < pr)
                         endStyle.top = CornerType.Intern;
                     else if (cr === 0 && line === eL)
@@ -2227,15 +2213,9 @@ export class Display extends EventEmitter {
                     else if (0 < fl(cl) && fl(cl) < nr)
                         startStyle.bottom = CornerType.Intern;
 
-                    if (cr === nr) {
-                        if (line === sL && this.lines[line].length === 0)
-                            endStyle.bottom = CornerType.Intern;
-                        else
-                            endStyle.bottom = CornerType.Flat;
-                    }
+                    if (cr === nr)
+                        endStyle.bottom = CornerType.Flat;
                     else if (cr < nr)
-                        endStyle.bottom = CornerType.Intern;
-                    else if (line === sL && this.lines[line].length === 0)
                         endStyle.bottom = CornerType.Intern;
                 }
 
