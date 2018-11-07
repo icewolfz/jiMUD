@@ -50,14 +50,14 @@
                     if (x < 0 || x >= line.length)
                         return '';
                     var sPos = x, ePos = x;
-                    while (line.substr(sPos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()])/gu) && sPos >= 0) {
+                    while (line.substr(sPos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]])/gu) && sPos >= 0) {
                         sPos--;
                         if (sPos < 0)
                             break;
                     }
                     sPos++;
                     var ll = line.length;
-                    while (line.substr(ePos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()])/gu) && ePos < ll) {
+                    while (line.substr(ePos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]])/gu) && ePos < ll) {
                         ePos++;
                     }
                     if (sPos + ePos - sPos > ll)
