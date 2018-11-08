@@ -175,6 +175,7 @@ export interface MSPOptions {
  */
 export class MSP extends EventEmitter {
     public enabled: boolean = true;
+    public enableSound: boolean = true;
     public server: boolean = false;
     public enableDebug: boolean = false;
 
@@ -364,7 +365,7 @@ export class MSP extends EventEmitter {
      * @param {Object} data Music argument object, contains all settings
      */
     public music(data) {
-        if (!this.enabled) return false;
+        if (!this.enabled && !this.enableSound) return false;
         if (!data.file || data.file.length === 0) {
             if (data.off && data.url && data.url.length > 0)
                 this.defaultMusicURL = data.url;
@@ -400,8 +401,12 @@ export class MSP extends EventEmitter {
             if (this.MusicState.url.length > 0 && !this.MusicState.url.endsWith('/'))
                 this.MusicState.url += '/';
         }
-        if (old !== this.MusicState.file || !data.continue || !this.MusicState.playing)
-            this.MusicState.play();
+        if (old !== this.MusicState.file || !data.continue || !this.MusicState.playing) {
+            if (this.enableSound)
+                this.MusicState.play();
+            else
+                this.emit('playing', { type: 1, file: this.MusicState.file, sound: this.MusicState.sound, state: this.MusicState, duration: '--:--' });
+        }
     }
 
     /**
@@ -411,7 +416,7 @@ export class MSP extends EventEmitter {
      * @todo make it play/stop sound
      */
     public sound(data) {
-        if (!this.enabled) return false;
+        if (!this.enabled && !this.enableSound) return false;
         if (!data.file || data.file.length === 0) {
             if (data.off && data.url && data.url.length > 0)
                 this.defaultSoundURL = data.url;
@@ -449,7 +454,10 @@ export class MSP extends EventEmitter {
             if (this.SoundState.url.length > 0 && !this.SoundState.url.endsWith('/'))
                 this.SoundState.url += '/';
         }
-        this.SoundState.play();
+        if (this.enableSound)
+            this.SoundState.play();
+        else
+            this.emit('playing', { type: 0, file: this.SoundState.file, sound: this.SoundState.sound, state: this.SoundState, duration: '--:--' });
     }
 
     /**

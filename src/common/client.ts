@@ -786,6 +786,7 @@ export class Client extends EventEmitter {
         this.telnet.keepAliveDelay = this.options.keepAliveDelay;
 
         this.MSP.enabled = this.options.enableMSP;
+        this.MSP.enableSound = this.options.enableSound;
         this.MSP.savePath = parseTemplate(this.options.soundPath);
 
         this._input.scrollLock = this.options.scrollLocked;
