@@ -215,6 +215,7 @@ chat.flashing                     | boolean | false
 display.hideTrailingEmptyLine     | boolean | true
 display.enableColors              | boolean | true
 display.enableBackgroundColors    | boolean | true
+enableSound                       | boolean | true
 
 ### trayClick and trayDblClick values
 
