@@ -176,8 +176,8 @@ export interface MSPOptions {
  * @property {string} savePath          - Where sounds will be saved
  */
 export class MSP extends EventEmitter {
-    public _enabled: boolean = true;
-    public _enableSound: boolean = true;
+    private _enabled: boolean = true;
+    private _enableSound: boolean = true;
     public server: boolean = false;
     public enableDebug: boolean = false;
 
@@ -206,6 +206,12 @@ export class MSP extends EventEmitter {
         this.SoundState.on('error', (err) => { this.emit('error', err); });
     }
 
+    /**
+     * enable or disable MSP
+     *
+     * @type {boolean}
+     * @memberof MSP
+     */
     get enabled() { return this._enabled; }
     set enabled(value) {
         if (value === this._enabled) return;
@@ -214,6 +220,12 @@ export class MSP extends EventEmitter {
         this.SoundState.close();
     }
 
+    /**
+     * enable or disable enableSound, allow processing of msp
+     *
+     * @type {boolean}
+     * @memberof MSP
+     */
     get enableSound() { return this._enableSound; }
     set enableSound(value) {
         if (value === this._enableSound) return;
