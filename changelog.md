@@ -11,6 +11,7 @@
   - Update electron-updater 3.1.6 to 3.2.2
   - Clear local cache every time the preferences are changed
   - Clear local cache when leaving combat if it has been at least an hour since last time
+  - Display: tweak performance and memory usage to try and balance between not using to much memory and using enough to get performance gains
 - **Fixed:**
   - Code editor:
     - Area designer:

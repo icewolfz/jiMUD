@@ -3,7 +3,6 @@ import EventEmitter = require('events');
 import RGBColor = require('rgbcolor');
 import { ParserLine, FormatType, ParserOptions, FontStyle, LineFormat, LinkFormat, ImageFormat, Size } from './types';
 import { stripQuotes, CharAllowedInURL, htmlDecode } from './library';
-//const buzz = require('buzz');
 
 interface MXPBlock {
   format: LineFormat | LinkFormat | ImageFormat;
@@ -199,8 +198,8 @@ class Tag {
 class MXPStyle {
   public tag: MXPTag = MXPTag.None;
   public custom: string = '';
-  public font: string = '';
-  public fontSize: (string) = '';
+  public font: string = null;
+  public fontSize: (string) = null;
   public style: FontStyle = FontStyle.None;
   public fore: string = '';
   public back: string = '';
@@ -358,8 +357,6 @@ export class Parser extends EventEmitter {
         fc = f;
         if (f <= -16)
           f = this.IncreaseColor(this.GetColor(f), 0.5);
-        else
-          f = this.GetColor(f);
       }
       else if ((this._CurrentAttributes & FontStyle.Faint) === FontStyle.Faint) {
         if (f > 99 && f < 999)
@@ -369,26 +366,25 @@ export class Parser extends EventEmitter {
         fc = f;
         if (f <= -16)
           f = this.DecreaseColor(this.GetColor(f), 0.15);
-        else
-          f = this.GetColor(f);
       }
       else {
         fc = f;
-        f = this.GetColor(f);
       }
     }
 
-    if (mxp.high)
-      f = this.IncreaseColor(f, 0.25);
+    if (mxp.high) {
+      if (typeof f === 'number')
+        f = this.IncreaseColor(this.GetColor(f), 0.25);
+      else
+        f = this.IncreaseColor(f, 0.25);
+    }
 
     if (mxp.back.length > 0)
       b = mxp.back;
     else if (typeof this._CurrentBackColor === 'string')
       b = 'rgb(' + this._CurrentBackColor.replace(/;/g, ',') + ')';
-    else {
-      bc = this._CurrentBackColor;
-      b = this.GetColor(this._CurrentBackColor);
-    }
+    else
+      b = bc = this._CurrentBackColor;
 
     if ((this._CurrentAttributes & FontStyle.Inverse) === FontStyle.Inverse || (mxp.style & FontStyle.Inverse) === FontStyle.Inverse)
       return { fore: b, back: f, foreCode: bc, backCode: fc };
@@ -401,10 +397,10 @@ export class Parser extends EventEmitter {
     return {
       formatType: FormatType.Normal,
       offset: offset,
-      color: colors.fore,
-      background: colors.back,
-      size: mxp.fontSize,
-      font: mxp.font,
+      color: colors.fore || 0,
+      background: colors.back || 0,
+      size: mxp.fontSize || 0,
+      font: mxp.font || 0,
       style: mxp.style | (this._CurrentAttributes & ~FontStyle.Bold),
       unicode: false
     };
@@ -875,9 +871,41 @@ export class Parser extends EventEmitter {
   }
 
   private AddLine(line: string, raw: string, fragment: boolean, skip: boolean, formats: LineFormat[]) {
-    const data: ParserLine = { raw: raw, line: line, fragment: fragment, gagged: skip, formats: formats };
+    const data: ParserLine = { raw: raw, line: line, fragment: fragment, gagged: skip, formats: this.pruneFormats(formats, line.length) };
     this.emit('add-line', data);
     this.EndOfLine = !fragment;
+  }
+
+  private pruneFormats(formats, textLen) {
+    //noformats or only 1 format
+    if (!formats || formats.length < 2) return formats;
+    const l = formats.length;
+    const nF = [];
+    for (let f = 0; f < l; f++) {
+      const format = formats[f];
+      let end;
+      if (f < l - 1) {
+        const nFormat = formats[f + 1];
+        //skip format until find one that has different offset
+        if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+          continue;
+        end = nFormat.offset;
+        //empty link
+        if (format.formatType === FormatType.Link && end - format.offset === 0 && nFormat.formatType === FormatType.LinkEnd)
+          continue;
+        //empty send
+        if (format.formatType === FormatType.MXPSend && end - format.offset === 0 && nFormat.formatType === FormatType.MXPSendEnd)
+          continue;
+        //empty link
+        if (format.formatType === FormatType.MXPLink && end - format.offset === 0 && nFormat.formatType === FormatType.MXPLinkEnd)
+          continue;
+      }
+      //trailing link with no text
+      else if ((format.formatType === FormatType.Link || format.formatType === FormatType.MXPSend || format.formatType === FormatType.MXPLink) && textLen - format.offset === 0)
+        continue;
+      nF.push(format);
+    }
+    return nF;
   }
 
   private GetEntity(entity: string) {
@@ -992,7 +1020,7 @@ export class Parser extends EventEmitter {
                 if (this.isNumber(arg[1]))
                   tmp.fontSize = arg[1] + 'pt';
                 else
-                  tmp.fontSize = arg[1];
+                  tmp.fontSize = arg[1] || 0;
                 break;
               case 'COLOR':
                 sArgs = arg[1].split(',');
@@ -1035,20 +1063,21 @@ export class Parser extends EventEmitter {
                 if (color.ok) tmp.back = color.toRGB();
                 break;
               case 'FACE':
-                tmp.font = stripQuotes(arg[1]);
+                tmp.font = stripQuotes(arg[1]) || 0;
                 break;
               default:
                 if (this.enableDebug) this.emit('debug', 'Invalid Argument for ' + tag + ': ' + arg[0]);
                 break;
             }
           }
-          else if (x === 0)
-            tmp.font = stripQuotes(args[x]);
+          else if (x === 0) {
+            tmp.font = stripQuotes(args[x]) || 0;
+          }
           else if (x === 1) {
             if (this.isNumber(args[x]))
               tmp.fontSize = args[x] + 'pt';
             else
-              tmp.fontSize = args[x];
+              tmp.fontSize = args[x] || 0;
           }
           else if (x === 2) {
             color = new RGBColor(stripQuotes(args[x]));
@@ -1489,7 +1518,7 @@ export class Parser extends EventEmitter {
           this.mxpStyles.push(tmp);
           return null;
         case 'GAUGE':
-          e = { value: 0, max: 1, caption: '', color: '' };
+          e = { value: 0, max: 1, caption: '', color: 0 };
           for (x = 0; x < xl; x++) {
             arg = args[x].split('=');
             if (arg.length > 1) {
