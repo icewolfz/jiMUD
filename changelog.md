@@ -41,6 +41,7 @@
   - Fixed memory leak in temporary triggers and alarms
   - Fixed Invalid GMCP error when a different error happened
   - Status: Fixed combat/party health bar percent display rare case of trailing decimals
+  - Fixed #testmxp send examples to use correct testmxpcolors and textmxpexpire commands
 
 ## v0.6.6 2018-11-05
 

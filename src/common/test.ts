@@ -204,7 +204,7 @@ export class Tests extends EventEmitter {
             sample += '\t<COLOR #800000>COLOR #800000</COLOR>\n';
             sample += '\t<H><C Maroon>H C Maroon</C></H>\n';
             sample += '\t<H><COLOR #800000>H COLOR #800000</COLOR></H>\n';
-            sample += '\tRun <send PROMPT>TestMXPColors()</send> for a detailed list.\n';
+            sample += '\tRun <send PROMPT>#testmxpcolors</send> for a detailed list.\n';
             sample += '\t<FONT "Times New Roman">FONT "Times New Roman"</FONT>\n';
             sample += '\t<FONT "Webdings">FONT "Webdings"</FONT>\n';
             sample += '\t<FONT COLOR=Red,Blink>FONT COLOR=Red,Blink</FONT>\n';
@@ -226,7 +226,7 @@ export class Tests extends EventEmitter {
             sample += '\t<send href="command2">test command2</send>\n';
             sample += '\t<send "command1|command2|command3" hint="click to see menu|Item 1|Item 2|Item 3">this is a menu link</SEND>\n';
             sample += '\t<SEND "sample" PROMPT EXPIRE=prompt>Prompt sample</SEND>\n';
-            sample += '\t<send PROMPT href="TestMXPExpire()">&lt;EXPIRE&gt; - TestMXPExpire()</send> \n';
+            sample += '\t<send PROMPT href="#testmxpexpire">&lt;EXPIRE&gt; - #testmxpexpire</send> \n';
             sample += 'Horizontal Rule\n';
             sample += '<hr>\n';
             sample += '<hr>Text After\n';
