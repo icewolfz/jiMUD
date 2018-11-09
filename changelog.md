@@ -16,6 +16,7 @@
   - Status:
     - Performance tweaks by grouping updates when possible
     - Removed jQuery where possible to remove overhead and improve performance  
+  - Process all GMCP in async to try and improve performance
 - **Fixed:**
   - Code editor:
     - Area designer:

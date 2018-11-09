@@ -1050,7 +1050,7 @@ export class Mapper extends EventEmitter {
         this._changed = true;
     }
 
-    public processGMCP(mod: string, obj) {
+    public async processGMCP(mod: string, obj) {
         if (!this.enabled) return;
         const mods = mod.split('.');
         if (mods.length < 2 || mods[0] !== 'Room') return;
