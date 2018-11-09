@@ -771,7 +771,7 @@
             });
 
             client.on('profiles-updated', () => {
-                doUpdate(12);
+                doUpdate(76);
             });
             client.on('add-line', (data) => {
                 var res, re, c, cl;
@@ -1797,6 +1797,7 @@
             if (client.options.showCharacterManager)
                 showCharacters();
             autoConnect();
+            doUpdate(64);
             client.raise('opened');
         }
 
@@ -2118,7 +2119,7 @@
                     format: client.options.logTimeFormat
                 }
             });
-            doUpdate(12);
+            doUpdate(76);
         });
 
         ipcRenderer.on('reload-options', () => {
@@ -2136,7 +2137,7 @@
                     format: client.options.logTimeFormat
                 }
             });
-            doUpdate(12);
+            doUpdate(76);
             client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
         });
 
@@ -2355,6 +2356,12 @@
                 if (($updating & 32) === 32) {
                     client.saveOptions();
                     $updating &= ~32;
+                }
+                if (($updating & 64) === 64) {
+                    client.saveOptions();
+                    remote.getCurrentWindow().webContents.session.clearCache(() => { if (client.options.enableDebug) console.log('Cache cleared'); });
+                    webFrame.clearCache();
+                    $updating &= ~64;
                 }
                 this.doUpdate($updating);
             });
