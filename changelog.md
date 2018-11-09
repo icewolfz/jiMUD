@@ -8,6 +8,7 @@
   - Added [Enable sound](docs/preferences.md#general) to disable or enable sounds without the need to disable msp
 - **Changed:**
   - Update electron from 3.0.7 to 3.0.8
+  - Update electron-updater 3.1.6 to 3.2.2
 - **Fixed:**
   - Code editor:
     - Area designer:
