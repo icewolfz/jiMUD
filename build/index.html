@@ -186,6 +186,7 @@
         var autoLoginCounter = 0;
         var lastMouse;
         var chatWin;
+        var _nextClear = Date.now() + 3600000;
         var set = Settings.load(remote.getGlobal('settingsFile'));
         if (set.spellchecking)
             loadSpellchecker();
@@ -771,7 +772,7 @@
             });
 
             client.on('profiles-updated', () => {
-                doUpdate(12);
+                doUpdate(76);
             });
             client.on('add-line', (data) => {
                 var res, re, c, cl;
@@ -1008,7 +1009,8 @@
                             prepend: client.options.logPrepend,
                             what: client.options.logWhat,
                             debug: client.options.enableDebug,
-                            format: client.options.logTimeFormat
+                            format: client.options.logTimeFormat,
+                            colors: client.options.colors
                         }
                     });
             });
@@ -1303,6 +1305,13 @@
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: client.options.showArmor });
                 }
             });
+            _status.on('leave combat', () => {
+                if (_nextClear <= Date.now()) {
+                    doUpdate(64);
+                    //clear every ~hr
+                    _nextClear = Date.now() + 3600000;
+                }
+            });
             _status.ac = client.options.showArmor;
             _status.on('set-title', (title) => {
                 if (client.options.autoCreateCharacter)
@@ -1326,7 +1335,8 @@
                     prepend: client.options.logPrepend,
                     what: client.options.logWhat,
                     debug: client.options.enableDebug,
-                    format: client.options.logTimeFormat
+                    format: client.options.logTimeFormat,
+                    colors: client.options.colors
                 }
             });
             let closeWindow = false;
@@ -1797,6 +1807,7 @@
             if (client.options.showCharacterManager)
                 showCharacters();
             autoConnect();
+            doUpdate(64);
             client.raise('opened');
         }
 
@@ -1924,6 +1935,7 @@
                     buttons.append(button);
                 }
             }
+            doUpdate(64);
         }
 
         function updateMenu() {
@@ -2115,10 +2127,11 @@
                     prepend: client.options.logPrepend,
                     what: client.options.logWhat,
                     debug: client.options.enableDebug,
-                    format: client.options.logTimeFormat
+                    format: client.options.logTimeFormat,
+                    colors: client.options.colors
                 }
             });
-            doUpdate(12);
+            doUpdate(76);
         });
 
         ipcRenderer.on('reload-options', () => {
@@ -2133,10 +2146,11 @@
                     prepend: client.options.logPrepend,
                     what: client.options.logWhat,
                     debug: client.options.enableDebug,
-                    format: client.options.logTimeFormat
+                    format: client.options.logTimeFormat,
+                    colors: client.options.colors
                 }
             });
-            doUpdate(12);
+            doUpdate(76);
             client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
         });
 
@@ -2355,6 +2369,12 @@
                 if (($updating & 32) === 32) {
                     client.saveOptions();
                     $updating &= ~32;
+                }
+                if (($updating & 64) === 64) {
+                    client.saveOptions();
+                    remote.getCurrentWindow().webContents.session.clearCache(() => { if (client.options.enableDebug) console.log('Cache cleared'); });
+                    webFrame.clearCache();
+                    $updating &= ~64;
                 }
                 this.doUpdate($updating);
             });

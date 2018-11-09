@@ -76,7 +76,6 @@ export class Display extends EventEmitter {
     private _lineID = 0;
     private _parser: Parser;
     private _el: HTMLElement;
-    private _elJ: JQuery;
     private _os;
     private _padding = [0, 0, 0, 0];
 
@@ -109,7 +108,6 @@ export class Display extends EventEmitter {
     private _lines: Line[] = [];
 
     public lines: string[] = [];
-    private displayLines: string[] = [];
     private lineIDs: number[] = [];
     public rawLines: string[] = [];
     public scrollToEnd: boolean = true;
@@ -249,7 +247,7 @@ export class Display extends EventEmitter {
                 }
                 if (this.split.dirty && this.split.shown && this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
                     this.split._viewRange.start = this.getLineFromPosition(this._VScroll.scrollSize);
-                    this.split._viewRange.end = this.getLineFromPosition(this._VScroll.scrollSize + this._elJ.innerHeight());
+                    this.split._viewRange.end = this.getLineFromPosition(this._VScroll.scrollSize + this._el.clientHeight);
 
                     if (this.split._viewRange.start < 0)
                         this.split._viewRange.start = 0;
@@ -436,9 +434,8 @@ export class Display extends EventEmitter {
         this._canvas.style.left = '-1000px';
         this._styles = document.createElement('style');
 
-        this._elJ = $(this._el);
-        this._innerHeight = this._elJ.innerHeight();
-        this._innerWidth = this._elJ.innerWidth();
+        this._innerHeight = this._el.clientHeight;
+        this._innerWidth = this._el.clientWidth;
         const fragment = document.createDocumentFragment();
         fragment.appendChild(this._styles);
         this._background = document.createElement('div');
@@ -1117,7 +1114,6 @@ export class Display extends EventEmitter {
         if (this.split) this.split.dirty = true;
         this._viewLines = [];
         this._backgroundLines = [];
-        this.displayLines = [];
         this.lineIDs = [];
         this._lines = [];
         this._lineID = 0;
@@ -1215,7 +1211,7 @@ export class Display extends EventEmitter {
         this._overlay.style.width = mw + 'px';
 
         this._viewRange.start = this.getLineFromPosition(this._VScroll.position);
-        this._viewRange.end = this.getLineFromPosition(this._VScroll.position + this._elJ.innerHeight());
+        this._viewRange.end = this.getLineFromPosition(this._VScroll.position + this._el.clientHeight);
 
         if (this._viewRange.start < 0)
             this._viewRange.start = 0;
@@ -1308,14 +1304,10 @@ export class Display extends EventEmitter {
         this.emit('add-line-done', data);
         if (data.gagged)
             return;
-        if (data.line === '\n' || data.line.length === 0) {
+        if (data.line === '\n' || data.line.length === 0)
             this.lines.push('');
-            this.displayLines.push('');
-        }
-        else {
+        else
             this.lines.push(data.line);
-            this.displayLines.push(data.line.replace(/ /g, '\u00A0'));
-        }
         this.rawLines.push(data.raw);
         this.lineFormats.push(data.formats);
         if (data.formats[0].hr) {
@@ -1344,7 +1336,6 @@ export class Display extends EventEmitter {
         this.emit('line-removed', line, this.lines[line]);
         this._height -= this._lines[line].height;
         this.lines.splice(line, 1);
-        this.displayLines.splice(line, 1);
         this.lineIDs.splice(line, 1);
         this._lines.splice(line, 1);
         this.rawLines.splice(line, 1);
@@ -1409,7 +1400,6 @@ export class Display extends EventEmitter {
         if (amt < 1) amt = 1;
         this.emit('lines-removed', line, this.lines.slice(line, amt));
         this.lines.splice(line, amt);
-        this.displayLines.splice(line, amt);
         this.lineIDs.splice(line, amt);
         this._lines.splice(line, amt);
         this.rawLines.splice(line, amt);
@@ -1510,7 +1500,6 @@ export class Display extends EventEmitter {
         if (this.lines.length > this._maxLines) {
             const amt = this.lines.length - this._maxLines;
             this.lines.splice(0, amt);
-            this.displayLines.splice(0, amt);
             this.lineIDs.splice(0, amt);
             this._lines.splice(0, amt);
             this.rawLines.splice(0, amt);
@@ -1610,7 +1599,7 @@ export class Display extends EventEmitter {
                 y = this.lines.length - 1;
             const formats = this.lineFormats[y];
             const fLen = formats.length;
-            const text = this.displayLines[y];
+            const text = this.lines[y].replace(/ /g, '\u00A0');
             const tl = text.length;
             let left = 0;
             let f = 0;
@@ -1651,9 +1640,9 @@ export class Display extends EventEmitter {
             /*
             let text;
             if (y < this.lines.length)
-                text = this.displayLines[y];
+                text = this.lines[y].replace(/ /g, '\u00A0');
             else
-                text = this.displayLines[this.lines.length - 1];
+                text = this.lines[this.lines.length - 1].replace(/ /g, '\u00A0');
             const tl = text.length;
             let w = Math.ceil(this.textWidth(text.substr(0, x)));
             if (w > xPos && xPos > 0) {
@@ -1742,7 +1731,7 @@ export class Display extends EventEmitter {
         if (len - start <= 0) return 0;
         if (start === 0 && len >= this.lines[line].length)
             return this._lines[line].width;
-        const text = this.displayLines[line];
+        const text = this.lines[line].replace(/ /g, '\u00A0');
         const formats = this.lineFormats[line];
         const fLen = formats.length;
         const tl = text.length;
@@ -2073,7 +2062,7 @@ export class Display extends EventEmitter {
             else {
                 s = Math.min(sel.start.x, sel.end.x);
                 e = Math.max(sel.start.x, sel.end.x);
-                text = this.displayLines[sL];
+                text = this.lines[sL];
                 if (s < 0) s = 0;
                 if (e > text.length)
                     e = text.length;
@@ -2416,8 +2405,8 @@ export class Display extends EventEmitter {
         if (this.split) this.split.dirty = true;
         this._os = this.offset(this._el);
         this._maxView = this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size;
-        this._innerHeight = this._elJ.innerHeight();
-        this._innerWidth = this._elJ.innerWidth();
+        this._innerHeight = this._el.clientHeight;
+        this._innerWidth = this._el.clientWidth;
         const t = window.getComputedStyle(this._el);
         this._borderSize.height = parseInt(t.borderTopWidth) || 0;
         this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
@@ -2451,7 +2440,7 @@ export class Display extends EventEmitter {
             idx = this.lines.length - 1;
         const back = [];
         const fore = [];
-        const text = this.displayLines[idx];
+        const text = this.lines[idx].replace(/ /g, '\u00A0');
         const formats = this.lineFormats[idx];
         let offset = 0;
         let bStyle: any = '';
@@ -2506,9 +2495,13 @@ export class Display extends EventEmitter {
                     bStyle = [];
                     fStyle = [];
                     fCls = [];
-                    if (format.background)
+                    if (typeof format.background === 'number')
+                        bStyle.push('background:', this._parser.GetColor(format.background), ';');
+                    else if (format.background)
                         bStyle.push('background:', format.background, ';');
-                    if (format.color)
+                    if (typeof format.color === 'number')
+                        fStyle.push('color:', this._parser.GetColor(format.color), ';');
+                    else if (format.color)
                         fStyle.push('color:', format.color, ';');
                     font = 0;
                     if (format.font || format.size) {
@@ -2542,17 +2535,20 @@ export class Display extends EventEmitter {
                         if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
                             fCls.push(' s');
                     }
-                    format.bStyle = bStyle;
-                    format.fStyle = fStyle;
-                    format.fCls = fCls;
+                    format.bStyle = bStyle = bStyle.join('').trim();
+                    format.fStyle = fStyle = fStyle.join('').trim();
+                    if (fCls.length !== 0)
+                        format.fCls = fCls = ' class="' + fCls.join('').trim() + '"';
+                    else
+                        format.fCls = fCls = '';
                 }
                 if (format.hr) {
-                    back.push('<span style="left:0;width:{max}px;', ...bStyle, '"></span>');
-                    fore.push('<span style="left:0;width:{max}px;', ...fStyle, '" class="', fCls, '"><div class="hr" style="background-color:', format.color, '"></div></span>');
+                    back.push('<span style="left:0;width:{max}px;', bStyle, '"></span>');
+                    fore.push('<span style="left:0;width:{max}px;', fStyle, '"', fCls, '><div class="hr" style="background-color:', format.color, '"></div></span>');
                 }
                 else if (end - offset !== 0) {
-                    back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
-                    fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
+                    back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
+                    fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                     left += format.width;
                 }
             }
@@ -2564,8 +2560,8 @@ export class Display extends EventEmitter {
                     format.width = format.width || this.textWidth(eText, font);
                 else
                     format.width = format.width || eText.length * cw;
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                 left += format.width;
             }
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
@@ -2593,8 +2589,8 @@ export class Display extends EventEmitter {
                     format.width = format.width || this.textWidth(eText, font);
                 else
                     format.width = format.width || eText.length * cw;
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                 left += format.width;
             }
             else if (format.formatType === FormatType.MXPSend) {
@@ -2618,8 +2614,8 @@ export class Display extends EventEmitter {
                     format.width = format.width || this.textWidth(eText, font);
                 else
                     format.width = format.width || eText.length * cw;
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '" ></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" ></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                 left += format.width;
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
@@ -2628,8 +2624,8 @@ export class Display extends EventEmitter {
                     format.width = format.width || this.textWidth(eText, font);
                 else
                     format.width = format.width || eText.length * cw;
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', ...fStyle, '" class="', ...fCls, '">', htmlEncode(eText), '</span>');
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                 left += format.width;
             }
             else if (format.formatType === FormatType.Image) {
@@ -2778,9 +2774,9 @@ export class Display extends EventEmitter {
             len = this.lines[idx].length;
         const parts = [];
         let offset = 0;
-        let style = [];
-        let fCls;
-        const text = this.displayLines[idx];
+        let style: any = '';
+        let fCls: any = '';
+        const text = this.lines[idx].replace(/ /g, '\u00A0');
         const formats = this.lineFormats[idx];
         const fLen = formats.length;
         let right = false;
@@ -2811,9 +2807,13 @@ export class Display extends EventEmitter {
             if (format.formatType === FormatType.Normal) {
                 style = [];
                 fCls = [];
-                if (format.background)
+                if (typeof format.background === 'number')
+                    style.push('background:', this._parser.GetColor(format.background), ';');
+                else if (format.background)
                     style.push('background:', format.background, ';');
-                if (format.color)
+                if (typeof format.color === 'number')
+                    style.push('color:', this._parser.GetColor(format.color), ';');
+                else if (format.color)
                     style.push('color:', format.color, ';');
                 if (format.font)
                     style.push('font-family: ', format.font, ';');
@@ -2845,11 +2845,15 @@ export class Display extends EventEmitter {
                 }
                 if (offset < start || end < start)
                     continue;
-
+                style = style.join('').trim();
+                if (fCls.length !== 0)
+                    fCls = ' class="' + fCls.join('').trim() + '"';
+                else
+                    fCls = '';
                 if (format.hr)
-                    parts.push('<span style="', style.join(''), 'min-width:100%;width:100%;" class="', fCls.join(''), '"><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', format.color, '"></div></span>');
+                    parts.push('<span style="', style, 'min-width:100%;width:100%;"', fCls, '><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', format.color, '"></div></span>');
                 else if (end - offset !== 0)
-                    parts.push('<span style="', style.join(''), '" class="', fCls.join(''), '">', htmlEncode(text.substring(offset, end)), '</span>');
+                    parts.push('<span style="', style, '"', fCls, '>', htmlEncode(text.substring(offset, end)), '</span>');
             }
             else if (format.formatType === FormatType.Link) {
                 if (offset < start || end < start)
@@ -2858,7 +2862,7 @@ export class Display extends EventEmitter {
                 parts.push(format.href.replace(/"/g, '&quot;'));
                 parts.push('" onclick="', this.linkFunction, '(\'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
-                parts.push('<span style="', style.join(''), '" class="', fCls.join(''), '">');
+                parts.push('<span style="', style, '"', fCls, '>');
                 parts.push(htmlEncode(text.substring(offset, end)));
                 parts.push('</span>');
             }
@@ -2880,7 +2884,7 @@ export class Display extends EventEmitter {
                 parts.push('"');
                 parts.push('onclick="', this.mxpLinkFunction, '(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
-                parts.push('<span style="', style.join(''), '" class="', fCls.join(''), '">');
+                parts.push('<span style="', style, '"', fCls, '>');
                 parts.push(htmlEncode(text.substring(offset, end)));
                 parts.push('</span>');
             }
@@ -2893,14 +2897,14 @@ export class Display extends EventEmitter {
                 parts.push(' onmouseover="', this.mxpTooltipFunction, '(this);"');
                 parts.push(' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ', ', format.prompt ? 1 : 0, ', ', format.tt.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ');return false;">');
                 if (end - offset === 0) continue;
-                parts.push('<span style="', style.join(''), '" class="', fCls.join(''), '">');
+                parts.push('<span style="', style, '"', fCls, '>');
                 parts.push(htmlEncode(text.substring(offset, end)));
                 parts.push('</span>');
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 if (offset < start || end < start)
                     continue;
-                parts.push('<span style="', style.join(''), '" class="', fCls.join(''), '">');
+                parts.push('<span style="', style, '"', fCls, '>');
                 parts.push(htmlEncode(text.substring(offset, end)));
                 parts.push('</span>');
             }

@@ -13,6 +13,10 @@
   - Added [Enable sound](docs/preferences.md#general) to disable or enable sounds without the need to disable msp
 - **Changed:**
   - Update electron from 3.0.7 to 3.0.8
+  - Update electron-updater 3.1.6 to 3.2.2
+  - Clear local cache every time the preferences are changed
+  - Clear local cache when leaving combat if it has been at least an hour since last time
+  - Display: tweak performance and memory usage to try and balance between not using to much memory and using enough to get performance gains
 - **Fixed:**
   - Code editor:
     - Area designer:
@@ -33,6 +37,8 @@
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
     - Fixed URL click scripts by including some minor javascript to execute urls
     - Fixed generating HTML when not logging to save memory and cpu time
+    - Fixed flushing when logging disabled
+  - Fixed drake monster icon
 
 ## v0.6.6 2018-11-05
 
