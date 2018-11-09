@@ -186,6 +186,7 @@
         var autoLoginCounter = 0;
         var lastMouse;
         var chatWin;
+        var _nextClear = Date.now() + 3600000;
         var set = Settings.load(remote.getGlobal('settingsFile'));
         if (set.spellchecking)
             loadSpellchecker();
@@ -1303,6 +1304,13 @@
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: client.options.showArmor });
                 }
             });
+            _status.on('leave combat', () => {
+                if (_nextClear <= Date.now()) {
+                    doUpdate(64);
+                    //clear every ~hr
+                    _nextClear = Date.now() + 3600000;
+                }
+            });
             _status.ac = client.options.showArmor;
             _status.on('set-title', (title) => {
                 if (client.options.autoCreateCharacter)
@@ -1925,6 +1933,7 @@
                     buttons.append(button);
                 }
             }
+            doUpdate(64);
         }
 
         function updateMenu() {

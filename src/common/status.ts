@@ -117,8 +117,10 @@ export class Status extends EventEmitter {
                     }
                     break;
                 case 'omud.combat':
-                    if (obj.action === 'leave')
+                    if (obj.action === 'leave') {
                         $('#combat').empty();
+                        this.emit('leave combat');
+                    }
                     else if (obj.action === 'add')
                         this.createBar('#combat', this.getID(obj, 'combat_'), obj.name, obj.hp, 100, this.livingClass(obj, 'monster-'), obj.order);
                     else if (obj.action === 'update') {
@@ -131,8 +133,10 @@ export class Status extends EventEmitter {
                         this.removeBar('#' + this.getID(obj, 'combat_'));
                     break;
                 case 'omud.party':
-                    if (obj.action === 'leave')
+                    if (obj.action === 'leave') {
                         $('#party').empty();
+                        this.emit('leave party');
+                    }
                     else if (obj.action === 'add') {
                         this.createBar('#party', this.getID(obj, 'party_'), obj.name, obj.hp, 100, this.livingClass(obj, 'party-'), obj.name.replace('"', ''));
                     }
