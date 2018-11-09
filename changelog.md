@@ -34,6 +34,7 @@
     - Fixed generating HTML when not logging to save memory and cpu time
     - Fixed flushing when logging disabled
   - Fixed drake monster icon
+  - Fixed memory leak in temporary triggers and alarms
 
 ## v0.6.6 2018-11-05
 

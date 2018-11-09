@@ -3530,10 +3530,17 @@ export class Input extends EventEmitter {
                 this._stack.pop();
                 break;
             case 2:
-                if (!this._TriggerFunctionCache[idx])
-                    /*jslint evil: true */
-                    this._TriggerFunctionCache[idx] = new Function('try { ' + trigger.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                ret = this._TriggerFunctionCache[idx].apply(this.client, args);
+                //do not cache temp triggers
+                if (trigger.temp) {
+                    ret = new Function('try { ' + trigger.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    ret = ret.apply(this.client, args);
+                }
+                else {
+                    if (!this._TriggerFunctionCache[idx])
+                        /*jslint evil: true */
+                        this._TriggerFunctionCache[idx] = new Function('try { ' + trigger.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    ret = this._TriggerFunctionCache[idx].apply(this.client, args);
+                }
                 if (typeof ret === 'string')
                     ret = this.parseOutgoing(ret);
                 break;
@@ -3541,8 +3548,11 @@ export class Input extends EventEmitter {
                 ret = trigger.value;
                 break;
         }
-        if (trigger.temp)
+        if (trigger.temp) {
+            if (idx >= 0)
+                this._TriggerCache.splice(idx, 1);
             this.client.removeTrigger(trigger);
+        }
         if (ret == null || ret === undefined)
             return null;
         if (r)
