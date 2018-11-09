@@ -11,6 +11,7 @@ import { Input } from './input';
 import { ProfileCollection, Alias, Trigger, Alarm, Macro, Profile, Button, Context, TriggerType } from './profile';
 import { MSP } from './msp';
 import { Display } from './display';
+import { exec } from 'child_process';
 const { version } = require('../../package.json');
 const path = require('path');
 const fs = require('fs');
@@ -660,11 +661,12 @@ export class Client extends EventEmitter {
             try {
                 if (val.length > 0)
                     obj = JSON.parse(val);
-                this.emit('received-GMCP', mod, obj);
             }
             catch (e) {
                 this.error('Invalid GMCP');
+                return;
             }
+            this.emit('received-GMCP', mod, obj);
         });
 
         this.telnet.on('windowSize', () => { this.UpdateWindow(); });
