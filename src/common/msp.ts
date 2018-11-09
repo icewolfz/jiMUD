@@ -140,6 +140,8 @@ class SoundState extends EventEmitter {
             delete this.sound;
             this.sound = null;
         }
+        else if (this.playing)
+            this.playing = false;
         this.emit('closed');
     }
 
@@ -174,8 +176,8 @@ export interface MSPOptions {
  * @property {string} savePath          - Where sounds will be saved
  */
 export class MSP extends EventEmitter {
-    public enabled: boolean = true;
-    public enableSound: boolean = true;
+    public _enabled: boolean = true;
+    public _enableSound: boolean = true;
     public server: boolean = false;
     public enableDebug: boolean = false;
 
@@ -202,6 +204,22 @@ export class MSP extends EventEmitter {
         this.SoundState.on('playing', (data) => { data.type = 0; this.emit('playing', data); });
         this.MusicState.on('error', (err) => { this.emit('error', err); });
         this.SoundState.on('error', (err) => { this.emit('error', err); });
+    }
+
+    get enabled() { return this._enabled; }
+    set enabled(value) {
+        if (value === this._enabled) return;
+        this._enabled = value;
+        this.MusicState.close();
+        this.SoundState.close();
+    }
+
+    get enableSound() { return this._enableSound; }
+    set enableSound(value) {
+        if (value === this._enableSound) return;
+        this._enableSound = value;
+        this.MusicState.close();
+        this.SoundState.close();
     }
 
     /**

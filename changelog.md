@@ -26,7 +26,9 @@
       - Fixed room preview tool tips when item appears multiple times in long
     - Virtual area editor:
       - Fixed room preview tool tips when item appears multiple times in long
-  - MSP: Fixed not displaying error when file not found or unable to play
+  - MSP:
+    - Fixed not displaying error when file not found or unable to play
+    - Reset current sound when sound/msp enabled/disabled
   - Display:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
     - Fixed overlay and selection to add extra ending space to represent newlines better
