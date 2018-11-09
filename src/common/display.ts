@@ -9,7 +9,7 @@
 import { Size, ParserLine, FormatType, FontStyle } from './types';
 import EventEmitter = require('events');
 import { Parser } from './parser';
-import { htmlEncode, formatUnit } from './library';
+import { htmlEncode, formatUnit, copy } from './library';
 import { Finder } from './finder';
 import { DisplayOptions, OverlayRange } from './types';
 
@@ -61,6 +61,11 @@ interface Line {
     top: number;
     width: number;
     images: number;
+}
+
+interface Wrapline {
+    offset: number;
+    formats: any[];
 }
 
 /**
@@ -157,6 +162,8 @@ export class Display extends EventEmitter {
     private _hideTrailingEmptyLine = true;
     private _enableColors = true;
     private _enableBackgroundColors = true;
+
+    private _indent = 4;
 
     get enableColors() { return this._enableColors; }
     set enableColors(value) {
@@ -267,7 +274,7 @@ export class Display extends EventEmitter {
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
-                    const mw = '' + (this._maxWidth === 0 ? 0 : Math.max(this._maxWidth, this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size));
+                    const mw = '' + (this._maxWidth === 0 ? 0 : Math.max(this._maxWidth, this._maxView));
                     const mv = '' + this._maxView;
                     this.split.view.style.width = this._maxWidth + 'px';
                     this.split.background.style.width = this._maxWidth + 'px';
@@ -1203,7 +1210,7 @@ export class Display extends EventEmitter {
         if (this._hideTrailingEmptyLine && l && this.lines[l - 1].length === 0)
             l--;
         const h = this._height - (l < this._lines.length ? this._lines[l].height : 0);
-        const mw = '' + (w === 0 ? 0 : Math.max(w, this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size));
+        const mw = '' + (w === 0 ? 0 : Math.max(w, this._maxView));
         const mv = '' + this._maxView;
         this._view.style.height = h + 'px';
         this._view.style.width = w + 'px';
@@ -2452,6 +2459,7 @@ export class Display extends EventEmitter {
         const back = [];
         const fore = [];
         const text = this.displayLines[idx];
+        const pText = this.lines[idx];
         const formats = this.lineFormats[idx];
         let offset = 0;
         let bStyle: any = '';
@@ -2466,6 +2474,7 @@ export class Display extends EventEmitter {
         let ol;
         let iWidth = 0;
         let right = false;
+        const indent = this._indent * this._charWidth;
         const id = this.lineIDs[idx];
         for (ol in this._expire) {
             if (!this._expire.hasOwnProperty(ol))
@@ -2475,6 +2484,124 @@ export class Display extends EventEmitter {
         }
         delete this._expire2[idx];
         let f;
+        const wLines: Wrapline[] = [
+            {
+                offset: 0,
+                formats: []
+            }
+        ];
+        let cLine: Wrapline = wLines[0];
+        let nLine: Wrapline;
+        let wText;
+
+        layout:
+        for (f = 0; f < len; f++) {
+            const format = formats[f];
+            let nFormat;
+            let end;
+            let eText;
+            let fP;
+            let sOffset;
+            let eOffset;
+            if (f < len - 1) {
+                nFormat = formats[f + 1];
+                //skip empty blocks
+                if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                    continue;
+                end = nFormat.offset;
+            }
+            else
+                end = text.length;
+            offset = format.offset;
+            if (format.hr)
+                break;
+            else if (format.formatType === FormatType.Normal && end - offset !== 0) {
+                eText = text.substring(offset, end);
+                font = 0;
+                if (format.font || format.size)
+                    format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
+                else if (format.unicode)
+                    format.width = format.width || this.textWidth(eText);
+                else
+                    format.width = format.width || eText.length * cw;
+                if (left + format.width > mv) {
+                    fP = cLine.formats.length;
+                    while (fP--) {
+                        if (cLine.formats[fP].formatType === FormatType.WordBreak) {
+                            nLine = { offset: cLine.formats[fP + 1].offset, formats: [] };
+                            cLine.formats.splice(fP, cLine.formats.length - fP);
+                            cLine = nLine;
+                            left = indent;
+                            f = fP;
+                            continue layout;
+                        }
+                        else if (cLine.formats[fP].formatType === FormatType.Image && cLine.formats[fP].width) {
+                            nLine = { offset: cLine.formats[fP + 1].offset, formats: [] };
+                            cLine.formats.splice(fP, cLine.formats.length - fP + 1);
+                            cLine = nLine;
+                            left = indent;
+                            f = fP;
+                            continue layout;
+                        }
+                        else if ((cLine.formats[fP].formatType === FormatType.MXPExpired || cLine.formats[fP].formatType === FormatType.MXPLink || cLine.formats[fP].formatType === FormatType.Link || cLine.formats[fP].formatType === FormatType.MXPSend)) {
+                            if (fP === cLine.formats.length - 1)
+                                eOffset = offset;
+                            else
+                                eOffset = cLine.formats[fP + 1].offset;
+                            sOffset = cLine.formats[fP];
+                            while (eOffset-- >= sOffset) {
+                                if (pText.substring(eOffset, 1) === ' ' || pText.substring(eOffset, 1) === '-' || pText.substring(eOffset, 1) === '\u00AD') {
+                                    nFormat = copy(cLine.formats[fP]);
+                                    nFormat.offset = eOffset;
+                                    nLine = { offset: cLine.formats[fP + 1].offset, formats: [] };
+                                    wText = text.substring(cLine.formats[fP].offset, eOffset);
+                                    if (cLine.formats[fP].font || cLine.formats[fP].size)
+                                        cLine.formats[fP].width = this.textWidth(wText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
+                                    else if (format.unicode)
+                                        cLine.formats[fP].width = this.textWidth(wText);
+                                    else
+                                        cLine.formats[fP].width = wText.length * cw;
+                                    cLine.formats.splice(f, cLine.formats.length - f + 1);
+                                    nFormat.width -= cLine.formats[fP].width;
+                                    nLine.formats[nLine.formats.length - 1].push(nFormat);
+                                    f = fP;
+                                    left = indent + nFormat.width;
+                                    continue layout;
+                                }
+                            }
+                        }
+                    }
+                    //hard break word
+                }
+                else
+                    left += format.width;
+            }
+            else if ((format.formatType === FormatType.MXPExpired || format.formatType === FormatType.MXPLink || format.formatType === FormatType.Link || format.formatType === FormatType.MXPSend) && end - offset !== 0) {
+                eText = text.substring(offset, end);
+                if (format.unicode || font)
+                    format.width = format.width || this.textWidth(eText, font);
+                else
+                    format.width = format.width || eText.length * cw;
+                left += format.width;
+            }
+            else if (format.formatType === FormatType.Image && format.width) {
+                if (left + format.width + format.marginWidth || 0 > mv) {
+                    cLine = { offset: format.offset, formats: [] };
+                    cLine.formats.push(copy(format));
+                    wLines.push(cLine);
+                    left = indent + format.width + format.marginWidth || 0;
+                }
+                else
+                    left += format.width + format.marginWidth || 0;
+            }
+            else
+                cLine.formats.push(copy(format));
+        }
+
+        left = 0;
+        iWidth = 0;
+        height = 0;
+        console.log(breaks);
         for (f = 0; f < len; f++) {
             const format = formats[f];
             let nFormat;
