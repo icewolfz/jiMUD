@@ -467,7 +467,7 @@ function createLine(text: string, formats: any[]) {
             color = format.background;
             if (typeof color === 'number')
                 color = GetColor(color);
-            if (color && backgrounds[getClassName(color)])
+            if (backgrounds[getClassName(color)])
                 fCls.push(' b', backgrounds[getClassName(color)]);
             else if (color) {
                 backgrounds[getClassName(color)] = backgroundsCnt;
@@ -478,7 +478,7 @@ function createLine(text: string, formats: any[]) {
             color = format.color;
             if (typeof color === 'number')
                 color = GetColor(color);
-            if (color && colors[getClassName(color)])
+            if (colors[getClassName(color)])
                 fCls.push(' c', colors[getClassName(color)]);
             else if (color) {
                 colors[getClassName(color)] = colorsCnt;
@@ -525,13 +525,16 @@ function createLine(text: string, formats: any[]) {
                     fCls.push(' s');
             }
             if (format.hr) {
-                if (!backgrounds[getClassName(format.color)]) {
-                    backgrounds[getClassName(format.color)] = backgroundsCnt;
+                color = format.color;
+                if (typeof color === 'number')
+                    color = GetColor(color);
+                if (!backgrounds[getClassName(color)]) {
+                    backgrounds[getClassName(color)] = backgroundsCnt;
                     fCls.push(' b', backgroundsCnt);
-                    styles.push(`.b${backgroundsCnt} { background-color: ${format.color}; }`);
+                    styles.push(`.b${backgroundsCnt} { background-color: ${color}; }`);
                     backgroundsCnt++;
                 }
-                parts.push('<span class="ansi', ...fCls, '"><div class="hr" class="b', backgrounds[getClassName(format.color)], '"></div></span>');
+                parts.push('<span class="ansi', ...fCls, '"><div class="hr" class="b', backgrounds[getClassName(color)], '"></div></span>');
             }
             else if (end - offset !== 0)
                 parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');

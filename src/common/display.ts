@@ -2544,7 +2544,7 @@ export class Display extends EventEmitter {
                 }
                 if (format.hr) {
                     back.push('<span style="left:0;width:{max}px;', bStyle, '"></span>');
-                    fore.push('<span style="left:0;width:{max}px;', fStyle, '"', fCls, '><div class="hr" style="background-color:', format.color, '"></div></span>');
+                    fore.push('<span style="left:0;width:{max}px;', fStyle, '"', fCls, '><div class="hr" style="background-color:', (typeof format.color === 'number' ? this._parser.GetColor(format.color) : format.color), '"></div></span>');
                 }
                 else if (end - offset !== 0) {
                     back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
@@ -2829,7 +2829,7 @@ export class Display extends EventEmitter {
                     if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) === FontStyle.Underline)
                         td.push('underline ');
                     if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
-                        style.push('border-bottom: 1px solid ', format.color, ';');
+                        style.push('border-bottom: 1px solid ', (typeof format.color === 'number' ? this._parser.GetColor(format.color) : format.color), ';');
                     else
                         style.push('padding-bottom: 1px;');
                     if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
@@ -2851,7 +2851,7 @@ export class Display extends EventEmitter {
                 else
                     fCls = '';
                 if (format.hr)
-                    parts.push('<span style="', style, 'min-width:100%;width:100%;"', fCls, '><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', format.color, '"></div></span>');
+                    parts.push('<span style="', style, 'min-width:100%;width:100%;"', fCls, '><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', (typeof format.color === 'number' ? this._parser.GetColor(format.color) : format.color), '"></div></span>');
                 else if (end - offset !== 0)
                     parts.push('<span style="', style, '"', fCls, '>', htmlEncode(text.substring(offset, end)), '</span>');
             }
