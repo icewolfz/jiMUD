@@ -13,6 +13,9 @@
   - Clear local cache when leaving combat if it has been at least an hour since last time
   - Display: tweak performance and memory usage to try and balance between not using to much memory and using enough to get performance gains
   - Input: Performance tweaks to executing triggers
+  - Status:
+    - Performance tweaks by grouping updates when possible
+    - Removed jQuery where possible to remove overhead and improve performance  
 - **Fixed:**
   - Code editor:
     - Area designer:
@@ -37,6 +40,7 @@
   - Fixed drake monster icon
   - Fixed memory leak in temporary triggers and alarms
   - Fixed Invalid GMCP error when a different error happened
+  - Status: Fixed combat/party health bar percent display rare case of trailing decimals
 
 ## v0.6.6 2018-11-05
 
