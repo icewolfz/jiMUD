@@ -201,6 +201,7 @@ self.addEventListener('message', (e: MessageEvent) => {
                 flushBuffer.logging = logging;
                 flushBuffer.file = currentFile;
                 flushBuffer.connected = connected;
+                flushBuffer.offline = options.offline;
                 flushBuffer.what = options.what;
                 flushBuffer.gagged = data.gagged || (options.gagged && data.gagged);
                 return;
@@ -341,8 +342,8 @@ function writeRaw(data) {
 }
 
 function flush(newline?) {
-    //no buffer done
-    if (!flushBuffer) return;
+    //no buffer or not logging at that point so bail
+    if (!flushBuffer || !flushBuffer.logging || (!flushBuffer.offline && !flushBuffer.connected)) return;
     //store current state
     const c = connected;
     const f = currentFile;
