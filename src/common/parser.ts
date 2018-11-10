@@ -902,7 +902,7 @@ export class Parser extends EventEmitter {
                     continue;
             }
             //trailing link with no text or empty format block
-            else if ((format.formatType === FormatType.Normal || format.formatType === FormatType.Link || format.formatType === FormatType.MXPSend || format.formatType === FormatType.MXPLink) && format.offset === textLen)
+            else if (format.offset === textLen && textLen !== 0 && ((format.formatType === FormatType.Normal && !format.hr) || format.formatType === FormatType.Link || format.formatType === FormatType.MXPSend || format.formatType === FormatType.MXPLink))
                 continue;
             nF.push(format);
         }
