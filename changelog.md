@@ -47,7 +47,7 @@
   - Fixed #testmxp send examples to use correct testmxpcolors and textmxpexpire commands
   - ANSI Parser:
     - Fixed raw data doubling split buffer data
-    - Fixed extraed line when controls at beginning of a line are split
+    - Fixed extra line when controls at beginning of a line are split
 
 ## v0.6.6 2018-11-05
 
