@@ -206,11 +206,13 @@ class MXPStyle {
     public high: boolean = false;
     public obj: any = null;
     public gagged: boolean = false;
-    constructor(style?: FontStyle, fore?: string, back?: string, high?: boolean) {
+    public open: boolean = false;
+    constructor(style?: FontStyle, fore?: string, back?: string, high?: boolean, open?: boolean) {
         if (style != null) this.style = style;
         if (fore != null) this.fore = fore;
         if (back != null) this.back = back;
-        if (high != null) this.high = high;
+        this.high = high || false;
+        this.open = open || false;
     }
 
 }
@@ -922,22 +924,35 @@ export class Parser extends EventEmitter {
         return entity;
     }
 
-    private ClearMXPToTag(tag: MXPTag, custom?: string) {
+    private ClearMXPToTag(tag: MXPTag, custom?: string, secure?: boolean) {
         if (custom == null) custom = '';
         let tmp = new MXPStyle();
         tmp.tag = MXPTag.None;
         let ml = this.mxpStyles.length - 1;
         for (; ml >= 0; ml--) {
-            if (this.mxpStyles[ml].tag !== tag && this.mxpStyles[ml].custom !== custom)
-                tmp = this.mxpStyles.pop();
+            if (this.mxpStyles[ml].tag !== tag && this.mxpStyles[ml].custom !== custom) {
+                if (!this.mxpStyles[ml].open && !secure) continue;
+                tmp = this.mxpStyles.splice(ml, 1)[0];
+            }
             else
                 break;
         }
-        if (this.mxpStyles.length > 0)
-            tmp = this.mxpStyles.pop();
+        //return the matching tag
+        if (ml >= 0 && this.mxpStyles.length > 0)
+            tmp = this.mxpStyles.splice(ml, 1)[0];
         else if (this.mxpStyles.length === 0)
             this.ResetMXP();
         return tmp;
+    }
+
+    private ClearMXPOpen() {
+        let ml = this.mxpStyles.length;
+        while (ml--) {
+            if (!this.mxpStyles[ml].open) continue;
+            this.mxpStyles.splice(ml, 1);
+        }
+        if (this.mxpStyles.length === 0)
+            this.ResetMXP();
     }
 
     private getMXPBlock(tag: string, args, remote): MXPBlock {
@@ -965,6 +980,7 @@ export class Parser extends EventEmitter {
             case 'COLOR':
                 tmp = this.CloneCurrentStyle();
                 tmp.tag = MXPTag[tag];
+                tmp.open = true;
                 if (xl > 0) {
                     arg = args[0].split('=');
                     if (arg.length > 1) {
@@ -1005,6 +1021,7 @@ export class Parser extends EventEmitter {
             case 'BOLD':
             case 'STRONG':
                 tmp = this.CloneCurrentStyle();
+                tmp.open = true;
                 tmp.tag = MXPTag[tag];
                 tmp.style |= FontStyle.Bold;
                 tmp.custom = '';
@@ -1012,6 +1029,7 @@ export class Parser extends EventEmitter {
                 return null;
             case 'FONT':
                 tmp = this.CloneCurrentStyle();
+                tmp.open = true;
                 tmp.tag = MXPTag[tag];
                 for (x = 0; x < xl; x++) {
                     arg = args[x].split('=');
@@ -1095,6 +1113,7 @@ export class Parser extends EventEmitter {
             case 'H':
             case 'HIGH':
                 tmp = this.CloneCurrentStyle();
+                tmp.open = true;
                 tmp.tag = MXPTag[tag];
                 tmp.high = true;
                 tmp.custom = '';
@@ -1104,6 +1123,7 @@ export class Parser extends EventEmitter {
             case 'ITALIC':
             case 'EM':
                 tmp = this.CloneCurrentStyle();
+                tmp.open = true;
                 tmp.tag = MXPTag[tag];
                 tmp.style |= FontStyle.Italic;
                 tmp.custom = '';
@@ -1112,6 +1132,7 @@ export class Parser extends EventEmitter {
             case 'U':
             case 'UNDERLINE':
                 tmp = this.CloneCurrentStyle();
+                tmp.open = true;
                 tmp.tag = MXPTag[tag];
                 tmp.style |= FontStyle.Underline;
                 tmp.custom = '';
@@ -1120,6 +1141,7 @@ export class Parser extends EventEmitter {
             case 'S':
             case 'STRIKEOUT':
                 tmp = this.CloneCurrentStyle();
+                tmp.open = true;
                 tmp.tag = MXPTag[tag];
                 tmp.style |= FontStyle.Strikeout;
                 tmp.custom = '';
@@ -1513,6 +1535,7 @@ export class Parser extends EventEmitter {
                     this.mxpState.captured.push([]);
                     this.mxpState.capture++;
                     tmp = this.CloneCurrentStyle();
+                    tmp.open = false;
                     tmp.tag = MXPTag[tag];
                     tmp.obj = args;
                     tmp.custom = '';
@@ -1958,6 +1981,7 @@ export class Parser extends EventEmitter {
                     break;
                 case 'A':
                     tmp = this.CloneCurrentStyle();
+                    tmp.open = false;
                     tmp.tag = MXPTag[tag];
                     for (x = 0; x < xl; x++) {
                         arg = args[x].split('=');
@@ -1999,6 +2023,7 @@ export class Parser extends EventEmitter {
                     };
                 case 'SEND':
                     tmp = this.CloneCurrentStyle();
+                    tmp.open = false;
                     tmp.tag = MXPTag[tag];
                     for (x = 0; x < xl; x++) {
                         arg = args[x].split('=');
@@ -2069,6 +2094,7 @@ export class Parser extends EventEmitter {
                 case 'H5':
                 case 'H6':
                     tmp = this.CloneCurrentStyle();
+                    tmp.open = true;
                     tmp.tag = MXPTag[tag];
                     tmp.style |= FontStyle.Bold;
                     tmp.custom = '';
@@ -2105,6 +2131,7 @@ export class Parser extends EventEmitter {
                     return null;
                 case 'P':
                     tmp = this.CloneCurrentStyle();
+                    tmp.open = false;
                     tmp.tag = MXPTag[tag];
                     tmp.custom = '';
                     this.mxpStyles.push(tmp);
@@ -2142,6 +2169,7 @@ export class Parser extends EventEmitter {
             if (!e.open && this.mxpState.lineType !== lineType.Secure && this.mxpState.lineType !== lineType.LockSecure && this.mxpState.lineType !== lineType.TempSecure)
                 return null;
             tmp = this.CloneCurrentStyle();
+            tmp.open = e.open;
             tmp.tag = MXPTag.Custom;
             tmp.custom = e.name;
             arg = e.definition;
@@ -2459,7 +2487,7 @@ export class Parser extends EventEmitter {
                             c === 'T' ||  //Scroll whole page down by n (default 1) lines. New lines are added at the top. (not ANSI.SYS)
                             c === 'r'//SET SCROLLING REGION
                         ) {
-                            this.ResetMXP();
+                            this.ClearMXPOpen();
                             this._SplitBuffer = '';
                             _AnsiParams = null;
                             state = ParserState.None;
@@ -2483,12 +2511,13 @@ export class Parser extends EventEmitter {
                             this.mxpState.noBreak = false;
                             this.mxpState.paragraph = false;
                             if (this.mxpState.lineType === lineType.Open)
-                                this.ResetMXP();
+                                this.ClearMXPOpen();
                             switch (iTmp) {
                                 case 2:
                                     this.mxpState.on = false;
                                     this.mxpState.locked = false;
                                     this.mxpState.lineType = lineType.Locked;
+                                    this.ClearMXPOpen();
                                     break;
                                 case 3:
                                     this.ResetMXP();
@@ -2505,26 +2534,30 @@ export class Parser extends EventEmitter {
                                         this.mxpState.on = false;
                                     }
                                     this.mxpState.locked = false;
+                                    this.ClearMXPOpen();
                                     break;
                                 case 5:
                                     this.iMXPDefaultMode = lineType.Open;
                                     this.mxpState.locked = true;
                                     this.mxpState.lineType = lineType.LockOpen;
+                                    this.ClearMXPOpen();
                                     break;
                                 case 6:
                                     this.iMXPDefaultMode = lineType.Secure;
                                     this.mxpState.lineType = lineType.LockSecure;
                                     this.mxpState.locked = true;
+                                    this.ClearMXPOpen();
                                     break;
                                 case 7:
                                     this.iMXPDefaultMode = lineType.Locked;
                                     this.mxpState.lineType = lineType.LockLocked;
                                     this.mxpState.locked = true;
+                                    this.ClearMXPOpen();
                                     break;
                                 default:
                                     //invalid line so reset
                                     if (iTmp < 0 || iTmp > 99)
-                                        this.ResetMXP();
+                                        this.ClearMXPOpen();
                                     else {
                                         this.mxpState.lineType = iTmp;
                                         this.mxpState.locked = false;
@@ -2551,7 +2584,7 @@ export class Parser extends EventEmitter {
                         }
                         else if (c === 'J')  //Clear screen Up/Down
                         {
-                            this.ResetMXP();
+                            this.ClearMXPOpen();
                             if (_AnsiParams.length > 0) {
                                 if (+_AnsiParams === 2) {
                                     lineLength = 0;
@@ -2708,6 +2741,8 @@ export class Parser extends EventEmitter {
                             //Abnormal end, discard
                             state = ParserState.None;
                             this._SplitBuffer = '';
+                            if (this.mxpState.on && c === '\n')
+                                this.ClearMXPOpen();
                         }
                         else if (c === ' ') {
                             state = ParserState.MXPTagArg;
@@ -2829,6 +2864,8 @@ export class Parser extends EventEmitter {
                             //Abnormal end, discard
                             state = ParserState.None;
                             this._SplitBuffer = '';
+                            if (this.mxpState.on && c === '\n')
+                                this.ClearMXPOpen();
                         }
                         else if (c === ' ') {
                             state = ParserState.MXPTagArg;
@@ -2906,6 +2943,8 @@ export class Parser extends EventEmitter {
                                 this._SplitBuffer = '';
                                 format.unicode = true;
                             }
+                            if (this.mxpState.on && c === '\n')
+                                this.ClearMXPOpen();
                         }
                         else if (c === ';') {
                             if (this.enableDebug) this.emit('debug', 'MXP Entity: ' + _MXPEntity);
@@ -2955,6 +2994,8 @@ export class Parser extends EventEmitter {
                             this.rawLength--;
                             state = pState;
                             _MXPComment = '';
+                            if (this.mxpState.on && c === '\n')
+                                this.ClearMXPOpen();
                         }
                         else
                             _MXPComment += c;
@@ -3253,6 +3294,8 @@ export class Parser extends EventEmitter {
                             skip = false;
                             stringBuilder = [];
                             rawBuilder = [];
+                            if (this.mxpState.on)
+                                this.ClearMXPOpen();
                             formatBuilder = [format = this.getFormatBlock(lineLength)];
                             this.textLength++;
                             this.mxpState.noBreak = false;
