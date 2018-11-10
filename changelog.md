@@ -38,6 +38,7 @@
     - Fixed double click counting [, ], @, ?, |, <, >, ", ', +, and \ as part of words
     - Fixed MXP tag closing to separate open and secure closings
     - Fixed MXP image caching not clearing correctly
+    - Fixed MXP send/a tags not correctly spanning multiple lines
   - Fixed context word selection to not count [, ], @, ?, |, <, >, ", ', +, and \ as part of words
   - Logger:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
