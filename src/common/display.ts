@@ -2732,7 +2732,7 @@ export class Display extends EventEmitter {
                         const bounds = img.getBoundingClientRect();
                         fmt.width = bounds.width || img.width;
                         fmt.height = bounds.height || img.height;
-                        img.remove();
+                        this._el.removeChild(img);
                         if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
                             if (this.split) this.split.dirty = true;
                             this.doUpdate(UpdateType.display);

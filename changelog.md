@@ -37,6 +37,7 @@
     - Fixed rounded corner selection/overlay placements
     - Fixed double click counting [, ], @, ?, |, <, >, ", ', +, and \ as part of words
     - Fixed MXP tag closing to separate open and secure closings
+    - Fixed MXP image caching not clearing correctly
   - Fixed context word selection to not count [, ], @, ?, |, <, >, ", ', +, and \ as part of words
   - Logger:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
