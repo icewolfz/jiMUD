@@ -1806,6 +1806,15 @@ export class Display extends EventEmitter {
                         const bounds = img.getBoundingClientRect();
                         fmt.width = bounds.width || img.width;
                         fmt.height = bounds.height || img.height;
+                        if (format.hspace.length > 0 || format.vspace.length > 0) {
+                            const styles = getComputedStyle(img);
+                            fmt.marginHeight = parseFloat(styles.marginTop) + parseFloat(styles.marginBottom);
+                            fmt.marginWidth = parseFloat(styles.marginLeft) + parseFloat(styles.marginRight);
+                        }
+                        else {
+                            fmt.marginHeight = 0;
+                            fmt.marginWidth = 0;
+                        }
                         this._el.removeChild(img);
                         if (this._viewCache[lIdx])
                             delete this._viewCache[lIdx];
