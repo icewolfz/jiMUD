@@ -1294,6 +1294,7 @@ export class Display extends EventEmitter {
 
     public addParserLine(data: ParserLine, noUpdate?: boolean) {
         let t;
+        let idx;
         this.emit('add-line', data);
         if (data == null || typeof data === 'undefined' || data.line == null || typeof data.line === 'undefined')
             return;
@@ -1314,16 +1315,19 @@ export class Display extends EventEmitter {
         else if (data.line.length > this._maxLineLength)
             this._maxLineLength = data.line.length;
         this.lineIDs.push(this._lineID);
-        t = this.calculateSize(this.lines.length - 1);
-        if (this.lines.length > 0)
-            t.top = this._lines[this.lines.length - 1].top = this._lines[this.lines.length - 1].top + this._lines[this.lines.length - 1].height;
+        idx = this.lines.length - 1;
+        this._lines.push({ height: 0, top: 0, width: 0, images: 0 });
+        t = this.calculateSize(idx);
+        this._lines[idx].width = t.width || 0;
+        this._lines[idx].height = t.height || 0;
+        if (idx - 1 >= 0)
+            this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
         else
-            t.top = 0;
+            this._lines[idx].top = 0;
         this._height += t.height;
-        this._lines.push({ height: t.height, top: t.op, width: t.width, images: 0 });
         this._lineID++;
         if (t.width > this._maxWidth)
-            this._maxWidth = this._lines[this._lines.length - 1].width;
+            this._maxWidth = t.width;
         if (this.split) this.split.dirty = true;
         if (!noUpdate)
             this.doUpdate(UpdateType.display);
@@ -1332,7 +1336,8 @@ export class Display extends EventEmitter {
     public removeLine(line: number) {
         if (line < 0 || line >= this.lines.length) return;
         this.emit('line-removed', line, this.lines[line]);
-        this._height -= this._lines[line].height;
+        if (line >= 0 || line < this._lines.length)
+            this._height -= this._lines[line].height;
         this.lines.splice(line, 1);
         this.lineIDs.splice(line, 1);
         this._lines.splice(line, 1);
@@ -1793,8 +1798,9 @@ export class Display extends EventEmitter {
         const len = formats.length;
         const cw = this._charWidth;
         const id = this.lineIDs[idx];
+        const mv = this._maxView;
+        const mw = this._maxWidth;
         let width = 0;
-        let iWidth = 0;
         let font: any = 0;
         for (let f = 0; f < len; f++) {
             const format = formats[f];
@@ -1852,19 +1858,22 @@ export class Display extends EventEmitter {
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.Image) {
-                eText = '';
-                switch (format.align.toLowerCase()) {
-                    case 'left':
-                    case 'right':
-                        iWidth += format.width || 0 + (format.marginWidth || 0);
-                        break;
-                    default:
-                        width += format.width + (format.marginWidth || 0);
-                }
-
+                width += format.marginWidth || 0;
                 if (!format.width) {
                     this._lines[idx].images++;
                     const img = new Image();
+                    eText = '';
+                    if (format.url.length > 0) {
+                        eText += format.url;
+                        if (!format.url.endsWith('/'))
+                            eText += '/';
+                    }
+                    if (format.t.length > 0) {
+                        eText += format.t;
+                        if (!format.t.endsWith('/'))
+                            eText += '/';
+                    }
+                    eText += format.name;
                     img.src = eText;
                     img.dataset.id = '' + id;
                     img.dataset.f = '' + f;
@@ -1902,16 +1911,24 @@ export class Display extends EventEmitter {
                         this._lines[idx].height = t.height;
                         this._height += t.height;
                         this.updateTops(idx);
+                        if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
+                            if (this.split) this.split.dirty = true;
+                            this.doUpdate(UpdateType.display);
+                        }
                     };
                 }
                 if (format.marginHeight)
                     height = Math.max(height, format.height + format.marginHeight);
                 else
                     height = Math.max(height, format.height || 0);
+                /*
+            if (mv > mw && format.align.toLowerCase() === 'right')
+                width += mv - (format.width || 0);
+                */
             }
             width += format.width || 0;
         }
-        return { width: width + iWidth, height: height || this._charHeight };
+        return { width: width, height: height || this._charHeight };
     }
 
     public clearOverlay(type?: string) {
@@ -2821,6 +2838,7 @@ export class Display extends EventEmitter {
                 tmp.push('"');
                 if (format.ismap) tmp.push(' ismap onclick="return false;"');
                 fore.push(tmp.join(''), ` src="${eText}"/>`);
+                /*
                 if (!format.width) {
                     this._lines[idx].images++;
                     const img = new Image();
@@ -2876,6 +2894,7 @@ export class Display extends EventEmitter {
                         }
                     };
                 }
+                */
                 if (format.marginHeight)
                     height = Math.max(height, format.height + format.marginHeight);
                 else
@@ -2884,7 +2903,7 @@ export class Display extends EventEmitter {
         }
         if (height) {
             if (right)
-                return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;min-width:{view}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;min-width:{view}px;">${back.join('')}<br></span>`];
+                return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;min-width:${mv}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;min-width:${mv}px;">${back.join('')}<br></span>`];
             return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;">${back.join('')}<br></span>`];
         }
         if (right)
