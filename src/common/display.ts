@@ -2542,7 +2542,6 @@ export class Display extends EventEmitter {
         let bStyle: any = '';
         let fStyle: any = '';
         let fCls: any = '';
-        const height = this._lines[idx].height;
         const ch = this._charHeight;
         const len = formats.length;
         let left = 0;
@@ -2710,7 +2709,7 @@ export class Display extends EventEmitter {
                 else if (format.vspace.length > 0)
                     tmp.push('margin:', formatUnit(format.vspace), ' 0px;');
                 //TODO remove max-height when variable height supported
-                tmp.push('max-height:', '' + height, 'px;"');
+                tmp.push('max-height:', '' + ch, 'px;"');
                 back.push(tmp.join(''), ` src="./../assets/blank.png"/>`);
                 if (format.ismap) tmp.push(' ismap onclick="return false;"');
                 fore.push(tmp.join(''), ` src="${eText}"/>`);
