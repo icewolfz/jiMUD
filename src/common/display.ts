@@ -1811,9 +1811,9 @@ export class Display extends EventEmitter {
                             delete this._viewCache[lIdx];
                         if (this._lines[lIdx].images !== 0) return;
                         const t = this.calculateSize(lIdx);
-                        this._lines[idx].width = t.width;
-                        this._lines[idx].height = t.height;
-                        this.updateTops(idx);
+                        this._lines[lIdx].width = t.width;
+                        this._lines[lIdx].height = t.height;
+                        this.updateTops(lIdx);
                         if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
                             if (this.split) this.split.dirty = true;
                             this.doUpdate(UpdateType.display);
