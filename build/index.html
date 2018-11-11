@@ -50,14 +50,14 @@
                     if (x < 0 || x >= line.length)
                         return '';
                     var sPos = x, ePos = x;
-                    while (line.substr(sPos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]])/gu) && sPos >= 0) {
+                    while (line.substr(sPos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && sPos >= 0) {
                         sPos--;
                         if (sPos < 0)
                             break;
                     }
                     sPos++;
                     var ll = line.length;
-                    while (line.substr(ePos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]])/gu) && ePos < ll) {
+                    while (line.substr(ePos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && ePos < ll) {
                         ePos++;
                     }
                     if (sPos + ePos - sPos > ll)
@@ -644,6 +644,8 @@
                     window.writeClipboard(client.display.selection, client.display.selectionAsHTML);
                     client.display.clearSelection();
                 }
+                else
+                    ipcRenderer.send('update-menuitem', { menu: ['edit', 'copyHTML'], enabled: client.display.hasSelection });
             });
 
             client.display._el.addEventListener('contextmenu', (e) => {
@@ -686,8 +688,9 @@
                         c.append(new MenuItem({ type: 'separator' }));
                     }
 
-                    if (window.$selected && window.$selected != '') {
+                    if (client.display.hasSelection) {
                         c.append(new MenuItem({ role: 'copy' }));
+                        c.append(new MenuItem({ label: 'Copy as HTML', accelerator: 'CmdOrCtrl+Alt+C', click: () => { copyAsHTML(); } }));
                     }
                     if (window.$copied.length) {
                         c.append(new MenuItem({ label: 'Paste', click: paste, accelerator: 'CmdOrCtrl+V' }));
@@ -2234,6 +2237,11 @@
         // eslint-disable-next-line no-unused-vars
         function toggleLogging() {
             _logger.postMessage({ action: 'toggle' });
+        }
+
+        function copyAsHTML() {
+            if (!client.display.hasSelection) return;
+            window.writeClipboard(client.display.selectionAsHTML);
         }
 
         function pasteSpecial(noDialog) {

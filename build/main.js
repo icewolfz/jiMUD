@@ -246,6 +246,15 @@ var menuTemp = [
                 role: 'copy'
             },
             {
+                label: 'Copy as HTML',
+                accelerator: 'CmdOrCtrl+Alt+C',
+                id: 'copyHTML',
+                enabled: false,
+                click: () => {
+                    win.webContents.executeJavaScript('copyAsHTML();');
+                }
+            },
+            {
                 label: 'Paste',
                 accelerator: 'CmdOrCtrl+V',
                 click: () => {

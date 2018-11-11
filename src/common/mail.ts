@@ -114,7 +114,7 @@ export class Mail extends EventEmitter {
         //spell-checker:enable
     }
 
-    public processGMCP(mod: string, obj) {
+    public async processGMCP(mod: string, obj) {
         const mods = mod.split('.');
         let i;
         let il;

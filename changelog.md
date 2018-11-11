@@ -11,16 +11,21 @@
   - Code editor:
     - Area designer: Exits that are closed doors are now hidden in the room preview to mimic standard door usage
   - Added [Enable sound](docs/preferences.md#general) to disable or enable sounds without the need to disable msp
+  - Added Copy as HTML to edit menu to copy selected text as HTML formated markup
 - **Changed:**
   - Update electron from 3.0.7 to 3.0.8
-  - Update electron-updater 3.1.6 to 3.2.2
+  - Update electron-updater 3.1.6 to 3.2.3
+  - Update yargs-parser 11.0.0 to 11.1.0
   - Clear local cache every time the preferences are changed
   - Clear local cache when leaving combat if it has been at least an hour since last time
-  - Display: tweak performance and memory usage to try and balance between not using to much memory and using enough to get performance gains
-  - Input: Performance tweaks to executing triggers
+  - Display:
+    - Tweak performance and memory usage to try and balance between not using to much memory and using enough to get performance gains
+    - Changed how formated data is stored and cached
+  - Input: Performance tweaks when executing triggers
   - Status:
     - Performance tweaks by grouping updates when possible
     - Removed jQuery where possible to remove overhead and improve performance  
+  - Process all GMCP in async to try and improve performance
 - **Fixed:**
   - Code editor:
     - Area designer:
@@ -30,13 +35,18 @@
       - Fixed room preview tool tips when item appears multiple times in long
     - Virtual area editor:
       - Fixed room preview tool tips when item appears multiple times in long
-  - MSP: Fixed not displaying error when file not found or unable to play
+  - MSP:
+    - Fixed not displaying error when file not found or unable to play
+    - Reset current sound when sound/msp enabled/disabled
   - Display:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
     - Fixed overlay and selection to add extra ending space to represent newlines better
     - Fixed rounded corner selection/overlay placements
-    - Fixed double click counting [ and ] as part of words
-  - Fixed context word selection to not count [ and ] as part of words
+    - Fixed double click counting [, ], @, ?, |, <, >, ", ', +, and \ as part of words
+    - Fixed MXP tag closing to separate open and secure closings
+    - Fixed MXP image caching not clearing correctly
+    - Fixed MXP send/a tags not correctly spanning multiple lines
+  - Fixed context word selection to not count [, ], @, ?, |, <, >, ", ', +, and \ as part of words
   - Logger:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
     - Fixed URL click scripts by including some minor javascript to execute urls
@@ -46,6 +56,10 @@
   - Fixed memory leak in temporary triggers and alarms
   - Fixed Invalid GMCP error when a different error happened
   - Status: Fixed combat/party health bar percent display rare case of trailing decimals
+  - Fixed #testmxp send examples to use correct testmxpcolors and textmxpexpire commands
+  - ANSI Parser:
+    - Fixed raw data doubling split buffer data
+    - Fixed extra line when controls at beginning of a line are split
 
 ## v0.6.6 2018-11-05
 
