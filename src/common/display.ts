@@ -324,20 +324,20 @@ export class Display extends EventEmitter {
                 e.cancelBubble = true;
                 if (e.pageY < 20)
                     this.split.ghostBar.style.top = '20px';
-                else if (e.pageY > this._el.clientHeight - 150 - this._HScroll.size)
-                    this.split.ghostBar.style.top = (this._el.clientHeight - 150 - this.split.bar.offsetHeight - this._HScroll.size) + 'px';
+                else if (e.pageY > this._innerHeight - 150 - this._HScroll.size)
+                    this.split.ghostBar.style.top = (this._innerHeight - 150 - this.split.bar.offsetHeight - this._HScroll.size) + 'px';
                 else
                     this.split.ghostBar.style.top = (e.pageY - this.split.bar.offsetHeight) + 'px';
                 let h;
                 if (this.splitLive) {
                     if (e.pageY < 20)
-                        h = this._el.clientHeight - 20 + this.split.bar.offsetHeight;
-                    else if (e.pageY > this._el.clientHeight - 150)
+                        h = this._innerHeight - 20 + this.split.bar.offsetHeight;
+                    else if (e.pageY > this._innerHeight - 150)
                         h = 150;
                     else
-                        h = this._el.clientHeight - e.pageY + this.split.bar.offsetHeight;
+                        h = this._innerHeight - e.pageY + this.split.bar.offsetHeight;
 
-                    h = (h / this._el.clientHeight * 100);
+                    h = (h / this._innerHeight * 100);
                     this.split.style.height = h + '%';
                     this.doUpdate(UpdateType.scrollView | UpdateType.view);
                 }
@@ -348,12 +348,12 @@ export class Display extends EventEmitter {
                 if (this.split.ghostBar) {
                     let h;
                     if (e.pageY < 20)
-                        h = this._el.clientHeight - 20 + this.split.bar.offsetHeight - this._HScroll.size;
-                    else if (e.pageY > this._el.clientHeight - 150 - this._HScroll.size)
+                        h = this._innerHeight - 20 + this.split.bar.offsetHeight - this._HScroll.size;
+                    else if (e.pageY > this._innerHeight - 150 - this._HScroll.size)
                         h = 150;
                     else
-                        h = this._el.clientHeight - e.pageY + this.split.bar.offsetHeight;
-                    h = (h / this._el.clientHeight * 100);
+                        h = this._innerHeight - e.pageY + this.split.bar.offsetHeight;
+                    h = (h / this._innerHeight * 100);
                     this.split.style.height = h + '%';
                     this.split.updatePosition();
                     this._el.removeChild(this.split.ghostBar);
@@ -577,9 +577,9 @@ export class Display extends EventEmitter {
                 e.preventDefault();
                 e.cancelBubble = true;
                 const os = this._os;
-                if (e.pageX - os.left > this._el.clientWidth)
+                if (e.pageX - os.left > this._innerWidth)
                     return;
-                if (e.pageY - os.top > this._el.clientHeight)
+                if (e.pageY - os.top > this._innerHeight)
                     return;
                 this._currentSelection.drag = true;
                 this._prevSelection = {
@@ -696,7 +696,7 @@ export class Display extends EventEmitter {
                         y = -1 * this._charHeight;
                         this._currentSelection.end.y--;
                     }
-                    else if (y >= this._el.clientHeight && this._VScroll.position < this._VScroll.scrollSize) {
+                    else if (y >= this._innerHeight && this._VScroll.position < this._VScroll.scrollSize) {
                         y = this._charHeight;
                         this._currentSelection.end.y++;
                         if (this._currentSelection.end.y >= this.lines.length)
@@ -709,7 +709,7 @@ export class Display extends EventEmitter {
                         x = -1 * this._charWidth;
                         this._currentSelection.end.x--;
                     }
-                    else if (x >= this._el.clientWidth && this._HScroll.position < this._HScroll.scrollSize) {
+                    else if (x >= this._innerWidth && this._HScroll.position < this._HScroll.scrollSize) {
                         x = this._charWidth;
                         this._currentSelection.end.x++;
                     }
@@ -1210,7 +1210,7 @@ export class Display extends EventEmitter {
         this._background.style.height = h + 'px';
         this._background.style.width = w + 'px';
 
-        this._overlay.style.height = Math.max(h, this._el.clientHeight) + 'px';
+        this._overlay.style.height = Math.max(h, this._innerHeight) + 'px';
         this._overlay.style.width = mw + 'px';
 
         this._viewRange.start = Math.trunc(this._VScroll.position / this._charHeight);
@@ -1817,7 +1817,7 @@ export class Display extends EventEmitter {
                     img.dataset.f = '' + f;
                     Object.assign(img.style, {
                         position: 'absolute',
-                        top: (this._el.clientWidth + 100) + 'px'
+                        top: (this._innerWidth + 100) + 'px'
                     });
                     this._el.appendChild(img);
                     img.onload = () => {
