@@ -273,7 +273,7 @@ export class Display extends EventEmitter {
                             delete this.split.viewCache[start];
                         }
                         else {
-                            cache[start] = this.buildLineElement(start, mw, mv);
+                            cache[start] = this.buildLineDisplay(start, mw, mv);
                             fFrag.appendChild(cache[start][0]);
                             bFrag.appendChild(cache[start][1]);
                         }
@@ -1234,7 +1234,7 @@ export class Display extends EventEmitter {
                 delete this._viewCache[l];
             }
             else {
-                cache[l] = this.buildLineElement(l, mw, mv);
+                cache[l] = this.buildLineDisplay(l, mw, mv);
                 fFrag.appendChild(cache[l][0]);
                 bFrag.appendChild(cache[l][1]);
             }
@@ -2571,7 +2571,7 @@ export class Display extends EventEmitter {
         this._styles.innerHTML = styles;
     }
 
-    private buildLineElement(idx?: number, mw?, mv?) {
+    private buildLineDisplay(idx?: number, mw?, mv?) {
         if (idx === undefined)
             idx = this.lines.length - 1;
         const back: HTMLSpanElement = document.createElement('span');
@@ -2880,7 +2880,7 @@ export class Display extends EventEmitter {
                 }
                 else if (format.vspace.length > 0) {
                     fEl.style.margin = formatUnit(format.vspace) + ' 0px';
-                    bEl.style.margin = formatUnit(format.vspace) + ' 0px';
+                    fEl.style.margin = formatUnit(format.vspace) + ' 0px';
                 }
                 //TODO remove max-height when variable height supported
                 fEl.style.maxHeight = ch + 'px';
@@ -2895,7 +2895,6 @@ export class Display extends EventEmitter {
         }
         fore.appendChild(document.createElement('br'));
         back.appendChild(document.createElement('br'));
-        //if right aligned the min width of a line must be the view width
         if (right) {
             fore.style.minWidth = mv + 'px';
             back.style.minWidth = mv + 'px';
