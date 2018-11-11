@@ -2876,7 +2876,7 @@ export class Display extends EventEmitter {
                 }
                 else if (format.vspace.length > 0) {
                     fEl.style.margin = formatUnit(format.vspace) + ' 0px';
-                    fEl.style.margin = formatUnit(format.vspace) + ' 0px';
+                    bEl.style.margin = formatUnit(format.vspace) + ' 0px';
                 }
                 //TODO remove max-height when variable height supported
                 fEl.style.maxHeight = ch + 'px';
