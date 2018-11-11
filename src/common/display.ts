@@ -2689,13 +2689,7 @@ export class Display extends EventEmitter {
                     if (format.font || format.size) {
                         if (format.font) fStyle.push('font-family: ', format.font, ';');
                         if (format.size) fStyle.push('font-size: ', format.size, ';');
-                        height = Math.max(height, format.height = this.textHeight(eText, format.font, format.size));
-                        format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
                     }
-                    else if (format.unicode)
-                        format.width = format.width || this.textWidth(eText);
-                    else
-                        format.width = format.width || eText.length * cw;
 
                     if (format.style !== FontStyle.None) {
                         if ((format.style & FontStyle.Bold) === FontStyle.Bold)
@@ -2738,10 +2732,6 @@ export class Display extends EventEmitter {
                 fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href.replace(/"/g, '&quot;'), '" onclick="', this.linkFunction, '(\'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
-                else
-                    format.width = format.width || eText.length * cw;
                 back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
                 fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                 left += format.width;
@@ -2755,10 +2745,6 @@ export class Display extends EventEmitter {
                 fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="', format.href, '" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onclick="', this.mxpLinkFunction, '(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
-                else
-                    format.width = format.width || eText.length * cw;
                 back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
                 fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                 left += format.width;
@@ -2767,20 +2753,12 @@ export class Display extends EventEmitter {
                 fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onmouseover="', this.mxpTooltipFunction, '(this);"', ' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ', ', format.prompt ? 1 : 0, ', ', format.tt.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
-                else
-                    format.width = format.width || eText.length * cw;
                 back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" ></span>');
                 fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                 left += format.width;
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 eText = text.substring(offset, end);
-                if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
-                else
-                    format.width = format.width || eText.length * cw;
                 back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
                 fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                 left += format.width;
