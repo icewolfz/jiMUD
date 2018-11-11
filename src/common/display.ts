@@ -1294,7 +1294,6 @@ export class Display extends EventEmitter {
 
     public addParserLine(data: ParserLine, noUpdate?: boolean) {
         let t;
-        let idx;
         this.emit('add-line', data);
         if (data == null || typeof data === 'undefined' || data.line == null || typeof data.line === 'undefined')
             return;
@@ -1315,15 +1314,13 @@ export class Display extends EventEmitter {
         else if (data.line.length > this._maxLineLength)
             this._maxLineLength = data.line.length;
         this.lineIDs.push(this._lineID);
-        idx = this.lines.length - 1;
+        const idx = this.lines.length - 1;
         this._lines.push({ height: 0, top: 0, width: 0, images: 0 });
         t = this.calculateSize(idx);
         this._lines[idx].width = t.width || 0;
         this._lines[idx].height = t.height || 0;
         if (idx - 1 >= 0)
             this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
-        else
-            this._lines[idx].top = 0;
         this._height += t.height;
         this._lineID++;
         if (t.width > this._maxWidth)
@@ -2838,63 +2835,6 @@ export class Display extends EventEmitter {
                 tmp.push('"');
                 if (format.ismap) tmp.push(' ismap onclick="return false;"');
                 fore.push(tmp.join(''), ` src="${eText}"/>`);
-                /*
-                if (!format.width) {
-                    this._lines[idx].images++;
-                    const img = new Image();
-                    img.src = eText;
-                    img.dataset.id = '' + id;
-                    img.dataset.f = '' + f;
-                    Object.assign(img.style, {
-                        position: 'absolute',
-                        top: (this._el.clientWidth + 100) + 'px'
-                    });
-                    this._el.appendChild(img);
-                    img.onload = () => {
-                        const lIdx = this.lineIDs.indexOf(+img.dataset.id);
-                        this._lines[lIdx].images--;
-                        if (lIdx === -1 || lIdx >= this.lines.length) return;
-                        const fIdx = +img.dataset.f;
-                        const fmt = this.lineFormats[lIdx][fIdx];
-                        if (fmt.w.length > 0 && fmt.h.length > 0) {
-                            Object.assign(img.style, {
-                                width: formatUnit(fmt.w),
-                                height: formatUnit(fmt.h, this._charHeight)
-                            });
-                        }
-                        else if (fmt.w.length > 0)
-                            img.style.width = formatUnit(fmt.w);
-                        else if (fmt.h.length > 0)
-                            img.style.height = formatUnit(fmt.h, this._charHeight);
-                        if (format.hspace.length > 0 && format.vspace.length > 0)
-                            img.style.margin = formatUnit(format.vspace) + ' ' + formatUnit(format.hspace, this._charHeight);
-                        else if (format.hspace.length > 0)
-                            img.style.margin = '0px ' + formatUnit(format.hspace, this._charHeight);
-                        else if (format.vspace.length > 0)
-                            img.style.margin = formatUnit(format.hspace, this._charHeight) + ' 0px';
-                        const bounds = img.getBoundingClientRect();
-                        fmt.width = bounds.width || img.width;
-                        fmt.height = bounds.height || img.height;
-                        if (format.hspace.length > 0 || format.vspace.length > 0) {
-                            const styles = getComputedStyle(img);
-                            fmt.marginHeight = parseFloat(styles.marginTop) + parseFloat(styles.marginBottom);
-                            fmt.marginWidth = parseFloat(styles.marginLeft) + parseFloat(styles.marginRight);
-                        }
-                        else {
-                            fmt.marginHeight = 0;
-                            fmt.marginWidth = 0;
-                        }
-                        this._el.removeChild(img);
-                        //only rebuild if last image to reduce performance hits
-                        if (this._lines[lIdx].images !== 0) return;
-                        this.updateTops(lIdx);
-                        if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
-                            if (this.split) this.split.dirty = true;
-                            this.doUpdate(UpdateType.display);
-                        }
-                    };
-                }
-                */
                 if (format.marginHeight)
                     height = Math.max(height, format.height + format.marginHeight);
                 else
