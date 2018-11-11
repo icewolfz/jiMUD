@@ -1279,13 +1279,13 @@ export class Display extends EventEmitter {
     private updateTops(line: number) {
         const l = this._lines.length;
         if (l === 0) return;
-        this.clearElement(this._view);
-        this.clearElement(this._background);
+        //this.clearElement(this._view);
+        //this.clearElement(this._background);
         this._viewCache = {};
         if (this.split) {
             this.split.viewCache = {};
-            this.clearElement(this.split.background);
-            this.clearElement(this.split.view);
+            //this.clearElement(this.split.background);
+            //this.clearElement(this.split.view);
             this.split.dirty = true;
         }
         /*
@@ -2625,7 +2625,7 @@ export class Display extends EventEmitter {
                     else
                         bStyle = { color: '', background: '' };
                     if (typeof format.color === 'number')
-                        bStyle = { color: this._parser.GetColor(format.color), background: '' };
+                        fStyle = { color: this._parser.GetColor(format.color), background: '' };
                     else if (format.color)
                         fStyle = { color: format.color, background: '' };
                     else
@@ -2669,10 +2669,7 @@ export class Display extends EventEmitter {
                     }
                     format.bStyle = bStyle;
                     format.fStyle = fStyle;
-                    if (fCls.length !== 0)
-                        format.fCls = fCls = ' class="' + fCls.join('').trim() + '"';
-                    else
-                        format.fCls = fCls = '';
+                    format.fCls = fCls;
                 }
                 bEl = document.createElement('span');
                 Object.assign(bEl.style, bStyle);
