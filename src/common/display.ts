@@ -2634,27 +2634,8 @@ export class Display extends EventEmitter {
         this._styles.innerHTML = styles;
     }
 
-    private buildLineDisplay(idx?: number, mw?, mv?) {
-        if (idx === undefined)
-            idx = this.lines.length - 1;
-        const back = [];
-        const fore = [];
-        const text = this.lines[idx].replace(/ /g, '\u00A0');
-        const pText = this.lines[idx];
-        const formats = this.lineFormats[idx];
-        let offset = 0;
-        let bStyle: any = '';
-        let fStyle: any = '';
-        let fCls: any = '';
-        let height = 0;
-        let font;
-        const len = formats.length;
-        const cw = this._charWidth;
-        let left = 0;
-        let right = false;
+    private calculateWrapLines(idx?: number, mw?, mv?) {
         const indent = this._indent * this._charWidth;
-        const id = this.lineIDs[idx];
-        let f;
         const wLines: WrapLine[] = [
             {
                 offset: 0,
@@ -2664,9 +2645,16 @@ export class Display extends EventEmitter {
         let cLine: WrapLine = wLines[0];
         let nLine: WrapLine;
         let wText;
-
+        const pText = this.lines[idx];
+        const text = this.lines[idx].replace(/ /g, '\u00A0');
+        const formats = this.lineFormats[idx];
+        const len = formats.length;
+        const cw = this._charWidth;
+        let left = 0;
+        let offset = 0;
+        let font;
         layout:
-        for (f = 0; f < len; f++) {
+        for (let f = 0; f < len; f++) {
             const format = formats[f];
             let nFormat;
             let end;
@@ -2768,10 +2756,27 @@ export class Display extends EventEmitter {
             else
                 cLine.formats.push(copy(format));
         }
+    }
 
-        left = 0;
-        iWidth = 0;
-        height = 0;
+    private buildLineDisplay(idx?: number, mw?, mv?) {
+        if (idx === undefined)
+            idx = this.lines.length - 1;
+        const back = [];
+        const fore = [];
+        const text = this.lines[idx].replace(/ /g, '\u00A0');
+        const formats = this.lineFormats[idx];
+        let offset = 0;
+        let bStyle: any = '';
+        let fStyle: any = '';
+        let fCls: any = '';
+        let height = 0;
+        const len = formats.length;
+        let left = 0;
+        let right = false;
+
+        const id = this.lineIDs[idx];
+        let f;
+
         //console.log(breaks);
         for (f = 0; f < len; f++) {
             const format = formats[f];
@@ -2794,11 +2799,6 @@ export class Display extends EventEmitter {
                     bStyle = format.bStyle;
                     fStyle = format.fStyle;
                     fCls = format.fCls;
-                    height = Math.max(height, format.height || 0);
-                    if (format.font || format.size)
-                        font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`;
-                    else
-                        font = 0;
                 }
                 else {
                     bStyle = [];
@@ -2812,7 +2812,6 @@ export class Display extends EventEmitter {
                         fStyle.push('color:', this._parser.GetColor(format.color), ';');
                     else if (format.color)
                         fStyle.push('color:', format.color, ';');
-                    font = 0;
                     if (format.font || format.size) {
                         if (format.font) fStyle.push('font-family: ', format.font, ';');
                         if (format.size) fStyle.push('font-size: ', format.size, ';');
