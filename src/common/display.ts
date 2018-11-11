@@ -9,7 +9,7 @@
 import { Size, ParserLine, FormatType, FontStyle } from './types';
 import EventEmitter = require('events');
 import { Parser } from './parser';
-import { htmlEncode, formatUnit, stripQuotes } from './library';
+import { htmlEncode, formatUnit } from './library';
 import { Finder } from './finder';
 import { DisplayOptions, OverlayRange } from './types';
 
@@ -250,6 +250,8 @@ export class Display extends EventEmitter {
                         this.split._viewRange.start = 0;
                     if (this.split._viewRange.end > this.lines.length)
                         this.split._viewRange.end = this.lines.length;
+                    const lines = [];
+                    const bLines = [];
                     let start = this.split._viewRange.start;
                     const end = this.split._viewRange.end;
                     const overlays = [];
@@ -264,28 +266,19 @@ export class Display extends EventEmitter {
                     const mv = '' + this._maxView;
                     this.split.view.style.width = this._maxLineLength * this._charWidth + 'px';
                     this.split.background.style.width = this._maxLineLength * this._charWidth + 'px';
-                    const fFrag = document.createDocumentFragment();
-                    const bFrag = document.createDocumentFragment();
                     const cache = {};
                     for (; start < end; start++) {
-                        if (this.split.viewCache[start]) {
+                        if (this.split.viewCache[start])
                             cache[start] = this.split.viewCache[start];
-                            delete this.split.viewCache[start];
-                        }
-                        else {
+                        else
                             cache[start] = this.buildLineDisplay(start, mw, mv);
-                            fFrag.appendChild(cache[start][0]);
-                            bFrag.appendChild(cache[start][1]);
-                        }
+                        lines.push(cache[start][0]);
+                        bLines.push(cache[start][1]);
                     }
-                    Object.values(this.split.viewCache).forEach(el => {
-                        this.split.view.removeChild(el[0]);
-                        this.split.background.removeChild(el[1]);
-                    });
                     this.split.viewCache = cache;
                     this.split.overlay.innerHTML = overlays.join('');
-                    this.split.view.appendChild(fFrag);
-                    this.split.background.appendChild(bFrag);
+                    this.split.view.innerHTML = lines.join('');
+                    this.split.background.innerHTML = bLines.join('');
                     this.split.updatePosition();
                     this.split.dirty = false;
                 }
@@ -1120,13 +1113,9 @@ export class Display extends EventEmitter {
         this._overlays = {
             selection: []
         };
-        this.clearElement(this._view);
-        this.clearElement(this._background);
         this._viewCache = {};
         if (this.split) {
             this.split.viewCache = {};
-            this.clearElement(this.split.background);
-            this.clearElement(this.split.view);
             this.split.dirty = true;
         }
         this.lineIDs = [];
@@ -1223,29 +1212,22 @@ export class Display extends EventEmitter {
             this._viewRange.start = 0;
         if (this._viewRange.end > l)
             this._viewRange.end = l;
-        const fFrag = document.createDocumentFragment();
-        const bFrag = document.createDocumentFragment();
+        const lines = [];
+        const bLines = [];
         l = this._viewRange.start;
         const le = this._viewRange.end;
         const cache = {};
         for (; l < le; l++) {
-            if (this._viewCache[l]) {
+            if (this._viewCache[l])
                 cache[l] = this._viewCache[l];
-                delete this._viewCache[l];
-            }
-            else {
+            else
                 cache[l] = this.buildLineDisplay(l, mw, mv);
-                fFrag.appendChild(cache[l][0]);
-                bFrag.appendChild(cache[l][1]);
-            }
+            lines.push(cache[l][0]);
+            bLines.push(cache[l][1]);
         }
-        Object.values(this._viewCache).forEach(el => {
-            this._view.removeChild(el[0]);
-            this._background.removeChild(el[1]);
-        });
         this._viewCache = cache;
-        this._view.appendChild(fFrag);
-        this._background.appendChild(bFrag);
+        this._view.innerHTML = lines.join('');
+        this._background.innerHTML = bLines.join('');
         this.doUpdate(UpdateType.overlays);
     }
 
@@ -1283,20 +1265,13 @@ export class Display extends EventEmitter {
     private updateTops(line: number) {
         const l = this._lines.length;
         if (l === 0) return;
-        //this.clearElement(this._view);
-        //this.clearElement(this._background);
         this._viewCache = {};
-        if (this.split) {
-            this.split.viewCache = {};
-            //this.clearElement(this.split.background);
-            //this.clearElement(this.split.view);
-            this.split.dirty = true;
-        }
-        /*
+        if (this.split) this.split.viewCache = {};
         while (line < l) {
+            //this._viewLines[line] = this._viewLines[line].replace(/top:\d+px/, `top:${line * this._charHeight}px`);
+            //this._backgroundLines[line] = this._backgroundLines[line].replace(/top:\d+px/, `top:${line * this._charHeight}px`);
             line++;
         }
-        */
     }
 
     get WindowSize(): Size {
@@ -1578,14 +1553,9 @@ export class Display extends EventEmitter {
                 else if (lines[l].length > m)
                     m = lines[l].length;
             }
-            this.clearElement(this._view);
-            this.clearElement(this._background);
             this._viewCache = {};
-            if (this.split) {
+            if (this.split)
                 this.split.viewCache = {};
-                this.clearElement(this.split.background);
-                this.clearElement(this.split.view);
-            }
             this._maxLineLength = m;
             if (this.split) this.split.dirty = true;
             this.doUpdate(UpdateType.selection | UpdateType.overlays);
@@ -2533,14 +2503,8 @@ export class Display extends EventEmitter {
         this._os = this.offset(this._el);
         this._maxView = this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size;
         //resized so new width needs a recalculate
-        this.clearElement(this._view);
-        this.clearElement(this._background);
         this._viewCache = {};
-        if (this.split) {
-            this.split.viewCache = {};
-            this.clearElement(this.split.background);
-            this.clearElement(this.split.view);
-        }
+        if (this.split) this.split.viewCache = {};
         this._innerHeight = this._el.clientHeight;
         this._innerWidth = this._el.clientWidth;
         const t = window.getComputedStyle(this._el);
@@ -2574,28 +2538,19 @@ export class Display extends EventEmitter {
     private buildLineDisplay(idx?: number, mw?, mv?) {
         if (idx === undefined)
             idx = this.lines.length - 1;
-        const back: HTMLSpanElement = document.createElement('span');
-        const fore: HTMLSpanElement = document.createElement('span');
+        const back = [];
+        const fore = [];
         const text = this.lines[idx].replace(/ /g, '\u00A0');
         const formats = this.lineFormats[idx];
         let offset = 0;
-        let bStyle = { color: '', background: '' };
-        let fStyle = { color: '', background: '' };
-        let fCls;
+        let bStyle: any = '';
+        let fStyle: any = '';
+        let fCls: any = '';
         const ch = this._charHeight;
         const len = formats.length;
         let left = 0;
         const id = this.lineIDs[idx];
         let right = false;
-
-        let parentBack = back;
-        let parentFore = fore;
-        let fEl;
-        let bEl;
-        let child;
-
-        back.style.top = `${idx * this._charHeight}px`;
-        fore.style.top = `${idx * this._charHeight}px`;
 
         for (let f = 0; f < len; f++) {
             const format = formats[f];
@@ -2620,19 +2575,17 @@ export class Display extends EventEmitter {
                     fCls = format.fCls;
                 }
                 else {
+                    bStyle = [];
+                    fStyle = [];
                     fCls = [];
                     if (typeof format.background === 'number')
-                        bStyle = { color: '', background: this._parser.GetColor(format.background) };
+                        bStyle.push('background:', this._parser.GetColor(format.background), ';');
                     else if (format.background)
-                        bStyle = { color: '', background: format.background };
-                    else
-                        bStyle = { color: '', background: '' };
+                        bStyle.push('background:', format.background, ';');
                     if (typeof format.color === 'number')
-                        fStyle = { color: this._parser.GetColor(format.color), background: '' };
+                        fStyle.push('color:', this._parser.GetColor(format.color), ';');
                     else if (format.color)
-                        fStyle = { color: format.color, background: '' };
-                    else
-                        fStyle = { color: '', background: '' };
+                        fStyle.push('color:', format.color, ';');
 
                     //TODO variable character height is not supported
                     //TODO once supported update parser support tag to add font
@@ -2645,181 +2598,79 @@ export class Display extends EventEmitter {
 
                     if (format.style !== FontStyle.None) {
                         if ((format.style & FontStyle.Bold) === FontStyle.Bold)
-                            fCls.push('b');
+                            fCls.push(' b');
                         if ((format.style & FontStyle.Italic) === FontStyle.Italic)
-                            fCls.push('i');
+                            fCls.push(' i');
                         if ((format.style & FontStyle.Overline) === FontStyle.Overline)
-                            fCls.push('o');
+                            fCls.push(' o');
                         if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) === FontStyle.Underline)
-                            fCls.push('u');
+                            fCls.push(' u');
                         if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
-                            fCls.push('du');
+                            fCls.push(' du');
                         if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
                             if (this.enableFlashing)
-                                fCls.push('ansi-blink');
+                                fCls.push(' ansi-blink');
                             else if ((format.style & FontStyle.DoubleUnderline) !== FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) !== FontStyle.Underline)
-                                fCls.push('u');
+                                fCls.push(' u');
                         }
                         if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
-                            fCls.push('s');
+                            fCls.push(' s');
                     }
-                    format.bStyle = bStyle;
-                    format.fStyle = fStyle;
-                    format.fCls = fCls;
+                    format.bStyle = bStyle = bStyle.join('').trim();
+                    format.fStyle = fStyle = fStyle.join('').trim();
+                    if (fCls.length !== 0)
+                        format.fCls = fCls = ' class="' + fCls.join('').trim() + '"';
+                    else
+                        format.fCls = fCls = '';
                 }
-                bEl = document.createElement('span');
-                Object.assign(bEl.style, bStyle);
-                fEl = document.createElement('span');
-                Object.assign(fEl.style, fStyle);
-                if (fCls.length !== 0)
-                    fEl.classList.add(...fCls);
                 if (format.hr) {
-                    fEl.style.left = 0;
-                    fEl.style.width = mw + 'px';
-                    bEl.style.left = 0;
-                    bEl.style.width = mw + 'px';
-                    child = document.createElement('div');
-                    child.classList.add('hr');
-                    child.style.backgroundColor = (typeof format.color === 'number' ? this._parser.GetColor(format.color) : format.color);
-                    fEl.appendChild(child);
+                    back.push('<span style="left:0;width:', mw, 'px;', bStyle, '"></span>');
+                    fore.push('<span style="left:0;width:', mw, 'px;', fStyle, '"', fCls, '><div class="hr" style="background-color:', (typeof format.color === 'number' ? this._parser.GetColor(format.color) : format.color), '"></div></span>');
                 }
                 else if (end - offset !== 0) {
-                    bEl.style.left = `${left}px`;
-                    bEl.style.width = `${format.width}px`;
-                    fEl.style.left = `${left}px`;
-                    fEl.style.width = `${format.width}px`;
-                    fEl.textContent = eText;
+                    back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
+                    fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                     left += format.width;
                 }
-                parentBack.appendChild(bEl);
-                parentFore.appendChild(fEl);
             }
             else if (format.formatType === FormatType.Link) {
-                fEl = document.createElement('a');
-                fEl.classList.add('URLLink');
-                fEl.href = 'javascript:void(0)';
-                fEl.title = format.href;
-                fEl.draggable = false;
-                fEl.dataset.href = format.href;
-                fEl.onclick = (e) => {
-                    window[this.linkFunction](e.currentTarget.dataset.href);
-                    return false;
-                };
-                parentFore.appendChild(fEl);
-                parentFore = fEl;
+                fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href.replace(/"/g, '&quot;'), '" onclick="', this.linkFunction, '(\'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                bEl = document.createElement('span');
-                Object.assign(bEl.style, bStyle);
-                fEl = document.createElement('span');
-                Object.assign(fEl.style, fStyle);
-                if (fCls.length !== 0)
-                    fEl.classList.add(...fCls);
-                bEl.style.left = `${left}px`;
-                bEl.style.width = `${format.width}px`;
-                fEl.style.left = `${left}px`;
-                fEl.style.width = `${format.width}px`;
-                fEl.textContent = eText;
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                 left += format.width;
-                parentBack.appendChild(bEl);
-                parentFore.appendChild(fEl);
-
             }
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
-                parentFore = parentFore.parentElement || fore;
-                parentBack = parentBack.parentElement || back;
+                fore.push('</a>');
             }
             else if (format.formatType === FormatType.WordBreak)
-                parentFore.appendChild(document.createElement('wbr'));
+                fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
-                fEl = document.createElement('a');
-                fEl.classList.add('MXPLink');
-                fEl.href = 'javascript:void(0)';
-                fEl.title = format.hint;
-                fEl.draggable = false;
-                fEl.dataset.href = format.href;
-                fEl.onclick = (e) => {
-                    window[this.mxpLinkFunction](e.currentTarget.dataset.href);
-                    return false;
-                };
-                parentFore.appendChild(fEl);
-                parentFore = fEl;
+                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="', format.href, '" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onclick="', this.mxpLinkFunction, '(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                bEl = document.createElement('span');
-                Object.assign(bEl.style, bStyle);
-                fEl = document.createElement('span');
-                Object.assign(fEl.style, fStyle);
-                if (fCls.length !== 0)
-                    fEl.classList.add(...fCls);
-                bEl.style.left = `${left}px`;
-                bEl.style.width = `${format.width}px`;
-                fEl.style.left = `${left}px`;
-                fEl.style.width = `${format.width}px`;
-                fEl.textContent = eText;
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                 left += format.width;
-                parentBack.appendChild(bEl);
-                parentFore.appendChild(fEl);
             }
             else if (format.formatType === FormatType.MXPSend) {
-                fEl = document.createElement('a');
-                fEl.classList.add('MXPLink');
-                fEl.href = 'javascript:void(0)';
-                fEl.title = format.hint;
-                fEl.draggable = false;
-                fEl.dataset.href = format.href || '';
-                fEl.dataset.prompt = format.prompt ? '1' : '0';
-                fEl.dataset.tt = format.tt || '';
-                fEl.onclick = (e) => {
-                    let data = e.currentTarget.dataset.href;
-                    data = data.startsWith('[') ? data.substr(1, data.length - 2).splitQuote(',', 1).map(s => stripQuotes) : stripQuotes(data);
-                    let tt = e.currentTarget.dataset.tt;
-                    tt = tt.startsWith('[') ? tt.splitQuote(',', 1) : stripQuotes(tt);
-
-                    window[this.mxpSendFunction](e || window.event, e.currentTarget || e.target, data, e.currentTarget.dataset.prompt === '1' ? 1 : 0, tt);
-                    return false;
-                };
-                fEl.onmouseover = (e) => {
-                    window[this.mxpTooltipFunction](e.currentTarget || e.target);
-                };
-                parentFore.appendChild(fEl);
-                parentFore = fEl;
+                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onmouseover="', this.mxpTooltipFunction, '(this);"', ' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ', ', format.prompt ? 1 : 0, ', ', format.tt.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                bEl = document.createElement('span');
-                Object.assign(bEl.style, bStyle);
-                fEl = document.createElement('span');
-                Object.assign(fEl.style, fStyle);
-                if (fCls.length !== 0)
-                    fEl.classList.add(...fCls);
-                bEl.style.left = `${left}px`;
-                bEl.style.width = `${format.width}px`;
-                fEl.style.left = `${left}px`;
-                fEl.style.width = `${format.width}px`;
-                fEl.textContent = eText;
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" ></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                 left += format.width;
-                parentBack.appendChild(bEl);
-                parentFore.appendChild(fEl);
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 eText = text.substring(offset, end);
-                bEl = document.createElement('span');
-                Object.assign(bEl.style, bStyle);
-                fEl = document.createElement('span');
-                Object.assign(fEl.style, fStyle);
-                if (fCls.length !== 0)
-                    fEl.classList.add(...fCls);
-                bEl.style.left = `${left}px`;
-                bEl.style.width = `${format.width}px`;
-                fEl.style.left = `${left}px`;
-                fEl.style.width = `${format.width}px`;
-                fEl.textContent = eText;
+                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
                 left += format.width;
-                parentBack.appendChild(bEl);
-                parentFore.appendChild(fEl);
             }
             else if (format.formatType === FormatType.Image) {
                 eText = '';
+                const tmp = ['<img style="'];
                 if (format.url.length > 0) {
                     eText += format.url;
                     if (!format.url.endsWith('/'))
@@ -2831,75 +2682,46 @@ export class Display extends EventEmitter {
                         eText += '/';
                 }
                 eText += format.name;
-                fEl = document.createElement('img');
-                bEl = document.createElement('img');
-                fEl.src = eText;
-                bEl.src = './../assets/blank.png';
-                if (format.width) {
-                    fEl.style.width = format.width + 'px';
-                    bEl.style.width = format.width + 'px';
-                }
-                else if (format.w.length > 0) {
-                    fEl.style.width = formatUnit(format.w);
-                    bEl.style.width = formatUnit(format.w);
-                }
+                if (format.width)
+                    tmp.push('width:', format.width, 'px;');
+                else if (format.w.length > 0)
+                    tmp.push('width:', formatUnit(format.w), ';');
 
-                if (format.height) {
-                    fEl.style.height = format.height + 'px';
-                    bEl.style.height = format.height + 'px';
-                }
-                else if (format.w.length > 0) {
-                    fEl.style.height = formatUnit(format.h, ch);
-                    bEl.style.height = formatUnit(format.h, ch);
-                }
+                if (format.height)
+                    tmp.push('height:', format.height, 'px;');
+                else if (format.h.length > 0)
+                    tmp.push('height:', formatUnit(format.h, ch), ';');
 
                 switch (format.align.toLowerCase()) {
                     case 'left':
-                        fEl.style.cssFloat = 'left';
-                        bEl.style.cssFloat = 'left';
+                        tmp.push('float:left;');
                         break;
                     case 'right':
-                        fEl.style.cssFloat = 'right';
-                        bEl.style.cssFloat = 'right';
+                        tmp.push('float:right;');
                         right = true;
                         break;
                     case 'top':
                     case 'middle':
                     case 'bottom':
-                        fEl.style.verticalAlign = format.align;
-                        bEl.style.verticalAlign = format.align;
+                        tmp.push('vertical-align:', format.align, ';');
                         break;
                 }
-                if (format.hspace.length > 0 && format.vspace.length > 0) {
-                    fEl.style.margin = formatUnit(format.vspace) + ' ' + formatUnit(format.hspace, ch);
-                    bEl.style.margin = formatUnit(format.vspace) + ' ' + formatUnit(format.hspace, ch);
-                }
-                else if (format.hspace.length > 0) {
-                    fEl.style.margin = '0px ' + formatUnit(format.hspace, ch);
-                    bEl.style.margin = '0px ' + formatUnit(format.hspace, ch);
-                }
-                else if (format.vspace.length > 0) {
-                    fEl.style.margin = formatUnit(format.vspace) + ' 0px';
-                    fEl.style.margin = formatUnit(format.vspace) + ' 0px';
-                }
+                if (format.hspace.length > 0 && format.vspace.length > 0)
+                    tmp.push('margin:', formatUnit(format.vspace), ' ', formatUnit(format.hspace, ch), ';');
+                else if (format.hspace.length > 0)
+                    tmp.push('margin: 0px ', formatUnit(format.hspace, ch), ';');
+                else if (format.vspace.length > 0)
+                    tmp.push('margin:', formatUnit(format.vspace), ' 0px;');
                 //TODO remove max-height when variable height supported
-                fEl.style.maxHeight = ch + 'px';
-                bEl.style.maxHeight = ch + 'px';
-                if (format.ismap) {
-                    fEl.ismap = true;
-                    fEl.onclick = () => false;
-                }
-                parentBack.appendChild(bEl);
-                parentFore.appendChild(fEl);
+                tmp.push('max-height:', '' + ch, 'px;"');
+                back.push(tmp.join(''), ` src="./../assets/blank.png"/>`);
+                if (format.ismap) tmp.push(' ismap onclick="return false;"');
+                fore.push(tmp.join(''), ` src="${eText}"/>`);
             }
         }
-        fore.appendChild(document.createElement('br'));
-        back.appendChild(document.createElement('br'));
-        if (right) {
-            fore.style.minWidth = mv + 'px';
-            back.style.minWidth = mv + 'px';
-        }
-        return [fore, back];
+        if (right)
+            return [`<span data-id="${id}" style="top:${idx * ch}px;min-width:${mv}px;">${fore.join('')}<br></span>`, `<span style="top:${idx * ch}px;min-width:${mv}px;">${back.join('')}<br></span>`];
+        return [`<span data-id="${id}" style="top:${idx * ch}px;">${fore.join('')}<br></span>`, `<span style="top:${idx * ch}px;">${back.join('')}<br></span>`];
     }
 
     public getLineHTML(idx?: number, start?: number, len?: number) {
@@ -3276,11 +3098,6 @@ export class Display extends EventEmitter {
         window.removeEventListener('mousemove', this._wMove);
         window.removeEventListener('mouseup', this._wUp);
         window.removeEventListener('resize', this._wResize);
-    }
-
-    private clearElement(el) {
-        while (el.firstChild)
-            el.removeChild(el.firstChild);
     }
 }
 
