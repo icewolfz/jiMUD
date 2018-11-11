@@ -60,7 +60,7 @@ interface Line {
     height: number;
     top: number;
     width: number;
-    images: 0;
+    images: number;
 }
 
 /**
