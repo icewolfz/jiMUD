@@ -2769,7 +2769,7 @@ export class Display extends EventEmitter {
                 fEl.dataset.tt = format.tt || '';
                 fEl.onclick = (e) => {
                     let data = e.currentTarget.dataset.href;
-                    data = data.startsWith('[') ? data.substr(1, data.length - 2).splitQuote(',', 1).map(s => stripQuotes(s)) : stripQuotes(data);
+                    data = data.startsWith('[') ? data.substr(1, data.length - 2).splitQuote(',', 1).map(s => stripQuotes) : stripQuotes(data);
                     let tt = e.currentTarget.dataset.tt;
                     tt = tt.startsWith('[') ? tt.splitQuote(',', 1) : stripQuotes(tt);
 
