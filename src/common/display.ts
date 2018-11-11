@@ -60,6 +60,7 @@ interface Line {
     height: number;
     top: number;
     width: number;
+    images: 0;
 }
 
 /**
@@ -1309,7 +1310,14 @@ export class Display extends EventEmitter {
         else if (data.line.length > this._maxLineLength)
             this._maxLineLength = data.line.length;
         this.lineIDs.push(this._lineID);
-        this._lines.push({ height: 0, top: 0, width: this.calculateWidth(this.lines.length - 1) });
+        const idx = this.lines.length - 1;
+
+        this._lines.push({ height: 0, top: 0, width: 0, images: 0 });
+        t = this.calculateSize(idx);
+        this._lines[idx].height = t.height;
+        this._lines[idx].width = t.width;
+        if (idx - 1 >= 0)
+            this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx].height;
         this._lineID++;
         if (this.split) this.split.dirty = true;
         if (!noUpdate)
@@ -1683,18 +1691,20 @@ export class Display extends EventEmitter {
         return width;
     }
 
-    private calculateWidth(idx) {
+    private calculateSize(idx) {
         if (idx === undefined)
             idx = this.lines.length - 1;
         const text = this.lines[idx].replace(/ /g, '\u00A0');
         const formats = this.lineFormats[idx];
         let offset = 0;
-        const height = this._charHeight;
+        let height = 0;
         const len = formats.length;
         const cw = this._charWidth;
-        let right = false;
         const id = this.lineIDs[idx];
+        const mv = this._maxView;
+        const mw = this._maxLineLength * this._charWidth;
         let width = 0;
+        let font: any = 0;
         for (let f = 0; f < len; f++) {
             const format = formats[f];
             let nFormat;
@@ -1712,57 +1722,63 @@ export class Display extends EventEmitter {
             offset = format.offset;
             if (format.formatType === FormatType.Normal) {
                 eText = text.substring(offset, end);
-
-                //TODO variable character height is not supported
-                //TODO once supported update parser support tag to add font
+                font = 0;
                 /*
                 if (format.font || format.size) {
-                    if (format.font) fStyle.push('font-family: ', format.font, ';');
-                    if (format.size) fStyle.push('font-size: ', format.size, ';');
-                    format.height = || format.height this.textHeight(eText, format.font, format.size);
-                    format.width = || format.width this.textWidth(eText, `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
+                    height = (Math.max(height, format.height = format.height || this.textHeight(eText, format.font, format.size)));
+                    format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
                 }
-                else
-                */
+                else */
                 if (format.unicode)
                     format.width = format.width || this.textWidth(eText);
                 else
                     format.width = format.width || eText.length * cw;
-
             }
             else if (format.formatType === FormatType.Link && end - offset !== 0) {
                 eText = text.substring(offset, end);
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
+                if (format.unicode || font)
+                    format.width = format.width || this.textWidth(eText, font);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.MXPLink && end - offset !== 0) {
                 eText = text.substring(offset, end);
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
+                if (format.unicode || font)
+                    format.width = format.width || this.textWidth(eText, font);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.MXPSend && end - offset !== 0) {
                 eText = text.substring(offset, end);
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
+                if (format.unicode || font)
+                    format.width = format.width || this.textWidth(eText, font);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 eText = text.substring(offset, end);
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
+                if (format.unicode || font)
+                    format.width = format.width || this.textWidth(eText, font);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.Image) {
-                eText = '';
-                right = format.align.toLowerCase() === 'right';
+                width += format.marginWidth || 0;
                 if (!format.width) {
+                    this._lines[idx].images++;
                     const img = new Image();
+                    eText = '';
+                    if (format.url.length > 0) {
+                        eText += format.url;
+                        if (!format.url.endsWith('/'))
+                            eText += '/';
+                    }
+                    if (format.t.length > 0) {
+                        eText += format.t;
+                        if (!format.t.endsWith('/'))
+                            eText += '/';
+                    }
+                    eText += format.name;
                     img.src = eText;
                     img.dataset.id = '' + id;
                     img.dataset.f = '' + f;
@@ -1773,6 +1789,7 @@ export class Display extends EventEmitter {
                     this._el.appendChild(img);
                     img.onload = () => {
                         const lIdx = this.lineIDs.indexOf(+img.dataset.id);
+                        this._lines[lIdx].images--;
                         if (lIdx === -1 || lIdx >= this.lines.length) return;
                         const fIdx = +img.dataset.f;
                         const fmt = this.lineFormats[lIdx][fIdx];
@@ -1789,16 +1806,28 @@ export class Display extends EventEmitter {
                         const bounds = img.getBoundingClientRect();
                         fmt.width = bounds.width || img.width;
                         fmt.height = bounds.height || img.height;
-                        img.remove();
+                        this._el.removeChild(img);
                         if (this._viewCache[lIdx])
                             delete this._viewCache[lIdx];
-                        this._lines[idx].width = this.calculateWidth(lIdx);
+                        if (this._lines[lIdx].images !== 0) return;
+                        const t = this.calculateSize(lIdx);
+                        this._lines[idx].width = t.width;
+                        this._lines[idx].height = t.height;
+                        this.updateTops(idx);
+                        if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
+                            if (this.split) this.split.dirty = true;
+                            this.doUpdate(UpdateType.display);
+                        }
                     };
                 }
+                if (format.marginHeight)
+                    height = Math.max(height, format.height + format.marginHeight);
+                else
+                    height = Math.max(height, format.height || 0);
             }
             width += format.width || 0;
         }
-        return width;
+        return { width: width, height: this._charHeight };
     }
 
     public clearOverlay(type?: string) {
@@ -2704,41 +2733,6 @@ export class Display extends EventEmitter {
                 tmp.push('"');
                 if (format.ismap) tmp.push(' ismap onclick="return false;"');
                 fore.push(tmp.join(''), ` src="${eText}"/>`);
-                if (!format.width) {
-                    const img = new Image();
-                    img.src = eText;
-                    img.dataset.id = '' + id;
-                    img.dataset.f = '' + f;
-                    Object.assign(img.style, {
-                        position: 'absolute',
-                        top: (this._el.clientWidth + 100) + 'px'
-                    });
-                    this._el.appendChild(img);
-                    img.onload = () => {
-                        const lIdx = this.lineIDs.indexOf(+img.dataset.id);
-                        if (lIdx === -1 || lIdx >= this.lines.length) return;
-                        const fIdx = +img.dataset.f;
-                        const fmt = this.lineFormats[lIdx][fIdx];
-                        if (fmt.w.length > 0 && fmt.h.length > 0) {
-                            Object.assign(img.style, {
-                                width: formatUnit(fmt.w),
-                                height: formatUnit(fmt.h, this._charHeight)
-                            });
-                        }
-                        else if (fmt.w.length > 0)
-                            img.style.width = formatUnit(fmt.w);
-                        else if (fmt.h.length > 0)
-                            img.style.height = formatUnit(fmt.h, this._charHeight);
-                        const bounds = img.getBoundingClientRect();
-                        fmt.width = bounds.width || img.width;
-                        fmt.height = bounds.height || img.height;
-                        this._el.removeChild(img);
-                        if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
-                            if (this.split) this.split.dirty = true;
-                            this.doUpdate(UpdateType.display);
-                        }
-                    };
-                }
             }
         }
         if (right)
