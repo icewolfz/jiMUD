@@ -50,14 +50,14 @@
                     if (x < 0 || x >= line.length)
                         return '';
                     var sPos = x, ePos = x;
-                    while (line.substr(sPos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()])/gu) && sPos >= 0) {
+                    while (line.substr(sPos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && sPos >= 0) {
                         sPos--;
                         if (sPos < 0)
                             break;
                     }
                     sPos++;
                     var ll = line.length;
-                    while (line.substr(ePos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()])/gu) && ePos < ll) {
+                    while (line.substr(ePos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && ePos < ll) {
                         ePos++;
                     }
                     if (sPos + ePos - sPos > ll)
@@ -186,6 +186,7 @@
         var autoLoginCounter = 0;
         var lastMouse;
         var chatWin;
+        var _nextClear = Date.now() + 3600000;
         var set = Settings.load(remote.getGlobal('settingsFile'));
         if (set.spellchecking)
             loadSpellchecker();
@@ -643,6 +644,8 @@
                     window.writeClipboard(client.display.selection, client.display.selectionAsHTML);
                     client.display.clearSelection();
                 }
+                else
+                    ipcRenderer.send('update-menuitem', { menu: ['edit', 'copyHTML'], enabled: client.display.hasSelection });
             });
 
             client.display._el.addEventListener('contextmenu', (e) => {
@@ -685,8 +688,9 @@
                         c.append(new MenuItem({ type: 'separator' }));
                     }
 
-                    if (window.$selected && window.$selected != '') {
+                    if (client.display.hasSelection) {
                         c.append(new MenuItem({ role: 'copy' }));
+                        c.append(new MenuItem({ label: 'Copy as HTML', accelerator: 'CmdOrCtrl+Alt+C', click: () => { copyAsHTML(); } }));
                     }
                     if (window.$copied.length) {
                         c.append(new MenuItem({ label: 'Paste', click: paste, accelerator: 'CmdOrCtrl+V' }));
@@ -771,7 +775,7 @@
             });
 
             client.on('profiles-updated', () => {
-                doUpdate(12);
+                doUpdate(76);
             });
             client.on('add-line', (data) => {
                 var res, re, c, cl;
@@ -932,6 +936,10 @@
             });
             */
 
+            client.on('cleared', () => {
+                _logger.postMessage({ action: 'flush', args: true });
+            });
+
             client.on('show', () => {
                 remote.getCurrentWindow().show();
                 remote.getCurrentWindow().focus();
@@ -1004,7 +1012,8 @@
                             prepend: client.options.logPrepend,
                             what: client.options.logWhat,
                             debug: client.options.enableDebug,
-                            format: client.options.logTimeFormat
+                            format: client.options.logTimeFormat,
+                            colors: client.options.colors
                         }
                     });
             });
@@ -1299,6 +1308,13 @@
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: client.options.showArmor });
                 }
             });
+            _status.on('leave combat', () => {
+                if (_nextClear <= Date.now()) {
+                    doUpdate(64);
+                    //clear every ~hr
+                    _nextClear = Date.now() + 3600000;
+                }
+            });
             _status.ac = client.options.showArmor;
             _status.on('set-title', (title) => {
                 if (client.options.autoCreateCharacter)
@@ -1322,7 +1338,8 @@
                     prepend: client.options.logPrepend,
                     what: client.options.logWhat,
                     debug: client.options.enableDebug,
-                    format: client.options.logTimeFormat
+                    format: client.options.logTimeFormat,
+                    colors: client.options.colors
                 }
             });
             let closeWindow = false;
@@ -1378,6 +1395,7 @@
                             });
                         if (choice === 2) {
                             client.raise('closed');
+                            _logger.postMessage({ action: 'flush' });
                             client.options.askonclose = false;
                             client.saveOptions();
                             closeWindow = true;
@@ -1389,6 +1407,7 @@
                             return 'no';
                         }
                         client.raise('closed');
+                        _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
                         remote.getCurrentWindow().close();
                     });
@@ -1430,6 +1449,7 @@
                             }
                         }
                         client.raise('closed');
+                        _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
                         remote.getCurrentWindow().close();
                     });
@@ -1445,41 +1465,16 @@
                             windows[w].close();
                         }
                         client.raise('closed');
+                        _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
                         remote.getCurrentWindow().close();
                     });
                 }
                 client.raise('closed');
+                _logger.postMessage({ action: 'flush' });
                 closeWindow = true;
                 remote.getCurrentWindow().close();
                 return;
-
-                /*
-                if (client.options.askonclose && client.connected) {
-                  var choice = dialog.showMessageBox(
-                    remote.getCurrentWindow(),
-                    {
-                      type: 'warning',
-                      title: 'Connected',
-                      message: 'Closing will disconnect you from the mud, close anyway?',
-                      buttons: ['Yes', 'No', 'Never ask again'],
-                      defaultId: 1
-                    });
-                  if (choice === 2) {
-                    client.raise('closed');
-                    client.options.askonclose = false;
-                    client.saveOptions();
-                    return;
-                  }
-                  if (choice !== 0)
-                  {
-                    evt.returnValue = false;
-                    return 'no';
-                  }
-                }
-                client.raise('closed');
-                return;
-                */
             };
             $('#status').on('contextmenu', (e) => {
                 e.preventDefault();
@@ -1815,6 +1810,7 @@
             if (client.options.showCharacterManager)
                 showCharacters();
             autoConnect();
+            doUpdate(64);
             client.raise('opened');
         }
 
@@ -1942,6 +1938,7 @@
                     buttons.append(button);
                 }
             }
+            doUpdate(64);
         }
 
         function updateMenu() {
@@ -2133,10 +2130,11 @@
                     prepend: client.options.logPrepend,
                     what: client.options.logWhat,
                     debug: client.options.enableDebug,
-                    format: client.options.logTimeFormat
+                    format: client.options.logTimeFormat,
+                    colors: client.options.colors
                 }
             });
-            doUpdate(12);
+            doUpdate(76);
         });
 
         ipcRenderer.on('reload-options', () => {
@@ -2151,10 +2149,11 @@
                     prepend: client.options.logPrepend,
                     what: client.options.logWhat,
                     debug: client.options.enableDebug,
-                    format: client.options.logTimeFormat
+                    format: client.options.logTimeFormat,
+                    colors: client.options.colors
                 }
             });
-            doUpdate(12);
+            doUpdate(76);
             client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
         });
 
@@ -2238,6 +2237,11 @@
         // eslint-disable-next-line no-unused-vars
         function toggleLogging() {
             _logger.postMessage({ action: 'toggle' });
+        }
+
+        function copyAsHTML() {
+            if (!client.display.hasSelection) return;
+            window.writeClipboard(client.display.selectionAsHTML);
         }
 
         function pasteSpecial(noDialog) {
@@ -2373,6 +2377,12 @@
                 if (($updating & 32) === 32) {
                     client.saveOptions();
                     $updating &= ~32;
+                }
+                if (($updating & 64) === 64) {
+                    client.saveOptions();
+                    remote.getCurrentWindow().webContents.session.clearCache(() => { if (client.options.enableDebug) console.log('Cache cleared'); });
+                    webFrame.clearCache();
+                    $updating &= ~64;
                 }
                 this.doUpdate($updating);
             });

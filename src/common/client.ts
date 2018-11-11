@@ -11,6 +11,7 @@ import { Input } from './input';
 import { ProfileCollection, Alias, Trigger, Alarm, Macro, Profile, Button, Context, TriggerType } from './profile';
 import { MSP } from './msp';
 import { Display } from './display';
+import { exec } from 'child_process';
 const { version } = require('../../package.json');
 const path = require('path');
 const fs = require('fs');
@@ -660,11 +661,12 @@ export class Client extends EventEmitter {
             try {
                 if (val.length > 0)
                     obj = JSON.parse(val);
-                this.emit('received-GMCP', mod, obj);
             }
             catch (e) {
                 this.error('Invalid GMCP');
+                return;
             }
+            this.emit('received-GMCP', mod, obj);
         });
 
         this.telnet.on('windowSize', () => { this.UpdateWindow(); });
@@ -763,6 +765,8 @@ export class Client extends EventEmitter {
         this.display.enableMXP = this.options.enableMXP;
         this.display.enableURLDetection = this.options.enableURLDetection;
         this.display.enableMSP = this.options.enableMSP;
+        this.display.enableColors = this.options.display.enableColors;
+        this.display.enableBackgroundColors = this.options.display.enableBackgroundColors;
 
         if (this.options.colors.length > 0) {
             const colors = this.options.colors;
@@ -784,6 +788,7 @@ export class Client extends EventEmitter {
         this.telnet.keepAliveDelay = this.options.keepAliveDelay;
 
         this.MSP.enabled = this.options.enableMSP;
+        this.MSP.enableSound = this.options.enableSound;
         this.MSP.savePath = parseTemplate(this.options.soundPath);
 
         this._input.scrollLock = this.options.scrollLocked;
@@ -1026,6 +1031,7 @@ export class Client extends EventEmitter {
 
     public clear() {
         this.display.clear();
+        this.emit('cleared');
     }
 
     public parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean) {

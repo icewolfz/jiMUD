@@ -334,7 +334,10 @@ export let SettingList: any[] = [
     ['chat.showSplitButton', 0, 1, true],
     ['chat.bufferSize', 0, 2, 5000],
     ['chat.flashing', 0, 1, false],
-    ['display.hideTrailingEmptyLine', 0, 1, true]
+    ['display.hideTrailingEmptyLine', 0, 1, true],
+    ['display.enableColors', 0, 1, true],
+    ['display.enableBackgroundColors', 0, 1, true],
+    ['enableSound', 0, 1, true]
 ];
 
 /**
@@ -374,6 +377,7 @@ export class Settings {
     public autoLogin: boolean = true;
     public onDisconnect: OnDisconnect = OnDisconnect.ReconnectDialog;
     public commandEcho: boolean = true;
+    public enableSound: boolean = true;
 
     public enableKeepAlive: boolean = false;
     public keepAliveDelay: number = 0;
@@ -462,7 +466,9 @@ export class Settings {
         splitLive: true,
         roundedOverlays: true,
         showSplitButton: true,
-        hideTrailingEmptyLine: true
+        hideTrailingEmptyLine: true,
+        enableColors: true,
+        enableBackgroundColors: true
     };
 
     public extensions = {

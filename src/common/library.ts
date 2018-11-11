@@ -132,6 +132,7 @@ export function CharAllowedInURL(chr, proto) {
         chr === '$' ||
         chr === ',' ||
         chr === '/' ||
+        chr === '\\' ||
         chr === '?' ||
         chr === '%' ||
         chr === '#' ||

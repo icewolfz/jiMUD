@@ -1,18 +1,78 @@
 # Changelog
 
-## v0.6.6
+## v0.6.7
+
+- **New:**
+  - Code editor:
+    - Area designer: Exits that are closed doors are now hidden in the room preview to mimic standard door usage
+  - Added [Enable sound](docs/preferences.md#general) to disable or enable sounds without the need to disable msp
+  - Added Copy as HTML to edit menu to copy selected text as HTML formated markup
+- **Changed:**
+  - Update electron from 3.0.7 to 3.0.8
+  - Update electron-updater 3.1.6 to 3.2.3
+  - Update yargs-parser 11.0.0 to 11.1.0
+  - Clear local cache every time the preferences are changed
+  - Clear local cache when leaving combat if it has been at least an hour since last time
+  - Display:
+    - Tweak performance and memory usage to try and balance between not using to much memory and using enough to get performance gains
+    - Changed how formated data is stored and cached
+  - Input: Performance tweaks when executing triggers
+  - Status:
+    - Performance tweaks by grouping updates when possible
+    - Removed jQuery where possible to remove overhead and improve performance  
+  - Process all GMCP in async to try and improve performance
+- **Fixed:**
+  - Code editor:
+    - Area designer:
+      - Fixed room preview item matching generating corrupt HTML
+      - Fixed read display format in room property editor
+      - Fixed text selection for room preview
+      - Fixed room preview tool tips when item appears multiple times in long
+    - Virtual area editor:
+      - Fixed room preview tool tips when item appears multiple times in long
+  - MSP:
+    - Fixed not displaying error when file not found or unable to play
+    - Reset current sound when sound/msp enabled/disabled
+  - Display:
+    - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
+    - Fixed overlay and selection to add extra ending space to represent newlines better
+    - Fixed rounded corner selection/overlay placements
+    - Fixed double click counting [, ], @, ?, |, <, >, ", ', +, and \ as part of words
+    - Fixed MXP tag closing to separate open and secure closings
+    - Fixed MXP image caching not clearing correctly
+    - Fixed MXP send/a tags not correctly spanning multiple lines
+  - Fixed context word selection to not count [, ], @, ?, |, <, >, ", ', +, and \ as part of words
+  - Logger:
+    - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
+    - Fixed URL click scripts by including some minor javascript to execute urls
+    - Fixed generating HTML when not logging to save memory and cpu time
+    - Fixed flushing when logging disabled
+  - Fixed drake monster icon
+  - Fixed memory leak in temporary triggers and alarms
+  - Fixed Invalid GMCP error when a different error happened
+  - Status: Fixed combat/party health bar percent display rare case of trailing decimals
+  - Fixed #testmxp send examples to use correct testmxpcolors and textmxpexpire commands
+  - ANSI Parser:
+    - Fixed raw data doubling split buffer data
+    - Fixed extra line when controls at beginning of a line are split
+
+## v0.6.6 2018-11-05
 
 - **New:**
   - Added [Hide trailing line](docs/preferences.md#display) display preference to hide trailing empty line.
+  - Added [Enable colors](docs/preferences.md#display) enable or disable colors.
+  - Added [Enable background colors](docs/preferences.md#display) enable or disable background colors
   - Added new Zen theme
+  - ANSI Parser: Added backspace character support
 - **Changed:**
   - Remove clean and default scroll track rounded corners to properly hide background text
   - Update electron from 3.0.6 to 3.0.7
   - Update electron-updater 3.1.5 to 3.1.6
   - Change show split button disabled look for all themes to not light up
   - Logger:
-    - Re-coded html logger to use classes and style blocks to reduce file sizes
+    - Re-coded HTML logger to use classes and style blocks to reduce file sizes
     - Convert write system to use a stream to batch write to improve write speeds
+  - Preferences: Move display font selection to own sub section under display
 - **Fixed:**
   - Display:
     - Detect changes to display better to handle theme changes
@@ -21,15 +81,18 @@
     - Correctly factor in current theme display padding into available character width and height
     - Fixed vertical scroll bar when split button shown
     - Fixed show split button being shown after turning off split scroll
-    - Readd -(minus) and _(underscore) as selectable characters for double click and context menu word selection
+    - Re-add -(minus) and _(underscore) as selectable characters for double click and context menu word selection
     - Fixed selection when dragging below display window
     - Fixed split scroll window bottom padding spacing for all themes
     - Fixed MXP image align=right
     - Fixed getting wrong character for mouse position
-  - Fixed matching whole unicode words on context
+  - Fixed matching whole Unicode words on context
   - ANSI Parser: Always append line fragment when parsing, better fix to the previous missing raw data issue
   - Window size not correctly sent to mud when maximizing window, broken in v0.6.5
-  - Logger: Fixed MXP hr style effects
+  - Logger:
+    - Fixed MXP hr style effects
+    - Flush When closing, clearing screen or logging options changed to ensure last line is saved when required
+    - Fixed When path changed in the middle of logging it failed to correctly move current logs to new path
 
 ## v0.6.5 2018-10-29
 

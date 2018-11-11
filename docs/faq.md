@@ -212,6 +212,10 @@ chat.roundedOverlays              | boolean | true
 chat.showSplitButton              | boolean | true
 chat.bufferSize                   | integer | 5000
 chat.flashing                     | boolean | false
+display.hideTrailingEmptyLine     | boolean | true
+display.enableColors              | boolean | true
+display.enableBackgroundColors    | boolean | true
+enableSound                       | boolean | true
 
 ### trayClick and trayDblClick values
 

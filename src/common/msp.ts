@@ -109,6 +109,28 @@ class SoundState extends EventEmitter {
         this.sound.bind('loadeddata', (e) => {
             this.emit('playing', { file: this._file, sound: this.sound, state: this, duration: buzz.toTimer(this.sound.getDuration()) });
         });
+        this.sound.bind('error', (e) => {
+            if (e && e.currentTarget && e.currentTarget.error) {
+                switch (e.currentTarget.error.code) {
+                    case 1:
+                        this.emit('error', new Error(`MSP - Aborted: ${this.url}${this._file}`));
+                        break;
+                    case 2:
+                        this.emit('error', new Error(`MSP - Network error: ${this.url}${this._file}`));
+                        break;
+                    case 3:
+                        this.emit('error', new Error(`MSP - Could not decode: ${this.url}${this._file}`));
+                        break;
+                    case 4:
+                        this.emit('error', new Error(`MSP - Source not supported: ${this.url}${this._file}`));
+                        break;
+                }
+            }
+            else if (e && e.currentTarget && e.currentTarget.networkState === 3)
+                this.emit('error', new Error(`MSP - Source not found or unable to play: ${this.url}${this._file}`));
+            else
+                this.emit('error', new Error('MSP - Unknown error'));
+        });
         this.emit('opened');
     }
 
@@ -118,6 +140,8 @@ class SoundState extends EventEmitter {
             delete this.sound;
             this.sound = null;
         }
+        else if (this.playing)
+            this.playing = false;
         this.emit('closed');
     }
 
@@ -152,7 +176,8 @@ export interface MSPOptions {
  * @property {string} savePath          - Where sounds will be saved
  */
 export class MSP extends EventEmitter {
-    public enabled: boolean = true;
+    private _enabled: boolean = true;
+    private _enableSound: boolean = true;
     public server: boolean = false;
     public enableDebug: boolean = false;
 
@@ -177,6 +202,36 @@ export class MSP extends EventEmitter {
         }
         this.MusicState.on('playing', (data) => { data.type = 1; this.emit('playing', data); });
         this.SoundState.on('playing', (data) => { data.type = 0; this.emit('playing', data); });
+        this.MusicState.on('error', (err) => { this.emit('error', err); });
+        this.SoundState.on('error', (err) => { this.emit('error', err); });
+    }
+
+    /**
+     * enable or disable MSP
+     *
+     * @type {boolean}
+     * @memberof MSP
+     */
+    get enabled() { return this._enabled; }
+    set enabled(value) {
+        if (value === this._enabled) return;
+        this._enabled = value;
+        this.MusicState.close();
+        this.SoundState.close();
+    }
+
+    /**
+     * enable or disable enableSound, allow processing of msp
+     *
+     * @type {boolean}
+     * @memberof MSP
+     */
+    get enableSound() { return this._enableSound; }
+    set enableSound(value) {
+        if (value === this._enableSound) return;
+        this._enableSound = value;
+        this.MusicState.close();
+        this.SoundState.close();
     }
 
     /**
@@ -340,7 +395,7 @@ export class MSP extends EventEmitter {
      * @param {Object} data Music argument object, contains all settings
      */
     public music(data) {
-        if (!this.enabled) return false;
+        if (!this.enabled && !this.enableSound) return false;
         if (!data.file || data.file.length === 0) {
             if (data.off && data.url && data.url.length > 0)
                 this.defaultMusicURL = data.url;
@@ -376,8 +431,12 @@ export class MSP extends EventEmitter {
             if (this.MusicState.url.length > 0 && !this.MusicState.url.endsWith('/'))
                 this.MusicState.url += '/';
         }
-        if (old !== this.MusicState.file || !data.continue || !this.MusicState.playing)
-            this.MusicState.play();
+        if (old !== this.MusicState.file || !data.continue || !this.MusicState.playing) {
+            if (this.enableSound)
+                this.MusicState.play();
+            else
+                this.emit('playing', { type: 1, file: this.MusicState.file, sound: this.MusicState.sound, state: this.MusicState, duration: '--:--' });
+        }
     }
 
     /**
@@ -387,7 +446,7 @@ export class MSP extends EventEmitter {
      * @todo make it play/stop sound
      */
     public sound(data) {
-        if (!this.enabled) return false;
+        if (!this.enabled && !this.enableSound) return false;
         if (!data.file || data.file.length === 0) {
             if (data.off && data.url && data.url.length > 0)
                 this.defaultSoundURL = data.url;
@@ -425,7 +484,10 @@ export class MSP extends EventEmitter {
             if (this.SoundState.url.length > 0 && !this.SoundState.url.endsWith('/'))
                 this.SoundState.url += '/';
         }
-        this.SoundState.play();
+        if (this.enableSound)
+            this.SoundState.play();
+        else
+            this.emit('playing', { type: 0, file: this.SoundState.file, sound: this.SoundState.sound, state: this.SoundState, duration: '--:--' });
     }
 
     /**

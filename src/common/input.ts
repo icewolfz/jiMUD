@@ -3482,31 +3482,34 @@ export class Input extends EventEmitter {
         if (frag == null) frag = false;
         this.buildTriggerCache();
         let t = 0;
-        const tl = this._TriggerCache.length;
+        //scope to get performance
+        const triggers = this._TriggerCache;
+        const tl = triggers.length;
         for (; t < tl; t++) {
-            if (this._TriggerCache[t].type !== undefined && this._TriggerCache[t].type !== type) continue;
-            if (frag && !this._TriggerCache[t].triggerPrompt) continue;
-            if (!frag && !this._TriggerCache[t].triggerNewline && (this._TriggerCache[t].triggerNewline !== undefined))
+            const trigger = triggers[t];
+            if (trigger.type !== undefined && trigger.type !== type) continue;
+            if (frag && !trigger.triggerPrompt) continue;
+            if (!frag && !trigger.triggerNewline && (trigger.triggerNewline !== undefined))
                 continue;
-            if (this._TriggerCache[t].verbatim) {
-                if (!this._TriggerCache[t].caseSensitive && raw.toLowerCase() !== this._TriggerCache[t].pattern.toLowerCase()) continue;
-                else if (this._TriggerCache[t].caseSensitive && raw !== this._TriggerCache[t].pattern) continue;
+            if (trigger.verbatim) {
+                if (!trigger.caseSensitive && raw.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
+                else if (trigger.caseSensitive && raw !== trigger.pattern) continue;
                 if (ret)
-                    return this.ExecuteTrigger(this._TriggerCache[t], [raw], true, t);
-                this.ExecuteTrigger(this._TriggerCache[t], [raw], false, t);
+                    return this.ExecuteTrigger(trigger, [raw], true, t);
+                this.ExecuteTrigger(trigger, [raw], false, t);
             }
             else {
                 try {
                     let re;
-                    if (this._TriggerCache[t].caseSensitive)
-                        re = new RegExp(this._TriggerCache[t].pattern, 'g');
+                    if (trigger.caseSensitive)
+                        re = new RegExp(trigger.pattern, 'g');
                     else
-                        re = new RegExp(this._TriggerCache[t].pattern, 'gi');
+                        re = new RegExp(trigger.pattern, 'gi');
                     const res = re.exec(raw);
                     if (!res || !res.length) continue;
                     if (ret)
-                        return this.ExecuteTrigger(this._TriggerCache[t], res, true, t);
-                    this.ExecuteTrigger(this._TriggerCache[t], res, false, t);
+                        return this.ExecuteTrigger(trigger, res, true, t);
+                    this.ExecuteTrigger(trigger, res, false, t);
                 }
                 catch (e) {
                     if (this.client.options.showScriptErrors)
@@ -3530,10 +3533,17 @@ export class Input extends EventEmitter {
                 this._stack.pop();
                 break;
             case 2:
-                if (!this._TriggerFunctionCache[idx])
-                    /*jslint evil: true */
-                    this._TriggerFunctionCache[idx] = new Function('try { ' + trigger.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                ret = this._TriggerFunctionCache[idx].apply(this.client, args);
+                //do not cache temp triggers
+                if (trigger.temp) {
+                    ret = new Function('try { ' + trigger.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    ret = ret.apply(this.client, args);
+                }
+                else {
+                    if (!this._TriggerFunctionCache[idx])
+                        /*jslint evil: true */
+                        this._TriggerFunctionCache[idx] = new Function('try { ' + trigger.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    ret = this._TriggerFunctionCache[idx].apply(this.client, args);
+                }
                 if (typeof ret === 'string')
                     ret = this.parseOutgoing(ret);
                 break;
@@ -3541,8 +3551,11 @@ export class Input extends EventEmitter {
                 ret = trigger.value;
                 break;
         }
-        if (trigger.temp)
+        if (trigger.temp) {
+            if (idx >= 0)
+                this._TriggerCache.splice(idx, 1);
             this.client.removeTrigger(trigger);
+        }
         if (ret == null || ret === undefined)
             return null;
         if (r)

@@ -4,6 +4,8 @@
 import EventEmitter = require('events');
 import { Client } from './client';
 
+export enum UpdateType { none = 0, sortCombat = 1, sortParty = 2, overall = 4, xp = 8, status = 16 }
+
 /**
  * Status display control
  *
@@ -16,14 +18,15 @@ export class Status extends EventEmitter {
     private infoAC = [];
     private infoLimb = [];
     private _ac: boolean = false;
-    private lagMeter;
+    private lagMeter: HTMLElement;
+    private _updating: UpdateType;
 
     public client: Client;
 
     constructor(client: Client) {
         super();
         this.client = client;
-        this.lagMeter = $('#lagMeter');
+        this.lagMeter = document.getElementById('lagMeter');
         this.client.telnet.on('latency-changed', (lag, avg) => {
             this.updateLagMeter(lag);
         });
@@ -40,7 +43,7 @@ export class Status extends EventEmitter {
             this.info['EXPERIENCE_NEED'] = this.info['EXPERIENCE_NEED_RAW'] - this.info['EXPERIENCE'];
         });
 
-        this.client.on('received-GMCP', (mod, obj) => {
+        this.client.on('received-GMCP', async (mod, obj) => {
             let limb;
             switch (mod.toLowerCase()) {
                 case 'char.base':
@@ -49,16 +52,16 @@ export class Status extends EventEmitter {
                     this.setTitle(obj.name);
                     break;
                 case 'char.vitals':
-                    this.updateBar('#hp-bar', obj.hp, obj.hpmax);
-                    this.updateBar('#sp-bar', obj.sp, obj.spmax);
-                    this.updateBar('#mp-bar', obj.mp, obj.mpmax);
+                    this.updateBar('hp-bar', obj.hp, obj.hpmax);
+                    this.updateBar('sp-bar', obj.sp, obj.spmax);
+                    this.updateBar('mp-bar', obj.mp, obj.mpmax);
                     this.info['hp'] = obj.hp;
                     this.info['hpmax'] = obj.hpmax;
                     this.info['sp'] = obj.sp;
                     this.info['spmax'] = obj.spmax;
                     this.info['mp'] = obj.mp;
                     this.info['mpmax'] = obj.mpmax;
-                    this.updateOverall();
+                    this.doUpdate(UpdateType.overall);
                     break;
                 case 'char.experience':
                     this.info['EXPERIENCE'] = obj.current;
@@ -70,7 +73,7 @@ export class Status extends EventEmitter {
 
                     this.info['EXPERIENCE_EARNED'] = obj.earned;
                     this.info['EXPERIENCE_BANKED'] = obj.banked;
-                    this.updateXP();
+                    this.doUpdate(UpdateType.xp);
                     break;
                 case 'omud.ac':
                     for (limb in obj) {
@@ -94,15 +97,14 @@ export class Status extends EventEmitter {
                     break;
                 case 'omud.environment':
                     if (obj.weather) {
+                        const env = document.getElementById('environment');
+                        env.classList.remove('weather-' + this.info['WEATHER'], 'intensity-hard');
                         this.info['WEATHER'] = obj.weather;
                         this.info['WEATHER_INTENSITY'] = obj.weather_intensity;
-                        $('#environment').removeClass((index, className) => {
-                            return (className.match(/(^|\s)(weather-|intensity-)\S+/g) || []).join(' ');
-                        });
                         if (obj.weather !== '0' && obj.weather !== 'none')
-                            $('#environment').addClass('weather-' + obj.weather);
+                            env.classList.add('weather-' + obj.weather);
                         if (obj.weather_intensity > 6)
-                            $('#environment').addClass('intensity-hard');
+                            env.classList.add('intensity-hard');
                     }
                     if (obj.tod) {
                         $('#environment').removeClass('day night twilight dawn').addClass(obj.tod);
@@ -117,37 +119,42 @@ export class Status extends EventEmitter {
                     }
                     break;
                 case 'omud.combat':
-                    if (obj.action === 'leave')
-                        $('#combat').empty();
+                    if (obj.action === 'leave') {
+                        this.clear('combat');
+                        this.emit('leave combat');
+                    }
                     else if (obj.action === 'add')
-                        this.createBar('#combat', this.getID(obj, 'combat_'), obj.name, obj.hp, 100, this.livingClass(obj, 'monster-'), obj.order);
+                        this.createIconBar('#combat', this.getID(obj, 'combat_'), obj.name, obj.hp, 100, this.livingClass(obj, 'monster-'), obj.order);
                     else if (obj.action === 'update') {
                         if (obj.hp === 0)
-                            this.removeBar('#' + this.getID(obj, 'combat_'));
+                            this.removeBar(this.getID(obj, 'combat_'));
                         else
-                            this.createBar('#combat', this.getID(obj, 'combat_'), obj.name, obj.hp, 100, this.livingClass(obj, 'monster-'), obj.order);
+                            this.createIconBar('#combat', this.getID(obj, 'combat_'), obj.name, obj.hp, 100, this.livingClass(obj, 'monster-'), obj.order);
                     }
                     else if (obj.action === 'remove')
-                        this.removeBar('#' + this.getID(obj, 'combat_'));
+                        this.removeBar(this.getID(obj, 'combat_'));
                     break;
                 case 'omud.party':
-                    if (obj.action === 'leave')
-                        $('#party').empty();
+                    if (obj.action === 'leave') {
+                        this.clear('party');
+                        this.emit('leave party');
+                    }
                     else if (obj.action === 'add') {
-                        this.createBar('#party', this.getID(obj, 'party_'), obj.name, obj.hp, 100, this.livingClass(obj, 'party-'), obj.name.replace('"', ''));
+                        this.createIconBar('#party', this.getID(obj, 'party_'), obj.name, obj.hp, 100, this.livingClass(obj, 'party-'), obj.name.replace('"', ''));
                     }
                     else if (obj.action === 'update') {
                         if (obj.hp === 0)
-                            this.removeBar('#' + this.getID(obj, 'party_'));
+                            this.removeBar(this.getID(obj, 'party_'), true);
                         else
-                            this.createBar('#party', this.getID(obj, 'party_'), obj.name, obj.hp, 100, this.livingClass(obj, 'party-'), obj.name.replace('"', ''));
+                            this.createIconBar('#party', this.getID(obj, 'party_'), obj.name, obj.hp, 100, this.livingClass(obj, 'party-'), obj.name.replace('"', ''));
                     }
                     else if (obj.action === 'remove')
-                        this.removeBar('#' + this.getID(obj, 'party_'));
-                    if ($('#party').children().length > 0)
-                        $('#party').addClass('hasmembers');
+                        this.removeBar(this.getID(obj, 'party_'), true);
+
+                    if ((limb = document.getElementById('party')).children.length)
+                        limb.classList.add('hasmembers');
                     else
-                        $('#party').removeClass('hasmembers');
+                        limb.classList.remove('hasmembers');
                     break;
             }
         });
@@ -162,7 +169,7 @@ export class Status extends EventEmitter {
     set ac(enable: boolean) {
         if (this._ac !== enable) {
             this._ac = enable;
-            this.updateStatus();
+            this.doUpdate(UpdateType.status);
             this.emit('display-changed');
         }
     }
@@ -198,32 +205,29 @@ export class Status extends EventEmitter {
         const l = limb;
         limb = limb.replace(/\s/g, '');
         limb = limb.toLowerCase();
-        const eLimb = $(document.getElementById(limb + 'weapon'));
-        if (!eLimb || eLimb.length === 0)
+        const eLimb = document.getElementById(limb + 'weapon');
+        if (!eLimb)
             return;
-        eLimb.removeClass((index, className) => {
-            return (className.match(/(^|\s)weapon-\S+/g) || []).join(' ');
-        });
+        eLimb.className = '';
         if (!weapon) return;
         if (weapon.quality && weapon.quality.length > 0)
-            eLimb.addClass('weapon-' + this.sanitizeID(weapon.quality));
+            eLimb.classList.add('weapon-' + this.sanitizeID(weapon.quality));
         if (weapon.material && weapon.material.length > 0)
-            eLimb.addClass('weapon-' + this.sanitizeID(weapon.material));
+            eLimb.classList.add('weapon-' + this.sanitizeID(weapon.material));
         if (weapon.type && weapon.type.length > 0)
-            eLimb.addClass('weapon-' + this.sanitizeID(weapon.type));
+            eLimb.classList.add('weapon-' + this.sanitizeID(weapon.type));
         if (weapon.subtype && weapon.subtype.length > 0)
-            eLimb.addClass('weapon-' + this.sanitizeID(weapon.subtype));
+            eLimb.classList.add('weapon-' + this.sanitizeID(weapon.subtype));
         if (weapon.name && weapon.name.length > 0)
-            eLimb.addClass('weapon-' + this.sanitizeID(weapon.name));
+            eLimb.classList.add('weapon-' + this.sanitizeID(weapon.name));
         if (weapon.dominant)
-            eLimb.addClass('weapon-dominant');
-
+            eLimb.classList.add('weapon-dominant');
         if (weapon.subtype && weapon.subtype.length > 0)
-            (<HTMLElement>eLimb[0]).title = weapon.subtype + ' in ' + l;
+            eLimb.title = weapon.subtype + ' in ' + l;
         else if (weapon.type && weapon.type.length > 0)
-            (<HTMLElement>eLimb[0]).title = weapon.type + ' in ' + l;
+            eLimb.title = weapon.type + ' in ' + l;
         else
-            (<HTMLElement>eLimb[0]).title = 'weapon in ' + l;
+            eLimb.title = 'weapon in ' + l;
     }
 
     public setLimbAC(limb, ac) {
@@ -259,57 +263,56 @@ export class Status extends EventEmitter {
     }
 
     public updateOverall() {
-        $('#overall').removeClass((index, className) => {
-            return (className.match(/(^|\s)(health-|armor-)\S+/g) || []).join(' ');
-        });
+        const el = document.getElementById('overall');
+        el.className = '';
         if (this._ac) {
             if (this.infoAC['overall'] === 6.5) {
-                $('#overall').html('Extensively');
-                $('#overall').addClass('armor-extensively');
+                el.textContent = 'Extensively';
+                el.classList.add('armor-extensively');
             }
             else if (this.infoAC['overall'] === 6) {
-                $('#overall').html('Completely');
-                $('#overall').addClass('armor-completely');
+                el.textContent = 'Completely';
+                el.classList.add('armor-completely');
             }
             else if (this.infoAC['overall'] === 5.5) {
-                $('#overall').html('Significantly');
-                $('#overall').addClass('armor-significantly');
+                el.textContent = 'Significantly';
+                el.classList.add('armor-significantly');
             }
             else if (this.infoAC['overall'] === 5) {
-                $('#overall').html('Considerably');
-                $('#overall').addClass('armor-considerably');
+                el.textContent = 'Considerably';
+                el.classList.add('armor-considerably');
             }
             else if (this.infoAC['overall'] === 4.5) {
-                $('#overall').html('Well');
-                $('#overall').addClass('armor-well');
+                el.textContent = 'Well';
+                el.classList.add('armor-well');
             }
             else if (this.infoAC['overall'] === 4) {
-                $('#overall').html('Adequately');
-                $('#overall').addClass('armor-adequately');
+                el.textContent = 'Adequately';
+                el.classList.add('armor-adequately');
             }
             else if (this.infoAC['overall'] === 3.5) {
-                $('#overall').html('Fairly');
-                $('#overall').addClass('armor-fairly');
+                el.textContent = 'Fairly';
+                el.classList.add('armor-fairly');
             }
             else if (this.infoAC['overall'] === 3) {
-                $('#overall').html('Moderately');
-                $('#overall').addClass('armor-moderately');
+                el.textContent = 'Moderately';
+                el.classList.add('armor-moderately');
             }
             else if (this.infoAC['overall'] === 2.5) {
-                $('#overall').html('Somewhat');
-                $('#overall').addClass('armor-somewhat');
+                el.textContent = 'Somewhat';
+                el.classList.add('armor-somewhat');
             }
             else if (this.infoAC['overall'] === 2) {
-                $('#overall').html('Slightly');
-                $('#overall').addClass('armor-slightly');
+                el.textContent = 'Slightly';
+                el.classList.add('armor-slightly');
             }
             else if (this.infoAC['overall'] === 1) {
-                $('#overall').html('Barely');
-                $('#overall').addClass('armor-barely');
+                el.textContent = 'Barely';
+                el.classList.add('armor-barely');
             }
             else {
-                $('#overall').html('UNARMORED');
-                $('#overall').addClass('armor-unarmored');
+                el.textContent = 'UNARMORED';
+                el.classList.add('armor-unarmored');
             }
         }
         else {
@@ -317,32 +320,32 @@ export class Status extends EventEmitter {
             if (this.info['hpmax'] !== 0 && !isNaN(this.info['hpmax']))
                 v *= this.info['hp'] / this.info['hpmax'];
             if (v > 90) {
-                $('#overall').html('Top shape');
-                $('#overall').addClass('health-full');
+                el.textContent = 'Top shape';
+                el.classList.add('health-full');
             }
             else if (v > 75) {
-                $('#overall').html('Decent shape');
-                $('#overall').addClass('health-1-19');
+                el.textContent = 'Decent shape';
+                el.classList.add('health-1-19');
             }
             else if (v > 60) {
-                $('#overall').html('Slightly injured');
-                $('#overall').addClass('health-20-39');
+                el.textContent = 'Slightly injured';
+                el.classList.add('health-20-39');
             }
             else if (v > 45) {
-                $('#overall').html('Hurting');
-                $('#overall').addClass('health-40-59');
+                el.textContent = 'Hurting';
+                el.classList.add('health-40-59');
             }
             else if (v > 30) {
-                $('#overall').html('Badly injured');
-                $('#overall').addClass('health-60-79');
+                el.textContent = 'Badly injured';
+                el.classList.add('health-60-79');
             }
             else if (v > 15) {
-                $('#overall').html('Terribly injured');
-                $('#overall').addClass('health-80-99');
+                el.textContent = 'Terribly injured';
+                el.classList.add('health-80-99');
             }
             else {
-                $('#overall').html('Near death');
-                $('#overall').addClass('health-100');
+                el.textContent = 'Near death';
+                el.classList.add('health-100');
             }
         }
     }
@@ -352,11 +355,11 @@ export class Status extends EventEmitter {
         $('#xp-banked').text(this.info['EXPERIENCE_BANKED']);
         if (this.info['EXPERIENCE_NEED'] < 0) {
             $('#need-value').text(this.client.options.allowNegativeNumberNeeded ? this.info['EXPERIENCE_NEED'] : 0);
-            this.updateBar('#need-percent', 100 - this.info['EXPERIENCE_NEED_P'], 100, this.client.options.allowNegativeNumberNeeded ? this.info['EXPERIENCE_NEED'].toString() : '0');
+            this.updateBar('need-percent', 100 - this.info['EXPERIENCE_NEED_P'], 100, this.client.options.allowNegativeNumberNeeded ? this.info['EXPERIENCE_NEED'].toString() : '0');
         }
         else {
             $('#need-value').text(this.info['EXPERIENCE_NEED']);
-            this.updateBar('#need-percent', 100 - this.info['EXPERIENCE_NEED_P'], 100, this.info['EXPERIENCE_NEED'].toString());
+            this.updateBar('need-percent', 100 - this.info['EXPERIENCE_NEED_P'], 100, this.info['EXPERIENCE_NEED'].toString());
         }
         $('#earn-value').text(this.info['EXPERIENCE_EARNED']);
     }
@@ -365,62 +368,60 @@ export class Status extends EventEmitter {
         limb = limb.replace(/\s/g, '');
         limb = limb.toLowerCase();
         if (limb === 'overall') {
-            this.updateOverall();
+            this.doUpdate(UpdateType.overall);
             return;
         }
         if (limb === 'righthoof')
             limb = 'rightfoot';
         else if (limb === 'lefthoof')
             limb = 'leftfoot';
-        const eLimb = $(document.getElementById(limb));
-        if (!eLimb || eLimb.length === 0)
+        const eLimb = document.getElementById(limb);
+        if (!eLimb)
             return;
-        eLimb.removeClass((index, className) => {
-            return (className.match(/(^|\s)(health-|armor-)\S+/g) || []).join(' ');
-        });
-        eLimb.css('display', 'block');
-        eLimb.css('visibility', 'visible');
+        eLimb.setAttribute('class', '');
+        eLimb.style.display = 'block';
+        eLimb.style.visibility = 'visible';
         if (this._ac) {
             if (this.infoAC[limb] === 6.5)
-                eLimb.addClass('armor-extensively');
+                eLimb.classList.add('armor-extensively');
             else if (this.infoAC[limb] === 6)
-                eLimb.addClass('armor-completely');
+                eLimb.classList.add('armor-completely');
             else if (this.infoAC[limb] === 5.5)
-                eLimb.addClass('armor-significantly');
+                eLimb.classList.add('armor-significantly');
             else if (this.infoAC[limb] === 5)
-                eLimb.addClass('armor-considerably');
+                eLimb.classList.add('armor-considerably');
             else if (this.infoAC[limb] === 4.5)
-                eLimb.addClass('armor-well');
+                eLimb.classList.add('armor-well');
             else if (this.infoAC[limb] === 4)
-                eLimb.addClass('armor-adequately');
+                eLimb.classList.add('armor-adequately');
             else if (this.infoAC[limb] === 3.5)
-                eLimb.addClass('armor-fairly');
+                eLimb.classList.add('armor-fairly');
             else if (this.infoAC[limb] === 3)
-                eLimb.addClass('armor-moderately');
+                eLimb.classList.add('armor-moderately');
             else if (this.infoAC[limb] === 2.5)
-                eLimb.addClass('armor-somewhat');
+                eLimb.classList.add('armor-somewhat');
             else if (this.infoAC[limb] === 2)
-                eLimb.addClass('armor-slightly');
+                eLimb.classList.add('armor-slightly');
             else if (this.infoAC[limb] === 1)
-                eLimb.addClass('armor-barely');
+                eLimb.classList.add('armor-barely');
             else
-                eLimb.addClass('armor-unarmored');
+                eLimb.classList.add('armor-unarmored');
         }
         else {
             if (this.infoLimb[limb] === 100)
-                eLimb.addClass('health-100');
+                eLimb.classList.add('health-100');
             else if (this.infoLimb[limb] >= 80)
-                eLimb.addClass('health-80-99');
+                eLimb.classList.add('health-80-99');
             else if (this.infoLimb[limb] >= 60)
-                eLimb.addClass('health-60-79');
+                eLimb.classList.add('health-60-79');
             else if (this.infoLimb[limb] >= 40)
-                eLimb.addClass('health-40-59');
+                eLimb.classList.add('health-40-59');
             else if (this.infoLimb[limb] >= 20)
-                eLimb.addClass('health-20-39');
+                eLimb.classList.add('health-20-39');
             else if (this.infoLimb[limb] >= 1)
-                eLimb.addClass('health-1-19');
+                eLimb.classList.add('health-1-19');
             else
-                eLimb.addClass('health-full');
+                eLimb.classList.add('health-full');
         }
     }
 
@@ -432,8 +433,7 @@ export class Status extends EventEmitter {
         else
             for (limb in this.infoLimb)
                 this.updateLimb(limb);
-        this.updateOverall();
-        this.updateXP();
+        this.doUpdate(UpdateType.overall | UpdateType.xp);
     }
 
     public init() {
@@ -472,48 +472,45 @@ export class Status extends EventEmitter {
         this.infoLimb['righthand'] = 0;
         this.infoLimb['rightleg'] = 0;
         this.infoLimb['torso'] = 0;
-
-        $('#leftwing').css('display', 'none');
-        $('#rightwing').css('display', 'none');
-        $('#tail').css('display', 'none');
-
-        this.updateBar('#hp-bar', 0, 0);
-        this.updateBar('#sp-bar', 0, 0);
-        this.updateBar('#mp-bar', 0, 0);
-        //this.ac = false;
-        $('#xp-value').text('0');
-        $('#xp-banked').text('0');
-        $('#need-value').text('0');
-        this.updateBar('#need-percent', 0, 0, '0');
-        $('#earn-value').text('0');
-        $('#combat').empty();
-        $('#party').empty();
-        $('#party').removeClass('hasmembers');
+        document.getElementById('leftwing').style.display = 'none';
+        document.getElementById('rightwing').style.display = 'none';
+        document.getElementById('tail').style.display = 'none';
+        this.updateBar('hp-bar', 0, 0);
+        this.updateBar('sp-bar', 0, 0);
+        this.updateBar('mp-bar', 0, 0);
+        document.getElementById('xp-value').textContent = '0';
+        document.getElementById('xp-banked').textContent = '0';
+        document.getElementById('need-value').textContent = '0';
+        document.getElementById('earn-value').textContent = '0';
+        this.updateBar('need-percent', 0, 0, '0');
+        this.clear('combat');
+        this.clear('party');
+        document.getElementById('earn-value').classList.remove('hasmembers');
         this.updateOverall();
         this.updateStatus();
     }
 
     public updateBar(id: string, value: number, max?: number, text?: string) {
-        const bar = $(id);
-        if (bar.length === 0)
+        const bar = document.getElementById(id);
+        if (!bar)
             return;
         else {
             let p = 100;
             if (max !== 0)
                 p = value / max * 100;
-            $(id + ' .progressbar-value').css('width', (100 - p));
-            $(id + ' .progressbar-text').text(text || (value + '/' + max));
+            bar.firstElementChild.textContent = text || (value + '/' + max);
+            (<HTMLElement>bar.lastElementChild).style.width = (100 - p) + '%';
         }
     }
 
-    public createBar(parent, id, label, value, max, icon?, order?) {
+    public createIconBar(parent, id, label, value, max, icon?, order?) {
         let p = 100;
         if (max !== 0)
             p = value / max * 100;
         p = Math.floor(p);
         id = id.replace(' ', '');
-        let bar: any = $('#' + id);
-        if (bar.length === 0) {
+        let bar: any = document.getElementById(id);
+        if (!bar) {
             if (!icon)
                 icon = label.replace(/\d+$/, '').trim().replace(' ', '-');
             bar = '<div class="combat-bar" id="' + id + '" data-value="' + ((100 - p) / 20 * 20) + '" data-order="' + order + '">';
@@ -523,46 +520,46 @@ export class Status extends EventEmitter {
             bar += '<div class="progressbar-value" style="width: ' + (100 - p) + '%"></div>';
             bar += '</div></div>';
             $(parent).append(bar);
-            this.sortBars($(parent));
+            this.doUpdate(parent === '#party' ? UpdateType.sortParty : UpdateType.sortCombat);
         }
         else {
-            if (order !== bar.data('order')) {
-                bar.data('order', order);
-                this.sortBars($(parent));
+            if (order !== +bar.getAttribute('data-order')) {
+                bar.setAttribute('data-order', order);
+                this.doUpdate(parent === '#party' ? UpdateType.sortParty : UpdateType.sortCombat);
             }
-            bar.data('value', (100 - p) / 20 * 20);
-            bar.find('.combat-name').text(label);
-            bar.find('.progressbar-text').text(p + '%');
-            bar.find('.progressbar-value').css('width', 100 - p);
+            bar.setAttribute('data-value', (100 - p) / 20 * 20);
+            bar.children[1].textContent = label;
+            p = value / max * 100;
+            bar.lastElementChild.firstElementChild.textContent = Math.ceil(p) + '%';
+            (<HTMLElement>bar.lastElementChild.lastElementChild).style.width = (100 - p) + '%';
         }
     }
 
-    public removeBar(id) {
-        $(id).remove();
-        this.sortBars($(id).parent());
+    public removeBar(id, party?) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.parentNode.removeChild(el);
+        this.doUpdate(party ? UpdateType.sortParty : UpdateType.sortCombat);
     }
 
     public sortBars(p) {
         const listItems = p.children('div').get();
         listItems.sort((a, b) => {
-            //let compA = $(a).text().toUpperCase();
-            //let compB = $(b).text().toUpperCase();
-            const compA = $(a).data('order');
-            const compB = $(b).data('order');
+            const compA = +a.getAttribute('data-order');
+            const compB = +b.getAttribute('data-order');
             return (compA < compB) ? -1 : (compA > compB) ? 1 : 0;
         });
         $.each(listItems, (idx, itm) => { p.append(itm); });
     }
 
     public updateLagMeter(lag: number, force?: boolean) {
-        if (!this.lagMeter || this.lagMeter.length === 0) return;
+        if (!this.lagMeter) return;
         if (!this.client.options.lagMeter && !force) return;
         let p = 100;
         p = lag / 200 * 100;
         if (p > 100) p = 100;
-
-        this.lagMeter.find('.progressbar-value').css('width', (100 - p) + '%');
-        this.lagMeter.find('.progressbar-text').text((lag / 1000) + 's');
+        (<HTMLElement>this.lagMeter.lastElementChild).style.width = (100 - p) + '%';
+        this.lagMeter.firstElementChild.textContent = (lag / 1000) + 's';
     }
 
     public updateInterface() {
@@ -674,17 +671,54 @@ export class Status extends EventEmitter {
         $('#bars').css('top', (parseInt($('#bars').css('top'), 10) || 0) + top);
 
         $('#bars').css('bottom', '');
-        if (this.lagMeter && this.lagMeter.length > 0) {
+        if (this.lagMeter) {
             if (this.client.options.lagMeter) {
-                this.lagMeter.css('visibility', '');
-                this.lagMeter.css('display', '');
-                $('#bars').css('bottom', this.lagMeter.outerHeight() + (parseInt(this.lagMeter.css('bottom'), 10) || 0) + (parseInt($('#bars').css('bottom'), 10) || 0) + 'px');
+                this.lagMeter.style.visibility = '';
+                this.lagMeter.style.display = '';
+                $('#bars').css('bottom', this.lagMeter.offsetHeight + (parseInt(this.lagMeter.style.bottom, 10) || 0) + (parseInt($('#bars').css('bottom'), 10) || 0) + 'px');
                 this.updateLagMeter(0, true);
             }
             else {
-                this.lagMeter.css('visibility', 'hidden');
-                this.lagMeter.css('display', 'none');
+                this.lagMeter.style.visibility = 'hidden';
+                this.lagMeter.style.display = 'none';
             }
+        }
+    }
+
+    private doUpdate(type?: UpdateType) {
+        if (!type) return;
+        this._updating |= type;
+        if (this._updating === UpdateType.none)
+            return;
+        window.requestAnimationFrame(() => {
+            if ((this._updating & UpdateType.status) === UpdateType.status) {
+                this.updateStatus();
+                this._updating &= ~UpdateType.status;
+            }
+            if ((this._updating & UpdateType.sortCombat) === UpdateType.sortCombat) {
+                this.sortBars($('#combat'));
+                this._updating &= ~UpdateType.sortCombat;
+            }
+            if ((this._updating & UpdateType.sortParty) === UpdateType.sortParty) {
+                this.sortBars($('#party'));
+                this._updating &= ~UpdateType.sortParty;
+            }
+            if ((this._updating & UpdateType.overall) === UpdateType.overall) {
+                this.updateOverall();
+                this._updating &= ~UpdateType.overall;
+            }
+            if ((this._updating & UpdateType.xp) === UpdateType.xp) {
+                this.updateXP();
+                this._updating &= ~UpdateType.xp;
+            }
+            this.doUpdate(this._updating);
+        });
+    }
+
+    private clear(id) {
+        const el = document.getElementById(id);
+        while (el.firstChild) {
+            el.removeChild(el.firstChild);
         }
     }
 }
