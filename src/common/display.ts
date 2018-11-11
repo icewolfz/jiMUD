@@ -1315,7 +1315,12 @@ export class Display extends EventEmitter {
             this._maxLineLength = data.line.length;
         this.lineIDs.push(this._lineID);
         t = this.calculateSize(this.lines.length - 1);
-        this._lines.push({ height: t.height, top: 0, width: t.width, images: 0 });
+        if (this.lines.length > 0)
+            t.top = this._lines[this.lines.length - 1].top = this._lines[this.lines.length - 1].top + this._lines[this.lines.length - 1].height;
+        else
+            t.top = 0;
+        this._height += t.height;
+        this._lines.push({ height: t.height, top: t.op, width: t.width, images: 0 });
         this._lineID++;
         if (t.width > this._maxWidth)
             this._maxWidth = this._lines[this._lines.length - 1].width;
@@ -1787,7 +1792,6 @@ export class Display extends EventEmitter {
         let height = 0;
         const len = formats.length;
         const cw = this._charWidth;
-        let right = false;
         const id = this.lineIDs[idx];
         let width = 0;
         let iWidth = 0;
@@ -1811,7 +1815,7 @@ export class Display extends EventEmitter {
                 eText = text.substring(offset, end);
                 font = 0;
                 if (format.font || format.size) {
-                    height = Math.max(height, format.height = this.textHeight(eText, format.font, format.size));
+                    height = (Math.max(height, format.height = format.height || this.textHeight(eText, format.font, format.size)));
                     format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
                 }
                 else if (format.unicode)
@@ -1851,10 +1855,7 @@ export class Display extends EventEmitter {
                 eText = '';
                 switch (format.align.toLowerCase()) {
                     case 'left':
-                        iWidth += format.width || 0 + (format.marginWidth || 0);
-                        break;
                     case 'right':
-                        right = true;
                         iWidth += format.width || 0 + (format.marginWidth || 0);
                         break;
                     default:
@@ -1862,6 +1863,7 @@ export class Display extends EventEmitter {
                 }
 
                 if (!format.width) {
+                    this._lines[idx].images++;
                     const img = new Image();
                     img.src = eText;
                     img.dataset.id = '' + id;
@@ -1873,6 +1875,7 @@ export class Display extends EventEmitter {
                     this._el.appendChild(img);
                     img.onload = () => {
                         const lIdx = this.lineIDs.indexOf(+img.dataset.id);
+                        this._lines[lIdx].images--;
                         if (lIdx === -1 || lIdx >= this.lines.length) return;
                         const fIdx = +img.dataset.f;
                         const fmt = this.lineFormats[lIdx][fIdx];
@@ -1889,12 +1892,16 @@ export class Display extends EventEmitter {
                         const bounds = img.getBoundingClientRect();
                         fmt.width = bounds.width || img.width;
                         fmt.height = bounds.height || img.height;
-                        img.remove();
+                        this._el.removeChild(img);
                         if (this._viewCache[lIdx])
                             delete this._viewCache[lIdx];
+                        if (this._lines[lIdx].images !== 0) return;
                         const t = this.calculateSize(lIdx);
+                        this._height -= this._lines[idx].height;
                         this._lines[idx].width = t.width;
                         this._lines[idx].height = t.height;
+                        this._height += t.height;
+                        this.updateTops(idx);
                     };
                 }
                 if (format.marginHeight)
@@ -2829,7 +2836,6 @@ export class Display extends EventEmitter {
                         const lIdx = this.lineIDs.indexOf(+img.dataset.id);
                         this._lines[lIdx].images--;
                         if (lIdx === -1 || lIdx >= this.lines.length) return;
-                        const pHeight = this._lines[lIdx].height;
                         const fIdx = +img.dataset.f;
                         const fmt = this.lineFormats[lIdx][fIdx];
                         if (fmt.w.length > 0 && fmt.h.length > 0) {
@@ -2876,10 +2882,6 @@ export class Display extends EventEmitter {
                     height = Math.max(height, format.height || 0);
             }
         }
-        this._lines[idx].height = height || this._charHeight;
-        this._lines[idx].width = left + iWidth;
-        if (idx > 0)
-            this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
         if (height) {
             if (right)
                 return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;min-width:{view}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;min-width:{view}px;">${back.join('')}<br></span>`];
