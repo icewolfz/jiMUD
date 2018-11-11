@@ -235,6 +235,7 @@ export class Display extends EventEmitter {
                 this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                 this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                 this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
+                this.doUpdate(UpdateType.view);
             };
             this.split.updateView = () => {
                 if (this._HScroll.size !== this.split.bottom) {
@@ -338,7 +339,7 @@ export class Display extends EventEmitter {
 
                     h = (h / this._el.clientHeight * 100);
                     this.split.style.height = h + '%';
-                    this.doUpdate(UpdateType.scrollView);
+                    this.doUpdate(UpdateType.scrollView | UpdateType.view);
                 }
                 this.emit('split-move', h);
             };
@@ -1213,7 +1214,10 @@ export class Display extends EventEmitter {
         this._overlay.style.width = mw + 'px';
 
         this._viewRange.start = Math.trunc(this._VScroll.position / this._charHeight);
-        this._viewRange.end = Math.ceil((this._VScroll.position + this._innerHeight) / this._charHeight);
+        if (this.split && this.split.shown)
+            this._viewRange.end = Math.ceil((this._VScroll.position + this._innerHeight - this.split.clientHeight) / this._charHeight);
+        else
+            this._viewRange.end = Math.ceil((this._VScroll.position + this._innerHeight) / this._charHeight);
 
         if (this._viewRange.start < 0)
             this._viewRange.start = 0;
