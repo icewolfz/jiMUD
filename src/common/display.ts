@@ -2769,7 +2769,7 @@ export class Display extends EventEmitter {
         let bStyle: any = '';
         let fStyle: any = '';
         let fCls: any = '';
-        let height = 0;
+        const ch = this._charHeight;
         const len = formats.length;
         let left = 0;
         let right = false;
@@ -2911,7 +2911,7 @@ export class Display extends EventEmitter {
                 if (format.height)
                     tmp.push('height:', format.height, 'px;');
                 else if (format.h.length > 0)
-                    tmp.push('height:', formatUnit(format.h, this._charHeight), ';');
+                    tmp.push('height:', formatUnit(format.h, ch), ';');
 
                 switch (format.align.toLowerCase()) {
                     case 'left':
@@ -2934,29 +2934,20 @@ export class Display extends EventEmitter {
                         break;
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0)
-                    tmp.push('margin:', formatUnit(format.vspace), ' ', formatUnit(format.hspace, this._charHeight), ';');
+                    tmp.push('margin:', formatUnit(format.vspace), ' ', formatUnit(format.hspace, ch), ';');
                 else if (format.hspace.length > 0)
-                    tmp.push('margin: 0px ', formatUnit(format.hspace, this._charHeight), ';');
+                    tmp.push('margin: 0px ', formatUnit(format.hspace, ch), ';');
                 else if (format.vspace.length > 0)
                     tmp.push('margin:', formatUnit(format.vspace), ' 0px;');
                 tmp.push('"');
                 back.push(tmp.join(''), ` src="./../assets/blank.png"/>`);
                 if (format.ismap) tmp.push(' ismap onclick="return false;"');
                 fore.push(tmp.join(''), ` src="${eText}"/>`);
-                if (format.marginHeight)
-                    height = Math.max(height, format.height + format.marginHeight);
-                else
-                    height = Math.max(height, format.height || 0);
             }
         }
-        if (height) {
-            if (right)
-                return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;min-width:${mv}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;min-width:${mv}px;">${back.join('')}<br></span>`];
-            return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${height}px;">${back.join('')}<br></span>`];
-        }
         if (right)
-            return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;min-width:${mv}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;min-width:${mv}px;">${back.join('')}<br></span>`];
-        return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;">${back.join('')}<br></span>`];
+            return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${this._lines[idx].height}px;min-width:${mv}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${this._lines[idx].height}px;min-width:${mv}px;">${back.join('')}<br></span>`];
+        return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${this._lines[idx].height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${this._lines[idx].height}px;">${back.join('')}<br></span>`];
     }
 
     public getLineHTML(idx?: number, start?: number, len?: number) {
