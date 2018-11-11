@@ -408,8 +408,10 @@
         if (!fontSize || fontSize.length === 0)
             fontSize = '1em';
         logPath = parseTemplate(set.logPath);
-        if (display)
+        if (display) {
             display.updateFont(font, fontSize);
+            display.enableDebug = set.enableDebug;
+        }
 
         var keys = Object.keys(_viewers);
         var k = keys.length;

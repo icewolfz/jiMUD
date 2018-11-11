@@ -43,7 +43,7 @@ export class Status extends EventEmitter {
             this.info['EXPERIENCE_NEED'] = this.info['EXPERIENCE_NEED_RAW'] - this.info['EXPERIENCE'];
         });
 
-        this.client.on('received-GMCP', (mod, obj) => {
+        this.client.on('received-GMCP', async (mod, obj) => {
             let limb;
             switch (mod.toLowerCase()) {
                 case 'char.base':

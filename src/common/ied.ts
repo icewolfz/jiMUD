@@ -142,7 +142,7 @@ export class IED extends EventEmitter {
         };
     }
 
-    public processGMCP(mod: string, obj) {
+    public async processGMCP(mod: string, obj) {
         const mods = mod.split('.');
         let item;
         if (mods.length < 2 || mods[0] !== 'IED') return;
@@ -440,9 +440,7 @@ export class IED extends EventEmitter {
         this._gmcp.shift();
         if (this._gmcp.length > 0) {
             const iTmp = this._gmcp.shift();
-            setTimeout(() => {
-                this.processGMCP(iTmp[0], iTmp[1]);
-            }, 0);
+            this.processGMCP(iTmp[0], iTmp[1]);
         }
     }
 
