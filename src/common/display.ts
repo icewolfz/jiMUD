@@ -2578,9 +2578,8 @@ export class Display extends EventEmitter {
         let bStyle = { color: '', background: '' };
         let fStyle = { color: '', background: '' };
         let fCls;
-        const height = this._charHeight;
+        const ch = this._charHeight;
         const len = formats.length;
-        const cw = this._charWidth;
         let left = 0;
         const id = this.lineIDs[idx];
         let right = false;
@@ -2846,8 +2845,8 @@ export class Display extends EventEmitter {
                     bEl.style.height = format.height + 'px';
                 }
                 else if (format.w.length > 0) {
-                    fEl.style.height = formatUnit(format.h, this._charHeight);
-                    bEl.style.height = formatUnit(format.h, this._charHeight);
+                    fEl.style.height = formatUnit(format.h, ch);
+                    bEl.style.height = formatUnit(format.h, ch);
                 }
 
                 switch (format.align.toLowerCase()) {
@@ -2868,20 +2867,20 @@ export class Display extends EventEmitter {
                         break;
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0) {
-                    fEl.style.margin = formatUnit(format.vspace) + ' ' + formatUnit(format.hspace, this._charHeight);
-                    bEl.style.margin = formatUnit(format.vspace) + ' ' + formatUnit(format.hspace, this._charHeight);
+                    fEl.style.margin = formatUnit(format.vspace) + ' ' + formatUnit(format.hspace, ch);
+                    bEl.style.margin = formatUnit(format.vspace) + ' ' + formatUnit(format.hspace, ch);
                 }
                 else if (format.hspace.length > 0) {
-                    fEl.style.margin = '0px ' + formatUnit(format.hspace, this._charHeight);
-                    bEl.style.margin = '0px ' + formatUnit(format.hspace, this._charHeight);
+                    fEl.style.margin = '0px ' + formatUnit(format.hspace, ch);
+                    bEl.style.margin = '0px ' + formatUnit(format.hspace, ch);
                 }
                 else if (format.vspace.length > 0) {
                     fEl.style.margin = formatUnit(format.vspace) + ' 0px';
                     fEl.style.margin = formatUnit(format.vspace) + ' 0px';
                 }
                 //TODO remove max-height when variable height supported
-                fEl.style.maxHeight = height + 'px';
-                bEl.style.maxHeight = height + 'px';
+                fEl.style.maxHeight = ch + 'px';
+                bEl.style.maxHeight = ch + 'px';
                 if (format.ismap) {
                     fEl.ismap = true;
                     fEl.onclick = () => false;
