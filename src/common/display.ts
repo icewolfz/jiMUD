@@ -1324,8 +1324,9 @@ export class Display extends EventEmitter {
         const idx = this.lines.length - 1;
         this._lines.push({ height: 0, top: 0, width: 0, images: 0 });
         t = this.calculateSize(idx);
-        this._lines[idx].width = t.width || 0;
-        this._lines[idx].height = t.height || 0;
+        this.buildLineExpires(idx);
+        this._lines[idx].height = t.height;
+        this._lines[idx].width = t.width;
         if (idx - 1 >= 0)
             this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
         this._height += t.height;
@@ -1802,8 +1803,6 @@ export class Display extends EventEmitter {
         const len = formats.length;
         const cw = this._charWidth;
         const id = this.lineIDs[idx];
-        const mv = this._maxView;
-        const mw = this._maxWidth;
         let width = 0;
         let font: any = 0;
         for (let f = 0; f < len; f++) {
@@ -1942,6 +1941,38 @@ export class Display extends EventEmitter {
             width += format.width || 0;
         }
         return { width: width, height: height || this._charHeight };
+    }
+
+    private buildLineExpires(idx) {
+        if (idx === undefined)
+            idx = this.lines.length - 1;
+        const formats = this.lineFormats[idx];
+        for (const ol in this._expire) {
+            if (!this._expire.hasOwnProperty(ol))
+                continue;
+            if (this._expire[ol][idx])
+                delete this._expire[ol][idx];
+        }
+        delete this._expire2[idx];
+        let f = formats.length;
+        let format;
+        while (f--) {
+            format = formats[f];
+            if (format.formatType === FormatType.MXPSend || format.formatType === FormatType.MXPLink) {
+                if (format.expire && format.expire.length > 0) {
+                    if (!this._expire[format.expire])
+                        this._expire[format.expire] = [];
+                    if (!this._expire[format.expire][idx])
+                        this._expire[format.expire][idx] = [];
+                    this._expire[format.expire][idx].push(f);
+                }
+                else {
+                    if (!this._expire2[idx])
+                        this._expire2[idx] = [];
+                    this._expire2[idx].push(f);
+                }
+            }
+        }
     }
 
     public clearOverlay(type?: string) {
@@ -2620,18 +2651,9 @@ export class Display extends EventEmitter {
         const len = formats.length;
         const cw = this._charWidth;
         let left = 0;
-        let ol;
-        let iWidth = 0;
         let right = false;
         const indent = this._indent * this._charWidth;
         const id = this.lineIDs[idx];
-        for (ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol))
-                continue;
-            if (this._expire[ol][idx])
-                delete this._expire[ol][idx];
-        }
-        delete this._expire2[idx];
         let f;
         const wLines: WrapLine[] = [
             {
@@ -2858,18 +2880,6 @@ export class Display extends EventEmitter {
                 fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
                 fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="', format.href, '" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onclick="', this.mxpLinkFunction, '(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
-                if (format.expire && format.expire.length > 0) {
-                    if (!this._expire[format.expire])
-                        this._expire[format.expire] = [];
-                    if (!this._expire[format.expire][idx])
-                        this._expire[format.expire][idx] = [];
-                    this._expire[format.expire][idx].push(f);
-                }
-                else {
-                    if (!this._expire2[idx])
-                        this._expire2[idx] = [];
-                    this._expire2[idx].push(f);
-                }
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
@@ -2881,20 +2891,7 @@ export class Display extends EventEmitter {
                 left += format.width;
             }
             else if (format.formatType === FormatType.MXPSend) {
-                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '"');
-                if (format.expire && format.expire.length > 0) {
-                    if (!this._expire[format.expire])
-                        this._expire[format.expire] = [];
-                    if (!this._expire[format.expire][idx])
-                        this._expire[format.expire][idx] = [];
-                    this._expire[format.expire][idx].push(f);
-                }
-                else {
-                    if (!this._expire2[idx])
-                        this._expire2[idx] = [];
-                    this._expire2[idx].push(f);
-                }
-                fore.push(' onmouseover="', this.mxpTooltipFunction, '(this);"', ' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ', ', format.prompt ? 1 : 0, ', ', format.tt.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ');return false;">');
+                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onmouseover="', this.mxpTooltipFunction, '(this);"', ' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ', ', format.prompt ? 1 : 0, ', ', format.tt.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
@@ -2942,12 +2939,10 @@ export class Display extends EventEmitter {
                 switch (format.align.toLowerCase()) {
                     case 'left':
                         tmp.push('float:left;');
-                        iWidth += format.width || 0 + (format.marginWidth || 0);
                         break;
                     case 'right':
                         tmp.push('float:right;');
                         right = true;
-                        iWidth += format.width || 0 + (format.marginWidth || 0);
                         break;
                     case 'top':
                     case 'middle':
@@ -2967,8 +2962,8 @@ export class Display extends EventEmitter {
                     tmp.push('margin: 0px ', formatUnit(format.hspace, this._charHeight), ';');
                 else if (format.vspace.length > 0)
                     tmp.push('margin:', formatUnit(format.vspace), ' 0px;');
-                back.push(tmp.join(''), `" src="./../assets/blank.png"/>`);
                 tmp.push('"');
+                back.push(tmp.join(''), ` src="./../assets/blank.png"/>`);
                 if (format.ismap) tmp.push(' ismap onclick="return false;"');
                 fore.push(tmp.join(''), ` src="${eText}"/>`);
                 if (format.marginHeight)
