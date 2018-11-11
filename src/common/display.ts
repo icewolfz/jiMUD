@@ -9,7 +9,7 @@
 import { Size, ParserLine, FormatType, FontStyle } from './types';
 import EventEmitter = require('events');
 import { Parser } from './parser';
-import { htmlEncode, formatUnit } from './library';
+import { htmlEncode, formatUnit, stripQuotes } from './library';
 import { Finder } from './finder';
 import { DisplayOptions, OverlayRange } from './types';
 
@@ -2583,10 +2583,10 @@ export class Display extends EventEmitter {
         const cw = this._charWidth;
         let left = 0;
         const id = this.lineIDs[idx];
-        const right = false;
+        let right = false;
 
-        const parentBack = back;
-        const parentFore = fore;
+        let parentBack = back;
+        let parentFore = fore;
         let fEl;
         let bEl;
         let child;
@@ -2637,15 +2637,8 @@ export class Display extends EventEmitter {
                     if (format.font || format.size) {
                         if (format.font) fStyle.push('font-family: ', format.font, ';');
                         if (format.size) fStyle.push('font-size: ', format.size, ';');
-                        format.height = || format.height this.textHeight(eText, format.font, format.size);
-                        format.width = || format.width this.textWidth(eText, `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
                     }
-                    else
                     */
-                    if (format.unicode)
-                        format.width = format.width || this.textWidth(eText);
-                    else
-                        format.width = format.width || eText.length * cw;
 
                     if (format.style !== FontStyle.None) {
                         if ((format.style & FontStyle.Bold) === FontStyle.Bold)
@@ -2680,6 +2673,8 @@ export class Display extends EventEmitter {
                 if (format.hr) {
                     fEl.style.left = 0;
                     fEl.style.width = mw + 'px';
+                    bEl.style.left = 0;
+                    bEl.style.width = mw + 'px';
                     child = document.createElement('div');
                     child.classList.add('hr');
                     child.style.backgroundColor = (typeof format.color === 'number' ? this._parser.GetColor(format.color) : format.color);
@@ -2696,18 +2691,36 @@ export class Display extends EventEmitter {
                 parentBack.appendChild(bEl);
                 parentFore.appendChild(fEl);
             }
-            /*
             else if (format.formatType === FormatType.Link) {
-                fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href.replace(/"/g, '&quot;'), '" onclick="', this.linkFunction, '(\'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
+                fEl = document.createElement('a');
+                fEl.classList.add('URLLink');
+                fEl.href = 'javascript:void(0)';
+                fEl.title = format.href;
+                fEl.draggable = false;
+                fEl.dataset.href = format.href;
+                fEl.onclick = (e) => {
+                    window[this.linkFunction](e.currentTarget.dataset.href);
+                    return false;
+                };
+                parentFore.appendChild(fEl);
+                parentFore = fEl;
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
-                else
-                    format.width = format.width || eText.length * cw;
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                bEl = document.createElement('span');
+                Object.assign(bEl.style, bStyle);
+                fEl = document.createElement('span');
+                Object.assign(fEl.style, fStyle);
+                if (fCls.length !== 0)
+                    fEl.classList.add(...fCls);
+                bEl.style.left = `${left}px`;
+                bEl.style.width = `${format.width}px`;
+                fEl.style.left = `${left}px`;
+                fEl.style.width = `${format.width}px`;
+                fEl.textContent = eText;
                 left += format.width;
+                parentBack.appendChild(bEl);
+                parentFore.appendChild(fEl);
+
             }
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
                 parentFore = parentFore.parentElement || fore;
@@ -2716,42 +2729,94 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.WordBreak)
                 parentFore.appendChild(document.createElement('wbr'));
             else if (format.formatType === FormatType.MXPLink) {
-                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="', format.href, '" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onclick="', this.mxpLinkFunction, '(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
+                fEl = document.createElement('a');
+                fEl.classList.add('MXPLink');
+                fEl.href = 'javascript:void(0)';
+                fEl.title = format.hint;
+                fEl.draggable = false;
+                fEl.dataset.href = format.href;
+                fEl.onclick = (e) => {
+                    window[this.mxpLinkFunction](e.currentTarget.dataset.href);
+                    return false;
+                };
+                parentFore.appendChild(fEl);
+                parentFore = fEl;
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
-                else
-                    format.width = format.width || eText.length * cw;
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                bEl = document.createElement('span');
+                Object.assign(bEl.style, bStyle);
+                fEl = document.createElement('span');
+                Object.assign(fEl.style, fStyle);
+                if (fCls.length !== 0)
+                    fEl.classList.add(...fCls);
+                bEl.style.left = `${left}px`;
+                bEl.style.width = `${format.width}px`;
+                fEl.style.left = `${left}px`;
+                fEl.style.width = `${format.width}px`;
+                fEl.textContent = eText;
                 left += format.width;
+                parentBack.appendChild(bEl);
+                parentFore.appendChild(fEl);
             }
             else if (format.formatType === FormatType.MXPSend) {
-                fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onmouseover="', this.mxpTooltipFunction, '(this);"', ' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ', ', format.prompt ? 1 : 0, ', ', format.tt.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ');return false;">');
+                fEl = document.createElement('a');
+                fEl.classList.add('MXPLink');
+                fEl.href = 'javascript:void(0)';
+                fEl.title = format.hint;
+                fEl.draggable = false;
+                fEl.dataset.href = format.href || '';
+                fEl.dataset.prompt = format.prompt ? '1' : '0';
+                fEl.dataset.tt = format.tt || '';
+                fEl.onclick = (e) => {
+                    let data = e.currentTarget.dataset.href;
+                    data = data.startsWith('[') ? data.substr(1, data.length - 2).splitQuote(',', 1).map(s => stripQuotes(s)) : stripQuotes(data);
+                    let tt = e.currentTarget.dataset.tt;
+                    tt = tt.startsWith('[') ? tt.splitQuote(',', 1) : stripQuotes(tt);
+
+                    window[this.mxpSendFunction](e || window.event, e.currentTarget || e.target, data, e.currentTarget.dataset.prompt === '1' ? 1 : 0, tt);
+                    return false;
+                };
+                fEl.onmouseover = (e) => {
+                    window[this.mxpTooltipFunction](e.currentTarget || e.target);
+                };
+                parentFore.appendChild(fEl);
+                parentFore = fEl;
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
-                else
-                    format.width = format.width || eText.length * cw;
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" ></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                bEl = document.createElement('span');
+                Object.assign(bEl.style, bStyle);
+                fEl = document.createElement('span');
+                Object.assign(fEl.style, fStyle);
+                if (fCls.length !== 0)
+                    fEl.classList.add(...fCls);
+                bEl.style.left = `${left}px`;
+                bEl.style.width = `${format.width}px`;
+                fEl.style.left = `${left}px`;
+                fEl.style.width = `${format.width}px`;
+                fEl.textContent = eText;
                 left += format.width;
+                parentBack.appendChild(bEl);
+                parentFore.appendChild(fEl);
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 eText = text.substring(offset, end);
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
-                else
-                    format.width = format.width || eText.length * cw;
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                bEl = document.createElement('span');
+                Object.assign(bEl.style, bStyle);
+                fEl = document.createElement('span');
+                Object.assign(fEl.style, fStyle);
+                if (fCls.length !== 0)
+                    fEl.classList.add(...fCls);
+                bEl.style.left = `${left}px`;
+                bEl.style.width = `${format.width}px`;
+                fEl.style.left = `${left}px`;
+                fEl.style.width = `${format.width}px`;
+                fEl.textContent = eText;
                 left += format.width;
+                parentBack.appendChild(bEl);
+                parentFore.appendChild(fEl);
             }
             else if (format.formatType === FormatType.Image) {
                 eText = '';
-                const tmp = ['<img style="'];
                 if (format.url.length > 0) {
                     eText += format.url;
                     if (!format.url.endsWith('/'))
@@ -2763,43 +2828,67 @@ export class Display extends EventEmitter {
                         eText += '/';
                 }
                 eText += format.name;
-                if (format.width)
-                    tmp.push('width:', format.width, 'px;');
-                else if (format.w.length > 0)
-                    tmp.push('width:', formatUnit(format.w), ';');
+                fEl = document.createElement('img');
+                bEl = document.createElement('img');
+                fEl.src = eText;
+                bEl.src = './../assets/blank.png';
+                if (format.width) {
+                    fEl.style.width = format.width + 'px';
+                    bEl.style.width = format.width + 'px';
+                }
+                else if (format.w.length > 0) {
+                    fEl.style.width = formatUnit(format.w);
+                    bEl.style.width = formatUnit(format.w);
+                }
 
-                if (format.height)
-                    tmp.push('height:', format.height, 'px;');
-                else if (format.h.length > 0)
-                    tmp.push('height:', formatUnit(format.h, this._charHeight), ';');
+                if (format.height) {
+                    fEl.style.height = format.height + 'px';
+                    bEl.style.height = format.height + 'px';
+                }
+                else if (format.w.length > 0) {
+                    fEl.style.height = formatUnit(format.h, this._charHeight);
+                    bEl.style.height = formatUnit(format.h, this._charHeight);
+                }
 
                 switch (format.align.toLowerCase()) {
                     case 'left':
-                        tmp.push('float:left;');
+                        fEl.style.cssFloat = 'left';
+                        bEl.style.cssFloat = 'left';
                         break;
                     case 'right':
-                        tmp.push('float:right;');
+                        fEl.style.cssFloat = 'right';
+                        bEl.style.cssFloat = 'right';
                         right = true;
                         break;
                     case 'top':
                     case 'middle':
                     case 'bottom':
-                        tmp.push('vertical-align:', format.align, ';');
+                        fEl.style.verticalAlign = format.align;
+                        bEl.style.verticalAlign = format.align;
                         break;
                 }
-                if (format.hspace.length > 0 && format.vspace.length > 0)
-                    tmp.push('margin:', formatUnit(format.vspace), ' ', formatUnit(format.hspace, this._charHeight), ';');
-                else if (format.hspace.length > 0)
-                    tmp.push('margin: 0px ', formatUnit(format.hspace, this._charHeight), ';');
-                else if (format.vspace.length > 0)
-                    tmp.push('margin:', formatUnit(format.vspace), ' 0px;');
+                if (format.hspace.length > 0 && format.vspace.length > 0) {
+                    fEl.style.margin = formatUnit(format.vspace) + ' ' + formatUnit(format.hspace, this._charHeight);
+                    bEl.style.margin = formatUnit(format.vspace) + ' ' + formatUnit(format.hspace, this._charHeight);
+                }
+                else if (format.hspace.length > 0) {
+                    fEl.style.margin = '0px ' + formatUnit(format.hspace, this._charHeight);
+                    bEl.style.margin = '0px ' + formatUnit(format.hspace, this._charHeight);
+                }
+                else if (format.vspace.length > 0) {
+                    fEl.style.margin = formatUnit(format.vspace) + ' 0px';
+                    fEl.style.margin = formatUnit(format.vspace) + ' 0px';
+                }
                 //TODO remove max-height when variable height supported
-                tmp.push('max-height:', '' + height, 'px;"');
-                back.push(tmp.join(''), ` src="./../assets/blank.png"/>`);
-                if (format.ismap) tmp.push(' ismap onclick="return false;"');
-                fore.push(tmp.join(''), ` src="${eText}"/>`);
+                fEl.style.maxHeight = height + 'px';
+                bEl.style.maxHeight = height + 'px';
+                if (format.ismap) {
+                    fEl.ismap = true;
+                    fEl.onclick = () => false;
+                }
+                parentBack.appendChild(bEl);
+                parentFore.appendChild(fEl);
             }
-            */
         }
         fore.appendChild(document.createElement('br'));
         back.appendChild(document.createElement('br'));
