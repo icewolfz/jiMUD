@@ -2542,9 +2542,9 @@ export class Display extends EventEmitter {
         let bStyle: any = '';
         let fStyle: any = '';
         let fCls: any = '';
-        const height = this._charHeight;
+        const height = this._lines[idx].height;
+        const ch = this._charHeight;
         const len = formats.length;
-        const cw = this._charWidth;
         let left = 0;
         const id = this.lineIDs[idx];
         let right = false;
@@ -2687,7 +2687,7 @@ export class Display extends EventEmitter {
                 if (format.height)
                     tmp.push('height:', format.height, 'px;');
                 else if (format.h.length > 0)
-                    tmp.push('height:', formatUnit(format.h, this._charHeight), ';');
+                    tmp.push('height:', formatUnit(format.h, ch), ';');
 
                 switch (format.align.toLowerCase()) {
                     case 'left':
@@ -2704,9 +2704,9 @@ export class Display extends EventEmitter {
                         break;
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0)
-                    tmp.push('margin:', formatUnit(format.vspace), ' ', formatUnit(format.hspace, this._charHeight), ';');
+                    tmp.push('margin:', formatUnit(format.vspace), ' ', formatUnit(format.hspace, ch), ';');
                 else if (format.hspace.length > 0)
-                    tmp.push('margin: 0px ', formatUnit(format.hspace, this._charHeight), ';');
+                    tmp.push('margin: 0px ', formatUnit(format.hspace, ch), ';');
                 else if (format.vspace.length > 0)
                     tmp.push('margin:', formatUnit(format.vspace), ' 0px;');
                 //TODO remove max-height when variable height supported
@@ -2717,8 +2717,8 @@ export class Display extends EventEmitter {
             }
         }
         if (right)
-            return [`<span data-id="${id}" style="top:${idx * this._charHeight}px;min-width:${mv}px;">${fore.join('')}<br></span>`, `<span style="top:${idx * this._charHeight}px;min-width:${mv}px;">${back.join('')}<br></span>`];
-        return [`<span data-id="${id}" style="top:${idx * this._charHeight}px;">${fore.join('')}<br></span>`, `<span style="top:${idx * this._charHeight}px;">${back.join('')}<br></span>`];
+            return [`<span data-id="${id}" style="top:${idx * ch}px;min-width:${mv}px;">${fore.join('')}<br></span>`, `<span style="top:${idx * ch}px;min-width:${mv}px;">${back.join('')}<br></span>`];
+        return [`<span data-id="${id}" style="top:${idx * ch}px;">${fore.join('')}<br></span>`, `<span style="top:${idx * ch}px;">${back.join('')}<br></span>`];
     }
 
     public getLineHTML(idx?: number, start?: number, len?: number) {
