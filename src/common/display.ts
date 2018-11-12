@@ -3499,11 +3499,15 @@ export class ScrollBar extends EventEmitter {
      *
      * @memberof ScrollBar
      */
-    public resize(bar?) {
+    public resize(bar?, contentSize?, parentSize?) {
         const bottom = this.atBottom;
         if (this._type === ScrollType.horizontal) {
-            this._contentSize = this._content.clientWidth + this._padding[1] + this._padding[3];
-            this._parentSize = this._parent.clientWidth - this.offset;
+            if (!contentSize)
+                contentSize = this._content.clientWidth;
+            if (!parentSize)
+                parentSize = this._parent.clientWidth;
+            this._contentSize = contentSize + this._padding[1] + this._padding[3];
+            this._parentSize = parentSize - this.offset;
             if (bar || !this.trackSize) {
                 this.trackSize = this.track.clientWidth;
                 this.trackOffset = this.track.clientHeight;
@@ -3511,8 +3515,12 @@ export class ScrollBar extends EventEmitter {
             this.scrollSize = this._contentSize - this._parentSize - this._padding[1] - this._padding[3];
         }
         else {
-            this._contentSize = this._content.clientHeight + this._padding[0] + this._padding[2];
-            this._parentSize = this._parent.clientHeight - this.offset;
+            if (!contentSize)
+                contentSize = this._content.clientHeight;
+            if (!parentSize)
+                parentSize = this._parent.clientHeight;
+            this._contentSize = contentSize + this._padding[0] + this._padding[2];
+            this._parentSize = parentSize - this.offset;
             if (bar) {
                 this.trackSize = this.track.clientHeight;
                 this.trackOffset = this.track.clientWidth;
