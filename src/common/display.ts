@@ -42,7 +42,7 @@ interface ScrollState {
 }
 
 export enum ScrollType { vertical = 0, horizontal = 1 }
-export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512, scrollViewOverlays = 1024 }
+export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512, scrollViewOverlays = 1024, layout = 2048 }
 
 enum CornerType {
     Flat = 0,
@@ -230,8 +230,9 @@ export class Display extends EventEmitter {
             this._el.appendChild(this.split);
             if (this._splitHeight !== -1)
                 this.split.style.height = this._splitHeight + '%';
+            this.split._innerHeight = this.split.clientHeight;
             this.split.updatePosition = () => {
-                const t = this._view.clientHeight - this.split.clientHeight + this._padding[2];
+                const t = this._view.clientHeight - this.split._innerHeight + this._padding[2];
                 this.split.overlay.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                 this.split.view.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
                 this.split.background.style.transform = `translate(${-this._HScroll.position}px, ${-t}px)`;
@@ -332,6 +333,7 @@ export class Display extends EventEmitter {
 
                     h = (h / this._innerHeight * 100);
                     this.split.style.height = h + '%';
+                    this.split._innerHeight = this.split.clientHeight;
                     this.doUpdate(UpdateType.scrollView | UpdateType.view);
                 }
                 this.emit('split-move', h);
@@ -348,6 +350,7 @@ export class Display extends EventEmitter {
                         h = this._innerHeight - e.pageY + this.split.bar.offsetHeight;
                     h = (h / this._innerHeight * 100);
                     this.split.style.height = h + '%';
+                    this.split._innerHeight = this.split.clientHeight;
                     this.split.updatePosition();
                     this._el.removeChild(this.split.ghostBar);
                     delete this.split.ghostBar;
@@ -373,7 +376,6 @@ export class Display extends EventEmitter {
     }
 
     get linkFunction(): string {
-
         return this._linkFunction || 'doLink';
     }
 
@@ -866,13 +868,14 @@ export class Display extends EventEmitter {
             for (mutation of mutationsList) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                     if (this.split) this.split.dirty = true;
-                    this.doUpdate(UpdateType.scrollbars | UpdateType.update | UpdateType.view);
+                    this.doUpdate(UpdateType.scrollbars | UpdateType.update | UpdateType.view | UpdateType.layout);
                 }
             }
         });
         this.$observer.observe(this._el, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
         //setTimeout(() => { this.update(); }, 0);
         //this.update();
+        this.updateLayout();
     }
 
     get MatchCase(): boolean {
@@ -920,6 +923,10 @@ export class Display extends EventEmitter {
         if (this._updating === UpdateType.none)
             return;
         window.requestAnimationFrame(() => {
+            if ((this._updating & UpdateType.layout) === UpdateType.layout) {
+                this.updateLayout();
+                this._updating &= ~UpdateType.layout;
+            }
             if ((this._updating & UpdateType.display) === UpdateType.display) {
                 this.updateDisplay();
                 this._updating &= ~UpdateType.display;
@@ -932,9 +939,10 @@ export class Display extends EventEmitter {
                         if (this._scrollCorner) this._scrollCorner.classList.remove('active');
                         this.emit('scroll-lock', false);
                     }
-                    else {
+                    else if (!this.split.shown) {
                         this.split.style.display = 'block';
                         this.split.shown = true;
+                        this.split._innerHeight = this.split.clientHeight;
                         if (this._scrollCorner) this._scrollCorner.classList.add('active');
                         this.emit('scroll-lock', true);
                         this.split.updatePosition();
@@ -1204,7 +1212,7 @@ export class Display extends EventEmitter {
 
         this._viewRange.start = Math.trunc(this._VScroll.position / this._charHeight);
         if (this.split && this.split.shown)
-            this._viewRange.end = Math.ceil((this._VScroll.position + this._innerHeight - this.split.clientHeight) / this._charHeight);
+            this._viewRange.end = Math.ceil((this._VScroll.position + this._innerHeight - this.split._innerHeight) / this._charHeight);
         else
             this._viewRange.end = Math.ceil((this._VScroll.position + this._innerHeight) / this._charHeight);
 
@@ -1568,7 +1576,7 @@ export class Display extends EventEmitter {
         const os = this._os;
         let y = (pageY - os.top);
         if (this.split && this.split.shown) {
-            if (y >= this._VScroll.track.clientHeight - this.split.clientHeight)
+            if (y >= this._VScroll.trackSize - this.split._innerHeight)
                 y += this._VScroll.scrollSize;
             else
                 y += this._VScroll.position;
@@ -2504,26 +2512,12 @@ export class Display extends EventEmitter {
         this._maxView = this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size;
         //resized so new width needs a recalculate
         this._viewCache = {};
-        if (this.split) this.split.viewCache = {};
+        if (this.split) {
+            this.split.viewCache = {};
+            this.split._innerHeight = this.split.clientHeight;
+        }
         this._innerHeight = this._el.clientHeight;
         this._innerWidth = this._el.clientWidth;
-        const t = window.getComputedStyle(this._el);
-        this._borderSize.height = parseInt(t.borderTopWidth) || 0;
-        this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
-        const padding = [
-            parseInt(t.getPropertyValue('padding-top')) || 0,
-            parseInt(t.getPropertyValue('padding-right')) || 0,
-            parseInt(t.getPropertyValue('padding-bottom')) || 0,
-            parseInt(t.getPropertyValue('padding-left')) || 0
-        ];
-        if (padding[0] !== this._padding[0] ||
-            padding[1] !== this._padding[1] ||
-            padding[2] !== this._padding[2] ||
-            padding[3] !== this._padding[3]
-        ) {
-            this._padding = padding;
-            this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.scrollbars);
-        }
     }
 
     private buildStyleSheet() {
@@ -2957,6 +2951,7 @@ export class Display extends EventEmitter {
             if (this.scrollLock && !this.split.shown && this._VScroll.scrollSize > 0) {
                 this.split.style.display = 'block';
                 this.split.shown = true;
+                this.split._innerHeight = this.split.clientHeight;
                 if (this._scrollCorner) this._scrollCorner.classList.add('active');
                 this.doUpdate(UpdateType.scrollView);
             }
@@ -2970,13 +2965,13 @@ export class Display extends EventEmitter {
     public updateScrollbars() {
         if (this._parser.busy)
             return;
-        this._HScroll.offset = this._VScroll.track.clientWidth;
+        this._HScroll.offset = this._VScroll.trackOffset;
         this._HScroll.resize();
         this._HScroll.visible = this._HScroll.scrollSize > 0;
-        this._VScroll.offset = this._HScroll.visible ? this._HScroll.track.offsetHeight : 0;
+        this._VScroll.offset = this._HScroll.visible ? this._HScroll.trackOffsetSize.height : 0;
         this._VScroll.resize();
         if (this._VScroll.offset === 0 && this._showSplitButton && this.split && !this._HScroll.visible)
-            this._VScroll.padding = this._HScroll.track.offsetHeight || this._VScroll.track.offsetWidth;
+            this._VScroll.padding = this._HScroll.trackOffsetSize.height || this._VScroll.trackOffsetSize.width;
         else
             this._VScroll.padding = 0;
 
@@ -3032,17 +3027,17 @@ export class Display extends EventEmitter {
         if (this.split && this.split.shown) {
             if (y < this._VScroll.position)
                 this._VScroll.scrollTo(y);
-            else if (y + this._charHeight > this._VScroll.position + this._VScroll.track.clientHeight - this.split.clientHeight)
-                this._VScroll.scrollTo(y - this._VScroll.track.clientHeight + this.split.clientHeight + this._charHeight);
+            else if (y + this._charHeight > this._VScroll.position + this._VScroll.trackSize - this.split._innerHeight)
+                this._VScroll.scrollTo(y - this._VScroll.trackSize + this.split._innerHeight + this._charHeight);
         }
         else if (y < this._VScroll.position)
             this._VScroll.scrollTo(y);
-        else if (y + this._charHeight > this._VScroll.position + this._VScroll.track.clientHeight)
-            this._VScroll.scrollTo(y - this._VScroll.track.clientHeight + this._charHeight);
+        else if (y + this._charHeight > this._VScroll.position + this._VScroll.trackSize)
+            this._VScroll.scrollTo(y - this._VScroll.trackSize + this._charHeight);
         if (x < this._HScroll.position)
             this._HScroll.scrollTo(x);
-        else if (x + this._charWidth > this._HScroll.position + this._HScroll.track.clientWidth)
-            this._HScroll.scrollTo(x - this._HScroll.track.clientWidth + this._charWidth);
+        else if (x + this._charWidth > this._HScroll.position + this._HScroll.trackSize)
+            this._HScroll.scrollTo(x - this._HScroll.trackSize + this._charWidth);
     }
 
     private expireLineLinkFormat(formats, idx: number) {
@@ -3099,6 +3094,28 @@ export class Display extends EventEmitter {
         window.removeEventListener('mouseup', this._wUp);
         window.removeEventListener('resize', this._wResize);
     }
+
+    public updateLayout() {
+        const t = window.getComputedStyle(this._el);
+        this._borderSize.height = parseInt(t.borderTopWidth) || 0;
+        this._borderSize.width = parseInt(t.borderLeftWidth) || 0;
+        const padding = [
+            parseInt(t.getPropertyValue('padding-top')) || 0,
+            parseInt(t.getPropertyValue('padding-right')) || 0,
+            parseInt(t.getPropertyValue('padding-bottom')) || 0,
+            parseInt(t.getPropertyValue('padding-left')) || 0
+        ];
+        if (padding[0] !== this._padding[0] ||
+            padding[1] !== this._padding[1] ||
+            padding[2] !== this._padding[2] ||
+            padding[3] !== this._padding[3]
+        ) {
+            this._padding = padding;
+            this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.scrollbars);
+        }
+        this._VScroll.updateLayout();
+        this._HScroll.updateLayout();
+    }
 }
 
 /**
@@ -3121,7 +3138,6 @@ export class ScrollBar extends EventEmitter {
     private _padding = [0, 0, 0, 0];
     private _position: number = 0;
     private _thumbSize: number = 0;
-    private _trackSize: number = 0;
     private _ratio: number = 0;
     private _ratio2: number = 0;
 
@@ -3134,6 +3150,7 @@ export class ScrollBar extends EventEmitter {
 
     private $resizeObserver;
     private $resizeObserverCache;
+    private $observer: MutationObserver;
     private _type: ScrollType = ScrollType.vertical;
 
     public maxPosition: number = 0;
@@ -3141,6 +3158,9 @@ export class ScrollBar extends EventEmitter {
     public thumb: HTMLElement;
     public track: HTMLElement;
     public scrollSize: number = 0;
+    public trackSize: number = 0;
+    public trackOffset: number = 0;
+    public trackOffsetSize = { width: 0, height: 0 };
 
     public state: ScrollState = {
         dragging: false,
@@ -3355,7 +3375,7 @@ export class ScrollBar extends EventEmitter {
             }
         };
         this._wResize = (e) => {
-            this.resize();
+            this.resize(true);
         };
 
         window.addEventListener('mousemove', this._wMove.bind(this));
@@ -3363,17 +3383,27 @@ export class ScrollBar extends EventEmitter {
         window.addEventListener('mouseup', this._wUp.bind(this));
 
         window.addEventListener('resize', this._wResize.bind(this));
-        this.resize();
+        this.resize(true);
         this.$resizeObserver = new ResizeObserver((entries, observer) => {
             if (entries.length === 0) return;
             if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
                 return;
             if (!this.$resizeObserverCache || this.$resizeObserverCache.width !== entries[0].contentRect.width || this.$resizeObserverCache.height !== entries[0].contentRect.height) {
                 this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
-                this.resize();
+                this.resize(true);
             }
         });
         this.$resizeObserver.observe(this.track);
+        this.$observer = new MutationObserver((mutationsList) => {
+            let mutation;
+            for (mutation of mutationsList) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    this.updateLayout();
+                }
+            }
+        });
+        this.$observer.observe(this.track, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
+        this.updateLayout();
     }
 
     /**
@@ -3402,13 +3432,13 @@ export class ScrollBar extends EventEmitter {
             this.track.classList.remove('scroll-disabled');
         else
             this.track.classList.add('scroll-disabled');
-        this._thumbSize = Math.ceil(1 / this._percentView * this._trackSize);
-        if (this._thumbSize > this._trackSize)
-            this._thumbSize = this._trackSize;
+        this._thumbSize = Math.ceil(1 / this._percentView * this.trackSize);
+        if (this._thumbSize > this.trackSize)
+            this._thumbSize = this.trackSize;
         if (this._thumbSize < 20)
             this._thumbSize = 20;
         this.thumb.style[this._type === ScrollType.horizontal ? 'width' : 'height'] = this._thumbSize + 'px';
-        this._maxDrag = this._trackSize - this._thumbSize;
+        this._maxDrag = this.trackSize - this._thumbSize;
         if (this._maxDrag <= 0) {
             this._maxDrag = 0;
             this._ratio = 1;
@@ -3469,28 +3499,28 @@ export class ScrollBar extends EventEmitter {
      *
      * @memberof ScrollBar
      */
-    public resize() {
-        const pc = window.getComputedStyle(this._parent);
-        this._padding = [
-            parseInt(pc.getPropertyValue('padding-top')) || 0,
-            parseInt(pc.getPropertyValue('padding-right')) || 0,
-            parseInt(pc.getPropertyValue('padding-bottom')) || 0,
-            parseInt(pc.getPropertyValue('padding-left')) || 0
-        ];
+    public resize(bar?) {
         const bottom = this.atBottom;
         if (this._type === ScrollType.horizontal) {
             this._contentSize = this._content.clientWidth + this._padding[1] + this._padding[3];
             this._parentSize = this._parent.clientWidth - this.offset;
-            this._trackSize = this.track.clientWidth;
+            if (bar || !this.trackSize) {
+                this.trackSize = this.track.clientWidth;
+                this.trackOffset = this.track.clientHeight;
+            }
             this.scrollSize = this._contentSize - this._parentSize - this._padding[1] - this._padding[3];
         }
         else {
             this._contentSize = this._content.clientHeight + this._padding[0] + this._padding[2];
             this._parentSize = this._parent.clientHeight - this.offset;
-            this._trackSize = this.track.clientHeight;
+            if (bar) {
+                this.trackSize = this.track.clientHeight;
+                this.trackOffset = this.track.clientWidth;
+            }
             this.scrollSize = this._contentSize - this._parentSize - this._padding[0] - this._padding[2];
         }
-
+        if (bar || !this.trackOffsetSize.width)
+            this.trackOffsetSize = { height: this.track.offsetHeight, width: this.track.offsetWidth };
         this._percentView = this._contentSize / this._parentSize;
         this.maxPosition = this._parentSize - Math.ceil(1 / this._percentView * this._parentSize);
         if (this.maxPosition < 0)
@@ -3500,6 +3530,16 @@ export class ScrollBar extends EventEmitter {
             this.updatePosition(this.maxPosition);
         else
             this.updatePosition(this._position * this._ratio2);
+    }
+
+    public updateLayout() {
+        const pc = window.getComputedStyle(this._parent);
+        this._padding = [
+            parseInt(pc.getPropertyValue('padding-top')) || 0,
+            parseInt(pc.getPropertyValue('padding-right')) || 0,
+            parseInt(pc.getPropertyValue('padding-bottom')) || 0,
+            parseInt(pc.getPropertyValue('padding-left')) || 0
+        ];
     }
 
     /**
