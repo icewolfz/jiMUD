@@ -784,49 +784,54 @@ export class IED extends EventEmitter {
     }
 
     public static errorMessage(code: number): string {
+        if (typeof code !== 'number')
+            return code;
+
         switch (code) {
             case IEDError.DL_NOTSTART:
-                return 'Download not started';
+                return `Download not started [${('' + code).padStart(2, '0')}]`;
             case IEDError.DL_TOOMANY:
-                return 'Too many downloads active';
+                return `Too many downloads active [${('' + code).padStart(2, '0')}]`;
             case IEDError.DL_INPROGRESS:
-                return 'Download already in progress';
+                return `Download already in progress [${('' + code).padStart(2, '0')}]`;
             case IEDError.DL_INVALIDFMT:
-                return 'Invalid download data';
+                return `Invalid download data [${('' + code).padStart(2, '0')}]`;
             case IEDError.DL_UNKNOWN:
-                return 'Unknown download error';
+                return `Unknown download error [${('' + code).padStart(2, '0')}]`;
             case IEDError.DL_USERABORT:
-                return 'Download aborted';
+                return `Download aborted [${('' + code).padStart(2, '0')}]`;
             case IEDError.DL_INVALIDFILE:
-                return 'Invalid download filename';
+                return `Invalid download filename [${('' + code).padStart(2, '0')}]`;
             case IEDError.DL_INVALIDPATH:
-                return 'Invalid download path';
+                return `Invalid download path [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_TOOMANY:
-                return 'Too many uploads active';
+                return `Too many uploads active [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_INPROGRESS:
-                return 'Upload already in progress';
+                return `Upload already in progress [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_INVALIDFMT:
-                return 'Invalid upload data';
+                return `Invalid upload data [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_USERABORT:
-                return 'Upload aborted';
+                return `Upload aborted [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_BADENCODE:
-                return 'Error decoding uploaded data';
+                return `Error decoding uploaded data [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_TOOLARGE:
-                return 'Upload to large';
+                return `Upload to large [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_FAILWRITE:
-                return 'Failed to save upload data';
+                return `Failed to save upload data [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_UNKNOWN:
-                return 'Unknown upload error';
+                return `Unknown upload error [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_INVALIDFILE:
-                return 'Invalid upload filename';
+                return `Invalid upload filename [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_INVALIDPATH:
-                return 'Invalid upload path';
+                return `Invalid upload path [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_DENIED:
-                return 'Access denied uploading';
+                return `Access denied uploading [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_FILE:
-                return 'Error creating upload path';
+                return `Error creating upload path [${('' + code).padStart(2, '0')}]`;
         }
-        return '';
+        if (typeof code === 'number')
+            return `Unknown [${('' + code).padStart(2, '0')}]`;
+        return code;
     }
 
     public removeActive() {

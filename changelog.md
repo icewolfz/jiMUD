@@ -23,7 +23,9 @@
     - Performance tweaks by grouping updates when possible
     - Removed jQuery where possible to remove overhead and improve performance  
   - Process all GMCP in async to try and improve performance
-  - Immortal tools: bump max file size to 307,200 bytes using 1024 bytes as base
+  - Immortal tools:
+    - Bump max file size to 307,200 bytes using 1024 bytes as base
+    - Add error codes to error messages
 - **Fixed:**
   - Code editor:
     - Area designer:
