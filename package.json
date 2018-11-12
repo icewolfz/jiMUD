@@ -55,7 +55,7 @@
     "electron": "^3.0.8",
     "electron-builder": "^20.34.0",
     "eslint": "^5.9.0",
-    "eslint-plugin-html": "^4.0.6"
+    "eslint-plugin-html": "^5.0.0"
   },
   "build": {
     "appId": "jiMUD",
