@@ -3435,8 +3435,8 @@ export class ScrollBar extends EventEmitter {
         this._thumbSize = Math.ceil(1 / this._percentView * this.trackSize);
         if (this._thumbSize > this.trackSize)
             this._thumbSize = this.trackSize;
-        if (this._thumbSize < 20)
-            this._thumbSize = 20;
+        if (this._thumbSize < 15)
+            this._thumbSize = 15;
         this.thumb.style[this._type === ScrollType.horizontal ? 'width' : 'height'] = this._thumbSize + 'px';
         this._maxDrag = this.trackSize - this._thumbSize;
         if (this._maxDrag <= 0) {

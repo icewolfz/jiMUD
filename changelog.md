@@ -18,6 +18,7 @@
     - Tweak performance and memory usage to try and balance between not using to much memory and using enough to get performance gains
     - Changed how formated data is stored and cached
     - Converted to DOM generation instead of building HTML strings, removes extra step of parsing HTML into DOM
+    - Allow scroll bar thumb to be a little smaller
   - Input: Performance tweaks when executing triggers
   - Status:
     - Performance tweaks by grouping updates when possible
