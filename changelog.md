@@ -36,6 +36,7 @@
       - Fixed room preview tool tips when item appears multiple times in long
     - Virtual area editor:
       - Fixed room preview tool tips when item appears multiple times in long
+    - Fixed Value editors moving cursor location after pasting text
   - MSP:
     - Fixed not displaying error when file not found or unable to play
     - Reset current sound when sound/msp enabled/disabled
