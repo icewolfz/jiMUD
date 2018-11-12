@@ -589,7 +589,7 @@ export class IED extends EventEmitter {
             item.info = IED.getFileInfo(item.local);
             item.totalSize = item.info.size;
             item.originalSize = item.info.size;
-            if (item.totalSize > 200000) {
+            if (item.totalSize > 307200) {
                 item.state = ItemState.error;
                 item.error = 'File to large';
             }
@@ -632,7 +632,7 @@ export class IED extends EventEmitter {
             item.info = IED.getFileInfo(item.local);
             item.totalSize = item.info.size;
             item.originalSize = item.info.size;
-            if (item.totalSize > 200000) {
+            if (item.totalSize > 307200) {
                 item.state = ItemState.error;
                 item.error = 'File to large';
             }
