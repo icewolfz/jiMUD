@@ -12,6 +12,7 @@
     - Area designer: Exits that are closed doors are now hidden in the room preview to mimic standard door usage
   - Added [Enable sound](docs/preferences.md#general) to disable or enable sounds without the need to disable msp
   - Added Copy as HTML to edit menu to copy selected text as HTML formated markup
+  - Added [#testperiod](docs/commands.md) toggle on/off a test that will alternate between #testcolors, #textxterm, #testlist every 2 seconds to simulate constant streaming of text
 - **Changed:**
   - Update electron from 3.0.7 to 3.0.8
   - Update electron-updater 3.1.6 to 3.2.3
@@ -21,11 +22,15 @@
   - Display:
     - Tweak performance and memory usage to try and balance between not using to much memory and using enough to get performance gains
     - Changed how formated data is stored and cached
+    - Converted to DOM generation instead of building HTML strings, removes extra step of parsing HTML into DOM
   - Input: Performance tweaks when executing triggers
   - Status:
     - Performance tweaks by grouping updates when possible
     - Removed jQuery where possible to remove overhead and improve performance  
   - Process all GMCP in async to try and improve performance
+  - Immortal tools:
+    - Bump max file size to 307,200 bytes using 1024 bytes as base
+    - Add error codes to error messages
 - **Fixed:**
   - Code editor:
     - Area designer:
@@ -60,6 +65,7 @@
   - ANSI Parser:
     - Fixed raw data doubling split buffer data
     - Fixed extra line when controls at beginning of a line are split
+  - Immortal tools: Fixed error message display
 
 ## v0.6.6 2018-11-05
 

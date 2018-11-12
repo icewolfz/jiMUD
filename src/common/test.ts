@@ -21,14 +21,14 @@ export class Tests extends EventEmitter {
      * @type {object}
      * @memberof Tests
      */
-    public TestFunctions = {};
+    public TestFunctions: object = {};
     /**
      * The client the test functions are for
      *
      * @type {object}
      * @memberof Tests
      */
-    public Client;
+    public Client: object;
 
     /**
      * Creates an instance of Tests.
@@ -657,6 +657,25 @@ export class Tests extends EventEmitter {
             sample.push(`Max - ${max}`);
             this.Client.print(sample.join('\n') + '\n', true);
             this.Client.options.enableCommands = e;
+        };
+
+        this.TestFunctions['testperiod'] = () => {
+            if (window['periodID']) {
+                clearInterval(window['periodID']);
+                delete window['period'];
+                delete window['periodID'];
+                return;
+            }
+            window['period'] = 0;
+            window['periodID'] = setInterval(() => {
+                if (window['period'] % 3 === 1)
+                    client.sendCommand('#testcolors');
+                else if (window['period'] % 3 === 2)
+                    client.sendCommand('#testxterm');
+                else
+                    client.sendCommand('#testlist');
+                window['period']++;
+            }, 2000);
         };
 
         this.TestFunctions['testutf8'] = function () {
