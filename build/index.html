@@ -417,6 +417,8 @@
             var el = document.getElementById('theme');
             if (el.getAttribute('href') !== theme)
                 el.setAttribute('href', theme);
+            if(client && client.display)
+                client.display.updateLayout();
         }
 
         function updateInterface() {

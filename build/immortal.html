@@ -1227,7 +1227,9 @@
                                 case ItemState.paused:
                                     return 'Paused';
                                 case ItemState.error:
-                                    return IED.errorMessage(full.error);
+                                    if (typeof full.error === 'number')
+                                        return IED.errorMessage(full.error);
+                                    return full.error;
                                 case ItemState.done:
                                     return 'Success';
                                 case ItemState.stopped:
