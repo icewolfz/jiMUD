@@ -7,6 +7,7 @@
     - Area designer: Exits that are closed doors are now hidden in the room preview to mimic standard door usage
   - Added [Enable sound](docs/preferences.md#general) to disable or enable sounds without the need to disable msp
   - Added Copy as HTML to edit menu to copy selected text as HTML formated markup
+  - Added [#testperiod](docs/commands.md) toggle on/off a test that will alternate between #testcolors, #textxterm, #testlist every 2 seconds to simulate constant streaming of text
 - **Changed:**
   - Update electron from 3.0.7 to 3.0.8
   - Update electron-updater 3.1.6 to 3.2.3
