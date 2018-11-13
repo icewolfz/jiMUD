@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.8
+## v0.6.8 2018-11-12
 
 - **Changed:**
   - Update electron from 3.0.8 to 3.0.9npm
