@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Display: Fixed a bug when removing lines
+  - Character manager: fix the property section to scroll bar just in case contents do not fit height
 
 ## v0.6.7 2018-11-12
 
