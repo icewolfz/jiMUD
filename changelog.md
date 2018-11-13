@@ -6,7 +6,7 @@
   - Code editor:
     - Area designer: Exits that are closed doors are now hidden in the room preview to mimic standard door usage
   - Added [Enable sound](docs/preferences.md#general) to disable or enable sounds without the need to disable msp
-  - Added Copy as HTML to edit menu to copy selected text as HTML formated markup
+  - Added Copy as HTML to edit menu to copy selected text as HTML formatted markup
   - Added [#testperiod](docs/commands.md) toggle on/off a test that will alternate between #testcolors, #textxterm, #testlist every 2 seconds to simulate constant streaming of text
 - **Changed:**
   - Update electron from 3.0.7 to 3.0.8
@@ -17,7 +17,7 @@
   - Clear local cache when leaving combat if it has been at least an hour since last time
   - Display:
     - Tweak performance and memory usage to try and balance between not using to much memory and using enough to get performance gains
-    - Changed how formated data is stored and cached
+    - Changed how formatted data is stored and cached
     - Converted to DOM generation instead of building HTML strings, removes extra step of parsing HTML into DOM
     - Allow scroll bar thumb to be a little smaller
   - Input: Performance tweaks when executing triggers
@@ -40,7 +40,7 @@
     - Fixed Value editors moving cursor location after pasting text
   - MSP:
     - Fixed not displaying error when file not found or unable to play
-    - Reset current sound when sound/msp enabled/disabled
+    - Reset current sound when sound/MSP enabled/disabled
   - Display:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
     - Fixed overlay and selection to add extra ending space to represent newlines better
@@ -52,8 +52,8 @@
   - Fixed context word selection to not count [, ], @, ?, |, <, >, ", ', +, and \ as part of words
   - Logger:
     - Fixed URLs containing quotes or \ not correctly encoding in tool tips and link following
-    - Fixed URL click scripts by including some minor javascript to execute urls
-    - Fixed generating HTML when not logging to save memory and cpu time
+    - Fixed URL click scripts by including some minor JavaScript to execute URLs
+    - Fixed generating HTML when not logging to save memory and CPU time
     - Fixed flushing when logging disabled
   - Fixed drake monster icon
   - Fixed memory leak in temporary triggers and alarms
@@ -112,8 +112,8 @@
     - Added basic MXP image support, limits height to line height
     - Added more color attributes for color tag: hidden, strikeout, overline, and doubleunderline
     - Added a split toggle button at the bottom right corner for quick off/on, similar to clicking scroll lock button
-  - Expanded [client.writeClipboard](docs/scripting.md) added html argument to add formated html as well as plain text
-  - Expanded [client.writeClipboardHTML](docs/scripting.md) write HTML markup to clipboard to produce formated text for applications that support HTML pasting
+  - Expanded [client.writeClipboard](docs/scripting.md) added html argument to add formatted html as well as plain text
+  - Expanded [client.writeClipboardHTML](docs/scripting.md) write HTML markup to clipboard to produce formatted text for applications that support HTML pasting
   - Expanded [client.readClipboardHTML](docs/scripting.md) read HTML markup from clipboard if clipboard has HTML support
   - Added total time to [#testspeed](docs/commands.md) command
   - Added [#testspeedfile](docs/commands.md) to load a file and run timed test
@@ -1757,7 +1757,7 @@
   - View > Status > Visible was showing wrong check state
   - Fixed lines not being trimmed to buffer size, was introduced when display was converted to an iframe to fix the selection bugs.
   - Mapper
-    - Fixed a javascript bug when clicking cancel button on progress dialogs
+    - Fixed a JavaScript bug when clicking cancel button on progress dialogs
     - Import dialog would not close when imported data had no rooms
 
 ## v0.1.9 - 2017-05-14
@@ -1770,8 +1770,8 @@
     - `$selectedline/$selline` - returns the current line text
     - `$selectedurl/$selurl` - returns the current url when right clicked
     - `$copied` - return clipboard text
-  - Parsed variables that work like the javascript ones in format of %{variable}, you may force upper, lower, or proper case by appending .lower, or .upper, for example %{selword.lower} will return lower cased version, or using the inline parse functions
-  - `%{copied}` - replace with clipboard contents, for javascript use this.readClipboard() or client.readClipboard where needed
+  - Parsed variables that work like the JavaScript ones in format of %{variable}, you may force upper, lower, or proper case by appending .lower, or .upper, for example %{selword.lower} will return lower cased version, or using the inline parse functions
+  - `%{copied}` - replace with clipboard contents, for JavaScript use this.readClipboard() or client.readClipboard where needed
   - inline parse functions to manipulate parsable variables
     - `%{lower(TEXT)}` - convert TEXT to lower case
     - `%{upper(TEXT)}` - convert TEXT to upper case
@@ -1916,9 +1916,9 @@
   - Basic context menu for all editable fields
   - When closing profile manager will ask to save changes when using the window close button
   - When closing client will now warn if still connected with option to never ask again
-  - Added javascript aliases for OoMUD so web client scripts will work with little to no changes.
+  - Added JavaScript aliases for OoMUD so web client scripts will work with little to no changes.
 - **Changed:**
-  - Minified all javascript code to try and improve speed
+  - Minified all JavaScript code to try and improve speed
   - Compressed all PNG files to reduce size for loading improvements
 - **Fixed:**
   - Profile manager
