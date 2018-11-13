@@ -2,6 +2,9 @@
 
 ## v0.6.8
 
+- **Fixed:**
+  - Display: Fixed a bug when removing lines
+
 ## v0.6.7 2018-11-12
 
 - **New:**

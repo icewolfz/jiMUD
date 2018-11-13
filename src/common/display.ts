@@ -1349,7 +1349,7 @@ export class Display extends EventEmitter {
         if (this._viewCache[line])
             delete this._viewCache[line];
         if (this.split && this.split.viewCache[line])
-            delete this.split._viewCache[line];
+            delete this.split.viewCache[line];
 
         if (!this._currentSelection.drag) {
             if (this._currentSelection.start.y === line && this._currentSelection.end.y === line) {
@@ -1417,7 +1417,7 @@ export class Display extends EventEmitter {
             if (this._viewCache[line + a])
                 delete this._viewCache[line + a];
             if (this.split && this.split.viewCache[line + a])
-                delete this.split._viewCache[line + a];
+                delete this.split.viewCache[line + a];
         }
 
         if (!this._currentSelection.drag) {
