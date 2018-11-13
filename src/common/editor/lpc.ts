@@ -819,7 +819,7 @@ export function loadCompletion(): monaco.languages.CompletionList {
     list = list.concat(getCompletionFromPath(path.join(p, 'sefuns'), monaco.languages.CompletionItemKind.Class));
     list = list.concat(getCompletionFromPath(path.join(p, 'lfuns'), monaco.languages.CompletionItemKind.Property));
     list = list.concat(getCompletionFromFile(path.join(p, 'inherits.txt'), monaco.languages.CompletionItemKind.Module));
-    return { suggestions: list };
+    return { suggestions: list, incomplete: false };
 }
 
 function getCompletionFromPath(p, kind?: monaco.languages.CompletionItemKind, prefix?): monaco.languages.CompletionItem[] {
