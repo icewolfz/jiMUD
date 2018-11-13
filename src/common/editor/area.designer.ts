@@ -9508,7 +9508,7 @@ export class AreaDesigner extends EditorBase {
                 ctx.strokeStyle = 'rgba(142, 142, 142, 0.50)';
             ctx.strokeRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
         }
-        else if (this.$selectedRooms.indexOf(room) !== -1) {
+        else if (this.$selectedRooms && this.$selectedRooms.indexOf(room) !== -1) {
             if (this.$focused) {
                 ctx.fillStyle = 'rgba(135, 206, 250, 0.50)';
                 ctx.strokeStyle = 'rgba(135, 206, 250, 0.50)';

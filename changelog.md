@@ -12,6 +12,7 @@
   - Update electron from 3.0.7 to 3.0.8
   - Update electron-updater 3.1.6 to 3.2.3
   - Update yargs-parser 11.0.0 to 11.1.0
+  - Update monaco-editor from 0.14.3 to 0.15.0
   - Clear local cache every time the preferences are changed
   - Clear local cache when leaving combat if it has been at least an hour since last time
   - Display:
