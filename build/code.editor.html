@@ -8766,6 +8766,12 @@
                 if (type === 'designer')
                     ipcRenderer.send('progress-canceled');
             });
+            p.editor.on('progress-error', (type, err) => {
+                if (type === 'designer')
+                    ipcRenderer.send('progress-canceled');
+                if (options && options.debug)
+                    console.log(err);
+            });
             p.editor.on('progress', (pObject) => {
                 if (!pObject) return;
                 if (pObject.type === 'designer')

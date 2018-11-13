@@ -10863,6 +10863,8 @@ export class AreaDesigner extends EditorBase {
                 this.emit('progress-canceled', 'designer');
             else if (err && err.message === 'Canceled')
                 this.emit('progress-canceled', 'designer');
+            else
+                this.emit('progress-error', 'designer', err);
         }
     }
 
