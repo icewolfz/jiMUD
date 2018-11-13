@@ -973,7 +973,10 @@ function createTray() {
                             skipTaskbar: true,
                             resizable: false,
                             title: 'About jiMUD',
-                            icon: path.join(__dirname, '../assets/icons/png/64x64.png')
+                            icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
+                            webPreferences: {
+                                nodeIntegration: true
+                            }
                         });
                         about.webContents.on('crashed', (event, killed) => {
                             logError(`About crashed, killed: ${killed}\n`, true);
@@ -1169,6 +1172,7 @@ function createWindow() {
         show: false,
         icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
         webPreferences: {
+            nodeIntegration: true,
             nodeIntegrationInWorker: true
         }
     });
@@ -1292,6 +1296,10 @@ function createWindow() {
             options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
         }
         options.show = false;
+        if (!options.hasOwnProperty('webPreferences'))
+            options.webPreferences = { nodeIntegration: true };
+        else if (!options.webPreferences.hasOwnProperty('webPreferences'))
+            options.webPreferences.nodeIntegration = true;        
         const w = new BrowserWindow(options);
         if (global.debug)
             w.webContents.openDevTools();
@@ -2197,6 +2205,9 @@ ipcMain.on('progress-show', (event, title) => {
             title: title,
             icon: path.join(__dirname, '../assets/icons/png/progress.png'),
             show: false,
+            webPreferences: {
+                nodeIntegration: true
+            }
         });
         winProgress.setMenu(null);
         winProgress.on('closed', () => {
@@ -2625,7 +2636,10 @@ function showPrefs() {
         skipTaskbar: true,
         resizable: false,
         title: 'Preferences',
-        icon: path.join(__dirname, '../assets/icons/png/preferences.png')
+        icon: path.join(__dirname, '../assets/icons/png/preferences.png'),
+        webPreferences: {
+            nodeIntegration: true
+        }
     });
     pref.setMenu(null);
     pref.on('closed', () => {
@@ -2683,7 +2697,10 @@ function createMapper(show, loading, loaded) {
         backgroundColor: '#eae4d6',
         show: false,
         skipTaskbar: (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false,
-        icon: path.join(__dirname, '../assets/icons/png/map.png')
+        icon: path.join(__dirname, '../assets/icons/png/map.png'),
+        webPreferences: {
+            nodeIntegration: true
+        }
     });
 
     if (s.fullscreen)
@@ -2819,7 +2836,10 @@ function showProfiles() {
         resizable: true,
         title: 'Profile Manger',
         icon: path.join(__dirname, '../assets/icons/png/profiles.png'),
-        show: false
+        show: false,
+        webPreferences: {
+            nodeIntegration: true
+        }
     });
 
     winProfiles.webContents.on('crashed', (event, killed) => {
@@ -2915,7 +2935,10 @@ function createEditor(show, loading) {
         backgroundColor: '#000',
         show: false,
         skipTaskbar: false,
-        icon: path.join(__dirname, '../assets/icons/png/edit.png')
+        icon: path.join(__dirname, '../assets/icons/png/edit.png'),
+        webPreferences: {
+            nodeIntegration: true
+        }
     });
 
     winEditor.webContents.on('crashed', (event, killed) => {
@@ -3050,6 +3073,7 @@ function createChat(show, loading) {
         skipTaskbar: (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false,
         icon: path.join(__dirname, '../assets/icons/png/chat.png'),
         webPreferences: {
+            nodeIntegration: true,
             nodeIntegrationInWorker: true
         }
     });
@@ -3187,7 +3211,10 @@ function createNewWindow(name, options) {
         backgroundColor: options.background || '#000',
         show: false,
         skipTaskbar: (windows[name].alwaysOnTopClient || windows[name].alwaysOnTop) ? true : false,
-        icon: path.join(__dirname, '../assets/icons/png/' + (options.icon || name) + '.png')
+        icon: path.join(__dirname, '../assets/icons/png/' + (options.icon || name) + '.png'),
+        webPreferences: {
+            nodeIntegration: true
+        }
     });
 
     windows[name].window.webContents.on('crashed', (event, killed) => {
@@ -3278,6 +3305,10 @@ function createNewWindow(name, options) {
             options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
         }
         options.show = false;
+        if (!options.hasOwnProperty('webPreferences'))
+            options.webPreferences = { nodeIntegration: true };
+        else if (!options.webPreferences.hasOwnProperty('webPreferences'))
+            options.webPreferences.nodeIntegration = true;
         const w = new BrowserWindow(options);
         if (global.debug)
             w.webContents.openDevTools();
@@ -3389,6 +3420,9 @@ function showColor(args) {
         title: 'Pick color',
         icon: path.join(__dirname, '../assets/icons/png/color.png'),
         show: false,
+        webPreferences: {
+            nodeIntegration: true
+        }
     });
     cp.webContents.on('crashed', (event, killed) => {
         logError(`Colorpicker crashed, killed: ${killed}\n`, true);
@@ -3573,7 +3607,10 @@ function createCodeEditor(show, loading, loaded) {
         backgroundColor: 'grey',
         show: false,
         skipTaskbar: (!global.editorOnly && (edset.window.alwaysOnTopClient || edset.window.alwaysOnTop)) ? true : false,
-        icon: path.join(__dirname, '../assets/icons/win/code.ico')
+        icon: path.join(__dirname, '../assets/icons/win/code.ico'),
+        webPreferences: {
+            nodeIntegration: true
+        }
     });
 
     winCode.on('unresponsive', () => {
@@ -3708,6 +3745,10 @@ function createCodeEditor(show, loading, loaded) {
             options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
         }
         options.show = false;
+        if (!options.hasOwnProperty('webPreferences'))
+            options.webPreferences = { nodeIntegration: true };
+        else if (!options.webPreferences.hasOwnProperty('webPreferences'))
+            options.webPreferences.nodeIntegration = true;
         const w = new BrowserWindow(options);
         if (global.debug)
             w.webContents.openDevTools();
@@ -3931,7 +3972,10 @@ function showAbout() {
         skipTaskbar: true,
         resizable: false,
         title: 'About jiMUD',
-        icon: path.join(__dirname, '../assets/icons/png/64x64.png')
+        icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
+        webPreferences: {
+            nodeIntegration: true
+        }
     });
     about.webContents.on('crashed', (event, killed) => {
         logError(`About crashed, killed: ${killed}\n`, true);
