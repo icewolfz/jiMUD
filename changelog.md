@@ -5,6 +5,8 @@
 - **Fixed:**
   - Display: Fixed a bug when removing lines
   - Character manager: fix the property section to scroll bar just in case contents do not fit height
+  - Profile manager:
+    - Fixed expanding children after new profile created
 
 ## v0.6.7 2018-11-12
 

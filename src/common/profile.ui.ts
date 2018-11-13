@@ -306,7 +306,8 @@ function AddNewProfile(d?: Boolean) {
                 text: 'Aliases',
                 id: 'Profile' + profileID(n) + 'aliases',
                 dataAttr: {
-                    profile: n
+                    profile: n,
+                    type: 'aliases'
                 },
                 lazyLoad: profiles.items[n].aliases.length > 0,
                 state: {
@@ -317,7 +318,8 @@ function AddNewProfile(d?: Boolean) {
                 text: 'Macros',
                 id: 'Profile' + profileID(n) + 'macros',
                 dataAttr: {
-                    profile: n
+                    profile: n,
+                    type: 'macros'
                 },
                 lazyLoad: profiles.items[n].macros.length > 0,
                 state: {
@@ -328,7 +330,8 @@ function AddNewProfile(d?: Boolean) {
                 text: 'Triggers',
                 id: 'Profile' + profileID(n) + 'triggers',
                 dataAttr: {
-                    profile: n
+                    profile: n,
+                    type: 'triggers'
                 },
                 lazyLoad: profiles.items[n].triggers.length > 0,
                 state: {
@@ -339,7 +342,8 @@ function AddNewProfile(d?: Boolean) {
                 text: 'Buttons',
                 id: 'Profile' + profileID(n) + 'buttons',
                 dataAttr: {
-                    profile: n
+                    profile: n,
+                    type: 'buttons'
                 },
                 lazyLoad: profiles.items[n].buttons.length > 0,
                 state: {
@@ -350,7 +354,8 @@ function AddNewProfile(d?: Boolean) {
                 text: 'Contexts',
                 id: 'Profile' + profileID(n) + 'contexts',
                 dataAttr: {
-                    profile: n
+                    profile: n,
+                    type: 'contexts'
                 },
                 lazyLoad: profiles.items[n].contexts.length > 0,
                 state: {
