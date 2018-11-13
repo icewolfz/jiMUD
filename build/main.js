@@ -2257,7 +2257,10 @@ ipcMain.on('progress', (event, progressObj) => {
 ipcMain.on('progress-close', (event, progressObj) => {
     if (winProgress)
         winProgress.webContents.send('progress-close', progressObj);
-    setProgress({ percent: 0 });
+    if (win)
+        win.setProgressBar(0);
+    else if (global.editorOnly && winCode)
+        winCode.setProgressBar(0);
 });
 
 function setProgress(progressObj) {
