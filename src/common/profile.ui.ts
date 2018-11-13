@@ -1113,7 +1113,7 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
     let changed = 0;
     let val = <string>$('#profile-name').val();
     const e = _enabled.indexOf(currentProfile.name.toLowerCase()) !== -1;
-
+    let p;
     if (val !== currentProfile.name) {
         data.name = val;
         changed++;
@@ -1148,7 +1148,7 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
         }
         if (expanded)
             $('#profile-tree').treeview('expandNode', [node]);
-        sortTree();
+        p = sortTree();
     }
 
     if (currentProfile.enableAliases !== $('#profile-enableAliases').prop('checked')) {
@@ -1210,30 +1210,53 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
         changed++;
         currentProfile.priority = parseInt(<string>$('#profile-priority').val(), 10);
     }
-
-    val = profileID(currentProfile.name);
-    if (currentProfile.enableAliases)
-        $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'aliases$', 'id'])]);
-    else
-        $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'aliases$', 'id'])]);
-    if (currentProfile.enableMacros)
-        $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'macros$', 'id'])]);
-    else
-        $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'macros$', 'id'])]);
-    if (currentProfile.enableTriggers)
-        $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'triggers$', 'id'])]);
-    else
-        $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'triggers$', 'id'])]);
-    if (currentProfile.enableButtons)
-        $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'buttons$', 'id'])]);
-    else
-        $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'buttons$', 'id'])]);
-
-    if (currentProfile.enableContexts)
-        $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'contexts$', 'id'])]);
-    else
-        $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'contexts$', 'id'])]);
-
+    if (p)
+        p.then(() => {
+            val = profileID(currentProfile.name);
+            if (currentProfile.enableAliases)
+                $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'aliases$', 'id'])]);
+            else
+                $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'aliases$', 'id'])]);
+            if (currentProfile.enableMacros)
+                $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'macros$', 'id'])]);
+            else
+                $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'macros$', 'id'])]);
+            if (currentProfile.enableTriggers)
+                $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'triggers$', 'id'])]);
+            else
+                $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'triggers$', 'id'])]);
+            if (currentProfile.enableButtons)
+                $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'buttons$', 'id'])]);
+            else
+                $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'buttons$', 'id'])]);
+            if (currentProfile.enableContexts)
+                $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'contexts$', 'id'])]);
+            else
+                $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'contexts$', 'id'])]);
+        });
+    else {
+        val = profileID(currentProfile.name);
+        if (currentProfile.enableAliases)
+            $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'aliases$', 'id'])]);
+        else
+            $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'aliases$', 'id'])]);
+        if (currentProfile.enableMacros)
+            $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'macros$', 'id'])]);
+        else
+            $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'macros$', 'id'])]);
+        if (currentProfile.enableTriggers)
+            $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'triggers$', 'id'])]);
+        else
+            $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'triggers$', 'id'])]);
+        if (currentProfile.enableButtons)
+            $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'buttons$', 'id'])]);
+        else
+            $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'buttons$', 'id'])]);
+        if (currentProfile.enableContexts)
+            $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'contexts$', 'id'])]);
+        else
+            $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'contexts$', 'id'])]);
+    }
     if (changed > 0 && !customUndo) {
         pushUndo({ action: 'update', type: 'profile', profile: currentProfile.name.toLowerCase(), data: data });
         return UpdateState.Changed;
@@ -2084,138 +2107,143 @@ function updateCurrent(): UpdateState {
     return UpdateState.NoChange;
 }
 
-function buildTreeview(data) {
-    currentNode = 0;
-    $('#profile-tree').treeview({
-        showBorder: false,
-        showImage: true,
-        showTags: true,
-        showCheckbox: true,
-        preventUnselect: true,
-        levels: 1,
-        checkedIcon: 'fa fa-check-square-o',
-        uncheckedIcon: 'fa fa-square-o',
-        expandIcon: 'fa fa-chevron-right',
-        collapseIcon: 'fa fa-chevron-down',
-        onNodeRendered: (event, node) => {
-            node.$el.prop('title', node.text);
-        },
-        onNodeUnchecked: nodeCheckChanged,
-        onNodeChecked: nodeCheckChanged,
-        onNodeSelected: (event, node) => {
-            let t;
-            if (updateCurrent() === UpdateState.Error && currentNode) {
-                $('#profile-tree').treeview('selectNode', [currentNode, { silent: true }]);
-                return;
-            }
-            if (!node) return;
-            _loading++;
-            t = 'profile';
-            if (!node.dataAttr.type)
-                t = $('#profile-tree').treeview('getParents', node)[0].dataAttr.type;
-            else
-                t = node.dataAttr.type;
-            currentNode = node;
-            currentProfile = profiles.items[node.dataAttr.profile];
-            $('#btn-cut').prop('disabled', false);
-            $('#btn-copy').prop('disabled', false);
-            $('#btn-delete').prop('disabled', false);
-            menubar.updateItem('edit|cut', { enabled: true });
-            menubar.updateItem('edit|copy', { enabled: true });
-            menubar.updateItem('edit|delete', { enabled: true });
-            UpdatePaste();
-            switch (t) {
-                case 'aliases':
-                case 'macros':
-                case 'triggers':
-                case 'buttons':
-                case 'contexts':
-                case 'profile':
-                    UpdateEditor('profile', currentProfile, {
-                        post: () => {
-                            if (currentProfile.name === 'Default') {
-                                $('#profile-name').prop('disabled', true);
-                                if (t === 'profile') {
+function buildTreeview(data, skipInit?) {
+    return new Promise((resolve, reject) => {
+        currentNode = 0;
+        $('#profile-tree').treeview({
+            showBorder: false,
+            showImage: true,
+            showTags: true,
+            showCheckbox: true,
+            preventUnselect: true,
+            levels: 1,
+            checkedIcon: 'fa fa-check-square-o',
+            uncheckedIcon: 'fa fa-square-o',
+            expandIcon: 'fa fa-chevron-right',
+            collapseIcon: 'fa fa-chevron-down',
+            onNodeRendered: (event, node) => {
+                node.$el.prop('title', node.text);
+            },
+            onNodeUnchecked: nodeCheckChanged,
+            onNodeChecked: nodeCheckChanged,
+            onNodeSelected: (event, node) => {
+                let t;
+                if (updateCurrent() === UpdateState.Error && currentNode) {
+                    $('#profile-tree').treeview('selectNode', [currentNode, { silent: true }]);
+                    return;
+                }
+                if (!node) return;
+                _loading++;
+                t = 'profile';
+                if (!node.dataAttr.type)
+                    t = $('#profile-tree').treeview('getParents', node)[0].dataAttr.type;
+                else
+                    t = node.dataAttr.type;
+                currentNode = node;
+                currentProfile = profiles.items[node.dataAttr.profile];
+                $('#btn-cut').prop('disabled', false);
+                $('#btn-copy').prop('disabled', false);
+                $('#btn-delete').prop('disabled', false);
+                menubar.updateItem('edit|cut', { enabled: true });
+                menubar.updateItem('edit|copy', { enabled: true });
+                menubar.updateItem('edit|delete', { enabled: true });
+                UpdatePaste();
+                switch (t) {
+                    case 'aliases':
+                    case 'macros':
+                    case 'triggers':
+                    case 'buttons':
+                    case 'contexts':
+                    case 'profile':
+                        UpdateEditor('profile', currentProfile, {
+                            post: () => {
+                                if (currentProfile.name === 'Default') {
+                                    $('#profile-name').prop('disabled', true);
+                                    if (t === 'profile') {
+                                        $('#btn-cut').prop('disabled', true);
+                                        $('#btn-delete').prop('disabled', true);
+                                        menubar.updateItem('edit|cut', { enabled: false });
+                                        menubar.updateItem('edit|delete', { enabled: false });
+                                    }
+                                }
+                                else
+                                    $('#profile-name').prop('disabled', false);
+
+                                if (t !== 'profile' && currentProfile[t].length === 0) {
+                                    $('#btn-copy').prop('disabled', true);
                                     $('#btn-cut').prop('disabled', true);
                                     $('#btn-delete').prop('disabled', true);
                                     menubar.updateItem('edit|cut', { enabled: false });
+                                    menubar.updateItem('edit|copy', { enabled: false });
                                     menubar.updateItem('edit|delete', { enabled: false });
                                 }
+                                else if (t === 'profile') {
+                                    $('#btn-cut').prop('disabled', true);
+                                    menubar.updateItem('edit|cut', { enabled: false });
+                                }
                             }
-                            else
-                                $('#profile-name').prop('disabled', false);
-
-                            if (t !== 'profile' && currentProfile[t].length === 0) {
-                                $('#btn-copy').prop('disabled', true);
-                                $('#btn-cut').prop('disabled', true);
-                                $('#btn-delete').prop('disabled', true);
-                                menubar.updateItem('edit|cut', { enabled: false });
-                                menubar.updateItem('edit|copy', { enabled: false });
-                                menubar.updateItem('edit|delete', { enabled: false });
-                            }
-                            else if (t === 'profile') {
-                                $('#btn-cut').prop('disabled', true);
-                                menubar.updateItem('edit|cut', { enabled: false });
-                            }
-                        }
-                    });
-                    break;
-                case 'alias':
-                    UpdateEditor('alias', currentProfile.aliases[node.dataAttr.index]);
-                    break;
-                case 'macro':
-                    UpdateEditor('macro', currentProfile.macros[node.dataAttr.index], { key: MacroValue });
-                    break;
-                case 'trigger':
-                    UpdateEditor('trigger', currentProfile.triggers[node.dataAttr.index], { post: clearTriggerTester });
-                    break;
-                case 'button':
-                    UpdateEditor('button', currentProfile.buttons[node.dataAttr.index], { post: UpdateButtonSample });
-                    break;
-                case 'context':
-                    UpdateEditor('context', currentProfile.contexts[node.dataAttr.index], { post: UpdateContextSample });
-                    break;
-            }
-            document.getElementById('btn-new').title = 'New ' + ((t === 'alias' || t === 'aliases') ? 'alias' : (t.endsWith('s') ? t.substr(0, t.length - 1) : t));
-            _loading--;
-        },
-        lazyLoad: (node, add) => {
-            const parent = $('#profile-tree').treeview('getParents', node)[0];
-            const nodes = [];
-            let n;
-            let t;
-            let i;
-            let il = profiles.items[parent.dataAttr.profile][node.text.toLowerCase()].length;
-            if (node.text === 'Aliases')
-                t = 'alias';
-            else
-                t = node.text.substr(0, node.text.length - 1).toLowerCase();
-            const names = {};
-            const items = profiles.items[parent.dataAttr.profile][node.dataAttr.type];
-            for (i = 0; i < il; i++) {
-                if (!items[i].name || items[i].name.length === 0) continue;
-                names[items[i].name] = i + 1;
-            }
-            for (i = 0; i < il; i++) {
-                if (items[i].parent && names[items[i].parent]) continue;
-                nodes.push(newItemNode(items[i], i, t, parent.dataAttr.profile));
-            }
-            add(nodes.sort(sortNodes));
-            if (_clip && _clip.action === 2 && _clip.key === node.text.toLowerCase()) {
-                for (i = 0, il = _clip.data.length; i < il; i++) {
-                    n = $('#profile-tree').treeview('findNodes', ['^' + node.id + i, 'id']);
-                    n[0].$el.css('opacity', '0.5');
+                        });
+                        break;
+                    case 'alias':
+                        UpdateEditor('alias', currentProfile.aliases[node.dataAttr.index]);
+                        break;
+                    case 'macro':
+                        UpdateEditor('macro', currentProfile.macros[node.dataAttr.index], { key: MacroValue });
+                        break;
+                    case 'trigger':
+                        UpdateEditor('trigger', currentProfile.triggers[node.dataAttr.index], { post: clearTriggerTester });
+                        break;
+                    case 'button':
+                        UpdateEditor('button', currentProfile.buttons[node.dataAttr.index], { post: UpdateButtonSample });
+                        break;
+                    case 'context':
+                        UpdateEditor('context', currentProfile.contexts[node.dataAttr.index], { post: UpdateContextSample });
+                        break;
                 }
+                document.getElementById('btn-new').title = 'New ' + ((t === 'alias' || t === 'aliases') ? 'alias' : (t.endsWith('s') ? t.substr(0, t.length - 1) : t));
+                _loading--;
+            },
+            lazyLoad: (node, add) => {
+                const parent = $('#profile-tree').treeview('getParents', node)[0];
+                const nodes = [];
+                let n;
+                let t;
+                let i;
+                let il = profiles.items[parent.dataAttr.profile][node.text.toLowerCase()].length;
+                if (node.text === 'Aliases')
+                    t = 'alias';
+                else
+                    t = node.text.substr(0, node.text.length - 1).toLowerCase();
+                const names = {};
+                const items = profiles.items[parent.dataAttr.profile][node.dataAttr.type];
+                for (i = 0; i < il; i++) {
+                    if (!items[i].name || items[i].name.length === 0) continue;
+                    names[items[i].name] = i + 1;
+                }
+                for (i = 0; i < il; i++) {
+                    if (items[i].parent && names[items[i].parent]) continue;
+                    nodes.push(newItemNode(items[i], i, t, parent.dataAttr.profile));
+                }
+                add(nodes.sort(sortNodes));
+                if (_clip && _clip.action === 2 && _clip.key === node.text.toLowerCase()) {
+                    for (i = 0, il = _clip.data.length; i < il; i++) {
+                        n = $('#profile-tree').treeview('findNodes', ['^' + node.id + i, 'id']);
+                        n[0].$el.css('opacity', '0.5');
+                    }
+                }
+            },
+            data: data,
+            onInitialized: (event, nodes) => {
+                if (!skipInit && !currentNode) {
+                    const n = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
+                    $('#profile-tree').treeview('expandNode', [n]);
+                    $('#profile-tree').treeview('selectNode', [n]);
+                }
+                else if (!currentNode)
+                    currentNode = $('#profile-tree').treeview('getSelected')[0];
+                resolve();
             }
-        },
-        data: data,
-        onInitialized: (event, nodes) => {
-            if (!currentNode) {
-                const n = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
-                $('#profile-tree').treeview('expandNode', [n]);
-                $('#profile-tree').treeview('selectNode', [n]);
-            }
-        }
+        });
     });
 }
 
@@ -2951,7 +2979,7 @@ function sortTree() {
     n = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
     if (n.length > 0)
         data.unshift(cleanNode(n[0]));
-    buildTreeview(data);
+    return buildTreeview(data, true);
 }
 
 function loadActions(p, root) {

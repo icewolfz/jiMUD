@@ -2,11 +2,14 @@
 
 ## v0.6.8
 
+- **Changed:**
+  - Update electron from 3.0.8 to 3.0.9npm
 - **Fixed:**
   - Display: Fixed a bug when removing lines
   - Character manager: fix the property section to scroll bar just in case contents do not fit height
   - Profile manager:
     - Fixed expanding children after new profile created
+    - Fixed issue when renaming profile and attempting to update child nodes
 
 ## v0.6.7 2018-11-12
 
