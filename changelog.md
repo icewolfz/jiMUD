@@ -10,6 +10,7 @@
   - Profile manager:
     - Fixed expanding children after new profile created
     - Fixed issue when renaming profile and attempting to update child nodes
+    - Fixed deleting a profile after it was renamed
 
 ## v0.6.7 2018-11-12
 

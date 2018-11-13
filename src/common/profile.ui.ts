@@ -368,7 +368,7 @@ function AddNewProfile(d?: Boolean) {
     pushUndo({ action: 'add', type: 'profile', item: [p.clone()] });
     _enabled.push(p.name.toLowerCase());
     n = p.name;
-    _remove = _remove.filter((a) => { return a !== n; });
+    _remove = _remove.filter((a) => { return a.name !== n; });
 }
 
 export function RunTester() {
@@ -1463,7 +1463,7 @@ function addProfile(profile: Profile, noSort?: boolean) {
     profiles.add(profile);
     const n = profile.name;
     const ln = n.toLowerCase();
-    _remove = _remove.filter((a) => { return a !== n; });
+    _remove = _remove.filter((a) => { return a.name !== n; });
     _enabled = _enabled.filter((a) => { return a !== n; });
     $('#profile-tree').treeview('addNode', [newProfileNode(profile), false, false]);
     if (!noSort)
@@ -3244,7 +3244,7 @@ function trashProfiles(p) {
     if (_remove.length > 0) {
         const rl = _remove.length;
         for (let r = 0; r < rl; r++) {
-            shell.moveItemToTrash(path.join(p, _remove[r].toLowerCase() + '.json'));
+            shell.moveItemToTrash(path.join(p, _remove[r].file.toLowerCase() + '.json'));
         }
     }
 }
@@ -3452,7 +3452,7 @@ function DeleteProfileConfirm(profile) {
 
 function DeleteProfile(profile, customUndo?: boolean) {
     if (!profile) profile = currentProfile;
-    _remove.push(profile.name);
+    _remove.push({ name: profile.name, file: profile.file || profile.name });
     if (!customUndo)
         pushUndo({ action: 'delete', type: 'profile', item: profile });
     const nodes = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + '$', 'id']);
