@@ -2,6 +2,13 @@
 
 ## v0.6.9
 
+- **Fixed:**
+  - Code editor:
+    - Area designer:
+      - Fixed code generation cancel not resetting task bar progress
+      - Fixed object bonus code generation
+      - Do not generate set_prevent_* functions of empty string for objects
+
 ## v0.6.8 2018-11-12
 
 - **Changed:**
