@@ -2,6 +2,9 @@
 
 ## v0.6.9
 
+- **New:**
+  - Code editor:
+    - Add limb optional support to object editor
 - **Fixed:**
   - Code editor:
     - Fixed drop down edit boxes

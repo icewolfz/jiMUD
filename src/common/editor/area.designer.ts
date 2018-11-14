@@ -6558,6 +6558,11 @@ export class AreaDesigner extends EditorBase {
                                                 <input type="number" id="obj-maxWearable" class="input-sm form-control" min="0" value="10" />
                                                 <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">0 is unlimited</span>
                                             </label>
+                                        </div>
+                                        <div class="col-sm-6 form-group">
+                                            <label class="control-label">
+                                                <input type="checkbox" id="obj-limbsOptional" /> Limbs optional
+                                            </label>
                                         </div>`,
                                         reset: (e) => {
                                             $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'sheath').selectpicker('render');
@@ -6566,6 +6571,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-limbs').value = ed.value.limbs || '';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-maxWearable').value = ed.value.maxWearable || '0';
+                                            e.page.querySelector('#obj-limbsOptional').checked = ed.value.limbsOptional || false;
                                             initEditDropdown(e.page.querySelector('#obj-limbs-list').closest('.edit-dropdown'));
                                         }
                                     }), new WizardDataGridPage({
@@ -6732,6 +6738,11 @@ export class AreaDesigner extends EditorBase {
                                             <input type="number" id="obj-maxWearable" class="input-sm form-control" min="0" value="10" />
                                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">0 is unlimited</span>
                                         </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            <input type="checkbox" id="obj-limbsOptional" /> Limbs optional
+                                        </label>
                                     </div>`,
                                         reset: (e) => {
                                             $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'accessory').selectpicker('render');
@@ -6739,6 +6750,7 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-maxWearable').value = ed.value.maxWearable || '0';
+                                            e.page.querySelector('#obj-limbsOptional').checked = ed.value.limbsOptional || false;
                                             initEditDropdown(e.page.querySelector('#obj-limbs-list').closest('.edit-dropdown'));
                                         }
                                     }), new WizardDataGridPage({
@@ -12363,7 +12375,8 @@ export class AreaDesigner extends EditorBase {
                 }
                 if (obj.maxWearable !== 0)
                     data['create body'] += `   set_temp_property("max_wearable", ${obj.maxWearable});\n`;
-
+                if (obj.limbsOptional)
+                    data['create body'] += '   set_limbs_optional(1);\n';
                 if (obj.damaged && obj.damaged.length !== 0) {
                     data.includes += '\n#include <limbsdamaged.h>';
                     //name
@@ -12727,6 +12740,8 @@ export class AreaDesigner extends EditorBase {
                 }
                 if (obj.maxWearable !== 0)
                     data['create body'] += `   set_temp_property("max_wearable", ${obj.maxWearable});\n`;
+                if (obj.limbsOptional)
+                    data['create body'] += '   set_limbs_optional(1);\n';
                 //#endregion
                 break;
             case StdObjectType.weapon:
