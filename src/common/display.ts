@@ -2592,28 +2592,28 @@ export class Display extends EventEmitter {
 
                     if (format.style !== FontStyle.None) {
                         if ((format.style & FontStyle.Bold) === FontStyle.Bold)
-                            fCls.push(' b');
+                            fCls.push('b');
                         if ((format.style & FontStyle.Italic) === FontStyle.Italic)
-                            fCls.push(' i');
+                            fCls.push('i');
                         if ((format.style & FontStyle.Overline) === FontStyle.Overline)
-                            fCls.push(' o');
+                            fCls.push('o');
                         if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) === FontStyle.Underline)
-                            fCls.push(' u');
+                            fCls.push('u');
                         if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
-                            fCls.push(' du');
+                            fCls.push('du');
                         if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
                             if (this.enableFlashing)
-                                fCls.push(' ansi-blink');
+                                fCls.push('ansi-blink');
                             else if ((format.style & FontStyle.DoubleUnderline) !== FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) !== FontStyle.Underline)
-                                fCls.push(' u');
+                                fCls.push('u');
                         }
                         if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
                             fCls.push(' s');
                     }
-                    format.bStyle = bStyle = bStyle.join('').trim();
-                    format.fStyle = fStyle = fStyle.join('').trim();
+                    format.bStyle = bStyle = bStyle.join('');
+                    format.fStyle = fStyle = fStyle.join('');
                     if (fCls.length !== 0)
-                        format.fCls = fCls = ' class="' + fCls.join('').trim() + '"';
+                        format.fCls = fCls = ' class="' + fCls.join(' ') + '"';
                     else
                         format.fCls = fCls = '';
                 }
