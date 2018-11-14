@@ -57,7 +57,7 @@ export function SetupEditor() {
                 monaco.languages.setMonarchTokensProvider('lpc', language);
                 monaco.languages.setLanguageConfiguration('lpc', conf);
                 monaco.languages.registerCompletionItemProvider('lpc', {
-                    provideCompletionItems: (model, position) => {
+                    provideCompletionItems: (model, position, context, token) => {
                         if ($lpcCompletionCache) return $lpcCompletionCache;
                         return ($lpcCompletionCache = loadCompletion());
                     }

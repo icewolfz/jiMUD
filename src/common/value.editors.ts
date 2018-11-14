@@ -146,16 +146,20 @@ export class TextValueEditor extends ValueEditor {
         this.$editor.classList.add('property-grid-editor');
         if (this.$wrap)
             this.$editor.style.whiteSpace = 'normal';
-        this.$editor.addEventListener('paste', () => {
+        this.$editor.addEventListener('paste', (e) => {
             if (!this.$noEnter) return;
             const sel = {
                 start: this.$editor.selectionStart,
-                end: this.$editor.selectionEnd
+                end: this.$editor.selectionEnd,
+                new: e.clipboardData.getData('text/plain').replace(/(?:\r\n|\r|\n)/g, '').length
             };
             window.setTimeout(() => {
+                const len = this.$editor.value.length;
                 this.$editor.value = this.$editor.value.replace(/(?:\r\n|\r|\n)/g, '');
-                this.$editor.selectionStart = sel.start;
-                this.$editor.selectionEnd = sel.end;
+                //only worry about if different lengths
+                if (len === this.$editor.value.length) return;
+                this.$editor.selectionStart = sel.start + sel.new;
+                this.$editor.selectionEnd = sel.end + sel.new;
             });
         });
         this.$editor.addEventListener('blur', (e) => {

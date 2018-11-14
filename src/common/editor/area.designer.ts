@@ -6519,7 +6519,7 @@ export class AreaDesigner extends EditorBase {
                                         body: `<div class="col-sm-12 form-group">
                                             <label class="control-label" style="width: 100%;">Type
                                                 <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
-                                                    <optgroup label="accessory"><option value="accessory">Accessory</option><option value="buckler">Buckler</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Banded mail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splintmail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chainmail</option><option value="ringmail">Ring mail</option><option value="scalemail">Scalemail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy over clothing</option><option value="overclothing">Over clothing</option><option value="thin overclothing">Thin over clothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Under clothing</option></optgroup>
+                                                    <optgroup label="accessory"><option value="accessory">Accessory</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Banded mail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splintmail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chainmail</option><option value="ringmail">Ring mail</option><option value="scalemail">Scalemail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy over clothing</option><option value="overclothing">Over clothing</option><option value="thin overclothing">Thin over clothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Under clothing</option></optgroup>
                                                 </select>
                                             </label>
                                         </div>
@@ -6558,6 +6558,11 @@ export class AreaDesigner extends EditorBase {
                                                 <input type="number" id="obj-maxWearable" class="input-sm form-control" min="0" value="10" />
                                                 <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">0 is unlimited</span>
                                             </label>
+                                        </div>
+                                        <div class="col-sm-6 form-group">
+                                            <label class="control-label">
+                                                <input type="checkbox" id="obj-limbsOptional" /> Limbs optional
+                                            </label>
                                         </div>`,
                                         reset: (e) => {
                                             $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'sheath').selectpicker('render');
@@ -6566,6 +6571,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-limbs').value = ed.value.limbs || '';
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-maxWearable').value = ed.value.maxWearable || '0';
+                                            e.page.querySelector('#obj-limbsOptional').checked = ed.value.limbsOptional || false;
                                             initEditDropdown(e.page.querySelector('#obj-limbs-list').closest('.edit-dropdown'));
                                         }
                                     }), new WizardDataGridPage({
@@ -6700,7 +6706,7 @@ export class AreaDesigner extends EditorBase {
                                         body: `<div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%;">Type
                                             <select id="obj-subType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
-                                                <optgroup label="accessory"><option value="accessory">Accessory</option><option value="buckler">Buckler</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Banded mail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splint mail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chain mail</option><option value="ringmail">Ring mail</option><option value="scalemail">Scale mail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy overclothing</option><option value="overclothing">Overclothing</option><option value="thin overclothing">Thin overclothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Underclothing</option></optgroup>
+                                                <optgroup label="accessory"><option value="accessory">Accessory</option><option value="jewelry">Jewelry</option><option value="sheath">Sheath</option></optgroup><optgroup label="clothing"><option value="clothing">Clothing</option><option value="thin clothing">Thin clothing</option></optgroup><optgroup label="heavy"><option value="bandedmail">Banded mail</option><option value="full platemail">Full platemail</option><option value="platemail">Platemail</option><option value="splintmail">Splint mail</option></optgroup><optgroup label="light"><option value="hard leather">Hard leather</option><option value="heavy clothing">Heavy clothing</option><option value="padded leather">Padded leather</option><option value="soft leather">Soft leather</option><option value="studded leather">Studded leather</option></optgroup><optgroup label="medium"><option value="brigandine">Brigandine</option><option value="chainmail">Chain mail</option><option value="ringmail">Ring mail</option><option value="scalemail">Scale mail</option></optgroup><optgroup label="overclothing"><option value="heavy overclothing">Heavy overclothing</option><option value="overclothing">Overclothing</option><option value="thin overclothing">Thin overclothing</option></optgroup><optgroup label="underclothing"><option value="underclothing">Underclothing</option></optgroup>
                                             </select>
                                         </label>
                                     </div>
@@ -6732,6 +6738,11 @@ export class AreaDesigner extends EditorBase {
                                             <input type="number" id="obj-maxWearable" class="input-sm form-control" min="0" value="10" />
                                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">0 is unlimited</span>
                                         </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            <input type="checkbox" id="obj-limbsOptional" /> Limbs optional
+                                        </label>
                                     </div>`,
                                         reset: (e) => {
                                             $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'accessory').selectpicker('render');
@@ -6739,6 +6750,7 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-maxWearable').value = ed.value.maxWearable || '0';
+                                            e.page.querySelector('#obj-limbsOptional').checked = ed.value.limbsOptional || false;
                                             initEditDropdown(e.page.querySelector('#obj-limbs-list').closest('.edit-dropdown'));
                                         }
                                     }), new WizardDataGridPage({
@@ -9508,7 +9520,7 @@ export class AreaDesigner extends EditorBase {
                 ctx.strokeStyle = 'rgba(142, 142, 142, 0.50)';
             ctx.strokeRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
         }
-        else if (this.$selectedRooms.indexOf(room) !== -1) {
+        else if (this.$selectedRooms && this.$selectedRooms.indexOf(room) !== -1) {
             if (this.$focused) {
                 ctx.fillStyle = 'rgba(135, 206, 250, 0.50)';
                 ctx.strokeStyle = 'rgba(135, 206, 250, 0.50)';
@@ -10863,6 +10875,8 @@ export class AreaDesigner extends EditorBase {
                 this.emit('progress-canceled', 'designer');
             else if (err && err.message === 'Canceled')
                 this.emit('progress-canceled', 'designer');
+            else
+                this.emit('progress-error', 'designer', err);
         }
     }
 
@@ -12361,7 +12375,8 @@ export class AreaDesigner extends EditorBase {
                 }
                 if (obj.maxWearable !== 0)
                     data['create body'] += `   set_temp_property("max_wearable", ${obj.maxWearable});\n`;
-
+                if (obj.limbsOptional)
+                    data['create body'] += '   set_limbs_optional(1);\n';
                 if (obj.damaged && obj.damaged.length !== 0) {
                     data.includes += '\n#include <limbsdamaged.h>';
                     //name
@@ -12725,6 +12740,8 @@ export class AreaDesigner extends EditorBase {
                 }
                 if (obj.maxWearable !== 0)
                     data['create body'] += `   set_temp_property("max_wearable", ${obj.maxWearable});\n`;
+                if (obj.limbsOptional)
+                    data['create body'] += '   set_limbs_optional(1);\n';
                 //#endregion
                 break;
             case StdObjectType.weapon:
@@ -13010,7 +13027,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_prevent_offer(${obj.preventOffer});\n`;
         else if (obj.preventOffer === 'true' || obj.preventOffer === 1 || obj.preventOffer === '1')
             data['create body'] += `   set_prevent_offer(1);\n`;
-        else
+        else if (obj.preventOffer.length > 0)
             data['create body'] += `   set_prevent_offer("${obj.preventOffer.replace(/"/g, '\\"')}");\n`;
 
         obj.preventGet = obj.preventGet.trim();
@@ -13022,7 +13039,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_prevent_get(${obj.preventGet});\n`;
         else if (obj.preventGet === 'true' || obj.preventGet === 1 || obj.preventGet === '1')
             data['create body'] += `   set_prevent_get(1);\n`;
-        else
+        else if (obj.preventGet.length > 0)
             data['create body'] += `   set_prevent_get("${obj.preventGet.replace(/"/g, '\\"')}");\n`;
 
         obj.preventDrop = obj.preventDrop.trim();
@@ -13034,7 +13051,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_prevent_drop(${obj.preventDrop});\n`;
         else if (obj.preventDrop === 'true' || obj.preventDrop === 1 || obj.preventDrop === '1')
             data['create body'] += `   set_prevent_drop(1);\n`;
-        else
+        else if (obj.preventDrop.length > 0)
             data['create body'] += `   set_prevent_drop("${obj.preventDrop.replace(/"/g, '\\"')}");\n`;
 
         obj.preventPut = obj.preventPut.trim();
@@ -13046,7 +13063,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_prevent_put(${obj.preventPut});\n`;
         else if (obj.preventPut === 'true' || obj.preventPut === 1 || obj.preventPut === '1')
             data['create body'] += `   set_prevent_put(1);\n`;
-        else
+        else if (obj.preventPut.length > 0)
             data['create body'] += `   set_prevent_put("${obj.preventPut.replace(/"/g, '\\"')}");\n`;
 
         obj.preventSteal = obj.preventSteal.trim();
@@ -13058,11 +13075,11 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_prevent_steal(${obj.preventSteal});\n`;
         else if (obj.preventSteal === 'true' || obj.preventSteal === 1 || obj.preventSteal === '1')
             data['create body'] += `   set_prevent_steal(1);\n`;
-        else
+        else if (obj.preventSteal.length > 0)
             data['create body'] += `   set_prevent_steal("${obj.preventSteal.replace(/"/g, '\\"')}");\n`;
         //#endregion
         if (bonuses && obj.bonuses && obj.bonuses.length !== 0) {
-            tmp = obj.bonus.filter(b => b.type === 0 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
+            tmp = obj.bonuses.filter(b => b.type === 0 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
             tmp = tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
                     return `"${b.adjust}" : ${b.amount}`;
@@ -13077,7 +13094,7 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += tmp.join(',\n       ');
                 data['create body'] += '\n     ]) );\n';
             }
-            tmp = obj.bonus.filter(b => b.type === 1 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
+            tmp = obj.bonuses.filter(b => b.type === 1 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
             tmp = tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
                     return `"${b.adjust}" : ${b.amount}`;
@@ -13092,7 +13109,7 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += tmp.join(',\n       ');
                 data['create body'] += '\n     ]) );\n';
             }
-            tmp = obj.bonus.filter(b => b.type === 2 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
+            tmp = obj.bonuses.filter(b => b.type === 2 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
             tmp = tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
                     return `"${b.adjust}" : ${b.amount}`;
@@ -13107,7 +13124,7 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += tmp.join(',\n       ');
                 data['create body'] += '\n     ]) );\n';
             }
-            tmp = obj.bonus.filter(b => b.type === 3 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
+            tmp = obj.bonuses.filter(b => b.type === 3 && b.amount && b.adjust.length !== 0 && b.adjust !== 'false');
             tmp = tmp.map(b => {
                 if (b.amount.startsWith('(') || (typeof b.amount === 'string' && parseFloat(b.amount).toString() === b.amount))
                     return `"${b.adjust}" : ${b.amount}`;
