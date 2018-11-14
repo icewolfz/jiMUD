@@ -5,6 +5,8 @@
 - **New:**
   - Code editor:
     - Add limb optional support to object editor
+- **Changed:**
+  - ANSI Parser: use unicode zero space character instead of <wbr> tag to reduce memory
 - **Fixed:**
   - Code editor:
     - Fixed drop down edit boxes
