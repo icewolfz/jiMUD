@@ -13,6 +13,7 @@
       - Fixed object bonus code generation
       - Do not generate set_prevent_* functions of empty string for objects
       - Cancel on error when generating code
+      - Remove buckler as an accessory for armors
   - Progress dialog: fix task bar progress not being cleared on close
   - Status: Attempt to fix weather overlay again
 
