@@ -3169,6 +3169,18 @@ export class ScrollBar extends EventEmitter {
     };
 
     /**
+     * set or return the content element
+     *
+     * @memberof ScrollBar
+     */
+    get content() { return this._content; }
+    set content(value) {
+        if (this._content === value) return;
+        this._content = value;
+        this.resize();
+    }
+
+    /**
      * Current size of scroll bar
      *
      * @readonly
