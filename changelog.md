@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Code editor:
+    - Fixed drop down edit boxes
     - Area designer:
       - Fixed code generation cancel not resetting task bar progress
       - Fixed object bonus code generation

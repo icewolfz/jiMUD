@@ -1951,12 +1951,15 @@ export function initEditDropdown(d) {
     b.addEventListener('click', () => {
         const m = Array.from(b.nextElementSibling.querySelectorAll('li > a'));
         let val;
-        if (d.dataset.multiple === '1' || d.dataset.multiple === 'true')
+        if (ip.value.length !== 0 && (d.dataset.multiple === '1' || d.dataset.multiple === 'true'))
             val = ip.value.toLowerCase().split(',');
         else if (ip.value.length !== 0)
             val = [ip.value.toLowerCase()];
-        else
-            val = [];
+        if (!val || val.length === 0) {
+            b.nextElementSibling.scrollTop = 0;
+            return;
+        }
+
         m.forEach(i => {
             (<HTMLElement>i).classList.remove('active');
         });
