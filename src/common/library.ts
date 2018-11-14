@@ -1952,9 +1952,9 @@ export function initEditDropdown(d) {
         const m = Array.from(b.nextElementSibling.querySelectorAll('li > a'));
         let val;
         if (ip.value.length !== 0 && (d.dataset.multiple === '1' || d.dataset.multiple === 'true'))
-            val = ip.value.toLowerCase().split(',');
+            val = ip.value.toLowerCase().split(',').map(m => m.trim());
         else if (ip.value.length !== 0)
-            val = [ip.value.toLowerCase()];
+            val = [ip.value.toLowerCase().trim()];
         if (!val || val.length === 0) {
             b.nextElementSibling.scrollTop = 0;
             return;
