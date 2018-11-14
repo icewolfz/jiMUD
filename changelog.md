@@ -10,6 +10,7 @@
       - Do not generate set_prevent_* functions of empty string for objects
       - Cancel on error when generating code
   - Progress dialog: fix task bar progress not being cleared on close
+  - Status: Attempt to fix weather overlay again
 
 ## v0.6.8 2018-11-12
 

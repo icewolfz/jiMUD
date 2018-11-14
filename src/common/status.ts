@@ -98,7 +98,8 @@ export class Status extends EventEmitter {
                 case 'omud.environment':
                     if (obj.weather) {
                         const env = document.getElementById('environment');
-                        env.classList.remove('weather-' + this.info['WEATHER'], 'intensity-hard');
+                        env.className = env.className.split(' ').filter(c => !c.match(/^(weather-.*|intensity-hard)$/)).join(' ');
+                        //env.classList.remove('weather-' + this.info['WEATHER'], 'intensity-hard');
                         this.info['WEATHER'] = obj.weather;
                         this.info['WEATHER_INTENSITY'] = obj.weather_intensity;
                         if (obj.weather !== '0' && obj.weather !== 'none')
