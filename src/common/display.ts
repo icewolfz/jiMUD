@@ -2608,7 +2608,7 @@ export class Display extends EventEmitter {
                                 fCls.push('u');
                         }
                         if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
-                            fCls.push(' s');
+                            fCls.push('s');
                     }
                     format.bStyle = bStyle = bStyle.join('');
                     format.fStyle = fStyle = fStyle.join('');
