@@ -1364,7 +1364,7 @@ export class Display extends EventEmitter {
         if (this._viewCache[line])
             delete this._viewCache[line];
         if (this.split && this.split.viewCache[line])
-            delete this.split._viewCache[line];
+            delete this.split.viewCache[line];
 
         if (!this._currentSelection.drag) {
             if (this._currentSelection.start.y === line && this._currentSelection.end.y === line) {
@@ -1432,7 +1432,7 @@ export class Display extends EventEmitter {
             if (this._viewCache[line + a])
                 delete this._viewCache[line + a];
             if (this.split && this.split.viewCache[line + a])
-                delete this.split._viewCache[line + a];
+                delete this.split.viewCache[line + a];
         }
 
         if (!this._currentSelection.drag) {
@@ -1768,7 +1768,7 @@ export class Display extends EventEmitter {
         let width = 0;
         for (; f < fLen; f++) {
             //no width so ignore these blocks
-            if (!formats[f].width || formats[f].formatType === FormatType.WordBreak || formats[f].formatType === FormatType.LinkEnd || formats[f].formatType === FormatType.MXPLinkEnd || formats[f].formatType === FormatType.MXPSendEnd)
+            if (!formats[f].width || formats[f].formatType === FormatType.LinkEnd || formats[f].formatType === FormatType.MXPLinkEnd || formats[f].formatType === FormatType.MXPSendEnd)
                 continue;
             //find end
             if (f < fLen - 1)
@@ -2817,28 +2817,28 @@ export class Display extends EventEmitter {
 
                     if (format.style !== FontStyle.None) {
                         if ((format.style & FontStyle.Bold) === FontStyle.Bold)
-                            fCls.push(' b');
+                            fCls.push('b');
                         if ((format.style & FontStyle.Italic) === FontStyle.Italic)
-                            fCls.push(' i');
+                            fCls.push('i');
                         if ((format.style & FontStyle.Overline) === FontStyle.Overline)
-                            fCls.push(' o');
+                            fCls.push('o');
                         if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) === FontStyle.Underline)
-                            fCls.push(' u');
+                            fCls.push('u');
                         if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
-                            fCls.push(' du');
+                            fCls.push('du');
                         if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
                             if (this.enableFlashing)
-                                fCls.push(' ansi-blink');
+                                fCls.push('ansi-blink');
                             else if ((format.style & FontStyle.DoubleUnderline) !== FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) !== FontStyle.Underline)
-                                fCls.push(' u');
+                                fCls.push('u');
                         }
                         if ((format.style & FontStyle.Strikeout) === FontStyle.Strikeout)
-                            fCls.push(' s');
+                            fCls.push('s');
                     }
-                    format.bStyle = bStyle = bStyle.join('').trim();
-                    format.fStyle = fStyle = fStyle.join('').trim();
+                    format.bStyle = bStyle = bStyle.join('');
+                    format.fStyle = fStyle = fStyle.join('');
                     if (fCls.length !== 0)
-                        format.fCls = fCls = ' class="' + fCls.join('').trim() + '"';
+                        format.fCls = fCls = ' class="' + fCls.join(' ') + '"';
                     else
                         format.fCls = fCls = '';
                 }
@@ -2863,8 +2863,6 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
                 fore.push('</a>');
             }
-            else if (format.formatType === FormatType.WordBreak)
-                fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
                 fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="', format.href, '" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onclick="', this.mxpLinkFunction, '(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
@@ -3055,11 +3053,6 @@ export class Display extends EventEmitter {
                 if (offset < start || end < start)
                     continue;
                 parts.push('</a>');
-            }
-            else if (format.formatType === FormatType.WordBreak) {
-                if (offset < start || end < start)
-                    continue;
-                parts.push('<wbr>');
             }
             else if (format.formatType === FormatType.MXPLink) {
                 if (offset < start || end < start)
@@ -3399,6 +3392,18 @@ export class ScrollBar extends EventEmitter {
     };
 
     /**
+     * set or return the content element
+     *
+     * @memberof ScrollBar
+     */
+    get content() { return this._content; }
+    set content(value) {
+        if (this._content === value) return;
+        this._content = value;
+        this.resize();
+    }
+
+    /**
      * Current size of scroll bar
      *
      * @readonly
@@ -3665,8 +3670,8 @@ export class ScrollBar extends EventEmitter {
         this._thumbSize = Math.ceil(1 / this._percentView * this.trackSize);
         if (this._thumbSize > this.trackSize)
             this._thumbSize = this.trackSize;
-        if (this._thumbSize < 20)
-            this._thumbSize = 20;
+        if (this._thumbSize < 15)
+            this._thumbSize = 15;
         this.thumb.style[this._type === ScrollType.horizontal ? 'width' : 'height'] = this._thumbSize + 'px';
         this._maxDrag = this.trackSize - this._thumbSize;
         if (this._maxDrag <= 0) {

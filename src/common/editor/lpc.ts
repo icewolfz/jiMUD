@@ -793,7 +793,7 @@ export const language = <ILanguage>{
 };
 //spellchecker:enable
 
-export function loadCompletion(): monaco.languages.CompletionItem[] {
+export function loadCompletion(): monaco.languages.CompletionList {
     let list: monaco.languages.CompletionItem[] = [
         {
             label: 'void create',
@@ -819,7 +819,7 @@ export function loadCompletion(): monaco.languages.CompletionItem[] {
     list = list.concat(getCompletionFromPath(path.join(p, 'sefuns'), monaco.languages.CompletionItemKind.Class));
     list = list.concat(getCompletionFromPath(path.join(p, 'lfuns'), monaco.languages.CompletionItemKind.Property));
     list = list.concat(getCompletionFromFile(path.join(p, 'inherits.txt'), monaco.languages.CompletionItemKind.Module));
-    return list;
+    return { suggestions: list, incomplete: false };
 }
 
 function getCompletionFromPath(p, kind?: monaco.languages.CompletionItemKind, prefix?): monaco.languages.CompletionItem[] {

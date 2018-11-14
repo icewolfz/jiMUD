@@ -40,7 +40,7 @@
                         let idx = manager.panes.indexOf(manager.activePane);
                         if (idx !== -1) {
                             var ed;
-                            if (window.$editors[idx].domElement.style.display !== 'block')
+                            if (window.$editors[idx]._domElement.style.display !== 'block')
                                 ed = window.$dEditors[idx];
                             else
                                 ed = window.$editors[idx];
@@ -64,7 +64,7 @@
                         let idx = manager.panes.indexOf(manager.activePane);
                         if (idx !== -1) {
                             var ed;
-                            if (window.$editors[idx].domElement.style.display !== 'block')
+                            if (window.$editors[idx]._domElement.style.display !== 'block')
                                 ed = window.$dEditors[idx];
                             else
                                 ed = window.$editors[idx];
@@ -2232,9 +2232,9 @@
                                 if (manager.active.diffFile)
                                     stopWatchFile(manager.active.diffFile);
                                 manager.active.diffFile = null;
-                                window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
+                                window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
                                 toggleDiffNav(false);
-                                window.$editors[pane].domElement.style.display = 'block';
+                                window.$editors[pane]._domElement.style.display = 'block';
                                 manager.active.editor.activate(window.$editors[pane]);
                                 window.$editors[pane].layout();
                                 doUpdate(2);
@@ -2250,9 +2250,9 @@
                                 manager.active.editor.diff = manager.active.editor.read();
                                 manager.active.diffFile = manager.active.editor.file;
                                 watchFile(manager.active.diffFile);
-                                window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
+                                window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
                                 toggleDiffNav(true);
-                                window.$editors[pane].domElement.style.display = '';
+                                window.$editors[pane]._domElement.style.display = '';
                                 manager.active.editor.activate(window.$dEditors[pane]);
                                 window.$dEditors[pane].layout();
                                 doUpdate(2);
@@ -2280,9 +2280,9 @@
                                         manager.active.editor.diff = manager.active.editor.read(fileNames[0]);
                                         manager.active.diffFile = fileNames[0];
                                         watchFile(manager.active.diffFile);
-                                        window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
+                                        window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
                                         toggleDiffNav(true);
-                                        window.$editors[pane].domElement.style.display = '';
+                                        window.$editors[pane]._domElement.style.display = '';
                                         manager.active.editor.activate(window.$dEditors[pane]);
                                         window.$dEditors[pane].layout();
                                         doUpdate(2);
@@ -2495,16 +2495,16 @@
     manager.on('removed', (e, pane) => {
         closeEditor(e.panel);
         if (manager.panes[pane].panels.length === 0) {
-            window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
-            window.$editors[pane].domElement.style.display = '';
+            window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+            window.$editors[pane]._domElement.style.display = '';
             toggleDiffNav(false);
         }
         doUpdate(1);
     });
     manager.on('dock-changed', (e, pane, oPane) => {
         if (manager.panes[oPane].panels.length === 0) {
-            window.$editors[oPane].domElement.style.display = '';
-            window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
+            window.$editors[oPane]._domElement.style.display = '';
+            window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
             toggleDiffNav(false);
         }
         doUpdate(129);
@@ -2521,15 +2521,15 @@
         if (e.panel.editor) {
             if (e.panel.editor.type === 1) {
                 if (e.panel.editor.diff) {
-                    window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
-                    window.$editors[pane].domElement.style.display = '';
+                    window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                    window.$editors[pane]._domElement.style.display = '';
                     e.panel.editor.activate(window.$dEditors[pane]);
                     window.$dEditors[pane].layout();
                     toggleDiffNav(true);
                 }
                 else {
-                    window.$editors[pane].domElement.style.display = 'block';
-                    window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
+                    window.$editors[pane]._domElement.style.display = 'block';
+                    window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
                     e.panel.editor.activate(window.$editors[pane]);
                     if (!e.panel.restored) {
                         var state = getViewState(e.panel.editor.file);
@@ -2542,16 +2542,16 @@
                 }
             }
             else {
-                window.$editors[pane].domElement.style.display = '';
-                window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
+                window.$editors[pane]._domElement.style.display = '';
+                window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
                 e.panel.editor.activate();
                 toggleDiffNav(false);
             }
             setTimeout(() => { e.panel.editor.focus(); }, 50);
         }
         else {
-            window.$editors[pane].domElement.style.display = '';
-            window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
+            window.$editors[pane]._domElement.style.display = '';
+            window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
             toggleDiffNav(false);
         }
         doUpdate(1);
@@ -2938,8 +2938,8 @@
                             stopWatchFile(_editors[p].diffFile);
                         _editors[p].diffFile = null;
                         if (a) {
-                            window.$dEditors[pane].modifiedEditor.domElement.parentElement.parentElement.style.display = '';
-                            window.$editors[pane].domElement.style.display = 'block';
+                            window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+                            window.$editors[pane]._domElement.style.display = 'block';
                             toggleDiffNav(false);
                             _editors[p].editor.activate(window.$editors[pane]);
                             window.$editors[pane].layout();
@@ -4092,9 +4092,9 @@
                 if (manager.active.diffFile)
                     stopWatchFile(manager.active.diffFile);
                 manager.active.editor.diff = manager.active.editor.read(item.local);
-                window.$dEditors[dock].modifiedEditor.domElement.parentElement.parentElement.style.display = 'block';
+                window.$dEditors[dock].modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
                 toggleDiffNav(true);
-                window.$editors[dock].domElement.style.display = '';
+                window.$editors[dock]._domElement.style.display = '';
                 manager.active.editor.activate(window.$dEditors[dock]);
                 window.$dEditors[dock].layout();
                 closeProgressDialog(item.ID);
@@ -8761,6 +8761,16 @@
                     logOutput(manager.active.editor.filename + ': Formatting started');
                 else if (type === 'designer')
                     ipcRenderer.send('progress-show', 'Generating area&hellip;');
+            });
+            p.editor.on('progress-canceled', (type) => {
+                if (type === 'designer')
+                    ipcRenderer.send('progress-canceled');
+            });
+            p.editor.on('progress-error', (type, err) => {
+                if (type === 'designer')
+                    ipcRenderer.send('progress-canceled');
+                if (options && options.debug)
+                    console.log(err);
             });
             p.editor.on('progress', (pObject) => {
                 if (!pObject) return;

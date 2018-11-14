@@ -2176,9 +2176,7 @@ export class Parser extends EventEmitter {
                     return null;
                 case 'SBR':
                     return {
-                        format: {
-                            formatType: FormatType.WordBreak
-                        }, text: ' '
+                        format: null, text: ' \u200B'
                     };
                 case 'RESET':
                     this.ResetMXP();

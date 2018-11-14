@@ -1951,12 +1951,15 @@ export function initEditDropdown(d) {
     b.addEventListener('click', () => {
         const m = Array.from(b.nextElementSibling.querySelectorAll('li > a'));
         let val;
-        if (d.dataset.multiple === '1' || d.dataset.multiple === 'true')
-            val = ip.value.toLowerCase().split(',');
+        if (ip.value.length !== 0 && (d.dataset.multiple === '1' || d.dataset.multiple === 'true'))
+            val = ip.value.toLowerCase().split(',').map(i => i.trim());
         else if (ip.value.length !== 0)
-            val = [ip.value.toLowerCase()];
-        else
-            val = [];
+            val = [ip.value.toLowerCase().trim()];
+        if (!val || val.length === 0) {
+            b.nextElementSibling.scrollTop = 0;
+            return;
+        }
+
         m.forEach(i => {
             (<HTMLElement>i).classList.remove('active');
         });
@@ -2034,4 +2037,18 @@ export function formatUnit(str, ch?) {
     if (/^\d+$/.test(str))
         return parseInt(str, 10) + 'px';
     return str;
+}
+
+export function replaceHtml(el, html) {
+    const oldEl = typeof el === 'string' ? document.getElementById(el) : el;
+    /*@cc_on // Pure innerHTML is slightly faster in IE
+		oldEl.innerHTML = html;
+		return oldEl;
+	@*/
+    const newEl = oldEl.cloneNode(false);
+    newEl.innerHTML = html;
+    oldEl.parentNode.replaceChild(newEl, oldEl);
+    /* Since we just removed the old element from the DOM, return a reference
+	to the new element, which can be used to restore variable references. */
+    return newEl;
 }
