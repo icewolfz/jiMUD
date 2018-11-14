@@ -1667,7 +1667,7 @@ export class Display extends EventEmitter {
         let width = 0;
         for (; f < fLen; f++) {
             //no width so ignore these blocks
-            if (!formats[f].width || formats[f].formatType === FormatType.WordBreak || formats[f].formatType === FormatType.LinkEnd || formats[f].formatType === FormatType.MXPLinkEnd || formats[f].formatType === FormatType.MXPSendEnd)
+            if (!formats[f].width || formats[f].formatType === FormatType.LinkEnd || formats[f].formatType === FormatType.MXPLinkEnd || formats[f].formatType === FormatType.MXPSendEnd)
                 continue;
             //find end
             if (f < fLen - 1)
@@ -2638,8 +2638,6 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
                 fore.push('</a>');
             }
-            else if (format.formatType === FormatType.WordBreak)
-                fore.push('<wbr>');
             else if (format.formatType === FormatType.MXPLink) {
                 fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="', format.href, '" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onclick="', this.mxpLinkFunction, '(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
@@ -2825,11 +2823,6 @@ export class Display extends EventEmitter {
                 if (offset < start || end < start)
                     continue;
                 parts.push('</a>');
-            }
-            else if (format.formatType === FormatType.WordBreak) {
-                if (offset < start || end < start)
-                    continue;
-                parts.push('<wbr>');
             }
             else if (format.formatType === FormatType.MXPLink) {
                 if (offset < start || end < start)

@@ -547,8 +547,6 @@ function createLine(text: string, formats: any[]) {
         else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
             parts.push('</a>');
         }
-        else if (format.formatType === FormatType.WordBreak)
-            parts.push('<wbr>');
         else if (format.formatType === FormatType.MXPLink) {
             parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="', format.href.replace(/"/g, '&quot;'), '" onclick="doMXPLink(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
             if (end - offset === 0) continue;
