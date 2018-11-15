@@ -5,6 +5,7 @@
 - **New:**
   - Code editor:
     - Add limb optional support to object editor
+    - Add random gender support to monster wizard
 - **Changed:**
   - ANSI Parser: use unicode zero space character instead of <wbr> tag to reduce memory
 - **Fixed:**

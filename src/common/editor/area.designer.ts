@@ -11993,8 +11993,12 @@ export class AreaDesigner extends EditorBase {
         }
         if (monster.language !== base.language)
             data['create body'] += `   set_primary_lang("${monster.language}");\n`;
-        if (monster.gender !== base.gender)
-            data['create body'] += `   set_gender("${monster.gender}");\n`;
+        if (monster.gender !== base.gender) {
+            if (monster.gender === 'random')
+                data['create body'] += `   set_gender(random(2) ? "male" : "female");\n`;
+            else
+                data['create body'] += `   set_gender("${monster.gender}");\n`;
+        }
         if (monster.eyeColor !== base.eyeColor)
             data['create body'] += `   set_eyecolor("${monster.eyeColor}");\n`;
         if (monster.hairColor !== base.hairColor)

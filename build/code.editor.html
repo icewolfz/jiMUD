@@ -1265,6 +1265,7 @@
                     <select id="mon-wiz-gender" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
                         <option value='male'>male</option>
                         <option value='female'>female</option>
+                        <option value='random'>random</option>
                         <option value=''>none</option>
                     </select>
                 </label>
@@ -6994,8 +6995,12 @@
                 }
                 if (data['mon-wiz-language'].length > 0)
                     tmpl['create body'] += `   set_primary_lang("${data['mon-wiz-language']}");\n`;
-                if (data['mon-wiz-gender'].value && data['mon-wiz-gender'].value.length > 0)
-                    tmpl['create body'] += `   set_gender("${data['mon-wiz-gender'].value}");\n`;
+                if (data['mon-wiz-gender'].value && data['mon-wiz-gender'].value.length > 0) {
+                    if (data['mon-wiz-gender'].value === 'random')
+                        tmpl['create body'] += `   set_gender(random(2) ? "male" : "female");\n`;
+                    else
+                        tmpl['create body'] += `   set_gender("${data['mon-wiz-gender'].value}");\n`;
+                }
                 if (data['mon-wiz-eye'].length > 0)
                     tmpl['create body'] += `   set_eyecolor("${data['mon-wiz-eye']}");\n`;
                 if (data['mon-wiz-hair'].length > 0)
