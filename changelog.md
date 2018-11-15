@@ -11,6 +11,7 @@
 - **Fixed:**
   - Code editor:
     - Fixed drop down edit boxes
+    - Fixed monster wizard emote type display
     - Area designer:
       - Fixed code generation cancel not resetting task bar progress
       - Fixed object bonus code generation

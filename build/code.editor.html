@@ -6250,6 +6250,34 @@
                                     { value: 3, display: 'combat speak' }
                                 ]
                             }
+                        },
+                        formatter: (data) => {
+                            if (!data) return '';
+                            switch (data.cell) {
+                                case 0:
+                                    return 'emote';
+                                case 1:
+                                    return 'combat emote';
+                                case 2:
+                                    return 'speak';
+                                case 3:
+                                    return 'combat speak';
+                            }
+                            return '';
+                        },
+                        tooltipFormatter: (data) => {
+                            if (!data) return '';
+                            switch (data.cell) {
+                                case 0:
+                                    return 'emote';
+                                case 1:
+                                    return 'combat emote';
+                                case 2:
+                                    return 'speak';
+                                case 3:
+                                    return 'combat speak';
+                            }
+                            return '';
                         }
                     },
                     {
