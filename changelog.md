@@ -12,6 +12,7 @@
   - Code editor:
     - Fixed drop down edit boxes
     - Fixed monster wizard emote type display
+    - Fixed auto complete
     - Area designer:
       - Fixed saving monster gender
       - Fixed code generation cancel not resetting task bar progress
