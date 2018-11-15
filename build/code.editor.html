@@ -7025,7 +7025,7 @@
                     tmpl['create body'] += `   set_primary_lang("${data['mon-wiz-language']}");\n`;
                 if (data['mon-wiz-gender'].value && data['mon-wiz-gender'].value.length > 0) {
                     if (data['mon-wiz-gender'].value === 'random')
-                        tmpl['create body'] += `   set_gender(random(2) ? "male" : "female");\n`;
+                        tmpl['create body'] += '   set_gender(random(2) ? "male" : "female");\n';
                     else
                         tmpl['create body'] += `   set_gender("${data['mon-wiz-gender'].value}");\n`;
                 }

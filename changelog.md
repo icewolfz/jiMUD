@@ -13,6 +13,7 @@
     - Fixed drop down edit boxes
     - Fixed monster wizard emote type display
     - Area designer:
+      - Fixed saving monster gender
       - Fixed code generation cancel not resetting task bar progress
       - Fixed object bonus code generation
       - Do not generate set_prevent_* functions of empty string for objects

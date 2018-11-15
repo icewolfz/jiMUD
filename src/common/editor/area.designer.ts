@@ -4515,7 +4515,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.height = +e.data['mon-wiz-height'];
                                     nMonster.eyeColor = e.data['mon-wiz-eye'];
                                     nMonster.hairColor = e.data['mon-wiz-hair'];
-                                    nMonster.gender = e.data['mon-wiz-gender'];
+                                    nMonster.gender = e.data['mon-wiz-gender'].value;
                                     nMonster.bodyType = e.data['mon-wiz-body'];
                                     nMonster.noCorpse = e.data['mon-wiz-no-corpse'];
                                     nMonster.noLimbs = e.data['mon-wiz-no-limbs'];
@@ -5497,7 +5497,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.height = +e.data['mon-wiz-height'];
                                     nMonster.eyeColor = e.data['mon-wiz-eye'];
                                     nMonster.hairColor = e.data['mon-wiz-hair'];
-                                    nMonster.gender = e.data['mon-wiz-gender'];
+                                    nMonster.gender = e.data['mon-wiz-gender'].value;
                                     nMonster.bodyType = e.data['mon-wiz-body'];
                                     nMonster.noCorpse = e.data['mon-wiz-no-corpse'];
                                     nMonster.noLimbs = e.data['mon-wiz-no-limbs'];
