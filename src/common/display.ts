@@ -2521,7 +2521,7 @@ export class Display extends EventEmitter {
     }
 
     private buildStyleSheet() {
-        let styles = `.background > span, .view > span, .line, .background-line { height: ${this._charHeight}px; }`;
+        let styles = `.background > span, .view > span, .line, .background-line { height: ${this._charHeight}px; line-height: ${this._charHeight}px; }`;
         if (!this._enableColors)
             styles += '.view > span span {color: inherit !important;}';
         if (!this._enableColors || !this._enableBackgroundColors)
