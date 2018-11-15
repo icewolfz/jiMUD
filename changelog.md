@@ -8,6 +8,7 @@
     - Add random gender support to monster wizard
 - **Changed:**
   - ANSI Parser: use unicode zero space character instead of <wbr> tag to reduce memory
+  - Update monaco-editor from 0.15.0 to 0.15.2
 - **Fixed:**
   - Code editor:
     - Fixed drop down edit boxes
