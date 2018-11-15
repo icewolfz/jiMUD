@@ -832,7 +832,8 @@ function getCompletionFromPath(p, kind?: monaco.languages.CompletionItemKind, pr
         list.push(
             {
                 label: prefix + path.basename(files.files[f], path.extname(files.files[f])),
-                kind: kind
+                kind: kind,
+                insertText: prefix + path.basename(files.files[f], path.extname(files.files[f]))
             }
         );
     }
@@ -850,7 +851,8 @@ function getCompletionFromFile(p, kind?: monaco.languages.CompletionItemKind, pr
         list.push(
             {
                 label: prefix + lines[f],
-                kind: kind
+                kind: kind,
+                insertText: prefix + lines[f]
             }
         );
     }
