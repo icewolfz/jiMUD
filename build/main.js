@@ -958,66 +958,7 @@ function createTray() {
                 {
                     label: '&About...',
                     click: () => {
-                        var b = win.getBounds();
-
-                        let about = new BrowserWindow({
-                            parent: getParentWindow(),
-                            modal: true,
-                            x: Math.floor(b.x + b.width / 2 - 225),
-                            y: Math.floor(b.y + b.height / 2 - 200),
-                            width: 450,
-                            height: 400,
-                            movable: false,
-                            minimizable: false,
-                            maximizable: false,
-                            skipTaskbar: true,
-                            resizable: false,
-                            title: 'About jiMUD',
-                            icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
-                            webPreferences: {
-                                nodeIntegration: true,
-                                webviewTag: false
-                            }
-                        });
-                        about.webContents.on('crashed', (event, killed) => {
-                            logError(`About crashed, killed: ${killed}\n`, true);
-                        });
-
-                        about.on('unresponsive', () => {
-                            dialog.showMessageBox({
-                                type: 'info',
-                                message: 'Unresponsive',
-                                buttons: ['Reopen', 'Keep waiting', 'Close']
-                            }, result => {
-                                if (!about)
-                                    return;
-                                if (result === 0) {
-                                    about.reload();
-                                    logError('About unresponsive, reload.\n', true);
-                                }
-                                else if (result === 2) {
-                                    about.destroy();
-                                }
-                                else
-                                    logError('About unresponsive, waiting.\n', true);
-                            });
-                        });
-
-                        about.setMenu(null);
-                        about.on('closed', () => {
-                            about = null;
-                        });
-
-                        // and load the index.html of the app.
-                        about.loadURL(url.format({
-                            pathname: path.join(__dirname, 'about.html'),
-                            protocol: 'file:',
-                            slashes: true
-                        }));
-
-                        about.once('ready-to-show', () => {
-                            about.show();
-                        });
+                        showAbout();
                     }
                 }
             ]
@@ -3979,10 +3920,10 @@ function showAbout() {
     let about = new BrowserWindow({
         parent: getParentWindow(),
         modal: true,
-        x: Math.floor(b.x + b.width / 2 - 225),
-        y: Math.floor(b.y + b.height / 2 - 205),
-        width: 450,
-        height: 410,
+        x: Math.floor(b.x + b.width / 2 - 250),
+        y: Math.floor(b.y + b.height / 2 - 280),
+        width: 500,
+        height: 560,
         movable: false,
         minimizable: false,
         maximizable: false,

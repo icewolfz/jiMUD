@@ -60,6 +60,7 @@
 
         .totals {
             font-weight: bold;
+            border-top: 2px solid #ddd;
         }
 
         #logo {
@@ -174,13 +175,19 @@
             if (remote.getGlobal('editorOnly'))
                 $('#logo-editor').css('display', 'block');
             updateMemory();
-            setInterval(updateMemory, 1000);
+            setInterval(updateMemory, 5000);
         });
 
         $(window).keydown((event) => {
             if (event.which === 27)
                 window.close();
         });
+
+        function formatMemory(amt) {
+            if(amt > 1024)
+                return (amt / 1024).toFixed(1).toLocaleString() + 'M';
+            return amt.toLocaleString() + 'K';
+        }
 
         function updateMemory() {
             var mi = remote.app.getAppMetrics();
@@ -189,10 +196,10 @@
             for (var i = 0; i < mi.length; i++) {
                 rows += '<tr><td>' + mi[i].pid + '</td>';
                 rows += '<td>' + mi[i].type + '</td>';
-                rows += '<td>' + (mi[i].memory.peakWorkingSetSize).toLocaleString() + ' K</td>';
-                rows += '<td>' + (mi[i].memory.privateBytes).toLocaleString() + 'K</td>';
-                rows += '<td>' + (mi[i].memory.sharedBytes).toLocaleString() + ' K</td>';
-                rows += '<td>' + (mi[i].memory.workingSetSize).toLocaleString() + ' K</td>';
+                rows += '<td>' + formatMemory(mi[i].memory.peakWorkingSetSize)+ '</td>';
+                rows += '<td>' + formatMemory(mi[i].memory.privateBytes) + '</td>';
+                rows += '<td>' + formatMemory(mi[i].memory.sharedBytes) + '</td>';
+                rows += '<td>' + formatMemory(mi[i].memory.workingSetSize) + '</td>';
                 rows += '<td>' + (mi[i].cpu.percentCPUUsage || 0.0).toFixed(3) + '%</td>';
                 rows += '<td>' + mi[i].cpu.idleWakeupsPerSecond + '</td></tr>';
 
@@ -205,10 +212,10 @@
             }
             rows += '<tr class=\'totals\'><td>Total:</td>';
             rows += '<td></td>';
-            rows += '<td>' + (total[0]).toLocaleString() + ' K</td>';
-            rows += '<td>' + (total[1]).toLocaleString() + ' K</td>';
-            rows += '<td>' + (total[2]).toLocaleString() + ' K</td>';
-            rows += '<td>' + (total[3]).toLocaleString() + ' K</td>';
+            rows += '<td>' + formatMemory(total[0]) + '</td>';
+            rows += '<td>' + formatMemory(total[1]) + '</td>';
+            rows += '<td>' + formatMemory(total[2]) + '</td>';
+            rows += '<td>' + formatMemory (total[3]) + '</td>';
             rows += '<td>' + total[4].toFixed(3) + '%</td>';
             rows += '<td>' + total[5] + '</td></tr>';
             memory.innerHTML = rows;
@@ -247,7 +254,7 @@
                             <th>Shared</th>
                             <th>Working Set</th>
                             <th>CPU Usage</th>
-                            <th>idle Wakeups/Second</th>
+                            <th>idle Wake ups</th>
                         </tr>
                     </thead>
                     <tbody id="memoryRows">
