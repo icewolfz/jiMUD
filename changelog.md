@@ -6,6 +6,7 @@
   - Code editor:
     - Add limb optional support to object editor
     - Add random gender support to monster wizard
+    - Add advanced properties to object editor
   - About: do live updates of cpu/memory usage
 - **Changed:**
   - ANSI Parser: use unicode zero space character instead of <wbr> tag to reduce memory

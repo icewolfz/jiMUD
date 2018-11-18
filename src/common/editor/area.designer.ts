@@ -593,6 +593,12 @@ export enum StdObjectType {
     object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink, fishing_pole, backpack, bag_of_holding
 }
 
+interface Property {
+    type: number;
+    name: string;
+    value: string;
+}
+
 class StdObject {
     public id: number;
     public type: StdObjectType = StdObjectType.object;
@@ -606,6 +612,7 @@ class StdObject {
     public material: string = '';
     public notes: string = '';
     public reads: Read[] = [];
+    public properties: Property[] = [];
     /*
     weapon - type, quality, enchantment
     armor - type, quality, limbs, enchantment
@@ -6278,7 +6285,7 @@ export class AreaDesigner extends EditorBase {
                                         }
                                     }),
                                     new WizardPage({
-                                        id: 'obj-properties',
+                                        id: 'obj-general',
                                         title: 'General properties',
                                         body: `<div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%">Key ID
@@ -6355,6 +6362,80 @@ export class AreaDesigner extends EditorBase {
                                                 e.page.querySelector('#obj-baitStrength').disabled = !e.page.querySelector('#obj-bait').checked;
                                                 e.page.querySelector('#obj-baitUses').disabled = !e.page.querySelector('#obj-bait').checked;
                                             });
+                                        }
+                                    }),
+                                    new WizardDataGridPage({
+                                        title: 'Advanced properties',
+                                        id: 'obj-properties',
+                                        clipboard: 'jiMUD/',
+                                        columns: [
+                                            {
+                                                label: 'Type',
+                                                field: 'type',
+                                                width: 150,
+                                                editor: {
+                                                    type: EditorType.select,
+                                                    options: {
+                                                        data: [
+                                                            { value: 0, display: 'normal' },
+                                                            { value: 1, display: 'temporary' }
+                                                        ]
+                                                    }
+                                                },
+                                                formatter: (data) => {
+                                                    if (!data) return '';
+                                                    switch (data.cell) {
+                                                        case 0:
+                                                            return 'normal';
+                                                        case 1:
+                                                            return 'temporary';
+                                                    }
+                                                    return '';
+                                                },
+                                                tooltipFormatter: (data) => {
+                                                    if (!data) return '';
+                                                    switch (data.cell) {
+                                                        case 0:
+                                                            return 'normal';
+                                                        case 1:
+                                                            return 'temporary';
+                                                    }
+                                                    return '';
+                                                }
+                                            },
+                                            {
+                                                label: 'Name',
+                                                field: 'name',
+                                                width: 150,
+                                                editor: {
+                                                    type: EditorType.dropdown,
+                                                    options: {
+                                                        container: '#object-wizard',
+                                                        data: [
+                                                            'magic effect', 'lore', 'magic item', 'crafting quality',
+                                                            'dig', 'break remove', 'mining', 'check skill', 'check level'
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                label: 'Value',
+                                                field: 'value',
+                                                spring: true,
+                                                width: 200,
+                                                editor: {
+                                                    options: {
+                                                        container: '#object-wizard'
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        add: (e) => {
+                                            e.data = {
+                                                type: 1,
+                                                name: '',
+                                                value: ''
+                                            };
                                         }
                                     }),
                                     new WizardPage({
@@ -6452,7 +6533,8 @@ export class AreaDesigner extends EditorBase {
                                 ]
                             });
                             wiz.defaults = {
-                                'obj-reads': ed.value.reads
+                                'obj-reads': ed.value.reads,
+                                'obj-advanced-properties': ed.value.properties
                             };
                             wiz.pages[3].page.querySelector('#obj-material-list').innerHTML = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'material.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
                             initEditDropdown(wiz.pages[3].page.querySelector('#obj-material-list').closest('.edit-dropdown'));
@@ -12310,6 +12392,7 @@ export class AreaDesigner extends EditorBase {
         let bonuses = false;
         let skills = false;
         const props = [];
+        const tempProps = [];
         const limbsDamaged = {};
         limbsDamaged['both arms and legs'] = 'ARMSLEGS_DAM';
         limbsDamaged['both arms'] = 'ARMS_DAM';
@@ -12378,7 +12461,7 @@ export class AreaDesigner extends EditorBase {
                     data['create arguments comment'] += ', Natural enchantment';
                 }
                 if (obj.maxWearable !== 0)
-                    data['create body'] += `   set_temp_property("max_wearable", ${obj.maxWearable});\n`;
+                    tempProps.push(`"max_wearable" : "${obj.maxWearable}"`);
                 if (obj.limbsOptional)
                     data['create body'] += '   set_limbs_optional(1);\n';
                 if (obj.damaged && obj.damaged.length !== 0) {
@@ -12743,7 +12826,7 @@ export class AreaDesigner extends EditorBase {
                         data['create body'] += `   set_weapon_type("${obj.material}");\n`;
                 }
                 if (obj.maxWearable !== 0)
-                    data['create body'] += `   set_temp_property("max_wearable", ${obj.maxWearable});\n`;
+                    tempProps.push(`"max_wearable" : "${obj.maxWearable}"`);
                 if (obj.limbsOptional)
                     data['create body'] += '   set_limbs_optional(1);\n';
                 //#endregion
@@ -13002,6 +13085,62 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += '   set_adjectives(' + obj.adjectives.join(', ') + ');\n';
         }
 
+        if (obj.properties.length > 0) {
+            obj.properties.froEach(b => {
+                b.value = b.value.trim();
+                if (b.value.startsWith('(:')) {
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                    else
+                        props.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                    data['create pre'] += createFunction(b.value);
+                }
+                else if (b.value.startsWith('({')) {
+                    tmp2 = b.vale.substring(2);
+                    if (tmp2.endsWith('})'))
+                        tmp2 = tmp2.substr(0, tmp2.length - 2);
+                    tmp2 = tmp2.split(',');
+                    tmp2 = tmp2.map(t => {
+                        t = t.trim();
+                        if (t.match(/\d+/))
+                            return t;
+                        else if (t.startsWith('(:')) {
+                            t = formatFunctionPointer(t);
+                            data['create pre'] += createFunction(t);
+                            return t;
+                        }
+                        else if (t.startsWith('"') && t.endsWith('"'))
+                            return t;
+                        return `"${t}"`;
+                    });
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                    else
+                        props.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                }
+                else if (b.value.startsWith('"') && b.value.endsWith('"')) {
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : "${b.value}"`);
+                    else
+                        props.push(`"${b.name}" : ${b.value}`);
+                }
+                else if (b.value.match(/\d+/)) {
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : "${b.value}"`);
+                    else
+                        props.push(`"${b.name}" : ${b.value}`);
+                }
+                else {
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : "${b.value}"`);
+                    else
+                        props.push(`"${b.name}" : "${b.value}"`);
+                }
+            });
+        }
+
+        //data['create body'] += `   set_temp_property("max_wearable", ${obj.maxWearable});\n`;
+
         if (obj.keyID.length > 0 && obj.type !== StdObjectType.chest)
             props.push(`"key" : "${obj.keyID}"`);
 
@@ -13010,7 +13149,17 @@ export class AreaDesigner extends EditorBase {
         if (obj.value > 0)
             data['create body'] += `   set_value("${obj.value}");\n`;
 
-        if (props.length > 0) {
+        if (tempProps.length === 1)
+            data['create body'] += `   set_temp_property(${props[0]});\n`;
+        else if (tempProps.length > 0) {
+            data['create body'] += '   set_temp_properties( ([\n       ';
+            data['create body'] += props.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+
+        if (props.length === 1)
+            data['create body'] += `   set_property(${props[0]});\n`;
+        else if (props.length > 0) {
             data['create body'] += '   set_properties( ([\n       ';
             data['create body'] += props.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
