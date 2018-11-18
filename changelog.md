@@ -10,7 +10,8 @@
   - About: do live updates of cpu/memory usage
 - **Changed:**
   - ANSI Parser: use unicode zero space character instead of <wbr> tag to reduce memory
-  - Update monaco-editor from 0.15.0 to 0.15.2
+  - Update monaco-editor from 0.15.0 to 0.15.5
+  - Update electron-updater 3.2.3 to 4.0.4
 - **Fixed:**
   - Code editor:
     - Fixed drop down edit boxes
