@@ -6534,7 +6534,7 @@ export class AreaDesigner extends EditorBase {
                             });
                             wiz.defaults = {
                                 'obj-reads': ed.value.reads,
-                                'obj-advanced-properties': ed.value.properties
+                                'obj-properties': ed.value.properties
                             };
                             wiz.pages[3].page.querySelector('#obj-material-list').innerHTML = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'material.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
                             initEditDropdown(wiz.pages[3].page.querySelector('#obj-material-list').closest('.edit-dropdown'));
