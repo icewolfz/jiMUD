@@ -3517,6 +3517,7 @@ export class AreaDesigner extends EditorBase {
                         columns: [
                             {
                                 label: 'Name',
+                                width: 300,
                                 field: 'id',
                                 formatter: (data) => {
                                     if (!data) return '';
@@ -4313,6 +4314,7 @@ export class AreaDesigner extends EditorBase {
                         columns: [
                             {
                                 label: 'Name',
+                                width: 300,
                                 field: 'id',
                                 formatter: (data) => {
                                     if (!data) return '';
@@ -4723,6 +4725,7 @@ export class AreaDesigner extends EditorBase {
                         columns: [
                             {
                                 label: 'Name',
+                                width: 300,
                                 field: 'id',
                                 formatter: (data) => {
                                     if (!data) return '';
@@ -5280,6 +5283,7 @@ export class AreaDesigner extends EditorBase {
                         columns: [
                             {
                                 label: 'Name',
+                                width: 300,
                                 field: 'id',
                                 formatter: (data) => {
                                     if (!data) return '';
