@@ -12294,7 +12294,7 @@ export class AreaDesigner extends EditorBase {
             return tmp3;
         });
         if (tmp.length !== 0)
-            data['create body'] += `   set_emotes(${monster.emotesChance}, ({\n     ${tmp.join(',\n     ')}\n     }) );\n`;
+            data['create body'] += `   set_emotes(${monster.emotesChance}, ({\n       ${tmp.join(',\n       ')}\n     }) );\n`;
         tmp = monster.emotes.filter(s => s.type === 1).map(i => {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
@@ -12306,7 +12306,7 @@ export class AreaDesigner extends EditorBase {
             return tmp3;
         });
         if (tmp.length !== 0)
-            data['create body'] += `   set_emotes(${monster.emotesChanceCombat}, ({\n     ${tmp.join(',\n     ')}\n     }), 1);\n`;
+            data['create body'] += `   set_emotes(${monster.emotesChanceCombat}, ({\n       ${tmp.join(',\n       ')}\n     }), 1);\n`;
         //#endregion
         //#region speeches
         tmp = {};
@@ -12324,7 +12324,7 @@ export class AreaDesigner extends EditorBase {
                 tmp[i.language].push(tmp3);
         });
         Object.keys(tmp).forEach(k => {
-            data['create body'] += `   set_speech(${monster.speechChance}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }) );\n`;
+            data['create body'] += `   set_speech(${monster.speechChance}, "${k}", ({\n       ${tmp[k].join(',\n       ')}\n     }) );\n`;
         });
         tmp = {};
         monster.emotes.filter(s => s.type === 3 && s.language.length !== 0).forEach(i => {
@@ -12341,7 +12341,7 @@ export class AreaDesigner extends EditorBase {
                 tmp[i.language].push(tmp3);
         });
         Object.keys(tmp).forEach(k => {
-            data['create body'] += `   set_speech(${monster.speechChanceCombat}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }), 1);\n`;
+            data['create body'] += `   set_speech(${monster.speechChanceCombat}, "${k}", ({\n       ${tmp[k].join(',\n       ')}\n     }), 1);\n`;
         });
         //#endregion
 

@@ -7179,7 +7179,7 @@
                     return tmp3;
                 });
                 if (tmp.length !== 0)
-                    tmpl['create body'] += `   set_emotes(${data['mon-wiz-emotes-chance']}, ({\n     ${tmp.join(',\n     ')}\n     }) );\n`;
+                    tmpl['create body'] += `   set_emotes(${data['mon-wiz-emotes-chance']}, ({\n       ${tmp.join(',\n       ')}\n     }) );\n`;
                 tmp = data['mon-wiz-emotes'].filter(s => s.type === 1).map(i => {
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
@@ -7191,7 +7191,7 @@
                     return tmp3;
                 });
                 if (tmp.length !== 0)
-                    tmpl['create body'] += `   set_emotes(${data['mon-wiz-emotes-chance-combat']}, ({\n     ${tmp.join(',\n     ')}\n     }), 1);\n`;
+                    tmpl['create body'] += `   set_emotes(${data['mon-wiz-emotes-chance-combat']}, ({\n       ${tmp.join(',\n       ')}\n     }), 1);\n`;
                 //#endregion
                 //#region speeches
                 tmp = {};
@@ -7209,7 +7209,7 @@
                         tmp[i.language].push(tmp3);
                 });
                 Object.keys(tmp).forEach(k => {
-                    tmpl['create body'] += `   set_speech(${data['mon-wiz-speech-chance']}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }) );\n`;
+                    tmpl['create body'] += `   set_speech(${data['mon-wiz-speech-chance']}, "${k}", ({\n       ${tmp[k].join(',\n       ')}\n     }) );\n`;
                 });
                 tmp = {};
                 data['mon-wiz-emotes'].filter(s => s.type === 3 && s.language.length !== 0).forEach(i => {
@@ -7226,7 +7226,7 @@
                         tmp[i.language].push(tmp3);
                 });
                 Object.keys(tmp).forEach(k => {
-                    tmpl['create body'] += `   set_speech(${data['mon-wiz-speech-chance-combat']}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }), 1);\n`;
+                    tmpl['create body'] += `   set_speech(${data['mon-wiz-speech-chance-combat']}, "${k}", ({\n       ${tmp[k].join(',\n       ')}\n     }), 1);\n`;
                 });
                 //#endregion
                 data['mon-wiz-reputations'].forEach(r => {
