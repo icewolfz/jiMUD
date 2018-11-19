@@ -11830,7 +11830,7 @@ export class AreaDesigner extends EditorBase {
         const base: Monster = this.$area.monsters[monster.type] || this.$area.baseMonsters[monster.type] || new Monster();
 
         if (files[monster.type])
-            data.inherit = `(MON + ${files[monster.type]})`;
+            data.inherit = `(MON + "${files[monster.type]}")`;
         else
             data.inherit = files[monster.type + 'monster'] || monster.type.toUpperCase();
         data.inherits = '';
@@ -12350,6 +12350,7 @@ export class AreaDesigner extends EditorBase {
 
         if (monster.objects.length !== 0) {
             tmp2 = '';
+            tmp3 = [];
             if (baseMonster) {
                 tmp2 = '   ';
                 data['create body'] += '   if(!query_property("no objects"))\n{\n';
@@ -12357,16 +12358,37 @@ export class AreaDesigner extends EditorBase {
             monster.objects.forEach(o => {
                 if (!this.$area.objects[o.id]) return;
                 tmp = '';
-                if (o.unique)
+                if (o.unique) {
                     tmp = `   clone_unique(OBJ + "${files[o.id]}.c");\n`;
-                else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                    if (o.action.trim().length > 0)
+                        tmp3.push(`${o.action.trim()} ${this.$area.objects[o.id].name}`);
+                }
+                else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0)) {
                     tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
-                else if (o.minAmount > 0 && o.maxAmount > 0)
+                    if (o.action.trim().length > 0)
+                        tmp3.push(`${o.action.trim()} ${this.$area.objects[o.id].name}`);
+                }
+                else if (o.minAmount > 0 && o.maxAmount > 0) {
                     tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                    if (o.action.trim().length > 0)
+                        tmp3.push(`${o.action.trim()} ${this.$area.objects[o.id].name}`);
+                }
                 if (o.random > 0 && tmp.length !== 0 && o.random < 100)
                     data['create body'] += `${tmp2}   if(random(${o.random}) <= random(101))\n   `;
                 data['create body'] += tmp2 + tmp;
             });
+            tmp3 = tmp3.filter((v, i, s) => s.indexOf(v) === i);
+            if (tmp3.length !== 0) {
+                tmp3.actions.forEach(w => {
+                    w = w.trim();
+                    if (w.length === 0) return;
+                    if (!w.startsWith('"'))
+                        w = '"' + w;
+                    if (!w.endsWith('"'))
+                        w += '"';
+                    data['create body'] += `${tmp2}   command(${w});\n`;
+                });
+            }
             if (baseMonster)
                 data['create body'] += '   }\n';
         }
