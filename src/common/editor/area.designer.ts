@@ -12473,7 +12473,7 @@ export class AreaDesigner extends EditorBase {
                 //#region Armor
                 bonuses = true;
                 skills = true;
-                data.inherits = 'OBJ_ARMOUR';
+                data.inherit = 'OBJ_ARMOUR';
                 data['doc'].push('/doc/build/armours/tutorial');
                 data.help.push('atypes');
                 data.includes += '\n#include <limbs.h>';
