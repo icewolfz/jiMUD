@@ -13140,15 +13140,13 @@ export class AreaDesigner extends EditorBase {
                     tmp2 = tmp2.split(',');
                     tmp2 = tmp2.map(t => {
                         t = t.trim();
-                        if (t.match(/\d+/))
+                        if ((t.startsWith('"') && t.endsWith('"')) || t.match(/^\d+$/))
                             return t;
                         else if (t.startsWith('(:')) {
                             t = formatFunctionPointer(t);
                             data['create pre'] += createFunction(t);
                             return t;
                         }
-                        else if (t.startsWith('"') && t.endsWith('"'))
-                            return t;
                         return `"${t}"`;
                     });
                     if (b.type === 1)
@@ -13156,15 +13154,9 @@ export class AreaDesigner extends EditorBase {
                     else
                         props.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
                 }
-                else if (b.value.startsWith('"') && b.value.endsWith('"')) {
+                else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : "${b.value}"`);
-                    else
-                        props.push(`"${b.name}" : ${b.value}`);
-                }
-                else if (b.value.match(/\d+/)) {
-                    if (b.type === 1)
-                        tempProps.push(`"${b.name}" : "${b.value}"`);
+                        tempProps.push(`"${b.name}" : ${b.value}`);
                     else
                         props.push(`"${b.name}" : ${b.value}`);
                 }
@@ -13188,15 +13180,15 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_value("${obj.value}");\n`;
 
         if (tempProps.length === 1)
-            data['create body'] += `   set_temp_property(${props[0]});\n`;
+            data['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
         else if (tempProps.length > 0) {
             data['create body'] += '   set_temp_properties( ([\n       ';
-            data['create body'] += props.join(',\n       ');
+            data['create body'] += tempProps.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
         }
 
         if (props.length === 1)
-            data['create body'] += `   set_property(${props[0]});\n`;
+            data['create body'] += `   set_property(${props[0].replace(' :', ',')});\n`;
         else if (props.length > 0) {
             data['create body'] += '   set_properties( ([\n       ';
             data['create body'] += props.join(',\n       ');
@@ -13335,7 +13327,7 @@ export class AreaDesigner extends EditorBase {
             tmp = obj.skills.filter(s => s.amount !== 0);
             if (tmp.length !== 0) {
                 let amt = 0;
-                data['create post'] += '\n\nvoid check_skill(object player)\n{\n   if(!player)\n   return 0;\n';
+                data['create post'] += '\n\nmixed check_skill(object player)\n{\n   if(!player)\n   return 0;\n';
                 let skill;
                 tmp.forEach(s => {
                     let message;
