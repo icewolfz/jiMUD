@@ -9,7 +9,7 @@
  * @doc /doc/build/room/Basic
  * @doc /doc/build/room/Intermediate
  * @doc /doc/build/room/Advanced
- {doc} */
+{doc} */
 #include <std.h>
 #include "area.h"{includes}
 
