@@ -5742,7 +5742,7 @@
                         let tl = tmp.length;
                         while (tl--) {
                             if (tmp.charAt(tl) === ' ') {
-                                tmp.substr(0, tl);
+                                tmp = tmp.substr(0, tl + 1);
                                 break;
                             }
                         }
@@ -6925,7 +6925,7 @@
                         let tl = tmp.length;
                         while (tl--) {
                             if (tmp.charAt(tl) === ' ') {
-                                tmp.substr(0, tl);
+                                tmp = tmp.substr(0, tl + 1);
                                 break;
                             }
                         }

@@ -11309,7 +11309,7 @@ export class AreaDesigner extends EditorBase {
                     let tl = tmp.length;
                     while (tl--) {
                         if (tmp.charAt(tl) === ' ') {
-                            tmp.substr(0, tl);
+                            tmp = tmp.substr(0, tl + 1);
                             break;
                         }
                     }
@@ -11974,7 +11974,7 @@ export class AreaDesigner extends EditorBase {
                     let tl = tmp.length;
                     while (tl--) {
                         if (tmp.charAt(tl) === ' ') {
-                            tmp.substr(0, tl);
+                            tmp = tmp.substr(0, tl + 1);
                             break;
                         }
                     }
@@ -13053,7 +13053,7 @@ export class AreaDesigner extends EditorBase {
                 let tl = tmp.length;
                 while (tl--) {
                     if (tmp.charAt(tl) === ' ') {
-                        tmp.substr(0, tl);
+                        tmp = tmp.substr(0, tl + 1);
                         break;
                     }
                 }
