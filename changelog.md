@@ -17,6 +17,7 @@
     - Fixed drop down edit boxes
     - Fixed monster wizard emote type display
     - Fixed auto complete
+    - Force all templates to use linux line endings
     - Area designer:
       - Fixed saving monster gender
       - Fixed code generation cancel not resetting task bar progress
