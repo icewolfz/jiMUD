@@ -26,6 +26,7 @@
       - Remove buckler as an accessory for armors
       - Fixed set_long string wrapping
       - Fixed room set_long/short when empty
+      - Fixed monster/object file name if empty
   - Progress dialog: fix task bar progress not being cleared on close
   - Status: Attempt to fix weather overlay again
   - Display: Set line-height to better control unicode

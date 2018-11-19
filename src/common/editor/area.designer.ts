@@ -10806,7 +10806,15 @@ export class AreaDesigner extends EditorBase {
             Object.keys(this.$area.monsters).forEach(m => {
                 if (this.$cancel)
                     throw new Error('Canceled');
-                const name = this.$area.monsters[m].name.replace(/ /g, '_').toLowerCase();
+                let name = this.$area.monsters[m].name.trim().replace(/ /g, '_').toLowerCase();
+                //empty name try base name
+                if (name.length === 0) {
+                    const base: Monster = this.$area.monsters[this.$area.monsters[m].type] || this.$area.baseMonsters[this.$area.monsters[m].type] || new Monster();
+                    name = base.name.trim().replace(/ /g, '_').toLowerCase();
+                    //if still empty default to generic monster
+                    if (name.length === 0)
+                        name = 'monster';
+                }
                 if (!counts[name])
                     counts[name] = 1;
                 else
@@ -10823,7 +10831,7 @@ export class AreaDesigner extends EditorBase {
             Object.keys(this.$area.objects).forEach(m => {
                 if (this.$cancel)
                     throw new Error('Canceled');
-                const name = stripPinkfish(this.$area.objects[m].name).replace(/ /g, '_').toLowerCase();
+                const name = stripPinkfish(this.$area.objects[m].name).replace(/ /g, '_').toLowerCase() || 'object';
                 if (!counts[name])
                     counts[name] = 1;
                 else
