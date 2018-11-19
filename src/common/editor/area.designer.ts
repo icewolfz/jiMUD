@@ -12480,20 +12480,22 @@ export class AreaDesigner extends EditorBase {
                 data['create arguments'] = `"${obj.subType || 'accessory'}", "${obj.material || 'iron'}", "${obj.quality || 'average'}", `;
                 data['create arguments comment'] = '//Type, Material, Quality, Limbs';
                 tmp = (obj.limbs || 'torso').split(',').map(l => l.trim());
+                //get non standard limbs
                 tmp2 = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) === -1);
+                //remove non standrad limbs
                 tmp = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) !== -1);
                 tmp = tmp.map(l => l.replace(/ /g, '').toUpperCase());
                 tmp2 = tmp2.map(l => `"${l}"`);
                 tmp = tmp.filter((value, index, self) => self.indexOf(value) === index);
-                tmp2 = tmp.filter((value, index, self) => self.indexOf(value) === index);
+                tmp2 = tmp2.filter((value, index, self) => self.indexOf(value) === index);
                 if (tmp.length === 0 && tmp2.length === 0)
                     data['create arguments'] += 'TORSO';
                 if (tmp.length !== 0 && tmp2.length !== 0)
-                    data['create arguments'] += `${tmp.join(' | ')} | ({ ${tmp2.join(' | ')} })`;
+                    data['create arguments'] += `${tmp.join(' | ')} | ({ "${tmp2.join(', ')}" })`;
                 else if (tmp.length !== 0)
                     data['create arguments'] += tmp.join(' | ');
                 else
-                    data['create arguments'] += tmp2.join(' | ');
+                    data['create arguments'] += `${tmp2.join(', ')}`;
                 if (obj.enchantment !== 0) {
                     data['create arguments'] += `, ${obj.enchantment}`;
                     data['create arguments comment'] += ', Natural enchantment';
@@ -12826,19 +12828,18 @@ export class AreaDesigner extends EditorBase {
                 tmp = tmp.map(l => l.replace(/ /g, '').toUpperCase());
                 tmp2 = tmp2.map(l => `"${l}"`);
                 tmp = tmp.filter((value, index, self) => self.indexOf(value) === index);
-                tmp2 = tmp.filter((value, index, self) => self.indexOf(value) === index);
-
+                tmp2 = tmp2.filter((value, index, self) => self.indexOf(value) === index);
                 if (!obj.subType || obj.subType.length === 0 || obj.subType === 'sheath') {
-                    data['create arguments'] = `"${obj.material || 'leather'}", "${obj.quality || 'average'}"`;
+                    data['create arguments'] = `"${obj.material || 'leather'}", "${obj.quality || 'average'}", `;
                     data['create arguments comment'] = '//Material, Quality, Limbs';
                     if (tmp.length === 0 && tmp2.length === 0)
                         data['create arguments'] += 'LEFTLEG';
                     if (tmp.length !== 0 && tmp2.length !== 0)
-                        data['create arguments'] += `${tmp.join(' | ')} | ({ ${tmp2.join(' | ')} })`;
+                        data['create arguments'] += `${tmp.join(' | ')} | ({ ${tmp2.join(', ')} })`;
                     else if (tmp.length !== 0)
                         data['create arguments'] += tmp.join(' | ');
                     else
-                        data['create arguments'] += tmp2.join(' | ');
+                        data['create arguments'] += tmp2.join(', ');
                     if (obj.enchantment !== 0) {
                         data['create arguments'] += `, ${obj.enchantment}`;
                         data['create arguments comment'] += ', Natural enchantment';
@@ -12850,11 +12851,11 @@ export class AreaDesigner extends EditorBase {
                     if (tmp.length === 0 && tmp2.length === 0)
                         data['create arguments comment'] += 'LEFTLEG';
                     if (tmp.length !== 0 && tmp2.length !== 0)
-                        data['create arguments comment'] += `${tmp.join(' | ')} | ({ ${tmp2.join(' | ')} })`;
+                        data['create arguments comment'] += `${tmp.join(' | ')} | ({ ${tmp2.join(', ')} })`;
                     else if (tmp.length !== 0)
                         data['create arguments comment'] += tmp.join(' | ');
                     else
-                        data['create arguments comment'] += tmp2.join(' | ');
+                        data['create arguments comment'] += tmp2.join(', ');
                     if (obj.enchantment !== 0) {
                         data['create arguments comment'] += `, ${obj.enchantment}`;
                         cac += ', Natural enchantment';
