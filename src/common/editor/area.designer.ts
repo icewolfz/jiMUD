@@ -13090,7 +13090,7 @@ export class AreaDesigner extends EditorBase {
         }
 
         if (obj.properties.length > 0) {
-            obj.properties.froEach(b => {
+            obj.properties.forEach(b => {
                 b.value = b.value.trim();
                 if (b.value.startsWith('(:')) {
                     if (b.type === 1)
