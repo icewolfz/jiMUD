@@ -12130,30 +12130,30 @@ export class AreaDesigner extends EditorBase {
         if (monster.party !== base.party)
             data['create body'] += `   set_mon_party("${monster.party}");\n`;
         if (monster.autoDrop.enabled && !base.autoDrop.enabled)
-            data['create body'] += `   set_auto_drop(1);`;
+            data['create body'] += `   set_auto_drop(1);\n`;
         if (monster.autoDrop.time !== base.autoDrop.time)
-            data['create body'] += `   set_auto_drop_delay(${monster.autoDrop.time});`;
+            data['create body'] += `   set_auto_drop_delay(${monster.autoDrop.time});\n`;
         if (!monster.autoDrop.enabled && base.autoDrop.enabled)
-            data['create body'] += `   set_open_storage(0);`;
+            data['create body'] += `   set_open_storage(0);\n`;
         if (monster.openStorage.time !== base.openStorage.time)
-            data['create body'] += `   set_open_storage_delay(${monster.openStorage.time});`;
+            data['create body'] += `   set_open_storage_delay(${monster.openStorage.time});\n`;
         if (!monster.autoDrop.enabled && base.autoDrop.enabled)
-            data['create body'] += `   set_auto_wield(0);`;
+            data['create body'] += `   set_auto_wield(0);\n`;
         if (monster.autoWield.time !== base.autoWield.time)
-            data['create body'] += `   set_auto_wield_delay(${monster.autoWield.time});`;
+            data['create body'] += `   set_auto_wield_delay(${monster.autoWield.time});\n`;
         if (monster.autoDrop.enabled && !base.autoDrop.enabled)
-            data['create body'] += `   set_auto_loot(1);`;
+            data['create body'] += `   set_auto_loot(1);\n`;
         if (monster.autoLoot.time !== base.autoLoot.time)
-            data['create body'] += `   set_auto_loot_delay(${monster.autoLoot.time});`;
+            data['create body'] += `   set_auto_loot_delay(${monster.autoLoot.time});\n`;
         if (monster.autoDrop.enabled && !base.autoDrop.enabled)
-            data['create body'] += `   set_auto_wear(1);`;
+            data['create body'] += `   set_auto_wear(1);\n`;
         if (monster.autoWear.time !== base.autoWear.time)
-            data['create body'] += `   set_auto_wear_delay(${monster.autoWear.time});`;
+            data['create body'] += `   set_auto_wear_delay(${monster.autoWear.time});\n`;
         if (monster.wimpy !== base.wimpy)
-            data['create body'] += `   set_wimpy(${monster.wimpy});`;
+            data['create body'] += `   set_wimpy(${monster.wimpy});\n`;
 
         if ((monster.flags & MonsterFlags.Auto_Stand) !== MonsterFlags.Auto_Stand && (base.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand)
-            data['create body'] += `   set_auto_stand(0);`;
+            data['create body'] += `   set_auto_stand(0);\n`;
 
         if (monster.reactions && monster.reactions.length !== 0) {
             tmp = monster.reactions.filter(r => r.reaction.length > 0);
@@ -12234,13 +12234,13 @@ export class AreaDesigner extends EditorBase {
             monster.askTopics[0].message = monster.askTopics[0].message.trim();
             if (monster.askTopics[0].message.trim().startsWith('(:')) {
                 tmp3 = formatFunctionPointer(monster.askTopics[0].message);
-                data['create body'] += `   set_topic(${tmp}, ${tmp3});`;
+                data['create body'] += `   set_topic(${tmp}, ${tmp3});\n`;
                 data['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
             }
             else if (!monster.askTopics[0].message.startsWith('"') && !monster.askTopics[0].message.endsWith('"'))
-                data['create body'] += `   set_topic(${tmp}, "${monster.askTopics[0].message}");`;
+                data['create body'] += `   set_topic(${tmp}, "${monster.askTopics[0].message}");\n`;
             else
-                data['create body'] += `   set_topic(${tmp}, ${monster.askTopics[0].message});`;
+                data['create body'] += `   set_topic(${tmp}, ${monster.askTopics[0].message});\n`;
         }
         else if (tmp.length > 0) {
             if ((monster.baseFlags & MonsterBaseFlags.No_Topics) === MonsterBaseFlags.No_Topics)
@@ -12272,13 +12272,13 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});\n`;
                 else if (r.amount.startsWith('(:')) {
                     tmp3 = formatFunctionPointer(r.amount);
-                    data['create body'] += `   set_reputation_${fun}(${r.group}${tmp3});`;
+                    data['create body'] += `   set_reputation_${fun}(${r.group}${tmp3});\n`;
                     data['create pre'] += createFunction(tmp3, 'string', 'object monster, object killer');
                 }
                 else if (!r.amount.startsWith('"') && !r.amount.endsWith('"'))
-                    data['create body'] += `   set_reputation_${fun}(${r.group}"${r.amount}");`;
+                    data['create body'] += `   set_reputation_${fun}(${r.group}"${r.amount}");\n`;
                 else
-                    data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});`;
+                    data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});\n`;
             });
         }
 
@@ -12294,7 +12294,7 @@ export class AreaDesigner extends EditorBase {
             return tmp3;
         });
         if (tmp.length !== 0)
-            data['create body'] += `   set_emotes(${monster.emotesChance}, ({\n     ${tmp.join(',\n     ')}\n     }) );`;
+            data['create body'] += `   set_emotes(${monster.emotesChance}, ({\n     ${tmp.join(',\n     ')}\n     }) );\n`;
         tmp = monster.emotes.filter(s => s.type === 1).map(i => {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
@@ -12306,7 +12306,7 @@ export class AreaDesigner extends EditorBase {
             return tmp3;
         });
         if (tmp.length !== 0)
-            data['create body'] += `   set_emotes(${monster.emotesChanceCombat}, ({\n     ${tmp.join(',\n     ')}\n     }), 1);`;
+            data['create body'] += `   set_emotes(${monster.emotesChanceCombat}, ({\n     ${tmp.join(',\n     ')}\n     }), 1);\n`;
         //#endregion
         //#region speeches
         tmp = {};
@@ -12324,7 +12324,7 @@ export class AreaDesigner extends EditorBase {
                 tmp[i.language].push(tmp3);
         });
         Object.keys(tmp).forEach(k => {
-            data['create body'] += `   set_speech(${monster.speechChance}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }) );`;
+            data['create body'] += `   set_speech(${monster.speechChance}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }) );\n`;
         });
         tmp = {};
         monster.emotes.filter(s => s.type === 3 && s.language.length !== 0).forEach(i => {
@@ -12341,7 +12341,7 @@ export class AreaDesigner extends EditorBase {
                 tmp[i.language].push(tmp3);
         });
         Object.keys(tmp).forEach(k => {
-            data['create body'] += `   set_speech(${monster.speechChanceCombat}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }), 1);`;
+            data['create body'] += `   set_speech(${monster.speechChanceCombat}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }), 1);\n`;
         });
         //#endregion
 
@@ -12859,7 +12859,7 @@ export class AreaDesigner extends EditorBase {
                         data['create arguments comment'] += `, ${obj.enchantment}`;
                         cac += ', Natural enchantment';
                     }
-                    data['create arguments comment'] += ');' + cac;
+                    data['create arguments comment'] += ');\n' + cac;
                     if (obj.wType.length > 0)
                         data['create body'] += `   set_weapon_type("${obj.material}");\n`;
                 }
@@ -13460,11 +13460,11 @@ export class AreaDesigner extends EditorBase {
             if (tmp.language.length !== 0)
                 tmp3 = `, "${tmp.language}"`;
             if (tmp.description.startsWith('(:'))
-                data['create body'] += `   set_read(${tmp2}${formatFunctionPointer(tmp.description)}${tmp3});`;
+                data['create body'] += `   set_read(${tmp2}${formatFunctionPointer(tmp.description)}${tmp3});\n`;
             else if (!tmp.description.startsWith('"') && !tmp.description.endsWith('"'))
-                data['create body'] += `   set_read(${tmp2}"${tmp.description}"${tmp3});`;
+                data['create body'] += `   set_read(${tmp2}"${tmp.description}"${tmp3});\n`;
             else
-                data['create body'] += `   set_read(${tmp2}${tmp.description}${tmp3});`;
+                data['create body'] += `   set_read(${tmp2}${tmp.description}${tmp3});\n`;
         }
         else if (tmp.length > 0) {
             data['create body'] += '   set_read( ([\n       ';
