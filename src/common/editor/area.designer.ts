@@ -11327,7 +11327,7 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += `${formatString(room.long, 5, 73)});\n`;
                 }
                 else if (room.long.length) {
-                    data['create body'] = `   set_long("${room.long}");\n`;
+                    data['create body'] += `   set_long("${room.long}");\n`;
                     data.description = ' * ' + room.long;
                 }
             }
@@ -11942,8 +11942,6 @@ export class AreaDesigner extends EditorBase {
             }
         }
 
-        data['create body'] = '';
-
         if (monster.name.startsWith('"') && monster.name.endsWith('"'))
             data['name'] = monster.name.substr(1, monster.name.length - 2).replace(/"/g, '\\"');
         else
@@ -11993,7 +11991,7 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += `${formatString(monster.long, 5, 73)});\n`;
                 }
                 else if (monster.long.length) {
-                    data['create body'] = `   set_long("${monster.long}");\n`;
+                    data['create body'] += `   set_long("${monster.long}");\n`;
                     data.description = ' * ' + monster.long;
                 }
             }
@@ -12079,7 +12077,7 @@ export class AreaDesigner extends EditorBase {
         if (monster.mass !== base.mass)
             data['create body'] += `   set_mass(${monster.mass});\n`;
         if (monster.height !== base.height)
-            data['create body'] = `   set_height(${monster.height});\n`;
+            data['create body'] += `   set_height(${monster.height});\n`;
 
         if (monster.alignment !== base.alignment && monster.alignment !== '0' && monster.alignment !== 'neutral' && monster.alignment.length !== 0) {
             if (typeof monster.alignment === 'string' && parseFloat(monster.alignment).toString() === monster.alignment) {
