@@ -13278,7 +13278,7 @@ export class AreaDesigner extends EditorBase {
                 return `"${b.adjust}" : "${b.amount}"`;
             });
             if (tmp.length === 1)
-                data['create body'] += `   add_temp_bonus(${tmp[0].replace(/ :/, ',')})`;
+                data['create body'] += `   add_temp_bonus(${tmp[0].replace(/ :/, ',')});\n`;
             else if (tmp.length > 0) {
                 data['create body'] += '   add_temp_bonuses( ([\n       ';
                 data['create body'] += tmp.join(',\n       ');
@@ -13293,7 +13293,7 @@ export class AreaDesigner extends EditorBase {
                 return `"${b.adjust}" : "${b.amount}"`;
             });
             if (tmp.length === 1)
-                data['create body'] += `   add_temp_stat_bonus(${tmp[0].replace(/ :/, ',')})`;
+                data['create body'] += `   add_temp_stat_bonus(${tmp[0].replace(/ :/, ',')});\n`;
             else if (tmp.length > 0) {
                 data['create body'] += '   add_temp_stat_bonuses( ([\n       ';
                 data['create body'] += tmp.join(',\n       ');
@@ -13308,7 +13308,7 @@ export class AreaDesigner extends EditorBase {
                 return `"${b.adjust}" : "${b.amount}"`;
             });
             if (tmp.length === 1)
-                data['create body'] += `   add_temp_skill_bonus(${tmp[0].replace(/ :/, ',')})`;
+                data['create body'] += `   add_temp_skill_bonus(${tmp[0].replace(/ :/, ',')});\n`;
             else if (tmp.length > 0) {
                 data['create body'] += '   add_temp_skill_bonuses( ([\n       ';
                 data['create body'] += tmp.join(',\n       ');
@@ -13323,7 +13323,7 @@ export class AreaDesigner extends EditorBase {
                 return `"${b.adjust}" : "${b.amount}"`;
             });
             if (tmp.length === 1)
-                data['create body'] += `   add_temp_resistance_bonus(${tmp[0].replace(/ :/, ',')})`;
+                data['create body'] += `   add_temp_resistance_bonus(${tmp[0].replace(/ :/, ',')});\n`;
             else if (tmp.length > 0) {
                 data['create body'] += '   add_temp_resistance_bonuses( ([\n       ';
                 data['create body'] += tmp.join(',\n       ');
