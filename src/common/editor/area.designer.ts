@@ -12379,7 +12379,7 @@ export class AreaDesigner extends EditorBase {
             });
             tmp3 = tmp3.filter((v, i, s) => s.indexOf(v) === i);
             if (tmp3.length !== 0) {
-                tmp3.actions.forEach(w => {
+                tmp3.forEach(w => {
                     w = w.trim();
                     if (w.length === 0) return;
                     if (!w.startsWith('"'))
