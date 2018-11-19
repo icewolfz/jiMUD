@@ -10874,10 +10874,10 @@ export class AreaDesigner extends EditorBase {
                                 dest = `DIR_${e.dest.toUpperCase()}`;
                             else if (parts.length > 1)
                                 dest = `DIR_${parts[parts.length - 2].toUpperCase()}_${parts[parts.length - 1].toUpperCase()}`;
-                            if (externs[dest])
+                            if (externs[dest] && path.dirname(e.dest) !== externs[dest])
                                 dest += ec;
-                            externs[dest] = e.dest;
-                            files[e.dest] = dest;
+                            externs[dest] = path.dirname(e.dest);
+                            files[e.dest] = `${dest} + "${path.basename(e.dest)}"`;
                         });
                     }
                 }
@@ -11524,7 +11524,7 @@ export class AreaDesigner extends EditorBase {
                 else if (i.dest.match(/^\d+\s*,\s*\d+$/) && files[i.dest.replace(/ /g, '') + ',0'])
                     tmp2.push(`"dest" : RMS + "${files[i.dest.replace(/ /g, '') + ',0']}.c"`);
                 else if (files[i.dest])
-                    tmp2 = `${files[i.dest]}`;
+                    tmp2.push(`"dest" : ${files[i.dest]}`);
                 else
                     tmp2.push(`"dest" : "${i.dest}"`);
             }
@@ -11556,7 +11556,7 @@ export class AreaDesigner extends EditorBase {
                 else if (tmp.match(/^\d+\s*,\s*\d+$/) && files[tmp.replace(/ /g, '') + ',0'])
                     tmp = `RMS + "${files[tmp.replace(/ /g, '') + ',0']}.c"`;
                 else if (files[tmp])
-                    tmp = `"${files[tmp]}"`;
+                    tmp = `${files[tmp]}`;
                 else
                     tmp = `"${tmp}"`;
             }
@@ -11577,14 +11577,14 @@ export class AreaDesigner extends EditorBase {
             if (d.destDoor.length > 0) {
                 if (!d.destDoor.startsWith('"') && !d.destDoor.endsWith('"'))
                     d.destDoor = '"' + d.destDoor + '"';
-                data['create body'] += `   set_door(${d.door}, "${tmp}", ${d.exit}, ${d.key}, ${d.hidden ? 1 : 0}, ${d.destDoor});\n`;
+                data['create body'] += `   set_door(${d.door}, ${tmp}, ${d.exit}, ${d.key}, ${d.hidden ? 1 : 0}, ${d.destDoor});\n`;
             }
             else if (d.hidden)
-                data['create body'] += `   set_door(${d.door}, "${tmp}", ${d.exit}, ${d.key}, 1);\n`;
+                data['create body'] += `   set_door(${d.door}, ${tmp}, ${d.exit}, ${d.key}, 1);\n`;
             else if (d.key !== '0')
-                data['create body'] += `   set_door(${d.door}, "${tmp}", ${d.exit}, ${d.key});\n`;
+                data['create body'] += `   set_door(${d.door}, ${tmp}, ${d.exit}, ${d.key});\n`;
             else
-                data['create body'] += `   set_door(${d.door}, "${tmp}", ${d.exit});\n`;
+                data['create body'] += `   set_door(${d.door}, ${tmp}, ${d.exit});\n`;
         });
         //smells
         tmp = copy(room.smells);
