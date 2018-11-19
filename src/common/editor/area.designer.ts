@@ -12079,7 +12079,7 @@ export class AreaDesigner extends EditorBase {
         if (monster.mass !== base.mass)
             data['create body'] += `   set_mass(${monster.mass});\n`;
         if (monster.height !== base.height)
-            data['create body'] = `   set_height("${monster.height}");\n`;
+            data['create body'] = `   set_height(${monster.height});\n`;
 
         if (monster.alignment !== base.alignment && monster.alignment !== '0' && monster.alignment !== 'neutral' && monster.alignment.length !== 0) {
             if (typeof monster.alignment === 'string' && parseFloat(monster.alignment).toString() === monster.alignment) {
