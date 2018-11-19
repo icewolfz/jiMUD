@@ -10868,7 +10868,7 @@ export class AreaDesigner extends EditorBase {
                             if (e.dest.match(/^\d+\s*,\s*\d+\s*,\s*\d+$/) || e.dest.match(/^\d+\s*,\s*\d+$/))
                                 return;
                             ec++;
-                            const parts = e.dest.split('/');
+                            const parts = path.dirname(e.dest).split('/');
                             let dest;
                             if (parts.length === 1)
                                 dest = `DIR_${e.dest.toUpperCase()}`;
