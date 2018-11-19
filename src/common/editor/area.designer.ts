@@ -11804,7 +11804,7 @@ export class AreaDesigner extends EditorBase {
         if (room.notes.length !== 0) {
             if (data.description.length !== 0)
                 data.description += '\n';
-            data.description += ' * Notes:\n * ' + room.notes.split('\n').join('\n * ') + '\n';
+            data.description += ' * Notes:\n * ' + room.notes.split('\n').join('\n * ') + '\n *';
         }
         if (baseRoom)
             return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'baseroom.c'))), data);
@@ -12412,7 +12412,7 @@ export class AreaDesigner extends EditorBase {
         if (monster.notes.length !== 0) {
             if (data.description.length !== 0)
                 data.description += '\n';
-            data.description += ' * Notes:\n * ' + monster.notes.split('\n').join('\n * ') + '\n';
+            data.description += ' * Notes:\n * ' + monster.notes.split('\n').join('\n * ') + '\n *';
         }
         if (baseMonster)
             return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'basemonster.c'))), data);
@@ -13483,7 +13483,7 @@ export class AreaDesigner extends EditorBase {
         if (obj.notes.length !== 0) {
             if (data.description.length !== 0)
                 data.description += '\n';
-            data.description += ' * Notes:\n * ' + obj.notes.split('\n').join('\n * ') + '\n';
+            data.description += ' * Notes:\n * ' + obj.notes.split('\n').join('\n * ') + '\n *';
         }
         return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'object.c'))), data);
     }
