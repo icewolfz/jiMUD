@@ -10989,6 +10989,7 @@ export class AreaDesigner extends EditorBase {
         const climbs = eArray.filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && r.climb);
         data.doc = [];
         data.includes = '';
+        data.description = '';
         data['create pre'] = '';
         data['create body'] = '';
         data['create post'] = '';
@@ -11817,6 +11818,7 @@ export class AreaDesigner extends EditorBase {
         files = files || {};
         data.doc = [];
         data.includes = '';
+        data.description = '';
         data['create pre'] = '';
         data['create body'] = '';
         data['create post'] = '';
@@ -12079,9 +12081,10 @@ export class AreaDesigner extends EditorBase {
         if (monster.height !== base.height)
             data['create body'] = `   set_height("${monster.height}");\n`;
 
-        if (monster.alignment !== base.alignment) {
-            if (typeof monster.alignment === 'string' && parseFloat(monster.alignment).toString() === monster.alignment)
+        if (monster.alignment !== base.alignment && monster.alignment !== '0' && monster.alignment !== 'neutral' && monster.alignment.length !== 0) {
+            if (typeof monster.alignment === 'string' && parseFloat(monster.alignment).toString() === monster.alignment) {
                 data['create body'] += `   set_alignment(${monster.alignment});\n`;
+            }
             else
                 data['create body'] += `   set_alignment("${monster.alignment}");\n`;
         }
@@ -12105,7 +12108,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += '   set_getable(1); //turn on getable\n';
         if (monster.patrolRoute !== base.patrolRoute)
             data['create body'] += `   set_patrol(${monster.speed}, ${formatArgumentList(monster.patrolRoute, 64 - ('' + monster.speed).length)}); //Set speed and patrol route\n`;
-        else if (monster.speed !== base.speed)
+        else if (monster.speed !== base.speed && monster.speed.length !== 0)
             data['create body'] += `   set_speed(${monster.speed}); //Set speed\n`;
 
         if (monster.noWalkRooms !== base.noWalkRooms)
@@ -12432,6 +12435,7 @@ export class AreaDesigner extends EditorBase {
         data.help = [];
         data.includes = '';
         data.inherits = '';
+        data.description = '';
         data['create pre'] = '';
         data['create body'] = '';
         data['create post'] = '';
