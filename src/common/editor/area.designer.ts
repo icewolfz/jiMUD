@@ -11169,7 +11169,7 @@ export class AreaDesigner extends EditorBase {
         else if (room.type === 'STD_ROOM' && doors.length !== 0)
             room.type = 'ROOMTYPE_VAULT';
 
-        data.inherit = room.type;
+        data.inherit = files[room.type + 'room'] || room.type.toUpperCase();
         data.inherits = '';
         if (climbs.length !== 0 && room.type !== 'ROOMTYPE_CLIMB' && base.type !== 'ROOMTYPE_CLIMB') {
             data.inherits += '\ninherit CLIMBING;';
@@ -11822,7 +11822,7 @@ export class AreaDesigner extends EditorBase {
         if (files[monster.type])
             data.inherit = `(MON + ${files[monster.type]})`;
         else
-            data.inherit = files[monster.type + 'monster'] || monster.type;
+            data.inherit = files[monster.type + 'monster'] || monster.type.toUpperCase();
         data.inherits = '';
 
         data.doc.push('/doc/build/areas/tutorial');
@@ -12965,7 +12965,6 @@ export class AreaDesigner extends EditorBase {
                 data.inherit = 'OBJ_FISHING_POLE';
                 data['create arguments'] = `"${obj.subType || 'staff'}", "${obj.material || 'wood'}", "${obj.quality || 'average'}"`;
                 data['create arguments comment'] = '//Type, Material, Quality';
-                break;
                 if (obj.enchantment !== 0) {
                     data['create arguments'] += `, ${obj.enchantment}`;
                     data['create arguments comment'] += ', Natural enchantment';
