@@ -12121,7 +12121,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_combat_initiator(${formatArgumentList(monster.attackInitiators, 56)}); //Set attack initiators\n`;
         if (monster.aggressive !== base.aggressive) {
             if (monster.aggressive.trim().startsWith('(['))
-                data['create body'] += `   set_aggressive( ${formatMapping(monster.aggressive, 4).trim()} ); //Set monster aggressiveness\n`;
+                data['create body'] += `   set_aggressive( ${formatMapping(monster.aggressive, 3).trim()} ); //Set monster aggressiveness\n`;
             else
                 data['create body'] += `   set_aggressive(${monster.aggressive.trim()}); //Set monster aggressiveness\n`;
             data['doc'].push('/doc/build/monster/haggle');

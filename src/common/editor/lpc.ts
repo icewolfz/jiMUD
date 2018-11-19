@@ -2483,12 +2483,12 @@ export function formatMapping(str, indent?) {
     if (!str.startsWith('([') && !str.ends_with('])'))
         return str;
     const map = parseMapping(str, true);
-    indent = '   ' + ' '.repeat(indent || 0);
+    indent = ' '.repeat(indent || 0);
     let out = indent + '([\n';
     out += Object.keys(map).map(k => {
         if (map[k].startsWith('([') && map[k].endsWith('])'))
-            return `${indent}  "${k}" : ${formatMapping(map[k], indent.length + 3)}`;
-        return `${indent}  "${k}" : ${map[k]}`;
+            return `${indent}  "${k}" : ${formatMapping(map[k], indent.length + 3).trim()}`;
+        return `${indent} "${k}" : ${map[k]}`;
     }).join(',\n');
     out += '\n' + indent + '])';
     return out;
