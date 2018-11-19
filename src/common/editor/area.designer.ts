@@ -11693,7 +11693,7 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                data['create pre'] += createFunction(tmp3, 'string', 'string search');
+                data['create pre'] += createFunction(tmp3, 'int');
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                 tmp3 = '"' + tmp3 + '"';
