@@ -12119,7 +12119,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_combat_initiator(${formatArgumentList(monster.attackInitiators, 56)}); //Set attack initiators\n`;
         if (monster.aggressive !== base.aggressive) {
             if (monster.aggressive.trim().startsWith('(['))
-                data['create body'] += `   set_aggressive( ${formatMapping(monster.aggressive, 3).trim()} ); //Set monster aggressiveness\n`;
+                data['create body'] += `   set_aggressive( ${formatMapping(monster.aggressive, 5).trim()} ); //Set monster aggressiveness\n`;
             else
                 data['create body'] += `   set_aggressive(${monster.aggressive.trim()}); //Set monster aggressiveness\n`;
             data['doc'].push('/doc/build/monster/haggle');
@@ -13325,7 +13325,7 @@ export class AreaDesigner extends EditorBase {
             tmp = obj.skills.filter(s => s.amount !== 0);
             if (tmp.length !== 0) {
                 let amt = 0;
-                data['create post'] += '\n\nmixed check_skill(object player)\n{\n   if(!player)\n   return 0;\n';
+                data['create post'] += '\n\nmixed check_skill(object player)\n{\n   if(!player)\n      return 0;\n';
                 let skill;
                 tmp.forEach(s => {
                     let message;

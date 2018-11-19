@@ -2477,7 +2477,7 @@ export function formatArgumentList(str, first, second?, indent?, quotes?) {
     return tmp.join(',\n' + ' '.repeat(indent));
 }
 
-export function formatMapping(str, indent?) {
+export function formatMapping(str, indent?, sub?) {
     if (!str) return;
     str = str.trim();
     if (!str.startsWith('([') && !str.ends_with('])'))
@@ -2487,10 +2487,13 @@ export function formatMapping(str, indent?) {
     let out = indent + '([\n';
     out += Object.keys(map).map(k => {
         if (map[k].startsWith('([') && map[k].endsWith('])'))
-            return `${indent}  "${k}" : ${formatMapping(map[k], indent.length + 3).trim()}`;
+            return `${indent}  "${k}" : ${formatMapping(map[k], indent.length + 3, true).trim()}`;
         return `${indent} "${k}" : ${map[k]}`;
     }).join(',\n');
-    out += '\n' + indent + '])';
+    if (sub && indent.length !== 0)
+        out += '\n' + indent.substring(0, indent.length - 1) + '])';
+    else
+        out += '\n' + indent + '])';
     return out;
 }
 
