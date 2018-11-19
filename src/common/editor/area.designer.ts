@@ -11259,19 +11259,19 @@ export class AreaDesigner extends EditorBase {
         if (room.short !== base.short) {
             room.short = room.short.trim();
             if (room.short.startsWith('(:')) {
-                data.short = formatFunctionPointer(room.short);
-                data['create pre'] += createFunction(data.short, 'string');
+                data['create body'] += `   set_short(${formatFunctionPointer(room.short)});\n`;
+                data['create pre'] += createFunction(room.short, 'string');
                 data.name = room.short.substr(2);
                 if (data.name.endsWith(':)'))
                     data.name = data.name.substr(0, data.name.length - 1);
                 data.name = data.name.trim();
             }
             else if (room.short.startsWith('"') && room.short.endsWith('"')) {
-                data.short = room.short;
+                data['create body'] += `   set_short(${room.short});\n`;
                 data.name = data.short.substr(1, data.short.length - 2);
             }
             else if (room.short.length !== 0 || base.short.length === 0) {
-                data.short = `"${room.short.replace(/"/g, '\\"')}"`;
+                data['create body'] += `   set_short("${room.short.replace(/"/g, '\\"')}");\n`;
                 data.name = room.short;
             }
         }
@@ -11291,7 +11291,7 @@ export class AreaDesigner extends EditorBase {
         if (room.long !== base.long) {
             room.long = room.long.trim();
             if (room.long.startsWith('(:')) {
-                data['long'] = formatFunctionPointer(room.long);
+                data['create body'] += `   set_long(${formatFunctionPointer(room.long)});\n`;
                 data['create pre'] += createFunction(room.long, 'string');
                 data.description = room.long.substr(2);
                 if (data.description.endsWith(':)'))
@@ -11313,13 +11313,13 @@ export class AreaDesigner extends EditorBase {
                             break;
                         }
                     }
-                    data['long'] = `"${tmp}"\n     `;
+                    data['create body'] += `   set_long("${tmp}"\n     `;
                     room.long = room.long.substr(tmp.length);
-                    data['long'] += `${formatString(room.long, 5, 73)}`;
+                    data['create body'] += `${formatString(room.long, 5, 73)});\n`;
                 }
-                else {
+                else if (room.long.length) {
+                    data['create body'] = `   set_long("${room.long}");\n`;
                     data.description = ' * ' + room.long;
-                    data['long'] = `"${room.long}"`;
                 }
             }
         }
@@ -11899,21 +11899,21 @@ export class AreaDesigner extends EditorBase {
 
         if (baseMonster) {
             if (monster.level !== base.level)
-                data['create arguments'] = `lvl || ${monster.level}, `;
+                data['create arguments'] += `lvl || ${monster.level}, `;
             else
-                data['create arguments'] = `lvl, `;
+                data['create arguments'] += `lvl, `;
             if (monster.race !== base.race)
-                data['create arguments'] = `race || "${monster.race}", `;
+                data['create arguments'] += `race || "${monster.race}", `;
             else
-                data['create arguments'] = `race, `;
+                data['create arguments'] += `race, `;
             if (monster.race !== base.race)
-                data['create arguments'] = `cls || "${monster.class}", `;
+                data['create arguments'] += `cls || "${monster.class}", `;
             else
-                data['create arguments'] = `cls, `;
+                data['create arguments'] += `cls, `;
             if (monster.race !== base.bodyType)
-                data['create arguments'] = `btype || "${monster.bodyType}", autospells, args`;
+                data['create arguments'] += `btype || "${monster.bodyType}", autospells, args`;
             else
-                data['create arguments'] = `btype, autospells, args`;
+                data['create arguments'] += `btype, autospells, args`;
         }
         else {
             data['create arguments'] = `${monster.level || base.level}, "${monster.race || base.race || 'human'}"`;
@@ -11982,7 +11982,7 @@ export class AreaDesigner extends EditorBase {
                     monster.long = monster.long.substr(tmp.length);
                     data['create body'] += `${formatString(monster.long, 5, 73)});\n`;
                 }
-                else {
+                else if (monster.long.length) {
                     data['create body'] = `   set_long("${monster.long}");\n`;
                     data.description = ' * ' + monster.long;
                 }
