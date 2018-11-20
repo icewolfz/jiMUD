@@ -1265,6 +1265,7 @@
                     <select id="mon-wiz-gender" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
                         <option value='male'>male</option>
                         <option value='female'>female</option>
+                        <option value='random'>random</option>
                         <option value=''>none</option>
                     </select>
                 </label>
@@ -5741,7 +5742,7 @@
                         let tl = tmp.length;
                         while (tl--) {
                             if (tmp.charAt(tl) === ' ') {
-                                tmp.substr(0, tl);
+                                tmp = tmp.substr(0, tl + 1);
                                 break;
                             }
                         }
@@ -6249,6 +6250,34 @@
                                     { value: 3, display: 'combat speak' }
                                 ]
                             }
+                        },
+                        formatter: (data) => {
+                            if (!data) return '';
+                            switch (data.cell) {
+                                case 0:
+                                    return 'emote';
+                                case 1:
+                                    return 'combat emote';
+                                case 2:
+                                    return 'speak';
+                                case 3:
+                                    return 'combat speak';
+                            }
+                            return '';
+                        },
+                        tooltipFormatter: (data) => {
+                            if (!data) return '';
+                            switch (data.cell) {
+                                case 0:
+                                    return 'emote';
+                                case 1:
+                                    return 'combat emote';
+                                case 2:
+                                    return 'speak';
+                                case 3:
+                                    return 'combat speak';
+                            }
+                            return '';
                         }
                     },
                     {
@@ -6896,7 +6925,7 @@
                         let tl = tmp.length;
                         while (tl--) {
                             if (tmp.charAt(tl) === ' ') {
-                                tmp.substr(0, tl);
+                                tmp = tmp.substr(0, tl + 1);
                                 break;
                             }
                         }
@@ -6994,8 +7023,12 @@
                 }
                 if (data['mon-wiz-language'].length > 0)
                     tmpl['create body'] += `   set_primary_lang("${data['mon-wiz-language']}");\n`;
-                if (data['mon-wiz-gender'].value && data['mon-wiz-gender'].value.length > 0)
-                    tmpl['create body'] += `   set_gender("${data['mon-wiz-gender'].value}");\n`;
+                if (data['mon-wiz-gender'].value && data['mon-wiz-gender'].value.length > 0) {
+                    if (data['mon-wiz-gender'].value === 'random')
+                        tmpl['create body'] += '   set_gender(random(2) ? "male" : "female");\n';
+                    else
+                        tmpl['create body'] += `   set_gender("${data['mon-wiz-gender'].value}");\n`;
+                }
                 if (data['mon-wiz-eye'].length > 0)
                     tmpl['create body'] += `   set_eyecolor("${data['mon-wiz-eye']}");\n`;
                 if (data['mon-wiz-hair'].length > 0)
@@ -7030,29 +7063,29 @@
                 if (data['mon-wiz-party'].length > 0)
                     tmpl['create body'] += `   set_mon_party("${data['mon-wiz-party']}");\n`;
                 if (data['mon-wiz-auto-drop-enabled'])
-                    tmpl['create body'] += '   set_auto_drop(1);';
+                    tmpl['create body'] += '   set_auto_drop(1);\n';
                 if (data['mon-wiz-auto-drop'] !== 1)
-                    tmpl['create body'] += `   set_auto_drop_delay(${data['mon-wiz-auto-drop']});`;
+                    tmpl['create body'] += `   set_auto_drop_delay(${data['mon-wiz-auto-drop']});\n`;
                 if (!data['mon-wiz-storage-enabled'])
-                    tmpl['create body'] += '   set_open_storage(0);';
+                    tmpl['create body'] += '   set_open_storage(0);\n';
                 if (data['mon-wiz-storage'] !== 3)
-                    tmpl['create body'] += `   set_open_storage_delay(${data['mon-wiz-storage']});`;
+                    tmpl['create body'] += `   set_open_storage_delay(${data['mon-wiz-storage']});\n`;
                 if (!data['mon-wiz-auto-wield-enabled'])
-                    tmpl['create body'] += '   set_auto_wield(0);';
+                    tmpl['create body'] += '   set_auto_wield(0);\n';
                 if (data['mon-wiz-auto-wield'] !== 3)
-                    tmpl['create body'] += `   set_auto_wield_delay(${data['mon-wiz-auto-wield']});`;
+                    tmpl['create body'] += `   set_auto_wield_delay(${data['mon-wiz-auto-wield']});\n`;
                 if (data['mon-wiz-auto-loot-enabled'])
-                    tmpl['create body'] += '   set_auto_loot(1);';
+                    tmpl['create body'] += '   set_auto_loot(1);\n';
                 if (data['mon-wiz-auto-loot'] !== 1)
-                    tmpl['create body'] += `   set_auto_loot_delay(${data['mon-wiz-auto-loot']});`;
+                    tmpl['create body'] += `   set_auto_loot_delay(${data['mon-wiz-auto-loot']});\n`;
                 if (data['mon-wiz-auto-wear-enabled'])
-                    tmpl['create body'] += '   set_auto_wear(1);';
+                    tmpl['create body'] += '   set_auto_wear(1);\n';
                 if (data['mon-wiz-auto-wear'] !== 3)
-                    tmpl['create body'] += `   set_auto_wear_delay(${data['mon-wiz-auto-wear']});`;
+                    tmpl['create body'] += `   set_auto_wear_delay(${data['mon-wiz-auto-wear']});\n`;
                 if (data['mon-wiz-wimpy'] !== 0)
-                    tmpl['create body'] += `   set_wimpy(${data['mon-wiz-wimpy']});`;
+                    tmpl['create body'] += `   set_wimpy(${data['mon-wiz-wimpy']});\n`;
                 if (!data['mon-wiz-auto-stand'])
-                    tmpl['create body'] += '   set_auto_stand(0);';
+                    tmpl['create body'] += '   set_auto_stand(0);\n';
                 data['mon-wiz-reactions'] = data['mon-wiz-reactions'].filter(r => r.reaction.length > 0);
                 if (data['mon-wiz-reactions'].length === 1)
                     tmpl['create body'] += `   set_reaction("${data['mon-wiz-reactions'][0].type.length > 0 ? data['mon-wiz-reactions'][0].type + ' ' : ''}${data['mon-wiz-reactions'][0].reaction}", "${data['mon-wiz-reactions'][0].action}");\n`;
@@ -7118,13 +7151,13 @@
                     data['mon-wiz-ask-topics'][0].message = data['mon-wiz-ask-topics'][0].message.trim();
                     if (data['mon-wiz-ask-topics'][0].message.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(data['mon-wiz-ask-topics'][0].message);
-                        tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic}, ${tmp3});`;
+                        tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic}, ${tmp3});\n`;
                         tmpl['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
                     }
                     else if (!data['mon-wiz-ask-topics'][0].message.startsWith('"') && !data['mon-wiz-ask-topics'][0].message.endsWith('"'))
-                        tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic}, "${data['mon-wiz-ask-topics'][0].message}");`;
+                        tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic}, "${data['mon-wiz-ask-topics'][0].message}");\n`;
                     else
-                        tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic}, ${data['mon-wiz-ask-topics'][0].message});`;
+                        tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic}, ${data['mon-wiz-ask-topics'][0].message});\n`;
                 }
                 else if (tmp.length > 0) {
                     tmpl['create body'] += '   set_topics( ([\n       ';
@@ -7146,7 +7179,7 @@
                     return tmp3;
                 });
                 if (tmp.length !== 0)
-                    tmpl['create body'] += `   set_emotes(${data['mon-wiz-emotes-chance']}, ({\n     ${tmp.join(',\n     ')}\n     }) );`;
+                    tmpl['create body'] += `   set_emotes(${data['mon-wiz-emotes-chance']}, ({\n       ${tmp.join(',\n       ')}\n     }) );\n`;
                 tmp = data['mon-wiz-emotes'].filter(s => s.type === 1).map(i => {
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
@@ -7158,7 +7191,7 @@
                     return tmp3;
                 });
                 if (tmp.length !== 0)
-                    tmpl['create body'] += `   set_emotes(${data['mon-wiz-emotes-chance-combat']}, ({\n     ${tmp.join(',\n     ')}\n     }), 1);`;
+                    tmpl['create body'] += `   set_emotes(${data['mon-wiz-emotes-chance-combat']}, ({\n       ${tmp.join(',\n       ')}\n     }), 1);\n`;
                 //#endregion
                 //#region speeches
                 tmp = {};
@@ -7176,7 +7209,7 @@
                         tmp[i.language].push(tmp3);
                 });
                 Object.keys(tmp).forEach(k => {
-                    tmpl['create body'] += `   set_speech(${data['mon-wiz-speech-chance']}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }) );`;
+                    tmpl['create body'] += `   set_speech(${data['mon-wiz-speech-chance']}, "${k}", ({\n       ${tmp[k].join(',\n       ')}\n     }) );\n`;
                 });
                 tmp = {};
                 data['mon-wiz-emotes'].filter(s => s.type === 3 && s.language.length !== 0).forEach(i => {
@@ -7193,7 +7226,7 @@
                         tmp[i.language].push(tmp3);
                 });
                 Object.keys(tmp).forEach(k => {
-                    tmpl['create body'] += `   set_speech(${data['mon-wiz-speech-chance-combat']}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }), 1);`;
+                    tmpl['create body'] += `   set_speech(${data['mon-wiz-speech-chance-combat']}, "${k}", ({\n       ${tmp[k].join(',\n       ')}\n     }), 1);\n`;
                 });
                 //#endregion
                 data['mon-wiz-reputations'].forEach(r => {
@@ -7211,13 +7244,13 @@
                         tmpl['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});\n`;
                     else if (r.amount.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(r.amount);
-                        tmpl['create body'] += `   set_reputation_${fun}(${r.group}${tmp3});`;
+                        tmpl['create body'] += `   set_reputation_${fun}(${r.group}${tmp3});\n`;
                         tmpl['create pre'] += createFunction(tmp3, 'string', 'object monster, object killer');
                     }
                     else if (!r.amount.startsWith('"') && !r.amount.endsWith('"'))
-                        tmpl['create body'] += `   set_reputation_${fun}(${r.group}"${r.amount}");`;
+                        tmpl['create body'] += `   set_reputation_${fun}(${r.group}"${r.amount}");\n`;
                     else
-                        tmpl['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});`;
+                        tmpl['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});\n`;
                 });
 
                 if (data['mon-wiz-actions'].length > 0) {

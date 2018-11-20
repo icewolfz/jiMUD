@@ -60,6 +60,7 @@
 
         .totals {
             font-weight: bold;
+            border-top: 2px solid #ddd;
         }
 
         #logo {
@@ -162,6 +163,7 @@
         const { version } = require('../package.json');
         const { remote } = require('electron');
 
+        var memory;
         //function formatBytes(a,b){if(0==a)return"0 Bytes";var c=1e3,d=b||2,e=["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"],f=Math.floor(Math.log(a)/Math.log(c));return parseFloat((a/Math.pow(c,f)).toFixed(d))+" "+e[f];}
         $(document).ready(() => {
             $('#ev').text(process.versions.electron);
@@ -169,18 +171,38 @@
             $('#cv').text(process.versions.chrome);
             $('#logo-version').text('v' + version);
 
+            memory = document.getElementById('memoryRows');
+            if (remote.getGlobal('editorOnly'))
+                $('#logo-editor').css('display', 'block');
+            updateMemory();
+            setInterval(updateMemory, 5000);
+        });
+
+        $(window).keydown((event) => {
+            if (event.which === 27)
+                window.close();
+        });
+
+        function formatMemory(amt) {
+            if(amt > 1024)
+                return (amt / 1024).toFixed(1).toLocaleString() + 'M';
+            return amt.toLocaleString() + 'K';
+        }
+
+        function updateMemory() {
             var mi = remote.app.getAppMetrics();
             var total = [0, 0, 0, 0, 0, 0];
+            var rows = '';
             for (var i = 0; i < mi.length; i++) {
-                var row = '<tr><td>' + mi[i].pid + '</td>';
-                row += '<td>' + mi[i].type + '</td>';
-                row += '<td>' + (mi[i].memory.peakWorkingSetSize).toLocaleString() + ' K</td>';
-                row += '<td>' + (mi[i].memory.privateBytes).toLocaleString() + 'K</td>';
-                row += '<td>' + (mi[i].memory.sharedBytes).toLocaleString() + ' K</td>';
-                row += '<td>' + (mi[i].memory.workingSetSize).toLocaleString() + ' K</td>';
-                row += '<td>' + (mi[i].cpu.percentCPUUsage || 0.0).toFixed(3) + '%</td>';
-                row += '<td>' + mi[i].cpu.idleWakeupsPerSecond + '</td></tr>';
-                $('#memory tbody').append(row);
+                rows += '<tr><td>' + mi[i].pid + '</td>';
+                rows += '<td>' + mi[i].type + '</td>';
+                rows += '<td>' + formatMemory(mi[i].memory.peakWorkingSetSize)+ '</td>';
+                rows += '<td>' + formatMemory(mi[i].memory.privateBytes) + '</td>';
+                rows += '<td>' + formatMemory(mi[i].memory.sharedBytes) + '</td>';
+                rows += '<td>' + formatMemory(mi[i].memory.workingSetSize) + '</td>';
+                rows += '<td>' + (mi[i].cpu.percentCPUUsage || 0.0).toFixed(3) + '%</td>';
+                rows += '<td>' + mi[i].cpu.idleWakeupsPerSecond + '</td></tr>';
+
                 total[0] += mi[i].memory.peakWorkingSetSize;
                 total[1] += mi[i].memory.privateBytes;
                 total[2] += mi[i].memory.sharedBytes;
@@ -188,38 +210,16 @@
                 total[4] += (mi[i].cpu.percentCPUUsage || 0.0);
                 total[5] += mi[i].cpu.idleWakeupsPerSecond;
             }
-            row = '<tr class=\'totals\'><td>Total:</td>';
-            row += '<td></td>';
-            row += '<td>' + (total[0]).toLocaleString() + ' K</td>';
-            row += '<td>' + (total[1]).toLocaleString() + ' K</td>';
-            row += '<td>' + (total[2]).toLocaleString() + ' K</td>';
-            row += '<td>' + (total[3]).toLocaleString() + ' K</td>';
-            row += '<td>' + total[4].toFixed(3) + '%</td>';
-            row += '<td>' + total[5] + '</td></tr>';
-            $('#memory tbody').append(row);
-            /*
-            var mi = remote.process.getProcessMemoryInfo();
-            var ci = remote.process.getCPUUsage();
-
-            var row = '<tr><td>' + remote.process.pid + '</td>';
-            row += '<td>' + remote.process.type + '</td>';
-            row += '<td>' + (mi.peakWorkingSetSize).toLocaleString() + ' K</td>';
-            row += '<td>' + (mi.privateBytes).toLocaleString() + 'K</td>';
-            row += '<td>' + (mi.sharedBytes).toLocaleString() + ' K</td>';
-            row += '<td>' + (mi.workingSetSize).toLocaleString() + ' K</td>';
-            row += '<td>' + (ci.percentCPUUsage || 0.0).toFixed(3) + '%</td>';
-            row += '<td>' + ci.idleWakeupsPerSecond + '</td></tr>';
-            $('#memory tbody').append(row);
-            */
-            if (remote.getGlobal('editorOnly'))
-                $('#logo-editor').css('display', 'block');
-
-        });
-
-        $(window).keydown((event) => {
-            if (event.which === 27)
-                window.close();
-        });
+            rows += '<tr class=\'totals\'><td>Total:</td>';
+            rows += '<td></td>';
+            rows += '<td>' + formatMemory(total[0]) + '</td>';
+            rows += '<td>' + formatMemory(total[1]) + '</td>';
+            rows += '<td>' + formatMemory(total[2]) + '</td>';
+            rows += '<td>' + formatMemory (total[3]) + '</td>';
+            rows += '<td>' + total[4].toFixed(3) + '%</td>';
+            rows += '<td>' + total[5] + '</td></tr>';
+            memory.innerHTML = rows;
+        }
         //remote.getCurrentWindow().openDevTools();
     </script>
 </head>
@@ -254,10 +254,10 @@
                             <th>Shared</th>
                             <th>Working Set</th>
                             <th>CPU Usage</th>
-                            <th>idle Wakeups/Second</th>
+                            <th>idle Wake ups</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="memoryRows">
                     </tbody>
                 </table>
             </div>

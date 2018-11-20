@@ -11,20 +11,36 @@
 
 - **New:**
   - Code editor:
-    - Add limb optional support to object editor
+    - Add limb optional support to object editor for armors and sheaths
+    - Add random gender support to monster wizard
+    - Add advanced properties to object editor
+  - About: do live updates of cpu/memory usage
 - **Changed:**
   - ANSI Parser: use unicode zero space character instead of <wbr> tag to reduce memory
+  - Update monaco-editor from 0.15.0 to 0.15.5
+  - Update electron-updater 3.2.3 to 4.0.4
+  - Update electron 3.0.9 to 3.0.10
+  - Update yargs-parser 11.1.0 to 11.1.1
 - **Fixed:**
   - Code editor:
     - Fixed drop down edit boxes
+    - Fixed monster wizard emote type display
+    - Fixed auto complete
+    - Force all templates to use linux line endings
     - Area designer:
+      - Fixed saving monster gender
       - Fixed code generation cancel not resetting task bar progress
       - Fixed object bonus code generation
       - Do not generate set_prevent_* functions of empty string for objects
       - Cancel on error when generating code
       - Remove buckler as an accessory for armors
+      - Fixed set_long string wrapping
+      - Fixed room set_long/short when empty
+      - Fixed monster/object file name if empty
+      - Fixed several minor issues with code generation
   - Progress dialog: fix task bar progress not being cleared on close
   - Status: Attempt to fix weather overlay again
+  - Display: Set line-height to better control unicode
 
 ## v0.6.8 2018-11-12
 

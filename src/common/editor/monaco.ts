@@ -2,7 +2,7 @@
 //spellchecker:ignore sefuns efuns efun sefun lfuns lfun nroff ormatting selectall
 import { EditorBase, EditorOptions, FileState, Source } from './editor.base';
 import { conf, language, loadCompletion, LPCIndenter, LPCFormatter } from './lpc';
-import { isFileSync, isDirSync, parseTemplate, stripPinkfish } from '../library';
+import { isFileSync, isDirSync, parseTemplate, stripPinkfish, copy } from '../library';
 const { ipcRenderer } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -57,9 +57,20 @@ export function SetupEditor() {
                 monaco.languages.setMonarchTokensProvider('lpc', language);
                 monaco.languages.setLanguageConfiguration('lpc', conf);
                 monaco.languages.registerCompletionItemProvider('lpc', {
-                    provideCompletionItems: (model, position, context, token) => {
-                        if ($lpcCompletionCache) return $lpcCompletionCache;
-                        return ($lpcCompletionCache = loadCompletion());
+                    provideCompletionItems: (model, position, item, token) => {
+                        /*
+                        let word: any = model.getWordAtPosition(position);
+                        if (!word) return { suggestions: [] };
+                        word = word.word;
+                        */
+                        if (!$lpcCompletionCache)
+                            $lpcCompletionCache = loadCompletion();
+                        return {
+                            suggestions: copy($lpcCompletionCache)
+                        };
+                    },
+                    resolveCompletionItem(model, position, item, token) {
+                        return item;
                     }
                 });
             });
