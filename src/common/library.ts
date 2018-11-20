@@ -1997,7 +1997,7 @@ export function initEditDropdown(d) {
         let items = Array.from(list.querySelectorAll('li'));
         items.forEach(e => (<HTMLElement>e).firstElementChild.classList.remove('active'));
         items.forEach(e => (<HTMLElement>e).style.display = '');
-        items = items.filter(e => !(<HTMLElement>e).textContent.match(new RegExp(ip.value)));
+        items = items.filter(e => !(<HTMLElement>e).textContent.toLowerCase().match(new RegExp(ip.value.toLowerCase())));
         items.forEach(e => (<HTMLElement>e).style.display = 'none');
         if (items.length !== 0)
             parent.classList.add('open', 'autocomplete');

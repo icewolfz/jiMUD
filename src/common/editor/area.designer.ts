@@ -593,6 +593,12 @@ export enum StdObjectType {
     object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink, fishing_pole, backpack, bag_of_holding
 }
 
+interface Property {
+    type: number;
+    name: string;
+    value: string;
+}
+
 class StdObject {
     public id: number;
     public type: StdObjectType = StdObjectType.object;
@@ -606,6 +612,7 @@ class StdObject {
     public material: string = '';
     public notes: string = '';
     public reads: Read[] = [];
+    public properties: Property[] = [];
     /*
     weapon - type, quality, enchantment
     armor - type, quality, limbs, enchantment
@@ -3510,6 +3517,7 @@ export class AreaDesigner extends EditorBase {
                         columns: [
                             {
                                 label: 'Name',
+                                width: 300,
                                 field: 'id',
                                 formatter: (data) => {
                                     if (!data) return '';
@@ -4306,6 +4314,7 @@ export class AreaDesigner extends EditorBase {
                         columns: [
                             {
                                 label: 'Name',
+                                width: 300,
                                 field: 'id',
                                 formatter: (data) => {
                                     if (!data) return '';
@@ -4515,7 +4524,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.height = +e.data['mon-wiz-height'];
                                     nMonster.eyeColor = e.data['mon-wiz-eye'];
                                     nMonster.hairColor = e.data['mon-wiz-hair'];
-                                    nMonster.gender = e.data['mon-wiz-gender'];
+                                    nMonster.gender = e.data['mon-wiz-gender'].value;
                                     nMonster.bodyType = e.data['mon-wiz-body'];
                                     nMonster.noCorpse = e.data['mon-wiz-no-corpse'];
                                     nMonster.noLimbs = e.data['mon-wiz-no-limbs'];
@@ -4716,6 +4725,7 @@ export class AreaDesigner extends EditorBase {
                         columns: [
                             {
                                 label: 'Name',
+                                width: 300,
                                 field: 'id',
                                 formatter: (data) => {
                                     if (!data) return '';
@@ -5273,6 +5283,7 @@ export class AreaDesigner extends EditorBase {
                         columns: [
                             {
                                 label: 'Name',
+                                width: 300,
                                 field: 'id',
                                 formatter: (data) => {
                                     if (!data) return '';
@@ -5497,7 +5508,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.height = +e.data['mon-wiz-height'];
                                     nMonster.eyeColor = e.data['mon-wiz-eye'];
                                     nMonster.hairColor = e.data['mon-wiz-hair'];
-                                    nMonster.gender = e.data['mon-wiz-gender'];
+                                    nMonster.gender = e.data['mon-wiz-gender'].value;
                                     nMonster.bodyType = e.data['mon-wiz-body'];
                                     nMonster.noCorpse = e.data['mon-wiz-no-corpse'];
                                     nMonster.noLimbs = e.data['mon-wiz-no-limbs'];
@@ -6278,7 +6289,7 @@ export class AreaDesigner extends EditorBase {
                                         }
                                     }),
                                     new WizardPage({
-                                        id: 'obj-properties',
+                                        id: 'obj-general',
                                         title: 'General properties',
                                         body: `<div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%">Key ID
@@ -6355,6 +6366,80 @@ export class AreaDesigner extends EditorBase {
                                                 e.page.querySelector('#obj-baitStrength').disabled = !e.page.querySelector('#obj-bait').checked;
                                                 e.page.querySelector('#obj-baitUses').disabled = !e.page.querySelector('#obj-bait').checked;
                                             });
+                                        }
+                                    }),
+                                    new WizardDataGridPage({
+                                        title: 'Advanced properties',
+                                        id: 'obj-properties',
+                                        clipboard: 'jiMUD/',
+                                        columns: [
+                                            {
+                                                label: 'Type',
+                                                field: 'type',
+                                                width: 150,
+                                                editor: {
+                                                    type: EditorType.select,
+                                                    options: {
+                                                        data: [
+                                                            { value: 0, display: 'normal' },
+                                                            { value: 1, display: 'temporary' }
+                                                        ]
+                                                    }
+                                                },
+                                                formatter: (data) => {
+                                                    if (!data) return '';
+                                                    switch (data.cell) {
+                                                        case 0:
+                                                            return 'normal';
+                                                        case 1:
+                                                            return 'temporary';
+                                                    }
+                                                    return '';
+                                                },
+                                                tooltipFormatter: (data) => {
+                                                    if (!data) return '';
+                                                    switch (data.cell) {
+                                                        case 0:
+                                                            return 'normal';
+                                                        case 1:
+                                                            return 'temporary';
+                                                    }
+                                                    return '';
+                                                }
+                                            },
+                                            {
+                                                label: 'Name',
+                                                field: 'name',
+                                                width: 150,
+                                                editor: {
+                                                    type: EditorType.dropdown,
+                                                    options: {
+                                                        container: '#object-wizard',
+                                                        data: [
+                                                            'magic effect', 'lore', 'magic item', 'crafting quality',
+                                                            'dig', 'break remove', 'mining', 'check skill', 'check level'
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                label: 'Value',
+                                                field: 'value',
+                                                spring: true,
+                                                width: 200,
+                                                editor: {
+                                                    options: {
+                                                        container: '#object-wizard'
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        add: (e) => {
+                                            e.data = {
+                                                type: 1,
+                                                name: '',
+                                                value: ''
+                                            };
                                         }
                                     }),
                                     new WizardPage({
@@ -6452,7 +6537,8 @@ export class AreaDesigner extends EditorBase {
                                 ]
                             });
                             wiz.defaults = {
-                                'obj-reads': ed.value.reads
+                                'obj-reads': ed.value.reads,
+                                'obj-properties': ed.value.properties
                             };
                             wiz.pages[3].page.querySelector('#obj-material-list').innerHTML = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'material.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
                             initEditDropdown(wiz.pages[3].page.querySelector('#obj-material-list').closest('.edit-dropdown'));
@@ -10720,7 +10806,15 @@ export class AreaDesigner extends EditorBase {
             Object.keys(this.$area.monsters).forEach(m => {
                 if (this.$cancel)
                     throw new Error('Canceled');
-                const name = this.$area.monsters[m].name.replace(/ /g, '_').toLowerCase();
+                let name = this.$area.monsters[m].name.trim().replace(/ /g, '_').toLowerCase();
+                //empty name try base name
+                if (name.length === 0) {
+                    const base: Monster = this.$area.monsters[this.$area.monsters[m].type] || this.$area.baseMonsters[this.$area.monsters[m].type] || new Monster();
+                    name = base.name.trim().replace(/ /g, '_').toLowerCase();
+                    //if still empty default to generic monster
+                    if (name.length === 0)
+                        name = 'monster';
+                }
                 if (!counts[name])
                     counts[name] = 1;
                 else
@@ -10737,7 +10831,7 @@ export class AreaDesigner extends EditorBase {
             Object.keys(this.$area.objects).forEach(m => {
                 if (this.$cancel)
                     throw new Error('Canceled');
-                const name = stripPinkfish(this.$area.objects[m].name).replace(/ /g, '_').toLowerCase();
+                const name = stripPinkfish(this.$area.objects[m].name).replace(/ /g, '_').toLowerCase() || 'object';
                 if (!counts[name])
                     counts[name] = 1;
                 else
@@ -10774,16 +10868,16 @@ export class AreaDesigner extends EditorBase {
                             if (e.dest.match(/^\d+\s*,\s*\d+\s*,\s*\d+$/) || e.dest.match(/^\d+\s*,\s*\d+$/))
                                 return;
                             ec++;
-                            const parts = e.dest.split('/');
+                            const parts = path.dirname(e.dest).split('/');
                             let dest;
                             if (parts.length === 1)
                                 dest = `DIR_${e.dest.toUpperCase()}`;
                             else if (parts.length > 1)
                                 dest = `DIR_${parts[parts.length - 2].toUpperCase()}_${parts[parts.length - 1].toUpperCase()}`;
-                            if (externs[dest])
+                            if (externs[dest] && path.dirname(e.dest) !== externs[dest])
                                 dest += ec;
-                            externs[dest] = e.dest;
-                            files[e.dest] = dest;
+                            externs[dest] = path.dirname(e.dest);
+                            files[e.dest] = `${dest} + "${path.basename(e.dest)}"`;
                         });
                     }
                 }
@@ -10895,6 +10989,7 @@ export class AreaDesigner extends EditorBase {
         const climbs = eArray.filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && r.climb);
         data.doc = [];
         data.includes = '';
+        data.description = '';
         data['create pre'] = '';
         data['create body'] = '';
         data['create post'] = '';
@@ -11083,7 +11178,7 @@ export class AreaDesigner extends EditorBase {
         else if (room.type === 'STD_ROOM' && doors.length !== 0)
             room.type = 'ROOMTYPE_VAULT';
 
-        data.inherit = room.type;
+        data.inherit = files[room.type + 'room'] || room.type.toUpperCase();
         data.inherits = '';
         if (climbs.length !== 0 && room.type !== 'ROOMTYPE_CLIMB' && base.type !== 'ROOMTYPE_CLIMB') {
             data.inherits += '\ninherit CLIMBING;';
@@ -11173,19 +11268,19 @@ export class AreaDesigner extends EditorBase {
         if (room.short !== base.short) {
             room.short = room.short.trim();
             if (room.short.startsWith('(:')) {
-                data.short = formatFunctionPointer(room.short);
-                data['create pre'] += createFunction(data.short, 'string');
+                data['create body'] += `   set_short(${formatFunctionPointer(room.short)});\n`;
+                data['create pre'] += createFunction(room.short, 'string');
                 data.name = room.short.substr(2);
                 if (data.name.endsWith(':)'))
                     data.name = data.name.substr(0, data.name.length - 1);
                 data.name = data.name.trim();
             }
             else if (room.short.startsWith('"') && room.short.endsWith('"')) {
-                data.short = room.short;
+                data['create body'] += `   set_short(${room.short});\n`;
                 data.name = data.short.substr(1, data.short.length - 2);
             }
             else if (room.short.length !== 0 || base.short.length === 0) {
-                data.short = `"${room.short.replace(/"/g, '\\"')}"`;
+                data['create body'] += `   set_short("${room.short.replace(/"/g, '\\"')}");\n`;
                 data.name = room.short;
             }
         }
@@ -11205,7 +11300,7 @@ export class AreaDesigner extends EditorBase {
         if (room.long !== base.long) {
             room.long = room.long.trim();
             if (room.long.startsWith('(:')) {
-                data['long'] = formatFunctionPointer(room.long);
+                data['create body'] += `   set_long(${formatFunctionPointer(room.long)});\n`;
                 data['create pre'] += createFunction(room.long, 'string');
                 data.description = room.long.substr(2);
                 if (data.description.endsWith(':)'))
@@ -11223,17 +11318,17 @@ export class AreaDesigner extends EditorBase {
                     let tl = tmp.length;
                     while (tl--) {
                         if (tmp.charAt(tl) === ' ') {
-                            tmp.substr(0, tl);
+                            tmp = tmp.substr(0, tl + 1);
                             break;
                         }
                     }
-                    data['long'] = `"${tmp}"\n     `;
+                    data['create body'] += `   set_long("${tmp}"\n     `;
                     room.long = room.long.substr(tmp.length);
-                    data['long'] += `${formatString(room.long, 5, 73)}`;
+                    data['create body'] += `${formatString(room.long, 5, 73)});\n`;
                 }
-                else {
+                else if (room.long.length) {
+                    data['create body'] += `   set_long("${room.long}");\n`;
                     data.description = ' * ' + room.long;
-                    data['long'] = `"${room.long}"`;
                 }
             }
         }
@@ -11429,7 +11524,7 @@ export class AreaDesigner extends EditorBase {
                 else if (i.dest.match(/^\d+\s*,\s*\d+$/) && files[i.dest.replace(/ /g, '') + ',0'])
                     tmp2.push(`"dest" : RMS + "${files[i.dest.replace(/ /g, '') + ',0']}.c"`);
                 else if (files[i.dest])
-                    tmp2 = `${files[i.dest]}`;
+                    tmp2.push(`"dest" : ${files[i.dest]}`);
                 else
                     tmp2.push(`"dest" : "${i.dest}"`);
             }
@@ -11461,7 +11556,7 @@ export class AreaDesigner extends EditorBase {
                 else if (tmp.match(/^\d+\s*,\s*\d+$/) && files[tmp.replace(/ /g, '') + ',0'])
                     tmp = `RMS + "${files[tmp.replace(/ /g, '') + ',0']}.c"`;
                 else if (files[tmp])
-                    tmp = `"${files[tmp]}"`;
+                    tmp = `${files[tmp]}`;
                 else
                     tmp = `"${tmp}"`;
             }
@@ -11482,14 +11577,14 @@ export class AreaDesigner extends EditorBase {
             if (d.destDoor.length > 0) {
                 if (!d.destDoor.startsWith('"') && !d.destDoor.endsWith('"'))
                     d.destDoor = '"' + d.destDoor + '"';
-                data['create body'] += `   set_door(${d.door}, "${tmp}", ${d.exit}, ${d.key}, ${d.hidden ? 1 : 0}, ${d.destDoor});\n`;
+                data['create body'] += `   set_door(${d.door}, ${tmp}, ${d.exit}, ${d.key}, ${d.hidden ? 1 : 0}, ${d.destDoor});\n`;
             }
             else if (d.hidden)
-                data['create body'] += `   set_door(${d.door}, "${tmp}", ${d.exit}, ${d.key}, 1);\n`;
+                data['create body'] += `   set_door(${d.door}, ${tmp}, ${d.exit}, ${d.key}, 1);\n`;
             else if (d.key !== '0')
-                data['create body'] += `   set_door(${d.door}, "${tmp}", ${d.exit}, ${d.key});\n`;
+                data['create body'] += `   set_door(${d.door}, ${tmp}, ${d.exit}, ${d.key});\n`;
             else
-                data['create body'] += `   set_door(${d.door}, "${tmp}", ${d.exit});\n`;
+                data['create body'] += `   set_door(${d.door}, ${tmp}, ${d.exit});\n`;
         });
         //smells
         tmp = copy(room.smells);
@@ -11598,7 +11693,7 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                data['create pre'] += createFunction(tmp3, 'string', 'string search');
+                data['create pre'] += createFunction(tmp3, 'int');
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                 tmp3 = '"' + tmp3 + '"';
@@ -11709,7 +11804,7 @@ export class AreaDesigner extends EditorBase {
         if (room.notes.length !== 0) {
             if (data.description.length !== 0)
                 data.description += '\n';
-            data.description += ' * Notes:\n * ' + room.notes.split('\n').join('\n * ') + '\n';
+            data.description += ' * Notes:\n * ' + room.notes.split('\n').join('\n * ') + '\n *';
         }
         if (baseRoom)
             return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'baseroom.c'))), data);
@@ -11723,6 +11818,7 @@ export class AreaDesigner extends EditorBase {
         files = files || {};
         data.doc = [];
         data.includes = '';
+        data.description = '';
         data['create pre'] = '';
         data['create body'] = '';
         data['create post'] = '';
@@ -11734,9 +11830,9 @@ export class AreaDesigner extends EditorBase {
         const base: Monster = this.$area.monsters[monster.type] || this.$area.baseMonsters[monster.type] || new Monster();
 
         if (files[monster.type])
-            data.inherit = `(MON + ${files[monster.type]})`;
+            data.inherit = `(MON + "${files[monster.type]}")`;
         else
-            data.inherit = files[monster.type + 'monster'] || monster.type;
+            data.inherit = files[monster.type + 'monster'] || monster.type.toUpperCase();
         data.inherits = '';
 
         data.doc.push('/doc/build/areas/tutorial');
@@ -11813,21 +11909,21 @@ export class AreaDesigner extends EditorBase {
 
         if (baseMonster) {
             if (monster.level !== base.level)
-                data['create arguments'] = `lvl || ${monster.level}, `;
+                data['create arguments'] += `lvl || ${monster.level}, `;
             else
-                data['create arguments'] = `lvl, `;
+                data['create arguments'] += `lvl, `;
             if (monster.race !== base.race)
-                data['create arguments'] = `race || "${monster.race}", `;
+                data['create arguments'] += `race || "${monster.race}", `;
             else
-                data['create arguments'] = `race, `;
+                data['create arguments'] += `race, `;
             if (monster.race !== base.race)
-                data['create arguments'] = `cls || "${monster.class}", `;
+                data['create arguments'] += `cls || "${monster.class}", `;
             else
-                data['create arguments'] = `cls, `;
+                data['create arguments'] += `cls, `;
             if (monster.race !== base.bodyType)
-                data['create arguments'] = `btype || "${monster.bodyType}", autospells, args`;
+                data['create arguments'] += `btype || "${monster.bodyType}", autospells, args`;
             else
-                data['create arguments'] = `btype, autospells, args`;
+                data['create arguments'] += `btype, autospells, args`;
         }
         else {
             data['create arguments'] = `${monster.level || base.level}, "${monster.race || base.race || 'human'}"`;
@@ -11845,8 +11941,6 @@ export class AreaDesigner extends EditorBase {
                 data['create arguments comment'] += ', Body type';
             }
         }
-
-        data['create body'] = '';
 
         if (monster.name.startsWith('"') && monster.name.endsWith('"'))
             data['name'] = monster.name.substr(1, monster.name.length - 2).replace(/"/g, '\\"');
@@ -11888,7 +11982,7 @@ export class AreaDesigner extends EditorBase {
                     let tl = tmp.length;
                     while (tl--) {
                         if (tmp.charAt(tl) === ' ') {
-                            tmp.substr(0, tl);
+                            tmp = tmp.substr(0, tl + 1);
                             break;
                         }
                     }
@@ -11896,8 +11990,8 @@ export class AreaDesigner extends EditorBase {
                     monster.long = monster.long.substr(tmp.length);
                     data['create body'] += `${formatString(monster.long, 5, 73)});\n`;
                 }
-                else {
-                    data['create body'] = `   set_long("${monster.long}");\n`;
+                else if (monster.long.length) {
+                    data['create body'] += `   set_long("${monster.long}");\n`;
                     data.description = ' * ' + monster.long;
                 }
             }
@@ -11983,18 +12077,23 @@ export class AreaDesigner extends EditorBase {
         if (monster.mass !== base.mass)
             data['create body'] += `   set_mass(${monster.mass});\n`;
         if (monster.height !== base.height)
-            data['create body'] = `   set_height("${monster.height}");\n`;
+            data['create body'] += `   set_height(${monster.height});\n`;
 
-        if (monster.alignment !== base.alignment) {
-            if (typeof monster.alignment === 'string' && parseFloat(monster.alignment).toString() === monster.alignment)
+        if (monster.alignment !== base.alignment && monster.alignment !== '0' && monster.alignment !== 'neutral' && monster.alignment.length !== 0) {
+            if (typeof monster.alignment === 'string' && parseFloat(monster.alignment).toString() === monster.alignment) {
                 data['create body'] += `   set_alignment(${monster.alignment});\n`;
+            }
             else
                 data['create body'] += `   set_alignment("${monster.alignment}");\n`;
         }
         if (monster.language !== base.language)
             data['create body'] += `   set_primary_lang("${monster.language}");\n`;
-        if (monster.gender !== base.gender)
-            data['create body'] += `   set_gender("${monster.gender}");\n`;
+        if (monster.gender !== base.gender) {
+            if (monster.gender === 'random')
+                data['create body'] += `   set_gender(random(2) ? "male" : "female");\n`;
+            else
+                data['create body'] += `   set_gender("${monster.gender}");\n`;
+        }
         if (monster.eyeColor !== base.eyeColor)
             data['create body'] += `   set_eyecolor("${monster.eyeColor}");\n`;
         if (monster.hairColor !== base.hairColor)
@@ -12007,7 +12106,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += '   set_getable(1); //turn on getable\n';
         if (monster.patrolRoute !== base.patrolRoute)
             data['create body'] += `   set_patrol(${monster.speed}, ${formatArgumentList(monster.patrolRoute, 64 - ('' + monster.speed).length)}); //Set speed and patrol route\n`;
-        else if (monster.speed !== base.speed)
+        else if (monster.speed !== base.speed && monster.speed.length !== 0)
             data['create body'] += `   set_speed(${monster.speed}); //Set speed\n`;
 
         if (monster.noWalkRooms !== base.noWalkRooms)
@@ -12020,7 +12119,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_combat_initiator(${formatArgumentList(monster.attackInitiators, 56)}); //Set attack initiators\n`;
         if (monster.aggressive !== base.aggressive) {
             if (monster.aggressive.trim().startsWith('(['))
-                data['create body'] += `   set_aggressive( ${formatMapping(monster.aggressive, 4).trim()} ); //Set monster aggressiveness\n`;
+                data['create body'] += `   set_aggressive( ${formatMapping(monster.aggressive, 5).trim()} ); //Set monster aggressiveness\n`;
             else
                 data['create body'] += `   set_aggressive(${monster.aggressive.trim()}); //Set monster aggressiveness\n`;
             data['doc'].push('/doc/build/monster/haggle');
@@ -12029,30 +12128,30 @@ export class AreaDesigner extends EditorBase {
         if (monster.party !== base.party)
             data['create body'] += `   set_mon_party("${monster.party}");\n`;
         if (monster.autoDrop.enabled && !base.autoDrop.enabled)
-            data['create body'] += `   set_auto_drop(1);`;
+            data['create body'] += `   set_auto_drop(1);\n`;
         if (monster.autoDrop.time !== base.autoDrop.time)
-            data['create body'] += `   set_auto_drop_delay(${monster.autoDrop.time});`;
+            data['create body'] += `   set_auto_drop_delay(${monster.autoDrop.time});\n`;
         if (!monster.autoDrop.enabled && base.autoDrop.enabled)
-            data['create body'] += `   set_open_storage(0);`;
+            data['create body'] += `   set_open_storage(0);\n`;
         if (monster.openStorage.time !== base.openStorage.time)
-            data['create body'] += `   set_open_storage_delay(${monster.openStorage.time});`;
+            data['create body'] += `   set_open_storage_delay(${monster.openStorage.time});\n`;
         if (!monster.autoDrop.enabled && base.autoDrop.enabled)
-            data['create body'] += `   set_auto_wield(0);`;
+            data['create body'] += `   set_auto_wield(0);\n`;
         if (monster.autoWield.time !== base.autoWield.time)
-            data['create body'] += `   set_auto_wield_delay(${monster.autoWield.time});`;
+            data['create body'] += `   set_auto_wield_delay(${monster.autoWield.time});\n`;
         if (monster.autoDrop.enabled && !base.autoDrop.enabled)
-            data['create body'] += `   set_auto_loot(1);`;
+            data['create body'] += `   set_auto_loot(1);\n`;
         if (monster.autoLoot.time !== base.autoLoot.time)
-            data['create body'] += `   set_auto_loot_delay(${monster.autoLoot.time});`;
+            data['create body'] += `   set_auto_loot_delay(${monster.autoLoot.time});\n`;
         if (monster.autoDrop.enabled && !base.autoDrop.enabled)
-            data['create body'] += `   set_auto_wear(1);`;
+            data['create body'] += `   set_auto_wear(1);\n`;
         if (monster.autoWear.time !== base.autoWear.time)
-            data['create body'] += `   set_auto_wear_delay(${monster.autoWear.time});`;
+            data['create body'] += `   set_auto_wear_delay(${monster.autoWear.time});\n`;
         if (monster.wimpy !== base.wimpy)
-            data['create body'] += `   set_wimpy(${monster.wimpy});`;
+            data['create body'] += `   set_wimpy(${monster.wimpy});\n`;
 
         if ((monster.flags & MonsterFlags.Auto_Stand) !== MonsterFlags.Auto_Stand && (base.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand)
-            data['create body'] += `   set_auto_stand(0);`;
+            data['create body'] += `   set_auto_stand(0);\n`;
 
         if (monster.reactions && monster.reactions.length !== 0) {
             tmp = monster.reactions.filter(r => r.reaction.length > 0);
@@ -12133,13 +12232,13 @@ export class AreaDesigner extends EditorBase {
             monster.askTopics[0].message = monster.askTopics[0].message.trim();
             if (monster.askTopics[0].message.trim().startsWith('(:')) {
                 tmp3 = formatFunctionPointer(monster.askTopics[0].message);
-                data['create body'] += `   set_topic(${tmp}, ${tmp3});`;
+                data['create body'] += `   set_topic(${tmp}, ${tmp3});\n`;
                 data['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
             }
             else if (!monster.askTopics[0].message.startsWith('"') && !monster.askTopics[0].message.endsWith('"'))
-                data['create body'] += `   set_topic(${tmp}, "${monster.askTopics[0].message}");`;
+                data['create body'] += `   set_topic(${tmp}, "${monster.askTopics[0].message}");\n`;
             else
-                data['create body'] += `   set_topic(${tmp}, ${monster.askTopics[0].message});`;
+                data['create body'] += `   set_topic(${tmp}, ${monster.askTopics[0].message});\n`;
         }
         else if (tmp.length > 0) {
             if ((monster.baseFlags & MonsterBaseFlags.No_Topics) === MonsterBaseFlags.No_Topics)
@@ -12171,13 +12270,13 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});\n`;
                 else if (r.amount.startsWith('(:')) {
                     tmp3 = formatFunctionPointer(r.amount);
-                    data['create body'] += `   set_reputation_${fun}(${r.group}${tmp3});`;
+                    data['create body'] += `   set_reputation_${fun}(${r.group}${tmp3});\n`;
                     data['create pre'] += createFunction(tmp3, 'string', 'object monster, object killer');
                 }
                 else if (!r.amount.startsWith('"') && !r.amount.endsWith('"'))
-                    data['create body'] += `   set_reputation_${fun}(${r.group}"${r.amount}");`;
+                    data['create body'] += `   set_reputation_${fun}(${r.group}"${r.amount}");\n`;
                 else
-                    data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});`;
+                    data['create body'] += `   set_reputation_${fun}(${r.group}${r.amount});\n`;
             });
         }
 
@@ -12193,7 +12292,7 @@ export class AreaDesigner extends EditorBase {
             return tmp3;
         });
         if (tmp.length !== 0)
-            data['create body'] += `   set_emotes(${monster.emotesChance}, ({\n     ${tmp.join(',\n     ')}\n     }) );`;
+            data['create body'] += `   set_emotes(${monster.emotesChance}, ({\n       ${tmp.join(',\n       ')}\n     }) );\n`;
         tmp = monster.emotes.filter(s => s.type === 1).map(i => {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
@@ -12205,7 +12304,7 @@ export class AreaDesigner extends EditorBase {
             return tmp3;
         });
         if (tmp.length !== 0)
-            data['create body'] += `   set_emotes(${monster.emotesChanceCombat}, ({\n     ${tmp.join(',\n     ')}\n     }), 1);`;
+            data['create body'] += `   set_emotes(${monster.emotesChanceCombat}, ({\n       ${tmp.join(',\n       ')}\n     }), 1);\n`;
         //#endregion
         //#region speeches
         tmp = {};
@@ -12223,7 +12322,7 @@ export class AreaDesigner extends EditorBase {
                 tmp[i.language].push(tmp3);
         });
         Object.keys(tmp).forEach(k => {
-            data['create body'] += `   set_speech(${monster.speechChance}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }) );`;
+            data['create body'] += `   set_speech(${monster.speechChance}, "${k}", ({\n       ${tmp[k].join(',\n       ')}\n     }) );\n`;
         });
         tmp = {};
         monster.emotes.filter(s => s.type === 3 && s.language.length !== 0).forEach(i => {
@@ -12240,7 +12339,7 @@ export class AreaDesigner extends EditorBase {
                 tmp[i.language].push(tmp3);
         });
         Object.keys(tmp).forEach(k => {
-            data['create body'] += `   set_speech(${monster.speechChanceCombat}, "${k}", ({\n     ${tmp[k].join(',\n     ')}\n     }), 1);`;
+            data['create body'] += `   set_speech(${monster.speechChanceCombat}, "${k}", ({\n       ${tmp[k].join(',\n       ')}\n     }), 1);\n`;
         });
         //#endregion
 
@@ -12249,6 +12348,7 @@ export class AreaDesigner extends EditorBase {
 
         if (monster.objects.length !== 0) {
             tmp2 = '';
+            tmp3 = [];
             if (baseMonster) {
                 tmp2 = '   ';
                 data['create body'] += '   if(!query_property("no objects"))\n{\n';
@@ -12256,16 +12356,37 @@ export class AreaDesigner extends EditorBase {
             monster.objects.forEach(o => {
                 if (!this.$area.objects[o.id]) return;
                 tmp = '';
-                if (o.unique)
+                if (o.unique) {
                     tmp = `   clone_unique(OBJ + "${files[o.id]}.c");\n`;
-                else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                    if (o.action.trim().length > 0)
+                        tmp3.push(`${o.action.trim()} ${this.$area.objects[o.id].name}`);
+                }
+                else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0)) {
                     tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
-                else if (o.minAmount > 0 && o.maxAmount > 0)
+                    if (o.action.trim().length > 0)
+                        tmp3.push(`${o.action.trim()} ${this.$area.objects[o.id].name}`);
+                }
+                else if (o.minAmount > 0 && o.maxAmount > 0) {
                     tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                    if (o.action.trim().length > 0)
+                        tmp3.push(`${o.action.trim()} ${this.$area.objects[o.id].name}`);
+                }
                 if (o.random > 0 && tmp.length !== 0 && o.random < 100)
                     data['create body'] += `${tmp2}   if(random(${o.random}) <= random(101))\n   `;
                 data['create body'] += tmp2 + tmp;
             });
+            tmp3 = tmp3.filter((v, i, s) => s.indexOf(v) === i);
+            if (tmp3.length !== 0) {
+                tmp3.forEach(w => {
+                    w = stripPinkfish(w.trim());
+                    if (w.length === 0) return;
+                    if (!w.startsWith('"'))
+                        w = '"' + w;
+                    if (!w.endsWith('"'))
+                        w += '"';
+                    data['create body'] += `${tmp2}   command(${w});\n`;
+                });
+            }
             if (baseMonster)
                 data['create body'] += '   }\n';
         }
@@ -12289,7 +12410,7 @@ export class AreaDesigner extends EditorBase {
         if (monster.notes.length !== 0) {
             if (data.description.length !== 0)
                 data.description += '\n';
-            data.description += ' * Notes:\n * ' + monster.notes.split('\n').join('\n * ') + '\n';
+            data.description += ' * Notes:\n * ' + monster.notes.split('\n').join('\n * ') + '\n *';
         }
         if (baseMonster)
             return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'basemonster.c'))), data);
@@ -12306,6 +12427,7 @@ export class AreaDesigner extends EditorBase {
         let bonuses = false;
         let skills = false;
         const props = [];
+        const tempProps = [];
         const limbsDamaged = {};
         limbsDamaged['both arms and legs'] = 'ARMSLEGS_DAM';
         limbsDamaged['both arms'] = 'ARMS_DAM';
@@ -12333,6 +12455,7 @@ export class AreaDesigner extends EditorBase {
         data.help = [];
         data.includes = '';
         data.inherits = '';
+        data.description = '';
         data['create pre'] = '';
         data['create body'] = '';
         data['create post'] = '';
@@ -12348,33 +12471,35 @@ export class AreaDesigner extends EditorBase {
                 //#region Armor
                 bonuses = true;
                 skills = true;
-                data.inherits = 'OBJ_ARMOUR';
+                data.inherit = 'OBJ_ARMOUR';
                 data['doc'].push('/doc/build/armours/tutorial');
                 data.help.push('atypes');
                 data.includes += '\n#include <limbs.h>';
                 data['create arguments'] = `"${obj.subType || 'accessory'}", "${obj.material || 'iron'}", "${obj.quality || 'average'}", `;
                 data['create arguments comment'] = '//Type, Material, Quality, Limbs';
                 tmp = (obj.limbs || 'torso').split(',').map(l => l.trim());
+                //get non standard limbs
                 tmp2 = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) === -1);
+                //remove non standrad limbs
                 tmp = tmp.filter(l => limbs.indexOf(l.replace(/ /g, '').toUpperCase()) !== -1);
                 tmp = tmp.map(l => l.replace(/ /g, '').toUpperCase());
                 tmp2 = tmp2.map(l => `"${l}"`);
                 tmp = tmp.filter((value, index, self) => self.indexOf(value) === index);
-                tmp2 = tmp.filter((value, index, self) => self.indexOf(value) === index);
+                tmp2 = tmp2.filter((value, index, self) => self.indexOf(value) === index);
                 if (tmp.length === 0 && tmp2.length === 0)
                     data['create arguments'] += 'TORSO';
                 if (tmp.length !== 0 && tmp2.length !== 0)
-                    data['create arguments'] += `${tmp.join(' | ')} | ({ ${tmp2.join(' | ')} })`;
+                    data['create arguments'] += `${tmp.join(' | ')} | ({ "${tmp2.join(', ')}" })`;
                 else if (tmp.length !== 0)
                     data['create arguments'] += tmp.join(' | ');
                 else
-                    data['create arguments'] += tmp2.join(' | ');
+                    data['create arguments'] += `${tmp2.join(', ')}`;
                 if (obj.enchantment !== 0) {
                     data['create arguments'] += `, ${obj.enchantment}`;
                     data['create arguments comment'] += ', Natural enchantment';
                 }
                 if (obj.maxWearable !== 0)
-                    data['create body'] += `   set_temp_property("max_wearable", ${obj.maxWearable});\n`;
+                    tempProps.push(`"max_wearable" : "${obj.maxWearable}"`);
                 if (obj.limbsOptional)
                     data['create body'] += '   set_limbs_optional(1);\n';
                 if (obj.damaged && obj.damaged.length !== 0) {
@@ -12701,19 +12826,18 @@ export class AreaDesigner extends EditorBase {
                 tmp = tmp.map(l => l.replace(/ /g, '').toUpperCase());
                 tmp2 = tmp2.map(l => `"${l}"`);
                 tmp = tmp.filter((value, index, self) => self.indexOf(value) === index);
-                tmp2 = tmp.filter((value, index, self) => self.indexOf(value) === index);
-
+                tmp2 = tmp2.filter((value, index, self) => self.indexOf(value) === index);
                 if (!obj.subType || obj.subType.length === 0 || obj.subType === 'sheath') {
-                    data['create arguments'] = `"${obj.material || 'leather'}", "${obj.quality || 'average'}"`;
+                    data['create arguments'] = `"${obj.material || 'leather'}", "${obj.quality || 'average'}", `;
                     data['create arguments comment'] = '//Material, Quality, Limbs';
                     if (tmp.length === 0 && tmp2.length === 0)
                         data['create arguments'] += 'LEFTLEG';
                     if (tmp.length !== 0 && tmp2.length !== 0)
-                        data['create arguments'] += `${tmp.join(' | ')} | ({ ${tmp2.join(' | ')} })`;
+                        data['create arguments'] += `${tmp.join(' | ')} | ({ ${tmp2.join(', ')} })`;
                     else if (tmp.length !== 0)
                         data['create arguments'] += tmp.join(' | ');
                     else
-                        data['create arguments'] += tmp2.join(' | ');
+                        data['create arguments'] += tmp2.join(', ');
                     if (obj.enchantment !== 0) {
                         data['create arguments'] += `, ${obj.enchantment}`;
                         data['create arguments comment'] += ', Natural enchantment';
@@ -12725,21 +12849,21 @@ export class AreaDesigner extends EditorBase {
                     if (tmp.length === 0 && tmp2.length === 0)
                         data['create arguments comment'] += 'LEFTLEG';
                     if (tmp.length !== 0 && tmp2.length !== 0)
-                        data['create arguments comment'] += `${tmp.join(' | ')} | ({ ${tmp2.join(' | ')} })`;
+                        data['create arguments comment'] += `${tmp.join(' | ')} | ({ ${tmp2.join(', ')} })`;
                     else if (tmp.length !== 0)
                         data['create arguments comment'] += tmp.join(' | ');
                     else
-                        data['create arguments comment'] += tmp2.join(' | ');
+                        data['create arguments comment'] += tmp2.join(', ');
                     if (obj.enchantment !== 0) {
                         data['create arguments comment'] += `, ${obj.enchantment}`;
                         cac += ', Natural enchantment';
                     }
-                    data['create arguments comment'] += ');' + cac;
+                    data['create arguments comment'] += ');\n' + cac;
                     if (obj.wType.length > 0)
                         data['create body'] += `   set_weapon_type("${obj.material}");\n`;
                 }
                 if (obj.maxWearable !== 0)
-                    data['create body'] += `   set_temp_property("max_wearable", ${obj.maxWearable});\n`;
+                    tempProps.push(`"max_wearable" : "${obj.maxWearable}"`);
                 if (obj.limbsOptional)
                     data['create body'] += '   set_limbs_optional(1);\n';
                 //#endregion
@@ -12874,7 +12998,6 @@ export class AreaDesigner extends EditorBase {
                 data.inherit = 'OBJ_FISHING_POLE';
                 data['create arguments'] = `"${obj.subType || 'staff'}", "${obj.material || 'wood'}", "${obj.quality || 'average'}"`;
                 data['create arguments comment'] = '//Type, Material, Quality';
-                break;
                 if (obj.enchantment !== 0) {
                     data['create arguments'] += `, ${obj.enchantment}`;
                     data['create arguments comment'] += ', Natural enchantment';
@@ -12963,7 +13086,7 @@ export class AreaDesigner extends EditorBase {
                 let tl = tmp.length;
                 while (tl--) {
                     if (tmp.charAt(tl) === ' ') {
-                        tmp.substr(0, tl);
+                        tmp = tmp.substr(0, tl + 1);
                         break;
                     }
                 }
@@ -12998,6 +13121,54 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += '   set_adjectives(' + obj.adjectives.join(', ') + ');\n';
         }
 
+        if (obj.properties.length > 0) {
+            obj.properties.forEach(b => {
+                b.value = b.value.trim();
+                if (b.value.startsWith('(:')) {
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                    else
+                        props.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                    data['create pre'] += createFunction(b.value);
+                }
+                else if (b.value.startsWith('({')) {
+                    tmp2 = b.vale.substring(2);
+                    if (tmp2.endsWith('})'))
+                        tmp2 = tmp2.substr(0, tmp2.length - 2);
+                    tmp2 = tmp2.split(',');
+                    tmp2 = tmp2.map(t => {
+                        t = t.trim();
+                        if ((t.startsWith('"') && t.endsWith('"')) || t.match(/^\d+$/))
+                            return t;
+                        else if (t.startsWith('(:')) {
+                            t = formatFunctionPointer(t);
+                            data['create pre'] += createFunction(t);
+                            return t;
+                        }
+                        return `"${t}"`;
+                    });
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                    else
+                        props.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                }
+                else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : ${b.value}`);
+                    else
+                        props.push(`"${b.name}" : ${b.value}`);
+                }
+                else {
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : "${b.value}"`);
+                    else
+                        props.push(`"${b.name}" : "${b.value}"`);
+                }
+            });
+        }
+
+        //data['create body'] += `   set_temp_property("max_wearable", ${obj.maxWearable});\n`;
+
         if (obj.keyID.length > 0 && obj.type !== StdObjectType.chest)
             props.push(`"key" : "${obj.keyID}"`);
 
@@ -13006,7 +13177,17 @@ export class AreaDesigner extends EditorBase {
         if (obj.value > 0)
             data['create body'] += `   set_value("${obj.value}");\n`;
 
-        if (props.length > 0) {
+        if (tempProps.length === 1)
+            data['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
+        else if (tempProps.length > 0) {
+            data['create body'] += '   set_temp_properties( ([\n       ';
+            data['create body'] += tempProps.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+
+        if (props.length === 1)
+            data['create body'] += `   set_property(${props[0].replace(' :', ',')});\n`;
+        else if (props.length > 0) {
             data['create body'] += '   set_properties( ([\n       ';
             data['create body'] += props.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
@@ -13088,7 +13269,7 @@ export class AreaDesigner extends EditorBase {
                 return `"${b.adjust}" : "${b.amount}"`;
             });
             if (tmp.length === 1)
-                data['create body'] += `   add_temp_bonus(${tmp[0].replace(/ :/, ',')})`;
+                data['create body'] += `   add_temp_bonus(${tmp[0].replace(/ :/, ',')});\n`;
             else if (tmp.length > 0) {
                 data['create body'] += '   add_temp_bonuses( ([\n       ';
                 data['create body'] += tmp.join(',\n       ');
@@ -13103,7 +13284,7 @@ export class AreaDesigner extends EditorBase {
                 return `"${b.adjust}" : "${b.amount}"`;
             });
             if (tmp.length === 1)
-                data['create body'] += `   add_temp_stat_bonus(${tmp[0].replace(/ :/, ',')})`;
+                data['create body'] += `   add_temp_stat_bonus(${tmp[0].replace(/ :/, ',')});\n`;
             else if (tmp.length > 0) {
                 data['create body'] += '   add_temp_stat_bonuses( ([\n       ';
                 data['create body'] += tmp.join(',\n       ');
@@ -13118,7 +13299,7 @@ export class AreaDesigner extends EditorBase {
                 return `"${b.adjust}" : "${b.amount}"`;
             });
             if (tmp.length === 1)
-                data['create body'] += `   add_temp_skill_bonus(${tmp[0].replace(/ :/, ',')})`;
+                data['create body'] += `   add_temp_skill_bonus(${tmp[0].replace(/ :/, ',')});\n`;
             else if (tmp.length > 0) {
                 data['create body'] += '   add_temp_skill_bonuses( ([\n       ';
                 data['create body'] += tmp.join(',\n       ');
@@ -13133,7 +13314,7 @@ export class AreaDesigner extends EditorBase {
                 return `"${b.adjust}" : "${b.amount}"`;
             });
             if (tmp.length === 1)
-                data['create body'] += `   add_temp_resistance_bonus(${tmp[0].replace(/ :/, ',')})`;
+                data['create body'] += `   add_temp_resistance_bonus(${tmp[0].replace(/ :/, ',')});\n`;
             else if (tmp.length > 0) {
                 data['create body'] += '   add_temp_resistance_bonuses( ([\n       ';
                 data['create body'] += tmp.join(',\n       ');
@@ -13144,7 +13325,7 @@ export class AreaDesigner extends EditorBase {
             tmp = obj.skills.filter(s => s.amount !== 0);
             if (tmp.length !== 0) {
                 let amt = 0;
-                data['create post'] += '\n\nvoid check_skill(object player)\n{\n   if(!player)\n   return 0;\n';
+                data['create post'] += '\n\nmixed check_skill(object player)\n{\n   if(!player)\n      return 0;\n';
                 let skill;
                 tmp.forEach(s => {
                     let message;
@@ -13270,11 +13451,11 @@ export class AreaDesigner extends EditorBase {
             if (tmp.language.length !== 0)
                 tmp3 = `, "${tmp.language}"`;
             if (tmp.description.startsWith('(:'))
-                data['create body'] += `   set_read(${tmp2}${formatFunctionPointer(tmp.description)}${tmp3});`;
+                data['create body'] += `   set_read(${tmp2}${formatFunctionPointer(tmp.description)}${tmp3});\n`;
             else if (!tmp.description.startsWith('"') && !tmp.description.endsWith('"'))
-                data['create body'] += `   set_read(${tmp2}"${tmp.description}"${tmp3});`;
+                data['create body'] += `   set_read(${tmp2}"${tmp.description}"${tmp3});\n`;
             else
-                data['create body'] += `   set_read(${tmp2}${tmp.description}${tmp3});`;
+                data['create body'] += `   set_read(${tmp2}${tmp.description}${tmp3});\n`;
         }
         else if (tmp.length > 0) {
             data['create body'] += '   set_read( ([\n       ';
@@ -13292,7 +13473,7 @@ export class AreaDesigner extends EditorBase {
         if (obj.notes.length !== 0) {
             if (data.description.length !== 0)
                 data.description += '\n';
-            data.description += ' * Notes:\n * ' + obj.notes.split('\n').join('\n * ') + '\n';
+            data.description += ' * Notes:\n * ' + obj.notes.split('\n').join('\n * ') + '\n *';
         }
         return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'object.c'))), data);
     }

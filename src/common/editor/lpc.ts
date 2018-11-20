@@ -793,7 +793,7 @@ export const language = <ILanguage>{
 };
 //spellchecker:enable
 
-export function loadCompletion(): monaco.languages.CompletionList {
+export function loadCompletion(): monaco.languages.CompletionItem[] {
     let list: monaco.languages.CompletionItem[] = [
         {
             label: 'void create',
@@ -819,7 +819,7 @@ export function loadCompletion(): monaco.languages.CompletionList {
     list = list.concat(getCompletionFromPath(path.join(p, 'sefuns'), monaco.languages.CompletionItemKind.Class));
     list = list.concat(getCompletionFromPath(path.join(p, 'lfuns'), monaco.languages.CompletionItemKind.Property));
     list = list.concat(getCompletionFromFile(path.join(p, 'inherits.txt'), monaco.languages.CompletionItemKind.Module));
-    return { suggestions: list, incomplete: false };
+    return list;
 }
 
 function getCompletionFromPath(p, kind?: monaco.languages.CompletionItemKind, prefix?): monaco.languages.CompletionItem[] {
@@ -832,7 +832,8 @@ function getCompletionFromPath(p, kind?: monaco.languages.CompletionItemKind, pr
         list.push(
             {
                 label: prefix + path.basename(files.files[f], path.extname(files.files[f])),
-                kind: kind
+                kind: kind,
+                insertText: prefix + path.basename(files.files[f], path.extname(files.files[f]))
             }
         );
     }
@@ -850,7 +851,8 @@ function getCompletionFromFile(p, kind?: monaco.languages.CompletionItemKind, pr
         list.push(
             {
                 label: prefix + lines[f],
-                kind: kind
+                kind: kind,
+                insertText: prefix + lines[f]
             }
         );
     }
@@ -2475,20 +2477,23 @@ export function formatArgumentList(str, first, second?, indent?, quotes?) {
     return tmp.join(',\n' + ' '.repeat(indent));
 }
 
-export function formatMapping(str, indent?) {
+export function formatMapping(str, indent?, sub?) {
     if (!str) return;
     str = str.trim();
     if (!str.startsWith('([') && !str.ends_with('])'))
         return str;
     const map = parseMapping(str, true);
-    indent = '   ' + ' '.repeat(indent || 0);
+    indent = ' '.repeat(indent || 0);
     let out = indent + '([\n';
     out += Object.keys(map).map(k => {
         if (map[k].startsWith('([') && map[k].endsWith('])'))
-            return `${indent}  "${k}" : ${formatMapping(map[k], indent.length + 3)}`;
-        return `${indent}  "${k}" : ${map[k]}`;
+            return `${indent}  "${k}" : ${formatMapping(map[k], indent.length + 3, true).trim()}`;
+        return `${indent} "${k}" : ${map[k]}`;
     }).join(',\n');
-    out += '\n' + indent + '])';
+    if (sub && indent.length !== 0)
+        out += '\n' + indent.substring(0, indent.length - 1) + '])';
+    else
+        out += '\n' + indent + '])';
     return out;
 }
 
