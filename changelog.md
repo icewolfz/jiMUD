@@ -4,7 +4,7 @@
 
 - **New:**
   - Code editor:
-    - Add limb optional support to object editor
+    - Add limb optional support to object editor for armors and sheaths
     - Add random gender support to monster wizard
     - Add advanced properties to object editor
   - About: do live updates of cpu/memory usage
@@ -12,6 +12,8 @@
   - ANSI Parser: use unicode zero space character instead of <wbr> tag to reduce memory
   - Update monaco-editor from 0.15.0 to 0.15.5
   - Update electron-updater 3.2.3 to 4.0.4
+  - Update electron 3.0.9 to 3.0.10
+  - Update yargs-parser 11.1.0 to 11.1.1
 - **Fixed:**
   - Code editor:
     - Fixed drop down edit boxes

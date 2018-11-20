@@ -52,7 +52,7 @@
     "@types/node": "^10.12.9",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^3.0.9",
+    "electron": "^3.0.10",
     "electron-builder": "^20.36.2",
     "eslint": "^5.9.0",
     "eslint-plugin-html": "^5.0.0"
@@ -143,6 +143,6 @@
     "rgbcolor": "^1.0.1",
     "spellchecker": "^3.5.0",
     "tmp": "0.0.33",
-    "yargs-parser": "^11.1.0"
+    "yargs-parser": "^11.1.1"
   }
 }
