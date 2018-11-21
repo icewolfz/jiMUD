@@ -85,6 +85,7 @@
       "!node_modules/better-sqlite3/obj/*",
       "!node_modules/better-sqlite3/build/Release/obj/**/*",
       "!node_modules/better-sqlite3/build/Release/test_extension.node",
+      "!node_modules/fsevents/lib/binding/Release/**/*",
       "!node_modules/**/benchmark/*",
       "!node_modules/**/browser/*",
       "!node_modules/monaco-editor/!(min)/*",
