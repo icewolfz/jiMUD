@@ -1292,8 +1292,8 @@ export class Display extends EventEmitter {
 
     get WindowHeight(): number {
         if (this._HScroll.visible)
-            return Math.trunc((this._innerHeight - this._HScroll.size - this._padding[0] - this._padding[2]) / ($(this._character).innerHeight() + 0.5)) - 1;
-        return Math.trunc((this._innerHeight - this._padding[0] - this._padding[2]) / ($(this._character).innerHeight() + 0.5)) - 1;
+            return Math.trunc((this._innerHeight - this._HScroll.size - this._padding[0] - this._padding[2]) / $(this._character).innerHeight()) - 1;
+        return Math.trunc((this._innerHeight - this._padding[0] - this._padding[2]) / $(this._character).innerHeight()) - 1;
     }
 
     public click(callback) {
@@ -2959,7 +2959,7 @@ export class Display extends EventEmitter {
         if (this._parser.busy)
             return;
         this._HScroll.offset = this._VScroll.trackOffset;
-        this._HScroll.resize(false, true);
+        this._HScroll.resize();
         this._HScroll.visible = this._HScroll.scrollSize > 0;
         this._VScroll.offset = this._HScroll.visible ? this._HScroll.trackOffsetSize.height : 0;
         this._VScroll.resize();
@@ -3274,7 +3274,8 @@ export class ScrollBar extends EventEmitter {
         super();
         this.setParent(parent, content);
         this.type = type || ScrollType.vertical;
-        this.autoScroll = !noAutoScroll;
+        if (noAutoScroll)
+            this.autoScroll = noAutoScroll;
     }
 
     /**
@@ -3519,7 +3520,7 @@ export class ScrollBar extends EventEmitter {
                 this.trackSize = this.track.clientWidth;
                 this.trackOffset = this.track.clientHeight;
             }
-            this.scrollSize = this._contentSize - this._parentSize - this._padding[1] - this._padding[3];
+            this.scrollSize = this._contentSize - this._parentSize - this._padding[3];
         }
         else {
             if (!contentSize)
@@ -3532,7 +3533,7 @@ export class ScrollBar extends EventEmitter {
                 this.trackSize = this.track.clientHeight;
                 this.trackOffset = this.track.clientWidth;
             }
-            this.scrollSize = this._contentSize - this._parentSize - this._padding[0] - this._padding[2];
+            this.scrollSize = this._contentSize - this._parentSize - this._padding[2];
         }
         if (bar || !this.trackOffsetSize.width)
             this.trackOffsetSize = { height: this.track.offsetHeight, width: this.track.offsetWidth };
