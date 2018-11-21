@@ -32,7 +32,6 @@
       - Fixed monster/object file name if empty
       - Fixed several minor issues with code generation
   - Progress dialog: fix task bar progress not being cleared on close
-  - Status: Attempt to fix weather overlay again
   - Display: Set line-height to better control unicode
 
 ## v0.6.8 2018-11-12
