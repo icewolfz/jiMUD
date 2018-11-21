@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.10
+## v0.6.10 2018-11-21
 
 - **Fixed:**
   - Display: Fix scroll bar rounding issue.
