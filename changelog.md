@@ -2,6 +2,9 @@
 
 ## v0.6.10
 
+- **Fixed:**
+  - Display: Fix scroll bar rounding issue.
+
 ## v0.6.9 2018-11-21
 
 - **New:**

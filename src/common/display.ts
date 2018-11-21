@@ -3190,7 +3190,7 @@ export class ScrollBar extends EventEmitter {
      * @type {number}
      * @memberof ScrollBar
      */
-    get position(): number { return this._position - (this._type === ScrollType.horizontal ? this._padding[3] + this._padding[1] : this._padding[0] + this._padding[2]); }
+    get position(): number { return Math.ceil(this._position) - (this._type === ScrollType.horizontal ? this._padding[3] + this._padding[1] : this._padding[0] + this._padding[2]); }
 
     /**
      * An offset amount to adjust the whole scroll bar by that effects total size
