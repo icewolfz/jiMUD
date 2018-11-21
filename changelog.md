@@ -7,7 +7,7 @@
     - Add limb optional support to object editor for armors and sheaths
     - Add random gender support to monster wizard
     - Add advanced properties to object editor
-  - About: do live updates of cpu/memory usage
+  - About: do live updates of CPU/memory usage
 - **Changed:**
   - ANSI Parser: use unicode zero space character instead of <wbr> tag to reduce memory
   - Update monaco-editor from 0.15.0 to 0.15.5
@@ -19,7 +19,7 @@
     - Fixed drop down edit boxes
     - Fixed monster wizard emote type display
     - Fixed auto complete
-    - Force all templates to use linux line endings
+    - Force all templates to use Linux line endings
     - Area designer:
       - Fixed saving monster gender
       - Fixed code generation cancel not resetting task bar progress
@@ -33,10 +33,10 @@
       - Fixed several minor issues with code generation
   - Progress dialog: fix task bar progress not being cleared on close
   - Display:
-    - Set line-height to better control unicode
+    - Set line-height to better control Unicode
     - Fixed horizontal scroll bar when it first appears auto scrolling right
     - Fixed calculating number of text rows
-    - Fixed scrollbar position calculations
+    - Fixed scroll bar position calculations
 
 ## v0.6.8 2018-11-12
 
@@ -1326,7 +1326,7 @@
   - Updated electron to 1.8.0
   - Updated spell checker and sqlite
 - **Fixed:**
-  - Copy was not working on linux
+  - Copy was not working on Linux
   - Fixed command argument parsing
   - Mapper: Zone/level not updating when active room
   - Verbatim was failing to append new line characters
@@ -1337,8 +1337,8 @@
 
 - **Fixed:**
   - Fixed display width when status display hidden
-  - Added a trailing ; to the linux category
-  - Fixed spell checker on linux
+  - Added a trailing ; to the Linux category
+  - Fixed spell checker on Linux
   - Fixed parsing of double/single quotes as strings when ending of a command
 
 ## v0.4.13 2017-08-19
@@ -1347,7 +1347,7 @@
   - Added new Windows 10 color scheme
   - Added Current color scheme to reset colors back to original colors
   - Added --disable-gpu command line arg
-  - Added linux Categories
+  - Added Linux Categories
 - **Changed:**
   - Changed how copy system works for main client
 - **Fixed:**
@@ -1428,7 +1428,7 @@
     - Set a min size for panel size when loading
     - When loading window was not correctly passing options
     - When saving options, options not correctly applied to active window
-    - Remote drag and drop on linux was broken
+    - Remote drag and drop on Linux was broken
 
 ## v0.4.9 2017-07-30
 
@@ -1800,7 +1800,7 @@
 - **Changed:**
   - Default button icons have been converted to font-awesome or svg icons for easy themeing and crisper look
   - Upgrade electron to 1.7.1, fixes a few crashers with --debug
-  - New application icons, should be cleaner and support linux, windows and mac
+  - New application icons, should be cleaner and support Linux, windows and mac
 - **Fixed:**
   - Ansi parser would return empty elements due to changing styles and colors, the empty blocks are now removed when the lines have been added, should reduce memory
   - Preferences was not saving display/command font setting
