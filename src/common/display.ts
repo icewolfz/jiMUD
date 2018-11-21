@@ -492,7 +492,7 @@ export class Display extends EventEmitter {
         this._VScroll.on('scroll', () => {
             this.doUpdate(UpdateType.scroll | UpdateType.view);
         });
-        this._HScroll = new ScrollBar(this._el, this._view, ScrollType.horizontal);
+        this._HScroll = new ScrollBar(this._el, this._view, ScrollType.horizontal, false);
         this._HScroll.on('scroll', () => {
             this.doUpdate(UpdateType.scroll);
         });
@@ -2959,7 +2959,7 @@ export class Display extends EventEmitter {
         if (this._parser.busy)
             return;
         this._HScroll.offset = this._VScroll.trackOffset;
-        this._HScroll.resize();
+        this._HScroll.resize(false, true);
         this._HScroll.visible = this._HScroll.scrollSize > 0;
         this._VScroll.offset = this._HScroll.visible ? this._HScroll.trackOffsetSize.height : 0;
         this._VScroll.resize();
@@ -3154,6 +3154,7 @@ export class ScrollBar extends EventEmitter {
     public trackSize: number = 0;
     public trackOffset: number = 0;
     public trackOffsetSize = { width: 0, height: 0 };
+    public autoScroll = true;
 
     public state: ScrollState = {
         dragging: false,
@@ -3269,10 +3270,11 @@ export class ScrollBar extends EventEmitter {
      * @param {ScrollType} [type=ScrollType.vertical] type of scroll bar
      * @memberof ScrollBar
      */
-    constructor(parent?: HTMLElement, content?: HTMLElement, type?: ScrollType) {
+    constructor(parent?: HTMLElement, content?: HTMLElement, type?: ScrollType, noAutoScroll?: boolean) {
         super();
         this.setParent(parent, content);
         this.type = type || ScrollType.vertical;
+        this.autoScroll = !noAutoScroll;
     }
 
     /**
@@ -3539,7 +3541,7 @@ export class ScrollBar extends EventEmitter {
         if (this.maxPosition < 0)
             this.maxPosition = 0;
         this.update();
-        if (bottom)
+        if (bottom && this.autoScroll)
             this.updatePosition(this.maxPosition);
         else
             this.updatePosition(this._position * this._ratio2);

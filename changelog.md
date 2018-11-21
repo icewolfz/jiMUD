@@ -32,7 +32,9 @@
       - Fixed monster/object file name if empty
       - Fixed several minor issues with code generation
   - Progress dialog: fix task bar progress not being cleared on close
-  - Display: Set line-height to better control unicode
+  - Display:
+    - Set line-height to better control unicode
+    - Fix horizontal scroll bar when it first appears auto scrolling right
 
 ## v0.6.8 2018-11-12
 
