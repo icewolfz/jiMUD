@@ -487,11 +487,11 @@ export class Display extends EventEmitter {
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
         this.buildStyleSheet();
 
-        this._VScroll = new ScrollBar(this._el, this._view);
+        this._VScroll = new ScrollBar({ parent: this._el, content: this._view, autoScroll: true, type: ScrollType.vertical });
         this._VScroll.on('scroll', () => {
             this.doUpdate(UpdateType.scroll | UpdateType.view);
         });
-        this._HScroll = new ScrollBar(this._el, this._view, ScrollType.horizontal);
+        this._HScroll = new ScrollBar({ parent: this._el, content: this._view, type: ScrollType.horizontal, autoScroll: false });
         this._HScroll.on('scroll', () => {
             this.doUpdate(UpdateType.scroll);
         });
@@ -690,7 +690,7 @@ export class Display extends EventEmitter {
                         y = -1 * this._charHeight;
                         this._currentSelection.end.y--;
                     }
-                    else if (y >= this._innerHeight && this._VScroll.position < this._VScroll.scrollSize) {
+                    else if (y >= this._innerHeight && Math.ceil(this._VScroll.position) < this._VScroll.scrollSize) {
                         y = this._charHeight;
                         this._currentSelection.end.y++;
                         if (this._currentSelection.end.y >= this.lines.length)
@@ -703,7 +703,7 @@ export class Display extends EventEmitter {
                         x = -1 * this._charWidth;
                         this._currentSelection.end.x--;
                     }
-                    else if (x >= this._innerWidth && this._HScroll.position < this._HScroll.scrollSize) {
+                    else if (x >= this._innerWidth && Math.ceil(this._HScroll.position) < this._HScroll.scrollSize) {
                         x = this._charWidth;
                         this._currentSelection.end.x++;
                     }
@@ -1296,8 +1296,8 @@ export class Display extends EventEmitter {
 
     get WindowHeight(): number {
         if (this._HScroll.visible)
-            return Math.trunc((this._innerHeight - this._HScroll.size - this._padding[0] - this._padding[2]) / ($(this._character).innerHeight() + 0.5)) - 1;
-        return Math.trunc((this._innerHeight - this._padding[0] - this._padding[2]) / ($(this._character).innerHeight() + 0.5)) - 1;
+            return Math.trunc((this._innerHeight - this._HScroll.size - this._padding[0] - this._padding[2]) / $(this._character).innerHeight()) - 1;
+        return Math.trunc((this._innerHeight - this._padding[0] - this._padding[2]) / $(this._character).innerHeight()) - 1;
     }
 
     public click(callback) {
@@ -3207,6 +3207,13 @@ export class Display extends EventEmitter {
     }
 }
 
+interface ScrollBarOptions {
+    parent?;
+    content?;
+    type?: ScrollType;
+    autoScroll?: boolean;
+}
+
 /**
  * Scroll bar control
  *
@@ -3250,6 +3257,7 @@ export class ScrollBar extends EventEmitter {
     public trackSize: number = 0;
     public trackOffset: number = 0;
     public trackOffsetSize = { width: 0, height: 0 };
+    public autoScroll = true;
 
     public state: ScrollState = {
         dragging: false,
@@ -3355,7 +3363,7 @@ export class ScrollBar extends EventEmitter {
      * @type {boolean}
      * @memberof ScrollBar
      */
-    get atBottom(): boolean { return this.position >= this.scrollSize; }
+    get atBottom(): boolean { return Math.ceil(this.position) >= this.scrollSize; }
 
     /**
      * Creates an instance of ScrollBar.
@@ -3365,10 +3373,16 @@ export class ScrollBar extends EventEmitter {
      * @param {ScrollType} [type=ScrollType.vertical] type of scroll bar
      * @memberof ScrollBar
      */
-    constructor(parent?: HTMLElement, content?: HTMLElement, type?: ScrollType) {
+    constructor(options: ScrollBarOptions) {
         super();
-        this.setParent(parent, content);
-        this.type = type || ScrollType.vertical;
+        if (options) {
+            this.setParent(options.parent, options.content);
+            this.type = options.type || ScrollType.vertical;
+            if (options.hasOwnProperty('autoScroll'))
+                this.autoScroll = options.autoScroll;
+        }
+        else
+            this.type = ScrollType.vertical;
     }
 
     /**
@@ -3613,7 +3627,7 @@ export class ScrollBar extends EventEmitter {
                 this.trackSize = this.track.clientWidth;
                 this.trackOffset = this.track.clientHeight;
             }
-            this.scrollSize = this._contentSize - this._parentSize - this._padding[1] - this._padding[3];
+            this.scrollSize = this._contentSize - this._parentSize - this._padding[3];
         }
         else {
             if (!contentSize)
@@ -3626,7 +3640,7 @@ export class ScrollBar extends EventEmitter {
                 this.trackSize = this.track.clientHeight;
                 this.trackOffset = this.track.clientWidth;
             }
-            this.scrollSize = this._contentSize - this._parentSize - this._padding[0] - this._padding[2];
+            this.scrollSize = this._contentSize - this._parentSize - this._padding[2];
         }
         if (bar || !this.trackOffsetSize.width)
             this.trackOffsetSize = { height: this.track.offsetHeight, width: this.track.offsetWidth };
@@ -3635,7 +3649,7 @@ export class ScrollBar extends EventEmitter {
         if (this.maxPosition < 0)
             this.maxPosition = 0;
         this.update();
-        if (bottom)
+        if (bottom && this.autoScroll)
             this.updatePosition(this.maxPosition);
         else
             this.updatePosition(this._position * this._ratio2);
