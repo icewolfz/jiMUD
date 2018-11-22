@@ -3190,7 +3190,7 @@ export class ScrollBar extends EventEmitter {
      * @type {number}
      * @memberof ScrollBar
      */
-    get position(): number { return Math.ceil(this._position) - (this._type === ScrollType.horizontal ? this._padding[3] + this._padding[1] : this._padding[0] + this._padding[2]); }
+    get position(): number { return Math.ceil(this._position) - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0]); }
 
     /**
      * An offset amount to adjust the whole scroll bar by that effects total size
@@ -3520,7 +3520,7 @@ export class ScrollBar extends EventEmitter {
                 this.trackSize = this.track.clientWidth;
                 this.trackOffset = this.track.clientHeight;
             }
-            this.scrollSize = this._contentSize - this._parentSize - this._padding[1] - this._padding[3];
+            this.scrollSize = this._contentSize - this._parentSize - this._padding[3];
         }
         else {
             if (!contentSize)
@@ -3533,7 +3533,7 @@ export class ScrollBar extends EventEmitter {
                 this.trackSize = this.track.clientHeight;
                 this.trackOffset = this.track.clientWidth;
             }
-            this.scrollSize = this._contentSize - this._parentSize - this._padding[0] -  this._padding[2];
+            this.scrollSize = this._contentSize - this._parentSize -  this._padding[2];
         }
         if (bar || !this.trackOffsetSize.width)
             this.trackOffsetSize = { height: this.track.offsetHeight, width: this.track.offsetWidth };
