@@ -66,6 +66,7 @@ interface Line {
 interface WrapLine {
     offset: number;
     formats: any[];
+    indent: boolean;
 }
 
 /**
@@ -1630,7 +1631,7 @@ export class Display extends EventEmitter {
             let left = 0;
             let f = 0;
             for (; f < fLen; f++) {
-                if (!formats[f].width || formats[f].formatType === FormatType.WordBreak || formats[f].formatType === FormatType.LinkEnd || formats[f].formatType === FormatType.MXPLinkEnd || formats[f].formatType === FormatType.MXPSendEnd)
+                if (!formats[f].width || formats[f].formatType === FormatType.LinkEnd || formats[f].formatType === FormatType.MXPLinkEnd || formats[f].formatType === FormatType.MXPSendEnd)
                     continue;
                 if (xPos >= left && xPos <= left + formats[f].width)
                     break;
@@ -2632,12 +2633,19 @@ export class Display extends EventEmitter {
         this._styles.innerHTML = styles;
     }
 
-    private calculateWrapLines(idx?: number, mw?, mv?) {
+    private calculateWrapLines(idx?: number, mv?) {
+        if (idx === undefined) {
+            idx = this.lines.length - 1;
+            mv = this._maxView;
+        }
+        else if (mv === undefined)
+            mv = this._maxView;
         const indent = this._indent * this._charWidth;
         const wLines: WrapLine[] = [
             {
                 offset: 0,
-                formats: []
+                formats: [],
+                indent: false
             }
         ];
         let cLine: WrapLine = wLines[0];
@@ -2660,6 +2668,8 @@ export class Display extends EventEmitter {
             let fP;
             let sOffset;
             let eOffset;
+            let bOffset;
+            let c;
             if (f < len - 1) {
                 nFormat = formats[f + 1];
                 //skip empty blocks
@@ -2684,18 +2694,11 @@ export class Display extends EventEmitter {
                 if (left + format.width > mv) {
                     fP = cLine.formats.length;
                     while (fP--) {
-                        if (cLine.formats[fP].formatType === FormatType.WordBreak) {
-                            nLine = { offset: cLine.formats[fP + 1].offset, formats: [] };
-                            cLine.formats.splice(fP, cLine.formats.length - fP);
-                            cLine = nLine;
-                            left = indent;
-                            f = fP;
-                            continue layout;
-                        }
-                        else if (cLine.formats[fP].formatType === FormatType.Image && cLine.formats[fP].width) {
+                        if (cLine.formats[fP].formatType === FormatType.Image && cLine.formats[fP].width) {
                             nLine = { offset: cLine.formats[fP + 1].offset, formats: [] };
                             cLine.formats.splice(fP, cLine.formats.length - fP + 1);
                             cLine = nLine;
+                            wLines.push(cLine);
                             left = indent;
                             f = fP;
                             continue layout;
@@ -2707,18 +2710,21 @@ export class Display extends EventEmitter {
                                 eOffset = cLine.formats[fP + 1].offset;
                             sOffset = cLine.formats[fP];
                             while (eOffset-- >= sOffset) {
-                                if (pText.substring(eOffset, 1) === ' ' || pText.substring(eOffset, 1) === '-' || pText.substring(eOffset, 1) === '\u00AD') {
+                                c = pText.substr(eOffset, 1);
+                                if (c === ' ' || c === '-' || c === '\u00AD' || c === '\u200B') {
                                     nFormat = copy(cLine.formats[fP]);
                                     nFormat.offset = eOffset;
-                                    nLine = { offset: cLine.formats[fP + 1].offset, formats: [] };
+                                    nLine = { offset: cLine.formats[fP + 1].offset, formats: [], indent: true };
                                     wText = text.substring(cLine.formats[fP].offset, eOffset);
                                     if (cLine.formats[fP].font || cLine.formats[fP].size)
-                                        cLine.formats[fP].width = this.textWidth(wText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
+                                        cLine.formats[fP].width = this.textWidth(wText, `${cLine.formats[fP].size || this._character.style.fontSize} ${cLine.formats[fP].font || this._character.style.fontFamily}`);
                                     else if (format.unicode)
                                         cLine.formats[fP].width = this.textWidth(wText);
                                     else
                                         cLine.formats[fP].width = wText.length * cw;
                                     cLine.formats.splice(f, cLine.formats.length - f + 1);
+                                    cLine = nLine;
+                                    wLines.push(cLine);
                                     nFormat.width -= cLine.formats[fP].width;
                                     nLine.formats[nLine.formats.length - 1].push(nFormat);
                                     f = fP;
@@ -2728,10 +2734,83 @@ export class Display extends EventEmitter {
                             }
                         }
                     }
-                    //hard break word
+                    sOffset = offset;
+                    nFormat = copy(format);
+                    while (left + nFormat.width > mv) {
+                        eOffset = sOffset + 1;
+                        wText = text.substring(sOffset, eOffset);
+                        while (eOffset <= end && left + fP < mv) {
+                            eOffset++;
+                            wText = text.substring(sOffset, eOffset);
+                            if (font)
+                                fP = this.textWidth(wText, font);
+                            else if (format.unicode)
+                                fP = this.textWidth(wText);
+                            else
+                                fP = wText.length * cw;
+                        }
+                        if (wText.substring(eOffset, 1) !== ' ' &&
+                            wText.substring(eOffset, 1) !== '-' &&
+                            wText.substring(eOffset, 1) !== '\u00AD' &&
+                            wText.substring(eOffset, 1) !== '\u200B') {
+                            bOffset = eOffset;
+                            while (bOffset-- >= sOffset) {
+                                c = pText.substr(bOffset, 1);
+                                if (c === ' ' || c === '-' || c === '\u00AD' || c === '\u200B') {
+                                    break;
+                                }
+                            }
+                            if (bOffset > sOffset && bOffset + 1 < eOffset)
+                                eOffset = bOffset + 1;
+                            else
+                                eOffset--;
+                        }
+                        wText = text.substring(sOffset, eOffset);
+                        if (eOffset === end) {
+                            nFormat.offset = sOffset;
+                            cLine.formats.push(nFormat);
+                            if (font)
+                                nFormat.width = this.textWidth(wText, font);
+                            else if (format.unicode)
+                                nFormat.width = this.textWidth(wText);
+                            else
+                                nFormat.width = wText.length * cw;
+                            left = indent + nFormat.width;
+                            break;
+                        }
+                        else {
+                            cLine.formats.push(copy(nFormat));
+                            fP = cLine.formats.length - 1;
+                            if (font)
+                                cLine.formats[fP].width = this.textWidth(wText, font);
+                            else if (format.unicode)
+                                cLine.formats[fP].width = this.textWidth(wText);
+                            else
+                                cLine.formats[fP].width = wText.length * cw;
+                            nFormat.offset = eOffset;
+                            wText = text.substring(eOffset);
+                            nLine = { offset: eOffset, formats: [], indent: true };
+                            if (font)
+                                nFormat.width = this.textWidth(wText, font);
+                            else if (format.unicode)
+                                nFormat.width = this.textWidth(wText);
+                            else
+                                nFormat.width = wText.length * cw;
+                            left = indent;
+                            sOffset = nFormat.offset;
+                        }
+                        cLine = nLine;
+                        wLines.push(cLine);
+                    }
+                    if (cLine.formats.length === 0) {
+                        cLine.formats.push(nFormat);
+                        left += nFormat.width;
+                    }
                 }
-                else
+                else {
                     left += format.width;
+                    cLine.formats.push(copy(format));
+                }
             }
             else if ((format.formatType === FormatType.MXPExpired || format.formatType === FormatType.MXPLink || format.formatType === FormatType.Link || format.formatType === FormatType.MXPSend) && end - offset !== 0) {
                 eText = text.substring(offset, end);
@@ -2743,7 +2822,7 @@ export class Display extends EventEmitter {
             }
             else if (format.formatType === FormatType.Image && format.width) {
                 if (left + format.width + format.marginWidth || 0 > mv) {
-                    cLine = { offset: format.offset, formats: [] };
+                    cLine = { offset: format.offset, formats: [], indent: true };
                     cLine.formats.push(copy(format));
                     wLines.push(cLine);
                     left = indent + format.width + format.marginWidth || 0;
@@ -2754,11 +2833,21 @@ export class Display extends EventEmitter {
             else
                 cLine.formats.push(copy(format));
         }
+        return wLines;
     }
 
     private buildLineDisplay(idx?: number, mw?, mv?) {
-        if (idx === undefined)
+        if (idx === undefined) {
             idx = this.lines.length - 1;
+            mw = this._maxWidth;
+            mv = this._maxView;
+        }
+        else if (mw === undefined) {
+            mw = this._maxWidth;
+            mv = this._maxView;
+        }
+        else if (mv === undefined)
+            mv = this._maxView;
         const back = [];
         const fore = [];
         const text = this.lines[idx].replace(/ /g, '\u00A0');
