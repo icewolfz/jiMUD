@@ -2632,14 +2632,42 @@ export class Display extends EventEmitter {
             styles += '.background > span span {background-color: inherit !important;}';
         this._styles.innerHTML = styles;
     }
-
-    private calculateWrapLines(idx?: number, mv?) {
+/**
+ *
+ * @private
+ * @param {number} [idx]
+ * @param {number} [mv]
+ * @returns
+ * @memberof Display
+ * @todo needs wrap for links, mxp send, mxp link
+ * @todo track links to properly add link formats at the start of wrapped lines
+ * @todo optimize
+ * @todo wrap is not 100% perfect, at < charwidth * 5 sometimes leaves more then 1 character
+ * Test:
+wrap = client.display.calculateWrapLines(3, 370);
+for(let w = 0, wl = wrap.length; w < wl; w++)
+{
+	var os = wrap[w].formats[0].offset;
+	var t = w === wl - 1 ? client.display.lines[3].substring(wrap[w].offset) : client.display.lines[3].substring(wrap[w].offset, wrap[w+1].offset);
+    //fake indent
+    if(w !== 0) {
+		t = '    ' + t;
+		os -= 4;
+		wrap[w].formats.unshift({ bStyle:"background:rgb(0, 0, 0);", background:40, color:37, fCls:"", fStyle:"color:rgb(187, 187, 187);", font:0, formatType:0, offset:os, size:0, style:0, unicode:false, width:0 })
+	}
+	client.display.addParserLine({raw: t, line: t, formats: wrap[w].formats.map(f=>{f.offset -= os; return f; })});
+}
+ */
+private calculateWrapLines(idx?: number, mv?: number) {
         if (idx === undefined) {
             idx = this.lines.length - 1;
             mv = this._maxView;
         }
         else if (mv === undefined)
             mv = this._maxView;
+        //never go below single character width * 5, 1 char + 4 indent spaces
+        if (mv < this._charWidth * 5)
+            mv = this._charWidth * 5;
         const indent = this._indent * this._charWidth;
         const wLines: WrapLine[] = [
             {
@@ -2692,51 +2720,62 @@ export class Display extends EventEmitter {
                 else
                     format.width = format.width || eText.length * cw;
                 if (left + format.width > mv) {
-                    fP = cLine.formats.length;
-                    while (fP--) {
-                        if (cLine.formats[fP].formatType === FormatType.Image && cLine.formats[fP].width) {
-                            nLine = { offset: cLine.formats[fP + 1].offset, formats: [] };
-                            cLine.formats.splice(fP, cLine.formats.length - fP + 1);
-                            cLine = nLine;
-                            wLines.push(cLine);
-                            left = indent;
-                            f = fP;
-                            continue layout;
-                        }
-                        else if ((cLine.formats[fP].formatType === FormatType.MXPExpired || cLine.formats[fP].formatType === FormatType.MXPLink || cLine.formats[fP].formatType === FormatType.Link || cLine.formats[fP].formatType === FormatType.MXPSend)) {
-                            if (fP === cLine.formats.length - 1)
-                                eOffset = offset;
-                            else
-                                eOffset = cLine.formats[fP + 1].offset;
-                            sOffset = cLine.formats[fP];
-                            while (eOffset-- >= sOffset) {
-                                c = pText.substr(eOffset, 1);
-                                if (c === ' ' || c === '-' || c === '\u00AD' || c === '\u200B') {
-                                    nFormat = copy(cLine.formats[fP]);
-                                    nFormat.offset = eOffset;
-                                    nLine = { offset: cLine.formats[fP + 1].offset, formats: [], indent: true };
-                                    wText = text.substring(cLine.formats[fP].offset, eOffset);
-                                    if (cLine.formats[fP].font || cLine.formats[fP].size)
-                                        cLine.formats[fP].width = this.textWidth(wText, `${cLine.formats[fP].size || this._character.style.fontSize} ${cLine.formats[fP].font || this._character.style.fontFamily}`);
-                                    else if (format.unicode)
-                                        cLine.formats[fP].width = this.textWidth(wText);
-                                    else
-                                        cLine.formats[fP].width = wText.length * cw;
-                                    cLine.formats.splice(f, cLine.formats.length - f + 1);
-                                    cLine = nLine;
-                                    wLines.push(cLine);
-                                    nFormat.width -= cLine.formats[fP].width;
-                                    nLine.formats[nLine.formats.length - 1].push(nFormat);
-                                    f = fP;
-                                    left = indent + nFormat.width;
-                                    continue layout;
+                    wText = pText.substring(offset, end);
+                    if (!wText.match(/ |-|\u00AD|\u200B/)) {
+                        fP = cLine.formats.length;
+                        while (fP--) {
+                            if (cLine.formats[fP].formatType === FormatType.Image && cLine.formats[fP].width) {
+                                nLine = { offset: cLine.formats[fP + 1].offset, formats: [], indent: true };
+                                cLine.formats.splice(fP, cLine.formats.length - fP + 1);
+                                cLine = nLine;
+                                wLines.push(cLine);
+                                left = indent;
+                                f = cLine.formats[fP].formatIndex;
+                                continue layout;
+                            }
+                            else if ((cLine.formats[fP].formatType === FormatType.Normal || cLine.formats[fP].formatType === FormatType.MXPExpired || cLine.formats[fP].formatType === FormatType.MXPLink || cLine.formats[fP].formatType === FormatType.Link || cLine.formats[fP].formatType === FormatType.MXPSend)) {
+                                if (fP === cLine.formats.length - 1)
+                                    eOffset = offset;
+                                else
+                                    eOffset = cLine.formats[fP + 1].offset;
+                                if (eOffset === cLine.offset)
+                                    break;
+                                bOffset = eOffset;
+                                sOffset = cLine.formats[fP].offset;
+                                while (bOffset-- >= sOffset) {
+                                    c = pText.substr(bOffset, 1);
+                                    if (c === ' ' || c === '-' || c === '\u00AD' || c === '\u200B') {
+                                        if (bOffset < eOffset)
+                                            bOffset++;
+                                        nFormat = copy(cLine.formats[fP]);
+                                        nFormat.offset = bOffset;
+                                        nLine = { offset: eOffset, formats: [nFormat], indent: true };
+                                        wText = text.substring(cLine.formats[fP].offset, bOffset);
+                                        if (cLine.formats[fP].font || cLine.formats[fP].size)
+                                            cLine.formats[fP].width = this.textWidth(wText, `${cLine.formats[fP].size || this._character.style.fontSize} ${cLine.formats[fP].font || this._character.style.fontFamily}`);
+                                        else if (format.unicode)
+                                            cLine.formats[fP].width = this.textWidth(wText);
+                                        else
+                                            cLine.formats[fP].width = wText.length * cw;
+                                        cLine.formats.splice(f, cLine.formats.length - f + 1);
+                                        nFormat.width -= cLine.formats[fP].width;
+                                        f = cLine.formats[fP].formatIndex;
+                                        cLine = nLine;
+                                        wLines.push(cLine);
+                                        left = indent + nFormat.width;
+                                        continue layout;
+                                    }
                                 }
                             }
                         }
                     }
                     sOffset = offset;
                     nFormat = copy(format);
+                    nFormat.formatIndex = f;
+                    let pOffset = -1;
                     while (left + nFormat.width > mv) {
+                        if (pOffset === sOffset)
+                            break;
                         eOffset = sOffset + 1;
                         wText = text.substring(sOffset, eOffset);
                         while (eOffset <= end && left + fP < mv) {
@@ -2749,7 +2788,7 @@ export class Display extends EventEmitter {
                             else
                                 fP = wText.length * cw;
                         }
-                        if (wText.substring(eOffset, 1) !== ' ' &&
+                        if (wText.length > 1 && wText.substring(eOffset, 1) !== ' ' &&
                             wText.substring(eOffset, 1) !== '-' &&
                             wText.substring(eOffset, 1) !== '\u00AD' &&
                             wText.substring(eOffset, 1) !== '\u200B') {
@@ -2762,11 +2801,11 @@ export class Display extends EventEmitter {
                             }
                             if (bOffset > sOffset && bOffset + 1 < eOffset)
                                 eOffset = bOffset + 1;
-                            else
+                            else if (c !== ' ' && c !== '-' && c !== '\u00AD' && c !== '\u200B')
                                 eOffset--;
                         }
                         wText = text.substring(sOffset, eOffset);
-                        if (eOffset === end) {
+                        if (eOffset === end || sOffset === eOffset) {
                             nFormat.offset = sOffset;
                             cLine.formats.push(nFormat);
                             if (font)
@@ -2788,7 +2827,7 @@ export class Display extends EventEmitter {
                             else
                                 cLine.formats[fP].width = wText.length * cw;
                             nFormat.offset = eOffset;
-                            wText = text.substring(eOffset);
+                            wText = text.substring(eOffset, end);
                             nLine = { offset: eOffset, formats: [], indent: true };
                             if (font)
                                 nFormat.width = this.textWidth(wText, font);
@@ -2797,6 +2836,7 @@ export class Display extends EventEmitter {
                             else
                                 nFormat.width = wText.length * cw;
                             left = indent;
+                            pOffset = sOffset;
                             sOffset = nFormat.offset;
                         }
                         cLine = nLine;
@@ -2809,7 +2849,9 @@ export class Display extends EventEmitter {
                 }
                 else {
                     left += format.width;
-                    cLine.formats.push(copy(format));
+                    nFormat = copy(format);
+                    nFormat.formatIndex = f;
+                    cLine.formats.push(nFormat);
                 }
             }
             else if ((format.formatType === FormatType.MXPExpired || format.formatType === FormatType.MXPLink || format.formatType === FormatType.Link || format.formatType === FormatType.MXPSend) && end - offset !== 0) {
@@ -2823,15 +2865,20 @@ export class Display extends EventEmitter {
             else if (format.formatType === FormatType.Image && format.width) {
                 if (left + format.width + format.marginWidth || 0 > mv) {
                     cLine = { offset: format.offset, formats: [], indent: true };
-                    cLine.formats.push(copy(format));
+                    nFormat = copy(format);
+                    nFormat.formatIndex = f;
+                    cLine.formats.push(nFormat);
                     wLines.push(cLine);
                     left = indent + format.width + format.marginWidth || 0;
                 }
                 else
                     left += format.width + format.marginWidth || 0;
             }
-            else
-                cLine.formats.push(copy(format));
+            else {
+                nFormat = copy(format);
+                nFormat.formatIndex = f;
+                cLine.formats.push(nFormat);
+            }
         }
         return wLines;
     }
