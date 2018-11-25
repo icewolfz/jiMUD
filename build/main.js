@@ -873,14 +873,7 @@ function createTray() {
     const contextMenu = Menu.buildFromTemplate([
         {
             label: '&Show window...', click: () => {
-                let s = getWindowState('main');
-                if (!s) getWindowState('main', win);
-                if (s.maximized)
-                    win.maximize();
-                win.show();
-                if (s.isFullScreen)
-                    win.setFullScreen(s.fullscreen);
-                win.focus();
+                showSelectedWindow();
             }
         },
         {
@@ -974,12 +967,7 @@ function createTray() {
         if (!s) getWindowState('main', win);
         switch (set.trayClick) {
             case TrayClick.show:
-                if (s.maximized)
-                    win.maximize();
-                win.show();
-                if (s.isFullScreen)
-                    win.setFullScreen(s.fullscreen);
-                win.focus();
+                showSelectedWindow();
                 break;
             case TrayClick.toggle:
                 if (win.isVisible()) {
@@ -1014,12 +1002,7 @@ function createTray() {
         if (!s) getWindowState('main', win);
         switch (set.trayClick) {
             case TrayClick.show:
-                if (s.maximized)
-                    win.maximize();
-                win.show();
-                if (s.isFullScreen)
-                    win.setFullScreen(s.fullscreen);
-                win.focus();
+                showSelectedWindow();
                 break;
             case TrayClick.toggle:
                 if (win.isVisible()) {
@@ -2266,7 +2249,29 @@ ipcMain.on('show-window', (event, window, args) => {
 });
 
 function showSelectedWindow(window, args) {
-    if (window === 'about')
+    if (!window) {
+        if (global.editorOnly) {
+            let s = getWindowState('code-editor');
+            if (!s) getWindowState('code-editor', winCode);
+            if (s.maximized)
+                winCode.maximize();
+            winCode.show();
+            if (s.isFullScreen)
+                winCode.setFullScreen(s.fullscreen);
+            winCode.focus();
+        }
+        else {
+            let s = getWindowState('main');
+            if (!s) getWindowState('main', win);
+            if (s.maximized)
+                win.maximize();
+            win.show();
+            if (s.isFullScreen)
+                win.setFullScreen(s.fullscreen);
+            win.focus();
+        }
+    }
+    else if (window === 'about')
         showAbout();
     else if (window === 'prefs')
         showPrefs();

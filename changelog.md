@@ -5,6 +5,7 @@
 - **Fixed:**
   - Display:
     - Fixed horizontal scroll bar when it first appears auto scrolling right correctly this time
+  - Fixed [#showclient and #toggleclient](docs/commands.md) commands not correctly restoring maximized state
 
 ## v0.6.10 2018-11-21
 

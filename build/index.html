@@ -416,7 +416,7 @@
             var el = document.getElementById('theme');
             if (el.getAttribute('href') !== theme)
                 el.setAttribute('href', theme);
-            if(client && client.display)
+            if (client && client.display)
                 client.display.updateLayout();
         }
 
@@ -942,8 +942,7 @@
             });
 
             client.on('show', () => {
-                remote.getCurrentWindow().show();
-                remote.getCurrentWindow().focus();
+                ipcRenderer.send('show-window');
             });
 
             client.on('hide', () => {
@@ -961,10 +960,8 @@
                     else
                         win.minimize();
                 }
-                else {
-                    win.show();
-                    remote.getCurrentWindow().focus();
-                }
+                else
+                    ipcRenderer.send('show-window');
             });
 
             client.on('notify', (title, message, options) => {
