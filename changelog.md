@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Display:
+    - Fixed scroll position rounding issue
     - Fixed horizontal scroll bar when it first appears auto scrolling right correctly this time
   - Fixed [#showclient and #toggleclient](docs/commands.md) commands not correctly restoring maximized state
 

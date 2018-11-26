@@ -691,7 +691,7 @@ export class Display extends EventEmitter {
                         y = -1 * this._charHeight;
                         this._currentSelection.end.y--;
                     }
-                    else if (y >= this._innerHeight && Math.ceil(this._VScroll.position) < this._VScroll.scrollSize) {
+                    else if (y >= this._innerHeight && this._VScroll.position < this._VScroll.scrollSize) {
                         y = this._charHeight;
                         this._currentSelection.end.y++;
                         if (this._currentSelection.end.y >= this.lines.length)
@@ -704,7 +704,7 @@ export class Display extends EventEmitter {
                         x = -1 * this._charWidth;
                         this._currentSelection.end.x--;
                     }
-                    else if (x >= this._innerWidth && Math.ceil(this._HScroll.position) < this._HScroll.scrollSize) {
+                    else if (x >= this._innerWidth && this._HScroll.position < this._HScroll.scrollSize) {
                         x = this._charWidth;
                         this._currentSelection.end.x++;
                     }
@@ -3197,7 +3197,9 @@ export class ScrollBar extends EventEmitter {
      * @type {number}
      * @memberof ScrollBar
      */
-    get position(): number { return this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0]); }
+    get position(): number { return Math.ceil(this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0])); }
+
+    get positionRaw(): number { return this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0]); }
 
     /**
      * An offset amount to adjust the whole scroll bar by that effects total size
@@ -3267,7 +3269,7 @@ export class ScrollBar extends EventEmitter {
      * @type {boolean}
      * @memberof ScrollBar
      */
-    get atBottom(): boolean { return Math.ceil(this.position) >= this.scrollSize; }
+    get atBottom(): boolean { return this.position >= this.scrollSize; }
 
     /**
      * Creates an instance of ScrollBar.
@@ -3478,7 +3480,7 @@ export class ScrollBar extends EventEmitter {
      */
     public scrollBy(amount: number) {
         if (amount === 0) return;
-        amount = this.position + (amount < 0 ? Math.floor(amount) : Math.ceil(amount));
+        amount = this.positionRaw + (amount < 0 ? Math.floor(amount) : Math.ceil(amount));
         amount = amount * this._ratio2;
         this.updatePosition(amount);
     }
