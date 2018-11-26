@@ -2,6 +2,9 @@
 
 ## v0.6.11
 
+- **Changed:**
+  - Update monaco-editor from 0.15.5 to 0.15.6
+  - Update mathjs-expression-parser from 1.0.0 to 1.0.2
 - **Fixed:**
   - Display:
     - Fixed scroll position rounding issue
