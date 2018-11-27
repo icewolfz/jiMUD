@@ -656,8 +656,8 @@
                 e.preventDefault();
                 var parent = $(e.srcElement.parentNode);
                 _selword = window.$selword;
-                _selurl = window.$_selurl;
-                _selline = window.$_selline;
+                _selurl = window.$selurl;
+                _selline = window.$selline;
                 var c = new Menu();
                 if (!_context)
                     buildContextMenu();
@@ -1817,12 +1817,12 @@
             if (!item.enabled) return false;
             var ret;// = '';
             client._input.vStackPush({
-                selword: _selword,
-                selurl: _selurl,
-                selline: _selline,
-                selectedword: _selword,
-                selectedurl: _selurl,
-                selectedline: _selline
+                $selword: _selword,
+                $selurl: _selurl,
+                $selline: _selline,
+                $selectedword: _selword,
+                $selectedurl: _selurl,
+                $selectedline: _selline
             });
             switch (item.style) {
                 case 1:

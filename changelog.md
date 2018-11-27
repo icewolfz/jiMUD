@@ -2,6 +2,9 @@
 
 ## v0.6.12
 
+- **Fixed:**
+  - Fixed selword, selurl, selline, selectedword, selectedurl, and selectedline for context menus
+
 ## v0.6.11 2018-11-26
 
 - **Changed:**
