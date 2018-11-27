@@ -728,56 +728,13 @@ export class Display extends EventEmitter {
         });
 
         this._el.addEventListener('contextmenu', (e: ContextEvent) => {
-            let word: string = '';
-            let line: string = '';
-            let url: string = '';
-            if (this.lines.length > 0) {
-                const o = this.getLineOffset(e.pageX, e.pageY);
-                if (o.y >= 0 && o.y < this.lines.length) {
-                    line = this.lines[o.y];
-                    const len = line.length;
-                    if (o.x >= 0 || o.x < len) {
-                        let sPos = o.x;
-                        let ePos = o.x;
-                        while (line.substr(sPos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && sPos >= 0) {
-                            sPos--;
-                            if (sPos < 0)
-                                break;
-                        }
-                        sPos++;
-                        while (line.substr(ePos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && ePos < len) {
-                            ePos++;
-                        }
-                        if (sPos >= 0 && ePos <= len)
-                            word = line.substring(sPos, ePos);
-                        const formats = this.lineFormats[o.y];
-                        const fl = formats.length;
-                        let l;
-                        for (l = 0; l < fl; l++) {
-                            const format = formats[l];
-                            if (format.formatType !== FormatType.Link && format.formatType !== FormatType.MXPLink)
-                                continue;
-                            let end = format.offset;
-                            if (l < fl - 1) {
-                                const nFormat = formats[l + 1];
-                                //skip empty blocks
-                                if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
-                                    continue;
-                                end = nFormat.offset;
-                            }
-                            else
-                                end = line.length;
-                            if (o.x >= format.offset && o.x < end) {
-                                url = format.href;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            e.word = word;
-            e.url = url;
-            e.line = line;
+            const o = this.getLineOffset(e.pageX, e.pageY);
+            if (o.y >= 0 && o.y < this.lines.length)
+                e.line = this.lines[o.y];
+            else
+                e.line = '';
+            e.word = this.getWordFromPosition(o);
+            e.url = this.getUrlFromPosition(o);
             this.emit('context-menu', e);
         });
 
@@ -1570,7 +1527,7 @@ export class Display extends EventEmitter {
         }
     }
 
-    private getLineOffset(pageX, pageY) {
+    public getLineOffset(pageX, pageY) {
         if (this.lines.length === 0)
             return { x: 0, y: 0 };
         const os = this._os;
@@ -1618,6 +1575,67 @@ export class Display extends EventEmitter {
             }
         }
         return { x: x, y: y };
+    }
+
+    public getWordFromPosition(position) {
+        if (position.y >= 0 && position.y < this.lines.length) {
+            const line = this.lines[position.y];
+            const len = line.length;
+            if (position.x >= 0 || position.x < len) {
+                let sPos = position.x;
+                let ePos = position.x;
+                while (line.substr(sPos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && sPos >= 0) {
+                    sPos--;
+                    if (sPos < 0)
+                        break;
+                }
+                sPos++;
+                while (line.substr(ePos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && ePos < len) {
+                    ePos++;
+                }
+                if (sPos >= 0 && ePos <= len)
+                    return line.substring(sPos, ePos);
+            }
+        }
+        return '';
+    }
+
+    public getUrlFromPosition(position) {
+        if (position.y >= 0 && position.y < this.lines.length) {
+            const line = this.lines[position.y];
+            const len = line.length;
+            if (position.x >= 0 || position.x < len) {
+                const formats = this.lineFormats[position.y];
+                const fl = formats.length;
+                let l;
+                for (l = 0; l < fl; l++) {
+                    const format = formats[l];
+                    if (format.formatType !== FormatType.Link && format.formatType !== FormatType.MXPLink)
+                        continue;
+                    let end = format.offset;
+                    l++;
+                    while (l++ < fl) {
+                        const nFormat = formats[l];
+                        if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                            continue;
+                        if (format.formatType === FormatType.Link && formats[l].formatType === FormatType.LinkEnd) {
+                            end = nFormat.offset;
+                            break;
+                        }
+                        else if (format.formatType === FormatType.MXPLink && formats[l].formatType === FormatType.MXPLinkEnd) {
+                            end = nFormat.offset;
+                            break;
+                        }
+                    }
+                    if (l >= fl)
+                        end = line.length;
+                    if (position.x >= format.offset && position.x < end) {
+                        return format.href;
+                    }
+                }
+            }
+        }
+        return '';
     }
 
     private offset(elt) {

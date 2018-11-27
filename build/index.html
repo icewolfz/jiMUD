@@ -41,27 +41,7 @@
             Object.defineProperty(window, a, {
                 get: function () {
                     if (!lastMouse) return '';
-                    var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
-                    var line = '';
-                    if (pos.y >= 0 && pos.y < client.display.lines.length)
-                        line = client.display.lines[pos.y];
-                    var x = pos.x;
-                    if (x < 0 || x >= line.length)
-                        return '';
-                    var sPos = x, ePos = x;
-                    while (line.substr(sPos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && sPos >= 0) {
-                        sPos--;
-                        if (sPos < 0)
-                            break;
-                    }
-                    sPos++;
-                    var ll = line.length;
-                    while (line.substr(ePos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && ePos < ll) {
-                        ePos++;
-                    }
-                    if (sPos + ePos - sPos > ll)
-                        return '';
-                    return line.substring(sPos, ePos);
+                    return client.display.getWordFromPosition(client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY));
                 },
                 configurable: true
             });
@@ -649,15 +629,14 @@
                     ipcRenderer.send('update-menuitem', { menu: ['edit', 'copyHTML'], enabled: client.display.hasSelection });
             });
 
-            client.display._el.addEventListener('contextmenu', (e) => {
-                lastMouse = e;
+            client.display.on('context-menu', (e) => {
                 $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
                 $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
                 e.preventDefault();
                 var parent = $(e.srcElement.parentNode);
-                _selword = window.$selword;
-                _selurl = window.$selurl;
-                _selline = window.$selline;
+                _selword = e.word;
+                _selurl = e.url;
+                _selline = e.line;
                 var c = new Menu();
                 if (!_context)
                     buildContextMenu();
@@ -715,7 +694,7 @@
                 }
                 if (c.items.length > 0)
                     c.popup({ window: remote.getCurrentWindow() });
-            }, false);
+            });
 
             ['cut', 'copy'].forEach(function (event) {
                 document.addEventListener(event, function (e) {
