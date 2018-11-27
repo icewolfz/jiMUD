@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.11
+## v0.6.11 2018-11-26
 
 - **Changed:**
   - Update monaco-editor from 0.15.5 to 0.15.6
