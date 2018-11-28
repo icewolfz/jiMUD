@@ -7,6 +7,7 @@
   - Code editor:
     - Rebuild recent menu as soon as opening is finished instead of de-bouncing it
     - Tab widths not correctly updated when file saved as
+    - Fixed code generation for functions that have no arguments
 
 ## v0.6.11 2018-11-26
 
