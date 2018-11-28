@@ -11091,7 +11091,7 @@ export class AreaDesigner extends EditorBase {
                             max = `MAX${mon.type.replace(/ /g, '_').toUpperCase()}`;
                     }
                     if (o.unique)
-                        tmp = `   clone_unique(MON + "${files[o.id]}.c")`;
+                        tmp = `   clone_unique(MON + "${files[o.id]}.c");\n`;
                     else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1)) {
                         if (max.length !== 0)
                             tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount}, ${max});\n`;
