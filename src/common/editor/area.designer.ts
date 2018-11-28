@@ -10929,7 +10929,7 @@ export class AreaDesigner extends EditorBase {
             //Generate base rooms
             if (this.$cancel)
                 throw new Error('Canceled');
-            this.emit('progress', { type: 'designer', percent: 24, title: 'Creating base files&hellip;' });
+            this.emit('progress', { type: 'designer', percent: 24, title: 'Creating base generateRoomCodefiles&hellip;' });
             Object.keys(this.$area.baseRooms).forEach(r => this.write(this.generateRoomCode(this.$area.baseRooms[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'room'].toLowerCase() + '.c')));
             //generate base monsters
             if (this.$cancel)
@@ -11027,7 +11027,7 @@ export class AreaDesigner extends EditorBase {
             }
 
             if (tmp3.length !== 0) {
-                data['reset body'] += `   //Perform a probably check to allow disabling of default monsters\n   if(query_property("no clone monsters"))\n      return;\n   // If monsters already in room do not create more\n   if(sizeof(filter(query_living_contents(), (: $1->is_${data.area}_monster() :) )))\n      return;\n`;
+                data['reset body'] += `   //Perform a property check to allow disabling of default monsters\n   if(query_property("no clone monsters"))\n      return;\n   // If monsters already in room do not create more\n   if(sizeof(filter(query_living_contents(), (: $1->is_${data.area}_monster() :) )))\n      return;\n`;
                 tmp3.forEach(o => {
                     const mon = this.$area.monsters[o.id];
                     if (!mon) return;
