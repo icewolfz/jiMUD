@@ -4,7 +4,9 @@
 
 - **Fixed:**
   - Fixed selword, selurl, selline, selectedword, selectedurl, and selectedline for context menus
-  - Code editor: Rebuild recent menu as soon as opening is finished instead of de-bouncing it
+  - Code editor:
+    - Rebuild recent menu as soon as opening is finished instead of de-bouncing it
+    - Tab widths not correctly updated when file saved as
 
 ## v0.6.11 2018-11-26
 

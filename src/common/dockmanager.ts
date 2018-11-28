@@ -1202,7 +1202,7 @@ export class DockPane extends EventEmitter {
         $('.dropdown.open').removeClass('open');
         const panel = this.newPanel(title, icon, tooltip);
         panel.dock = this;
-        this.setPanelTitle(title || '');
+        this.setPanelTitle(title || '', null, false);
         this.setPanelIconClass(panel.iconCls);
         this.setPanelTooltip(tooltip || '');
         this.$addCache.push(panel);
@@ -1420,6 +1420,7 @@ export class DockPane extends EventEmitter {
         if (!noMenu) return;
         const idx = this.getPanelIndex(tab);
         $(`#cm-scroll-dropdown-menu-${idx}-title`).html(text);
+        this.doUpdate(UpdateType.resize);
     }
 
     public setPanelIconClass(icon: string, tab?, noMenu?: boolean) {
@@ -1435,10 +1436,12 @@ export class DockPane extends EventEmitter {
         tab.icon.style.backgroundImage = '';
         tab.iconCls = icon;
         tab.iconSrc = 0;
+        if (!noMenu) return;
         const idx = this.getPanelIndex(tab);
         $(`#cm-scroll-dropdown-menu-${idx}-icon`).removeClass();
         $(`#cm-scroll-dropdown-menu-${idx}-icon`).addClass(tab.icon.className);
         $(`#cm-scroll-dropdown-menu-${idx}-icon`).css('background-image', '');
+        this.doUpdate(UpdateType.resize);
     }
 
     public setPanelIcon(icon: string, tab?, noMenu?: boolean) {
@@ -1452,9 +1455,11 @@ export class DockPane extends EventEmitter {
         tab.iconCls = '';
         tab.iconSrc = icon;
         tab.icon.style.backgroundImage = `url(${icon})`;
+        if (!noMenu) return;
         const idx = this.getPanelIndex(tab);
         $(`#cm-scroll-dropdown-menu-${idx}-icon`).removeClass();
         $(`#cm-scroll-dropdown-menu-${idx}-icon`).css('background-image', `url(${icon})`);
+        this.doUpdate(UpdateType.resize);
     }
 
     public getPanel(idx) {
