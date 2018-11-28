@@ -11350,6 +11350,7 @@ export class AreaDesigner extends EditorBase {
                     data.description = ' * ' + data.description;
             }
         }
+        data.description = stripPinkfish(data.description);
 
         if (room.terrain !== base.terrain)
             data['create body'] += `   set_terrain("${room.terrain}");\n`;
@@ -12014,6 +12015,7 @@ export class AreaDesigner extends EditorBase {
                     data.description = ' * ' + data.description;
             }
         }
+        data.description = stripPinkfish(data.description);
         if (monster.nouns !== base.nouns) {
             monster.nouns = (monster.nouns || '').split(',');
             monster.nouns = monster.nouns.map(w => {
@@ -13051,11 +13053,10 @@ export class AreaDesigner extends EditorBase {
                 break;
         }
 
-        if (obj.name.startsWith('"') && obj.name.endsWith('"')) {
-            data.name = obj.name.substr(1, obj.name.length - 2).replace(/"/g, '\\"');
-        }
+        if (obj.name.startsWith('"') && obj.name.endsWith('"'))
+            data.name = stripPinkfish(obj.name.substr(1, obj.name.length - 2).replace(/"/g, '\\"'));
         else
-            data.name = obj.name.replace(/"/g, '\\"');
+            data.name = stripPinkfish(obj.name.replace(/"/g, '\\"'));
         obj.short = obj.short.trim();
         if (obj.short.startsWith('(:')) {
             data.short = formatFunctionPointer(obj.short);
@@ -13100,6 +13101,7 @@ export class AreaDesigner extends EditorBase {
                 data.description = ' * ' + obj.long;
             }
         }
+        data.description = stripPinkfish(data.description);
 
         if (obj.nouns.length > 0) {
             obj.nouns = obj.nouns.split(',');

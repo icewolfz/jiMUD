@@ -1856,7 +1856,7 @@
     const { Wizard, WizardPage, WizardDataGridPage } = require('./js/wizard');
 
     // eslint-disable-next-line no-unused-vars
-    const { formatString, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize, updateEditDropdown, initEditDropdown } = require('./js/library');
+    const { formatString, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize, updateEditDropdown, initEditDropdown, stripPinkfish } = require('./js/library');
     const { IEDError } = require('./js/types');
 
     const { IED } = require('./js/ied');
@@ -5756,6 +5756,7 @@
                         tmpl['long'] = `"${data['room-wiz-long']}"`;
                     }
                 }
+                tmpl['description'] = stripPinkfish(tmpl['description']);
                 if (data['room-wiz-terrain'].length !== 0)
                     tmpl['create body'] += `   set_terrain("${data['room-wiz-terrain']}");\n`;
                 tmp = [];
@@ -6889,7 +6890,6 @@
                         tmpl.doc.push('/doc/build/monster/types/vendor');
                         break;
                 }
-
                 if (data['mon-wiz-name'].startsWith('"') && data['mon-wiz-name'].endsWith('"')) {
                     tmpl['name'] = data['mon-wiz-name'].substr(1, data['mon-wiz-name'].length - 2).replace(/"/g, '\\"');
                 }
@@ -6939,6 +6939,7 @@
                         tmpl['description'] = ' * ' + data['mon-wiz-long'];
                     }
                 }
+                tmpl['description'] = stripPinkfish(tmpl['description']);
                 tmpl['height'] = data['mon-wiz-height'];
 
                 tmpl['create arguments'] = `${data['mon-wiz-level']}, "${data['mon-wiz-race'] || 'human'}"`;
