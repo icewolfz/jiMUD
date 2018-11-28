@@ -11004,7 +11004,8 @@ export class AreaDesigner extends EditorBase {
             if (room.forage !== base.forage)
                 data['reset body'] += `   set_property('forage', ${room.forage});\n`;
             doors.forEach(r => {
-                data['reset body'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
+                if (r.key.length !== 0)
+                    data['reset body'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
                 data['reset body'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
             });
             if (tmp2.length !== 0) {

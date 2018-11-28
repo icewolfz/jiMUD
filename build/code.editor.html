@@ -5596,7 +5596,8 @@
                     if (data['room-wiz-forage'] !== -1)
                         tmpl['create post'] += `   set_property('forage', ${data['room-wiz-forage']});\n`;
                     doors.forEach(r => {
-                        tmpl['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
+                        if (r.key.length !== 0)
+                            tmpl['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
                         tmpl['create post'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
                     });
                     tmpl['create post'] += '}';
