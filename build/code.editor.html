@@ -5598,7 +5598,7 @@
                     doors.forEach(r => {
                         if (r.key.length !== 0)
                             tmpl['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
-                        tmpl['create post'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
+                        tmpl['create post'] += `   set_open("${r.door}", ${r.closed ? 0 : 1});\n`;
                     });
                     tmpl['create post'] += '}';
                 }

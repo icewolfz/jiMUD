@@ -11006,7 +11006,7 @@ export class AreaDesigner extends EditorBase {
             doors.forEach(r => {
                 if (r.key.length !== 0)
                     data['reset body'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
-                data['reset body'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
+                data['reset body'] += `   set_open("${r.door}", ${r.closed ? 0 : 1});\n`;
             });
             if (tmp2.length !== 0) {
                 data['reset body'] += '   if(!query_property("no clone objects"))\n   {\n';
@@ -11063,7 +11063,7 @@ export class AreaDesigner extends EditorBase {
                 data['create post'] += `   set_property('forage', ${room.forage});\n`;
             doors.forEach(r => {
                 data['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
-                data['create post'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
+                data['create post'] += `   set_open("${r.door}", ${r.closed ? 0 : 1});\n`;
             });
             if (tmp2.length !== 0) {
                 tmp2.forEach(o => {

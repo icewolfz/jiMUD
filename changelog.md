@@ -9,6 +9,7 @@
     - Tab widths not correctly updated when file saved as
     - Fixed code generation for functions that have no arguments
     - Strip colors for header name/descriptions for generated code
+    - Fixed room open door generated code
 
 ## v0.6.11 2018-11-26
 
