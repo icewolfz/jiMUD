@@ -11748,12 +11748,12 @@ export class AreaDesigner extends EditorBase {
             return `${tmp2} : ${tmp3}`;
         });
 
+        if ((room.baseFlags & RoomBaseFlags.No_Reads) === RoomBaseFlags.No_Reads)
+            tmp4 = 'set_read';
+        else
+            tmp4 = 'add_read';
         if (tmp.length === 1) {
             tmp = room.reads[0];
-            if ((room.baseFlags & RoomBaseFlags.No_Reads) === RoomBaseFlags.No_Reads)
-                tmp4 = 'set_read';
-            else
-                tmp4 = 'add_read';
             tmp2 = tmp.read.split(',').map(t => {
                 t.trim();
                 if (!t.startsWith('"') && !t.endsWith('"'))
