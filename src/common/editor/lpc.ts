@@ -2418,10 +2418,10 @@ export function createFunction(name, type?, args?) {
         name = name.substr(2);
     if (name.endsWith(':)'))
         name = name.substr(0, name.length - 2);
+    args = args || '';
     name = name.trim();
-    if (!type) type = 'void';
-    if (type === 'void')
-        return `${type} ${name}(${args})\n{\n}\n\n`;
+    if (!type || type === 'void')
+        return `void ${name}(${args})\n{\n}\n\n`;
     if (type === 'string')
         return `${type} ${name}(${args})\n{\n   return "";\n}\n\n`;
     return `${type} ${name}(${args})\n{\n   return 0;\n}\n\n`;

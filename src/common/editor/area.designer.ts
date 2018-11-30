@@ -10929,7 +10929,7 @@ export class AreaDesigner extends EditorBase {
             //Generate base rooms
             if (this.$cancel)
                 throw new Error('Canceled');
-            this.emit('progress', { type: 'designer', percent: 24, title: 'Creating base files&hellip;' });
+            this.emit('progress', { type: 'designer', percent: 24, title: 'Creating base generateRoomCodefiles&hellip;' });
             Object.keys(this.$area.baseRooms).forEach(r => this.write(this.generateRoomCode(this.$area.baseRooms[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'room'].toLowerCase() + '.c')));
             //generate base monsters
             if (this.$cancel)
@@ -11004,8 +11004,9 @@ export class AreaDesigner extends EditorBase {
             if (room.forage !== base.forage)
                 data['reset body'] += `   set_property('forage', ${room.forage});\n`;
             doors.forEach(r => {
-                data['reset body'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
-                data['reset body'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
+                if (r.key.length !== 0)
+                    data['reset body'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
+                data['reset body'] += `   set_open("${r.door}", ${r.closed ? 0 : 1});\n`;
             });
             if (tmp2.length !== 0) {
                 data['reset body'] += '   if(!query_property("no clone objects"))\n   {\n';
@@ -11027,7 +11028,7 @@ export class AreaDesigner extends EditorBase {
             }
 
             if (tmp3.length !== 0) {
-                data['reset body'] += `   //Perform a probably check to allow disabling of default monsters\n   if(query_property("no clone monsters"))\n      return;\n   // If monsters already in room do not create more\n   if(sizeof(filter(query_living_contents(), (: $1->is_${data.area}_monster() :) )))\n      return;\n`;
+                data['reset body'] += `   //Perform a property check to allow disabling of default monsters\n   if(query_property("no clone monsters"))\n      return;\n   // If monsters already in room do not create more\n   if(sizeof(filter(query_living_contents(), (: $1->is_${data.area}_monster() :) )))\n      return;\n`;
                 tmp3.forEach(o => {
                     const mon = this.$area.monsters[o.id];
                     if (!mon) return;
@@ -11062,7 +11063,7 @@ export class AreaDesigner extends EditorBase {
                 data['create post'] += `   set_property('forage', ${room.forage});\n`;
             doors.forEach(r => {
                 data['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
-                data['create post'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
+                data['create post'] += `   set_open("${r.door}", ${r.closed ? 0 : 1});\n`;
             });
             if (tmp2.length !== 0) {
                 tmp2.forEach(o => {
@@ -11091,7 +11092,7 @@ export class AreaDesigner extends EditorBase {
                             max = `MAX${mon.type.replace(/ /g, '_').toUpperCase()}`;
                     }
                     if (o.unique)
-                        tmp = `   clone_unique(MON + "${files[o.id]}.c")`;
+                        tmp = `   clone_unique(MON + "${files[o.id]}.c");\n`;
                     else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1)) {
                         if (max.length !== 0)
                             tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount}, ${max});\n`;
@@ -11349,6 +11350,7 @@ export class AreaDesigner extends EditorBase {
                     data.description = ' * ' + data.description;
             }
         }
+        data.description = stripPinkfish(data.description);
 
         if (room.terrain !== base.terrain)
             data['create body'] += `   set_terrain("${room.terrain}");\n`;
@@ -11746,12 +11748,12 @@ export class AreaDesigner extends EditorBase {
             return `${tmp2} : ${tmp3}`;
         });
 
+        if ((room.baseFlags & RoomBaseFlags.No_Reads) === RoomBaseFlags.No_Reads)
+            tmp4 = 'set_read';
+        else
+            tmp4 = 'add_read';
         if (tmp.length === 1) {
             tmp = room.reads[0];
-            if ((room.baseFlags & RoomBaseFlags.No_Reads) === RoomBaseFlags.No_Reads)
-                tmp4 = 'set_read';
-            else
-                tmp4 = 'add_read';
             tmp2 = tmp.read.split(',').map(t => {
                 t.trim();
                 if (!t.startsWith('"') && !t.endsWith('"'))
@@ -12013,6 +12015,7 @@ export class AreaDesigner extends EditorBase {
                     data.description = ' * ' + data.description;
             }
         }
+        data.description = stripPinkfish(data.description);
         if (monster.nouns !== base.nouns) {
             monster.nouns = (monster.nouns || '').split(',');
             monster.nouns = monster.nouns.map(w => {
@@ -13050,11 +13053,10 @@ export class AreaDesigner extends EditorBase {
                 break;
         }
 
-        if (obj.name.startsWith('"') && obj.name.endsWith('"')) {
-            data.name = obj.name.substr(1, obj.name.length - 2).replace(/"/g, '\\"');
-        }
+        if (obj.name.startsWith('"') && obj.name.endsWith('"'))
+            data.name = stripPinkfish(obj.name.substr(1, obj.name.length - 2).replace(/"/g, '\\"'));
         else
-            data.name = obj.name.replace(/"/g, '\\"');
+            data.name = stripPinkfish(obj.name.replace(/"/g, '\\"'));
         obj.short = obj.short.trim();
         if (obj.short.startsWith('(:')) {
             data.short = formatFunctionPointer(obj.short);
@@ -13099,6 +13101,7 @@ export class AreaDesigner extends EditorBase {
                 data.description = ' * ' + obj.long;
             }
         }
+        data.description = stripPinkfish(data.description);
 
         if (obj.nouns.length > 0) {
             obj.nouns = obj.nouns.split(',');
