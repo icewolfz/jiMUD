@@ -43,7 +43,7 @@
     - Add advanced properties to object editor
   - About: do live updates of CPU/memory usage
 - **Changed:**
-  - ANSI Parser: use unicode zero space character instead of <wbr> tag to reduce memory
+  - ANSI Parser: use unicode zero space character instead of wbr tag to reduce memory
   - Update monaco-editor from 0.15.0 to 0.15.5
   - Update electron-updater 3.2.3 to 4.0.4
   - Update electron 3.0.9 to 3.0.10
