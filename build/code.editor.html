@@ -1856,7 +1856,7 @@
     const { Wizard, WizardPage, WizardDataGridPage } = require('./js/wizard');
 
     // eslint-disable-next-line no-unused-vars
-    const { formatString, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize, updateEditDropdown, initEditDropdown } = require('./js/library');
+    const { formatString, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize, updateEditDropdown, initEditDropdown, stripPinkfish } = require('./js/library');
     const { IEDError } = require('./js/types');
 
     const { IED } = require('./js/ied');
@@ -4311,7 +4311,7 @@
                 last.dock.switchToPanel(last.id);
             }
         }
-        doUpdate(4);
+        buildRecent();
         $('#splashScreenMask').css('display', 'none');
         $('#splashLayout').css('display', 'none');
         remote.getCurrentWindow().setEnabled(true);
@@ -5596,8 +5596,9 @@
                     if (data['room-wiz-forage'] !== -1)
                         tmpl['create post'] += `   set_property('forage', ${data['room-wiz-forage']});\n`;
                     doors.forEach(r => {
-                        tmpl['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
-                        tmpl['create post'] += `   set_opened("${r.door}", ${r.closed ? 0 : 1});\n`;
+                        if (r.key.length !== 0)
+                            tmpl['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
+                        tmpl['create post'] += `   set_open("${r.door}", ${r.closed ? 0 : 1});\n`;
                     });
                     tmpl['create post'] += '}';
                 }
@@ -5755,6 +5756,7 @@
                         tmpl['long'] = `"${data['room-wiz-long']}"`;
                     }
                 }
+                tmpl['description'] = stripPinkfish(tmpl['description']);
                 if (data['room-wiz-terrain'].length !== 0)
                     tmpl['create body'] += `   set_terrain("${data['room-wiz-terrain']}");\n`;
                 tmp = [];
@@ -6888,7 +6890,6 @@
                         tmpl.doc.push('/doc/build/monster/types/vendor');
                         break;
                 }
-
                 if (data['mon-wiz-name'].startsWith('"') && data['mon-wiz-name'].endsWith('"')) {
                     tmpl['name'] = data['mon-wiz-name'].substr(1, data['mon-wiz-name'].length - 2).replace(/"/g, '\\"');
                 }
@@ -6938,6 +6939,7 @@
                         tmpl['description'] = ' * ' + data['mon-wiz-long'];
                     }
                 }
+                tmpl['description'] = stripPinkfish(tmpl['description']);
                 tmpl['height'] = data['mon-wiz-height'];
 
                 tmpl['create arguments'] = `${data['mon-wiz-level']}, "${data['mon-wiz-race'] || 'human'}"`;

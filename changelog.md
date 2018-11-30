@@ -7,11 +7,34 @@
     - Add MXP image height and better width support
     - Add MXP font size and family support
 
-## v0.6.11
+## v0.6.12
 
+- **Changed:**
+  - Update electron-updater 4.0.4 to 4.0.5
+  - Display: Make selected background color transparent
+- **Fixed:**
+  - Fixed selword, selurl, selline, selectedword, selectedurl, and selectedline for context menus
+  - Fixed auto connect firing when switching from a character with it on to one with it off
+  - Display: Correctly re-calculate widths and heights when font changed
+  - Code editor:
+    - Rebuild recent menu as soon as opening is finished instead of de-bouncing it
+    - Tab widths not correctly updated when file saved as
+    - Code generation
+      - Fixed functions that have no arguments
+      - Strip colors for header name/descriptions
+      - Fixed room open door
+      - Fixed room reads
+
+## v0.6.11 2018-11-26
+
+- **Changed:**
+  - Update monaco-editor from 0.15.5 to 0.15.6
+  - Update mathjs-expression-parser from 1.0.0 to 1.0.2
 - **Fixed:**
   - Display:
+    - Fixed scroll position rounding issue
     - Fixed horizontal scroll bar when it first appears auto scrolling right correctly this time
+  - Fixed [#showclient and #toggleclient](docs/commands.md) commands not correctly restoring maximized state
 
 ## v0.6.10 2018-11-21
 

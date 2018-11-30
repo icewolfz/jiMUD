@@ -379,6 +379,8 @@ export class Display extends EventEmitter {
             this._el.removeChild(this.split);
             this.split = null;
         }
+        if (this._VScroll.atBottom)
+            this.doUpdate(UpdateType.scrollEnd);
         this.doUpdate(UpdateType.scrollbars | UpdateType.scroll | UpdateType.view | UpdateType.scrollView);
     }
 
@@ -698,7 +700,7 @@ export class Display extends EventEmitter {
                         y = -1 * this._charHeight;
                         this._currentSelection.end.y--;
                     }
-                    else if (y >= this._innerHeight && Math.ceil(this._VScroll.position) < this._VScroll.scrollSize) {
+                    else if (y >= this._innerHeight && this._VScroll.position < this._VScroll.scrollSize) {
                         y = this._charHeight;
                         this._currentSelection.end.y++;
                         if (this._currentSelection.end.y >= this.lines.length)
@@ -711,7 +713,7 @@ export class Display extends EventEmitter {
                         x = -1 * this._charWidth;
                         this._currentSelection.end.x--;
                     }
-                    else if (x >= this._innerWidth && Math.ceil(this._HScroll.position) < this._HScroll.scrollSize) {
+                    else if (x >= this._innerWidth && this._HScroll.position < this._HScroll.scrollSize) {
                         x = this._charWidth;
                         this._currentSelection.end.x++;
                     }
@@ -735,56 +737,13 @@ export class Display extends EventEmitter {
         });
 
         this._el.addEventListener('contextmenu', (e: ContextEvent) => {
-            let word: string = '';
-            let line: string = '';
-            let url: string = '';
-            if (this.lines.length > 0) {
-                const o = this.getLineOffset(e.pageX, e.pageY);
-                if (o.y >= 0 && o.y < this.lines.length) {
-                    line = this.lines[o.y];
-                    const len = line.length;
-                    if (o.x >= 0 || o.x < len) {
-                        let sPos = o.x;
-                        let ePos = o.x;
-                        while (line.substr(sPos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && sPos >= 0) {
-                            sPos--;
-                            if (sPos < 0)
-                                break;
-                        }
-                        sPos++;
-                        while (line.substr(ePos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && ePos < len) {
-                            ePos++;
-                        }
-                        if (sPos >= 0 && ePos <= len)
-                            word = line.substring(sPos, ePos);
-                        const formats = this.lineFormats[o.y];
-                        const fl = formats.length;
-                        let l;
-                        for (l = 0; l < fl; l++) {
-                            const format = formats[l];
-                            if (format.formatType !== FormatType.Link && format.formatType !== FormatType.MXPLink)
-                                continue;
-                            let end = format.offset;
-                            if (l < fl - 1) {
-                                const nFormat = formats[l + 1];
-                                //skip empty blocks
-                                if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
-                                    continue;
-                                end = nFormat.offset;
-                            }
-                            else
-                                end = line.length;
-                            if (o.x >= format.offset && o.x < end) {
-                                url = format.href;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            e.word = word;
-            e.url = url;
-            e.line = line;
+            const o = this.getLineOffset(e.pageX, e.pageY);
+            if (o.y >= 0 && o.y < this.lines.length)
+                e.line = this.lines[o.y];
+            else
+                e.line = '';
+            e.word = this.getWordFromPosition(o);
+            e.url = this.getUrlFromPosition(o);
             this.emit('context-menu', e);
         });
 
@@ -1179,6 +1138,9 @@ export class Display extends EventEmitter {
             this._charHeight = $(this._character).innerHeight();
             this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
             this.buildStyleSheet();
+            this.reCalculateLines();
+            if (this._VScroll.atBottom)
+                this.doUpdate(UpdateType.scrollEnd);
             //update view to display any line height changes
             this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollView | UpdateType.overlays);
             this.updateWindow();
@@ -1603,7 +1565,7 @@ export class Display extends EventEmitter {
         }
     }
 
-    private getLineOffset(pageX, pageY) {
+    public getLineOffset(pageX, pageY) {
         if (this.lines.length === 0)
             return { x: 0, y: 0 };
         const os = this._os;
@@ -1696,6 +1658,67 @@ export class Display extends EventEmitter {
             */
         }
         return { x: x, y: y };
+    }
+
+    public getWordFromPosition(position) {
+        if (position.y >= 0 && position.y < this.lines.length) {
+            const line = this.lines[position.y];
+            const len = line.length;
+            if (position.x >= 0 || position.x < len) {
+                let sPos = position.x;
+                let ePos = position.x;
+                while (line.substr(sPos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && sPos >= 0) {
+                    sPos--;
+                    if (sPos < 0)
+                        break;
+                }
+                sPos++;
+                while (line.substr(ePos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && ePos < len) {
+                    ePos++;
+                }
+                if (sPos >= 0 && ePos <= len)
+                    return line.substring(sPos, ePos);
+            }
+        }
+        return '';
+    }
+
+    public getUrlFromPosition(position) {
+        if (position.y >= 0 && position.y < this.lines.length) {
+            const line = this.lines[position.y];
+            const len = line.length;
+            if (position.x >= 0 || position.x < len) {
+                const formats = this.lineFormats[position.y];
+                const fl = formats.length;
+                let l;
+                for (l = 0; l < fl; l++) {
+                    const format = formats[l];
+                    if (format.formatType !== FormatType.Link && format.formatType !== FormatType.MXPLink)
+                        continue;
+                    let end = format.offset;
+                    l++;
+                    while (l++ < fl) {
+                        const nFormat = formats[l];
+                        if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                            continue;
+                        if (format.formatType === FormatType.Link && formats[l].formatType === FormatType.LinkEnd) {
+                            end = nFormat.offset;
+                            break;
+                        }
+                        else if (format.formatType === FormatType.MXPLink && formats[l].formatType === FormatType.MXPLinkEnd) {
+                            end = nFormat.offset;
+                            break;
+                        }
+                    }
+                    if (l >= fl)
+                        end = line.length;
+                    if (position.x >= format.offset && position.x < end) {
+                        return format.href;
+                    }
+                }
+            }
+        }
+        return '';
     }
 
     private offset(elt) {
@@ -1806,7 +1829,7 @@ export class Display extends EventEmitter {
         return width;
     }
 
-    private calculateSize(idx) {
+    private calculateSize(idx, force?: boolean) {
         if (idx === undefined)
             idx = this.lines.length - 1;
         const text = this.lines[idx].replace(/ /g, '\u00A0');
@@ -1820,6 +1843,10 @@ export class Display extends EventEmitter {
         let font: any = 0;
         for (let f = 0; f < len; f++) {
             const format = formats[f];
+            if (force) {
+                format.width = 0;
+                format.height = 0;
+            }
             let nFormat;
             let end;
             let eText;
@@ -3290,17 +3317,14 @@ private calculateWrapLines(idx?: number, mv?: number) {
         return `<span class="line">${parts.join('')}<br></span>`;
     }
 
-    public rebuildLines() {
-        /*
+    public reCalculateLines() {
         let t;
         const ll = this.lines.length;
         for (let l = 0; l < ll; l++) {
-            t = this.buildLineDisplay(l);
-            this._viewLines[l] = t[0];
-            this._backgroundLines[l] = t[1];
+            t = this.calculateSize(l, true);
+            this._lines[l].width = t.width;
+            this._lines[l].height = t.height;
         }
-        */
-        if (this.split) this.split.dirty = true;
     }
 
     public scrollDisplay(force?: boolean) {
@@ -3563,7 +3587,9 @@ export class ScrollBar extends EventEmitter {
      * @type {number}
      * @memberof ScrollBar
      */
-    get position(): number { return this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0]); }
+    get position(): number { return Math.ceil(this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0])); }
+
+    get positionRaw(): number { return this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0]); }
 
     /**
      * An offset amount to adjust the whole scroll bar by that effects total size
@@ -3633,7 +3659,7 @@ export class ScrollBar extends EventEmitter {
      * @type {boolean}
      * @memberof ScrollBar
      */
-    get atBottom(): boolean { return Math.ceil(this.position) >= this.scrollSize; }
+    get atBottom(): boolean { return this.position >= this.scrollSize; }
 
     /**
      * Creates an instance of ScrollBar.
@@ -3844,7 +3870,7 @@ export class ScrollBar extends EventEmitter {
      */
     public scrollBy(amount: number) {
         if (amount === 0) return;
-        amount = this.position + (amount < 0 ? Math.floor(amount) : Math.ceil(amount));
+        amount = this.positionRaw + (amount < 0 ? Math.floor(amount) : Math.ceil(amount));
         amount = amount * this._ratio2;
         this.updatePosition(amount);
     }
