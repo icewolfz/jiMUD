@@ -2305,7 +2305,6 @@
         }
 
         function autoConnect() {
-            console.log(client.options.autoConnect);
             if (!autoConnectID && client.options.autoConnect && !client.connected && !client.errored)
                 autoConnectID = setTimeout(function () { client.connect(); autoConnectID = null; }, client.options.autoConnectDelay);
         }

@@ -372,6 +372,8 @@ export class Display extends EventEmitter {
             this._el.removeChild(this.split);
             this.split = null;
         }
+        if (this._VScroll.atBottom)
+            this.doUpdate(UpdateType.scrollEnd);
         this.doUpdate(UpdateType.scrollbars | UpdateType.scroll | UpdateType.view | UpdateType.scrollView);
     }
 
@@ -1127,6 +1129,8 @@ export class Display extends EventEmitter {
             this._charHeight = $(this._character).innerHeight();
             this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
             this.buildStyleSheet();
+            if (this._VScroll.atBottom)
+                this.doUpdate(UpdateType.scrollEnd);
             //update view to display any line height changes
             this.doUpdate(UpdateType.view | UpdateType.selection | UpdateType.update | UpdateType.scrollView | UpdateType.overlays);
             this.updateWindow();
