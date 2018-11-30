@@ -1129,6 +1129,7 @@ export class Display extends EventEmitter {
             this._charHeight = $(this._character).innerHeight();
             this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
             this.buildStyleSheet();
+            this.reCalculateLines();
             if (this._VScroll.atBottom)
                 this.doUpdate(UpdateType.scrollEnd);
             //update view to display any line height changes
@@ -1236,11 +1237,13 @@ export class Display extends EventEmitter {
         if (l === 0) return;
         this._viewCache = {};
         if (this.split) this.split.viewCache = {};
+        /*
         while (line < l) {
             //this._viewLines[line] = this._viewLines[line].replace(/top:\d+px/, `top:${line * this._charHeight}px`);
             //this._backgroundLines[line] = this._backgroundLines[line].replace(/top:\d+px/, `top:${line * this._charHeight}px`);
             line++;
         }
+        */
     }
 
     get WindowSize(): Size {
@@ -1726,7 +1729,7 @@ export class Display extends EventEmitter {
         return width;
     }
 
-    private calculateSize(idx) {
+    private calculateSize(idx, force?: boolean) {
         if (idx === undefined)
             idx = this.lines.length - 1;
         const text = this.lines[idx].replace(/ /g, '\u00A0');
@@ -1740,6 +1743,10 @@ export class Display extends EventEmitter {
         let font: any = 0;
         for (let f = 0; f < len; f++) {
             const format = formats[f];
+            if (force) {
+                format.width = 0;
+                format.height = 0;
+            }
             let nFormat;
             let end;
             let eText;
@@ -2946,17 +2953,14 @@ export class Display extends EventEmitter {
         return `<span class="line">${parts.join('')}<br></span>`;
     }
 
-    public rebuildLines() {
-        /*
+    public reCalculateLines() {
         let t;
         const ll = this.lines.length;
         for (let l = 0; l < ll; l++) {
-            t = this.buildLineDisplay(l);
-            this._viewLines[l] = t[0];
-            this._backgroundLines[l] = t[1];
+            t = this.calculateSize(l, true);
+            this._lines[l].width = t.width;
+            this._lines[l].height = t.height;
         }
-        */
-        if (this.split) this.split.dirty = true;
     }
 
     public scrollDisplay(force?: boolean) {
