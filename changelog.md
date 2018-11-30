@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Fixed selword, selurl, selline, selectedword, selectedurl, and selectedline for context menus
+  - Fixed auto connect firing when switching from a character with it on to one with it off
   - Code editor:
     - Rebuild recent menu as soon as opening is finished instead of de-bouncing it
     - Tab widths not correctly updated when file saved as
