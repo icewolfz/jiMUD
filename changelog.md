@@ -8,7 +8,10 @@
 - **Fixed:**
   - Fixed selword, selurl, selline, selectedword, selectedurl, and selectedline for context menus
   - Fixed auto connect firing when switching from a character with it on to one with it off
-  - Display: Correctly re-calculate widths and heights when font changed
+  - Display:
+    - Correctly re-calculate widths and heights when font changed
+    - Fixed split button not correctly locking when new lines added
+    - Fixed clear display when split view shown
   - Code editor:
     - Rebuild recent menu as soon as opening is finished instead of de-bouncing it
     - Tab widths not correctly updated when file saved as

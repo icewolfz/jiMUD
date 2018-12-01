@@ -1084,6 +1084,11 @@ export class Display extends EventEmitter {
         if (this.split) {
             this.split.viewCache = {};
             this.split.dirty = true;
+            if (this.split.shown) {
+                this.split.style.display = '';
+                this.split.shown = false;
+                if (this._scrollCorner) this._scrollCorner.classList.remove('active');
+            }
         }
         this.lineIDs = [];
         this._lines = [];
@@ -3005,7 +3010,8 @@ export class Display extends EventEmitter {
                 this._scrollCorner.innerHTML = '<i class="fa fa-minus"></i>';
                 this._scrollCorner.addEventListener('click', () => {
                     this.scrollLock = !this.scrollLock;
-                    this.scrollDisplay(true);
+                    this._VScroll.scrollBy(-this._charHeight);
+                    //this.scrollDisplay(true);
                 });
             }
             else
