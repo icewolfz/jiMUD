@@ -2422,8 +2422,14 @@ export function createFunction(name, type?, args?) {
     name = name.trim();
     if (!type || type === 'void')
         return `void ${name}(${args})\n{\n}\n\n`;
-    if (type === 'string')
-        return `${type} ${name}(${args})\n{\n   return "";\n}\n\n`;
+    switch (type) {
+        case 'string':
+            return `${type} ${name}(${args})\n{\n   return "";\n}\n\n`;
+        case 'array':
+            return `${type} ${name}(${args})\n{\n   return ({ });\n}\n\n`;
+        case 'mapping':
+            return `${type} ${name}(${args})\n{\n   return ([ ]);\n}\n\n`;
+    }
     return `${type} ${name}(${args})\n{\n   return 0;\n}\n\n`;
 }
 

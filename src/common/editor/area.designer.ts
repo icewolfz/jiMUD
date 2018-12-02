@@ -11438,7 +11438,7 @@ export class AreaDesigner extends EditorBase {
             p.peer = p.peer.trim();
             if (p.peer === 'false') { /**/ }
             if (p.peer.startsWith('(:')) {
-                data['create body'] += `   set_prevent_peer("${p.exit}",${formatFunctionPointer(p.peer)});\n`;
+                data['create body'] += `   set_prevent_peer("${p.exit}", ${formatFunctionPointer(p.peer)});\n`;
                 data['create pre'] += createFunction(p, 'string', 'string dir, object player');
             }
             else if (p.peer === 'true')
@@ -11708,7 +11708,7 @@ export class AreaDesigner extends EditorBase {
                 room.searches[0].search = `"${room.searches[0].search.trim()}"`;
             room.searches[0].message = room.searches[0].message.trim();
             if (room.searches[0].message.startsWith('(:'))
-                data['create body'] += `   set_search(${room.searches[0].search},${formatFunctionPointer(room.searches[0].message)});\n`;
+                data['create body'] += `   set_search(${room.searches[0].search}, ${formatFunctionPointer(room.searches[0].message)});\n`;
             else if (!room.searches[0].message.startsWith('"') && !room.searches[0].message.endsWith('"'))
                 data['create body'] += `   set_search(${room.searches[0].search}, "${room.searches[0].message}");\n`;
             else

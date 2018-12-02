@@ -5833,7 +5833,7 @@
                     p.peer = p.peer.trim();
                     if (p.peer === 'false') { /**/ }
                     if (p.peer.startsWith('(:')) {
-                        tmpl['create body'] += `   set_prevent_peer("${p.exit}",${formatFunctionPointer(p.peer)});\n`;
+                        tmpl['create body'] += `   set_prevent_peer("${p.exit}", ${formatFunctionPointer(p.peer)});\n`;
                         tmpl['create pre'] += createFunction(p, 'string', 'string dir, object player');
                     }
                     else if (p.peer === 'true')
