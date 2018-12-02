@@ -15,6 +15,8 @@
   - Code editor:
     - Rebuild recent menu as soon as opening is finished instead of de-bouncing it
     - Tab widths not correctly updated when file saved as
+    - Virtual area editor
+      - Fixed reloading when changes made to file
     - Code generation
       - Fixed functions that have no arguments
       - Strip colors for header name/descriptions

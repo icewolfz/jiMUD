@@ -4191,6 +4191,8 @@ export class VirtualEditor extends EditorBase {
             return;
         const root = path.dirname(this.file);
         if (file) {
+            if (root !== path.dirname(file))
+                return;
             switch (path.basename(file)) {
                 case 'virtual.terrain':
                     this.openRaw(file, this.$terrainRaw);
@@ -4211,7 +4213,7 @@ export class VirtualEditor extends EditorBase {
                     this.openRaw(file, this.$stateRaw);
                     break;
                 default:
-                    if (file === this.filename) {
+                    if (file === this.file) {
                         this.$opened[this.filename] = new Date().getTime();
                         this.$mapRaw.value = this.read();
                         this.doUpdate(UpdateType.buildRooms | UpdateType.buildMap);
