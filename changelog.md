@@ -17,6 +17,7 @@
     - Tab widths not correctly updated when file saved as
     - Virtual area editor
       - Fixed reloading when changes made to file
+      - Always add a trailing line as read_file on server seems to not work with out it correctly
     - Code generation
       - Fixed functions that have no arguments
       - Strip colors for header name/descriptions
