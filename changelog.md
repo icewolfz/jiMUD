@@ -12,6 +12,7 @@
     - Correctly re-calculate widths and heights when font changed
     - Fixed split button not correctly locking when new lines added
     - Fixed clear display when split view shown
+    - Fixed Yet another rounding issue with scrollbars
   - Code editor:
     - Rebuild recent menu as soon as opening is finished instead of de-bouncing it
     - Tab widths not correctly updated when file saved as

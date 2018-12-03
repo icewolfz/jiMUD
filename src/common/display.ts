@@ -3229,7 +3229,7 @@ export class ScrollBar extends EventEmitter {
      * @type {number}
      * @memberof ScrollBar
      */
-    get position(): number { return Math.ceil(this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0])); }
+    get position(): number { return Math.round(this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0])); }
 
     get positionRaw(): number { return this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0]); }
 
