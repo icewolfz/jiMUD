@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.12
+## v0.6.12 2018-12-03
 
 - **Changed:**
   - Update electron-updater 4.0.4 to 4.0.5
