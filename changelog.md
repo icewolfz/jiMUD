@@ -6,7 +6,7 @@
   - Update electron-updater 4.0.4 to 4.0.5
   - Display: Make selected background color transparent
 - **Fixed:**
-  - Fixed selword, selurl, selline, selectedword, selectedurl, and selectedline for context menus
+  - Fixed ${selword}, ${selurl}, ${selline}, ${selectedword}, ${selectedurl}, and ${selectedline} for context menus
   - Fixed auto connect firing when switching from a character with it on to one with it off
   - Display:
     - Correctly re-calculate widths and heights when font changed
