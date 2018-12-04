@@ -2,6 +2,10 @@
 
 ## v0.6.13
 
+- **Fixed:**
+  - Display:
+    - Fixed issue with url context menu
+
 ## v0.6.12 2018-12-03
 
 - **Changed:**

@@ -1626,7 +1626,7 @@ export class Display extends EventEmitter {
                         continue;
                     let end = format.offset;
                     l++;
-                    while (l++ < fl) {
+                    for (; l < fl; l++) {
                         const nFormat = formats[l];
                         if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
                             continue;
