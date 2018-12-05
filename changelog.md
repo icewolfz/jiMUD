@@ -5,6 +5,8 @@
 - **Fixed:**
   - Display:
     - Fixed issue with url context menu
+  - Code editor:
+    - Area designer: Fixed delete and cut correctly removing rooms
 
 ## v0.6.12 2018-12-03
 

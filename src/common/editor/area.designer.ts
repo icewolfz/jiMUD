@@ -8337,7 +8337,7 @@ export class AreaDesigner extends EditorBase {
                 while (sl--) {
                     const or = this.$selectedRooms[sl];
                     //has external rooms so remove them as they are now tied to the room
-                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
+                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z); //, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
                     if (this.$focusedRoom.at(or.x, or.y, or.z))
                         this.$focusedRoom = this.$selectedRooms[sl];
                     this.setRoom(this.$selectedRooms[sl]);
@@ -8460,7 +8460,7 @@ export class AreaDesigner extends EditorBase {
                 let sl = this.$selectedRooms.length;
                 while (sl--) {
                     const or = this.$selectedRooms[sl];
-                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
+                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z); //, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
                     if (this.$focusedRoom.at(or.x, or.y, or.z))
                         this.$focusedRoom = this.$selectedRooms[sl];
                     this.setRoom(this.$selectedRooms[sl]);
