@@ -9623,94 +9623,97 @@ export class AreaDesigner extends EditorBase {
             ctx.fillStyle = room.background;
             f = true;
         }
-        else if (room.terrain && room.terrain.length) {
-            //spellchecker:disable
-            switch (room.terrain) {
-                case 'wood':
-                    ctx.fillStyle = '#966F33';
-                    f = true;
-                    break;
-                case 'jungle':
-                    ctx.fillStyle = '#347C2C';
-                    f = true;
-                    break;
-                case 'forest':
-                    ctx.fillStyle = '#4E9258';
-                    f = true;
-                    break;
-                case 'grass':
-                case 'grassland':
-                case 'plains':
-                case 'prairie':
-                case 'savannah':
-                    ctx.fillStyle = '#4AA02C';
-                    f = true;
-                    break;
-                case 'desert':
-                case 'dirt':
-                case 'dirtroad':
-                case 'beach':
-                case 'sand':
-                case 'sanddesert':
-                    ctx.fillStyle = '#C2B280';
-                    f = true;
-                    break;
-                case 'snow':
-                    ctx.fillStyle = '#F0F8FF';
-                    f = true;
-                    break;
-                case 'tundra':
-                case 'icesheet':
-                    ctx.fillStyle = '#368BC1';
-                    f = true;
-                    break;
-                case 'underwater':
-                case 'water':
-                case 'lake':
-                case 'river':
-                    ctx.fillStyle = '#EBF4FA';
-                    f = true;
-                    break;
-                case 'ocean':
-                    ctx.fillStyle = '#C2DFFF';
-                    f = true;
-                    break;
-                case 'bog':
-                case 'city':
-                case 'cliff':
-                case 'highmountain':
-                case 'hills':
-                case 'mountain':
-                case 'swamp':
-                    f = false;
-                    break;
-                case 'farmland':
-                    f = true;
-                    ctx.fillStyle = '#A9DFBF';
-                    break;
-                case 'rockdesert':
-                    ctx.fillStyle = '#6E2C00';
-                    f = true;
-                    break;
-                case 'pavedroad':
-                    ctx.fillStyle = '#D0D3D4';
-                    f = true;
-                    break;
-                case 'cobble':
-                case 'rocky':
-                case 'stone':
-                    ctx.fillStyle = '#D5DBDB';
-                    f = true;
-                    break;
-                default:
-                    f = false;
-                    break;
+        else {
+            const base = this.$area.baseRooms[room.type];
+            const terrain = room.terrain || base.terrain;
+            if (terrain && terrain.length) {
+                //spellchecker:disable
+                switch (terrain) {
+                    case 'wood':
+                        ctx.fillStyle = '#966F33';
+                        f = true;
+                        break;
+                    case 'jungle':
+                        ctx.fillStyle = '#347C2C';
+                        f = true;
+                        break;
+                    case 'forest':
+                        ctx.fillStyle = '#4E9258';
+                        f = true;
+                        break;
+                    case 'grass':
+                    case 'grassland':
+                    case 'plains':
+                    case 'prairie':
+                    case 'savannah':
+                        ctx.fillStyle = '#4AA02C';
+                        f = true;
+                        break;
+                    case 'desert':
+                    case 'dirt':
+                    case 'dirtroad':
+                    case 'beach':
+                    case 'sand':
+                    case 'sanddesert':
+                        ctx.fillStyle = '#C2B280';
+                        f = true;
+                        break;
+                    case 'snow':
+                        ctx.fillStyle = '#F0F8FF';
+                        f = true;
+                        break;
+                    case 'tundra':
+                    case 'icesheet':
+                        ctx.fillStyle = '#368BC1';
+                        f = true;
+                        break;
+                    case 'underwater':
+                    case 'water':
+                    case 'lake':
+                    case 'river':
+                        ctx.fillStyle = '#EBF4FA';
+                        f = true;
+                        break;
+                    case 'ocean':
+                        ctx.fillStyle = '#C2DFFF';
+                        f = true;
+                        break;
+                    case 'bog':
+                    case 'city':
+                    case 'cliff':
+                    case 'highmountain':
+                    case 'hills':
+                    case 'mountain':
+                    case 'swamp':
+                        f = false;
+                        break;
+                    case 'farmland':
+                        f = true;
+                        ctx.fillStyle = '#A9DFBF';
+                        break;
+                    case 'rockdesert':
+                        ctx.fillStyle = '#6E2C00';
+                        f = true;
+                        break;
+                    case 'pavedroad':
+                        ctx.fillStyle = '#D0D3D4';
+                        f = true;
+                        break;
+                    case 'cobble':
+                    case 'rocky':
+                    case 'stone':
+                        ctx.fillStyle = '#D5DBDB';
+                        f = true;
+                        break;
+                    default:
+                        f = false;
+                        break;
+                }
+                //spellchecker:enable
             }
-            //spellchecker:enable
+            else
+                f = false;
         }
-        else
-            f = false;
-
         if (room.empty)
             ctx.strokeStyle = '#eae9e9';
         else
