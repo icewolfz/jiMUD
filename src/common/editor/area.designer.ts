@@ -29,6 +29,7 @@ interface AreaDesignerOptions extends EditorOptions {
 }
 
 export enum RoomFlags {
+    Underwater = 1 << 16,
     No_MGive = 1 << 15,
     Melee_As_Ability = 1 << 14,
     No_Dirt = 1 << 13,
@@ -4494,7 +4495,7 @@ export class AreaDesigner extends EditorBase {
                                 finish: e => {
                                     const nMonster = ed.value.clone();
                                     nMonster.notes = e.data['mon-wiz-notes'];
-                                    nMonster.flags = RoomFlags.None;
+                                    nMonster.flags = MonsterFlags.None;
                                     nMonster.type = e.data['mon-wiz-type'].value;
                                     nMonster.level = +e.data['mon-wiz-level'];
                                     nMonster.alignment = e.data['mon-wiz-alignment'];
@@ -4903,6 +4904,7 @@ export class AreaDesigner extends EditorBase {
                                     'room-wiz-no-map': (ed.value.flags & RoomFlags.No_Map_Send) === RoomFlags.No_Map_Send,
                                     'room-wiz-hide-exits': (ed.value.flags & RoomFlags.Hide_Exits) === RoomFlags.Hide_Exits,
                                     'room-wiz-no-forage': (ed.value.flags & RoomFlags.No_Forage) === RoomFlags.No_Forage,
+                                    'room-wiz-underwater': (ed.value.flags & RoomFlags.Underwater) === RoomFlags.Underwater,
                                     'room-wiz-forage': '' + ed.value.forage,
                                     'room-wiz-max-forage': '' + ed.value.maxForage,
                                     'room-wiz-secret-exit': ed.value.secretExit,
@@ -4963,6 +4965,8 @@ export class AreaDesigner extends EditorBase {
                                         nRoom.flags |= RoomFlags.Enable_Pk;
                                     if (e.data['room-wiz-no-dirt'])
                                         nRoom.flags |= RoomFlags.No_Dirt;
+                                    if (e.data['room-wiz-underwater'])
+                                        nRoom.flags |= RoomFlags.Underwater;
                                     nRoom.forage = +e.data['room-wiz-forage'];
                                     nRoom.maxForage = +e.data['room-wiz-max-forage'];
                                     nRoom.secretExit = e.data['room-wiz-secret-exit'];
@@ -5478,7 +5482,7 @@ export class AreaDesigner extends EditorBase {
                                     }
                                     const nMonster = ed.value.clone();
                                     nMonster.notes = e.data['mon-wiz-notes'];
-                                    nMonster.flags = RoomFlags.None;
+                                    nMonster.flags = MonsterFlags.None;
                                     nMonster.type = e.data['mon-wiz-type'].value;
                                     nMonster.level = +e.data['mon-wiz-level'];
                                     nMonster.alignment = e.data['mon-wiz-alignment'];
@@ -11388,7 +11392,8 @@ export class AreaDesigner extends EditorBase {
             tmp.push('"no dirt" : 1');
         if (room.dirtType !== base.dirtType)
             tmp.push(`"dirt type" : "${room.dirtType}"`);
-
+        if ((room.flags & RoomFlags.Underwater) === RoomFlags.Underwater && (base.flags & RoomFlags.Underwater) !== RoomFlags.Underwater)
+            tmp.push('"underwater" : 1');
         if ((room.baseFlags & RoomBaseFlags.No_Monsters) === RoomBaseFlags.No_Monsters && (base.baseFlags & RoomBaseFlags.No_Monsters) !== RoomBaseFlags.No_Monsters)
             tmp.push(`"no clone monsters" : 1`);
         if ((room.baseFlags & RoomBaseFlags.No_Objects) === RoomBaseFlags.No_Objects && (base.baseFlags & RoomBaseFlags.No_Objects) !== RoomBaseFlags.No_Objects)

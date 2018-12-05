@@ -1770,6 +1770,11 @@
                     <input type="checkbox" id="room-wiz-no-mgive" /> No mgive
                 </label>
             </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="room-wiz-underwater" /> Underwater
+                </label>
+            </div>            
         </div>
         <div id="room-wizard-combat-properties">
             <div class="col-sm-3 form-group">
@@ -5279,6 +5284,7 @@
                             e.page.querySelector('#room-wiz-secret-exit').value = e.wizard.defaults['room-wiz-secret-exit'] || '';
                             e.page.querySelector('#room-wiz-temperature').value = e.wizard.defaults['room-wiz-temperature'] || '0';
                             e.page.querySelector('#room-wiz-no-mgive').checked = e.wizard.defaults['room-wiz-no-mgive'] || false;
+                            e.page.querySelector('#room-wiz-underwater').checked = e.wizard.defaults['room-wiz-underwater'] || false;
                         }
                     }),
                     new WizardPage({
@@ -5520,6 +5526,7 @@
                             if (data['room-wiz-forage'] >= 0) sum += '<div><span style="font-weight:bold">' + data['room-wiz-forage'] + ':</span> Yes</div>';
                             if (data['room-wiz-no-dirt']) sum += '<div><span style="font-weight:bold">No dirt:</span> Yes</div>';
                             if (data['room-wiz-no-mgive']) sum += '<div><span style="font-weight:bold">No mgive:</span> Yes</div>';
+                            if (data['room-wiz-underwater']) sum += '<div><span style="font-weight:bold">Underwater:</span> Yes</div>';
                             if (data['room-wiz-max-forage'] > 0)
                                 sum += '<div><span style="font-weight:bold">Max forage:</span> ' + data['room-wiz-max-forage'] + '</div>';
                             if (data['room-wiz-dirt'].length > 0)
@@ -5790,6 +5797,9 @@
                     tmp.push('"no dirt" : 1');
                 if (data['room-wiz-dirt'].length > 0)
                     tmp.push(`"dirt type" : "${data['room-wiz-dirt']}"`);
+                if (data['room-wiz-underwater'])
+                    tmp.push('"underwater" : 1');
+
                 data['room-wiz-secret-exit'] = data['room-wiz-secret-exit'].trim();
                 if (data['room-wiz-secret-exit'] === 'false') { /**/ }
                 else if (data['room-wiz-secret-exit'].startsWith('(:')) {

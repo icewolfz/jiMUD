@@ -4,7 +4,10 @@
 
 - **New:**
   - Code editor:
-    - Area designer: Room background color will now set based on inherited type when possible
+    - Area designer:
+      - Room background color will now set based on inherited type when possible
+      - Add underwater property flag
+    - Add underwater property to room wizard
 - **Fixed:**
   - Display:
     - Fixed issue with url context menu
