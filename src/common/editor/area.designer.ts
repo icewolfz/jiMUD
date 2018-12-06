@@ -10914,7 +10914,8 @@ export class AreaDesigner extends EditorBase {
                         if (this.$cancel)
                             throw new Error('Canceled');
                         const r = this.$area.rooms[z][y][x];
-                        if (r.empty) continue;
+                        const base = this.$area.baseRooms[r.type] || this.$area.baseRooms[this.$area.defaultRoom] || new Room(0, 0, 0);
+                        if (r.empty || r.equals(base, true)) continue;
                         const name = (r.subArea && r.subArea.length > 0 ? r.subArea : data.area).toLowerCase();
                         if (!counts[name])
                             counts[name] = 1;
