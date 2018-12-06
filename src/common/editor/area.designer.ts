@@ -814,14 +814,18 @@ class Area {
                 }
             }
         }
-        if (data.baseRooms)
+        if (data.baseRooms) {
+            area.baseRooms = {};
             Object.keys(data.baseRooms).forEach(k => {
                 area.baseRooms[k] = new Room(0, 0, 0, data.baseRooms[k]);
             });
-        if (data.baseMonsters)
+        }
+        if (data.baseMonsters) {
+            area.baseMonsters = {};
             Object.keys(data.baseMonsters).forEach(k => {
                 area.baseMonsters[k] = new Monster(data.baseMonsters[k]);
             });
+        }
         area.defaultRoom = data.defaultRoom || 'base';
         area.defaultMonster = data.defaultMonster || 'base';
         return area;
@@ -3108,7 +3112,7 @@ export class AreaDesigner extends EditorBase {
 
             }
             else if (prop === 'type') {
-                const nDefault = this.$area.baseRooms[newValue] || new Room(0, 0, 0);
+                const nDefault = this.$area.baseRooms[newValue] || this.$area.baseRooms[this.$area.defaultRoom] || new Room(0, 0, 0);
                 while (sl--) {
                     const curr = selected[sl];
                     const old = this.getRoom(curr.x, curr.y, curr.z);
@@ -4610,8 +4614,8 @@ export class AreaDesigner extends EditorBase {
         this.$propertiesEditor.monsterGrid.on('cut', (e) => {
             this.pushUndo(undoAction.delete, undoType.properties, {
                 property: 'baseMonsters', values: e.data.map(r => {
-                    delete this.$area.baseMonsters[r.name];
-                    return { name: r.name, value: r.monster };
+                    delete this.$area.baseMonsters[r.data.name];
+                    return { name: r.data.name, value: r.data.monster };
                 })
             });
             this.emit('supports-changed');
@@ -4648,8 +4652,8 @@ export class AreaDesigner extends EditorBase {
             else {
                 this.pushUndo(undoAction.delete, undoType.properties, {
                     property: 'baseMonsters', values: e.data.map(r => {
-                        delete this.$area.baseMonsters[r.name];
-                        return { name: r.name, value: r.monster };
+                        delete this.$area.baseMonsters[r.data.name];
+                        return { name: r.data.name, value: r.data.monster };
                     })
                 });
                 this.changed = true;
@@ -5142,8 +5146,8 @@ export class AreaDesigner extends EditorBase {
         this.$propertiesEditor.roomGrid.on('cut', (e) => {
             this.pushUndo(undoAction.delete, undoType.properties, {
                 property: 'baseRooms', values: e.data.map(r => {
-                    delete this.$area.baseRooms[r.name];
-                    return { name: r.name, value: r.room };
+                    delete this.$area.baseRooms[r.data.name];
+                    return { name: r.data.name, value: r.data.room };
                 })
             });
             this.emit('supports-changed');
@@ -5181,8 +5185,8 @@ export class AreaDesigner extends EditorBase {
             else {
                 this.pushUndo(undoAction.delete, undoType.properties, {
                     property: 'baseRooms', values: e.data.map(r => {
-                        delete this.$area.baseRooms[r.name];
-                        return { name: r.name, value: r.room };
+                        delete this.$area.baseRooms[r.data.name];
+                        return { name: r.data.name, value: r.data.room };
                     })
                 });
                 this.changed = true;
@@ -8341,7 +8345,7 @@ export class AreaDesigner extends EditorBase {
                 while (sl--) {
                     const or = this.$selectedRooms[sl];
                     //has external rooms so remove them as they are now tied to the room
-                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z); //, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
+                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
                     if (this.$focusedRoom.at(or.x, or.y, or.z))
                         this.$focusedRoom = this.$selectedRooms[sl];
                     this.setRoom(this.$selectedRooms[sl]);
@@ -8464,7 +8468,7 @@ export class AreaDesigner extends EditorBase {
                 let sl = this.$selectedRooms.length;
                 while (sl--) {
                     const or = this.$selectedRooms[sl];
-                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z); //, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
+                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom); //, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
                     if (this.$focusedRoom.at(or.x, or.y, or.z))
                         this.$focusedRoom = this.$selectedRooms[sl];
                     this.setRoom(this.$selectedRooms[sl]);
@@ -9623,13 +9627,13 @@ export class AreaDesigner extends EditorBase {
             ctx.strokeRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
         }
         ctx.beginPath();
+        const base = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom] || new Room(0, 0, 0);
         if (room.background && room.background.length) {
             ctx.fillStyle = room.background;
             f = true;
         }
         else {
-            const base = this.$area.baseRooms[room.type];
-            const terrain = room.terrain || base.terrain;
+            const terrain = room.terrain || (base ? base.terrain : 0);
             if (terrain && terrain.length) {
                 //spellchecker:disable
                 switch (terrain) {
@@ -9718,7 +9722,7 @@ export class AreaDesigner extends EditorBase {
             else
                 f = false;
         }
-        if (room.empty)
+        if (room.empty || room.equals(base))
             ctx.strokeStyle = '#eae9e9';
         else
             ctx.strokeStyle = 'black';
@@ -10348,7 +10352,7 @@ export class AreaDesigner extends EditorBase {
             this.$roomPreview.objects.textContent = '';
         }
         else {
-            const base: Room = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
+            const base: Room = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom] || new Room(0, 0, 0);
             if (!room.short || room.short.trim().length === 0)
                 str = base.short;
             else
@@ -11003,7 +11007,7 @@ export class AreaDesigner extends EditorBase {
         data['create arguments'] = '';
         data['reset body'] = '';
         data['reset post'] = '';
-        const base: Room = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
+        const base: Room = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom] || new Room(0, 0, 0);
         tmp2 = room.objects.filter(o => this.$area.objects[o.id] && (o.minAmount > 0 || o.unique));
         tmp3 = room.monsters.filter(o => this.$area.monsters[o.id] && (o.minAmount > 0 || o.unique));
         if (baseRoom && (room.forage !== base.forage || doors.length > 0 || tmp2.length !== 0 || tmp3.length !== 0)) {

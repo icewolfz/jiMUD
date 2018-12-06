@@ -13,7 +13,10 @@
     - Fixed issue with url context menu
     - Fixed split button scrolling in stead of toggling
   - Code editor:
-    - Area designer: Fixed delete and cut correctly removing rooms
+    - Area designer:
+      - Fixed delete and cut correctly removing rooms
+      - Fixed base room delete/cut
+      - Fixed base monster delete/cut
 
 ## v0.6.12 2018-12-03
 
