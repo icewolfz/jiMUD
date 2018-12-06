@@ -226,6 +226,7 @@ export class Room {
     //room wizard supports
     public forageObjects: ObjectInfo[] = [];
     public rummageObjects: ObjectInfo[] = [];
+    public properties: Property[] = [];
 
     public exitsDetails = {};
     public terrain = '';
@@ -293,6 +294,7 @@ export class Room {
                 case 'sounds':
                 case 'smells':
                 case 'searches':
+                case 'properties':
                     if (this[prop].length !== room[prop].length)
                         return false;
                     if (this[prop].filter((v, i) => room[prop][i] !== v).length !== 0)
@@ -360,6 +362,7 @@ export class Room {
         this.rummageObjects = [];
         this.monsters = [];
         this.reads = [];
+        this.properties = [];
     }
 
     public at(x, y, z?) {
@@ -482,6 +485,7 @@ class Monster {
     public askNoTopic: string = '';
     public askResponseType: MonsterResponseType = MonsterResponseType.say;
     public askTopics: MonsterTopic[] = [];
+    public properties: Property[] = [];
 
     public reputationGroup: string = '';
     public reputations: MonsterReputation[] = [];
@@ -595,6 +599,7 @@ class Monster {
         this.askTopics = [];
         this.reputations = [];
         this.emotes = [];
+        this.properties = [];
     }
 }
 
@@ -3158,6 +3163,7 @@ export class AreaDesigner extends EditorBase {
                         case 'smells':
                         case 'searches':
                         case 'items':
+                        case 'properties':
                             oldValues[sl] = copy(old[prop]);
                             curr[prop] = copy(newValue);
                             this.RoomChanged(curr, old, true);
@@ -4075,6 +4081,114 @@ export class AreaDesigner extends EditorBase {
                 }
             },
             {
+                property: 'properties',
+                label: 'Custom',
+                group: 'Properties',
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
+                sort: 9,
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        columns: [
+                            {
+                                label: 'Type',
+                                field: 'type',
+                                width: 150,
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: [
+                                            { value: 0, display: 'normal' },
+                                            { value: 1, display: 'temporary' }
+                                        ]
+                                    }
+                                },
+                                formatter: (data) => {
+                                    if (!data) return '';
+                                    switch (data.cell) {
+                                        case 0:
+                                            return 'normal';
+                                        case 1:
+                                            return 'temporary';
+                                    }
+                                    return '';
+                                },
+                                tooltipFormatter: (data) => {
+                                    if (!data) return '';
+                                    switch (data.cell) {
+                                        case 0:
+                                            return 'normal';
+                                        case 1:
+                                            return 'temporary';
+                                    }
+                                    return '';
+                                }
+                            },
+                            {
+                                label: 'Name',
+                                field: 'name',
+                                width: 150,
+                                editor: {
+                                    type: EditorType.dropdown,
+                                    options: {
+                                        data: [
+                                            '[effect] bonus',
+                                            'cold element bonus',
+                                            'frost element bonus',
+                                            'ice element bonus',
+                                            'cold element penalty',
+                                            'frost element penalty',
+                                            'ice element penalty',
+                                            'lightning element bonus',
+                                            'lightning element penalty',
+                                            'fire element bonus',
+                                            'fire element penalty',
+                                            'heat element bonus',
+                                            'heat element penalty',
+                                            'water element bonus',
+                                            'water element penalty',
+                                            'hide exits',
+                                            'no convert',
+                                            'no scry',
+                                            'no dirt',
+                                            'no cauterize',
+                                            'no food decay',
+                                            'no shock',
+                                            'nonetrackable',
+                                            'melee as ability',
+                                            'crafting tool',
+                                            'crafting quality',
+                                            'crafting enchantment',
+                                            'no range throw',
+                                            'no range shoot'
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Value',
+                                field: 'value',
+                                spring: true,
+                                width: 200
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                type: 1,
+                                name: '',
+                                value: ''
+                            };
+                        },
+                        type: 'property',
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
+                    }
+                }
+            },
+            {
                 property: 'light',
                 group: 'Properties',
                 sort: 0,
@@ -4278,8 +4392,7 @@ export class AreaDesigner extends EditorBase {
                             rooms.push(room);
                             nRoom = new Room(room.x, room.y, room.z, this.$area.baseRooms[n], n);
                         }
-                        else
-                        {
+                        else {
                             if (!room.empty || room.type !== this.$area.defaultRoom)
                                 continue;
                             room.type = n;
@@ -4538,7 +4651,8 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-ask-response': '' + (ed.value.askResponseType || 0),
                                     'mon-wiz-ask-topics': ed.value.askTopics,
                                     'mon-wiz-reputation-group': ed.value.reputationGroup,
-                                    'mon-wiz-reputations': ed.value.reputations
+                                    'mon-wiz-reputations': ed.value.reputations,
+                                    'mon-wiz-properties': ed.value.properties || []
                                 },
                                 finish: e => {
                                     const nMonster = ed.value.clone();
@@ -4617,6 +4731,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.speechChance = +e.data['mon-wiz-speech-chance'];
                                     nMonster.emotesChanceCombat = +e.data['mon-wiz-emotes-chance-combat'];
                                     nMonster.speechChanceCombat = +e.data['mon-wiz-speech-chance-combat'];
+                                    nMonster.properties = e.data['mon-wiz-properties'] || [];
 
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;
@@ -4971,12 +5086,14 @@ export class AreaDesigner extends EditorBase {
                                     'room-wiz-searches': ed.value.searches,
                                     'room-wiz-forage-objects': ed.value.forageObjects,
                                     'room-wiz-rummage-objects': ed.value.rummage,
-                                    'room-wiz-reads': ed.value.reads
+                                    'room-wiz-reads': ed.value.reads,
+                                    'room-wiz-properties': ed.value.properties
                                 },
                                 finish: e => {
                                     const nRoom = ed.value.clone();
                                     nRoom.notes = e.data['room-wiz-notes'];
                                     nRoom.reads = e.data['room-wiz-reads'];
+                                    nRoom.properties = e.data['room-wiz-properties'];
                                     nRoom.flags = RoomFlags.None;
                                     nRoom.type = e.data['room-wiz-type'].value;
                                     nRoom.terrain = e.data['room-wiz-terrain'];
@@ -5521,7 +5638,8 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-ask-response': '' + (ed.value.askResponseType || 0),
                                     'mon-wiz-ask-topics': ed.value.askTopics,
                                     'mon-wiz-reputation-group': ed.value.reputationGroup,
-                                    'mon-wiz-reputations': ed.value.reputations
+                                    'mon-wiz-reputations': ed.value.reputations,
+                                    'mon-wiz-properties': ed.value.properties || []
                                 },
                                 finish: e => {
                                     if (ed.editors) {
@@ -5602,6 +5720,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.speechChance = e.data['mon-wiz-speech-chance'];
                                     nMonster.emotesChanceCombat = e.data['mon-wiz-emotes-chance-combat'];
                                     nMonster.speechChanceCombat = e.data['mon-wiz-speech-chance-combat'];
+                                    nMonster.properties = e.data['mon-wiz-properties'] || [];
 
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;
@@ -6421,7 +6540,7 @@ export class AreaDesigner extends EditorBase {
                                         }
                                     }),
                                     new WizardDataGridPage({
-                                        title: 'Advanced properties',
+                                        title: 'Custom properties',
                                         id: 'obj-properties',
                                         clipboard: 'jiMUD/',
                                         columns: [
@@ -11047,6 +11166,8 @@ export class AreaDesigner extends EditorBase {
         const doors = eArray.filter(r => r.exit.length > 0 && r.door && r.door.length > 0 && !r.climb);
         const exits = eArray.filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && !r.climb);
         const climbs = eArray.filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && r.climb);
+        const props = [];
+        const tempProps = [];
         data.doc = [];
         data.includes = '';
         data.description = '';
@@ -11062,7 +11183,7 @@ export class AreaDesigner extends EditorBase {
         if (baseRoom && (room.forage !== base.forage || doors.length > 0 || tmp2.length !== 0 || tmp3.length !== 0)) {
             data['reset body'] += '\n';
             if (room.forage !== base.forage)
-                data['reset body'] += `   set_property('forage', ${room.forage});\n`;
+                props.push(`'forage' : ${room.forage}`);
             doors.forEach(r => {
                 if (r.key.length !== 0)
                     data['reset body'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
@@ -11120,7 +11241,7 @@ export class AreaDesigner extends EditorBase {
         else if (!baseRoom && (room.forage !== base.forage || doors.length > 0 || tmp2.length !== 0 || tmp3.length !== 0)) {
             data['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
             if (room.forage !== base.forage)
-                data['create post'] += `   set_property('forage', ${room.forage});\n`;
+                props.push(`'forage' : ${room.forage}`);
             doors.forEach(r => {
                 data['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
                 data['create post'] += `   set_open("${r.door}", ${r.closed ? 0 : 1});\n`;
@@ -11414,65 +11535,121 @@ export class AreaDesigner extends EditorBase {
 
         if (room.terrain !== base.terrain)
             data['create body'] += `   set_terrain("${room.terrain}");\n`;
-        tmp = [];
+
         if (room.light !== base.light)
-            tmp.push(`"light" : ${room.light}`);
+            props.push(`"light" : ${room.light}`);
         if ((room.flags & RoomFlags.Indoors) === RoomFlags.Indoors && (base.flags & RoomFlags.Indoors) !== RoomFlags.Indoors)
-            tmp.push('"indoors" : 1');
+            props.push('"indoors" : 1');
         if ((room.flags & RoomFlags.No_Magic) === RoomFlags.No_Magic && (base.flags & RoomFlags.No_Magic) !== RoomFlags.No_Magic)
-            tmp.push('"no magic" : 1');
+            props.push('"no magic" : 1');
         if ((room.flags & RoomFlags.No_Attack) === RoomFlags.No_Attack && (base.flags & RoomFlags.No_Attack) !== RoomFlags.No_Attack)
-            tmp.push('"no attack" : 1');
+            props.push('"no attack" : 1');
         if ((room.flags & RoomFlags.No_Scry) === RoomFlags.No_Scry && (base.flags & RoomFlags.No_Scry) !== RoomFlags.No_Scry)
-            tmp.push('"no scry" : 1');
+            props.push('"no scry" : 1');
         if ((room.flags & RoomFlags.No_Teleport) === RoomFlags.No_Teleport && (base.flags & RoomFlags.No_Teleport) !== RoomFlags.No_Teleport)
-            tmp.push('"no teleport" : 1');
+            props.push('"no teleport" : 1');
         if ((room.flags & RoomFlags.No_MGive) === RoomFlags.No_MGive && (base.flags & RoomFlags.No_MGive) !== RoomFlags.No_MGive)
-            tmp.push('"no mgive" : 1');
+            props.push('"no mgive" : 1');
         if ((room.flags & RoomFlags.Council) === RoomFlags.Council && (base.flags & RoomFlags.Council) !== RoomFlags.Council)
-            tmp.push('"council" : 1');
+            props.push('"council" : 1');
         if ((room.flags & RoomFlags.No_Map_Send) === RoomFlags.No_Map_Send && (base.flags & RoomFlags.No_Map_Send) !== RoomFlags.No_Map_Send)
-            tmp.push('"no send info" : 1');
+            props.push('"no send info" : 1');
         if ((room.flags & RoomFlags.Melee_As_Ability) === RoomFlags.Melee_As_Ability && (base.flags & RoomFlags.Melee_As_Ability) !== RoomFlags.Melee_As_Ability)
-            tmp.push('"melee as ability" : 1');
+            props.push('"melee as ability" : 1');
         if ((room.flags & RoomFlags.Enable_Pk) === RoomFlags.Enable_Pk && (base.flags & RoomFlags.Enable_Pk) !== RoomFlags.Enable_Pk)
-            tmp.push('"enable pk" : 1');
+            props.push('"enable pk" : 1');
         if ((room.flags & RoomFlags.Hide_Exits) === RoomFlags.Hide_Exits && (base.flags & RoomFlags.Hide_Exits) !== RoomFlags.Hide_Exits)
-            tmp.push('"hide exits" : 1');
+            props.push('"hide exits" : 1');
         if ((room.flags & RoomFlags.No_Forage) === RoomFlags.No_Forage && (base.flags & RoomFlags.No_Forage) !== RoomFlags.No_Forage)
-            tmp.push('"no forage" : 1');
+            props.push('"no forage" : 1');
         if ((room.flags & RoomFlags.No_Dirt) === RoomFlags.No_Dirt && (base.flags & RoomFlags.No_Dirt) !== RoomFlags.No_Dirt)
-            tmp.push('"no dirt" : 1');
+            props.push('"no dirt" : 1');
         if (room.dirtType !== base.dirtType)
-            tmp.push(`"dirt type" : "${room.dirtType}"`);
+            props.push(`"dirt type" : "${room.dirtType}"`);
         if ((room.flags & RoomFlags.Underwater) === RoomFlags.Underwater && (base.flags & RoomFlags.Underwater) !== RoomFlags.Underwater)
-            tmp.push('"underwater" : 1');
+            props.push('"underwater" : 1');
         if ((room.baseFlags & RoomBaseFlags.No_Monsters) === RoomBaseFlags.No_Monsters && (base.baseFlags & RoomBaseFlags.No_Monsters) !== RoomBaseFlags.No_Monsters)
-            tmp.push(`"no clone monsters" : 1`);
+            props.push(`"no clone monsters" : 1`);
         if ((room.baseFlags & RoomBaseFlags.No_Objects) === RoomBaseFlags.No_Objects && (base.baseFlags & RoomBaseFlags.No_Objects) !== RoomBaseFlags.No_Objects)
-            tmp.push(`"no clone objects" : 1`);
+            props.push(`"no clone objects" : 1`);
+
+        if (room.properties.length > 0) {
+            room.properties.forEach(b => {
+                b.value = b.value.trim();
+                if (b.value.startsWith('(:')) {
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                    else
+                        props.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                    data['create pre'] += createFunction(b.value);
+                }
+                else if (b.value.startsWith('({')) {
+                    tmp2 = b.value.substring(2);
+                    if (tmp2.endsWith('})'))
+                        tmp2 = tmp2.substr(0, tmp2.length - 2);
+                    tmp2 = tmp2.split(',');
+                    tmp2 = tmp2.map(t => {
+                        t = t.trim();
+                        if ((t.startsWith('"') && t.endsWith('"')) || t.match(/^\d+$/))
+                            return t;
+                        else if (t.startsWith('(:')) {
+                            t = formatFunctionPointer(t);
+                            data['create pre'] += createFunction(t);
+                            return t;
+                        }
+                        return `"${t}"`;
+                    });
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                    else
+                        props.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                }
+                else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : ${b.value}`);
+                    else
+                        props.push(`"${b.name}" : ${b.value}`);
+                }
+                else {
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : "${b.value}"`);
+                    else
+                        props.push(`"${b.name}" : "${b.value}"`);
+                }
+            });
+        }
 
         room.secretExit = room.secretExit.trim();
         if (room.secretExit !== base.secretExit.trim()) {
             if (room.secretExit === 'false') { /**/ }
             else if (room.secretExit.startsWith('(:')) {
-                tmp.push(`"secret exit" : ${formatFunctionPointer(room.secretExit, true)})`);
+                props.push(`"secret exit" : ${formatFunctionPointer(room.secretExit, true)})`);
                 data['create pre'] += createFunction(room.secretExit, 'string', 'object room, object player');
             }
             else if (room.secretExit === 'true')
-                tmp.push(`"secret exit" : 1`);
+                props.push(`"secret exit" : 1`);
             else if (typeof room.secretExit === 'string' && parseFloat(room.secretExit).toString() === room.secretExit)
-                tmp.push(`"secret exit" : ${room.secretExit}`);
+                props.push(`"secret exit" : ${room.secretExit}`);
             else if (room.secretExit.length > 0) {
-                tmp.push(`"secret exit" : "${room.secretExit.replace(/"/g, '\\"')}"`);
+                props.push(`"secret exit" : "${room.secretExit.replace(/"/g, '\\"')}"`);
             }
         }
         if (room.maxForage !== base.maxForage)
-            tmp.push(`"maxforage" : ${room.maxForage}`);
+            props.push(`"maxforage" : ${room.maxForage}`);
 
-        if (tmp.length > 0) {
+        if (tempProps.length === 1)
+            data['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
+        else if (tempProps.length > 0) {
+            data['create body'] += '   set_temp_properties( ([\n       ';
+            data['create body'] += tempProps.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+
+        if (props.length === 1)
+            data['create body'] += `   set_property(${props[0].replace(' :', ',')});\n`;
+        else if (props.length > 0) {
             data['create body'] += '   set_properties( ([\n       ';
-            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += props.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
         }
 
@@ -11891,7 +12068,8 @@ export class AreaDesigner extends EditorBase {
 
         let tmp;
         const base: Monster = this.$area.monsters[monster.type] || this.$area.baseMonsters[monster.type] || new Monster();
-
+        const props = [];
+        const tempProps = [];
         if (files[monster.type])
             data.inherit = `(MON + "${files[monster.type]}")`;
         else
@@ -12101,15 +12279,15 @@ export class AreaDesigner extends EditorBase {
             });
             data['create body'] += '   set_adjectives(' + monster.adjectives.join(', ') + ');\n';
         }
-        tmp = [];
+
         if ((monster.flags & MonsterFlags.Undead) === MonsterFlags.Undead && (base.flags & MonsterFlags.Undead) !== MonsterFlags.Undead)
-            tmp.push('"undead" : 1');
+            props.push('"undead" : 1');
         if ((monster.flags & MonsterFlags.Water_Breathing) === MonsterFlags.Water_Breathing && (base.flags & MonsterFlags.Water_Breathing) !== MonsterFlags.Water_Breathing)
-            tmp.push('"waterbreathing" : 1');
+            props.push('"waterbreathing" : 1');
         if ((monster.flags & MonsterFlags.Requires_Water) === MonsterFlags.Requires_Water && (base.flags & MonsterFlags.Requires_Water) !== MonsterFlags.Requires_Water)
-            tmp.push('"requires water" : 1');
+            props.push('"requires water" : 1');
         if ((monster.flags & MonsterFlags.No_Bleeding) === MonsterFlags.No_Bleeding && (base.flags & MonsterFlags.No_Bleeding) !== MonsterFlags.No_Bleeding)
-            tmp.push('"no bleed" : 1');
+            props.push('"no bleed" : 1');
 
         if (monster.noCorpse !== base.noCorpse) {
             monster.noCorpse = monster.noCorpse.trim();
@@ -12133,9 +12311,66 @@ export class AreaDesigner extends EditorBase {
             else if (monster.noLimbs.length > 0)
                 tmp.push(`"no limbs" : "${monster.noLimbs.replace(/"/g, '\\"')}"`);
         }
-        if (tmp.length > 0) {
+
+        if (monster.properties.length > 0) {
+            monster.properties.forEach(b => {
+                b.value = b.value.trim();
+                if (b.value.startsWith('(:')) {
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                    else
+                        props.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                    data['create pre'] += createFunction(b.value);
+                }
+                else if (b.value.startsWith('({')) {
+                    tmp2 = b.value.substring(2);
+                    if (tmp2.endsWith('})'))
+                        tmp2 = tmp2.substr(0, tmp2.length - 2);
+                    tmp2 = tmp2.split(',');
+                    tmp2 = tmp2.map(t => {
+                        t = t.trim();
+                        if ((t.startsWith('"') && t.endsWith('"')) || t.match(/^\d+$/))
+                            return t;
+                        else if (t.startsWith('(:')) {
+                            t = formatFunctionPointer(t);
+                            data['create pre'] += createFunction(t);
+                            return t;
+                        }
+                        return `"${t}"`;
+                    });
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                    else
+                        props.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                }
+                else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : ${b.value}`);
+                    else
+                        props.push(`"${b.name}" : ${b.value}`);
+                }
+                else {
+                    if (b.type === 1)
+                        tempProps.push(`"${b.name}" : "${b.value}"`);
+                    else
+                        props.push(`"${b.name}" : "${b.value}"`);
+                }
+            });
+        }
+
+        if (tempProps.length === 1)
+            data['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
+        else if (tempProps.length > 0) {
+            data['create body'] += '   set_temp_properties( ([\n       ';
+            data['create body'] += tempProps.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+
+        if (props.length === 1)
+            data['create body'] += `   set_property(${props[0].replace(' :', ',')});\n`;
+        else if (props.length > 0) {
             data['create body'] += '   set_properties( ([\n       ';
-            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += props.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
         }
         if (monster.mass !== base.mass)
@@ -13196,7 +13431,7 @@ export class AreaDesigner extends EditorBase {
                     data['create pre'] += createFunction(b.value);
                 }
                 else if (b.value.startsWith('({')) {
-                    tmp2 = b.vale.substring(2);
+                    tmp2 = b.value.substring(2);
                     if (tmp2.endsWith('})'))
                         tmp2 = tmp2.substr(0, tmp2.length - 2);
                     tmp2 = tmp2.split(',');

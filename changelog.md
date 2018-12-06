@@ -7,7 +7,9 @@
     - Area designer:
       - Room background color will now set based on inherited type when possible
       - Add underwater property flag
+      - Add custom properties for rooms and suppot from monster/room wizards
     - Add underwater property to room wizard
+    - Add custom properties for monster and room wizards
 - **Fixed:**
   - Display:
     - Fixed issue with url context menu
