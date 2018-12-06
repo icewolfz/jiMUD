@@ -3010,8 +3010,10 @@ export class Display extends EventEmitter {
                 this._scrollCorner.innerHTML = '<i class="fa fa-minus"></i>';
                 this._scrollCorner.addEventListener('click', () => {
                     this.scrollLock = !this.scrollLock;
-                    this._VScroll.scrollBy(-this._charHeight);
-                    //this.scrollDisplay(true);
+                    if (this.split.shown)
+                        this.scrollDisplay(true);
+                    else
+                        this._VScroll.scrollBy(-this._charHeight);
                 });
             }
             else

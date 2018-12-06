@@ -11,6 +11,7 @@
 - **Fixed:**
   - Display:
     - Fixed issue with url context menu
+    - Fixed split button scrolling in stead of toggling
   - Code editor:
     - Area designer: Fixed delete and cut correctly removing rooms
 
