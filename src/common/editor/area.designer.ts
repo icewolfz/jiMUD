@@ -265,19 +265,27 @@ export class Room {
         return new Room(this.x, this.y, this.z, this, this.type);
     }
 
-    public equals(room) {
+    public equals(room, base?) {
         if (!room) return false;
         let prop;
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
             switch (prop) {
+                case 'x':
+                case 'y':
+                case 'z':
+                case 'type':
+                    if (base) continue;
+                    if (this[prop] !== room[prop])
+                        return false;
+                    break;
                 case 'items':
                     if (this.items.length !== room.items.length)
                         return false;
                     if (this.items.filter((v, i) => room.items[i].item !== v.item && room.items[i].description !== v.description).length !== 0)
                         return false;
                     break;
-                case 'read':
+                case 'reads':
                 case 'rummageObjects':
                 case 'forageObjects':
                 case 'objects':
@@ -9722,7 +9730,7 @@ export class AreaDesigner extends EditorBase {
             else
                 f = false;
         }
-        if (room.empty || room.equals(base))
+        if (room.empty || room.equals(base, true))
             ctx.strokeStyle = '#eae9e9';
         else
             ctx.strokeStyle = 'black';
