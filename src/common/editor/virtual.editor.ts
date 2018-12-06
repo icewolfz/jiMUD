@@ -1599,7 +1599,8 @@ export class VirtualEditor extends EditorBase {
                 y: 0,
                 z: 0,
                 exit: '',
-                dest: ''
+                dest: '',
+                hidden: false
             };
             this.startUndoGroup();
             this.pushUndo(undoAction.add, undoType.exits, { oldLength: this.$exits.length, exits: e.data, room: [0, 0, 0] });
@@ -9840,6 +9841,11 @@ export class ExternalExitValueEditor extends ValueEditor {
                             return value;
                         }
                     }
+                },
+                {
+                    label: 'Hidden',
+                    field: 'hidden',
+                    width: 150
                 }]);
             dg.addRows(this.$value.map(a => ({ ...a })));
             dg.on('selection-changed', () => {
@@ -9893,7 +9899,8 @@ export class ExternalExitValueEditor extends ValueEditor {
                     y: this.data.y,
                     z: this.data.z,
                     exit: '',
-                    dest: ''
+                    dest: '',
+                    hidden: false
                 };
             });
             header = document.createElement('div');
