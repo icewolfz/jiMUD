@@ -17,6 +17,7 @@
       - Fixed delete and cut correctly removing rooms
       - Fixed base room delete/cut
       - Fixed base monster delete/cut
+      - Fixed default room/monster drop down not updating
 
 ## v0.6.12 2018-12-03
 

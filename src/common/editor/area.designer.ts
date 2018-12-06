@@ -13656,13 +13656,13 @@ export class AreaDesigner extends EditorBase {
             this.$propertiesEditor.defaultRoom.html('<optgroup label="Area">' + Object.keys(this.$area.baseRooms || { base: null })
                 .map(r => `<option value="${r}">${capitalize(r)}</option>`).join('') + '</optgroup><optgroup label="Standard">' +
                 RoomTypes.map(r => `<option value="${r.value}">${r.display}</option>`).join('') + '</optgroup>');
-            this.$propertiesEditor.defaultRoom.val(this.$area.defaultRoom).selectpicker('render');
+            this.$propertiesEditor.defaultRoom.selectpicker('refresh').val(this.$area.defaultRoom).selectpicker('render');
         }
         if (this.$propertiesEditor.defaultMonster) {
             this.$propertiesEditor.defaultMonster.html('<optgroup label="Area">' + Object.keys(this.$area.baseMonsters || { base: null })
                 .map(r => `<option value="${r}">${capitalize(r)}</option>`).join('') + '</optgroup><optgroup label="Standard">' +
                 MonsterTypes.map(r => `<option value="${r.value}">${r.display}</option>`).join('') + '</optgroup>');
-            this.$propertiesEditor.defaultMonster.val(this.$area.defaultMonster).selectpicker('render');
+            this.$propertiesEditor.defaultMonster.selectpicker('refresh').val(this.$area.defaultMonster).selectpicker('render');
         }
     }
 
