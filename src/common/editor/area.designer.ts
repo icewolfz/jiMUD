@@ -10974,7 +10974,8 @@ export class AreaDesigner extends EditorBase {
                         if (this.$cancel)
                             throw new Error('Canceled');
                         const r = this.$area.rooms[z][y][x];
-                        if (r.empty) continue;
+                        const base: Room = this.$area.baseRooms[r.type] || this.$area.baseRooms[this.$area.defaultRoom];
+                        if (r.empty || r.equals(base, true)) continue;
                         this.write(this.generateRoomCode(r.clone(), files, copy(data)), path.join(p, files[`${r.x},${r.y},${r.z}`] + '.c'));
                         count++;
                         this.emit('progress', { type: 'designer', percent: 50 + Math.round(50 * count / this.$roomCount) });
