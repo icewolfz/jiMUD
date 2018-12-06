@@ -4256,7 +4256,43 @@ export class AreaDesigner extends EditorBase {
             MonsterTypes.map(r => `<option value="${r.value}">${r.display}</option>`).join('') + '</optgroup>';
         this.$propertiesEditor.defaultRoom = $(el[0]).selectpicker();
         this.$propertiesEditor.defaultRoom.on('change', () => {
+            this.startUndoGroup();
             this.pushUndo(undoAction.edit, undoType.properties, { property: 'defaultRoom', old: this.$area.defaultRoom, new: this.$propertiesEditor.defaultRoom.val() });
+            const r = this.$area.baseRooms[this.$area.defaultRoom];
+            const n = this.$propertiesEditor.defaultRoom.val();
+            const rooms = [];
+
+            const zl = this.$area.size.depth;
+            const xl = this.$area.size.width;
+            const yl = this.$area.size.height;
+            for (let z = 0; z < zl; z++) {
+                for (let y = 0; y < yl; y++) {
+                    for (let x = 0; x < xl; x++) {
+                        const room = this.$area.rooms[z][y][x];
+                        let nRoom;
+                        //not current default so ignore
+                        if (r) {
+                            const base = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom];
+                            //room has been changed so ignore
+                            if (!room.empty && !room.equals(base, true)) continue;
+                            rooms.push(room);
+                            nRoom = new Room(room.x, room.y, room.z, this.$area.baseRooms[n], n);
+                        }
+                        else
+                        {
+                            if (!room.empty || room.type !== this.$area.defaultRoom)
+                                continue;
+                            room.type = n;
+                        }
+                        this.setRoom(nRoom);
+                        this.RoomChanged(nRoom, room);
+                        this.DrawRoom(this.$mapContext, nRoom, true, nRoom.at(this.$mouse.rx, this.$mouse.ry));
+                    }
+                }
+            }
+
+            this.pushUndo(undoAction.delete, undoType.room, rooms);
+            this.stopUndoGroup();
             this.$area.defaultRoom = this.$propertiesEditor.defaultRoom.val();
             this.changed = true;
         });
@@ -10302,8 +10338,10 @@ export class AreaDesigner extends EditorBase {
         if (old) {
             if (room.equals(old))
                 return;
-            if (!old.empty) this.$roomCount--;
-            if (!room.empty) this.$roomCount++;
+            const base = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom];
+            const baseOld = this.$area.baseRooms[old.type] || this.$area.baseRooms[this.$area.defaultRoom];
+            if (!old.empty && !old.equals(baseOld, true)) this.$roomCount--;
+            if (!room.empty && !old.equals(base, true)) this.$roomCount++;
             this.doUpdate(UpdateType.status);
         }
         this.changed = true;
@@ -10588,7 +10626,8 @@ export class AreaDesigner extends EditorBase {
             for (let y = 0; y < yl; y++) {
                 for (let x = 0; x < xl; x++) {
                     const room = this.$area.rooms[z][y][x];
-                    if (!room.empty) this.$roomCount++;
+                    const base = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom];
+                    if (!room.empty && !room.equals(base, true)) this.$roomCount++;
                 }
             }
         }
@@ -13588,7 +13627,8 @@ export class AreaDesigner extends EditorBase {
                             this.$selectedRooms[idx] = rooms[room.z][room.y][room.x];
                         if (this.$focusedRoom && this.$focusedRoom.at(x, y, z))
                             this.$focusedRoom = rooms[room.z][room.y][room.x];
-                        if (!room.empty) this.$roomCount++;
+                        const base = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom];
+                        if (!room.empty && !room.equals(base, true)) this.$roomCount++;
                     }
                     else {
                         if (room.exits) {
