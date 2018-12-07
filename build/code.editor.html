@@ -5693,8 +5693,8 @@
                 var doors = data['room-wiz-exits'].filter(r => r.exit.length > 0 && r.door && r.door.length > 0 && !r.climb);
                 var exits = data['room-wiz-exits'].filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && !r.climb);
                 var climbs = data['room-wiz-exits'].filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && r.climb);
-                var props = [];
-                var tempProps = [];
+                var props = {};
+                var tempProps = {};
                 tmpl.doc = [];
                 tmpl.includes = '';
                 tmpl['create pre'] = '';
@@ -5704,7 +5704,7 @@
                 if (data['room-wiz-forage'] !== -1 || doors.length > 0) {
                     tmpl['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
                     if (data['room-wiz-forage'] !== -1)
-                        props.push(`'forage' : ${data['room-wiz-forage']}`);
+                        props['forage'] = data['room-wiz-forage'];
                     doors.forEach(r => {
                         if (r.key.length !== 0)
                             tmpl['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
@@ -5871,63 +5871,63 @@
                     tmpl['create body'] += `   set_terrain("${data['room-wiz-terrain']}");\n`;
 
                 if (data['room-wiz-light'] !== 0)
-                    props.push(`"light" : ${data['room-wiz-light']}`);
+                    props['light'] = data['room-wiz-light'];
                 if (data['room-wiz-indoors'])
-                    props.push('"indoors" : 1');
+                    props['indoors'] = 1;
                 if (data['room-wiz-no-magic'])
-                    props.push('"no magic" : 1');
+                    props['no magic'] = 1;
                 if (data['room-wiz-no-attack'])
-                    props.push('"no attack" : 1');
+                    props['no attack'] = 1;
                 if (data['room-wiz-no-scry'])
-                    props.push('"no scry" : 1');
+                    props['no scry'] = 1;
                 if (data['room-wiz-no-teleport'])
-                    props.push('"no teleport" : 1');
+                    props['no teleport'] = 1;
                 if (data['room-wiz-no-mgive'])
-                    props.push('"no mgive" : 1');
+                    props['no mgive'] = 1;
                 if (data['room-wiz-council'])
-                    props.push('"council" : 1');
+                    props['council'] = 1;
                 if (data['room-wiz-no-map'])
-                    props.push('"no send info" : 1');
+                    props['no send info'] = 1;
                 if (data['room-wiz-melee'])
-                    props.push('"melee as ability" : 1');
+                    props['melee as ability'] = 1;
                 if (data['room-wiz-pk'])
-                    props.push('"enable pk" : 1');
+                    props['enable pk'] = 1;
                 if (data['room-wiz-hide-exits'])
-                    props.push('"hide exits" : 1');
+                    props['hide exits'] = 1;
                 if (data['room-wiz-no-forage'])
-                    props.push('"no forage" : 1');
+                    props['no forage'] = 1;
                 if (data['room-wiz-no-dirt'])
-                    props.push('"no dirt" : 1');
+                    props['no dirt'] = 1;
                 if (data['room-wiz-dirt'].length > 0)
-                    props.push(`"dirt type" : "${data['room-wiz-dirt']}"`);
+                    props['dirt type'] = `"${data['room-wiz-dirt']}"`;
                 if (data['room-wiz-underwater'])
-                    props.push('"underwater" : 1');
+                    props['underwater'] = 1;
 
                 data['room-wiz-secret-exit'] = data['room-wiz-secret-exit'].trim();
                 if (data['room-wiz-secret-exit'] === 'false') { /**/ }
                 else if (data['room-wiz-secret-exit'].startsWith('(:')) {
-                    props.push(`"secret exit" : ${formatFunctionPointer(data['room-wiz-secret-exit'], true)})`);
+                    props['secret exit'] = formatFunctionPointer(data['room-wiz-secret-exit'], true);
                     tmpl['create pre'] += createFunction(data['room-wiz-secret-exit'], 'string', 'object room, object player');
                 }
                 else if (data['room-wiz-secret-exit'] === 'true')
-                    props.push('"secret exit" : 1');
+                    props['secret exit'] = 1;
                 else if (typeof data['room-wiz-secret-exit'] === 'string' && parseFloat(data['room-wiz-secret-exit']).toString() == data['room-wiz-secret-exit'])
-                    props.push(`"secret exit" : ${data['room-wiz-secret-exit']}`);
+                    props['secret exit'] = data['room-wiz-secret-exit'];
                 else if (data['room-wiz-secret-exit'].length > 0) {
-                    props.push(`"secret exit" : "${data['room-wiz-secret-exit'].replace(/"/g, '\\"')}"`);
+                    props['secret exit'] = `"${data['room-wiz-secret-exit'].replace(/"/g, '\\"')}"`;
                 }
                 if (data['room-wiz-max-forage'] > 0)
-                    props.push(`"maxforage" : ${data['room-wiz-max-forage']}`);
+                    props['maxforage'] = data['room-wiz-max-forage'];
 
                 if (data['room-wiz-properties'].length > 0) {
                     data['room-wiz-properties'].forEach(b => {
                         b.value = b.value.trim();
                         if (b.value.startsWith('(:')) {
                             if (b.type === 1)
-                                tempProps.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                                tempProps[b.name] = formatFunctionPointer(b.value);
                             else
-                                props.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
-                            data['create pre'] += createFunction(b.value);
+                                props[b.name] = formatFunctionPointer(b.value);
+                            tmpl['create pre'] += createFunction(b.value);
                         }
                         else if (b.value.startsWith('({')) {
                             tmp2 = b.value.substring(2);
@@ -5940,30 +5940,33 @@
                                     return t;
                                 else if (t.startsWith('(:')) {
                                     t = formatFunctionPointer(t);
-                                    data['create pre'] += createFunction(t);
+                                    tmpl['create pre'] += createFunction(t);
                                     return t;
                                 }
                                 return `"${t}"`;
                             });
                             if (b.type === 1)
-                                tempProps.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                                tempProps[b.name] = `({ ${tmp2.join(', ')} })`;
                             else
-                                props.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                                props[b.name] = `({ ${tmp2.join(', ')} })`;
                         }
                         else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
                             if (b.type === 1)
-                                tempProps.push(`"${b.name}" : ${b.value}`);
+                                tempProps[b.name] = b.value;
                             else
-                                props.push(`"${b.name}" : ${b.value}`);
+                                props[b.name] = b.value;
                         }
                         else {
                             if (b.type === 1)
-                                tempProps.push(`"${b.name}" : "${b.value}"`);
+                                tempProps[b.name] = `"${b.value}"`;
                             else
-                                props.push(`"${b.name}" : "${b.value}"`);
+                                props[b.name] = `"${b.value}"`;
                         }
                     });
                 }
+
+                tempProps = Object.keys(tempProps).map(k => `"${k}" : ${tempProps[k]}`);
+                props = Object.keys(props).map(k => `"${k}" : ${tempProps[k]}`);
 
                 if (tempProps.length === 1)
                     tmpl['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
@@ -7260,41 +7263,41 @@
                 }
 
                 if (data['mon-wiz-undead'])
-                    props.push('"undead" : 1');
+                    props['undead'] = 1;
                 if (data['mon-wiz-waterbreathing'])
-                    props.push('"waterbreathing" : 1');
+                    props['waterbreathing'] = 1;
                 if (data['mon-wiz-requires-water'])
-                    props.push('"requires water" : 1');
+                    props['requires water'] = 1;
                 if (data['mon-wiz-no-bleed'])
-                    props.push('"no bleed" : 1');
+                    props['no bleed'] = 1;
                 data['mon-wiz-no-corpse'] = data['mon-wiz-no-corpse'].trim();
                 if (data['mon-wiz-no-corpse'].startsWith('(:')) {
-                    props.push(`"no corpse" : ${formatFunctionPointer(data['mon-wiz-no-corpse'], true)}`);
+                    props['no corpse'] = formatFunctionPointer(data['mon-wiz-no-corpse'], true);
                     tmpl['create pre'] += createFunction(data['mon-wiz-no-corpse'], 'string');
                 }
                 else if (data['mon-wiz-no-corpse'].startsWith('"') && data['mon-wiz-no-corpse'].endsWith('"'))
-                    props.push(`"no corpse" : ${data['mon-wiz-no-corpse']}`);
+                    props['no corpse'] = data['mon-wiz-no-corpse'];
                 else if (data['mon-wiz-no-corpse'].length > 0)
-                    props.push(`"no corpse" : "${data['mon-wiz-no-corpse'].replace(/"/g, '\\"')}"`);
+                    props['no corpse'] = `"${data['mon-wiz-no-corpse'].replace(/"/g, '\\"')}"`;
                 data['mon-wiz-no-limbs'] = data['mon-wiz-no-limbs'].trim();
                 if (data['mon-wiz-no-limbs'].startsWith('(:')) {
-                    props.push(`"no limbs" : ${formatFunctionPointer(data['mon-wiz-no-limbs'], true)}`);
+                    props['no limbs'] = formatFunctionPointer(data['mon-wiz-no-limbs'], true);
                     tmpl['create pre'] += createFunction(data['mon-wiz-no-limbs'], 'string');
                 }
                 else if (data['mon-wiz-no-limbs'].startsWith('"') && data['mon-wiz-no-limbs'].endsWith('"'))
-                    props.push(`"no limbs" : ${data['mon-wiz-no-limbs']}`);
+                    props['no limbs'] = data['mon-wiz-no-limbs'];
                 else if (data['mon-wiz-no-limbs'].length > 0)
-                    props.push(`"no limbs" : "${data['mon-wiz-no-limbs'].replace(/"/g, '\\"')}"`);
+                    props['no limbs'] = `"${data['mon-wiz-no-limbs'].replace(/"/g, '\\"')} "`;
 
                 if (data['mon-wiz-properties'].length > 0) {
-                    data['mon-wiz-properties'].properties.forEach(b => {
+                    data['mon-wiz-properties'].forEach(b => {
                         b.value = b.value.trim();
                         if (b.value.startsWith('(:')) {
                             if (b.type === 1)
-                                tempProps.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                                tempProps[b.name] = formatFunctionPointer(b.value);
                             else
-                                props.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
-                            data['create pre'] += createFunction(b.value);
+                                props[b.name] = formatFunctionPointer(b.value);
+                            tmpl['create pre'] += createFunction(b.value);
                         }
                         else if (b.value.startsWith('({')) {
                             tmp2 = b.value.substring(2);
@@ -7307,30 +7310,33 @@
                                     return t;
                                 else if (t.startsWith('(:')) {
                                     t = formatFunctionPointer(t);
-                                    data['create pre'] += createFunction(t);
+                                    tmpl['create pre'] += createFunction(t);
                                     return t;
                                 }
                                 return `"${t}"`;
                             });
                             if (b.type === 1)
-                                tempProps.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                                tempProps[b.name] = `({ ${tmp2.join(', ')} })`;
                             else
-                                props.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                                props[b.name] = `({ ${tmp2.join(', ')} })`;
                         }
                         else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
                             if (b.type === 1)
-                                tempProps.push(`"${b.name}" : ${b.value}`);
+                                tempProps[b.name] = b.value;
                             else
-                                props.push(`"${b.name}" : ${b.value}`);
+                                props[b.name] = b.value;
                         }
                         else {
                             if (b.type === 1)
-                                tempProps.push(`"${b.name}" : "${b.value}"`);
+                                tempProps[b.name] = `"${b.value}"`;
                             else
-                                props.push(`"${b.name}" : "${b.value}"`);
+                                props[b.name] = `"${b.value}"`;
                         }
                     });
                 }
+
+                tempProps = Object.keys(tempProps).map(k => `"${k}" : ${tempProps[k]}`);
+                props = Object.keys(props).map(k => `"${k}" : ${tempProps[k]}`);
 
                 if (tempProps.length === 1)
                     tmpl['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
