@@ -11166,8 +11166,8 @@ export class AreaDesigner extends EditorBase {
         const doors = eArray.filter(r => r.exit.length > 0 && r.door && r.door.length > 0 && !r.climb);
         const exits = eArray.filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && !r.climb);
         const climbs = eArray.filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && r.climb);
-        const props = [];
-        const tempProps = [];
+        let props: any = {};
+        let tempProps: any = {};
         data.doc = [];
         data.includes = '';
         data.description = '';
@@ -11183,7 +11183,7 @@ export class AreaDesigner extends EditorBase {
         if (baseRoom && (room.forage !== base.forage || doors.length > 0 || tmp2.length !== 0 || tmp3.length !== 0)) {
             data['reset body'] += '\n';
             if (room.forage !== base.forage)
-                props.push(`'forage' : ${room.forage}`);
+                props['forage'] = room.forage;
             doors.forEach(r => {
                 if (r.key.length !== 0)
                     data['reset body'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
@@ -11241,7 +11241,7 @@ export class AreaDesigner extends EditorBase {
         else if (!baseRoom && (room.forage !== base.forage || doors.length > 0 || tmp2.length !== 0 || tmp3.length !== 0)) {
             data['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
             if (room.forage !== base.forage)
-                props.push(`'forage' : ${room.forage}`);
+                props['forage'] = room.forage;
             doors.forEach(r => {
                 data['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
                 data['create post'] += `   set_open("${r.door}", ${r.closed ? 0 : 1});\n`;
@@ -11537,50 +11537,50 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_terrain("${room.terrain}");\n`;
 
         if (room.light !== base.light)
-            props.push(`"light" : ${room.light}`);
+            props['light'] = room.light;
         if ((room.flags & RoomFlags.Indoors) === RoomFlags.Indoors && (base.flags & RoomFlags.Indoors) !== RoomFlags.Indoors)
-            props.push('"indoors" : 1');
+            props['indoors'] = 1;
         if ((room.flags & RoomFlags.No_Magic) === RoomFlags.No_Magic && (base.flags & RoomFlags.No_Magic) !== RoomFlags.No_Magic)
-            props.push('"no magic" : 1');
+            props['no magic'] = 1;
         if ((room.flags & RoomFlags.No_Attack) === RoomFlags.No_Attack && (base.flags & RoomFlags.No_Attack) !== RoomFlags.No_Attack)
-            props.push('"no attack" : 1');
+            props['no attack'] = 1;
         if ((room.flags & RoomFlags.No_Scry) === RoomFlags.No_Scry && (base.flags & RoomFlags.No_Scry) !== RoomFlags.No_Scry)
-            props.push('"no scry" : 1');
+            props['no scry'] = 1;
         if ((room.flags & RoomFlags.No_Teleport) === RoomFlags.No_Teleport && (base.flags & RoomFlags.No_Teleport) !== RoomFlags.No_Teleport)
-            props.push('"no teleport" : 1');
+            props['no teleport'] = 1;
         if ((room.flags & RoomFlags.No_MGive) === RoomFlags.No_MGive && (base.flags & RoomFlags.No_MGive) !== RoomFlags.No_MGive)
-            props.push('"no mgive" : 1');
+            props['no mgive'] = 1;
         if ((room.flags & RoomFlags.Council) === RoomFlags.Council && (base.flags & RoomFlags.Council) !== RoomFlags.Council)
-            props.push('"council" : 1');
+            props['council'] = 1;
         if ((room.flags & RoomFlags.No_Map_Send) === RoomFlags.No_Map_Send && (base.flags & RoomFlags.No_Map_Send) !== RoomFlags.No_Map_Send)
-            props.push('"no send info" : 1');
+            props['no send info'] = 1;
         if ((room.flags & RoomFlags.Melee_As_Ability) === RoomFlags.Melee_As_Ability && (base.flags & RoomFlags.Melee_As_Ability) !== RoomFlags.Melee_As_Ability)
-            props.push('"melee as ability" : 1');
+            props['melee as ability'] = 1;
         if ((room.flags & RoomFlags.Enable_Pk) === RoomFlags.Enable_Pk && (base.flags & RoomFlags.Enable_Pk) !== RoomFlags.Enable_Pk)
-            props.push('"enable pk" : 1');
+            props['enable pk'] = 1;
         if ((room.flags & RoomFlags.Hide_Exits) === RoomFlags.Hide_Exits && (base.flags & RoomFlags.Hide_Exits) !== RoomFlags.Hide_Exits)
-            props.push('"hide exits" : 1');
+            props['hide exits'] = 1;
         if ((room.flags & RoomFlags.No_Forage) === RoomFlags.No_Forage && (base.flags & RoomFlags.No_Forage) !== RoomFlags.No_Forage)
-            props.push('"no forage" : 1');
+            props['no forage'] = 1;
         if ((room.flags & RoomFlags.No_Dirt) === RoomFlags.No_Dirt && (base.flags & RoomFlags.No_Dirt) !== RoomFlags.No_Dirt)
-            props.push('"no dirt" : 1');
+            props['no dirt'] = 1;
         if (room.dirtType !== base.dirtType)
-            props.push(`"dirt type" : "${room.dirtType}"`);
+            props['dirt type'] = `"${room.dirtType}"`;
         if ((room.flags & RoomFlags.Underwater) === RoomFlags.Underwater && (base.flags & RoomFlags.Underwater) !== RoomFlags.Underwater)
-            props.push('"underwater" : 1');
+            props['underwater'] = 1;
         if ((room.baseFlags & RoomBaseFlags.No_Monsters) === RoomBaseFlags.No_Monsters && (base.baseFlags & RoomBaseFlags.No_Monsters) !== RoomBaseFlags.No_Monsters)
-            props.push(`"no clone monsters" : 1`);
+            props['no clone monsters'] = 1;
         if ((room.baseFlags & RoomBaseFlags.No_Objects) === RoomBaseFlags.No_Objects && (base.baseFlags & RoomBaseFlags.No_Objects) !== RoomBaseFlags.No_Objects)
-            props.push(`"no clone objects" : 1`);
+            props['no clone objects'] = 1;
 
         if (room.properties.length > 0) {
             room.properties.forEach(b => {
                 b.value = b.value.trim();
                 if (b.value.startsWith('(:')) {
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                        tempProps[b.name] = formatFunctionPointer(b.value);
                     else
-                        props.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                        props[b.name] = formatFunctionPointer(b.value);
                     data['create pre'] += createFunction(b.value);
                 }
                 else if (b.value.startsWith('({')) {
@@ -11600,21 +11600,21 @@ export class AreaDesigner extends EditorBase {
                         return `"${t}"`;
                     });
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                        tempProps[b.name] = `({ ${tmp2.join(', ')} })`;
                     else
-                        props.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                        props[b.name] = `({ ${tmp2.join(', ')} })`;
                 }
                 else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : ${b.value}`);
+                        tempProps[b.name] = b.value;
                     else
-                        props.push(`"${b.name}" : ${b.value}`);
+                        props[b.name] = b.value;
                 }
                 else {
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : "${b.value}"`);
+                        tempProps[b.name] = `"${b.value}"`;
                     else
-                        props.push(`"${b.name}" : "${b.value}"`);
+                        props[b.name] = `"${b.value}"`;
                 }
             });
         }
@@ -11623,19 +11623,22 @@ export class AreaDesigner extends EditorBase {
         if (room.secretExit !== base.secretExit.trim()) {
             if (room.secretExit === 'false') { /**/ }
             else if (room.secretExit.startsWith('(:')) {
-                props.push(`"secret exit" : ${formatFunctionPointer(room.secretExit, true)})`);
+                props['secret exit'] = formatFunctionPointer(room.secretExit, true);
                 data['create pre'] += createFunction(room.secretExit, 'string', 'object room, object player');
             }
             else if (room.secretExit === 'true')
-                props.push(`"secret exit" : 1`);
+                props['secret exit'] = 1;
             else if (typeof room.secretExit === 'string' && parseFloat(room.secretExit).toString() === room.secretExit)
-                props.push(`"secret exit" : ${room.secretExit}`);
+                props['secret exit'] = room.secretExit;
             else if (room.secretExit.length > 0) {
-                props.push(`"secret exit" : "${room.secretExit.replace(/"/g, '\\"')}"`);
+                props['secret exit'] = `"${room.secretExit.replace(/"/g, '\\"')}"`;
             }
         }
         if (room.maxForage !== base.maxForage)
-            props.push(`"maxforage" : ${room.maxForage}`);
+            props['maxforage'] = room.maxForage;
+
+        tempProps = Object.keys(tempProps).map(k => `"${k}" : ${tempProps[k]}`);
+        props = Object.keys(props).map(k => `"${k}" : ${tempProps[k]}`);
 
         if (tempProps.length === 1)
             data['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
@@ -12068,8 +12071,8 @@ export class AreaDesigner extends EditorBase {
 
         let tmp;
         const base: Monster = this.$area.monsters[monster.type] || this.$area.baseMonsters[monster.type] || new Monster();
-        const props = [];
-        const tempProps = [];
+        let props: any = {};
+        let tempProps: any = {};
         if (files[monster.type])
             data.inherit = `(MON + "${files[monster.type]}")`;
         else
@@ -12281,35 +12284,35 @@ export class AreaDesigner extends EditorBase {
         }
 
         if ((monster.flags & MonsterFlags.Undead) === MonsterFlags.Undead && (base.flags & MonsterFlags.Undead) !== MonsterFlags.Undead)
-            props.push('"undead" : 1');
+            props['undead'] = 1;
         if ((monster.flags & MonsterFlags.Water_Breathing) === MonsterFlags.Water_Breathing && (base.flags & MonsterFlags.Water_Breathing) !== MonsterFlags.Water_Breathing)
-            props.push('"waterbreathing" : 1');
+            props['waterbreathing'] = 1;
         if ((monster.flags & MonsterFlags.Requires_Water) === MonsterFlags.Requires_Water && (base.flags & MonsterFlags.Requires_Water) !== MonsterFlags.Requires_Water)
-            props.push('"requires water" : 1');
+            props['requires water'] = 1;
         if ((monster.flags & MonsterFlags.No_Bleeding) === MonsterFlags.No_Bleeding && (base.flags & MonsterFlags.No_Bleeding) !== MonsterFlags.No_Bleeding)
-            props.push('"no bleed" : 1');
+            props['no bleed'] = 1;
 
         if (monster.noCorpse !== base.noCorpse) {
             monster.noCorpse = monster.noCorpse.trim();
             if (monster.noCorpse.startsWith('(:')) {
-                tmp.push(`"no corpse" : ${formatFunctionPointer(monster.noCorpse, true)}`);
+                props['no corpse'] = formatFunctionPointer(monster.noCorpse, true);
                 data['create pre'] += createFunction(monster.noCorpse, 'string');
             }
             else if (monster.noCorpse.startsWith('"') && monster.noCorpse.endsWith('"'))
-                tmp.push(`"no corpse" : ${monster.noCorpse}`);
+                props['no corpse'] = monster.noCorpse;
             else if (monster.noCorpse.length > 0)
-                tmp.push(`"no corpse" : "${monster.noCorpse.replace(/"/g, '\\"')}"`);
+                props['no corpse'] = `"${monster.noCorpse.replace(/"/g, '\\"')}"`;
         }
         if (monster.noLimbs !== base.noLimbs) {
             monster.noLimbs = monster.noLimbs.trim();
             if (monster.noLimbs.startsWith('(:')) {
-                tmp.push(`"no limbs" : ${formatFunctionPointer(monster.noLimbs, true)}`);
+                props['no limbs'] = formatFunctionPointer(monster.noLimbs, true);
                 data['create pre'] += createFunction(monster.noLimbs, 'string');
             }
             else if (monster.noLimbs.startsWith('"') && monster.noLimbs.endsWith('"'))
-                tmp.push(`"no limbs" : ${monster.noLimbs}`);
+                props['no limbs'] = monster.noLimbs;
             else if (monster.noLimbs.length > 0)
-                tmp.push(`"no limbs" : "${monster.noLimbs.replace(/"/g, '\\"')}"`);
+                props['no limbs'] = `"${monster.noLimbs.replace(/"/g, '\\"')}"`;
         }
 
         if (monster.properties.length > 0) {
@@ -12317,9 +12320,9 @@ export class AreaDesigner extends EditorBase {
                 b.value = b.value.trim();
                 if (b.value.startsWith('(:')) {
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                        tempProps[b.name] = formatFunctionPointer(b.value);
                     else
-                        props.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                        props[b.name] = formatFunctionPointer(b.value);
                     data['create pre'] += createFunction(b.value);
                 }
                 else if (b.value.startsWith('({')) {
@@ -12339,24 +12342,30 @@ export class AreaDesigner extends EditorBase {
                         return `"${t}"`;
                     });
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                        tempProps[b.name] = `({ ${tmp2.join(', ')} })`;
                     else
-                        props.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                        props[b.name] = `({ ${tmp2.join(', ')} })`;
                 }
                 else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : ${b.value}`);
+                        tempProps[b.name] = b.value;
                     else
-                        props.push(`"${b.name}" : ${b.value}`);
+                        props[b.name] = b.value;
                 }
                 else {
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : "${b.value}"`);
+                        tempProps[b.name] = `"${b.value}"`;
                     else
-                        props.push(`"${b.name}" : "${b.value}"`);
+                        props[b.name] = `"${b.value}"`;
                 }
             });
         }
+
+        if ((monster.baseFlags & MonsterBaseFlags.No_Objects) === RoomBaseFlags.No_Objects && (base.baseFlags & MonsterBaseFlags.No_Topics) !== MonsterBaseFlags.No_Topics)
+            props['no objects'] = 1;
+
+        tempProps = Object.keys(tempProps).map(k => `"${k}" : ${tempProps[k]}`);
+        props = Object.keys(props).map(k => `"${k}" : ${tempProps[k]}`);
 
         if (tempProps.length === 1)
             data['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
@@ -12642,9 +12651,6 @@ export class AreaDesigner extends EditorBase {
         });
         //#endregion
 
-        if ((monster.baseFlags & MonsterBaseFlags.No_Objects) === RoomBaseFlags.No_Objects && (base.baseFlags & MonsterBaseFlags.No_Topics) !== MonsterBaseFlags.No_Topics)
-            data['create pre inherit'] += '   set_property("no objects", 1);\n';
-
         if (monster.objects.length !== 0) {
             tmp2 = '';
             tmp3 = [];
@@ -12725,8 +12731,8 @@ export class AreaDesigner extends EditorBase {
         let tmp3;
         let bonuses = false;
         let skills = false;
-        const props = [];
-        const tempProps = [];
+        let props: any = {};
+        let tempProps: any = {};
         const limbsDamaged = {};
         limbsDamaged['both arms and legs'] = 'ARMSLEGS_DAM';
         limbsDamaged['both arms'] = 'ARMS_DAM';
@@ -12798,7 +12804,7 @@ export class AreaDesigner extends EditorBase {
                     data['create arguments comment'] += ', Natural enchantment';
                 }
                 if (obj.maxWearable !== 0)
-                    tempProps.push(`"max_wearable" : "${obj.maxWearable}"`);
+                    tempProps['max_wearable'] = `"${obj.maxWearable}"`;
                 if (obj.limbsOptional)
                     data['create body'] += '   set_limbs_optional(1);\n';
                 if (obj.damaged && obj.damaged.length !== 0) {
@@ -13162,7 +13168,7 @@ export class AreaDesigner extends EditorBase {
                         data['create body'] += `   set_weapon_type("${obj.material}");\n`;
                 }
                 if (obj.maxWearable !== 0)
-                    tempProps.push(`"max_wearable" : "${obj.maxWearable}"`);
+                    tempProps['max_wearable'] = `"${obj.maxWearable}"`;
                 if (obj.limbsOptional)
                     data['create body'] += '   set_limbs_optional(1);\n';
                 //#endregion
@@ -13425,9 +13431,9 @@ export class AreaDesigner extends EditorBase {
                 b.value = b.value.trim();
                 if (b.value.startsWith('(:')) {
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                        tempProps[b.name] = formatFunctionPointer(b.value);
                     else
-                        props.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                        props[b.name] = formatFunctionPointer(b.value);
                     data['create pre'] += createFunction(b.value);
                 }
                 else if (b.value.startsWith('({')) {
@@ -13447,21 +13453,21 @@ export class AreaDesigner extends EditorBase {
                         return `"${t}"`;
                     });
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                        tempProps[b.name] = `({ ${tmp2.join(', ')} })`;
                     else
-                        props.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                        props[b.name] = `({ ${tmp2.join(', ')} })`;
                 }
                 else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : ${b.value}`);
+                        tempProps[b.name] = b.value;
                     else
-                        props.push(`"${b.name}" : ${b.value}`);
+                        props[b.name] = b.value;
                 }
                 else {
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : "${b.value}"`);
+                        tempProps[b.name] = `"${b.value}"`;
                     else
-                        props.push(`"${b.name}" : "${b.value}"`);
+                        props[b.name] = `"${b.value}"`;
                 }
             });
         }
@@ -13469,12 +13475,15 @@ export class AreaDesigner extends EditorBase {
         //data['create body'] += `   set_temp_property("max_wearable", ${obj.maxWearable});\n`;
 
         if (obj.keyID.length > 0 && obj.type !== StdObjectType.chest)
-            props.push(`"key" : "${obj.keyID}"`);
+            props['key'] = `"${obj.keyID}"`;
 
         if (obj.mass > 0)
             data['create body'] += `   set_mass(${obj.mass});\n`;
         if (obj.value > 0)
             data['create body'] += `   set_value("${obj.value}");\n`;
+
+        tempProps = Object.keys(tempProps).map(k => `"${k}" : ${tempProps[k]}`);
+        props = Object.keys(props).map(k => `"${k}" : ${tempProps[k]}`);
 
         if (tempProps.length === 1)
             data['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
