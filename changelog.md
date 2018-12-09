@@ -13,7 +13,7 @@
 - **Fixed:**
   - Display:
     - Fixed issue with url context menu
-    - Fixed split button scrolling in stead of toggling
+    - Fixed split button scrolling instead of toggling
   - Code editor:
     - Fixed save file as tab tooltip
     - Area designer:
