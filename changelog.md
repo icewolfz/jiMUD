@@ -15,6 +15,7 @@
     - Fixed issue with url context menu
     - Fixed split button scrolling in stead of toggling
   - Code editor:
+    - Fixed save file as tab tooltip
     - Area designer:
       - Fixed delete and cut correctly removing rooms
       - Fixed base room delete/cut
