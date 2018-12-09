@@ -3067,6 +3067,52 @@ export class Display extends EventEmitter {
             this._HScroll.scrollTo(x - this._HScroll.trackSize + this._charWidth);
     }
 
+    public scrollBy(x: number, y: number) {
+        this._VScroll.scrollBy(y);
+        this._HScroll.scrollBy(x);
+    }
+
+    public scrollByCharacter(x: number, y: number) {
+        this._VScroll.scrollBy(y * this._charHeight);
+        this._HScroll.scrollBy(x * this._charWidth);
+    }
+
+    public scrollUp() {
+        if (this._viewRange.start < 1 || this._viewRange.start - 1 >= this._lines.length)
+            return;
+        this._VScroll.scrollBy(-this._lines[this._viewRange.start - 1].height);
+    }
+
+    public scrollDown() {
+        if (this._viewRange.start + 1 >= this._lines.length)
+            return;
+        this._VScroll.scrollBy(this._lines[this._viewRange.start + 1].height);
+    }
+
+    public scrollLeft() {
+        if (this._viewRange.start + 1 >= this._lines.length)
+            return;
+        this._VScroll.scrollBy(this._lines[this._viewRange.start + 1].height);
+    }
+
+    public pageUp() {
+        if (this.split)
+            this._VScroll.pageUp(this.split._innerHeight);
+        else
+            this._VScroll.pageUp();
+    }
+
+    public pageDown() {
+        if (this.split)
+            this._VScroll.pageDown(this.split._innerHeight);
+        else
+            this._VScroll.pageDown();
+    }
+
+    public scrollToBottom() {
+        this._VScroll.scrollToEnd();
+    }
+
     private expireLineLinkFormat(formats, idx: number) {
         let f;
         let fs;
@@ -3547,6 +3593,16 @@ export class ScrollBar extends EventEmitter {
      */
     public scrollToStart() {
         this.updatePosition(0);
+    }
+
+    public pageUp(offset?) {
+        offset = offset || 0;
+        this.scrollBy(-(this._parentSize - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[2]) - offset));
+    }
+
+    public pageDown(offset?) {
+        offset = offset || 0;
+        this.scrollBy(this._parentSize - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[2]) - offset);
     }
 
     /**

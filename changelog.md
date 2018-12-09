@@ -3,6 +3,8 @@
 ## v0.6.13
 
 - **New:**
+  - Display: Add page up/down support
+  - Chat: Add page up/down, arrow key, home, end scroll support
   - Code editor:
     - Area designer:
       - Room background color will now set based on inherited type when possible
