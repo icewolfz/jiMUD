@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@types/bootstrap": "^3.3.40",
-    "@types/jquery": "^3.3.23",
+    "@types/jquery": "^3.3.24",
     "@types/node": "^10.12.12",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",

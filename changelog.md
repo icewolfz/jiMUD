@@ -14,7 +14,7 @@
     - Add custom properties for monster and room wizards
 - **Fixed:**
   - Display:
-    - Fixed issue with url context menu
+    - Fixed issue with URL context menu
     - Fixed split button scrolling instead of toggling
   - Code editor:
     - Fixed save file as tab tooltip
