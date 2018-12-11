@@ -711,6 +711,7 @@ export class Display extends EventEmitter {
                         this._currentSelection.end.x++;
                     }
                     else if (x > 0 && this._currentSelection.end.y >= this.lines.length) {
+                        x = 0;
                         this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
                     }
                     else {
