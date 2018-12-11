@@ -12,6 +12,8 @@
       - Add custom properties for rooms and suppot from monster/room wizards
     - Add underwater property to room wizard
     - Add custom properties for monster and room wizards
+- **Changed:**
+  - Update electron 3.0.9 to 3.0.10
 - **Fixed:**
   - Display:
     - Fixed issue with URL context menu
