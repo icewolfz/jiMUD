@@ -14,6 +14,7 @@
     - Add custom properties for monster and room wizards
 - **Changed:**
   - Update electron 3.0.9 to 3.0.10
+  - Update electron-updated 4.0.5 to 4.0.6
 - **Fixed:**
   - Display:
     - Fixed issue with URL context menu
