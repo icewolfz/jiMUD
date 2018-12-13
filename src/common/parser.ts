@@ -2467,15 +2467,34 @@ export class Parser extends EventEmitter {
         if (!this.EndOfLine && (this.textLength > 0 || this.rawLength > 0)) {
             let lines = this.display.lines;
             if (lines.length > 0) {
-                stringBuilder.push(this.display.lines[lines.length - 1]);
+                iTmp = this.display.lines[lines.length - 1];
                 formatBuilder.push.apply(formatBuilder, this.display.lineFormats[lines.length - 1]);
                 rawBuilder.push(this.display.rawLines[lines.length - 1]);
                 lineLength = this.display.lines[lines.length - 1].length;
                 this.display.removeLine(lines.length - 1);
+                format = formatBuilder[formatBuilder.length - 1];
+                if (format.formatType === FormatType.Link) {
+                    formatBuilder.pop();
+                    format = formatBuilder[formatBuilder.length - 1];
+                }
+                format.width = 0;
+                format.height = 0;
+                format.marginWidth = 0;
+                format.marginHeiht = 0;
+                lineLength = format.offset;
+                if (format.offset !== 0) {
+                    stringBuilder.push(iTmp.substring(0, format.offset));
+                    text = iTmp.substring(format.offset) + text;
+                }
+                else
+                    text = iTmp + text;
             }
+            else
+                formatBuilder.push(format = this.getFormatBlock(lineLength));
             lines = null;
         }
-        formatBuilder.push(format = this.getFormatBlock(lineLength));
+        else
+            formatBuilder.push(format = this.getFormatBlock(lineLength));
         if (this._SplitBuffer.length > 0) {
             text = this._SplitBuffer + text;
             this._SplitBuffer = '';
@@ -3860,6 +3879,14 @@ export class Parser extends EventEmitter {
                 rawBuilder.splice(rawBuilder.length - this._SplitBuffer.length, this._SplitBuffer.length);
             }
             formatBuilder.push(...this.getMXPCloseFormatBlocks());
+            if (state === ParserState.URLFound) {
+                formatBuilder.splice(fLnk, 0,
+                    {
+                        formatType: FormatType.Link,
+                        offset: lnkOffset,
+                        href: _MXPComment += stringBuilder.slice(lnk).join('')
+                    });
+            }
             this.AddLine(stringBuilder.join(''), rawBuilder.join(''), true, false, formatBuilder);
         }
         catch (ex) {
