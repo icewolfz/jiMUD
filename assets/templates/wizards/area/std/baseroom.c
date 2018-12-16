@@ -36,7 +36,7 @@ void create()
 void reset() 
 {
    ::reset();
-   //Perform a probably check to allow disabling of default monsters
+   //Perform a property check to allow disabling of default monsters
    if(query_property("no clone monsters"))
       return;
    // If monsters already in room do not create more
