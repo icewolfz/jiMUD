@@ -48,11 +48,11 @@
   },
   "devDependencies": {
     "@types/bootstrap": "^3.3.40",
-    "@types/jquery": "^3.3.25",
-    "@types/node": "^10.12.14",
+    "@types/jquery": "^3.3.27",
+    "@types/node": "^10.12.15",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^3.0.11",
+    "electron": "^3.0.12",
     "electron-builder": "^20.38.3",
     "eslint": "^5.10.0",
     "eslint-plugin-html": "^5.0.0"
@@ -128,7 +128,7 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^5.0.1",
+    "better-sqlite3": "^5.2.0",
     "buzz": "^1.2.1",
     "chokidar": "^2.0.4",
     "drivelist": "^6.4.3",
@@ -139,7 +139,7 @@
     "lz-string": "^1.4.4",
     "markdown-it": "^8.4.2",
     "mathjs-expression-parser": "^1.0.2",
-    "moment": "^2.22.2",
+    "moment": "^2.23.0",
     "monaco-editor": "^0.15.6",
     "rgbcolor": "^1.0.1",
     "spellchecker": "^3.5.0",
