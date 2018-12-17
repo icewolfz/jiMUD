@@ -156,6 +156,24 @@
                     }
                 });
             });
+            window.addEventListener('keydown', (e) => {
+                if (e.which === 33) //page up
+                    display.pageUp();
+                else if (e.which === 34) //page up
+                    display.pageDown();
+                else if (e.which === 35) //end
+                    display.scrollToBottom();
+                else if (e.which === 36) //home
+                    display.scrollTo(0, 0);
+                else if (e.which === 37) //left
+                    display.scrollByCharacter(1, 0);
+                else if (e.which === 38) //up
+                    display.scrollUp();
+                else if (e.which === 39) //right
+                    display.scrollByCharacter(-1, 0);
+                else if (e.which === 40) //down
+                    display.scrollDown();
+            });
         });
 
         // eslint-disable-next-line no-unused-vars
@@ -239,7 +257,7 @@
                 z = 0.5;
             else if (z > 3.0)
                 z = 3.0;
-            if(z === _zoom) return;
+            if (z === _zoom) return;
             _zoom = z;
             webFrame.setZoomFactor(z);
             ipcRenderer.send('setting-changed', { chat: 'chat', name: 'zoom', value: z });

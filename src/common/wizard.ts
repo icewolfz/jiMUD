@@ -53,7 +53,7 @@ export class WizardPage extends EventEmitter {
         }
     }
 
-    public set body(value) {
+    public set body(value: any) {
         if (value === this.$body) return;
         if (this.$body) {
             while (this.$body.firstChild) {
@@ -65,7 +65,7 @@ export class WizardPage extends EventEmitter {
         if (typeof value === 'string')
             this.$el.innerHTML = value;
         else if (value instanceof $) {
-            const bl = value.length;
+            const bl = (<JQuery>value).length;
             for (let b = 0; b < bl; b++)
                 this.$el.appendChild(value[b]);
         }

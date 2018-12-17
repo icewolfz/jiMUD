@@ -47,7 +47,7 @@ void reset()
 {
    ::reset();
    //virtual area so check exits, use the exit id as exits may not be created on first reset
-   //Perform a probably check to allow disabling of default monsters
+   //Perform a property check to allow disabling of default monsters
    if (query_property("no clone monsters") || !query_property("exit id"))
       return;
    // If monsters already in room do not create more

@@ -40,6 +40,7 @@ Advanced options for when creating a room
 - `Rummage Objects` objects to return when a player rummages for materials
   - `Name` the object to return
   - `Random` the chance it is this object  
+- `Custom properties` custom properties you may want to set for a room
 
 ### Description
 
@@ -227,6 +228,7 @@ Create objects for your area
     - `Bait` food/generic object only, can object be used as fishing bait
     - `Bait strength` how good the bait is
     - `Bait uses` how many uses the bait last
+  - `Custom properties` custom properties you may want to set for an object
   - `Prevent actions` prevent certain action from working
     - `Prevent offer` do not allow offering object
     - `Prevent get` can not get object

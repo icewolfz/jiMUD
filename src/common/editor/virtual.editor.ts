@@ -1599,7 +1599,8 @@ export class VirtualEditor extends EditorBase {
                 y: 0,
                 z: 0,
                 exit: '',
-                dest: ''
+                dest: '',
+                hidden: false
             };
             this.startUndoGroup();
             this.pushUndo(undoAction.add, undoType.exits, { oldLength: this.$exits.length, exits: e.data, room: [0, 0, 0] });
@@ -4191,6 +4192,8 @@ export class VirtualEditor extends EditorBase {
             return;
         const root = path.dirname(this.file);
         if (file) {
+            if (root !== path.dirname(file))
+                return;
             switch (path.basename(file)) {
                 case 'virtual.terrain':
                     this.openRaw(file, this.$terrainRaw);
@@ -4211,7 +4214,7 @@ export class VirtualEditor extends EditorBase {
                     this.openRaw(file, this.$stateRaw);
                     break;
                 default:
-                    if (file === this.filename) {
+                    if (file === this.file) {
                         this.$opened[this.filename] = new Date().getTime();
                         this.$mapRaw.value = this.read();
                         this.doUpdate(UpdateType.buildRooms | UpdateType.buildMap);
@@ -4271,28 +4274,28 @@ export class VirtualEditor extends EditorBase {
 
     public save() {
         this.$saving[this.filename] = true;
-        this.write(this.$mapRaw.value);
+        this.write(this.$mapRaw.value.trim() + '\n');
         const root = path.dirname(this.file);
 
         if (this.$files['virtual.terrain'] && this.$terrainRaw.dataset.changed === 'true') {
             this.$saving['virtual.terrain'] = true;
-            this.write(this.$terrainRaw.value, path.join(root, 'virtual.terrain'));
+            this.write(this.$terrainRaw.value.trim() + '\n', path.join(root, 'virtual.terrain'));
         }
         if (this.$files['virtual.state'] && this.$stateRaw.dataset.changed === 'true') {
             this.$saving['virtual.state'] = true;
-            this.write(this.$stateRaw.value, path.join(root, 'virtual.state'));
+            this.write(this.$stateRaw.value.trim() + '\n', path.join(root, 'virtual.state'));
         }
         if (this.$files['terrain.desc'] && this.$descriptionRaw.dataset.changed === 'true') {
             this.$saving['terrain.desc'] = true;
-            this.write(this.$descriptionRaw.value, path.join(root, 'terrain.desc'));
+            this.write(this.$descriptionRaw.value.trim() + '\n', path.join(root, 'terrain.desc'));
         }
         if (this.$files['terrain.item'] && this.$itemRaw.dataset.changed === 'true') {
             this.$saving['terrain.item'] = true;
-            this.write(this.$itemRaw.value, path.join(root, 'terrain.item'));
+            this.write(this.$itemRaw.value.trim() + '\n', path.join(root, 'terrain.item'));
         }
         if (this.$files['virtual.exits'] && this.$externalRaw.dataset.changed === 'true') {
             this.$saving['virtual.exits'] = true;
-            this.write(this.$externalRaw.value, path.join(root, 'virtual.exits'));
+            this.write(this.$externalRaw.value.trim() + '\n', path.join(root, 'virtual.exits'));
         }
         this.clearRawChanged();
         this.changed = false;
@@ -9838,6 +9841,11 @@ export class ExternalExitValueEditor extends ValueEditor {
                             return value;
                         }
                     }
+                },
+                {
+                    label: 'Hidden',
+                    field: 'hidden',
+                    width: 150
                 }]);
             dg.addRows(this.$value.map(a => ({ ...a })));
             dg.on('selection-changed', () => {
@@ -9891,7 +9899,8 @@ export class ExternalExitValueEditor extends ValueEditor {
                     y: this.data.y,
                     z: this.data.z,
                     exit: '',
-                    dest: ''
+                    dest: '',
+                    hidden: false
                 };
             });
             header = document.createElement('div');

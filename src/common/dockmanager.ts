@@ -1416,7 +1416,6 @@ export class DockPane extends EventEmitter {
             tab = this.getPanel(tab);
         if (!tab) return;
         tab.title.innerHTML = text;
-        tab.tab.title = tab.title.innerText;
         if (!noMenu) return;
         const idx = this.getPanelIndex(tab);
         $(`#cm-scroll-dropdown-menu-${idx}-title`).html(text);
