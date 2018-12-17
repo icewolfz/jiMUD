@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.13
+## v0.6.13 2018-12-17
 
 - **New:**
   - Display: Add page up/down support
