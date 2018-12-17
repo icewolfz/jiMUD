@@ -149,6 +149,11 @@
                         $('#pasteSpecial-ok').trigger('click');
                 }
             }
+            else if (event.which === 33) //page up
+                client.display.pageUp();
+            else if (event.which === 34) //page up
+                client.display.pageDown();
+
         });
         const Client = require('./js/client.js').Client;
         const Status = require('./js/status.js').Status;

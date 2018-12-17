@@ -69,6 +69,7 @@ See [Area designer](codeeditor.designer.md) for area designer docs
   - `Enable pk` allow players to kill each other
   - `No dirt` can not throw dirt
   - `Dirt type` custom dirt type, if empty it will be based on terrain and weather
+- `Custom properties` custom properties you may want to set for a room
 - `Items` the items you can look at in the room, there should be one for each noun from the description
   - `Item` the item name
   - `Description` the item description, you should also add any looks for nouns in descriptions of other items
@@ -133,6 +134,7 @@ Create a new monster using a wizard for easy option selection
 - `Advanced properties` Advanced options that while useful are not always needed
   - `No corpse` will the monster leave a corpse, string will be displayed to player and no corpse left, if "" no message and no corpse, $N/$n replaced with monster's name
   - `No limbs` will the limbs be dropped on the ground, if "" no limbs and no message, else message displayed to player, $L/$l will be replaced with limb name, $N/$n replaced with monster's name
+- `Custom properties` custom properties you may want to set for a monster
 - `Movement` determine if the monster will wander randomly or a set list of direction
   - `Speed` he speed the monster moves in heartbeats, must be set to enable movement
   - `Patrol route` a set list of exits the monster will attempt to follow

@@ -129,7 +129,7 @@ export class DataGrid extends EventEmitter {
         if (typeof options === 'string')
             this.parent = <any>options;
         else if (options instanceof $)
-            this.parent = options;
+            this.parent = <HTMLElement>options[0];
         else if (options instanceof HTMLElement)
             this.parent = options;
         else if (options) {

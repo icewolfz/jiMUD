@@ -7,18 +7,59 @@
     - Add MXP image height and better width support
     - Add MXP font size and family support
 
-## v0.6.12
+## v0.6.13
+
+- **New:**
+  - Display: Add page up/down support
+  - Chat: Add page up/down, arrow key, home, end scroll support
+  - Code editor:
+    - Area designer:
+      - Room background color will now set based on inherited type when possible
+      - Add underwater property flag
+      - Add custom properties for rooms and suppot from monster/room wizards
+    - Add underwater property to room wizard
+    - Add custom properties for monster and room wizards
+- **Changed:**
+  - Update electron 3.0.9 to 3.0.12
+  - Update electron-updated 4.0.5 to 4.0.6
+  - Update better-sqlite from 5.0.1 to 5.2.0
+- **Fixed:**
+  - Display:
+    - Fixed issue with URL context menu
+    - Fixed split button scrolling instead of toggling
+    - Fixed horizontal scroll when mouse dragging leaves bottom of display area
+    - Improve url detection when text is split
+    - Improve prompt line detection
+  - Code editor:
+    - Fixed save file as tab tooltip
+    - Area designer:
+      - Fixed delete and cut correctly removing rooms
+      - Fixed base room delete/cut
+      - Fixed base monster delete/cut
+      - Fixed default room/monster drop down not updating
+      - Fixed Update all empty rooms to new default room type
+    - Virtual area editor:
+      - Fixed external exit editing for hidden flag
+
+## v0.6.12 2018-12-03
 
 - **Changed:**
   - Update electron-updater 4.0.4 to 4.0.5
   - Display: Make selected background color transparent
 - **Fixed:**
-  - Fixed selword, selurl, selline, selectedword, selectedurl, and selectedline for context menus
+  - Fixed ${selword}, ${selurl}, ${selline}, ${selectedword}, ${selectedurl}, and ${selectedline} for context menus
   - Fixed auto connect firing when switching from a character with it on to one with it off
-  - Display: Correctly re-calculate widths and heights when font changed
+  - Display:
+    - Correctly re-calculate widths and heights when font changed
+    - Fixed split button not correctly locking when new lines added
+    - Fixed clear display when split view shown
+    - Fixed Yet another rounding issue with scroll bars
   - Code editor:
     - Rebuild recent menu as soon as opening is finished instead of de-bouncing it
     - Tab widths not correctly updated when file saved as
+    - Virtual area editor
+      - Fixed reloading when changes made to file
+      - Always add a trailing line as read_file on server seems to not work with out it correctly
     - Code generation
       - Fixed functions that have no arguments
       - Strip colors for header name/descriptions
@@ -50,7 +91,7 @@
     - Add advanced properties to object editor
   - About: do live updates of CPU/memory usage
 - **Changed:**
-  - ANSI Parser: use unicode zero space character instead of <wbr> tag to reduce memory
+  - ANSI Parser: use unicode zero space character instead of wbr tag to reduce memory
   - Update monaco-editor from 0.15.0 to 0.15.5
   - Update electron-updater 3.2.3 to 4.0.4
   - Update electron 3.0.9 to 3.0.10

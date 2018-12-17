@@ -718,6 +718,7 @@ export class Display extends EventEmitter {
                         this._currentSelection.end.x++;
                     }
                     else if (x > 0 && this._currentSelection.end.y >= this.lines.length) {
+                        x = 0;
                         this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
                     }
                     else {
@@ -1091,6 +1092,11 @@ export class Display extends EventEmitter {
         if (this.split) {
             this.split.viewCache = {};
             this.split.dirty = true;
+            if (this.split.shown) {
+                this.split.style.display = '';
+                this.split.shown = false;
+                if (this._scrollCorner) this._scrollCorner.classList.remove('active');
+            }
         }
         this.lineIDs = [];
         this._lines = [];
@@ -1697,7 +1703,7 @@ export class Display extends EventEmitter {
                         continue;
                     let end = format.offset;
                     l++;
-                    while (l++ < fl) {
+                    for (; l < fl; l++) {
                         const nFormat = formats[l];
                         if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
                             continue;
@@ -3369,7 +3375,10 @@ private calculateWrapLines(idx?: number, mv?: number) {
                 this._scrollCorner.innerHTML = '<i class="fa fa-minus"></i>';
                 this._scrollCorner.addEventListener('click', () => {
                     this.scrollLock = !this.scrollLock;
-                    this.scrollDisplay(true);
+                    if (this.split.shown)
+                        this.scrollDisplay(true);
+                    else
+                        this._VScroll.scrollBy(-this._charHeight);
                 });
             }
             else
@@ -3421,6 +3430,52 @@ private calculateWrapLines(idx?: number, mv?: number) {
             this._HScroll.scrollTo(x);
         else if (x + this._charWidth > this._HScroll.position + this._HScroll.trackSize)
             this._HScroll.scrollTo(x - this._HScroll.trackSize + this._charWidth);
+    }
+
+    public scrollBy(x: number, y: number) {
+        this._VScroll.scrollBy(y);
+        this._HScroll.scrollBy(x);
+    }
+
+    public scrollByCharacter(x: number, y: number) {
+        this._VScroll.scrollBy(y * this._charHeight);
+        this._HScroll.scrollBy(x * this._charWidth);
+    }
+
+    public scrollUp() {
+        if (this._viewRange.start < 1 || this._viewRange.start - 1 >= this._lines.length)
+            return;
+        this._VScroll.scrollBy(-this._lines[this._viewRange.start - 1].height);
+    }
+
+    public scrollDown() {
+        if (this._viewRange.start + 1 >= this._lines.length)
+            return;
+        this._VScroll.scrollBy(this._lines[this._viewRange.start + 1].height);
+    }
+
+    public scrollLeft() {
+        if (this._viewRange.start + 1 >= this._lines.length)
+            return;
+        this._VScroll.scrollBy(this._lines[this._viewRange.start + 1].height);
+    }
+
+    public pageUp() {
+        if (this.split)
+            this._VScroll.pageUp(this.split._innerHeight);
+        else
+            this._VScroll.pageUp();
+    }
+
+    public pageDown() {
+        if (this.split)
+            this._VScroll.pageDown(this.split._innerHeight);
+        else
+            this._VScroll.pageDown();
+    }
+
+    public scrollToBottom() {
+        this._VScroll.scrollToEnd();
     }
 
     private expireLineLinkFormat(formats, idx: number) {
@@ -3587,7 +3642,7 @@ export class ScrollBar extends EventEmitter {
      * @type {number}
      * @memberof ScrollBar
      */
-    get position(): number { return Math.ceil(this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0])); }
+    get position(): number { return Math.round(this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0])); }
 
     get positionRaw(): number { return this._position - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[0]); }
 
@@ -3903,6 +3958,16 @@ export class ScrollBar extends EventEmitter {
      */
     public scrollToStart() {
         this.updatePosition(0);
+    }
+
+    public pageUp(offset?) {
+        offset = offset || 0;
+        this.scrollBy(-(this._parentSize - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[2]) - offset));
+    }
+
+    public pageDown(offset?) {
+        offset = offset || 0;
+        this.scrollBy(this._parentSize - (this._type === ScrollType.horizontal ? this._padding[3] : this._padding[2]) - offset);
     }
 
     /**

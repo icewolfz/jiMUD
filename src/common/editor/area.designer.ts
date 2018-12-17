@@ -29,6 +29,7 @@ interface AreaDesignerOptions extends EditorOptions {
 }
 
 export enum RoomFlags {
+    Underwater = 1 << 16,
     No_MGive = 1 << 15,
     Melee_As_Ability = 1 << 14,
     No_Dirt = 1 << 13,
@@ -225,6 +226,7 @@ export class Room {
     //room wizard supports
     public forageObjects: ObjectInfo[] = [];
     public rummageObjects: ObjectInfo[] = [];
+    public properties: Property[] = [];
 
     public exitsDetails = {};
     public terrain = '';
@@ -264,19 +266,27 @@ export class Room {
         return new Room(this.x, this.y, this.z, this, this.type);
     }
 
-    public equals(room) {
+    public equals(room, base?) {
         if (!room) return false;
         let prop;
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
             switch (prop) {
+                case 'x':
+                case 'y':
+                case 'z':
+                case 'type':
+                    if (base) continue;
+                    if (this[prop] !== room[prop])
+                        return false;
+                    break;
                 case 'items':
                     if (this.items.length !== room.items.length)
                         return false;
                     if (this.items.filter((v, i) => room.items[i].item !== v.item && room.items[i].description !== v.description).length !== 0)
                         return false;
                     break;
-                case 'read':
+                case 'reads':
                 case 'rummageObjects':
                 case 'forageObjects':
                 case 'objects':
@@ -284,6 +294,7 @@ export class Room {
                 case 'sounds':
                 case 'smells':
                 case 'searches':
+                case 'properties':
                     if (this[prop].length !== room[prop].length)
                         return false;
                     if (this[prop].filter((v, i) => room[prop][i] !== v).length !== 0)
@@ -351,6 +362,7 @@ export class Room {
         this.rummageObjects = [];
         this.monsters = [];
         this.reads = [];
+        this.properties = [];
     }
 
     public at(x, y, z?) {
@@ -473,6 +485,7 @@ class Monster {
     public askNoTopic: string = '';
     public askResponseType: MonsterResponseType = MonsterResponseType.say;
     public askTopics: MonsterTopic[] = [];
+    public properties: Property[] = [];
 
     public reputationGroup: string = '';
     public reputations: MonsterReputation[] = [];
@@ -586,6 +599,7 @@ class Monster {
         this.askTopics = [];
         this.reputations = [];
         this.emotes = [];
+        this.properties = [];
     }
 }
 
@@ -813,14 +827,18 @@ class Area {
                 }
             }
         }
-        if (data.baseRooms)
+        if (data.baseRooms) {
+            area.baseRooms = {};
             Object.keys(data.baseRooms).forEach(k => {
                 area.baseRooms[k] = new Room(0, 0, 0, data.baseRooms[k]);
             });
-        if (data.baseMonsters)
+        }
+        if (data.baseMonsters) {
+            area.baseMonsters = {};
             Object.keys(data.baseMonsters).forEach(k => {
                 area.baseMonsters[k] = new Monster(data.baseMonsters[k]);
             });
+        }
         area.defaultRoom = data.defaultRoom || 'base';
         area.defaultMonster = data.defaultMonster || 'base';
         return area;
@@ -3107,7 +3125,7 @@ export class AreaDesigner extends EditorBase {
 
             }
             else if (prop === 'type') {
-                const nDefault = this.$area.baseRooms[newValue] || new Room(0, 0, 0);
+                const nDefault = this.$area.baseRooms[newValue] || this.$area.baseRooms[this.$area.defaultRoom] || new Room(0, 0, 0);
                 while (sl--) {
                     const curr = selected[sl];
                     const old = this.getRoom(curr.x, curr.y, curr.z);
@@ -3145,6 +3163,7 @@ export class AreaDesigner extends EditorBase {
                         case 'smells':
                         case 'searches':
                         case 'items':
+                        case 'properties':
                             oldValues[sl] = copy(old[prop]);
                             curr[prop] = copy(newValue);
                             this.RoomChanged(curr, old, true);
@@ -4062,6 +4081,114 @@ export class AreaDesigner extends EditorBase {
                 }
             },
             {
+                property: 'properties',
+                label: 'Custom',
+                group: 'Properties',
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
+                sort: 9,
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        columns: [
+                            {
+                                label: 'Type',
+                                field: 'type',
+                                width: 150,
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: [
+                                            { value: 0, display: 'normal' },
+                                            { value: 1, display: 'temporary' }
+                                        ]
+                                    }
+                                },
+                                formatter: (data) => {
+                                    if (!data) return '';
+                                    switch (data.cell) {
+                                        case 0:
+                                            return 'normal';
+                                        case 1:
+                                            return 'temporary';
+                                    }
+                                    return '';
+                                },
+                                tooltipFormatter: (data) => {
+                                    if (!data) return '';
+                                    switch (data.cell) {
+                                        case 0:
+                                            return 'normal';
+                                        case 1:
+                                            return 'temporary';
+                                    }
+                                    return '';
+                                }
+                            },
+                            {
+                                label: 'Name',
+                                field: 'name',
+                                width: 150,
+                                editor: {
+                                    type: EditorType.dropdown,
+                                    options: {
+                                        data: [
+                                            '[effect] bonus',
+                                            'cold element bonus',
+                                            'frost element bonus',
+                                            'ice element bonus',
+                                            'cold element penalty',
+                                            'frost element penalty',
+                                            'ice element penalty',
+                                            'lightning element bonus',
+                                            'lightning element penalty',
+                                            'fire element bonus',
+                                            'fire element penalty',
+                                            'heat element bonus',
+                                            'heat element penalty',
+                                            'water element bonus',
+                                            'water element penalty',
+                                            'hide exits',
+                                            'no convert',
+                                            'no scry',
+                                            'no dirt',
+                                            'no cauterize',
+                                            'no food decay',
+                                            'no shock',
+                                            'nonetrackable',
+                                            'melee as ability',
+                                            'crafting tool',
+                                            'crafting quality',
+                                            'crafting enchantment',
+                                            'no range throw',
+                                            'no range shoot'
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Value',
+                                field: 'value',
+                                spring: true,
+                                width: 200
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                type: 1,
+                                name: '',
+                                value: ''
+                            };
+                        },
+                        type: 'property',
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
+                    }
+                }
+            },
+            {
                 property: 'light',
                 group: 'Properties',
                 sort: 0,
@@ -4243,7 +4370,42 @@ export class AreaDesigner extends EditorBase {
             MonsterTypes.map(r => `<option value="${r.value}">${r.display}</option>`).join('') + '</optgroup>';
         this.$propertiesEditor.defaultRoom = $(el[0]).selectpicker();
         this.$propertiesEditor.defaultRoom.on('change', () => {
+            this.startUndoGroup();
             this.pushUndo(undoAction.edit, undoType.properties, { property: 'defaultRoom', old: this.$area.defaultRoom, new: this.$propertiesEditor.defaultRoom.val() });
+            const r = this.$area.baseRooms[this.$area.defaultRoom];
+            const n = this.$propertiesEditor.defaultRoom.val();
+            const rooms = [];
+
+            const zl = this.$area.size.depth;
+            const xl = this.$area.size.width;
+            const yl = this.$area.size.height;
+            for (let z = 0; z < zl; z++) {
+                for (let y = 0; y < yl; y++) {
+                    for (let x = 0; x < xl; x++) {
+                        const room = this.$area.rooms[z][y][x];
+                        let nRoom;
+                        //not current default so ignore
+                        if (r) {
+                            const base = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom];
+                            //room has been changed so ignore
+                            if (!room.empty && !room.equals(base, true)) continue;
+                            rooms.push(room);
+                            nRoom = new Room(room.x, room.y, room.z, this.$area.baseRooms[n], n);
+                        }
+                        else {
+                            if (!room.empty || room.type !== this.$area.defaultRoom)
+                                continue;
+                            room.type = n;
+                        }
+                        this.setRoom(nRoom);
+                        this.RoomChanged(nRoom, room);
+                        this.DrawRoom(this.$mapContext, nRoom, true, nRoom.at(this.$mouse.rx, this.$mouse.ry));
+                    }
+                }
+            }
+
+            this.pushUndo(undoAction.delete, undoType.room, rooms);
+            this.stopUndoGroup();
             this.$area.defaultRoom = this.$propertiesEditor.defaultRoom.val();
             this.changed = true;
         });
@@ -4489,12 +4651,13 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-ask-response': '' + (ed.value.askResponseType || 0),
                                     'mon-wiz-ask-topics': ed.value.askTopics,
                                     'mon-wiz-reputation-group': ed.value.reputationGroup,
-                                    'mon-wiz-reputations': ed.value.reputations
+                                    'mon-wiz-reputations': ed.value.reputations,
+                                    'mon-wiz-properties': ed.value.properties || []
                                 },
                                 finish: e => {
                                     const nMonster = ed.value.clone();
                                     nMonster.notes = e.data['mon-wiz-notes'];
-                                    nMonster.flags = RoomFlags.None;
+                                    nMonster.flags = MonsterFlags.None;
                                     nMonster.type = e.data['mon-wiz-type'].value;
                                     nMonster.level = +e.data['mon-wiz-level'];
                                     nMonster.alignment = e.data['mon-wiz-alignment'];
@@ -4568,6 +4731,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.speechChance = +e.data['mon-wiz-speech-chance'];
                                     nMonster.emotesChanceCombat = +e.data['mon-wiz-emotes-chance-combat'];
                                     nMonster.speechChanceCombat = +e.data['mon-wiz-speech-chance-combat'];
+                                    nMonster.properties = e.data['mon-wiz-properties'] || [];
 
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;
@@ -4609,8 +4773,8 @@ export class AreaDesigner extends EditorBase {
         this.$propertiesEditor.monsterGrid.on('cut', (e) => {
             this.pushUndo(undoAction.delete, undoType.properties, {
                 property: 'baseMonsters', values: e.data.map(r => {
-                    delete this.$area.baseMonsters[r.name];
-                    return { name: r.name, value: r.monster };
+                    delete this.$area.baseMonsters[r.data.name];
+                    return { name: r.data.name, value: r.data.monster };
                 })
             });
             this.emit('supports-changed');
@@ -4647,8 +4811,8 @@ export class AreaDesigner extends EditorBase {
             else {
                 this.pushUndo(undoAction.delete, undoType.properties, {
                     property: 'baseMonsters', values: e.data.map(r => {
-                        delete this.$area.baseMonsters[r.name];
-                        return { name: r.name, value: r.monster };
+                        delete this.$area.baseMonsters[r.data.name];
+                        return { name: r.data.name, value: r.data.monster };
                     })
                 });
                 this.changed = true;
@@ -4903,6 +5067,7 @@ export class AreaDesigner extends EditorBase {
                                     'room-wiz-no-map': (ed.value.flags & RoomFlags.No_Map_Send) === RoomFlags.No_Map_Send,
                                     'room-wiz-hide-exits': (ed.value.flags & RoomFlags.Hide_Exits) === RoomFlags.Hide_Exits,
                                     'room-wiz-no-forage': (ed.value.flags & RoomFlags.No_Forage) === RoomFlags.No_Forage,
+                                    'room-wiz-underwater': (ed.value.flags & RoomFlags.Underwater) === RoomFlags.Underwater,
                                     'room-wiz-forage': '' + ed.value.forage,
                                     'room-wiz-max-forage': '' + ed.value.maxForage,
                                     'room-wiz-secret-exit': ed.value.secretExit,
@@ -4921,12 +5086,14 @@ export class AreaDesigner extends EditorBase {
                                     'room-wiz-searches': ed.value.searches,
                                     'room-wiz-forage-objects': ed.value.forageObjects,
                                     'room-wiz-rummage-objects': ed.value.rummage,
-                                    'room-wiz-reads': ed.value.reads
+                                    'room-wiz-reads': ed.value.reads,
+                                    'room-wiz-properties': ed.value.properties
                                 },
                                 finish: e => {
                                     const nRoom = ed.value.clone();
                                     nRoom.notes = e.data['room-wiz-notes'];
                                     nRoom.reads = e.data['room-wiz-reads'];
+                                    nRoom.properties = e.data['room-wiz-properties'];
                                     nRoom.flags = RoomFlags.None;
                                     nRoom.type = e.data['room-wiz-type'].value;
                                     nRoom.terrain = e.data['room-wiz-terrain'];
@@ -4963,6 +5130,8 @@ export class AreaDesigner extends EditorBase {
                                         nRoom.flags |= RoomFlags.Enable_Pk;
                                     if (e.data['room-wiz-no-dirt'])
                                         nRoom.flags |= RoomFlags.No_Dirt;
+                                    if (e.data['room-wiz-underwater'])
+                                        nRoom.flags |= RoomFlags.Underwater;
                                     nRoom.forage = +e.data['room-wiz-forage'];
                                     nRoom.maxForage = +e.data['room-wiz-max-forage'];
                                     nRoom.secretExit = e.data['room-wiz-secret-exit'];
@@ -5138,8 +5307,8 @@ export class AreaDesigner extends EditorBase {
         this.$propertiesEditor.roomGrid.on('cut', (e) => {
             this.pushUndo(undoAction.delete, undoType.properties, {
                 property: 'baseRooms', values: e.data.map(r => {
-                    delete this.$area.baseRooms[r.name];
-                    return { name: r.name, value: r.room };
+                    delete this.$area.baseRooms[r.data.name];
+                    return { name: r.data.name, value: r.data.room };
                 })
             });
             this.emit('supports-changed');
@@ -5177,8 +5346,8 @@ export class AreaDesigner extends EditorBase {
             else {
                 this.pushUndo(undoAction.delete, undoType.properties, {
                     property: 'baseRooms', values: e.data.map(r => {
-                        delete this.$area.baseRooms[r.name];
-                        return { name: r.name, value: r.room };
+                        delete this.$area.baseRooms[r.data.name];
+                        return { name: r.data.name, value: r.data.room };
                     })
                 });
                 this.changed = true;
@@ -5469,7 +5638,8 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-ask-response': '' + (ed.value.askResponseType || 0),
                                     'mon-wiz-ask-topics': ed.value.askTopics,
                                     'mon-wiz-reputation-group': ed.value.reputationGroup,
-                                    'mon-wiz-reputations': ed.value.reputations
+                                    'mon-wiz-reputations': ed.value.reputations,
+                                    'mon-wiz-properties': ed.value.properties || []
                                 },
                                 finish: e => {
                                     if (ed.editors) {
@@ -5478,7 +5648,7 @@ export class AreaDesigner extends EditorBase {
                                     }
                                     const nMonster = ed.value.clone();
                                     nMonster.notes = e.data['mon-wiz-notes'];
-                                    nMonster.flags = RoomFlags.None;
+                                    nMonster.flags = MonsterFlags.None;
                                     nMonster.type = e.data['mon-wiz-type'].value;
                                     nMonster.level = +e.data['mon-wiz-level'];
                                     nMonster.alignment = e.data['mon-wiz-alignment'];
@@ -5550,6 +5720,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.speechChance = e.data['mon-wiz-speech-chance'];
                                     nMonster.emotesChanceCombat = e.data['mon-wiz-emotes-chance-combat'];
                                     nMonster.speechChanceCombat = e.data['mon-wiz-speech-chance-combat'];
+                                    nMonster.properties = e.data['mon-wiz-properties'] || [];
 
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;
@@ -6369,7 +6540,7 @@ export class AreaDesigner extends EditorBase {
                                         }
                                     }),
                                     new WizardDataGridPage({
-                                        title: 'Advanced properties',
+                                        title: 'Custom properties',
                                         id: 'obj-properties',
                                         clipboard: 'jiMUD/',
                                         columns: [
@@ -8460,7 +8631,7 @@ export class AreaDesigner extends EditorBase {
                 let sl = this.$selectedRooms.length;
                 while (sl--) {
                     const or = this.$selectedRooms[sl];
-                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
+                    this.$selectedRooms[sl] = new Room(or.x, or.y, or.z, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom); //, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
                     if (this.$focusedRoom.at(or.x, or.y, or.z))
                         this.$focusedRoom = this.$selectedRooms[sl];
                     this.setRoom(this.$selectedRooms[sl]);
@@ -9619,99 +9790,102 @@ export class AreaDesigner extends EditorBase {
             ctx.strokeRoundedRect(1.5 + x, 1.5 + y, 30, 30, 8);
         }
         ctx.beginPath();
+        const base = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom] || new Room(0, 0, 0);
         if (room.background && room.background.length) {
             ctx.fillStyle = room.background;
             f = true;
         }
-        else if (room.terrain && room.terrain.length) {
-            //spellchecker:disable
-            switch (room.terrain) {
-                case 'wood':
-                    ctx.fillStyle = '#966F33';
-                    f = true;
-                    break;
-                case 'jungle':
-                    ctx.fillStyle = '#347C2C';
-                    f = true;
-                    break;
-                case 'forest':
-                    ctx.fillStyle = '#4E9258';
-                    f = true;
-                    break;
-                case 'grass':
-                case 'grassland':
-                case 'plains':
-                case 'prairie':
-                case 'savannah':
-                    ctx.fillStyle = '#4AA02C';
-                    f = true;
-                    break;
-                case 'desert':
-                case 'dirt':
-                case 'dirtroad':
-                case 'beach':
-                case 'sand':
-                case 'sanddesert':
-                    ctx.fillStyle = '#C2B280';
-                    f = true;
-                    break;
-                case 'snow':
-                    ctx.fillStyle = '#F0F8FF';
-                    f = true;
-                    break;
-                case 'tundra':
-                case 'icesheet':
-                    ctx.fillStyle = '#368BC1';
-                    f = true;
-                    break;
-                case 'underwater':
-                case 'water':
-                case 'lake':
-                case 'river':
-                    ctx.fillStyle = '#EBF4FA';
-                    f = true;
-                    break;
-                case 'ocean':
-                    ctx.fillStyle = '#C2DFFF';
-                    f = true;
-                    break;
-                case 'bog':
-                case 'city':
-                case 'cliff':
-                case 'highmountain':
-                case 'hills':
-                case 'mountain':
-                case 'swamp':
-                    f = false;
-                    break;
-                case 'farmland':
-                    f = true;
-                    ctx.fillStyle = '#A9DFBF';
-                    break;
-                case 'rockdesert':
-                    ctx.fillStyle = '#6E2C00';
-                    f = true;
-                    break;
-                case 'pavedroad':
-                    ctx.fillStyle = '#D0D3D4';
-                    f = true;
-                    break;
-                case 'cobble':
-                case 'rocky':
-                case 'stone':
-                    ctx.fillStyle = '#D5DBDB';
-                    f = true;
-                    break;
-                default:
-                    f = false;
-                    break;
+        else {
+            const terrain = room.terrain || (base ? base.terrain : 0);
+            if (terrain && terrain.length) {
+                //spellchecker:disable
+                switch (terrain) {
+                    case 'wood':
+                        ctx.fillStyle = '#966F33';
+                        f = true;
+                        break;
+                    case 'jungle':
+                        ctx.fillStyle = '#347C2C';
+                        f = true;
+                        break;
+                    case 'forest':
+                        ctx.fillStyle = '#4E9258';
+                        f = true;
+                        break;
+                    case 'grass':
+                    case 'grassland':
+                    case 'plains':
+                    case 'prairie':
+                    case 'savannah':
+                        ctx.fillStyle = '#4AA02C';
+                        f = true;
+                        break;
+                    case 'desert':
+                    case 'dirt':
+                    case 'dirtroad':
+                    case 'beach':
+                    case 'sand':
+                    case 'sanddesert':
+                        ctx.fillStyle = '#C2B280';
+                        f = true;
+                        break;
+                    case 'snow':
+                        ctx.fillStyle = '#F0F8FF';
+                        f = true;
+                        break;
+                    case 'tundra':
+                    case 'icesheet':
+                        ctx.fillStyle = '#368BC1';
+                        f = true;
+                        break;
+                    case 'underwater':
+                    case 'water':
+                    case 'lake':
+                    case 'river':
+                        ctx.fillStyle = '#EBF4FA';
+                        f = true;
+                        break;
+                    case 'ocean':
+                        ctx.fillStyle = '#C2DFFF';
+                        f = true;
+                        break;
+                    case 'bog':
+                    case 'city':
+                    case 'cliff':
+                    case 'highmountain':
+                    case 'hills':
+                    case 'mountain':
+                    case 'swamp':
+                        f = false;
+                        break;
+                    case 'farmland':
+                        f = true;
+                        ctx.fillStyle = '#A9DFBF';
+                        break;
+                    case 'rockdesert':
+                        ctx.fillStyle = '#6E2C00';
+                        f = true;
+                        break;
+                    case 'pavedroad':
+                        ctx.fillStyle = '#D0D3D4';
+                        f = true;
+                        break;
+                    case 'cobble':
+                    case 'rocky':
+                    case 'stone':
+                        ctx.fillStyle = '#D5DBDB';
+                        f = true;
+                        break;
+                    default:
+                        f = false;
+                        break;
+                }
+                //spellchecker:enable
             }
-            //spellchecker:enable
+            else
+                f = false;
         }
-        else
-            f = false;
-
-        if (room.empty)
+        if (room.empty || room.equals(base, true))
             ctx.strokeStyle = '#eae9e9';
         else
             ctx.strokeStyle = 'black';
@@ -10283,8 +10457,10 @@ export class AreaDesigner extends EditorBase {
         if (old) {
             if (room.equals(old))
                 return;
-            if (!old.empty) this.$roomCount--;
-            if (!room.empty) this.$roomCount++;
+            const base = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom];
+            const baseOld = this.$area.baseRooms[old.type] || this.$area.baseRooms[this.$area.defaultRoom];
+            if (!old.empty && !old.equals(baseOld, true)) this.$roomCount--;
+            if (!room.empty && !old.equals(base, true)) this.$roomCount++;
             this.doUpdate(UpdateType.status);
         }
         this.changed = true;
@@ -10341,7 +10517,7 @@ export class AreaDesigner extends EditorBase {
             this.$roomPreview.objects.textContent = '';
         }
         else {
-            const base: Room = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
+            const base: Room = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom] || new Room(0, 0, 0);
             if (!room.short || room.short.trim().length === 0)
                 str = base.short;
             else
@@ -10569,7 +10745,8 @@ export class AreaDesigner extends EditorBase {
             for (let y = 0; y < yl; y++) {
                 for (let x = 0; x < xl; x++) {
                     const room = this.$area.rooms[z][y][x];
-                    if (!room.empty) this.$roomCount++;
+                    const base = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom];
+                    if (!room.empty && !room.equals(base, true)) this.$roomCount++;
                 }
             }
         }
@@ -10856,7 +11033,8 @@ export class AreaDesigner extends EditorBase {
                         if (this.$cancel)
                             throw new Error('Canceled');
                         const r = this.$area.rooms[z][y][x];
-                        if (r.empty) continue;
+                        const base = this.$area.baseRooms[r.type] || this.$area.baseRooms[this.$area.defaultRoom] || new Room(0, 0, 0);
+                        if (r.empty || r.equals(base, true)) continue;
                         const name = (r.subArea && r.subArea.length > 0 ? r.subArea : data.area).toLowerCase();
                         if (!counts[name])
                             counts[name] = 1;
@@ -10955,7 +11133,8 @@ export class AreaDesigner extends EditorBase {
                         if (this.$cancel)
                             throw new Error('Canceled');
                         const r = this.$area.rooms[z][y][x];
-                        if (r.empty) continue;
+                        const base: Room = this.$area.baseRooms[r.type] || this.$area.baseRooms[this.$area.defaultRoom];
+                        if (r.empty || r.equals(base, true)) continue;
                         this.write(this.generateRoomCode(r.clone(), files, copy(data)), path.join(p, files[`${r.x},${r.y},${r.z}`] + '.c'));
                         count++;
                         this.emit('progress', { type: 'designer', percent: 50 + Math.round(50 * count / this.$roomCount) });
@@ -10987,6 +11166,8 @@ export class AreaDesigner extends EditorBase {
         const doors = eArray.filter(r => r.exit.length > 0 && r.door && r.door.length > 0 && !r.climb);
         const exits = eArray.filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && !r.climb);
         const climbs = eArray.filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && r.climb);
+        let props: any = {};
+        let tempProps: any = {};
         data.doc = [];
         data.includes = '';
         data.description = '';
@@ -10996,13 +11177,13 @@ export class AreaDesigner extends EditorBase {
         data['create arguments'] = '';
         data['reset body'] = '';
         data['reset post'] = '';
-        const base: Room = this.$area.baseRooms[room.type] || new Room(0, 0, 0);
+        const base: Room = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom] || new Room(0, 0, 0);
         tmp2 = room.objects.filter(o => this.$area.objects[o.id] && (o.minAmount > 0 || o.unique));
         tmp3 = room.monsters.filter(o => this.$area.monsters[o.id] && (o.minAmount > 0 || o.unique));
         if (baseRoom && (room.forage !== base.forage || doors.length > 0 || tmp2.length !== 0 || tmp3.length !== 0)) {
             data['reset body'] += '\n';
             if (room.forage !== base.forage)
-                data['reset body'] += `   set_property('forage', ${room.forage});\n`;
+                props['forage'] = room.forage;
             doors.forEach(r => {
                 if (r.key.length !== 0)
                     data['reset body'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
@@ -11060,7 +11241,7 @@ export class AreaDesigner extends EditorBase {
         else if (!baseRoom && (room.forage !== base.forage || doors.length > 0 || tmp2.length !== 0 || tmp3.length !== 0)) {
             data['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
             if (room.forage !== base.forage)
-                data['create post'] += `   set_property('forage', ${room.forage});\n`;
+                props['forage'] = room.forage;
             doors.forEach(r => {
                 data['create post'] += `   set_locked("${r.door}", ${r.locked ? 1 : 0});\n`;
                 data['create post'] += `   set_open("${r.door}", ${r.closed ? 0 : 1});\n`;
@@ -11354,64 +11535,124 @@ export class AreaDesigner extends EditorBase {
 
         if (room.terrain !== base.terrain)
             data['create body'] += `   set_terrain("${room.terrain}");\n`;
-        tmp = [];
-        if (room.light !== base.light)
-            tmp.push(`"light" : ${room.light}`);
-        if ((room.flags & RoomFlags.Indoors) === RoomFlags.Indoors && (base.flags & RoomFlags.Indoors) !== RoomFlags.Indoors)
-            tmp.push('"indoors" : 1');
-        if ((room.flags & RoomFlags.No_Magic) === RoomFlags.No_Magic && (base.flags & RoomFlags.No_Magic) !== RoomFlags.No_Magic)
-            tmp.push('"no magic" : 1');
-        if ((room.flags & RoomFlags.No_Attack) === RoomFlags.No_Attack && (base.flags & RoomFlags.No_Attack) !== RoomFlags.No_Attack)
-            tmp.push('"no attack" : 1');
-        if ((room.flags & RoomFlags.No_Scry) === RoomFlags.No_Scry && (base.flags & RoomFlags.No_Scry) !== RoomFlags.No_Scry)
-            tmp.push('"no scry" : 1');
-        if ((room.flags & RoomFlags.No_Teleport) === RoomFlags.No_Teleport && (base.flags & RoomFlags.No_Teleport) !== RoomFlags.No_Teleport)
-            tmp.push('"no teleport" : 1');
-        if ((room.flags & RoomFlags.No_MGive) === RoomFlags.No_MGive && (base.flags & RoomFlags.No_MGive) !== RoomFlags.No_MGive)
-            tmp.push('"no mgive" : 1');
-        if ((room.flags & RoomFlags.Council) === RoomFlags.Council && (base.flags & RoomFlags.Council) !== RoomFlags.Council)
-            tmp.push('"council" : 1');
-        if ((room.flags & RoomFlags.No_Map_Send) === RoomFlags.No_Map_Send && (base.flags & RoomFlags.No_Map_Send) !== RoomFlags.No_Map_Send)
-            tmp.push('"no send info" : 1');
-        if ((room.flags & RoomFlags.Melee_As_Ability) === RoomFlags.Melee_As_Ability && (base.flags & RoomFlags.Melee_As_Ability) !== RoomFlags.Melee_As_Ability)
-            tmp.push('"melee as ability" : 1');
-        if ((room.flags & RoomFlags.Enable_Pk) === RoomFlags.Enable_Pk && (base.flags & RoomFlags.Enable_Pk) !== RoomFlags.Enable_Pk)
-            tmp.push('"enable pk" : 1');
-        if ((room.flags & RoomFlags.Hide_Exits) === RoomFlags.Hide_Exits && (base.flags & RoomFlags.Hide_Exits) !== RoomFlags.Hide_Exits)
-            tmp.push('"hide exits" : 1');
-        if ((room.flags & RoomFlags.No_Forage) === RoomFlags.No_Forage && (base.flags & RoomFlags.No_Forage) !== RoomFlags.No_Forage)
-            tmp.push('"no forage" : 1');
-        if ((room.flags & RoomFlags.No_Dirt) === RoomFlags.No_Dirt && (base.flags & RoomFlags.No_Dirt) !== RoomFlags.No_Dirt)
-            tmp.push('"no dirt" : 1');
-        if (room.dirtType !== base.dirtType)
-            tmp.push(`"dirt type" : "${room.dirtType}"`);
 
+        if (room.light !== base.light)
+            props['light'] = room.light;
+        if ((room.flags & RoomFlags.Indoors) === RoomFlags.Indoors && (base.flags & RoomFlags.Indoors) !== RoomFlags.Indoors)
+            props['indoors'] = 1;
+        if ((room.flags & RoomFlags.No_Magic) === RoomFlags.No_Magic && (base.flags & RoomFlags.No_Magic) !== RoomFlags.No_Magic)
+            props['no magic'] = 1;
+        if ((room.flags & RoomFlags.No_Attack) === RoomFlags.No_Attack && (base.flags & RoomFlags.No_Attack) !== RoomFlags.No_Attack)
+            props['no attack'] = 1;
+        if ((room.flags & RoomFlags.No_Scry) === RoomFlags.No_Scry && (base.flags & RoomFlags.No_Scry) !== RoomFlags.No_Scry)
+            props['no scry'] = 1;
+        if ((room.flags & RoomFlags.No_Teleport) === RoomFlags.No_Teleport && (base.flags & RoomFlags.No_Teleport) !== RoomFlags.No_Teleport)
+            props['no teleport'] = 1;
+        if ((room.flags & RoomFlags.No_MGive) === RoomFlags.No_MGive && (base.flags & RoomFlags.No_MGive) !== RoomFlags.No_MGive)
+            props['no mgive'] = 1;
+        if ((room.flags & RoomFlags.Council) === RoomFlags.Council && (base.flags & RoomFlags.Council) !== RoomFlags.Council)
+            props['council'] = 1;
+        if ((room.flags & RoomFlags.No_Map_Send) === RoomFlags.No_Map_Send && (base.flags & RoomFlags.No_Map_Send) !== RoomFlags.No_Map_Send)
+            props['no send info'] = 1;
+        if ((room.flags & RoomFlags.Melee_As_Ability) === RoomFlags.Melee_As_Ability && (base.flags & RoomFlags.Melee_As_Ability) !== RoomFlags.Melee_As_Ability)
+            props['melee as ability'] = 1;
+        if ((room.flags & RoomFlags.Enable_Pk) === RoomFlags.Enable_Pk && (base.flags & RoomFlags.Enable_Pk) !== RoomFlags.Enable_Pk)
+            props['enable pk'] = 1;
+        if ((room.flags & RoomFlags.Hide_Exits) === RoomFlags.Hide_Exits && (base.flags & RoomFlags.Hide_Exits) !== RoomFlags.Hide_Exits)
+            props['hide exits'] = 1;
+        if ((room.flags & RoomFlags.No_Forage) === RoomFlags.No_Forage && (base.flags & RoomFlags.No_Forage) !== RoomFlags.No_Forage)
+            props['no forage'] = 1;
+        if ((room.flags & RoomFlags.No_Dirt) === RoomFlags.No_Dirt && (base.flags & RoomFlags.No_Dirt) !== RoomFlags.No_Dirt)
+            props['no dirt'] = 1;
+        if (room.dirtType !== base.dirtType)
+            props['dirt type'] = `"${room.dirtType}"`;
+        if ((room.flags & RoomFlags.Underwater) === RoomFlags.Underwater && (base.flags & RoomFlags.Underwater) !== RoomFlags.Underwater)
+            props['underwater'] = 1;
         if ((room.baseFlags & RoomBaseFlags.No_Monsters) === RoomBaseFlags.No_Monsters && (base.baseFlags & RoomBaseFlags.No_Monsters) !== RoomBaseFlags.No_Monsters)
-            tmp.push(`"no clone monsters" : 1`);
+            props['no clone monsters'] = 1;
         if ((room.baseFlags & RoomBaseFlags.No_Objects) === RoomBaseFlags.No_Objects && (base.baseFlags & RoomBaseFlags.No_Objects) !== RoomBaseFlags.No_Objects)
-            tmp.push(`"no clone objects" : 1`);
+            props['no clone objects'] = 1;
+
+        if (room.properties.length > 0) {
+            room.properties.forEach(b => {
+                b.value = b.value.trim();
+                if (b.value.startsWith('(:')) {
+                    if (b.type === 1)
+                        tempProps[b.name] = formatFunctionPointer(b.value);
+                    else
+                        props[b.name] = formatFunctionPointer(b.value);
+                    data['create pre'] += createFunction(b.value);
+                }
+                else if (b.value.startsWith('({')) {
+                    tmp2 = b.value.substring(2);
+                    if (tmp2.endsWith('})'))
+                        tmp2 = tmp2.substr(0, tmp2.length - 2);
+                    tmp2 = tmp2.split(',');
+                    tmp2 = tmp2.map(t => {
+                        t = t.trim();
+                        if ((t.startsWith('"') && t.endsWith('"')) || t.match(/^\d+$/))
+                            return t;
+                        else if (t.startsWith('(:')) {
+                            t = formatFunctionPointer(t);
+                            data['create pre'] += createFunction(t);
+                            return t;
+                        }
+                        return `"${t}"`;
+                    });
+                    if (b.type === 1)
+                        tempProps[b.name] = `({ ${tmp2.join(', ')} })`;
+                    else
+                        props[b.name] = `({ ${tmp2.join(', ')} })`;
+                }
+                else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
+                    if (b.type === 1)
+                        tempProps[b.name] = b.value;
+                    else
+                        props[b.name] = b.value;
+                }
+                else {
+                    if (b.type === 1)
+                        tempProps[b.name] = `"${b.value}"`;
+                    else
+                        props[b.name] = `"${b.value}"`;
+                }
+            });
+        }
 
         room.secretExit = room.secretExit.trim();
         if (room.secretExit !== base.secretExit.trim()) {
             if (room.secretExit === 'false') { /**/ }
             else if (room.secretExit.startsWith('(:')) {
-                tmp.push(`"secret exit" : ${formatFunctionPointer(room.secretExit, true)})`);
+                props['secret exit'] = formatFunctionPointer(room.secretExit, true);
                 data['create pre'] += createFunction(room.secretExit, 'string', 'object room, object player');
             }
             else if (room.secretExit === 'true')
-                tmp.push(`"secret exit" : 1`);
+                props['secret exit'] = 1;
             else if (typeof room.secretExit === 'string' && parseFloat(room.secretExit).toString() === room.secretExit)
-                tmp.push(`"secret exit" : ${room.secretExit}`);
+                props['secret exit'] = room.secretExit;
             else if (room.secretExit.length > 0) {
-                tmp.push(`"secret exit" : "${room.secretExit.replace(/"/g, '\\"')}"`);
+                props['secret exit'] = `"${room.secretExit.replace(/"/g, '\\"')}"`;
             }
         }
         if (room.maxForage !== base.maxForage)
-            tmp.push(`"maxforage" : ${room.maxForage}`);
+            props['maxforage'] = room.maxForage;
 
-        if (tmp.length > 0) {
+        tempProps = Object.keys(tempProps).map(k => `"${k}" : ${tempProps[k]}`);
+        props = Object.keys(props).map(k => `"${k}" : ${tempProps[k]}`);
+
+        if (tempProps.length === 1)
+            data['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
+        else if (tempProps.length > 0) {
+            data['create body'] += '   set_temp_properties( ([\n       ';
+            data['create body'] += tempProps.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+
+        if (props.length === 1)
+            data['create body'] += `   set_property(${props[0].replace(' :', ',')});\n`;
+        else if (props.length > 0) {
             data['create body'] += '   set_properties( ([\n       ';
-            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += props.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
         }
 
@@ -11438,7 +11679,7 @@ export class AreaDesigner extends EditorBase {
             p.peer = p.peer.trim();
             if (p.peer === 'false') { /**/ }
             if (p.peer.startsWith('(:')) {
-                data['create body'] += `   set_prevent_peer("${p.exit}",${formatFunctionPointer(p.peer)});\n`;
+                data['create body'] += `   set_prevent_peer("${p.exit}", ${formatFunctionPointer(p.peer)});\n`;
                 data['create pre'] += createFunction(p, 'string', 'string dir, object player');
             }
             else if (p.peer === 'true')
@@ -11708,7 +11949,7 @@ export class AreaDesigner extends EditorBase {
                 room.searches[0].search = `"${room.searches[0].search.trim()}"`;
             room.searches[0].message = room.searches[0].message.trim();
             if (room.searches[0].message.startsWith('(:'))
-                data['create body'] += `   set_search(${room.searches[0].search},${formatFunctionPointer(room.searches[0].message)});\n`;
+                data['create body'] += `   set_search(${room.searches[0].search}, ${formatFunctionPointer(room.searches[0].message)});\n`;
             else if (!room.searches[0].message.startsWith('"') && !room.searches[0].message.endsWith('"'))
                 data['create body'] += `   set_search(${room.searches[0].search}, "${room.searches[0].message}");\n`;
             else
@@ -11830,7 +12071,8 @@ export class AreaDesigner extends EditorBase {
 
         let tmp;
         const base: Monster = this.$area.monsters[monster.type] || this.$area.baseMonsters[monster.type] || new Monster();
-
+        let props: any = {};
+        let tempProps: any = {};
         if (files[monster.type])
             data.inherit = `(MON + "${files[monster.type]}")`;
         else
@@ -12040,41 +12282,104 @@ export class AreaDesigner extends EditorBase {
             });
             data['create body'] += '   set_adjectives(' + monster.adjectives.join(', ') + ');\n';
         }
-        tmp = [];
+
         if ((monster.flags & MonsterFlags.Undead) === MonsterFlags.Undead && (base.flags & MonsterFlags.Undead) !== MonsterFlags.Undead)
-            tmp.push('"undead" : 1');
+            props['undead'] = 1;
         if ((monster.flags & MonsterFlags.Water_Breathing) === MonsterFlags.Water_Breathing && (base.flags & MonsterFlags.Water_Breathing) !== MonsterFlags.Water_Breathing)
-            tmp.push('"waterbreathing" : 1');
+            props['waterbreathing'] = 1;
         if ((monster.flags & MonsterFlags.Requires_Water) === MonsterFlags.Requires_Water && (base.flags & MonsterFlags.Requires_Water) !== MonsterFlags.Requires_Water)
-            tmp.push('"requires water" : 1');
+            props['requires water'] = 1;
         if ((monster.flags & MonsterFlags.No_Bleeding) === MonsterFlags.No_Bleeding && (base.flags & MonsterFlags.No_Bleeding) !== MonsterFlags.No_Bleeding)
-            tmp.push('"no bleed" : 1');
+            props['no bleed'] = 1;
 
         if (monster.noCorpse !== base.noCorpse) {
             monster.noCorpse = monster.noCorpse.trim();
             if (monster.noCorpse.startsWith('(:')) {
-                tmp.push(`"no corpse" : ${formatFunctionPointer(monster.noCorpse, true)}`);
+                props['no corpse'] = formatFunctionPointer(monster.noCorpse, true);
                 data['create pre'] += createFunction(monster.noCorpse, 'string');
             }
             else if (monster.noCorpse.startsWith('"') && monster.noCorpse.endsWith('"'))
-                tmp.push(`"no corpse" : ${monster.noCorpse}`);
+                props['no corpse'] = monster.noCorpse;
             else if (monster.noCorpse.length > 0)
-                tmp.push(`"no corpse" : "${monster.noCorpse.replace(/"/g, '\\"')}"`);
+                props['no corpse'] = `"${monster.noCorpse.replace(/"/g, '\\"')}"`;
         }
         if (monster.noLimbs !== base.noLimbs) {
             monster.noLimbs = monster.noLimbs.trim();
             if (monster.noLimbs.startsWith('(:')) {
-                tmp.push(`"no limbs" : ${formatFunctionPointer(monster.noLimbs, true)}`);
+                props['no limbs'] = formatFunctionPointer(monster.noLimbs, true);
                 data['create pre'] += createFunction(monster.noLimbs, 'string');
             }
             else if (monster.noLimbs.startsWith('"') && monster.noLimbs.endsWith('"'))
-                tmp.push(`"no limbs" : ${monster.noLimbs}`);
+                props['no limbs'] = monster.noLimbs;
             else if (monster.noLimbs.length > 0)
-                tmp.push(`"no limbs" : "${monster.noLimbs.replace(/"/g, '\\"')}"`);
+                props['no limbs'] = `"${monster.noLimbs.replace(/"/g, '\\"')}"`;
         }
-        if (tmp.length > 0) {
+
+        if (monster.properties.length > 0) {
+            monster.properties.forEach(b => {
+                b.value = b.value.trim();
+                if (b.value.startsWith('(:')) {
+                    if (b.type === 1)
+                        tempProps[b.name] = formatFunctionPointer(b.value);
+                    else
+                        props[b.name] = formatFunctionPointer(b.value);
+                    data['create pre'] += createFunction(b.value);
+                }
+                else if (b.value.startsWith('({')) {
+                    tmp2 = b.value.substring(2);
+                    if (tmp2.endsWith('})'))
+                        tmp2 = tmp2.substr(0, tmp2.length - 2);
+                    tmp2 = tmp2.split(',');
+                    tmp2 = tmp2.map(t => {
+                        t = t.trim();
+                        if ((t.startsWith('"') && t.endsWith('"')) || t.match(/^\d+$/))
+                            return t;
+                        else if (t.startsWith('(:')) {
+                            t = formatFunctionPointer(t);
+                            data['create pre'] += createFunction(t);
+                            return t;
+                        }
+                        return `"${t}"`;
+                    });
+                    if (b.type === 1)
+                        tempProps[b.name] = `({ ${tmp2.join(', ')} })`;
+                    else
+                        props[b.name] = `({ ${tmp2.join(', ')} })`;
+                }
+                else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
+                    if (b.type === 1)
+                        tempProps[b.name] = b.value;
+                    else
+                        props[b.name] = b.value;
+                }
+                else {
+                    if (b.type === 1)
+                        tempProps[b.name] = `"${b.value}"`;
+                    else
+                        props[b.name] = `"${b.value}"`;
+                }
+            });
+        }
+
+        if ((monster.baseFlags & MonsterBaseFlags.No_Objects) === RoomBaseFlags.No_Objects && (base.baseFlags & MonsterBaseFlags.No_Topics) !== MonsterBaseFlags.No_Topics)
+            props['no objects'] = 1;
+
+        tempProps = Object.keys(tempProps).map(k => `"${k}" : ${tempProps[k]}`);
+        props = Object.keys(props).map(k => `"${k}" : ${tempProps[k]}`);
+
+        if (tempProps.length === 1)
+            data['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
+        else if (tempProps.length > 0) {
+            data['create body'] += '   set_temp_properties( ([\n       ';
+            data['create body'] += tempProps.join(',\n       ');
+            data['create body'] += '\n     ]) );\n';
+        }
+
+        if (props.length === 1)
+            data['create body'] += `   set_property(${props[0].replace(' :', ',')});\n`;
+        else if (props.length > 0) {
             data['create body'] += '   set_properties( ([\n       ';
-            data['create body'] += tmp.join(',\n       ');
+            data['create body'] += props.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
         }
         if (monster.mass !== base.mass)
@@ -12346,9 +12651,6 @@ export class AreaDesigner extends EditorBase {
         });
         //#endregion
 
-        if ((monster.baseFlags & MonsterBaseFlags.No_Objects) === RoomBaseFlags.No_Objects && (base.baseFlags & MonsterBaseFlags.No_Topics) !== MonsterBaseFlags.No_Topics)
-            data['create pre inherit'] += '   set_property("no objects", 1);\n';
-
         if (monster.objects.length !== 0) {
             tmp2 = '';
             tmp3 = [];
@@ -12429,8 +12731,8 @@ export class AreaDesigner extends EditorBase {
         let tmp3;
         let bonuses = false;
         let skills = false;
-        const props = [];
-        const tempProps = [];
+        let props: any = {};
+        let tempProps: any = {};
         const limbsDamaged = {};
         limbsDamaged['both arms and legs'] = 'ARMSLEGS_DAM';
         limbsDamaged['both arms'] = 'ARMS_DAM';
@@ -12502,7 +12804,7 @@ export class AreaDesigner extends EditorBase {
                     data['create arguments comment'] += ', Natural enchantment';
                 }
                 if (obj.maxWearable !== 0)
-                    tempProps.push(`"max_wearable" : "${obj.maxWearable}"`);
+                    tempProps['max_wearable'] = `"${obj.maxWearable}"`;
                 if (obj.limbsOptional)
                     data['create body'] += '   set_limbs_optional(1);\n';
                 if (obj.damaged && obj.damaged.length !== 0) {
@@ -12866,7 +13168,7 @@ export class AreaDesigner extends EditorBase {
                         data['create body'] += `   set_weapon_type("${obj.material}");\n`;
                 }
                 if (obj.maxWearable !== 0)
-                    tempProps.push(`"max_wearable" : "${obj.maxWearable}"`);
+                    tempProps['max_wearable'] = `"${obj.maxWearable}"`;
                 if (obj.limbsOptional)
                     data['create body'] += '   set_limbs_optional(1);\n';
                 //#endregion
@@ -13129,13 +13431,13 @@ export class AreaDesigner extends EditorBase {
                 b.value = b.value.trim();
                 if (b.value.startsWith('(:')) {
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                        tempProps[b.name] = formatFunctionPointer(b.value);
                     else
-                        props.push(`"${b.name}" : ${formatFunctionPointer(b.value)}`);
+                        props[b.name] = formatFunctionPointer(b.value);
                     data['create pre'] += createFunction(b.value);
                 }
                 else if (b.value.startsWith('({')) {
-                    tmp2 = b.vale.substring(2);
+                    tmp2 = b.value.substring(2);
                     if (tmp2.endsWith('})'))
                         tmp2 = tmp2.substr(0, tmp2.length - 2);
                     tmp2 = tmp2.split(',');
@@ -13151,21 +13453,21 @@ export class AreaDesigner extends EditorBase {
                         return `"${t}"`;
                     });
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                        tempProps[b.name] = `({ ${tmp2.join(', ')} })`;
                     else
-                        props.push(`"${b.name}" : ({ ${tmp2.join(', ')} })`);
+                        props[b.name] = `({ ${tmp2.join(', ')} })`;
                 }
                 else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : ${b.value}`);
+                        tempProps[b.name] = b.value;
                     else
-                        props.push(`"${b.name}" : ${b.value}`);
+                        props[b.name] = b.value;
                 }
                 else {
                     if (b.type === 1)
-                        tempProps.push(`"${b.name}" : "${b.value}"`);
+                        tempProps[b.name] = `"${b.value}"`;
                     else
-                        props.push(`"${b.name}" : "${b.value}"`);
+                        props[b.name] = `"${b.value}"`;
                 }
             });
         }
@@ -13173,12 +13475,15 @@ export class AreaDesigner extends EditorBase {
         //data['create body'] += `   set_temp_property("max_wearable", ${obj.maxWearable});\n`;
 
         if (obj.keyID.length > 0 && obj.type !== StdObjectType.chest)
-            props.push(`"key" : "${obj.keyID}"`);
+            props['key'] = `"${obj.keyID}"`;
 
         if (obj.mass > 0)
             data['create body'] += `   set_mass(${obj.mass});\n`;
         if (obj.value > 0)
             data['create body'] += `   set_value("${obj.value}");\n`;
+
+        tempProps = Object.keys(tempProps).map(k => `"${k}" : ${tempProps[k]}`);
+        props = Object.keys(props).map(k => `"${k}" : ${tempProps[k]}`);
 
         if (tempProps.length === 1)
             data['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
@@ -13567,7 +13872,8 @@ export class AreaDesigner extends EditorBase {
                             this.$selectedRooms[idx] = rooms[room.z][room.y][room.x];
                         if (this.$focusedRoom && this.$focusedRoom.at(x, y, z))
                             this.$focusedRoom = rooms[room.z][room.y][room.x];
-                        if (!room.empty) this.$roomCount++;
+                        const base = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom];
+                        if (!room.empty && !room.equals(base, true)) this.$roomCount++;
                     }
                     else {
                         if (room.exits) {
@@ -13644,13 +13950,13 @@ export class AreaDesigner extends EditorBase {
             this.$propertiesEditor.defaultRoom.html('<optgroup label="Area">' + Object.keys(this.$area.baseRooms || { base: null })
                 .map(r => `<option value="${r}">${capitalize(r)}</option>`).join('') + '</optgroup><optgroup label="Standard">' +
                 RoomTypes.map(r => `<option value="${r.value}">${r.display}</option>`).join('') + '</optgroup>');
-            this.$propertiesEditor.defaultRoom.val(this.$area.defaultRoom).selectpicker('render');
+            this.$propertiesEditor.defaultRoom.selectpicker('refresh').val(this.$area.defaultRoom).selectpicker('render');
         }
         if (this.$propertiesEditor.defaultMonster) {
             this.$propertiesEditor.defaultMonster.html('<optgroup label="Area">' + Object.keys(this.$area.baseMonsters || { base: null })
                 .map(r => `<option value="${r}">${capitalize(r)}</option>`).join('') + '</optgroup><optgroup label="Standard">' +
                 MonsterTypes.map(r => `<option value="${r.value}">${r.display}</option>`).join('') + '</optgroup>');
-            this.$propertiesEditor.defaultMonster.val(this.$area.defaultMonster).selectpicker('render');
+            this.$propertiesEditor.defaultMonster.selectpicker('refresh').val(this.$area.defaultMonster).selectpicker('render');
         }
     }
 
