@@ -13,9 +13,9 @@
     - Add underwater property to room wizard
     - Add custom properties for monster and room wizards
 - **Changed:**
-  - Update electron 3.0.9 to 3.0.12
+  - Update electron 3.0.9 to 3.0.13
   - Update electron-updated 4.0.5 to 4.0.6
-  - Update better-sqlite from 5.0.1 to 5.2.0
+  - Update better-sqlite from 5.0.1 to 5.2.1
 - **Fixed:**
   - Display:
     - Fixed issue with URL context menu

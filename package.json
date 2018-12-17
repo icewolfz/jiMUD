@@ -52,7 +52,7 @@
     "@types/node": "^10.12.15",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^3.0.12",
+    "electron": "^3.0.13",
     "electron-builder": "^20.38.3",
     "eslint": "^5.10.0",
     "eslint-plugin-html": "^5.0.0"
@@ -128,7 +128,7 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^5.2.0",
+    "better-sqlite3": "^5.2.1",
     "buzz": "^1.2.1",
     "chokidar": "^2.0.4",
     "drivelist": "^6.4.3",
