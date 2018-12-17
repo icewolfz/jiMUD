@@ -21,10 +21,10 @@
     - Fixed issue with URL context menu
     - Fixed split button scrolling instead of toggling
     - Fixed horizontal scroll when mouse dragging leaves bottom of display area
-    - Improve url detection when text is split
+    - Improve URL detection when text is split
     - Improve prompt line detection
   - Code editor:
-    - Fixed save file as tab tooltip
+    - Fixed save file as tab tool-tip
     - Area designer:
       - Fixed delete and cut correctly removing rooms
       - Fixed base room delete/cut
