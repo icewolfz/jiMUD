@@ -875,12 +875,12 @@ export class Parser extends EventEmitter {
     }
 
     private AddLine(line: string, raw: string, fragment: boolean, skip: boolean, formats: LineFormat[]) {
-        const data: ParserLine = { raw: raw, line: line, fragment: fragment, gagged: skip, formats: this.pruneFormats(formats, line.length) };
+        const data: ParserLine = { raw: raw, line: line, fragment: fragment, gagged: skip, formats: this.pruneFormats(formats, line.length, fragment) };
         this.emit('add-line', data);
         this.EndOfLine = !fragment;
     }
 
-    private pruneFormats(formats, textLen) {
+    private pruneFormats(formats, textLen, fragment) {
         //no formats or only 1 format
         if (!formats || formats.length < 2) return formats;
         const l = formats.length;
@@ -904,8 +904,8 @@ export class Parser extends EventEmitter {
                 if (format.formatType === FormatType.MXPLink && end - format.offset === 0 && nFormat.formatType === FormatType.MXPLinkEnd)
                     continue;
             }
-            //trailing link with no text or empty format block
-            else if (format.offset === textLen && textLen !== 0 && ((format.formatType === FormatType.Normal && !format.hr) || format.formatType === FormatType.Link || format.formatType === FormatType.MXPSend || format.formatType === FormatType.MXPLink))
+            //trailing link with no text or empty format block and not fragment
+            else if (!fragment && format.offset === textLen && textLen !== 0 && ((format.formatType === FormatType.Normal && !format.hr) || format.formatType === FormatType.Link || format.formatType === FormatType.MXPSend || format.formatType === FormatType.MXPLink))
                 continue;
             nF.push(format);
         }

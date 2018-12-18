@@ -2,6 +2,9 @@
 
 ## v0.6.15
 
+- **Fixed:**
+  - Parser: Fixed issue of trimming end formatting codes on fragmented lines
+
 ## v0.6.14 2018-12-17
 
 - **Fixed:**
