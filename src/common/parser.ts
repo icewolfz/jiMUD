@@ -2462,14 +2462,17 @@ export class Parser extends EventEmitter {
         this.busy = true;
         this.parsing.unshift([text, remote]);
         let format;
-        //store remote state as mxp requires it
+        if (this._SplitBuffer.length > 0) {
+            text = this._SplitBuffer + text;
+            this._SplitBuffer = '';
+        }
         //not end of line but text, so fragment, re-get and re-parse to ensure proper triggering
         if (!this.EndOfLine && (this.textLength > 0 || this.rawLength > 0)) {
             let lines = this.display.lines;
             if (lines.length > 0) {
                 iTmp = this.display.lines[lines.length - 1];
+                _MXPComment = this.display.rawLines[lines.length - 1];
                 formatBuilder.push.apply(formatBuilder, this.display.lineFormats[lines.length - 1]);
-                rawBuilder.push(this.display.rawLines[lines.length - 1]);
                 lineLength = this.display.lines[lines.length - 1].length;
                 this.display.removeLine(lines.length - 1);
                 format = formatBuilder[formatBuilder.length - 1];
@@ -2480,14 +2483,19 @@ export class Parser extends EventEmitter {
                 format.width = 0;
                 format.height = 0;
                 format.marginWidth = 0;
-                format.marginHeiht = 0;
+                format.marginHeight = 0;
                 lineLength = format.offset;
                 if (format.offset !== 0) {
                     stringBuilder.push(iTmp.substring(0, format.offset));
-                    text = iTmp.substring(format.offset) + text;
+                    iTmp = iTmp.substring(format.offset);
+                    text = iTmp + text;
                 }
                 else
                     text = iTmp + text;
+                if (_MXPComment.endsWith(iTmp))
+                    rawBuilder.push(_MXPComment.substr(0, _MXPComment.length - iTmp.length));
+                else
+                    rawBuilder.push(_MXPComment);
             }
             else
                 formatBuilder.push(format = this.getFormatBlock(lineLength));
@@ -2495,11 +2503,6 @@ export class Parser extends EventEmitter {
         }
         else
             formatBuilder.push(format = this.getFormatBlock(lineLength));
-        if (this._SplitBuffer.length > 0) {
-            text = this._SplitBuffer + text;
-            this._SplitBuffer = '';
-        }
-
         let idx = 0;
         let tl = text.length;
         let c: string;

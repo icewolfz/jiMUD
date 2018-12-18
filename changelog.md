@@ -1,6 +1,9 @@
 # Changelog
 
-## v0.6.14
+## v0.6.14 2018-12-17
+
+- **Fixed:**
+  - Parser: Fixed split text issue introduced in v0.6.13 when fixing split URLs
 
 ## v0.6.13 2018-12-17
 
