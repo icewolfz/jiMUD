@@ -2046,21 +2046,25 @@
         ipcRenderer.on('setting-changed', (event, data) => {
             if (data.type === 'mapper') {
                 client.options.mapper[data.name] = data.value;
-                doUpdate(32);
+                if (!data.noSave)
+                    doUpdate(32);
             }
             else if (data.type === 'profiles') {
                 client.options.profiles[data.name] = data.value;
                 if (data.name === 'enabled')
                     updateMenu();
-                doUpdate(32);
+                if (!data.noSave)
+                    doUpdate(32);
             }
             else if (data.type === 'chat') {
                 client.options.chat[data.name] = data.value;
-                doUpdate(32);
+                if (!data.noSave)
+                    doUpdate(32);
             }
             else if (data.type === 'extensions') {
                 client.options.extensions[data.name] = data.value;
-                doUpdate(32);
+                if (!data.noSave)
+                    doUpdate(32);
             }
             else if (data.type === 'windows') {
                 if (!client.options.windows[data.name])
@@ -2070,7 +2074,25 @@
                 client.options.windows[data.name].options.alwaysOnTopClient = data.value.alwaysOnTopClient;
                 client.options.windows[data.name].options.persistent = data.value.persistent;
                 client.options.windows[data.name].options.alwaysOnTop = data.value.alwaysOnTop;
-                doUpdate(32);
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+            else if (data.type === 'windowOptions') {
+                if (!client.options.windows[data.name])
+                    client.options.windows[data.name] = {};
+                client.options.windows[data.name].options = data.value;
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+            else if (data.type === 'window') {
+                client.options.windows[data.name] = data.value || {};
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+            else if (data.type === 'normal') {
+                client.options[data.name] = data.value;
+                if (!data.noSave)
+                    doUpdate(32);
             }
         });
 

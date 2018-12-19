@@ -1156,16 +1156,19 @@ function createWindow() {
                 set.windows['main'] = getWindowState('main', win);
                 if (winMap) {
                     set.windows['mapper'] = getWindowState('mapper', winMap);
+                    win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows['mapper'], noSave: true });
                     winMap.webContents.executeJavaScript('closeWindow()');
                     winMap = null;
                 }
                 if (winEditor) {
                     set.windows['editor'] = getWindowState('editor', winEditor);
+                    win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows['editor'], noSave: true });
                     winEditor.close();
                     winEditor = null;
                 }
                 if (winChat) {
                     set.windows['chat'] = getWindowState('chat', winChat);
+                    win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows['chat'], noSave: true });
                     winChat.close();
                     winChat = null;
                 }
@@ -1261,7 +1264,7 @@ function createWindow() {
         });
 
         w.on('closed', () => {
-            if (win && win.webContents) {
+            if (win && !win.isDestroyed() && win.webContents) {
                 win.webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
             }
         });
@@ -1274,16 +1277,19 @@ function createWindow() {
     win.on('closed', () => {
         if (winMap) {
             set.windows['mapper'] = getWindowState('mapper', winMap);
+            win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows['mapper'], noSave: true });
             winMap.webContents.executeJavaScript('closeWindow()');
             winMap = null;
         }
         if (winEditor) {
             set.windows['editor'] = getWindowState('editor', winEditor);
+            win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows['editor'], noSave: true });
             winEditor.close();
             winEditor = null;
         }
         if (winChat) {
             set.windows['chat'] = getWindowState('chat', winChat);
+            win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows['chat'], noSave: true });
             winChat.close();
             winChat = null;
         }
@@ -1362,7 +1368,7 @@ function createWindow() {
     win.on('close', (e) => {
         set = settings.Settings.load(global.settingsFile);
         set.windows['main'] = getWindowState('main', win || e.sender);
-
+        win.webContents.send('setting-changed', { type: 'window', name: 'main', value: set.windows['main'], noSave: true });
         if (winProfiles) {
             e.preventDefault();
             dialog.showMessageBox(winProfiles, {
@@ -1565,7 +1571,7 @@ ipcMain.on('load-default', () => {
         }
         return;
     }
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('load-default');
     global.settingsFile = sf;
     global.mapFile = mf;
@@ -1595,7 +1601,7 @@ ipcMain.on('load-default', () => {
         windows[name].window = null;
         cWin.close();
     }
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('change-options', global.settingsFile);
 
     if (set.showMapper)
@@ -1638,16 +1644,19 @@ ipcMain.on('load-char', (event, char) => {
     set.windows['main'] = getWindowState('main', win);
     if (winMap) {
         set.windows['mapper'] = getWindowState('mapper', winMap);
+        win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows['mapper'], noSave: true });
         winMap.webContents.executeJavaScript('closeWindow()');
         winMap = null;
     }
     if (winEditor) {
         set.windows['editor'] = getWindowState('editor', winEditor);
+        win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows['editor'], noSave: true });
         winEditor.close();
         winEditor = null;
     }
     if (winChat) {
         set.windows['chat'] = getWindowState('chat', winChat);
+        win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows['chat'], noSave: true });
         winChat.close();
         winChat = null;
     }
@@ -1655,7 +1664,7 @@ ipcMain.on('load-char', (event, char) => {
     loadCharacter(char);
     resetProfiles();
     set = settings.Settings.load(global.settingsFile);
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('load-char', char);
 
     if (winMap) {
@@ -1675,7 +1684,7 @@ ipcMain.on('load-char', (event, char) => {
         winCode.webContents.executeJavaScript('closeWindow()');
         winCode = null;
     }
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('change-options', global.settingsFile);
 
     if (set.showMapper)
@@ -1723,7 +1732,7 @@ ipcMain.on('options-changed', () => {
 ipcMain.on('reload-options', (event, save) => {
     resetProfiles();
     closeWindows(save, true, true);
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('reload-options');
     set = settings.Settings.load(global.settingsFile);
     if (set.showTrayIcon && !tray)
@@ -1858,27 +1867,27 @@ function openEditor(file, remote, remoteEdit) {
 }
 
 ipcMain.on('send-background', (event, command) => {
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('send-background', command);
 });
 
 ipcMain.on('send-command', (event, command) => {
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('send-command', command);
 });
 
 ipcMain.on('send-gmcp', (event, data) => {
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('send-gmcp', data);
 });
 
 ipcMain.on('send-raw', (event, raw) => {
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('send-raw', raw);
 });
 
 ipcMain.on('send', (event, raw, echo) => {
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('send', raw, echo);
 });
 
@@ -1921,18 +1930,18 @@ ipcMain.on('log-error', (event, err, skipClient) => {
 });
 
 ipcMain.on('debug', (event, msg) => {
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('debug', msg);
 });
 
 ipcMain.on('error', (event, err) => {
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('error', err);
 });
 
 ipcMain.on('reload-mail', () => {
     createMenu();
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('reload-mail');
     for (var name in windows) {
         if (!windows.hasOwnProperty(name) || !windows[name].window || !windows[name].window.webContents)
@@ -1943,7 +1952,7 @@ ipcMain.on('reload-mail', () => {
 
 ipcMain.on('reload-profiles', () => {
     createMenu();
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('reload-profiles');
     for (var name in windows) {
         if (!windows.hasOwnProperty(name) || !windows[name].window || !windows[name].window.webContents)
@@ -2304,12 +2313,12 @@ ipcMain.on('import-map', (event, data) => {
 ipcMain.on('flush', (event, sender) => {
     if (winMap)
         winMap.webContents.send('flush', sender);
-    else if (win && win.webContents)
+    else if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('flush-end', sender);
 });
 
 ipcMain.on('flush-end', (event, sender) => {
-    if (win && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('flush-end', sender);
 });
 
@@ -2740,9 +2749,12 @@ function createMapper(show, loading, loaded) {
 
     winMap.on('close', (e) => {
         set = settings.Settings.load(global.settingsFile);
-        if (win != null && winMap === e.sender)
+        if (win != null && winMap === e.sender) {
             set.showMapper = false;
+            win.webContents.send('setting-changed', { type: 'normal', name: 'showMapper', value: false, noSave: true });
+        }
         set.windows['mapper'] = getWindowState('mapper', e.sender);
+        win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows['mapper'], noSave: true });
         set.save(global.settingsFile);
         if (winMap === e.sender && winMap && (set.mapper.enabled || set.mapper.persistent)) {
             e.preventDefault();
@@ -2755,6 +2767,7 @@ function createMapper(show, loading, loaded) {
 function showMapper(loading) {
     set = settings.Settings.load(global.settingsFile);
     set.showMapper = true;
+    win.webContents.send('setting-changed', { type: 'normal', name: 'showMapper', value: true, noSave: true });
     set.save(global.settingsFile);
     if (winMap != null) {
         if (mapperMax)
@@ -2852,6 +2865,7 @@ function showProfiles() {
     winProfiles.on('close', () => {
         set = settings.Settings.load(global.settingsFile);
         set.windows['profiles'] = getWindowState('profiles', winProfiles);
+        win.webContents.send('setting-changed', { type: 'window', name: 'profiles', value: set.windows['profiles'], noSave: true });
         set.save(global.settingsFile);
     });
 
@@ -2983,6 +2997,8 @@ function createEditor(show, loading) {
         set = settings.Settings.load(global.settingsFile);
         set.showEditor = false;
         set.windows['editor'] = getWindowState('editor', winEditor || e.sender);
+        win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows['editor'], noSave: true });
+        win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: false, noSave: true });
         set.save(global.settingsFile);
         e.sender.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
         if (winEditor === e.sender && winEditor && (set.editorPersistent && !global.editorOnly)) {
@@ -2996,6 +3012,7 @@ function createEditor(show, loading) {
 function showEditor(loading) {
     set = settings.Settings.load(global.settingsFile);
     set.showEditor = true;
+    win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: true, noSave: true });
     set.save(global.settingsFile);
     if (winEditor != null) {
         if (!editorReady)
@@ -3119,9 +3136,12 @@ function createChat(show, loading) {
 
     winChat.on('close', (e) => {
         set = settings.Settings.load(global.settingsFile);
-        if (winChat === e.sender)
+        if (winChat === e.sender) {
             set.showChat = false;
+            win.webContents.send('setting-changed', { type: 'normal', name: 'showChat', value: false, noSave: true });
+        }
         set.windows['chat'] = getWindowState('chat', e.sender);
+        win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows['chat'], noSave: true });
         set.save(global.settingsFile);
         if (winChat === e.sender && winChat && (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)) {
             e.preventDefault();
@@ -3134,6 +3154,7 @@ function createChat(show, loading) {
 function showChat(loading) {
     set = settings.Settings.load(global.settingsFile);
     set.showChat = true;
+    win.webContents.send('setting-changed', { type: 'normal', name: 'showChat', value: true, noSave: true });
     set.save(global.settingsFile);
     if (winChat != null) {
         if (!chatReady)
@@ -3335,6 +3356,8 @@ function createNewWindow(name, options) {
             windows[name].show = false;
         set.windows[name].options = copyWindowOptions(name);
         set.save(global.settingsFile);
+        if (win && !win.isDestroyed() && win.webContents)
+            win.webContents.send('setting-changed', { type: 'window', name: name, value: set.windows[name], noSave: true });
         if (windows[name].window === e.sender && windows[name].window && windows[name].persistent) {
             e.preventDefault();
             windows[name].window.webContents.executeJavaScript('closeHidden()');
@@ -3348,6 +3371,7 @@ function showWindow(name, options) {
     if (!set.windows[name])
         set.windows[name] = {};
     set.windows[name].show = true;
+    win.webContents.send('setting-changed', { type: 'window', name: name, value: set.windows[name], noSave: true });
     set.save(global.settingsFile);
     if (!options) options = { show: true };
     if (windows[name] && windows[name].window) {
@@ -3474,7 +3498,7 @@ function logError(err, skipClient) {
         msg = err;
 
 
-    if (win && win.webContents && !skipClient)
+    if (win && !win.isDestroyed() && win.webContents && !skipClient)
         win.webContents.send('error', msg);
     else if (set.logErrors) {
         if (err.stack && !set.showErrorsExtended)
@@ -3527,8 +3551,11 @@ function closeWindows(save, clear) {
     }
     if (clear)
         windows = {};
-    if (save)
+    if (save) {
+        if (win && !win.isDestroyed() && win.webContents)
+            win.webContents.send('setting-changed', { type: 'window', name: name, value: set.windows[name], noSave: true });
         set.save(global.settingsFile);
+    }
 }
 
 function createCodeEditor(show, loading, loaded) {
