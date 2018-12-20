@@ -2,6 +2,9 @@
 
 ## v0.7.0
 
+- **Changed:**
+  - Update electron 3.0.13 to 4.0.0
+
 ## v0.6.15 2018-12-20
 
 - **Fixed:**
