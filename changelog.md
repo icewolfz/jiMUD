@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.15
+## v0.6.15 2018-12-20
 
 - **Fixed:**
   - Parser: Fixed issue of trimming end formatting codes on fragmented lines
