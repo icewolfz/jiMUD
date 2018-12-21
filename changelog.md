@@ -4,6 +4,9 @@
 
 - **Changed:**
   - Update electron 3.0.13 to 4.0.0
+- **Fixed:**
+  - Code editor:
+    - Fixed save as not updating window title.
 
 ## v0.6.15 2018-12-20
 
