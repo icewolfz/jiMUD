@@ -7,6 +7,7 @@
 - **Fixed:**
   - Code editor:
     - Fixed save as not updating window title.
+  - Refresh display scroll bars when window restored from a minimized state.
 
 ## v0.6.15 2018-12-20
 

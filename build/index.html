@@ -553,6 +553,15 @@
         }
 
         function init() {
+            remote.getCurrentWindow().on('restore', () => {
+                client.display.updateScrollbars();
+                client.display.updateView();
+            });
+            remote.getCurrentWindow().on('maximize', () => {
+                client.display.updateScrollbars();
+                client.display.updateView();
+            });
+
             ipcRenderer.send('set-overlay', 0);
             window.addEventListener('blur', function () {
                 active = false;
