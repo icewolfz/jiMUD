@@ -2473,9 +2473,9 @@ export class Input extends EventEmitter {
                     switch (c) {
                         case '%':
                             if (eAlias && findAlias)
-                                alias += '%';
+                                alias += '%%';
                             else
-                                str += '%';
+                                str += '%%';
                             state = ParseState.none;
                             break;
                         case '*':
@@ -2611,7 +2611,7 @@ export class Input extends EventEmitter {
                     state = ParseState.none;
                     break;
                 case ParseState.paramsD:
-                    if (c === '{')
+if (c === '{')
                         state = ParseState.paramsDBlock;
                     else if (eEscape && c === escChar)
                         state = ParseState.paramsDEscape;

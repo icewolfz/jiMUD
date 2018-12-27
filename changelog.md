@@ -11,6 +11,8 @@
   - Display: Fixed horizontal scrolling when split view visible
   - Fixed parsing of %* parameter of append %*
   - Fixed parsing of ${*} not correctly marking arguments as used thus appending them if append was turned on
+  - Fixed pasring of %%
+  - ${repeatnum} and ${i} are not saved on stack correctly so instead of last use it is now the correct # based on where it is executed, making nested #nnn in aliases better
 
 ## v0.6.15 2018-12-20
 
