@@ -54,7 +54,7 @@
     "devtron": "^1.4.0",
     "electron": "^4.0.0",
     "electron-builder": "^20.38.4",
-    "eslint": "^5.11.0",
+    "eslint": "^5.11.1",
     "eslint-plugin-html": "^5.0.0"
   },
   "build": {
