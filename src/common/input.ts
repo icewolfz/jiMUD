@@ -79,7 +79,7 @@ export class Input extends EventEmitter {
 
     get repeatNumber() {
         if (this._stack.length === 0 || !this.stack.hasOwnProperty('repeatnum'))
-        return window.repeatnum;
+            return window.repeatnum;
         return this.stack.repeatnum;
     }
 
