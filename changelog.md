@@ -9,6 +9,8 @@
     - Fixed save as not updating window title.
   - Refresh display scroll bars when window restored from a minimized state.
   - Display: Fixed horizontal scrolling when split view visible
+  - Fixed parsing of %* parameter of append %*
+  - Fixed parsing of ${*} not correctly marking arguments as used thus appending them if append was turned on
 
 ## v0.6.15 2018-12-20
 

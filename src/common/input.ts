@@ -2478,7 +2478,7 @@ export class Input extends EventEmitter {
                                     str += this.stack.args.slice(1).join(' ');
                                 this.stack.used = this.stack.args.length;
                             }
-                            if (eAlias && findAlias)
+                            else if (eAlias && findAlias)
                                 alias += '%*';
                             else
                                 str += '%*';
@@ -2659,7 +2659,7 @@ export class Input extends EventEmitter {
                             tmp2 = window.repeatnum;
                         else if (this.stack.args && arg === '*') {
                             tmp2 = this.stack.args.slice(1).join(' ');
-                            this.stack.used = args.length;
+                            this.stack.used = this.stack.args.length;
                         }
                         else if (this.stack.named && this.stack.named.hasOwnProperty(arg))
                             tmp2 = this.stack.named[arg];
