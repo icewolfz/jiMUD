@@ -14,6 +14,7 @@
   - Fixed pasring of %%
   - ${repeatnum} and ${i} are not saved on stack correctly so instead of last use it is now the correct # based on where it is executed, making nested #nnn in aliases better
   - Fixed parsing of $STRING parameters
+  - Fixed appending unused variables to inner blocks of parsed lines
 
 ## v0.6.15 2018-12-20
 
