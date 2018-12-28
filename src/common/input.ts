@@ -2367,6 +2367,8 @@ export class Input extends EventEmitter {
                     }
                     //end of alias at end of text, new line, or command stack if enabled
                     else if (idx === tl - 1 || c === '\n' || (stacking && c === stackingChar)) {
+                        if (!(c === '\n' || (stacking && c === stackingChar)))
+                            arg += c;
                         //save any arg that was found
                         if (arg.length > 0)
                             args.push(arg);

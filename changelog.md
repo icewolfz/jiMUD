@@ -9,12 +9,15 @@
     - Fixed save as not updating window title.
   - Refresh display scroll bars when window restored from a minimized state.
   - Display: Fixed horizontal scrolling when split view visible
-  - Fixed parsing of %* parameter of append %*
-  - Fixed parsing of ${*} not correctly marking arguments as used thus appending them if append was turned on
-  - Fixed pasring of %%
+  - Command parsing:
+    - Fixed %* parameter of append %*
+    - Fixed ${*} not correctly marking arguments as used thus appending them if append was turned on
+    - Fixed %%
+    - Fixed $STRING parameters
+    - Fixed appending unused variables to inner blocks of parsed lines
+    - Fixed aliases when value does not end in newline
   - ${repeatnum} and ${i} are not saved on stack correctly so instead of last use it is now the correct # based on where it is executed, making nested #nnn in aliases better
-  - Fixed parsing of $STRING parameters
-  - Fixed appending unused variables to inner blocks of parsed lines
+
 
 ## v0.6.15 2018-12-20
 
