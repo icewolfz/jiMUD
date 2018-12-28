@@ -2611,7 +2611,7 @@ export class Input extends EventEmitter {
                     state = ParseState.none;
                     break;
                 case ParseState.paramsD:
-if (c === '{')
+                    if (c === '{')
                         state = ParseState.paramsDBlock;
                     else if (eEscape && c === escChar)
                         state = ParseState.paramsDEscape;
@@ -2636,6 +2636,10 @@ if (c === '{')
                             else
                                 str += this.stack.named[arg];
                         }
+                        else if (eAlias && findAlias)
+                            alias += '$' + arg;
+                        else
+                            str += '$' + arg;
                         idx--;
                         state = ParseState.none;
                         arg = '';
@@ -2936,7 +2940,7 @@ if (c === '{')
             if (str !== null) out += str;
             str = '';
         }
-        if (this.stack.args && this.stack.append && this.stack.args.length - 1 > 0 && this.stack.used + 1 < this.stack.args.length) {
+        if (eAlias && this.stack.args && this.stack.append && this.stack.args.length - 1 > 0 && this.stack.used + 1 < this.stack.args.length) {
             let r = false;
             if (str.endsWith('\n')) {
                 str = str.substring(0, str.length - 1);

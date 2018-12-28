@@ -13,6 +13,7 @@
   - Fixed parsing of ${*} not correctly marking arguments as used thus appending them if append was turned on
   - Fixed pasring of %%
   - ${repeatnum} and ${i} are not saved on stack correctly so instead of last use it is now the correct # based on where it is executed, making nested #nnn in aliases better
+  - Fixed parsing of $STRING parameters
 
 ## v0.6.15 2018-12-20
 
