@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.7.0
+## v0.7.0 2018-12-31
 
 - **Changed:**
   - Update electron 3.0.13 to 4.0.0
