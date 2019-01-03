@@ -2,6 +2,9 @@
 
 ## v0.7.1
 
+- **Changed:**
+  - Remove memory info from about, no longer supported in electron 4
+
 ## v0.7.0 2018-12-31
 
 - **Changed:**

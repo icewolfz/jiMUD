@@ -175,7 +175,7 @@
             if (remote.getGlobal('editorOnly'))
                 $('#logo-editor').css('display', 'block');
             updateMemory();
-            setInterval(updateMemory, 5000);
+            setInterval(updateMemory, 1000);
         });
 
         $(window).keydown((event) => {
@@ -184,43 +184,30 @@
         });
 
         function formatMemory(amt) {
-            if(amt > 1024)
+            if (amt > 1024)
                 return (amt / 1024).toFixed(1).toLocaleString() + 'M';
             return amt.toLocaleString() + 'K';
         }
 
         function updateMemory() {
             var mi = remote.app.getAppMetrics();
-            var total = [0, 0, 0, 0, 0, 0];
+            var total = [0, 0];
             var rows = '';
             for (var i = 0; i < mi.length; i++) {
                 rows += '<tr><td>' + mi[i].pid + '</td>';
                 rows += '<td>' + mi[i].type + '</td>';
-                rows += '<td>' + formatMemory(mi[i].memory.peakWorkingSetSize)+ '</td>';
-                rows += '<td>' + formatMemory(mi[i].memory.privateBytes) + '</td>';
-                rows += '<td>' + formatMemory(mi[i].memory.sharedBytes) + '</td>';
-                rows += '<td>' + formatMemory(mi[i].memory.workingSetSize) + '</td>';
                 rows += '<td>' + (mi[i].cpu.percentCPUUsage || 0.0).toFixed(3) + '%</td>';
                 rows += '<td>' + mi[i].cpu.idleWakeupsPerSecond + '</td></tr>';
-
-                total[0] += mi[i].memory.peakWorkingSetSize;
-                total[1] += mi[i].memory.privateBytes;
-                total[2] += mi[i].memory.sharedBytes;
-                total[3] += mi[i].memory.workingSetSize;
-                total[4] += (mi[i].cpu.percentCPUUsage || 0.0);
-                total[5] += mi[i].cpu.idleWakeupsPerSecond;
+                total[0] += (mi[i].cpu.percentCPUUsage || 0.0);
+                total[1] += mi[i].cpu.idleWakeupsPerSecond;
             }
             rows += '<tr class=\'totals\'><td>Total:</td>';
             rows += '<td></td>';
-            rows += '<td>' + formatMemory(total[0]) + '</td>';
-            rows += '<td>' + formatMemory(total[1]) + '</td>';
-            rows += '<td>' + formatMemory(total[2]) + '</td>';
-            rows += '<td>' + formatMemory (total[3]) + '</td>';
-            rows += '<td>' + total[4].toFixed(3) + '%</td>';
-            rows += '<td>' + total[5] + '</td></tr>';
+            rows += '<td>' + total[0].toFixed(3) + '%</td>';
+            rows += '<td>' + total[1] + '</td></tr>';
             memory.innerHTML = rows;
         }
-        //remote.getCurrentWindow().openDevTools();
+        remote.getCurrentWindow().openDevTools();
     </script>
 </head>
 
@@ -249,10 +236,6 @@
                         <tr style="text-align: center">
                             <th>PID</th>
                             <th>Type</th>
-                            <th>Peak Working Set</th>
-                            <th>Private</th>
-                            <th>Shared</th>
-                            <th>Working Set</th>
                             <th>CPU Usage</th>
                             <th>idle Wake ups</th>
                         </tr>
