@@ -4,6 +4,7 @@
 
 - **Changed:**
   - Remove memory info from about, no longer supported in electron 4
+  - Advanced editor: fixed unable to add new lines
 
 ## v0.7.0 2018-12-31
 
@@ -12,7 +13,7 @@
 - **Fixed:**
   - Code editor:
     - Fixed save as not updating window title.
-  - Display: 
+  - Display:
     - Fixed horizontal scrolling when split view visible
     - Refresh scroll bars when window restored from a minimized state.
   - Command parsing:
