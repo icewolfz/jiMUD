@@ -1820,7 +1820,7 @@ export class LPCFormatter extends EventEmitter {
                                     break;
                                 case 'case':
                                 case 'do':
-                                case 'else':
+                                //case 'else':
                                 case 'for':
                                 case 'foreach':
                                 case 'goto':
@@ -1830,6 +1830,21 @@ export class LPCFormatter extends EventEmitter {
                                 case 'try':
                                 case 'throw':
                                 case 'using':
+                                    break;
+                                case 'else':
+                                    while (tokenLine[t2].type === FormatTokenType.whitespace) {
+                                        t++;
+                                        e++;
+                                        t2++;
+                                        if (t2 >= tll)
+                                            break;
+                                    }
+                                    if (t2 < tll && tokenLine[t2].value !== 'if' && tokenLine[t2].type !== FormatTokenType.parenLBrace) {
+                                        op.rtrim();
+                                        op += '\n';
+                                    }
+                                    else
+                                        op += ' ';
                                     break;
                                 case 'if':
                                     while (tokenLine[t2].type === FormatTokenType.whitespace) {

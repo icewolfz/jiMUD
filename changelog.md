@@ -4,7 +4,8 @@
 
 - **Changed:**
   - Remove memory info from about, no longer supported in electron 4
-  - Advanced editor: fixed unable to add new lines
+  - Advanced editor: Fixed unable to add new lines
+  - Code editor: Fixed formatting of else single line to newline/indent like single line if
 
 ## v0.7.0 2018-12-31
 
