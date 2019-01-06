@@ -2,6 +2,8 @@
 
 ## v0.7.1
 
+- **New:**
+  - Add command history window
 - **Changed:**
   - Remove memory info from about, no longer supported in electron 4
   - Update electron 4.0.0 to 4.0.1

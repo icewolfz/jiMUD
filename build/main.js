@@ -635,6 +635,14 @@ var menuTemp = [
                 click: showMapper,
                 accelerator: 'CmdOrCtrl+T'
             },
+            {
+                label: '&Command history...',
+                id: 'history',
+                click: () => {
+                    win.webContents.executeJavaScript('showCommandHistory()');
+                },
+                accelerator: 'CmdOrCtrl+Shift+H'
+            },            
             /*
             {
               label: '&Mail...',
@@ -2077,9 +2085,24 @@ ipcMain.on('GMCP-received', (event, data) => {
     }
 });
 
-ipcMain.on('request-command-history', (event, history) => {
+ipcMain.on('request-command-history', () => {
     if (win)
-        win.webContents.send('request-command-history', history);
+        win.webContents.send('request-command-history');
+});
+
+ipcMain.on('change-command-history-index', (event, index) => {
+    if (win)
+        win.webContents.send('change-command-history-index', index);
+});
+
+ipcMain.on('add-command-history', (event, cmd) => {
+    if (win)
+        win.webContents.send('add-command-history', cmd);
+});
+
+ipcMain.on('clear-command-history', () => {
+    if (win)
+        win.webContents.send('clear-command-history');
 });
 
 ipcMain.on('command-history', (event, history) => {
@@ -3203,10 +3226,10 @@ function createNewWindow(name, options) {
     windows[name].window = new BrowserWindow({
         parent: windows[name].alwaysOnTopClient ? getParentWindow() : null,
         title: options.title || name,
-        x: s.x,
-        y: s.y,
-        width: s.width,
-        height: s.height,
+        x: options.x || s.x,
+        y: options.y || s.y,
+        width: options.width || s.width,
+        height: options.height || s.height,
         backgroundColor: options.background || '#000',
         show: false,
         skipTaskbar: (windows[name].alwaysOnTopClient || windows[name].alwaysOnTop) ? true : false,
@@ -3216,6 +3239,10 @@ function createNewWindow(name, options) {
             webviewTag: false
         }
     });
+    delete windows[name].width;
+    delete windows[name].height;
+    delete windows[name].x;
+    delete windows[name].y;
 
     windows[name].window.webContents.on('crashed', (event, killed) => {
         logError(`${name} crashed, killed: ${killed}\n`, true);

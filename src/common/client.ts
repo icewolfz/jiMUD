@@ -313,6 +313,18 @@ export class Client extends EventEmitter {
         return this._input.commandHistory;
     }
 
+    public setHistoryIndex(index) {
+        this._input.setHistoryIndex(index);
+    }
+
+    public clearCommandHistory() {
+        this._input.clearCommandHistory();
+    }
+
+    public AddCommandToHistory(txt) {
+        this._input.AddCommandToHistory(txt);
+    }
+
     public loadProfiles() {
         const p = path.join(parseTemplate('{data}'), 'profiles');
         //clear out all current profiles

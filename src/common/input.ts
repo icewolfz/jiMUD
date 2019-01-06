@@ -409,6 +409,21 @@ export class Input extends EventEmitter {
         }
     }
 
+    public clearCommandHistory() {
+        this._commandHistory = [];
+        this._historyIdx = -1;
+        this.emit('command-history-changed', this._commandHistory);
+    }
+
+    public setHistoryIndex(index) {
+        if (index < 0 || this._commandHistory.length === 0)
+            this._historyIdx = -1;
+        else if (index >= this._commandHistory.length)
+            this._historyIdx = this._commandHistory.length - 1;
+        else
+            this._historyIdx = index;
+    }
+
     public get commandHistory() { return this._commandHistory; }
 
     public executeScript(txt: string) {

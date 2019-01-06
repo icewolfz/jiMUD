@@ -2026,6 +2026,18 @@
             ipcRenderer.send('command-history', client.commandHistory);
         });
 
+        ipcRenderer.on('change-command-history-index', (event, index) => {
+            client.setHistoryIndex(index);
+        });
+
+        ipcRenderer.on('clear-command-history', () => {
+            client.clearCommandHistory();
+        });
+
+        ipcRenderer.on('add-command-history', (event, cmd) => {
+            client.AddCommandToHistory(cmd);
+        });
+
         ipcRenderer.on('flush-end', (event, sender) => {
             client.debug('Finished map');
             client.debug(sender);
@@ -2112,7 +2124,7 @@
         });
 
         ipcRenderer.on('send-background', (event, command) => {
-            client.sendCommand(command);
+            client.sendBackground(command);
         });
 
         ipcRenderer.on('send-command', (event, command) => {
@@ -2205,6 +2217,16 @@
             }
             else
                 ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function showCommandHistory() {
+            if (client.options.windows['history'] && client.options.windows['history'].options) {
+                client.options.windows['history'].options.show = true;
+                ipcRenderer.send('show-window', 'history', client.options.windows['history'].options);
+            }
+            else
+                ipcRenderer.send('show-window', 'history', { show: true, width: 400, height: 275, file: 'history.html', icon: 'history', alwaysOnTopClient: true });
         }
 
         // eslint-disable-next-line no-unused-vars
