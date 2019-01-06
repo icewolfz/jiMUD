@@ -17,6 +17,7 @@
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
     <script>
         //spell-checker:ignore ismap hellip selectall lagmeter repeatnum buttonvisible statusvisible limbsmenu partyhealth combathealth limb armor limbhealth
         if (window.module) module.module;
@@ -553,6 +554,20 @@
         }
 
         function init() {
+            $('.dropdown').on('show.bs.dropdown', () => {
+                $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
+                var lst = '';
+                var l = client.commandHistory.length;
+                for (var i = 0; i < l; i++) {
+                    lst += `<li><a href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd);client.sendCommand(cmd);">${client.commandHistory[i]}</a></li>`;
+                }
+                if (l === 0)
+                    lst = '<li><a href="#">No history</a></li><li role="separator" class="divider"></li>';
+                else
+                    lst += '<li role="separator" class="divider"></li><li><a href="#" onclick="client.clearCommandHistory();">Clear</a></li>';
+                lst += '<li><a href="#" onclick="showCommandHistory()">Show history window...</a></li>';
+                $('.command-history ul').html(lst);
+            });
             remote.getCurrentWindow().on('restore', () => {
                 client.display.updateScrollbars();
                 client.display.updateView();
@@ -2439,6 +2454,12 @@
         <div id="commandright"></div>
         <div id="commandbox">
             <textarea type="text" id="commandinput" aria-live="polite" spellcheck="true" wrap="off" cols="20" rows="20"></textarea>
+        </div>
+        <div class="dropdown dropup command-history">
+            <a id="history-dropup" style="width:32px" title="Show command history" class="button button-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" area-expanded="true">
+                <i class="fa fa-history"></i><span class="caret" style="margin: 0"></span>
+            </a>
+            <ul class="dropdown-menu pull-right dropdown-menu-right" data-container="body" aria-labelledby="history-dropdown"></ul>
         </div>
         <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="ipcRenderer.send('show-window', 'editor');">
             <i class="fa fa-edit"></i>
