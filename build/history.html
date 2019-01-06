@@ -57,14 +57,16 @@
     list.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         var c = new Menu();
-        c.append(new MenuItem({
-            label: '&Send',
-            click: () => {
-                ipcRenderer.send('add-command-history', list.value);
-                ipcRenderer.send('send-command', list.value);
-            }
-        }));
-        c.append(new MenuItem({ type: 'separator' }));
+        if (list.selectedIndex !== -1) {
+            c.append(new MenuItem({
+                label: '&Send',
+                click: () => {
+                    ipcRenderer.send('add-command-history', list.value);
+                    ipcRenderer.send('send-command', list.value);
+                }
+            }));
+            c.append(new MenuItem({ type: 'separator' }));
+        }
         c.append(new MenuItem({
             label: '&Refresh',
             click: () => {
@@ -78,7 +80,6 @@
             }
         }));
         c.popup({ window: remote.getCurrentWindow() });
-    });
     });
 </script>
 
