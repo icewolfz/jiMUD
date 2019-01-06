@@ -771,6 +771,7 @@
             client.on('profiles-updated', () => {
                 doUpdate(76);
             });
+            client.on('command-history-changed', history => ipcRenderer.send('command-history', history));
             client.on('add-line', (data) => {
                 var res, re, c, cl;
                 //no more then 3 tries
@@ -2019,6 +2020,10 @@
         ipcRenderer.on('update-downloaded', () => {
             if ($('#update-progress')[0].open)
                 $('#update-progress')[0].close();
+        });
+
+        ipcRenderer.on('request-command-history', () => {
+            ipcRenderer.send('command-history', client.commandHistory);
         });
 
         ipcRenderer.on('flush-end', (event, sender) => {

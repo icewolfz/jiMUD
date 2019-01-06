@@ -405,8 +405,11 @@ export class Input extends EventEmitter {
             if (this._commandHistory.length >= this.client.options.commandHistorySize)
                 this._commandHistory.shift();
             this._commandHistory.push(cmd);
+            this.emit('command-history-changed', this._commandHistory);
         }
     }
+
+    public get commandHistory() { return this._commandHistory; }
 
     public executeScript(txt: string) {
         if (txt == null)

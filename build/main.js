@@ -2077,6 +2077,23 @@ ipcMain.on('GMCP-received', (event, data) => {
     }
 });
 
+ipcMain.on('request-command-history', (event, history) => {
+    if (win)
+        win.webContents.send('request-command-history', history);
+});
+
+ipcMain.on('command-history', (event, history) => {
+    if (winMap)
+        winMap.webContents.send('command-history', history);
+    if (winCode)
+        winCode.webContents.send('command-history', history);
+    for (var name in windows) {
+        if (!windows.hasOwnProperty(name) || !windows[name].window)
+            continue;
+        windows[name].window.webContents.send('command-history', history);
+    }
+});
+
 ipcMain.on('update-menuitem', (event, args) => {
     updateMenuItem(args);
 });
@@ -2346,6 +2363,11 @@ ipcMain.on('profile-item-removed', (event, type, profile, idx) => {
 ipcMain.on('profile-toggled', (event, profile, enabled) => {
     if (winProfiles)
         winProfiles.webContents.send('profile-toggled', profile, enabled);
+});
+
+ipcMain.on('profile-enabled', (event, profile) => {
+    if (winProfiles)
+        winProfiles.webContents.send('profile-enabled', profile);
 });
 
 ipcMain.on('ondragstart', (event, files, icon) => {
