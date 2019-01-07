@@ -309,6 +309,22 @@ export class Client extends EventEmitter {
         return this.profiles.active;
     }
 
+    public get commandHistory() {
+        return this._input.commandHistory;
+    }
+
+    public setHistoryIndex(index) {
+        this._input.setHistoryIndex(index);
+    }
+
+    public clearCommandHistory() {
+        this._input.clearCommandHistory();
+    }
+
+    public AddCommandToHistory(txt) {
+        this._input.AddCommandToHistory(txt);
+    }
+
     public loadProfiles() {
         const p = path.join(parseTemplate('{data}'), 'profiles');
         //clear out all current profiles
@@ -533,6 +549,7 @@ export class Client extends EventEmitter {
                 this.display.scrollDisplay(true);
             this.emit('scroll-lock', lock);
         });
+        this._input.on('command-history-changed', history => this.emit('command-history-changed', history));
 
         this._input.on('item-added', (type, profile, item) => {
             this.emit('item-added', type, profile, item);

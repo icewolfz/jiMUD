@@ -39,7 +39,7 @@ body {
 
 #commandbox {
     left: 2px;
-    right: 20px;
+    right: 60px;
     height: 18px;
     bottom: 2px;
 }
@@ -757,6 +757,25 @@ body {
 /** end stats **/
 
 /** button stats */
+
+#history-dropup {
+    text-align: center;
+    border-radius: 4px;
+    border: 0px;
+    background-color: transparent;  
+}
+
+#history-dropup .fa {
+    margin-top: 1px;
+}
+
+#history-dropup:hover {
+    background-color: #3f3f46;
+}
+
+#history-dropup:active {
+    background-color: #2a2d2e;
+}
 
 #advedit {
     top: 3px;

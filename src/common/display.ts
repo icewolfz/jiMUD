@@ -906,6 +906,8 @@ export class Display extends EventEmitter {
                         this.emit('scroll-lock', true);
                         this.split.updatePosition();
                     }
+                    else
+                        this.split.updatePosition();
                 }
                 this._view.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
                 this._background.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
