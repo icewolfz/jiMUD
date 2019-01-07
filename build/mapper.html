@@ -457,7 +457,7 @@
                     }
                 });
 
-                mapper.on('import-complete', (value) => {
+                mapper.on('import-complete', () => {
                     updateAreas();
                     ipcRenderer.send('progress-close');
                     ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
