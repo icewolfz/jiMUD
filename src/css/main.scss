@@ -205,6 +205,12 @@ body {
     position: absolute;
 }
 
+.command-history {
+    position: absolute !important;
+    top: 3px;
+    right:23px;
+}
+
 #advedit {
     position: absolute;
 }
@@ -500,4 +506,8 @@ dialog {
 
 .dialog-header .btn {
     margin: 5px;
+}
+
+.command-history ul {
+    overflow: auto;
 }

@@ -11,9 +11,9 @@ There is a special format for argument variables for aliases and triggers.
 - `$name`, `%name`, `${name}`, or `%{name}` is for aliased [parameters](profiles.md#aliases), this allow yous to name arguments for easier understanding, where name is from the alias parameter list
 - `%%` allows you to escape a %
 
-[Repeat command `#nnn`](commands.md) special format for i/repeatnum
+[Repeat command `#nnn`](commands.md) special format to get loop iteration
 
-- `%i`. `%repeatnum` a more simple version of i/repeatnum or use the normal ${}/%{} forms
+- `%i`, `%repeatnum` return current loop iteration, supports #{}/${} formats
 
 Expressions, [when enabled](preferences.md#scripting) or using eval(), are basic math or supported math functions supported by [Mathjs](http://mathjs.org/) which include all the standard javascript Math functions, the i and repeatnum variables You may also embed ${} variables and functions as well for example: ${5+5} will return 10 or ${5 + i} will return 5 + what ever the current value of i is, ${5 + ${dice(2d10)}} will return 5 + a 2, 10 sided dice rolls noticed how it requires the ${} as dice is a jiMUD functions not a math function.
 
@@ -23,29 +23,29 @@ Escaping allows you to prevent special characters from being parsed and allow th
 
 ## Predefined variables
 
-- `selected` - selected text
-- `selectedword` - word under mouse when right clicked
-- `selectedline` - line under mouse when right clicked
-- `selectedurl` - url under mouse when right clicked
+- `selected` selected text
+- `selectedword` word under mouse when right clicked
+- `selectedline` line under mouse when right clicked
+- `selectedurl` url under mouse when right clicked
 - `selword` same as $selectedword
-- `selline` sane as $selline
+- `selline` same as $selline
 - `selurl` same as $selected url
 - `copied` return clipboard text
 - `selected`, `selectedword`, `selectedline`, `selectedurl`, `selword`, `selline`, `selurl`, or `copied` allow the following post fixes:
-  - `.lower` - force to all lower case by appending .lower
-  - `.upper` - force to all upper case by appending .lower
-  - `.proper` - force to proper casing by appending .proper
-- `repeatnum` - returns the current index during #nnn
-- `i` - same as repeatnum
-- `cr` - replace with carriage return
-- `esc` - escape character, useful for creating ansi color codes
-- `lf` - replace with line feed
-- `crlf` - replace with carriage return and linefeed
-- `expression` - evaluate the math expression and return the results when [allow evaluate is enabled](preferences.md#scripting)
+  - `.lower` force to all lower case by appending .lower
+  - `.upper` force to all upper case by appending .lower
+  - `.proper` force to proper casing by appending .proper
+- `repeatnum` returns the current index during #nnn
+- `i` same as repeatnum
+- `cr` replace with carriage return
+- `esc` escape character, useful for creating ansi color codes
+- `lf` replace with line feed
+- `crlf` replace with carriage return and linefeed
+- `expression` evaluate the math expression and return the results when [allow evaluate is enabled](preferences.md#scripting)
 
 ## Functions
 
-- `time(format)` - display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]
+- `time(format)` display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]
   - `YYYY` 4 or 2 digit year
   - `YY` 2 digit year
   - `Y` Year with any number of digits and sign
@@ -57,11 +57,11 @@ Escaping allows you to prevent special characters from being parsed and allow th
   - `DDD DDDD` Day of year
   - `X` Unix timestamp
   - `x` Unix ms timestamp
-- `lower(TEXT)` - force TEXT into lower case, for example ${lower(${selword})} is the same as ${selword.lower}
-- `upper(TEXT)` - force TEXT into upper case
-- `proper(TEXT)` - force TEXT into proper casing
-- `eval(expression)` - evaluate the expression and return the results, a long version of `expression`
-- `dice(xdy+n)` - roll a dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+- `lower(TEXT)` force TEXT into lower case, for example ${lower(${selword})} is the same as ${selword.lower}
+- `upper(TEXT)` force TEXT into upper case
+- `proper(TEXT)` force TEXT into proper casing
+- `eval(expression)` evaluate the expression and return the results, a long version of `expression`
+- `dice(xdy+n)` roll a dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
 - `diceavg(xdy+n)` the avg roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
 - `dicemin(xdy+n)` the minimum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
 - `dicemax(xdy+n)` the maximum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier

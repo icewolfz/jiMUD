@@ -7986,6 +7986,8 @@
         panel.editor.remote = '';
         manager.setPanelTooltip(panel.editor.file, panel);
         manager.setPanelTitle(panel.editor.filename, panel);
+        if (manager.active && manager.active.editor && manager.active.editor === panel.editor)
+            document.title = 'Code Editor - ' + manager.active.tab.innerText;
         try {
             panel.editor.save();
         }

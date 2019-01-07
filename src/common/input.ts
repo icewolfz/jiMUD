@@ -77,6 +77,12 @@ export class Input extends EventEmitter {
         return this._stack[this._stack.length - 1];
     }
 
+    get repeatNumber() {
+        if (this._stack.length === 0 || !this.stack.hasOwnProperty('repeatnum'))
+            return window.repeatnum;
+        return this.stack.repeatnum;
+    }
+
     get vStack() {
         if (this._vStack.length === 0)
             return {};
@@ -399,8 +405,26 @@ export class Input extends EventEmitter {
             if (this._commandHistory.length >= this.client.options.commandHistorySize)
                 this._commandHistory.shift();
             this._commandHistory.push(cmd);
+            this.emit('command-history-changed', this._commandHistory);
         }
     }
+
+    public clearCommandHistory() {
+        this._commandHistory = [];
+        this._historyIdx = -1;
+        this.emit('command-history-changed', this._commandHistory);
+    }
+
+    public setHistoryIndex(index) {
+        if (index < 0 || this._commandHistory.length === 0)
+            this._historyIdx = -1;
+        else if (index >= this._commandHistory.length)
+            this._historyIdx = this._commandHistory.length - 1;
+        else
+            this._historyIdx = index;
+    }
+
+    public get commandHistory() { return this._commandHistory; }
 
     public executeScript(txt: string) {
         if (txt == null)
@@ -2256,11 +2280,13 @@ export class Input extends EventEmitter {
             args = args.join(' ');
             tmp = [];
             for (let r = 0; r < i; r++) {
+                this.stack.repeatnum = r;
                 window.repeatnum = r;
                 n = this.parseOutgoing(args);
                 if (n != null && n.length > 0)
                     tmp.push(n);
             }
+            delete this.stack.repeatnum;
             window.repeatnum = undefined;
             if (tmp.length > 0)
                 return tmp.join('\n');
@@ -2359,6 +2385,8 @@ export class Input extends EventEmitter {
                     }
                     //end of alias at end of text, new line, or command stack if enabled
                     else if (idx === tl - 1 || c === '\n' || (stacking && c === stackingChar)) {
+                        if (!(c === '\n' || (stacking && c === stackingChar)))
+                            arg += c;
                         //save any arg that was found
                         if (arg.length > 0)
                             args.push(arg);
@@ -2465,9 +2493,9 @@ export class Input extends EventEmitter {
                     switch (c) {
                         case '%':
                             if (eAlias && findAlias)
-                                alias += '%';
+                                alias += '%%';
                             else
-                                str += '%';
+                                str += '%%';
                             state = ParseState.none;
                             break;
                         case '*':
@@ -2478,7 +2506,7 @@ export class Input extends EventEmitter {
                                     str += this.stack.args.slice(1).join(' ');
                                 this.stack.used = this.stack.args.length;
                             }
-                            if (eAlias && findAlias)
+                            else if (eAlias && findAlias)
                                 alias += '%*';
                             else
                                 str += '%*';
@@ -2531,9 +2559,9 @@ export class Input extends EventEmitter {
                 case ParseState.paramsPBlock:
                     if (c === '}' && nest === 0) {
                         if (arg === 'i')
-                            tmp2 = window.repeatnum;
+                            tmp2 = this.repeatNumber;
                         else if (arg === 'repeatnum')
-                            tmp2 = window.repeatnum;
+                            tmp2 = this.repeatNumber;
                         else if (this.stack.args && arg === '*') {
                             tmp2 = this.stack.args.slice(1).join(' ');
                             this.stack.used = this.stack.args.length;
@@ -2559,9 +2587,9 @@ export class Input extends EventEmitter {
                                     tmp2 = tmp;
                                 else if (this.client.options.allowEval) {
                                     if (this.stack.named)
-                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 }, this.stack.named));
+                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 }, this.stack.named));
                                     else
-                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
+                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
                                 }
                                 else {
                                     tmp2 += '%';
@@ -2628,6 +2656,10 @@ export class Input extends EventEmitter {
                             else
                                 str += this.stack.named[arg];
                         }
+                        else if (eAlias && findAlias)
+                            alias += '$' + arg;
+                        else
+                            str += '$' + arg;
                         idx--;
                         state = ParseState.none;
                         arg = '';
@@ -2654,12 +2686,12 @@ export class Input extends EventEmitter {
                     if (c === '}' && nest === 0) {
                         tmp2 = null;
                         if (arg === 'i')
-                            tmp2 = window.repeatnum;
+                            tmp2 = this.repeatNumber;
                         else if (arg === 'repeatnum')
-                            tmp2 = window.repeatnum;
+                            tmp2 = this.repeatNumber;
                         else if (this.stack.args && arg === '*') {
                             tmp2 = this.stack.args.slice(1).join(' ');
-                            this.stack.used = args.length;
+                            this.stack.used = this.stack.args.length;
                         }
                         else if (this.stack.named && this.stack.named.hasOwnProperty(arg))
                             tmp2 = this.stack.named[arg];
@@ -2682,9 +2714,9 @@ export class Input extends EventEmitter {
                                     tmp2 = c;
                                 else if (this.client.options.allowEval) {
                                     if (this.stack.named)
-                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 }, this.stack.named));
+                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 }, this.stack.named));
                                     else
-                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
+                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
                                 }
                                 else {
                                     tmp2 = '$';
@@ -2928,7 +2960,7 @@ export class Input extends EventEmitter {
             if (str !== null) out += str;
             str = '';
         }
-        if (this.stack.args && this.stack.append && this.stack.args.length - 1 > 0 && this.stack.used + 1 < this.stack.args.length) {
+        if (eAlias && this.stack.args && this.stack.append && this.stack.args.length - 1 > 0 && this.stack.used + 1 < this.stack.args.length) {
             let r = false;
             if (str.endsWith('\n')) {
                 str = str.substring(0, str.length - 1);
@@ -3039,7 +3071,7 @@ export class Input extends EventEmitter {
                 return ProperCase(window.$copied);
             case 'i':
             case 'repeatnum':
-                return window.repeatnum;
+                return this.vStack['$repeatnum'] || this.repeatNumber;
             case 'selected':
             case 'selectedurl':
             case 'selectedline':
@@ -3094,7 +3126,7 @@ export class Input extends EventEmitter {
             case 'proper':
                 return ProperCase(this.parseOutgoing(res[2]));
             case 'eval':
-                return '' + mathjs.eval(this.parseOutgoing(res[2]), { i: window.repeatnum || 0, repeatnum: window.repeatnum || 0 });
+                return '' + mathjs.eval(this.parseOutgoing(res[2]), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
             case 'dice':
                 args = this.parseOutgoing(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid dice');
@@ -3304,7 +3336,10 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (alias.style) {
             case 1:
-                this._stack.push({ args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
+                if (this.stack.hasOwnProperty('repeatNumber'))
+                    this._stack.push({ repeatnum: this.repeatNumber, args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
+                else
+                    this._stack.push({ args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
                 ret = this.parseOutgoing(alias.value);
                 this._stack.pop();
                 break;
@@ -3528,7 +3563,10 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (trigger.style) {
             case 1:
-                this._stack.push({ args: args, named: [], used: 0 });
+                if (this.stack.hasOwnProperty('repeatNumber'))
+                    this._stack.push({ repeatnum: window.repeatnum, args: args, named: [], used: 0 });
+                else
+                    this._stack.push({ args: args, named: [], used: 0 });
                 ret = this.parseOutgoing(trigger.value);
                 this._stack.pop();
                 break;
@@ -3613,6 +3651,8 @@ export class Input extends EventEmitter {
     public executeWait(text, delay: number, eAlias?: boolean, stacking?: boolean) {
         if (!text || text.length === 0) return;
         const s = { args: 0, named: 0, used: this.stack.used, append: this.stack.append };
+        if (this.stack.hasOwnProperty('repeatNumber'))
+            (<any>s).repeatnum = this.repeatNumber;
         if (this.stack.args)
             s.args = this.stack.args.slice();
         if (this.stack.named)

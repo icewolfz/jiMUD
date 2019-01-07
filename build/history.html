@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Command history</title>
+    <link rel="shortcut icon" href="../assets/icons/png/history.png" />
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/editor.css" rel="stylesheet" type="text/css" />
+    <style type="text/css">
+        #history {
+            top: 0;
+            right: 0;
+            left: 0;
+            bottom: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <select id="history" multiple="multiple"></select>
+</body>
+<script>
+    if (typeof module === 'object') { window.module = module; module = undefined; }
+</script>
+<script src="../lib/jquery.min.js"></script>
+<script src="../lib/bootstrap.min.js"></script>
+<script type="text/javascript">
+    const { remote, ipcRenderer } = require('electron');
+    const { Menu, MenuItem } = remote;
+
+    var list = document.getElementById('history');
+    ipcRenderer.send('request-command-history');
+    ipcRenderer.on('command-history', (event, history) => {
+        var l = history.length;
+        while (this.list.firstChild)
+            this.list.removeChild(this.list.firstChild);
+        var lst = '';
+        for (var i = 0; i < l; i++) {
+            lst += `<option value="${history[i]}">${history[i]}</option>`;
+        }
+        list.innerHTML = lst;
+    });
+    list.addEventListener('dblclick', () => {
+        ipcRenderer.send('add-command-history', list.value);
+        ipcRenderer.send('send-command', list.value);
+        window.close();
+    });
+    list.addEventListener('change', () => {
+        ipcRenderer.send('change-command-history-index', list.selectedIndex);
+    });
+    list.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        var c = new Menu();
+        if (list.selectedIndex !== -1) {
+            c.append(new MenuItem({
+                label: '&Send',
+                click: () => {
+                    ipcRenderer.send('add-command-history', list.value);
+                    ipcRenderer.send('send-command', list.value);
+                }
+            }));
+            c.append(new MenuItem({ type: 'separator' }));
+        }
+        c.append(new MenuItem({
+            label: '&Refresh',
+            click: () => {
+                ipcRenderer.send('request-command-history');
+            }
+        }));
+        c.append(new MenuItem({
+            label: '&Clear history',
+            click: () => {
+                ipcRenderer.send('clear-command-history');
+            }
+        }));
+        c.popup({ window: remote.getCurrentWindow() });
+    });
+</script>
+
+</html>

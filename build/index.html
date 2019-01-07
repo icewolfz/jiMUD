@@ -17,6 +17,7 @@
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
     <script>
         //spell-checker:ignore ismap hellip selectall lagmeter repeatnum buttonvisible statusvisible limbsmenu partyhealth combathealth limb armor limbhealth
         if (window.module) module.module;
@@ -553,6 +554,29 @@
         }
 
         function init() {
+            $('.dropdown').on('show.bs.dropdown', () => {
+                $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
+                var lst = '';
+                var l = client.commandHistory.length;
+                for (var i = 0; i < l; i++) {
+                    lst += `<li><a href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd);client.sendCommand(cmd);">${client.commandHistory[i]}</a></li>`;
+                }
+                if (l === 0)
+                    lst = '<li><a href="#">No history</a></li><li role="separator" class="divider"></li>';
+                else
+                    lst += '<li role="separator" class="divider"></li><li><a href="#" onclick="client.clearCommandHistory();">Clear</a></li>';
+                lst += '<li><a href="#" onclick="showCommandHistory()">Show history window...</a></li>';
+                $('.command-history ul').html(lst);
+            });
+            remote.getCurrentWindow().on('restore', () => {
+                client.display.updateScrollbars();
+                client.display.updateView();
+            });
+            remote.getCurrentWindow().on('maximize', () => {
+                client.display.updateScrollbars();
+                client.display.updateView();
+            });
+
             ipcRenderer.send('set-overlay', 0);
             window.addEventListener('blur', function () {
                 active = false;
@@ -762,6 +786,7 @@
             client.on('profiles-updated', () => {
                 doUpdate(76);
             });
+            client.on('command-history-changed', history => ipcRenderer.send('command-history', history));
             client.on('add-line', (data) => {
                 var res, re, c, cl;
                 //no more then 3 tries
@@ -1801,6 +1826,7 @@
             if (!item.enabled) return false;
             var ret;// = '';
             client._input.vStackPush({
+                $repeatnum: window.repeatnum,
                 $selword: _selword,
                 $selurl: _selurl,
                 $selline: _selline,
@@ -2011,6 +2037,22 @@
                 $('#update-progress')[0].close();
         });
 
+        ipcRenderer.on('request-command-history', () => {
+            ipcRenderer.send('command-history', client.commandHistory);
+        });
+
+        ipcRenderer.on('change-command-history-index', (event, index) => {
+            client.setHistoryIndex(index);
+        });
+
+        ipcRenderer.on('clear-command-history', () => {
+            client.clearCommandHistory();
+        });
+
+        ipcRenderer.on('add-command-history', (event, cmd) => {
+            client.AddCommandToHistory(cmd);
+        });
+
         ipcRenderer.on('flush-end', (event, sender) => {
             client.debug('Finished map');
             client.debug(sender);
@@ -2046,21 +2088,25 @@
         ipcRenderer.on('setting-changed', (event, data) => {
             if (data.type === 'mapper') {
                 client.options.mapper[data.name] = data.value;
-                doUpdate(32);
+                if (!data.noSave)
+                    doUpdate(32);
             }
             else if (data.type === 'profiles') {
                 client.options.profiles[data.name] = data.value;
                 if (data.name === 'enabled')
                     updateMenu();
-                doUpdate(32);
+                if (!data.noSave)
+                    doUpdate(32);
             }
             else if (data.type === 'chat') {
                 client.options.chat[data.name] = data.value;
-                doUpdate(32);
+                if (!data.noSave)
+                    doUpdate(32);
             }
             else if (data.type === 'extensions') {
                 client.options.extensions[data.name] = data.value;
-                doUpdate(32);
+                if (!data.noSave)
+                    doUpdate(32);
             }
             else if (data.type === 'windows') {
                 if (!client.options.windows[data.name])
@@ -2070,12 +2116,30 @@
                 client.options.windows[data.name].options.alwaysOnTopClient = data.value.alwaysOnTopClient;
                 client.options.windows[data.name].options.persistent = data.value.persistent;
                 client.options.windows[data.name].options.alwaysOnTop = data.value.alwaysOnTop;
-                doUpdate(32);
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+            else if (data.type === 'windowOptions') {
+                if (!client.options.windows[data.name])
+                    client.options.windows[data.name] = {};
+                client.options.windows[data.name].options = data.value;
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+            else if (data.type === 'window') {
+                client.options.windows[data.name] = data.value || {};
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+            else if (data.type === 'normal') {
+                client.options[data.name] = data.value;
+                if (!data.noSave)
+                    doUpdate(32);
             }
         });
 
         ipcRenderer.on('send-background', (event, command) => {
-            client.sendCommand(command);
+            client.sendBackground(command);
         });
 
         ipcRenderer.on('send-command', (event, command) => {
@@ -2168,6 +2232,16 @@
             }
             else
                 ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function showCommandHistory() {
+            if (client.options.windows['history'] && client.options.windows['history'].options) {
+                client.options.windows['history'].options.show = true;
+                ipcRenderer.send('show-window', 'history', client.options.windows['history'].options);
+            }
+            else
+                ipcRenderer.send('show-window', 'history', { show: true, width: 400, height: 275, file: 'history.html', icon: 'history', alwaysOnTopClient: true });
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -2380,6 +2454,12 @@
         <div id="commandright"></div>
         <div id="commandbox">
             <textarea type="text" id="commandinput" aria-live="polite" spellcheck="true" wrap="off" cols="20" rows="20"></textarea>
+        </div>
+        <div class="dropdown dropup command-history">
+            <a id="history-dropup" style="width:32px" title="Show command history" class="button button-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" area-expanded="true">
+                <i class="fa fa-history"></i><span class="caret" style="margin: 0"></span>
+            </a>
+            <ul class="dropdown-menu pull-right dropdown-menu-right" data-container="body" aria-labelledby="history-dropdown"></ul>
         </div>
         <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="ipcRenderer.send('show-window', 'editor');">
             <i class="fa fa-edit"></i>

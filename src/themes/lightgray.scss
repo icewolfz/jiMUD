@@ -40,7 +40,7 @@ body {
 #commandbox {
     left: 0px;
     top: 0px;
-    right: 26px;
+    right: 60px;
     bottom: 0px;
     background-color: white;
 }
@@ -795,6 +795,22 @@ body {
 
 
 /** button stats */
+
+#history-dropup {
+    font-size: 22px;
+    line-height: 22px;
+    height: 24px;
+}
+
+.command-history {
+    right:25px;
+    top:0;
+}
+
+#history-dropup .fa {
+    margin-top: 3px;
+    font-size: 18px;
+}
 
 #advedit {
     right: 0px;

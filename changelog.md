@@ -1,13 +1,54 @@
 # Changelog
 
-## v0.6.x
+## vX
 
 - **Fixed:**
   - Display:
     - Add MXP image height and better width support
     - Add MXP font size and family support
 
-## v0.6.13
+## v0.7.1
+
+- **New:**
+  - Add command history window
+- **Changed:**
+  - Remove memory info from about, no longer supported in electron 4
+  - Update electron 4.0.0 to 4.0.1
+- **Fixed:**
+  - Advanced editor: Fixed unable to add new lines
+  - Code editor: Fixed formatting of else single line to newline/indent like single line if
+
+## v0.7.0 2018-12-31
+
+- **Changed:**
+  - Update electron 3.0.13 to 4.0.0
+- **Fixed:**
+  - Code editor:
+    - Fixed save as not updating window title.
+  - Display:
+    - Fixed horizontal scrolling when split view visible
+    - Refresh scroll bars when window restored from a minimized state.
+  - Command parsing:
+    - Fixed %* parameter of append %*
+    - Fixed ${*} not correctly marking arguments as used thus appending them if append was turned on
+    - Fixed %%
+    - Fixed $STRING parameters
+    - Fixed appending unused variables to inner blocks of parsed lines
+    - Fixed aliases when value does not end in newline
+  - ${repeatnum} and ${i} are now saved on stack correctly so instead of last use it is now the correct # based on where it is executed, making nested #nnn in aliases better
+
+## v0.6.15 2018-12-20
+
+- **Fixed:**
+  - Parser: Fixed issue of trimming end formatting codes on fragmented lines
+  - Fixed issue where some window settings where not correctly saving
+
+## v0.6.14 2018-12-17
+
+- **Fixed:**
+  - Parser: Fixed split text issue introduced in v0.6.13 when fixing split URLs
+
+## v0.6.13 2018-12-17
 
 - **New:**
   - Display: Add page up/down support
@@ -16,22 +57,22 @@
     - Area designer:
       - Room background color will now set based on inherited type when possible
       - Add underwater property flag
-      - Add custom properties for rooms and suppot from monster/room wizards
+      - Add custom properties for rooms and support from monster/room wizards
     - Add underwater property to room wizard
     - Add custom properties for monster and room wizards
 - **Changed:**
-  - Update electron 3.0.9 to 3.0.12
+  - Update electron 3.0.9 to 3.0.13
   - Update electron-updated 4.0.5 to 4.0.6
-  - Update better-sqlite from 5.0.1 to 5.2.0
+  - Update better-sqlite from 5.0.1 to 5.2.1
 - **Fixed:**
   - Display:
     - Fixed issue with URL context menu
     - Fixed split button scrolling instead of toggling
     - Fixed horizontal scroll when mouse dragging leaves bottom of display area
-    - Improve url detection when text is split
+    - Improve URL detection when text is split
     - Improve prompt line detection
   - Code editor:
-    - Fixed save file as tab tooltip
+    - Fixed save file as tab tool-tip
     - Area designer:
       - Fixed delete and cut correctly removing rooms
       - Fixed base room delete/cut
