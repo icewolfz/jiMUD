@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.x
+## vX
 
 - **Fixed:**
   - Display:
