@@ -1839,11 +1839,13 @@ export class LPCFormatter extends EventEmitter {
                                         if (t2 >= tll)
                                             break;
                                     }
-                                    if (t2 < tll && tokenLine[t2].value !== 'if' && tokenLine[t2].type !== FormatTokenType.parenLBrace && tokenLine[t2].type !== FormatTokenType.newline) {
+                                    if (t2 < tll && tokenLine[t2].type === FormatTokenType.commentInline)
+                                        op += ' ';
+                                    else if (t2 < tll && tokenLine[t2].value !== 'if' && tokenLine[t2].type !== FormatTokenType.parenLBrace && tokenLine[t2].type !== FormatTokenType.newline) {
                                         op.rtrim();
                                         op += '\n';
                                     }
-                                    else if (tokenLine[t2].type !== FormatTokenType.newline)
+                                    else if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline)
                                         op += ' ';
                                     break;
                                 case 'if':
@@ -1863,7 +1865,7 @@ export class LPCFormatter extends EventEmitter {
                         p--;
                         if (p === 0) {
                             t2 = t + 1;
-                            if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t].type !== FormatTokenType.parenLBrace && tokenLine[t].type !== FormatTokenType.keyword) {
+                            if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t].type !== FormatTokenType.parenLBrace && tokenLine[t].type !== FormatTokenType.keyword && tokenLine[t].type === FormatTokenType.commentInline) {
                                 while (tokenLine[t2].type === FormatTokenType.whitespace) {
                                     t++;
                                     e++;
@@ -1871,7 +1873,7 @@ export class LPCFormatter extends EventEmitter {
                                     if (t2 >= tll)
                                         break;
                                 }
-                                if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t2].type !== FormatTokenType.parenLBrace && tokenLine[t2].type !== FormatTokenType.keyword) {
+                                if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t2].type !== FormatTokenType.parenLBrace && tokenLine[t2].type !== FormatTokenType.keyword && tokenLine[t2].type !== FormatTokenType.commentInline) {
                                     op = op.rtrim();
                                     op += '\n' + leading;
                                 }
