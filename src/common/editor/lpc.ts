@@ -1839,11 +1839,11 @@ export class LPCFormatter extends EventEmitter {
                                         if (t2 >= tll)
                                             break;
                                     }
-                                    if (t2 < tll && tokenLine[t2].value !== 'if' && tokenLine[t2].type !== FormatTokenType.parenLBrace) {
+                                    if (t2 < tll && tokenLine[t2].value !== 'if' && tokenLine[t2].type !== FormatTokenType.parenLBrace && tokenLine[t2].type !== FormatTokenType.newline) {
                                         op.rtrim();
                                         op += '\n';
                                     }
-                                    else
+                                    else if (tokenLine[t2].type !== FormatTokenType.newline)
                                         op += ' ';
                                     break;
                                 case 'if':
