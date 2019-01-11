@@ -11,7 +11,9 @@
   - Update drivelist 6.4.3 to 6.4.5
 - **Fixed:**
   - Advanced editor: Fixed unable to add new lines
-  - Code editor: Fixed formatting of else single line to newline/indent like single line if
+  - Code editor:
+    - Fixed formatting of else single line to newline/indent like single line if
+    - Fixed formatting of an inline comment following if/else
 
 ## v0.7.0 2018-12-31
 
