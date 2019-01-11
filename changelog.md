@@ -7,6 +7,8 @@
 - **Changed:**
   - Remove memory info from about, no longer supported in electron 4
   - Update electron 4.0.0 to 4.0.1
+  - Update better-sqlite3 5.2.1 to 5.3.0
+  - Update drivelist 6.4.3 to 6.4.5
 - **Fixed:**
   - Advanced editor: Fixed unable to add new lines
   - Code editor: Fixed formatting of else single line to newline/indent like single line if
