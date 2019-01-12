@@ -25,7 +25,7 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script type="text/javascript">
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        const { parseTemplate, templatePath, isFileSync, isDirSync, decrypt, encrypt, clone } = require('./js/library');
+        const { parseTemplate, templatePath, isFileSync, isDirSync, decrypt, encrypt, clone, walkSync } = require('./js/library');
         const Settings = require('./js/settings').Settings;
         const { shell, remote, ipcRenderer } = require('electron');
         const { dialog, Menu, MenuItem } = remote;
@@ -39,6 +39,10 @@
         var changed = 0;
 
         $(window).keydown((event) => {
+            if (document.getElementById('progress-dialog').open) {
+                event.preventDefault();
+                return false;
+            }
             if (event.which === 27) {
                 if ($('#get-name')[0].open)
                     $('#get-name')[0].close();
@@ -692,7 +696,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function backup() {
-            archiver = archiver || require('adm-zip');
+            archiver = archiver || require('yazl');
             var data = parseTemplate('{data}');
             var file = dialog.showSaveDialog(remote.getCurrentWindow(), {
                 title: 'Save as...',
@@ -705,23 +709,38 @@
             if (file === undefined)
                 return;
 
-
-            archive = new archiver();
+            showProgressDialog();
+            archive = new archiver.ZipFile();
 
             if (isFileSync(charactersFile))
-                archive.addLocalFile(charactersFile);
+                archive.addFile(charactersFile, 'characters.json');
             if (isFileSync(path.join(data, 'map.sqlite')))
-                archive.addLocalFile(path.join(data, 'map.sqlite'));
+                archive.addFile(path.join(data, 'map.sqlite'), 'map.sqlite');
             if (isFileSync(path.join(data, 'mail.sqlite')))
-                archive.addLocalFile(path.join(data, 'mail.sqlite'));
+                archive.addFile(path.join(data, 'mail.sqlite'), 'mail.sqlite');
             if (isFileSync(path.join(data, 'settings.json')))
-                archive.addLocalFile(path.join(data, 'settings.json'));
-            if (isDirSync(path.join(data, 'profiles')))
-                archive.addLocalFolder(path.join(data, 'profiles'), 'profiles');
-            if (isDirSync(path.join(data, 'characters')))
-                archive.addLocalFolder(path.join(data, 'characters'), 'characters');
+                archive.addFile(path.join(data, 'settings.json'), 'settings.json');
 
-            archive.writeZip(file);
+            var files;
+            if (isDirSync(path.join(data, 'profiles'))) {
+                files = walkSync(path.join(data, 'profiles'));
+                files.files.forEach(file => {
+                    archive.addFile(file, file.substring(data.length + 1).replace(/\\/g, '/'));
+                });
+            }
+            if (isDirSync(path.join(data, 'characters'))) {
+                files = walkSync(path.join(data, 'characters'));
+                files.files.forEach(file => {
+                    archive.addFile(file, file.substring(data.length + 1).replace(/\\/g, '/'));
+                });
+            }
+
+            archive.outputStream.pipe(fs.createWriteStream(file)).on('close', function () {
+                closeProgressDialog();
+            });
+            archive.end(() => {
+                closeProgressDialog();
+            });
         }
 
         function showProgressDialog() {
@@ -889,15 +908,10 @@
             </button>
         </div>
     </dialog>
-    <dialog id="progress-dialog" style="z-index:1000;text-align:center" onclose="closeProgressDialog()" oncancel="cancelProgress()">
+    <dialog id="progress-dialog" style="z-index:1000;text-align:center">
         <div id="progress-dialog-title">Saving&hellip;</div>
         <div>
             <progress max="100" id="progress-dialog-progressbar"></progress>
-        </div>
-        <div>
-            <button id="progress-dialog-cancel" onclick="cancelProgress()">
-                Cancel
-            </button>
         </div>
     </dialog>
 </body>

@@ -128,7 +128,6 @@
     }
   },
   "dependencies": {
-    "adm-zip": "^0.4.13",
     "better-sqlite3": "^5.3.0",
     "buzz": "^1.2.1",
     "chokidar": "^2.0.4",
@@ -145,6 +144,7 @@
     "rgbcolor": "^1.0.1",
     "spellchecker": "^3.5.0",
     "tmp": "0.0.33",
-    "yargs-parser": "^11.1.1"
+    "yargs-parser": "^11.1.1",
+    "yazl": "^2.5.1"
   }
 }
