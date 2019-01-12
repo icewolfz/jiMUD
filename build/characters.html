@@ -696,11 +696,9 @@
 
         // eslint-disable-next-line no-unused-vars
         function backup() {
-            archiver = archiver || require('yazl');
-            var data = parseTemplate('{data}');
             var file = dialog.showSaveDialog(remote.getCurrentWindow(), {
                 title: 'Save as...',
-                defaultPath: path.join(data, 'jiMUD-characters-data.zip'),
+                defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-characters-data.zip'),
                 filters: [
                     { name: 'Zip files (*.zip)', extensions: ['zip'] },
                     { name: 'All files (*.*)', extensions: ['*'] },
@@ -710,6 +708,8 @@
                 return;
 
             showProgressDialog();
+            archiver = archiver || require('yazl');
+            var data = parseTemplate('{data}');
             archive = new archiver.ZipFile();
 
             if (isFileSync(charactersFile))
