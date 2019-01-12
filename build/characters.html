@@ -25,13 +25,14 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script>
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        const { parseTemplate, templatePath, isFileSync, decrypt, encrypt, clone } = require('./js/library');
+        const { parseTemplate, templatePath, isFileSync, isDirSync, decrypt, encrypt, clone } = require('./js/library');
         const Settings = require('./js/settings').Settings;
         const { shell, remote, ipcRenderer } = require('electron');
         const { dialog, Menu, MenuItem } = remote;
         const path = require('path');
         const fs = require('fs');
         const crypto = require('crypto');
+        var archiver, archive;
 
         var characters, current = '';
         var charactersFile = parseTemplate(path.join('{data}', 'characters.json'));
@@ -309,7 +310,6 @@
             });
             list.append(item);
         }
-
 
         function clearButton(id) {
             $(id).removeClass('open');
@@ -689,8 +689,122 @@
             readStream.once('end', () => { });
             readStream.pipe(fs.createWriteStream(dest));
         }
+
+        // eslint-disable-next-line no-unused-vars
+        function backup() {
+            archiver = archiver || require('archiver');
+            var data = parseTemplate('{data}');
+            var file = dialog.showSaveDialog(remote.getCurrentWindow(), {
+                title: 'Save as...',
+                defaultPath: path.join(data, 'characters-data.zip'),
+                filters: [
+                    { name: 'Zip files (*.zip)', extensions: ['zip'] },
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+            });
+            if (file === undefined)
+                return;
+            showProgressDialog();
+            // create a file to stream archive data to.
+            var output = fs.createWriteStream(file);
+            archive = archiver('zip', {
+                zlib: { level: 9 } // Sets the compression level.
+            });
+
+
+            output.on('end', function () {
+                closeProgressDialog();
+            });
+
+            output.on('finish', function () {
+                closeProgressDialog();
+            });
+            
+            // good practice to catch warnings (ie stat failures and other non-blocking errors)
+            archive.on('warning', function (err) {
+                if (err.code === 'ENOENT') {
+                    // log warning
+                } else {
+                    // throw error
+                    dialog.showMessageBox(
+                        remote.getCurrentWindow(),
+                        {
+                            type: 'error',
+                            title: 'Error saving',
+                            message: err.toString(),
+                            defaultId: 1
+                        });
+                }
+            });
+
+            // good practice to catch this error explicitly
+            archive.on('error', function (err) {
+                dialog.showMessageBox(
+                    remote.getCurrentWindow(),
+                    {
+                        type: 'error',
+                        title: 'Error saving',
+                        message: err.toString(),
+                        defaultId: 1
+                    });
+                archive.abort();
+            });
+
+            archive.on('progress', data => {
+                setProgressDialogValue(data.entries.processed / data.entries.total);
+            });
+
+            // pipe archive data to the file
+            archive.pipe(output);
+
+            if (isFileSync(charactersFile))
+                archive.file(charactersFile, { name: 'characters.json' });
+            if (isFileSync(path.join(data, 'map.sqlite')))
+                archive.file(path.join(data, 'map.sqlite'), { name: 'map.sqlite' });
+            if (isFileSync(path.join(data, 'mail.sqlite')))
+                archive.file(path.join(data, 'mail.sqlite'), { name: 'mail.sqlite' });
+            if (isFileSync(path.join(data, 'settings.json')))
+                archive.file(path.join(data, 'settings.json'), { name: 'settings.json' });
+            if (isDirSync(path.join(data, 'profiles')))
+                archive.directory(path.join(data, 'profiles'), 'profiles');
+            if (isDirSync(path.join(data, 'characters')))
+                archive.directory(path.join(data, 'characters'), 'characters');
+
+            // finalize the archive (ie we are done appending files but streams have to finish yet)
+            // 'close', 'end' or 'finish' may be fired right after calling this method so register to them beforehand
+            archive.finalize();
+        }
+
+        function showProgressDialog() {
+            var progress = document.getElementById('progress-dialog');
+            if (progress.open) return;
+            setProgressDialogValue(0);
+            progress.showModal();
+        }
+
+        function setProgressDialogValue(value) {
+            ipcRenderer.send('set-progress', { value: value });
+            ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+            document.getElementById('progress-dialog-progressbar').value = value * 100;
+        }
+
+        function closeProgressDialog() {
+            var progress = document.getElementById('progress-dialog');
+            if (progress.open)
+                progress.close();
+            setProgressDialogValue(-1);
+            document.getElementById('progress-dialog-progressbar').removeAttribute('value');
+            archive = null;
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function cancelProgress() {
+            if (archive)
+                archive.abort();
+            closeProgressDialog();
+        }
     </script>
-    <style>
+    <style type="text/css">
         .form-control-feedback,
         .form-error {
             display: none;
@@ -718,6 +832,9 @@
         <div class="btn-group" role="group">
             <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="refresh()">
                 <i class="fa fa-refresh"></i>
+            </button>
+            <button id="btn-save" type="button" class="btn btn-default btn-xs" title="Backup to zip" onclick="backup()">
+                <i class="fa fa-upload"></i>
             </button>
             <button id="btn-save" type="button" class="btn btn-default btn-xs" title="Save" onclick="saveCharacters()">
                 <i class="fa fa-save"></i>
@@ -817,6 +934,17 @@
                 Ok
             </button>
             <button onclick="$('#get-name')[0].close()">
+                Cancel
+            </button>
+        </div>
+    </dialog>
+    <dialog id="progress-dialog" style="z-index:1000;text-align:center" onclose="closeProgressDialog()" oncancel="cancelProgress()">
+        <div id="progress-dialog-title">Saving&hellip;</div>
+        <div>
+            <progress max="100" id="progress-dialog-progressbar"></progress>
+        </div>
+        <div>
+            <button id="progress-dialog-cancel" onclick="cancelProgress()">
                 Cancel
             </button>
         </div>
