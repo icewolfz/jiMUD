@@ -552,6 +552,12 @@
         <button style="float: right" type="button" class="btn btn-default" onclick="if(profileUI.saveProfiles(true)) window.close();">Save</button>
         <button style="float: right" type="button" class="btn btn-default" onclick="profileUI.saveProfiles()">Apply</button>
     </div>
+    <dialog id="progress-dialog" style="z-index:1000;text-align:center">
+        <div id="progress-dialog-title">Saving&hellip;</div>
+        <div>
+            <progress max="100" id="progress-dialog-progressbar"></progress>
+        </div>
+    </dialog>    
     <script>
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>

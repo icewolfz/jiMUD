@@ -93,9 +93,9 @@
     <script src="../lib/bootstrap.min.js"></script>
     <script src="../lib/bootstrap-select.min.js"></script>
     <script src="../lib/bootstrap-treeview.min.js"></script>
-    <script>
+    <script type="text/javascript">
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        const { parseTemplate, templatePath, existsSync, getColors } = require('./js/library');
+        const { parseTemplate, templatePath, existsSync, getColors, isFileSync, isDirSync, walkSync } = require('./js/library');
         const { TrayClick } = require('./js/types');
         const Settings = require('./js/settings').Settings;
         const { remote, ipcRenderer } = require('electron');
@@ -105,6 +105,9 @@
         const fs = require('fs');
         var fontManager;
         var currentColors;
+
+        var archiver, archive;
+
         try {
             fontManager = require('font-manager');
         }
@@ -115,6 +118,10 @@
         var _settings;
         if (window.module) module.module;
         $(window).keydown((event) => {
+            if (document.getElementById('progress-dialog').open) {
+                event.preventDefault();
+                return false;
+            }            
             if (event.which === 27)
                 window.close();
         });
@@ -1100,6 +1107,85 @@
             ipcRenderer.send('reload-options', false);
             window.close();
         }
+
+        // eslint-disable-next-line no-unused-vars
+        function backup() {
+            var file = dialog.showSaveDialog(remote.getCurrentWindow(), {
+                title: 'Save as...',
+                defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-data.zip'),
+                filters: [
+                    { name: 'Zip files (*.zip)', extensions: ['zip'] },
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+            });
+            if (file === undefined)
+                return;
+
+            showProgressDialog();
+            archiver = archiver || require('yazl');
+            var data = parseTemplate('{data}');
+            archive = new archiver.ZipFile();
+
+            if (isFileSync(path.join(data, 'characters.json')))
+                archive.addFile(path.join(data, 'characters.json'), 'characters.json');
+            if (isFileSync(path.join(data, 'map.sqlite')))
+                archive.addFile(path.join(data, 'map.sqlite'), 'map.sqlite');
+            if (isFileSync(path.join(data, 'mail.sqlite')))
+                archive.addFile(path.join(data, 'mail.sqlite'), 'mail.sqlite');
+            if (isFileSync(path.join(data, 'settings.json')))
+                archive.addFile(path.join(data, 'settings.json'), 'settings.json');
+            if (isFileSync(path.join(data, 'editor.json')))
+                archive.addFile(path.join(data, 'editor.json'), 'editor.json');
+            var files;
+            if (isDirSync(path.join(data, 'profiles'))) {
+                files = walkSync(path.join(data, 'profiles'));
+                files.files.forEach(file => {
+                    archive.addFile(file, file.substring(data.length + 1).replace(/\\/g, '/'));
+                });
+            }
+            if (isDirSync(path.join(data, 'characters'))) {
+                files = walkSync(path.join(data, 'characters'));
+                files.files.forEach(file => {
+                    archive.addFile(file, file.substring(data.length + 1).replace(/\\/g, '/'));
+                });
+            }
+
+            archive.outputStream.pipe(fs.createWriteStream(file)).on('close', function () {
+                closeProgressDialog();
+            });
+            archive.end(() => {
+                closeProgressDialog();
+            });
+        }
+
+        function showProgressDialog() {
+            var progress = document.getElementById('progress-dialog');
+            if (progress.open) return;
+            setProgressDialogValue(0);
+            progress.showModal();
+        }
+
+        function setProgressDialogValue(value) {
+            ipcRenderer.send('set-progress', { value: value });
+            ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+            document.getElementById('progress-dialog-progressbar').value = value * 100;
+        }
+
+        function closeProgressDialog() {
+            var progress = document.getElementById('progress-dialog');
+            if (progress.open)
+                progress.close();
+            setProgressDialogValue(-1);
+            document.getElementById('progress-dialog-progressbar').removeAttribute('value');
+            archive = null;
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function cancelProgress() {
+            if (archive)
+                archive.abort();
+            closeProgressDialog();
+        }
     </script>
 </head>
 
@@ -1185,7 +1271,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="enableSound" /> Enable sound
                         </label>
-                    </div>                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="display">
                     <div class="col-sm-6 fform-group">
@@ -2202,11 +2288,19 @@
                 </div>
             </div>
         </div>
-        <div class="dialog-footer">
-            <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
-            <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
-            <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
+    </div>
+    <div class="dialog-footer">
+        <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
+        <button style="float: left" type="button" class="btn btn-default" onclick="backup()">Backup</button>
+        <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
+        <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
+    </div>
+    <dialog id="progress-dialog" style="z-index:1000;text-align:center">
+        <div id="progress-dialog-title">Saving&hellip;</div>
+        <div>
+            <progress max="100" id="progress-dialog-progressbar"></progress>
         </div>
+    </dialog>
 </body>
 
 </html>

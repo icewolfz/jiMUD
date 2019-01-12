@@ -4,7 +4,10 @@
 
 - **New:**
   - Add command history window
-  - Backup characters to zip with all related files
+  - Character manager: Backup to zip with all related files as a zip file
+  - Preferences: Backup up all settings and related files as a zip file
+  - Logs: Backup up all logs as a zip file
+  - Profile manager: Add export and import as zip file
 - **Changed:**
   - Remove memory info from about, no longer supported in electron 4
   - Update electron 4.0.0 to 4.0.1
