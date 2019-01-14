@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.7.1
+## v0.7.1 2019-01-14
 
 - **New:**
   - Add command history window
