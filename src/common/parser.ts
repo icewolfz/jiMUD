@@ -3345,6 +3345,9 @@ export class Parser extends EventEmitter {
                                     }
                                 }
                                 this.mxpState.lineExpanded = false;
+                                formatBuilder.push(...this.getMXPCloseFormatBlocks());
+                                if (this.mxpState.on)
+                                    this.ClearMXPOpen();
                                 this.mxpState.on = false;
                                 if (this.mxpLines[this.mxpState.lineType] && this.mxpLines[this.mxpState.lineType].enabled && this.mxpLines[this.mxpState.lineType].gag)
                                     skip = true;
@@ -3352,28 +3355,34 @@ export class Parser extends EventEmitter {
                                 if (this.mxpState.lineType !== 2 && !this.enableMXP)
                                     this.ResetMXP();
                             }
-                            lineLength = 0;
-                            if (!skip) {
-                                this.MXPCapture('\n');
+                            else {
+                                formatBuilder.push(...this.getMXPCloseFormatBlocks());
+                                if (this.mxpState.on)
+                                    this.ClearMXPOpen();
                             }
-                            formatBuilder.push(...this.getMXPCloseFormatBlocks());
+                            lineLength = 0;
+                            if (!skip)
+                                this.MXPCapture('\n');
                             this.AddLine(stringBuilder.join(''), rawBuilder.join(''), false, skip, formatBuilder);
                             skip = false;
                             stringBuilder = [];
                             rawBuilder = [];
-                            if (this.mxpState.on)
-                                this.ClearMXPOpen();
                             formatBuilder = [...this.getMXPOpenFormatBlocks(), format = this.getFormatBlock(lineLength)];
                             this.textLength++;
                             this.mxpState.noBreak = false;
                         }
                         else if (e && c === '\r') {
+                            continue;
+                            /*
                             if (this.mxpState.noBreak || this.mxpState.paragraph) continue;
                             if (!this.mxpState.locked) {
+                                if (this.mxpState.on)
+                                    this.ClearMXPOpen();
                                 this.mxpState.on = false;
                                 this.mxpState.lineType = lineType.Open;
                             }
                             continue;
+                            */
                         }
                         else if (e && c === '\x1b') {
                             this._SplitBuffer += c;  //store in split buffer incase split command
