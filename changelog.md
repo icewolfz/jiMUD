@@ -6,6 +6,7 @@
   - Update moment 2.23.0 to 2.24.0
 - **Fixed:**
   - ANSI Parser: Line feeds (\r) are now ignored when parsing text to fix MXP state management
+  - Fixed copy/paste short cut display in command input context menu
 
 ## v0.7.1 2019-01-14
 
