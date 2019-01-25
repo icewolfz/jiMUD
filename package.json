@@ -48,7 +48,7 @@
     "list": "asar l .\\dist\\win-unpacked\\resources\\app.asar > .\\dist\\files%npm_package_version%.txt"
   },
   "devDependencies": {
-    "@types/bootstrap": "^3.3.40",
+    "@types/bootstrap": "^3.3.41",
     "@types/jquery": "^3.3.29",
     "@types/node": "^10.12.18",
     "babel-minify": "^0.4.3",
