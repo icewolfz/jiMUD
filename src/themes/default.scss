@@ -48,7 +48,7 @@ body {
 
 #commandbox {
     left: 5px;
-    right: 64px;
+    right: 96px;
     height: 18px;
     bottom: 5px;
 }
@@ -798,6 +798,41 @@ body {
 }
 
 #history-dropup:active {
+    background-color: #790000;
+}
+
+.command-history {
+    right: 60px;
+    top: 4px;
+}
+
+#btnTriggers {
+    right: 24px;
+}
+
+#btnParsing {
+    right: 42px;
+}
+
+#btnTriggers, #btnParsing {
+    top: 5px;
+    text-align: center;
+    border-radius: 4px;
+    border: 0px;
+    height: 16px;
+    width: 16px;
+    background-color: transparent;
+}
+
+#btnTriggers.on, #btnParsing.on {
+    background-color: #d70000;
+}
+
+#btnTriggers:hover, #btnParsing:hover, #btnTriggers.on:active, #btnParsing.on:active {
+    background-color: #d70000;
+}
+
+#btnTriggers:active, #btnParsing:active, #btnTriggers.on:hover, #btnParsing.on:hover {
     background-color: #790000;
 }
 

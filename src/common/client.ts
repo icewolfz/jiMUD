@@ -99,6 +99,23 @@ export class Client extends EventEmitter {
         return this.options.profiles.enabled;
     }
 
+    set enableParsing(value) {
+        this.options.enableParsing = value;
+        this._input.enableParsing = value;
+        this.saveOptions();
+    }
+
+    get enableParsing() { return this.options.enableParsing; }
+
+    set enableTriggers(value) {
+        this.options.enableTriggers = value;
+        this._input.enableTriggers = value;
+        this.startAlarms();
+        this.saveOptions();
+    }
+
+    get enableTriggers() { return this.options.enableTriggers; }
+
     set settingsFile(val: string) {
         if (this._settingsFile !== val) {
             this._settingsFile = val;
@@ -400,7 +417,7 @@ export class Client extends EventEmitter {
 
     public startAlarms() {
         const al = this.alarms.length;
-        if (al === 0 && this._alarm) {
+        if ((al === 0 || !this.options.enableTriggers) && this._alarm) {
             clearInterval(this._alarm);
             this._alarm = null;
         }
@@ -444,6 +461,8 @@ export class Client extends EventEmitter {
     }
 
     private process_alarms() {
+        if (!this.options.enableTriggers)
+            return;
         let a = 0;
         const al = this.alarms.length;
         if (al === 0 && this._alarm) {
@@ -809,6 +828,8 @@ export class Client extends EventEmitter {
         this.MSP.savePath = parseTemplate(this.options.soundPath);
 
         this._input.scrollLock = this.options.scrollLocked;
+        this._input.enableParsing = this.options.enableParsing;
+        this._input.enableTriggers = this.options.enableTriggers;
         this.display.scrollLock = this.options.scrollLocked;
         this.display.enableSplit = this.options.display.split;
         this.display.hideTrailingEmptyLine = this.options.display.hideTrailingEmptyLine;

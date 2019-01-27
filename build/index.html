@@ -457,6 +457,14 @@
             $('#mail').css('display', client.options.buttons.mail ? '' : 'none');
             $('#compose').css('display', client.options.buttons.compose ? '' : 'none');
             $('#codeEditor').css('display', client.options.buttons.codeEditor ? '' : 'none');
+            if (client.enableParsing)
+                $('#btnParsing').addClass('on');
+            else
+                $('#btnParsing').removeClass('on');
+            if (client.enableTriggers)
+                $('#btnTriggers').addClass('on');
+            else
+                $('#btnTriggers').removeClass('on');
             _status.updateInterface();
             buildButtons();
             client.display.update();
@@ -1225,6 +1233,14 @@
             });
 
             client.on('options-saved', () => {
+                if (client.enableParsing)
+                    $('#btnParsing').addClass('on');
+                else
+                    $('#btnParsing').removeClass('on');
+                if (client.enableTriggers)
+                    $('#btnTriggers').addClass('on');
+                else
+                    $('#btnTriggers').removeClass('on');
                 ipcRenderer.send('options-changed');
             });
 
@@ -1969,6 +1985,8 @@
             ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'mailbutton'], checked: client.options.buttons.mail });
             ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'composebutton'], checked: client.options.buttons.compose });
             ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'userbutton'], checked: client.options.buttons.user });
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableParsing'], checked: client.enableParsing });
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableTriggers'], checked: client.enableTriggers });
             _logger.postMessage({ action: 'logging' });
         }
 
@@ -2295,6 +2313,18 @@
             _logger.postMessage({ action: 'toggle' });
         }
 
+        // eslint-disable-next-line no-unused-vars
+        function toggleParsing() {
+            client.enableParsing = !client.enableParsing;
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableParsing'], checked: client.enableParsing });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function toggleTriggers() {
+            client.enableTriggers = !client.enableTriggers;
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableTriggers'], checked: client.enableTriggers });
+        }
+
         function copyAsHTML() {
             if (!client.display.hasSelection) return;
             window.writeClipboard(client.display.selectionAsHTML);
@@ -2461,6 +2491,12 @@
             </a>
             <ul class="dropdown-menu pull-right dropdown-menu-right" data-container="body" aria-labelledby="history-dropdown"></ul>
         </div>
+        <a href="javascript:void(0)" title="Toggle parsing" class="button button-sm" id="btnParsing" onclick="toggleParsing()">
+            <i class="fa fa-terminal"></i>
+        </a>
+        <a href="javascript:void(0)" title="Toggle triggers" class="button button-sm" id="btnTriggers" onclick="toggleTriggers()">
+            <i class="fa fa-bolt"></i>
+        </a>
         <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="ipcRenderer.send('show-window', 'editor');">
             <i class="fa fa-edit"></i>
         </a>

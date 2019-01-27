@@ -2,6 +2,9 @@
 
 ## v0.7.2
 
+- **New:**
+  - Global enable parsing toggle system to allow disabling of command paring with a simple on / off button or menu click
+  - Global enable trigger toggle system to allow disabling of trigger with a simple on / off button or menu click
 - **Changed:**
   - Update moment 2.23.0 to 2.24.0
   - Update electron 4.0.1 to 4.0.2

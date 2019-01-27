@@ -207,12 +207,23 @@ body {
 
 .command-history {
     position: absolute !important;
-    top: 3px;
-    right:23px;
+    top: 2px;
+    right:64px;
 }
 
-#advedit {
+#btnParsing {
+    top: 2px;
+    right:42px;
+}
+
+#btnTriggers {
+    top: 2px;
+    right:22px;
+}
+
+#advedit, #btnTriggers, #btnParsing {
     position: absolute;
+    border-radius: 4px;
 }
 
 .find {

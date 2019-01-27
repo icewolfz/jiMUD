@@ -185,6 +185,27 @@ var menuTemp = [
                 type: 'separator'
             },
             {
+                label: '&Enable parsing',
+                id: 'enableParsing',
+                type: 'checkbox',
+                checked: true,
+                click: () => {
+                    win.webContents.executeJavaScript('toggleParsing()');
+                }
+            },
+            {
+                label: '&Enable triggers',
+                id: 'enableTriggers',
+                type: 'checkbox',
+                checked: true,
+                click: () => {
+                    win.webContents.executeJavaScript('toggleTriggers()');
+                }
+            },
+            {
+                type: 'separator'
+            },
+            {
                 label: 'Ch&aracters...',
                 id: 'characters',
                 accelerator: 'CmdOrCtrl+H',

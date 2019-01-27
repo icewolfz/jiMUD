@@ -70,6 +70,8 @@ export class Input extends EventEmitter {
     private _lastSuspend = -1;
 
     public client: Client = null;
+    public enableParsing: boolean = true;
+    public enableTriggers: boolean = true;
 
     get stack() {
         if (this._stack.length === 0)
@@ -2301,7 +2303,7 @@ export class Input extends EventEmitter {
 
     public parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean) {
         const tl = text.length;
-        if (text == null || tl === 0)
+        if (!this.enableParsing || text == null || tl === 0)
             return text;
         let str: string = '';
         let alias: string = '';
@@ -3512,7 +3514,7 @@ export class Input extends EventEmitter {
     }
 
     public ExecuteTriggers(type: TriggerType, raw?, frag?: boolean, ret?: boolean) {
-        if (raw == null) return raw;
+        if (!this.enableTriggers || raw == null) return raw;
         if (ret == null) ret = false;
         if (frag == null) frag = false;
         this.buildTriggerCache();
@@ -3631,6 +3633,7 @@ export class Input extends EventEmitter {
     }
 
     public triggerEvent(event: string, args?) {
+        if (!this.enableTriggers) return;
         this.buildTriggerCache();
         let t = 0;
         if (!args)

@@ -40,7 +40,7 @@ body {
 #commandbox {
     left: 0px;
     top: 0px;
-    right: 60px;
+    right: 112px;
     bottom: 0px;
     background-color: white;
 }
@@ -812,6 +812,29 @@ body {
     font-size: 18px;
 }
 
+
+.command-history {
+    right: 78px;
+    top: 0px;
+}
+
+#btnTriggers {
+    right: 26px;
+}
+ 
+#btnParsing {
+    right: 52px;
+}
+
+#btnTriggers, #btnParsing {
+    top: 0px;
+    text-align: center;
+    height: 24px;
+    width: 24px;
+    font-size: 22px;
+    line-height: 22px;
+}
+
 #advedit {
     right: 0px;
     top: 0px;
@@ -821,7 +844,7 @@ body {
     line-height: 22px;
 }
 
-#advedit .fa {
+#advedit .fa, #btnTriggers .fa, #btnParsing .fa {
     margin-top: 3px;
     font-size: 18px;
 }

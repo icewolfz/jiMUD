@@ -39,7 +39,7 @@ body {
 
 #commandbox {
     left: 2px;
-    right: 60px;
+    right: 96px;
     height: 18px;
     bottom: 2px;
 }
@@ -775,6 +775,44 @@ body {
 
 #history-dropup:active {
     background-color: #2a2d2e;
+}
+
+.command-history {
+    right: 58px;
+    top: 3px;
+}
+
+#btnTriggers {
+    right: 22px;
+}
+ 
+#btnParsing {
+    right: 40px;
+}
+
+#btnTriggers, #btnParsing {
+    top: 3px;
+    text-align: center;
+    border-radius: 4px;
+    border: 0px;
+    height: 16px;
+    width: 16px;
+    background-color: transparent;
+}
+
+#btnTriggers.on, #btnParsing.on {
+    background-color: #3f3f46;
+    color: white;
+}
+
+#btnTriggers:hover, #btnParsing:hover, #btnTriggers.on:active, #btnParsing.on:active {
+    background-color: #3f3f46;
+    color: white;
+}
+
+#btnTriggers:active, #btnParsing:active, #btnTriggers.on:hover, #btnParsing.on:hover {
+    background-color: #2a2d2e;
+    color: white;
 }
 
 #advedit {

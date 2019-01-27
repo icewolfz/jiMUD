@@ -425,6 +425,9 @@ export class Settings {
     public commandDelay: number = 500;
     public commandDelayCount: number = 5;
 
+    public enableParsing: boolean = true;
+    public enableTriggers: boolean = true;
+
     public colors: string[] = [];
 
     public soundPath = path.join('{data}', 'sounds');
