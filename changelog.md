@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.7.2
+## v0.7.2 2019-01-28
 
 - **New:**
   - Global enable parsing toggle system to allow disabling of command paring with a simple on / off button or menu click
