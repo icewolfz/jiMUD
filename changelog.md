@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.4
+
+- **Changed:**
+  - Update drivelist 7.0.0 to 7.0.1
+
 ## v0.7.3 2019-01-28
 
 - **Fixed:**
