@@ -853,8 +853,8 @@ export class Client extends EventEmitter {
             return;
         let opt = this.options;
         let o;
-        const ol = name.length - 1;
         name = name.split('.');
+        const ol = name.length - 1;
         for (o = 0; o < ol; o++)
             opt = opt[name[o]];
         opt[name[name.length - 1]] = value;
@@ -866,8 +866,8 @@ export class Client extends EventEmitter {
             return null;
         let opt = this.options;
         let o;
-        const ol = name.length;
         name = name.split('.');
+        const ol = name.length;
         for (o = 0; o < ol; o++)
             opt = opt[name[o]];
         return opt;

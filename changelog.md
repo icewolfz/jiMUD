@@ -1,6 +1,9 @@
 # Changelog
 
-## v0.7.3
+## v0.7.3 2019-01-28
+
+- **Fixed:**
+  - Fixed #gets/#sets commands
 
 ## v0.7.2 2019-01-28
 
