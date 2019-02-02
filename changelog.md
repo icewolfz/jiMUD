@@ -4,6 +4,8 @@
 
 - **Changed:**
   - Update drivelist 7.0.0 to 7.0.1
+  - Update electron 4.0.2 to 4.0.3
+  - Update yargs-parser 11.1.1 to 12.0.0
 
 ## v0.7.3 2019-01-28
 
