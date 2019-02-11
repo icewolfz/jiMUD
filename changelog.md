@@ -2,6 +2,8 @@
 
 ## v0.7.4
 
+- **Fixed:**
+  - Command history: Add text ... overflow systems for long commands to prevent drop up display from being hidden off screen
 - **Changed:**
   - Update drivelist 7.0.0 to 7.0.1
   - Update electron 4.0.2 to 4.0.4

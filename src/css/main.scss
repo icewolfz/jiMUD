@@ -208,17 +208,17 @@ body {
 .command-history {
     position: absolute !important;
     top: 2px;
-    right:64px;
+    right: 64px;
 }
 
 #btnParsing {
     top: 2px;
-    right:42px;
+    right: 42px;
 }
 
 #btnTriggers {
     top: 2px;
-    right:22px;
+    right: 22px;
 }
 
 #advedit, #btnTriggers, #btnParsing {
@@ -521,4 +521,10 @@ dialog {
 
 .command-history ul {
     overflow: auto;
+}
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

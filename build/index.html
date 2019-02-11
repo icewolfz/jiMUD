@@ -564,10 +564,11 @@
         function init() {
             $('.dropdown').on('show.bs.dropdown', () => {
                 $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
+                $('.command-history ul').css('max-width', ($('#command').outerWidth() - 100)+ 'px');
                 var lst = '';
                 var l = client.commandHistory.length;
                 for (var i = 0; i < l; i++) {
-                    lst += `<li><a href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd);client.sendCommand(cmd);">${client.commandHistory[i]}</a></li>`;
+                    lst += `<li><a class="truncate" href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd);client.sendCommand(cmd);" title="${client.commandHistory[i]}">${client.commandHistory[i]}</a></li>`;
                 }
                 if (l === 0)
                     lst = '<li><a href="#">No history</a></li><li role="separator" class="divider"></li>';
