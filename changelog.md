@@ -8,7 +8,7 @@
   - Update drivelist 7.0.0 to 7.0.1
   - Update electron 4.0.2 to 4.0.4
   - Update yargs-parser 11.1.1 to 13.0.0
-  - Update chokidar 2.0.4 to 2.1.0
+  - Update chokidar 2.0.4 to 2.1.1
 
 ## v0.7.3 2019-01-28
 
@@ -67,7 +67,6 @@
     - Fixed appending unused variables to inner blocks of parsed lines
     - Fixed aliases when value does not end in newline
   - ${repeatnum} and ${i} are now saved on stack correctly so instead of last use it is now the correct # based on where it is executed, making nested #nnn in aliases better
-
 
 ## v0.6.15 2018-12-20
 
