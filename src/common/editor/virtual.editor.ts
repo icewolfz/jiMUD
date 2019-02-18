@@ -8606,8 +8606,10 @@ export class VirtualEditor extends EditorBase {
 
                 if (items.length > 0 && room.item >= 0 && room.item < items.length && items[room.item] && items[room.item].children && items[room.item].children.length > 0) {
                     items = items[room.item].children.slice().sort((a, b) => { return b.item.length - a.item.length; });
-                    for (c = 0, cl = items.length; c < cl; c++)
-                        str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'gi'), (m) => '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + m + '</span>');
+                    for (c = 0, cl = items.length; c < cl; c++) {
+                        if(items[c].item.length === 0) continue;
+                        str = str.replace(new RegExp('\\b(?!room-preview)(' + items[c].item + ')\\b', 'gi'), (m) => '<span data-id="' + this.parent.id + '-room-preview' + c + '">' + m + '</span>');
+                    }
                 }
                 else
                     items = null;
@@ -8615,9 +8617,11 @@ export class VirtualEditor extends EditorBase {
                 this.$roomPreview.long.innerHTML = pinkfishToHTML(str);
                 if (items && items.length > 0) {
                     for (c = 0, cl = items.length; c < cl; c++) {
-                        item = document.getElementById(this.parent.id + '-room-preview' + c);
-                        if (item)
-                            item.title = items[c].description;
+                        item = document.querySelectorAll(`[data-id=${this.parent.id}-room-preview${c}]`);
+                        item.forEach(el => {
+                            el.title = items[c].description;
+                            el.classList.add('room-item');
+                        });
                     }
                 }
                 if (data.smell.length > 0 && data.smell !== '0' && data.sound.length > 0 && data.sound !== '0') {
