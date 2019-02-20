@@ -7,10 +7,10 @@
   - Code editor:
     - Virtual/area editor: Fix issue with room preview and item formatting when item text is empty
 - **Changed:**
-  - Update drivelist 7.0.0 to 7.0.1
+  - Update drivelist 7.0.0 to 7.0.3
   - Update electron 4.0.2 to 4.0.5
   - Update yargs-parser 11.1.1 to 13.0.0
-  - Update chokidar 2.0.4 to 2.1.1
+  - Update chokidar 2.0.4 to 2.1.2
 
 ## v0.7.3 2019-01-28
 
