@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.7.4
+## v0.7.4 2019-02-25
 
 - **Fixed:**
   - Command history: Add text ... overflow systems for long commands to prevent drop up display from being hidden off screen
