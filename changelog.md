@@ -2,6 +2,10 @@
 
 ## v0.7.5
 
+- **Changed:**
+  - Update electron 4.0.5 to 4.0.6
+  - Update drivelist 7.0.3 to 8.0.1
+
 ## v0.7.4 2019-02-25
 
 - **Fixed:**

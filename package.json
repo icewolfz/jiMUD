@@ -50,12 +50,12 @@
   "devDependencies": {
     "@types/bootstrap": "^3.3.42",
     "@types/jquery": "^3.3.29",
-    "@types/node": "^10.12.27",
+    "@types/node": "^10.12.29",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^4.0.5",
+    "electron": "^4.0.6",
     "electron-builder": "^20.38.5",
-    "eslint": "^5.14.1",
+    "eslint": "^5.15.0",
     "eslint-plugin-html": "^5.0.3"
   },
   "build": {
@@ -132,7 +132,7 @@
     "better-sqlite3": "^5.4.0",
     "buzz": "^1.2.1",
     "chokidar": "^2.1.2",
-    "drivelist": "^7.0.3",
+    "drivelist": "^8.0.1",
     "electron-updater": "^4.0.6",
     "font-manager": "^0.3.0",
     "fs-extra": "^7.0.1",
