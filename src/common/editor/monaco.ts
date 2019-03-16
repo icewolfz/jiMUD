@@ -58,16 +58,22 @@ export function SetupEditor() {
                 monaco.languages.setLanguageConfiguration('lpc', conf);
                 monaco.languages.registerCompletionItemProvider('lpc', {
                     provideCompletionItems: (model, position, item, token) => {
-                        /*
-                        let word: any = model.getWordAtPosition(position);
+                        const word: any = model.getWordAtPosition(position);
                         if (!word) return { suggestions: [] };
-                        word = word.word;
-                        */
                         if (!$lpcCompletionCache)
                             $lpcCompletionCache = loadCompletion();
-                        return {
+                        const s = {
                             suggestions: copy($lpcCompletionCache)
                         };
+                        s.suggestions.forEach(c => {
+                            c.range = {
+                                startLineNumber: position.lineNumber,
+                                startColumn: word.startColumn,
+                                endLineNumber: position.lineNumber,
+                                endColumn: word.endColumn
+                            };
+                        });
+                        return s;
                     },
                     resolveCompletionItem(model, position, item, token) {
                         return item;
@@ -173,7 +179,7 @@ export function SetupEditor() {
             //https://github.com/Microsoft/monaco-editor/issues/852
             //https://github.com/Microsoft/monaco-editor/issues/935
             monaco.languages.registerDefinitionProvider('lpc', {
-                async provideDefinition(model: monaco.editor.ITextModel, position: monaco.Position, token: monaco.CancellationToken): Promise<monaco.languages.DefinitionLink[] | monaco.languages.Definition | undefined> {
+                async provideDefinition(model: monaco.editor.ITextModel, position: monaco.Position, token: monaco.CancellationToken): Promise<monaco.languages.LocationLink[] | monaco.languages.Location | undefined> {
                     if (!model) return undefined;
                     if (!$lpcDefineCache) $lpcDefineCache = {};
                     const defines = [];
