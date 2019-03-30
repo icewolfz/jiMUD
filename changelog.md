@@ -3,9 +3,11 @@
 ## v0.7.5
 
 - **Changed:**
-  - Update electron 4.0.5 to 4.1.0
-  - Update drivelist 7.0.3 to 8.0.2
-  - Update monaco-editor 0.15.6 to 0.16.1
+  - Update electron 4.0.5 to 4.1.3
+  - Update drivelist 7.0.3 to 8.0.6
+  - Update monaco-editor 0.15.6 to 0.16.2
+  - Update chokidar from 2.1.2 to 2.1.5
+  - Update tmp from 0.0.33 to 0.1.0
 
 ## v0.7.4 2019-02-25
 
