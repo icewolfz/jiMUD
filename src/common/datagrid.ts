@@ -482,14 +482,14 @@ export class DataGrid extends EventEmitter {
             this.emit('contextmenu', e);
             if (e.defaultPrevented) return;
             if (e.srcElement && this.$editor) {
-                let row = e.srcElement.closest('tr.datagrid-row');
+                let row = (<HTMLElement>e.srcElement).closest('tr.datagrid-row');
                 if (!row) {
-                    if (e.srcElement.classList.contains('grid-editor-dropdown'))
+                    if ((<HTMLElement>e.srcElement).classList.contains('grid-editor-dropdown'))
                         return;
-                    row = e.srcElement.closest('.property-grid-editor-flag-dropdown');
+                    row = (<HTMLElement>e.srcElement).closest('.property-grid-editor-flag-dropdown');
                     if (row) return;
                 }
-                else if (row === this.$editor.el && !e.srcElement.classList.contains('datagrid-cell'))
+                else if (row === this.$editor.el && !(<HTMLElement>e.srcElement).classList.contains('datagrid-cell'))
                     return;
             }
             const temp = [];
