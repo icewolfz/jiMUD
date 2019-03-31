@@ -5,7 +5,7 @@
  * 
  * @author {your name}
  * @created {date}
- * @typeof object
+ * @typeof room
  * @doc /doc/build/room/Basic
  * @doc /doc/build/room/Intermediate
  * @doc /doc/build/room/Advanced
