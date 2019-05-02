@@ -1267,7 +1267,7 @@ function createWindow() {
         const w = new BrowserWindow(options);
         if (global.debug)
             w.webContents.openDevTools();
-        w.setMenu(null);
+        w.removeMenu();
         w.once('ready-to-show', () => {
             loadWindowScripts(w, frameName);
             addInputContext(w);
@@ -2212,7 +2212,7 @@ ipcMain.on('progress-show', (event, title) => {
                 webviewTag: false
             }
         });
-        winProgress.setMenu(null);
+        winProgress.removeMenu();
         winProgress.on('closed', () => {
             winProgress = null;
             progressReady = 0;
@@ -2672,7 +2672,7 @@ function showPrefs() {
             webviewTag: false
         }
     });
-    pref.setMenu(null);
+    pref.removeMenu();
     pref.on('closed', () => {
         pref = null;
     });
@@ -2738,7 +2738,7 @@ function createMapper(show, loading, loaded) {
     if (s.fullscreen)
         winMap.setFullScreen(s.fullscreen);
 
-    winMap.setMenu(null);
+    winMap.removeMenu();
     winMap.loadURL(url.format({
         pathname: path.join(__dirname, 'mapper.html'),
         protocol: 'file:',
@@ -2913,7 +2913,7 @@ function showProfiles() {
         profilesReady = 2;
     });
 
-    winProfiles.setMenu(null);
+    winProfiles.removeMenu();
     winProfiles.on('closed', () => {
         winProfiles = null;
         profilesReady = 0;
@@ -3007,7 +3007,7 @@ function createEditor(show, loading) {
     if (s.fullscreen)
         winEditor.setFullScreen(s.fullscreen);
 
-    winEditor.setMenu(null);
+    winEditor.removeMenu();
     winEditor.loadURL(url.format({
         pathname: path.join(__dirname, 'editor.html'),
         protocol: 'file:',
@@ -3148,7 +3148,7 @@ function createChat(show, loading) {
     if (s.fullscreen)
         winChat.setFullScreen(s.fullscreen);
 
-    winChat.setMenu(null);
+    winChat.removeMenu();
     winChat.loadURL(url.format({
         pathname: path.join(__dirname, 'chat.html'),
         protocol: 'file:',
@@ -3366,7 +3366,7 @@ function createNewWindow(name, options) {
         const w = new BrowserWindow(options);
         if (global.debug)
             w.webContents.openDevTools();
-        w.setMenu(null);
+        w.removeMenu();
         w.once('ready-to-show', () => {
             loadWindowScripts(w, frameName);
             addInputContext(w);
@@ -3506,7 +3506,7 @@ function showColor(args) {
         });
     });
 
-    cp.setMenu(null);
+    cp.removeMenu();
     cp.on('closed', () => {
         cp = null;
     });
@@ -3697,7 +3697,7 @@ function createCodeEditor(show, loading, loaded) {
 
     if (s.fullscreen)
         winCode.setFullScreen(s.fullscreen);
-    winCode.setMenu(null);
+    winCode.removeMenu();
     winCode.loadURL(url.format({
         pathname: path.join(__dirname, 'code.editor.html'),
         protocol: 'file:',
@@ -3816,7 +3816,7 @@ function createCodeEditor(show, loading, loaded) {
         const w = new BrowserWindow(options);
         if (global.debug)
             w.webContents.openDevTools();
-        w.setMenu(null);
+        w.removeMenu();
         w.once('ready-to-show', () => {
             loadWindowScripts(w, frameName);
             addInputContext(w);
@@ -4066,7 +4066,7 @@ function showAbout() {
         });
     });
 
-    about.setMenu(null);
+    about.removeMenu();
     about.on('closed', () => {
         about = null;
     });

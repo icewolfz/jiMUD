@@ -212,7 +212,7 @@
                 });
         }
 
-        webFrame.setSpellCheckProvider('en-US', true, {
+        webFrame.setSpellCheckProvider('en-US', {
             spellCheck: function (text) {
                 if (!spellchecker || !options.spellchecking)
                     return true;

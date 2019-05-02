@@ -224,7 +224,7 @@
             lastMouse = e;
         };
 
-        webFrame.setSpellCheckProvider('en-US', true, {
+        webFrame.setSpellCheckProvider('en-US', {
             spellCheck: function (text) {
                 if (!spellchecker || !client.options.spellchecking)
                     return true;
