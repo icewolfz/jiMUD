@@ -1,9 +1,11 @@
 # Changelog
 
-## v0.7.6
+## v0.8.0
 
 - **Changed:**
-  - Update electron 4.1.3 to 4.1.4
+  - Update electron 4.1.3 to 5.0.0
+  - Update spellchecker 3.5.2 to 3.5.3
+  - Update chokidar 2.1.5 to 3.0.0
 
 ## v0.7.5 2019-04-01
 
