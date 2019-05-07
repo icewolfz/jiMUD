@@ -3,9 +3,10 @@
 ## v0.8.0
 
 - **Changed:**
-  - Update electron 4.1.3 to 5.0.0
+  - Update electron 4.1.3 to 5.0.1
   - Update spellchecker 3.5.2 to 3.5.3
   - Update chokidar 2.1.5 to 3.0.0
+  - Update monaco-editor 0.16.2 to 0.17.0
 
 ## v0.7.5 2019-04-01
 
