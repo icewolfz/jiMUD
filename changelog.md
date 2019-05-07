@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.0
+## v0.8.0 2019-05-06
 
 - **Changed:**
   - Update electron 4.1.3 to 5.0.1
