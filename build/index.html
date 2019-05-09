@@ -225,10 +225,13 @@
         };
 
         webFrame.setSpellCheckProvider('en-US', {
-            spellCheck: function (text) {
-                if (!spellchecker || !client.options.spellchecking)
-                    return true;
-                return !(spellchecker.isMisspelled(text));
+            spellCheck(words, callback) {
+                setTimeout(() => {
+                    if (!spellchecker || !client.options.spellchecking)
+                        return;
+                    const misspelled = words.filter(x => spellchecker.isMisspelled(x));
+                    callback(misspelled);
+                }, 0);
             }
         });
 
@@ -564,7 +567,7 @@
         function init() {
             $('.dropdown').on('show.bs.dropdown', () => {
                 $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
-                $('.command-history ul').css('max-width', ($('#command').outerWidth() - 100)+ 'px');
+                $('.command-history ul').css('max-width', ($('#command').outerWidth() - 100) + 'px');
                 var lst = '';
                 var l = client.commandHistory.length;
                 for (var i = 0; i < l; i++) {

@@ -2,6 +2,9 @@
 
 ## v0.8.1
 
+- **Fixed:**
+  - Fix spell checker, electron 5.0 changed api
+
 ## v0.8.0 2019-05-06
 
 - **Changed:**
