@@ -4,6 +4,8 @@
 
 - **Fixed:**
   - Fix spell checker, electron 5.0 changed api
+- **Changed:**
+  - Update fs-extra from 7.0.1 to 8.0.0
 
 ## v0.8.0 2019-05-06
 
