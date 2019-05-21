@@ -50,13 +50,13 @@
   "devDependencies": {
     "@types/bootstrap": "^3.3.42",
     "@types/jquery": "^3.3.29",
-    "@types/node": "^11.13.10",
+    "@types/node": "^12.0.2",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
     "electron": "^5.0.1",
     "electron-builder": "^20.40.2",
     "eslint": "^5.16.0",
-    "eslint-plugin-html": "^5.0.4"
+    "eslint-plugin-html": "^5.0.5"
   },
   "build": {
     "appId": "jiMUD",
@@ -135,7 +135,7 @@
     "drivelist": "^8.0.6",
     "electron-updater": "^4.0.6",
     "font-manager": "^0.3.0",
-    "fs-extra": "^8.0.0",
+    "fs-extra": "^8.0.1",
     "fswin": "^3.18.918",
     "lz-string": "^1.4.4",
     "markdown-it": "^8.4.2",
