@@ -552,6 +552,9 @@ export class Settings {
     }
 
     public save(file) {
-        fs.writeFileSync(file, JSON.stringify(this));
+        const data = JSON.stringify(this);
+        if (!data || data.length === 0)
+            throw new Error('Could not serialize settings');
+        fs.writeFileSync(file, data);
     }
 }
