@@ -3,7 +3,8 @@
 ## v0.8.1
 
 - **Fixed:**
-  - Fix spell checker, electron 5.0 changed api
+  - Fixed spell checker, electron 5.0 changed api
+  - Fixed issue not resetting telnet prompt flag when doing local text display
 - **Changed:**
   - Update fs-extra from 7.0.1 to 8.0.1
   - Update electron 5.0.1 to 5.0.3
