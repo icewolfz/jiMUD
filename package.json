@@ -50,10 +50,10 @@
   "devDependencies": {
     "@types/bootstrap": "^3.3.42",
     "@types/jquery": "^3.3.29",
-    "@types/node": "^12.0.4",
+    "@types/node": "^12.0.7",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^5.0.2",
+    "electron": "^5.0.3",
     "electron-builder": "^20.43.0",
     "eslint": "^5.16.0",
     "eslint-plugin-html": "^5.0.5"
@@ -143,7 +143,7 @@
     "moment": "^2.24.0",
     "monaco-editor": "^0.17.0",
     "rgbcolor": "^1.0.1",
-    "spellchecker": "^3.5.3",
+    "spellchecker": "^3.6.0",
     "tmp": "^0.1.0",
     "yargs-parser": "^13.1.0",
     "yauzl": "^2.10.0",
