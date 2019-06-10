@@ -12,6 +12,7 @@
   - Update electron 5.0.1 to 5.0.3
   - Update chokidar 3.0.0 to 3.0.1
   - Update spellchecker 3.5.3 to 3.6.0
+  - Update yargs-parser 13.1.0 to 13.1.1
 
 ## v0.8.0 2019-05-06
 

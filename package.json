@@ -145,7 +145,7 @@
     "rgbcolor": "^1.0.1",
     "spellchecker": "^3.6.0",
     "tmp": "^0.1.0",
-    "yargs-parser": "^13.1.0",
+    "yargs-parser": "^13.1.1",
     "yauzl": "^2.10.0",
     "yazl": "^2.5.1"
   }
