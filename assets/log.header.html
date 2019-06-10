@@ -164,7 +164,7 @@
 <script>
     function doLink(url) {
         if (confirm('Open \'' + url + '\'?') === true)
-            window.open(url, '_blank');
+            window.open(encodeURI(url), '_blank');
     }
 
     // eslint-disable-next-line no-unused-vars
@@ -172,7 +172,7 @@
         if (url.startsWith('OoMUD://') || url.startsWith('jiMUD://') || url.startsWith('client://'))
             doMXPSend(0, el, url.substring(8));
         else if (confirm('Open \'' + url + '\'?') === true)
-            window.open(url.replace('&text;', el.textContent || ''), '_blank');
+            window.open(encodeURI(url.replace('&text;', el.textContent || '')), '_blank');
     }
 
     function doMXPSend(e, el, url, pmt, tt) {

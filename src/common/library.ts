@@ -149,6 +149,44 @@ export function CharAllowedInURL(chr, proto) {
         return true;
     if (i > 47 && i < 58)
         return true;
+    if (i >= 160 && i <= 55295)
+        return true;
+    if (i >= 57344 && i <= 64975)
+        return true;
+    if (i >= 65008 && i <= 65533)
+        return true;
+    if (i >= 65536 && i <= 131069)
+        return true;
+    if (i >= 131072 && i <= 196605)
+        return true;
+    if (i >= 196608 && i <= 262141)
+        return true;
+    if (i >= 262144 && i <= 327677)
+        return true;
+    if (i >= 327680 && i <= 393213)
+        return true;
+    if (i >= 393216 && i <= 458749)
+        return true;
+    if (i >= 458752 && i <= 524285)
+        return true;
+    if (i >= 524288 && i <= 589821)
+        return true;
+    if (i >= 589824 && i <= 655357)
+        return true;
+    if (i >= 655360 && i <= 720893)
+        return true;
+    if (i >= 720896 && i <= 786429)
+        return true;
+    if (i >= 786432 && i <= 851965)
+        return true;
+    if (i >= 851968 && i <= 917501)
+        return true;
+    if (i >= 921600 && i <= 983037)
+        return true;
+    if (i >= 983040 && i <= 1048573)
+        return true;
+    if (i >= 1048576 && i <= 1114109)
+        return true;
     return false;
 }
 

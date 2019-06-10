@@ -252,7 +252,7 @@
 
         function doLink(url) {
             if (confirm('Open \'' + url + '\'?') === true)
-                shell.openExternal(url);
+                shell.openExternal(encodeURI(url));
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -260,7 +260,7 @@
             if (url.startsWith('OoMUD://') || url.startsWith('jiMUD://') || url.startsWith('client://'))
                 doMXPSend(0, el, url.substring(8));
             else if (confirm('Open \'' + url + '\'?') === true)
-                shell.openExternal(url.replace('&text;', $(el).text()));
+                shell.openExternal(encodeURI(url.replace('&text;', $(el).text())));
         }
 
         function doMXPSend(e, el, url, pmt, tt) {
@@ -691,14 +691,14 @@
 
                     if (parent && parent.hasClass('URLLink')) {
                         c.append(new MenuItem({ label: 'Open url', click: () => { doLink(parent.attr('title')); } }));
-                        c.append(new MenuItem({ label: 'Copy url', click: () => { window.writeClipboard(parent.attr('title')); } }));
+                        c.append(new MenuItem({ label: 'Copy url', click: () => { window.writeClipboard(encodeURI(parent.attr('title'))); } }));
                         if (parent.text() !== parent.attr('title'))
                             c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
                         c.append(new MenuItem({ type: 'separator' }));
                     }
                     else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0) {
                         c.append(new MenuItem({ label: 'Open url', click: () => { parent.trigger('click'); } }));
-                        c.append(new MenuItem({ label: 'Copy url', click: () => { window.writeClipboard(parent.data('href')); } }));
+                        c.append(new MenuItem({ label: 'Copy url', click: () => { window.writeClipboard(encodeURI(parent.data('href'))); } }));
                         if (parent.text() !== parent.attr('href'))
                             c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
                         c.append(new MenuItem({ type: 'separator' }));
