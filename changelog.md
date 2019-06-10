@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.1
+## v0.8.1 2019-06-10
 
 - **Fixed:**
   - Fixed spell checker, electron 5.0 changed api
