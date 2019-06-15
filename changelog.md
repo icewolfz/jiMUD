@@ -2,6 +2,9 @@
 
 ## v0.8.2
 
+- **Changed:**
+  - Update electron 5.0.3 to 5.0.4
+
 ## v0.8.1 2019-06-10
 
 - **Fixed:**
