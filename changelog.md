@@ -2,6 +2,8 @@
 
 ## v0.8.2
 
+- **Fixed:**
+  - Mapper: Fixed get new zone system
 - **Changed:**
   - Update electron 5.0.3 to 5.0.4
 

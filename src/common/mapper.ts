@@ -944,7 +944,7 @@ export class Mapper extends EventEmitter {
         const row = this._db.prepare('SELECT DISTINCT Zone FROM Rooms ORDER BY Zone DESC LIMIT 1').get();
         if (!row)
             return zone;
-        return row.zone + 1;
+        return row.Zone + 1;
     }
 
     public roomExists(x, y, z, zone) {
