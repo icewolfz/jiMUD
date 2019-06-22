@@ -48,13 +48,13 @@
     "list": "asar l .\\dist\\win-unpacked\\resources\\app.asar > .\\dist\\files%npm_package_version%.txt"
   },
   "devDependencies": {
-    "@types/bootstrap": "^3.3.42",
+    "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.3.29",
-    "@types/node": "^12.0.8",
+    "@types/node": "^12.0.10",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^5.0.4",
-    "electron-builder": "^20.43.0",
+    "electron": "^5.0.5",
+    "electron-builder": "^20.44.4",
     "eslint": "^5.16.0",
     "eslint-plugin-html": "^5.0.5"
   },
