@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Mapper: Fixed get new zone system
+  - Immortal tools: Fix drive dropdown explorer
 - **Changed:**
   - Update electron 5.0.3 to 5.0.6
   - Update fs-extra from 8.0.1 to 8.1.0

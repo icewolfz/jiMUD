@@ -682,11 +682,7 @@
             info.localFiles = all.length - dirs.length;
             $('#local-path').val(p);
             $('#local-navigate').empty();
-            drivelist.list((error, drives) => {
-                if (error) {
-                    logMessage(error);
-                    return;
-                }
+            drivelist.list().then((drives) => {
                 var paths = [];
                 var found = false;
                 var c = '', pt, d, dl, pl, cl;
@@ -745,6 +741,9 @@
                     else
                         $('#local-navigate').append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`);
                 }
+            }).catch((error) => {
+                if (error)
+                    logMessage(error);
             });
             localTable.clear().rows.add(all);
             $('#btn-local-up').prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
