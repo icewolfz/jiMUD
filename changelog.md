@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.2
+## v0.8.2 2019-07-01
 
 - **Fixed:**
   - Mapper: Fixed get new zone system
@@ -10,7 +10,6 @@
   - Update fs-extra from 8.0.1 to 8.1.0
   - Update spellchecker 3.6.0 to 3.6.1
   - Update monaco-editor 0.17.0 to 0.17.1
-
 
 ## v0.8.1 2019-06-10
 
