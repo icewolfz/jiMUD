@@ -50,7 +50,7 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.3.30",
-    "@types/node": "^12.0.10",
+    "@types/node": "^12.0.12",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
     "electron": "^5.0.6",
@@ -131,7 +131,7 @@
   "dependencies": {
     "better-sqlite3": "^5.4.0",
     "buzz": "^1.2.1",
-    "chokidar": "^3.0.1",
+    "chokidar": "^3.0.2",
     "drivelist": "^8.0.6",
     "electron-updater": "^4.0.14",
     "font-manager": "^0.3.0",

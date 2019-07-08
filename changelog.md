@@ -2,6 +2,9 @@
 
 ## v0.8.3
 
+- **Changed:**
+  - Update chokidar 3.0.1 to 3.0.2
+
 ## v0.8.2 2019-07-01
 
 - **Fixed:**
