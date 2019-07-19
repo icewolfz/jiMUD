@@ -10,6 +10,7 @@
   - Update better-sqlite3 5.4.0 to 5.4.1
   - Update electron 5.0.6 to 5.0.7
   - Update electron-updater 4.0.14 to 4.1.2
+  - Preferences: Backup all profiles is now default true to mimic web client behavior
 
 ## v0.8.2 2019-07-01
 

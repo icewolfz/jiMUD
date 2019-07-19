@@ -299,7 +299,7 @@ export let SettingList: any[] = [
     ['display.roundedOverlays', 0, 1, true],
     ['backupLoad', 0, 2, BackupSelection.All],
     ['backupSave', 0, 2, BackupSelection.All],
-    ['backupAllProfiles', 0, 1, false],
+    ['backupAllProfiles', 0, 1, true],
     ['scrollLocked', 0, 1, false],
     ['showStatus', 0, 1, true],
     ['showCharacterManager', 0, 1, false],
@@ -480,7 +480,7 @@ export class Settings {
 
     public backupLoad: BackupSelection = BackupSelection.All;
     public backupSave: BackupSelection = BackupSelection.All;
-    public backupAllProfiles = false;
+    public backupAllProfiles = true;
 
     public scrollLocked: boolean = false;
     public showStatus: boolean = true;

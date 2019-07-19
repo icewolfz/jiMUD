@@ -177,7 +177,7 @@ display.splitLive                 | boolean | true
 display.roundedOverlays           | boolean | true
 backupLoad                        | integer | 14
 backupSave                        | integer | 14
-backupAllProfiles                 | boolean | false
+backupAllProfiles                 | boolean | true
 scrollLocked                      | boolean | false
 showStatus                        | boolean | true
 showCharacterManager              | boolean | false
