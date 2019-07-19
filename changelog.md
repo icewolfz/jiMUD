@@ -4,7 +4,10 @@
 
 - **Changed:**
   - Update chokidar 3.0.1 to 3.0.2
-  - Update markdown-it 8.4.2 to 9.0.0
+  - Update markdown-it 8.4.2 to 9.0.1
+  - Update better-sqlite3 5.4.0 to 5.4.1
+  - Update electron 5.0.6 to 5.0.7
+  - Update electron-updater 4.0.14 to 4.1.2
 
 ## v0.8.2 2019-07-01
 
