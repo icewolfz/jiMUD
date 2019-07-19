@@ -214,13 +214,12 @@ export class Input extends EventEmitter {
                     if (this._commandHistory.length < 0) {
                         this._historyIdx = -1;
                         this.client.commandInput.val('');
-                        this.client.commandInput.select();
                     }
                     else {
                         if (this._commandHistory.length > 0 && this._historyIdx < this._commandHistory.length && this._historyIdx >= 0)
                             this.client.commandInput.val(this._commandHistory[this._historyIdx]);
-                        this.client.commandInput.select();
                     }
+                    setTimeout(() => this.client.commandInput.select(), 0);
                     break;
                 case 40: //down
                     if (this._historyIdx === this._commandHistory.length && this.client.commandInput.val().length > 0)
@@ -229,13 +228,12 @@ export class Input extends EventEmitter {
                     if (this._historyIdx >= this._commandHistory.length || this._commandHistory.length < 1) {
                         this._historyIdx = this._commandHistory.length;
                         this.client.commandInput.val('');
-                        this.client.commandInput.select();
                     }
                     else {
                         if (this._commandHistory.length > 0 && this._historyIdx < this._commandHistory.length && this._historyIdx >= 0)
                             this.client.commandInput.val(this._commandHistory[this._historyIdx]);
-                        this.client.commandInput.select();
                     }
+                    setTimeout(() => this.client.commandInput.select(), 0);
                     break;
                 case 13: // return
                     switch (this.client.options.newlineShortcut) {
