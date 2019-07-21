@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Command history: Fixed selection of commands while browsing
+  - Paste special: losing text when clicking ok or return key
 - **Changed:**
   - Update chokidar 3.0.1 to 3.0.2
   - Update markdown-it 8.4.2 to 9.0.1

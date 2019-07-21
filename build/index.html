@@ -2402,7 +2402,10 @@
                 + client.commandInput[0].value.substring(endPos, client.commandInput[0].value.length);
             client.commandInput[0].selectionStart = startPos;
             client.commandInput[0].selectionEnd = startPos + txt.length;
-            client.commandInput[0].focus();
+            setTimeout(() => {
+                client.commandInput[0].blur();
+                client.commandInput[0].focus();
+            }, 0);
         }
 
         function paste() {
