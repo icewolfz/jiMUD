@@ -514,7 +514,7 @@ export class Status extends EventEmitter {
         if (!bar) {
             if (!icon)
                 icon = label.replace(/\d+$/, '').trim().replace(' ', '-');
-            bar = '<div class="combat-bar" id="' + id + '" data-value="' + ((100 - p) / 20 * 20) + '" data-order="' + order + '">';
+            bar = '<div title="' + label + '" class="combat-bar" id="' + id + '" data-value="' + ((100 - p) / 20 * 20) + '" data-order="' + order + '">';
             bar += '<div class="combat-icon ' + icon + '"></div>';
             bar += '<div class="combat-name"> ' + label + '</div>';
             bar += '<div class="progressbar"><div class="progressbar-text">' + p + '%</div>';

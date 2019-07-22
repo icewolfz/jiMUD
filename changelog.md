@@ -2,10 +2,13 @@
 
 ## v0.8.3
 
+- **New:**
+  - Status: add tooltip to combat/party bars with full names
 - **Fixed:**
   - Command history: Fixed selection of commands while browsing
   - Paste special: losing text when clicking ok or return key
 - **Changed:**
+  - Themes: bump combat/party names to be larger and easier to read
   - Update chokidar 3.0.1 to 3.0.2
   - Update markdown-it 8.4.2 to 9.0.1
   - Update better-sqlite3 5.4.0 to 5.4.1
