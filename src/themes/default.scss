@@ -729,10 +729,9 @@ body {
 }
 
 .progressbar {
-    height: 13px;
-    font-size: 0.75em;
+    height: 14px;
+    font-size: 1em;
     border: 1px solid #{$borderColor};
-    height: 13px;
     width: 118px;
     -webkit-border-radius: 6px;
     border-radius: 6px;
@@ -765,6 +764,7 @@ body {
     bottom: 3px;
     right: 3px;
     left: 3px;
+    font-size: 0.75em;
 }
 
 #lagMeter.progressbar .progressbar-text {
