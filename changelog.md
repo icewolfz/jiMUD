@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.3
+## v0.8.3 2019-07-22
 
 - **New:**
   - Status: add tooltip to combat/party bars with full names
