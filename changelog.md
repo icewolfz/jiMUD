@@ -7,6 +7,7 @@
 - **Fixed:**
   - Command history: Fixed selection of commands while browsing
   - Paste special: losing text when clicking ok or return key
+  - Preferences: Fixed dialog height to prevent theme drop down not correctly showing
 - **Changed:**
   - Themes:
     - Bump combat/party names to be larger and easier to read
