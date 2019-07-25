@@ -4,6 +4,8 @@
 
 - **Fixed:**
   - Main menu hacks in an attempt to fix some menu issues.
+- **Changed:**
+  - Update electron 5.0.7 to 5.0.8  
 
 ## v0.8.3 2019-07-22
 

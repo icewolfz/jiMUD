@@ -53,8 +53,8 @@
     "@types/node": "^12.6.8",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^5.0.7",
-    "electron-builder": "^20.44.4",
+    "electron": "^5.0.8",
+    "electron-builder": "^21.1.5",
     "eslint": "^6.1.0",
     "eslint-plugin-html": "^6.0.0"
   },
