@@ -170,6 +170,7 @@ var menuTemp = [
                 accelerator: 'CmdOrCtrl+N',
                 click: () => {
                     win.webContents.executeJavaScript('client.connect()');
+                    win.webContents.focus();
                 }
             },
             {
@@ -179,6 +180,7 @@ var menuTemp = [
                 enabled: false,
                 click: () => {
                     win.webContents.executeJavaScript('client.close()');
+                    win.webContents.focus();
                 }
             },
             {
@@ -191,6 +193,7 @@ var menuTemp = [
                 checked: true,
                 click: () => {
                     win.webContents.executeJavaScript('toggleParsing()');
+                    win.webContents.focus();
                 }
             },
             {
@@ -200,6 +203,7 @@ var menuTemp = [
                 checked: true,
                 click: () => {
                     win.webContents.executeJavaScript('toggleTriggers()');
+                    win.webContents.focus();
                 }
             },
             {
@@ -211,6 +215,7 @@ var menuTemp = [
                 accelerator: 'CmdOrCtrl+H',
                 click: () => {
                     win.webContents.executeJavaScript('showCharacters()');
+                    win.webContents.focus();
                 }
             },
             { type: 'separator' },
@@ -221,12 +226,14 @@ var menuTemp = [
                 checked: false,
                 click: () => {
                     win.webContents.executeJavaScript('toggleLogging()');
+                    win.webContents.focus();
                 }
             },
             {
                 label: '&View logs...',
                 click: () => {
                     win.webContents.executeJavaScript('showLogViewer()');
+                    win.webContents.focus();
                 }
             },
             {
@@ -274,6 +281,7 @@ var menuTemp = [
                 enabled: false,
                 click: () => {
                     win.webContents.executeJavaScript('copyAsHTML();');
+                    win.webContents.focus();
                 }
             },
             {
@@ -281,6 +289,7 @@ var menuTemp = [
                 accelerator: 'CmdOrCtrl+V',
                 click: () => {
                     win.webContents.executeJavaScript('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);paste()');
+                    win.webContents.focus();
                 }
             },
             {
@@ -303,6 +312,7 @@ var menuTemp = [
                 accelerator: 'CmdOrCtrl+A',
                 click: () => {
                     win.webContents.executeJavaScript('selectAll()');
+                    win.webContents.focus();
                 }
             },
             {
@@ -312,6 +322,7 @@ var menuTemp = [
                 label: 'Clear',
                 click: () => {
                     win.webContents.executeJavaScript('client.clear()');
+                    win.webContents.focus();
                 }
             },
             { type: 'separator' },
@@ -319,6 +330,7 @@ var menuTemp = [
                 label: 'Find',
                 accelerator: 'CmdOrCtrl+F',
                 click: () => {
+                    win.webContents.focus();
                     win.webContents.executeJavaScript('client.display.showFind()');
                 }
             },
@@ -342,6 +354,7 @@ var menuTemp = [
                 checked: false,
                 click: () => {
                     win.webContents.executeJavaScript('client.toggleScrollLock()');
+                    win.webContents.focus();
                 }
             },
             {
@@ -352,6 +365,7 @@ var menuTemp = [
                         return;
                     }
                     shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
+                    win.webContents.focus();
                 }
             },
             {
@@ -368,6 +382,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("status")');
+                            win.webContents.focus();
                         }
                     },
                     {
@@ -375,6 +390,7 @@ var menuTemp = [
                         id: 'refresh',
                         click: () => {
                             win.webContents.executeJavaScript('client.sendGMCP(\'Core.Hello { "client": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');');
+                            win.webContents.focus();
                         }
                     },
                     { type: 'separator' },
@@ -385,6 +401,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("weather")');
+                            win.webContents.focus();
                         }
                     },
                     {
@@ -398,6 +415,7 @@ var menuTemp = [
                                 checked: true,
                                 click: () => {
                                     win.webContents.executeJavaScript('toggleView("limbs")');
+                                    win.webContents.focus();
                                 }
                             },
                             { type: 'separator' },
@@ -408,6 +426,7 @@ var menuTemp = [
                                 checked: true,
                                 click: () => {
                                     win.webContents.executeJavaScript('toggleView("limbhealth")');
+                                    win.webContents.focus();
                                 }
                             },
                             {
@@ -417,6 +436,7 @@ var menuTemp = [
                                 checked: true,
                                 click: () => {
                                     win.webContents.executeJavaScript('toggleView("limbarmor")');
+                                    win.webContents.focus();
                                 }
                             },
                         ]
@@ -428,6 +448,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("health")');
+                            win.webContents.focus();
                         }
                     },
                     {
@@ -437,6 +458,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("experience")');
+                            win.webContents.focus();
                         }
                     },
                     {
@@ -446,6 +468,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("partyhealth")');
+                            win.webContents.focus();
                         }
                     },
                     {
@@ -455,6 +478,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("combathealth")');
+                            win.webContents.focus();
                         }
                     },
                     {
@@ -464,6 +488,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("lagmeter")');
+                            win.webContents.focus();
                         }
                     }
                 ]
@@ -486,6 +511,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("buttons")');
+                            win.webContents.focus();
                         }
                     },
                     { type: 'separator' },
@@ -496,6 +522,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("button.connect")');
+                            win.webContents.focus();
                         }
                     },
                     {
@@ -505,6 +532,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("button.characters")');
+                            win.webContents.focus();
                         }
                     },
                     {
@@ -520,6 +548,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("button.preferences")');
+                            win.webContents.focus();
                         }
                     },
                     {
@@ -529,6 +558,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("button.log")');
+                            win.webContents.focus();
                         }
                     },
                     {
@@ -538,6 +568,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("button.clear")');
+                            win.webContents.focus();
                         }
                     },
                     {
@@ -547,6 +578,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("button.lock")');
+                            win.webContents.focus();
                         }
                     },
                     {
@@ -556,6 +588,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("button.map")');
+                            win.webContents.focus();
                         }
                     },
                     /*
@@ -566,6 +599,7 @@ var menuTemp = [
                       checked: true,
                       click: () => {
                         win.webContents.executeJavaScript('toggleView("button.mail")');
+                            win.webContents.focus();
                       }
                     },
                     {
@@ -575,6 +609,7 @@ var menuTemp = [
                       checked: true,
                       click: () => {
                         win.webContents.executeJavaScript('toggleView("button.compose")');
+                            win.webContents.focus();
                       }
                     },
                     */
@@ -585,6 +620,7 @@ var menuTemp = [
                         checked: true,
                         click: () => {
                             win.webContents.executeJavaScript('toggleView("button.user")');
+                            win.webContents.focus();
                         }
                     },
                 ]
@@ -599,6 +635,7 @@ var menuTemp = [
                         win.webContents.closeDevTools();
                     else
                         win.webContents.openDevTools();
+                        win.webContents.focus();
                 }
             },
             {
@@ -643,6 +680,7 @@ var menuTemp = [
                 id: 'immortal',
                 click: () => {
                     win.webContents.executeJavaScript('showImmortalTools()');
+                    win.webContents.focus();
                 },
                 visible: false,
                 accelerator: 'CmdOrCtrl+I'
@@ -662,6 +700,7 @@ var menuTemp = [
                 id: 'history',
                 click: () => {
                     win.webContents.executeJavaScript('showCommandHistory()');
+                    win.webContents.focus();
                 },
                 accelerator: 'CmdOrCtrl+Shift+H'
             },
@@ -702,18 +741,21 @@ var menuTemp = [
                 label: '&ShadowMUD...',
                 click: () => {
                     shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
+                    win.webContents.focus();
                 }
             },
             {
                 label: '&jiMUD...',
                 click: () => {
                     win.webContents.executeJavaScript('showHelp()');
+                    win.webContents.focus();
                 }
             },
             {
                 label: '&jiMUD website...',
                 click: () => {
                     shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
+                    win.webContents.focus();
                 }
             },
             { type: 'separator' },

@@ -2,6 +2,9 @@
 
 ## v0.8.4
 
+- **Fixed:**
+  - Main menu hacks in an attempt to fix some menu issues.
+
 ## v0.8.3 2019-07-22
 
 - **New:**
