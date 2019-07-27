@@ -2,6 +2,8 @@
 
 ## v0.8.4
 
+- **New:**
+  - Character manager: Add Never ask again when warning on loading default or character
 - **Fixed:**
   - Main menu hacks in an attempt to fix some menu issues.
 - **Changed:**

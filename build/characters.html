@@ -37,6 +37,7 @@
         var characters, current = '';
         var charactersFile = parseTemplate(path.join('{data}', 'characters.json'));
         var changed = 0;
+        var askonloadCharacter = true;
 
         $(window).keydown((event) => {
             if (document.getElementById('progress-dialog').open) {
@@ -55,6 +56,8 @@
         });
 
         $(document).ready(() => {
+            var set = Settings.load(remote.getGlobal('settingsFile'));
+            askonloadCharacter = set.askonloadCharacter;
             $('#characters-list').contextmenu((event) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -627,30 +630,53 @@
         function load(name) {
             if (name === undefined)
                 name = current;
+            if (!askonloadCharacter) {
+                saveCharacters();
+                ipcRenderer.send('load-char', name);
+                return;
+            }
             var response = dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'warning',
                 title: 'Load character',
                 message: 'Load ' + name + '?',
-                buttons: ['Yes', 'No'],
+                buttons: ['Yes', 'No', 'Never ask again'],
                 defaultId: 1,
             });
-            if (response === 0) {
+            if (response === 2) {
+                saveCharacters();
+                ipcRenderer.send('load-char', name);
+                ipcRenderer.send('setting-changed', { type: 'normal', name: 'askonloadCharacter', value: false });
+                askonloadCharacter = false;
+            }
+            else if (response === 0) {
                 saveCharacters();
                 ipcRenderer.send('load-char', name);
             }
             return response;
         }
 
+
         // eslint-disable-next-line no-unused-vars
         function loadDefault() {
+            if (!askonloadCharacter) {
+                saveCharacters();
+                ipcRenderer.send('load-default', name);
+                return;
+            }
             var response = dialog.showMessageBox(remote.getCurrentWindow(), {
                 type: 'warning',
                 title: 'Load defaults',
                 message: 'Load defaults?',
-                buttons: ['Yes', 'No'],
+                buttons: ['Yes', 'No', 'Never ask again'],
                 defaultId: 1,
             });
-            if (response === 0) {
+            if (response === 2) {
+                saveCharacters();
+                ipcRenderer.send('load-default', name);
+                ipcRenderer.send('setting-changed', { type: 'normal', name: 'askonloadCharacter', value: false });
+                askonloadCharacter = false;
+            }
+            else if (response === 0) {
                 saveCharacters();
                 ipcRenderer.send('load-default', name);
             }
