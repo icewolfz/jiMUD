@@ -4,6 +4,7 @@
 
 - **New:**
   - Character manager: Add Never ask again when warning on loading default or character
+  - Preferences: Allow toggling never ask again check when closing client option
 - **Fixed:**
   - Main menu hacks in an attempt to fix some menu issues.
 - **Changed:**

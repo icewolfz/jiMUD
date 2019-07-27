@@ -194,6 +194,9 @@ Controls what is captured into the chat window
 - `Hide when minimized` will hide the main window and any window set as a child
 - `Enable profile manager code editor` disable or enable the code editor for the profile manager
 - `Enable profile manager file watcher` disable or enable watching for profile file changes to warn when saving overrides
+- `Enable warning dialog when connected and closing client` disable or enable warning check when closing mud and connected
+- `Enable warning dialog when closing client and child windows are open` disable or enable warning dialog when closing and child windows are open
+- `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character
 
 ## Advanced > Tray
 
