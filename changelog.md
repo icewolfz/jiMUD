@@ -7,6 +7,7 @@
   - Preferences: Allow toggling never ask again check when closing client option
 - **Fixed:**
   - Main menu hacks in an attempt to fix some menu issues.
+  - Mapper: Fixed fill walls, split area, and show legend not correctly restoring on load
 - **Changed:**
   - Update electron 5.0.7 to 5.0.8  
 

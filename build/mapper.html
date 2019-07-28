@@ -595,16 +595,22 @@
                     mapper.enabled = false;
                     toggleEnabled();
                 }
-                if (mapper.showLegend)
+                if (options.mapper.legend) {
+                    mapper.showLegend = false;
                     toggleLegend();
+                }
                 if (options.mapper.follow) {
                     mapper.follow = false;
                     toggleFollow();
                 }
-                if (mapper.splitArea)
+                if (options.mapper.split) {
+                    mapper.splitArea = false;
                     toggleSplitArea();
-                if (mapper.fillWalls)
+                }
+                if (options.mapper.fill) {
+                    mapper.fillWalls = false;
                     toggleFillWalls();
+                }
                 if (mapper.follow)
                     mapper.focusCurrentRoom();
 
