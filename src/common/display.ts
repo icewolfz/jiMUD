@@ -1837,8 +1837,8 @@ export class Display extends EventEmitter {
                     this._el.appendChild(img);
                     img.onload = () => {
                         const lIdx = this.lineIDs.indexOf(+img.dataset.id);
-                        this._lines[lIdx].images--;
                         if (lIdx === -1 || lIdx >= this.lines.length) return;
+                        this._lines[lIdx].images--;
                         const fIdx = +img.dataset.f;
                         const fmt = this.lineFormats[lIdx][fIdx];
                         if (fmt.w.length > 0 && fmt.h.length > 0) {

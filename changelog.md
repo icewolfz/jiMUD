@@ -8,6 +8,7 @@
 - **Fixed:**
   - Main menu hacks in an attempt to fix some menu issues.
   - Mapper: Fixed fill walls, split area, and show legend not correctly restoring on load
+  - Display: MXP Image caching was not correctly handled when old lines where trimmmed at buffer max
 - **Changed:**
   - Update electron 5.0.7 to 5.0.8  
 
