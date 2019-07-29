@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.4
+## v0.8.4 2019-07-29
 
 - **New:**
   - Character manager: Add Never ask again when warning on loading default or character
@@ -10,7 +10,8 @@
   - Mapper: Fixed fill walls, split area, and show legend not correctly restoring on load
   - Display: MXP Image caching was not correctly handled when old lines where trimmmed at buffer max
 - **Changed:**
-  - Update electron 5.0.7 to 5.0.8  
+  - Update electron 5.0.7 to 5.0.8
+  - Update spellchecker 3.6.1 to 3.7.0
 
 ## v0.8.3 2019-07-22
 
