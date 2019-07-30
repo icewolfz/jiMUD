@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.0
+
+- **Changed:**
+  - Update electron 5.0.8 to 6.0.0
+
 ## v0.8.4 2019-07-29
 
 - **New:**
