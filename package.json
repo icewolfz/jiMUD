@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
-    "@types/jquery": "^3.3.30",
+    "@types/jquery": "^3.3.31",
     "@types/node": "^12.6.9",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
@@ -129,7 +129,7 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^5.4.1",
+    "better-sqlite3": "^5.4.2",
     "buzz": "^1.2.1",
     "chokidar": "^3.0.2",
     "drivelist": "^8.0.6",

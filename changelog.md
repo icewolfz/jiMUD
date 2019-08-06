@@ -4,6 +4,7 @@
 
 - **Changed:**
   - Update electron 5.0.8 to 6.0.0
+  - Update better-sqlite3 5.4.1 to 5.4.2
 
 ## v0.8.4 2019-07-29
 
