@@ -2012,12 +2012,12 @@ export class VirtualEditor extends EditorBase {
                 inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
                     { role: 'copy' },
                     { type: 'separator' },
-                    { role: 'selectall' }
+                    { role: 'selectAll' }
                 ]);
             }
             else
                 inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
-                    { role: 'selectall' }
+                    { role: 'selectAll' }
                 ]);
             inputMenu.popup({ window: remote.getCurrentWindow() });
         });
@@ -4120,14 +4120,14 @@ export class VirtualEditor extends EditorBase {
                     { role: 'copy' },
                     { role: 'paste' },
                     { type: 'separator' },
-                    { role: 'selectall' }
+                    { role: 'selectAll' }
                 ];
             }
             else
                 tmp = [
                     { role: 'paste' },
                     { type: 'separator' },
-                    { role: 'selectall' }
+                    { role: 'selectAll' }
                 ];
             if (this.$undo.length > 0 || this.$redo.length > 0)
                 tmp.unshift({ type: 'separator' });

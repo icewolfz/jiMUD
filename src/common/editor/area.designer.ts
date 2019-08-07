@@ -1491,12 +1491,12 @@ export class AreaDesigner extends EditorBase {
                 inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
                     { role: 'copy' },
                     { type: 'separator' },
-                    { role: 'selectall' }
+                    { role: 'selectAll' }
                 ]);
             }
             else
                 inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
-                    { role: 'selectall' }
+                    { role: 'selectAll' }
                 ]);
             inputMenu.popup({ window: remote.getCurrentWindow() });
         });
