@@ -1488,14 +1488,14 @@ export class AreaDesigner extends EditorBase {
             const sel = getSelection();
             let inputMenu;
             if (!sel.isCollapsed && sel.type === 'Range' && this.$roomPreview.container.contains(sel.anchorNode)) {
-                inputMenu = Menu.buildFromTemplate([
+                inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
                     { role: 'copy' },
                     { type: 'separator' },
                     { role: 'selectall' }
                 ]);
             }
             else
-                inputMenu = Menu.buildFromTemplate([
+                inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
                     { role: 'selectall' }
                 ]);
             inputMenu.popup({ window: remote.getCurrentWindow() });
