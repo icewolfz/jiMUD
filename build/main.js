@@ -1174,7 +1174,8 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
-            webviewTag: false
+            webviewTag: false,
+            sandbox: false
         }
     });
     if (s.fullscreen)
@@ -1305,6 +1306,7 @@ function createWindow() {
         else if (!options.webPreferences.hasOwnProperty('webPreferences')) {
             options.webPreferences.nodeIntegration = true;
             options.webPreferences.webviewTag = false;
+            options.webPreferences.sandbox = false;
         }
         const w = new BrowserWindow(options);
         if (global.debug)
@@ -2251,7 +2253,8 @@ ipcMain.on('progress-show', (event, title) => {
             show: false,
             webPreferences: {
                 nodeIntegration: true,
-                webviewTag: false
+                webviewTag: false,
+                sandbox: false
             }
         });
         winProgress.removeMenu();
@@ -2711,7 +2714,8 @@ function showPrefs() {
         icon: path.join(__dirname, '../assets/icons/png/preferences.png'),
         webPreferences: {
             nodeIntegration: true,
-            webviewTag: false
+            webviewTag: false,
+            sandbox: false
         }
     });
     pref.removeMenu();
@@ -2773,7 +2777,8 @@ function createMapper(show, loading, loaded) {
         icon: path.join(__dirname, '../assets/icons/png/map.png'),
         webPreferences: {
             nodeIntegration: true,
-            webviewTag: false
+            webviewTag: false,
+            sandbox: false
         }
     });
 
@@ -2917,7 +2922,8 @@ function showProfiles() {
         show: false,
         webPreferences: {
             nodeIntegration: true,
-            webviewTag: false
+            webviewTag: false,
+            sandbox: false
         }
     });
 
@@ -3018,7 +3024,8 @@ function createEditor(show, loading) {
         icon: path.join(__dirname, '../assets/icons/png/edit.png'),
         webPreferences: {
             nodeIntegration: true,
-            webviewTag: false
+            webviewTag: false,
+            sandbox: false
         }
     });
 
@@ -3159,7 +3166,8 @@ function createChat(show, loading) {
         webPreferences: {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
-            webviewTag: false
+            webviewTag: false,
+            sandbox: false
         }
     });
 
@@ -3303,7 +3311,8 @@ function createNewWindow(name, options) {
         icon: path.join(__dirname, '../assets/icons/png/' + (options.icon || name) + '.png'),
         webPreferences: {
             nodeIntegration: true,
-            webviewTag: false
+            webviewTag: false,
+            sandbox: false
         }
     });
     delete windows[name].width;
@@ -3404,6 +3413,7 @@ function createNewWindow(name, options) {
         else if (!options.webPreferences.hasOwnProperty('webPreferences')) {
             options.webPreferences.nodeIntegration = true;
             options.webPreferences.webviewTag = true;
+            options.webPreferences.sandbox = false;
         }
         const w = new BrowserWindow(options);
         if (global.debug)
@@ -3521,7 +3531,8 @@ function showColor(args) {
         show: false,
         webPreferences: {
             nodeIntegration: true,
-            webviewTag: false
+            webviewTag: false,
+            sandbox: false
         }
     });
     cp.webContents.on('crashed', (event, killed) => {
@@ -3713,7 +3724,8 @@ function createCodeEditor(show, loading, loaded) {
         icon: path.join(__dirname, '../assets/icons/win/code.ico'),
         webPreferences: {
             nodeIntegration: true,
-            webviewTag: false
+            webviewTag: false,
+            sandbox: false
         }
     });
 
@@ -3854,6 +3866,7 @@ function createCodeEditor(show, loading, loaded) {
         else if (!options.webPreferences.hasOwnProperty('webPreferences')) {
             options.webPreferences.nodeIntegration = true;
             options.webPreferences.webviewTag = false;
+            options.webPreferences.sandbox = false;
         }
         const w = new BrowserWindow(options);
         if (global.debug)
@@ -4081,7 +4094,8 @@ function showAbout() {
         icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
         webPreferences: {
             nodeIntegration: true,
-            webviewTag: false
+            webviewTag: false,
+            sandbox: false
         }
     });
     about.webContents.on('crashed', (event, killed) => {
