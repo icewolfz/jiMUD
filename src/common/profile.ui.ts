@@ -220,7 +220,7 @@ const menubar: Menubar = new Menubar([
 function addInputContext() {
     window.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        const inputMenu = Menu.buildFromTemplate([
+        const inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
             {
                 label: 'Undo',
                 click: () => { doUndo(); },
@@ -3016,8 +3016,8 @@ export function doRefresh() {
             message: 'All unsaved or applied changes will be lost, refresh?',
             buttons: ['Yes', 'No'],
             defaultId: 1
-        }, (response) => {
-            if (response === 0) {
+        }).then((response) => {
+            if (response.response === 0) {
                 filesChanged = false;
                 resetUndo();
                 profiles = new ProfileCollection();
@@ -3366,8 +3366,8 @@ export function saveProfiles(clearNow?: boolean) {
             message: 'Profiles have been updated outside of manager, save anyways?',
             buttons: ['Yes', 'No'],
             defaultId: 1
-        }, (response) => {
-            if (response === 0) {
+        }).then((response) => {
+            if (response.response === 0) {
                 const p = path.join(parseTemplate('{data}'), 'profiles');
                 if (!existsSync(p))
                     fs.mkdirSync(p);
@@ -3552,8 +3552,8 @@ function DeleteProfileConfirm(profile) {
         message: 'Delete ' + profile.name + '?',
         buttons: ['Yes', 'No'],
         defaultId: 1
-    }, (response) => {
-        if (response === 0) DeleteProfile(profile);
+    }).then((response) => {
+        if (response.response === 0) DeleteProfile(profile);
     });
 }
 
@@ -3587,8 +3587,8 @@ function DeleteItems(type, key, profile) {
         message: 'Are you sure you want to delete all ' + key + '?',
         buttons: ['Yes', 'No'],
         defaultId: 1
-    }, (response) => {
-        if (response === 0) {
+    }).then((response) => {
+        if (response.response === 0) {
             const _u = { action: 'group', add: [], delete: [] };
             const n = $('#profile-tree').treeview('findNodes', ['Profile' + profileID(profile.name) + key, 'id']);
             $('#profile-tree').treeview('expandNode', [n, { levels: 1, silent: true }]);
@@ -3608,8 +3608,8 @@ function DeleteItemConfirm(type, key, idx, profile) {
         message: 'Are you sure you want to delete this ' + type + '?',
         buttons: ['Yes', 'No'],
         defaultId: 1
-    }, (response) => {
-        if (response === 0) {
+    }).then((response) => {
+        if (response.response === 0) {
             DeleteItem(type.toLowerCase(), key, idx, profile);
         }
     });
@@ -3666,10 +3666,10 @@ export function doClose() {
             message: 'All unsaved changes will be lost, close?',
             buttons: ['Yes', 'No', 'Never ask again'],
             defaultId: 1
-        }, (response) => {
-            if (response === 0)
+        }).then((response) => {
+            if (response.response === 0)
                 window.close();
-            else if (response === 2) {
+            else if (response.response === 2) {
                 _never = false;
                 _close = true;
                 window.close();
@@ -3707,8 +3707,8 @@ export function doReset(node) {
         message: 'Resetting will loose all profile data, reset?',
         buttons: ['Yes', 'No'],
         defaultId: 1
-    }, (response) => {
-        if (response === 0) {
+    }).then((response) => {
+        if (response.response === 0) {
             pushUndo({ action: 'reset', type: 'profile', profile: profile.clone() });
             let o;
             let n = $('#profile-tree').treeview('findNodes', ['Profile' + profileID(profile.name) + 'macros[0-9]+', 'id']);
@@ -3992,16 +3992,15 @@ function exportAll() {
             { name: 'Text files (*.txt)', extensions: ['txt'] },
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
-    },
-        (fileName) => {
-            if (fileName === undefined) {
+    }).then((fileName) => {
+            if (fileName.filePath === undefined) {
                 return;
             }
             const data = {
                 version: 2,
                 profiles: profiles.clone(2)
             };
-            fs.writeFileSync(fileName, JSON.stringify(data));
+            fs.writeFileSync(fileName.filePath, JSON.stringify(data));
         });
 
 }
@@ -4094,9 +4093,8 @@ function exportCurrent() {
             { name: 'Text files (*.txt)', extensions: ['txt'] },
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
-    },
-        (fileName) => {
-            if (fileName === undefined) {
+    }).then((fileName) => {
+            if (fileName.filePath === undefined) {
                 return;
             }
             const data = {
@@ -4104,7 +4102,7 @@ function exportCurrent() {
                 profiles: {}
             };
             data.profiles[currentProfile.name] = currentProfile.clone(2);
-            fs.writeFileSync(fileName, JSON.stringify(data));
+            fs.writeFileSync(fileName.filePath, JSON.stringify(data));
         });
 
 }
