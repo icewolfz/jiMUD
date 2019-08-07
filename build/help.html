@@ -148,12 +148,12 @@
                     inputMenu = Menu.buildFromTemplate([
                         { role: 'copy' },
                         { type: 'separator' },
-                        { role: 'selectall' }
+                        { role: 'selectAll' }
                     ]);
                 }
                 else
                     inputMenu = Menu.buildFromTemplate([
-                        { role: 'selectall' }
+                        { role: 'selectAll' }
                     ]);
                 inputMenu.popup({ window: remote.getCurrentWindow() });
             });
