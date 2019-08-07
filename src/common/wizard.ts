@@ -229,7 +229,7 @@ export class WizardDataGridPage extends WizardPage {
         this.dataGrid.on('delete', (e) => {
             const ep = { preventDefault: false };
             this.emit('delete-prompt', ep);
-            if (!ep.preventDefault && dialog.showMessageBox(
+            if (!ep.preventDefault && dialog.showMessageBoxSync(
                 remote.getCurrentWindow(),
                 {
                     type: 'warning',

@@ -1013,7 +1013,7 @@
         var e = 0, el = dialogs.length;
         for (; e < el; e++) {
             if (dialogs[e].open) {
-                if (dialog.showMessageBox(
+                if (dialog.showMessageBoxSync(
                     remote.getCurrentWindow(),
                     {
                         type: 'question',
@@ -1045,7 +1045,7 @@
                 var e = 0, el = dialogs.length;
                 for (; e < el; e++) {
                     if (dialogs[e].open) {
-                        if (dialog.showMessageBox(
+                        if (dialog.showMessageBoxSync(
                             remote.getCurrentWindow(),
                             {
                                 type: 'question',
