@@ -1338,7 +1338,7 @@
             if (!closeWindow && draft && !ask) {
                 evt.returnValue = false;
                 setTimeout(() => {
-                    var choice = dialog.showMessageBox(
+                    var choice = dialog.showMessageBoxSync(
                         remote.getCurrentWindow(),
                         {
                             type: 'warning',

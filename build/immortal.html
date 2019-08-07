@@ -3275,7 +3275,7 @@
             if ($('#newFolder').data('type') === 'local') {
                 if (_local[n]) {
                     n = getNewName(n, _local);
-                    if (dialog.showMessageBox(remote.getCurrentWindow(), {
+                    if (dialog.showMessageBoxSync(remote.getCurrentWindow(), {
                         type: 'warning',
                         title: 'File or folder exist?',
                         message: `Do you want to rename to "${n}"?`,
@@ -3292,7 +3292,7 @@
             else if ($('#newFolder').data('type') === 'remote') {
                 if (_remote[n]) {
                     n = getNewName(n, _remote);
-                    if (dialog.showMessageBox(remote.getCurrentWindow(), {
+                    if (dialog.showMessageBoxSync(remote.getCurrentWindow(), {
                         type: 'warning',
                         title: 'File or folder exist?',
                         message: `Do you want to rename to "${n}"?`,
@@ -3336,7 +3336,7 @@
                 }
                 else if (editor.val() != editor.original) {
                     var n = getNewName(editor.val(), list);
-                    if (dialog.showMessageBox(remote.getCurrentWindow(), {
+                    if (dialog.showMessageBoxSync(remote.getCurrentWindow(), {
                         type: 'warning',
                         title: 'Rename file?',
                         message: `Do you want to rename "${editor.original}" to "${n}"?`,

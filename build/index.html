@@ -1392,7 +1392,7 @@
                                 count++;
                             }
                             if (count > 0) {
-                                choice = dialog.showMessageBox(
+                                choice = dialog.showMessageBoxSync(
                                     remote.getCurrentWindow(),
                                     {
                                         type: 'warning',
@@ -1411,7 +1411,7 @@
                                 }
                             }
                         }
-                        choice = dialog.showMessageBox(
+                        choice = dialog.showMessageBoxSync(
                             remote.getCurrentWindow(),
                             {
                                 type: 'warning',
@@ -1457,7 +1457,7 @@
                             count++;
                         }
                         if (count > 0) {
-                            choice = dialog.showMessageBox(
+                            choice = dialog.showMessageBoxSync(
                                 remote.getCurrentWindow(),
                                 {
                                     type: 'warning',

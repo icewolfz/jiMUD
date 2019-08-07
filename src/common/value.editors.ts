@@ -1345,7 +1345,7 @@ export class CollectionValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (dialog.showMessageBox(
+                if (dialog.showMessageBoxSync(
                     remote.getCurrentWindow(),
                     {
                         type: 'warning',
