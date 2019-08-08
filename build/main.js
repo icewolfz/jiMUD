@@ -4034,7 +4034,7 @@ function checkForUpdatesManual() {
             message: 'Current version is up-to-date.',
             buttons: ['Ok', 'Open website']
         }, (buttonIndex) => {
-            if (buttonIndex === 0)
+            if (buttonIndex === 1)
                 shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest', '_blank');
             if (global.editorOnly)
                 winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });

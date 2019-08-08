@@ -2,6 +2,8 @@
 
 ## v0.8.5
 
+- **Fixed:**
+  - Fixed check for updates open website dialog button
 - **Changed:**
   - Update electron 5.0.8 to 5.0.9
   - Update better-sqlite3 5.4.1 to 5.4.2
