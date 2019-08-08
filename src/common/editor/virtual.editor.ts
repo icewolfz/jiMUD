@@ -4120,14 +4120,14 @@ export class VirtualEditor extends EditorBase {
                     { role: 'copy' },
                     { role: 'paste' },
                     { type: 'separator' },
-                    { role: 'selectAll' }
+                    { role: 'selectall' }
                 ];
             }
             else
                 tmp = [
                     { role: 'paste' },
                     { type: 'separator' },
-                    { role: 'selectAll' }
+                    { role: 'selectall' }
                 ];
             if (this.$undo.length > 0 || this.$redo.length > 0)
                 tmp.unshift({ type: 'separator' });

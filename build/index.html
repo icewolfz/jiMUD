@@ -1753,7 +1753,7 @@
                     { label: 'Paste', accelerator: 'CmdOrCtrl+V', click: paste },
                     { label: 'Paste special', accelerator: 'CmdOrCtrL+Shift+V', click: () => { pasteSpecial(); } },
                     { type: 'separator' },
-                    { role: 'selectAll', accelerator: 'CmdOrCtrl+A' },
+                    { role: 'selectall', accelerator: 'CmdOrCtrl+A' },
                 ]);
                 inputMenu.on('menu-will-show', () => {
                     $('#commandinput').data('context', true);

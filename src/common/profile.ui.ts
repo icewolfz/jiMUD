@@ -236,7 +236,7 @@ function addInputContext() {
             { role: 'copy' },
             { role: 'paste' },
             { type: 'separator' },
-            { role: 'selectAll' }
+            { role: 'selectall' }
         ]);
         inputMenu.popup({ window: remote.getCurrentWindow() });
     }, false);

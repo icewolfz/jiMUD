@@ -301,7 +301,7 @@ var menuTemp = [
             },
             /*
             {
-              role: 'pasteAndMatchStyle'
+              role: 'pasteandmatchstyle'
             },
             */
             {
@@ -642,13 +642,13 @@ var menuTemp = [
                 type: 'separator'
             },
             {
-                role: 'resetZoom'
+                role: 'resetzoom'
             },
             {
-                role: 'zoomIn'
+                role: 'zoomin'
             },
             {
-                role: 'zoomOut'
+                role: 'zoomout'
             },
             {
                 type: 'separator'
@@ -855,7 +855,7 @@ let menubar;
 const selectionMenu = Menu.buildFromTemplate([
     { role: 'copy' },
     { type: 'separator' },
-    { role: 'selectAll' },
+    { role: 'selectall' },
 ]);
 
 const inputMenu = Menu.buildFromTemplate([
@@ -866,7 +866,7 @@ const inputMenu = Menu.buildFromTemplate([
     { role: 'copy' },
     { role: 'paste' },
     { type: 'separator' },
-    { role: 'selectAll' },
+    { role: 'selectall' },
 ]);
 
 function addInputContext(window) {
