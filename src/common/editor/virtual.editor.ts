@@ -782,7 +782,7 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$descriptionGrid.on('delete', (e) => {
-            if (dialog.showMessageBoxSync(
+            if (dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
                     type: 'warning',
@@ -939,7 +939,7 @@ export class VirtualEditor extends EditorBase {
                 e.data[d].data.idx = idx;
                 e.data[d].items.idx = idx;
                 if (!all && idx < this.$items.length) {
-                    choice = dialog.showMessageBoxSync(
+                    choice = dialog.showMessageBox(
                         remote.getCurrentWindow(),
                         {
                             type: 'warning',
@@ -1112,7 +1112,7 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$itemGrid.on('delete', (e) => {
-            if (dialog.showMessageBoxSync(
+            if (dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
                     type: 'warning',
@@ -1547,7 +1547,7 @@ export class VirtualEditor extends EditorBase {
             }
         });
         this.$exitGrid.on('delete', (e) => {
-            if (dialog.showMessageBoxSync(
+            if (dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
                     type: 'warning',
@@ -4373,7 +4373,7 @@ export class VirtualEditor extends EditorBase {
         if (!this.$files[file] || !isFileSync(path.join(path.dirname(this.file), file)))
             return 0;
         //ask and return answer
-        return dialog.showMessageBoxSync(
+        return dialog.showMessageBox(
             remote.getCurrentWindow(),
             {
                 type: 'warning',
@@ -9872,7 +9872,7 @@ export class ExternalExitValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (dialog.showMessageBoxSync(
+                if (dialog.showMessageBox(
                     remote.getCurrentWindow(),
                     {
                         type: 'warning',
@@ -10213,7 +10213,7 @@ export class ItemsValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (dialog.showMessageBoxSync(
+                if (dialog.showMessageBox(
                     remote.getCurrentWindow(),
                     {
                         type: 'warning',

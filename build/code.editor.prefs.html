@@ -406,7 +406,7 @@
             var files;
             var i;
             if (type === 1) {
-                choice = dialog.showMessageBoxSync(
+                choice = dialog.showMessageBox(
                     remote.getCurrentWindow(),
                     {
                         type: 'warning',
@@ -430,7 +430,7 @@
                 }
             }
             else if (type === 2) {
-                choice = dialog.showMessageBoxSync(
+                choice = dialog.showMessageBox(
                     remote.getCurrentWindow(),
                     {
                         type: 'warning',
@@ -454,7 +454,7 @@
                 }
             }
             else {
-                choice = dialog.showMessageBoxSync(
+                choice = dialog.showMessageBox(
                     remote.getCurrentWindow(),
                     {
                         type: 'warning',

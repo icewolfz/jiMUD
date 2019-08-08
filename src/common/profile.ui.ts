@@ -2524,7 +2524,7 @@ export function init() {
             return;
         evt.returnValue = false;
         setTimeout(() => {
-            const choice = dialog.showMessageBoxSync(
+            const choice = dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
                     type: 'warning',
@@ -3140,7 +3140,7 @@ function importProfiles() {
                                             $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                         }
                                         else if (all !== 4) {
-                                            const response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                                            const response = dialog.showMessageBox(remote.getCurrentWindow(), {
                                                 type: 'question',
                                                 title: 'Profiles already exists',
                                                 message: 'Profile named \'' + p.name + '\' exist, replace?',
@@ -3297,7 +3297,7 @@ function importProfiles() {
                                         $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                     }
                                     else if (all !== 4) {
-                                        const response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                                        const response = dialog.showMessageBox(remote.getCurrentWindow(), {
                                             type: 'question',
                                             title: 'Profiles already exists',
                                             message: 'Profile named \'' + p.name + '\' exist, replace?',

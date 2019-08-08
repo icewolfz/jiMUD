@@ -2924,7 +2924,7 @@
             _editors[p].editor.watch(event, file, args);
             if (_editors[p] && _editors[p].diffFile === file) {
                 if (event === 'unlink') {
-                    choice = dialog.showMessageBoxSync(
+                    choice = dialog.showMessageBox(
                         remote.getCurrentWindow(),
                         {
                             type: 'question',
@@ -2954,7 +2954,7 @@
                     }
                 }
                 else if (event !== 'raw') {
-                    choice = dialog.showMessageBoxSync(
+                    choice = dialog.showMessageBox(
                         remote.getCurrentWindow(),
                         {
                             type: 'question',
@@ -4382,7 +4382,7 @@
         var e = 0, el = dialogs.length;
         for (; e < el; e++) {
             if (dialogs[e].open) {
-                if (dialog.showMessageBoxSync(
+                if (dialog.showMessageBox(
                     remote.getCurrentWindow(),
                     {
                         type: 'question',
@@ -4414,7 +4414,7 @@
                 var e = 0, el = dialogs.length;
                 for (; e < el; e++) {
                     if (dialogs[e].open) {
-                        if (dialog.showMessageBoxSync(
+                        if (dialog.showMessageBox(
                             remote.getCurrentWindow(),
                             {
                                 type: 'question',
@@ -8118,7 +8118,7 @@
         }
         var choice;
         if (panel.editor.changed && panel.editor.new) {
-            choice = dialog.showMessageBoxSync(
+            choice = dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
                     type: 'question',
@@ -8131,7 +8131,7 @@
                 panel.editor.revert();
         }
         else if (panel.editor.changed && !panel.editor.new) {
-            choice = dialog.showMessageBoxSync(
+            choice = dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
                     type: 'question',
@@ -8187,7 +8187,7 @@
                 return false;
             panel = manager.active;
         }
-        var choice = dialog.showMessageBoxSync(
+        var choice = dialog.showMessageBox(
             remote.getCurrentWindow(),
             {
                 type: 'question',
@@ -8443,7 +8443,7 @@
                     f = path.join(path.dirname(p.editor.file), f);
                     if (existsSync(f))
                         openFile(f);
-                    else if (dialog.showMessageBoxSync(
+                    else if (dialog.showMessageBox(
                         remote.getCurrentWindow(),
                         {
                             type: 'question',
@@ -8882,7 +8882,7 @@
             p.editor.on('reload', (type, file) => {
                 var choice;
                 if (type === 'unlink') {
-                    choice = dialog.showMessageBoxSync(
+                    choice = dialog.showMessageBox(
                         remote.getCurrentWindow(),
                         {
                             type: 'question',
@@ -8898,7 +8898,7 @@
                         p.editor.deleted(choice === 0, file);
                 }
                 else {
-                    choice = dialog.showMessageBoxSync(
+                    choice = dialog.showMessageBox(
                         remote.getCurrentWindow(),
                         {
                             type: 'question',

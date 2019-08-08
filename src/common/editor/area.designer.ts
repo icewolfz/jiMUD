@@ -4797,7 +4797,7 @@ export class AreaDesigner extends EditorBase {
             this.changed = true;
         });
         this.$propertiesEditor.monsterGrid.on('delete', (e) => {
-            if (dialog.showMessageBoxSync(
+            if (dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
                     type: 'warning',
@@ -5332,7 +5332,7 @@ export class AreaDesigner extends EditorBase {
             this.changed = true;
         });
         this.$propertiesEditor.roomGrid.on('delete', (e) => {
-            if (dialog.showMessageBoxSync(
+            if (dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
                     type: 'warning',
@@ -5737,7 +5737,7 @@ export class AreaDesigner extends EditorBase {
             }
         ];
         this.$monsterGrid.on('delete', (e) => {
-            if (dialog.showMessageBoxSync(
+            if (dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
                     type: 'warning',
@@ -7810,7 +7810,7 @@ export class AreaDesigner extends EditorBase {
             }
         ];
         this.$objectGrid.on('delete', (e) => {
-            if (dialog.showMessageBoxSync(
+            if (dialog.showMessageBox(
                 remote.getCurrentWindow(),
                 {
                     type: 'warning',
