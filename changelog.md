@@ -5,8 +5,9 @@
 - **Fixed:**
   - Fixed check for updates open website dialog button
 - **Changed:**
-  - Update electron 5.0.8 to 5.0.9
+  - Update electron 5.0.8 to 6.0.2
   - Update better-sqlite3 5.4.1 to 5.4.2
+  - Update markdown-it 9.0.1 to 9.1.0
 
 ## v0.8.4 2019-07-29
 

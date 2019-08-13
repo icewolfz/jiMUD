@@ -50,10 +50,10 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.3.31",
-    "@types/node": "^12.7.0",
+    "@types/node": "^12.7.1",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^5.0.9",
+    "electron": "^6.0.2",
     "electron-builder": "^21.2.0",
     "eslint": "^6.1.0",
     "eslint-plugin-html": "^6.0.0"
@@ -138,7 +138,7 @@
     "fs-extra": "^8.1.0",
     "fswin": "^3.18.918",
     "lz-string": "^1.4.4",
-    "markdown-it": "^9.0.1",
+    "markdown-it": "^9.1.0",
     "mathjs-expression-parser": "^1.0.2",
     "moment": "^2.24.0",
     "monaco-editor": "^0.17.1",
