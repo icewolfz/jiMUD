@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.5
+## v0.9.0
 
 - **Fixed:**
   - Fixed check for updates open website dialog button
