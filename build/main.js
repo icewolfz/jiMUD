@@ -169,7 +169,10 @@ var menuTemp = [
                 id: 'connect',
                 accelerator: 'CmdOrCtrl+N',
                 click: () => {
-                    win.webContents.executeJavaScript('client.connect()');
+                    win.webContents.executeJavaScript('client.connect()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 }
             },
@@ -179,7 +182,10 @@ var menuTemp = [
                 accelerator: 'CmdOrCtrl+D',
                 enabled: false,
                 click: () => {
-                    win.webContents.executeJavaScript('client.close()');
+                    win.webContents.executeJavaScript('client.close()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 }
             },
@@ -192,7 +198,10 @@ var menuTemp = [
                 type: 'checkbox',
                 checked: true,
                 click: () => {
-                    win.webContents.executeJavaScript('toggleParsing()');
+                    win.webContents.executeJavaScript('toggleParsing()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 }
             },
@@ -202,7 +211,10 @@ var menuTemp = [
                 type: 'checkbox',
                 checked: true,
                 click: () => {
-                    win.webContents.executeJavaScript('toggleTriggers()');
+                    win.webContents.executeJavaScript('toggleTriggers()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 }
             },
@@ -214,7 +226,10 @@ var menuTemp = [
                 id: 'characters',
                 accelerator: 'CmdOrCtrl+H',
                 click: () => {
-                    win.webContents.executeJavaScript('showCharacters()');
+                    win.webContents.executeJavaScript('showCharacters()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 }
             },
@@ -225,14 +240,20 @@ var menuTemp = [
                 type: 'checkbox',
                 checked: false,
                 click: () => {
-                    win.webContents.executeJavaScript('toggleLogging()');
+                    win.webContents.executeJavaScript('toggleLogging()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 }
             },
             {
                 label: '&View logs...',
                 click: () => {
-                    win.webContents.executeJavaScript('showLogViewer()');
+                    win.webContents.executeJavaScript('showLogViewer()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 }
             },
@@ -280,7 +301,10 @@ var menuTemp = [
                 id: 'copyHTML',
                 enabled: false,
                 click: () => {
-                    win.webContents.executeJavaScript('copyAsHTML();');
+                    win.webContents.executeJavaScript('copyAsHTML();').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 }
             },
@@ -288,7 +312,10 @@ var menuTemp = [
                 label: 'Paste',
                 accelerator: 'CmdOrCtrl+V',
                 click: () => {
-                    win.webContents.executeJavaScript('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);paste()');
+                    win.webContents.executeJavaScript('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);paste()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 }
             },
@@ -296,7 +323,10 @@ var menuTemp = [
                 label: 'Paste special',
                 accelerator: 'CmdOrCtrl+Shift+V',
                 click: () => {
-                    win.webContents.executeJavaScript('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);pasteSpecial()');
+                    win.webContents.executeJavaScript('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);pasteSpecial()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                 }
             },
             /*
@@ -311,7 +341,10 @@ var menuTemp = [
                 label: 'Select All',
                 accelerator: 'CmdOrCtrl+A',
                 click: () => {
-                    win.webContents.executeJavaScript('selectAll()');
+                    win.webContents.executeJavaScript('selectAll()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 }
             },
@@ -321,7 +354,10 @@ var menuTemp = [
             {
                 label: 'Clear',
                 click: () => {
-                    win.webContents.executeJavaScript('client.clear()');
+                    win.webContents.executeJavaScript('client.clear()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 }
             },
@@ -331,7 +367,10 @@ var menuTemp = [
                 accelerator: 'CmdOrCtrl+F',
                 click: () => {
                     win.webContents.focus();
-                    win.webContents.executeJavaScript('client.display.showFind()');
+                    win.webContents.executeJavaScript('client.display.showFind()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                 }
             },
         ]
@@ -353,7 +392,10 @@ var menuTemp = [
                 type: 'checkbox',
                 checked: false,
                 click: () => {
-                    win.webContents.executeJavaScript('client.toggleScrollLock()');
+                    win.webContents.executeJavaScript('client.toggleScrollLock()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 }
             },
@@ -381,7 +423,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("status")');
+                            win.webContents.executeJavaScript('toggleView("status")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -389,7 +434,10 @@ var menuTemp = [
                         label: '&Refresh',
                         id: 'refresh',
                         click: () => {
-                            win.webContents.executeJavaScript('client.sendGMCP(\'Core.Hello { "client": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');');
+                            win.webContents.executeJavaScript('client.sendGMCP(\'Core.Hello { "client": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -400,7 +448,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("weather")');
+                            win.webContents.executeJavaScript('toggleView("weather")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -414,7 +465,10 @@ var menuTemp = [
                                 type: 'checkbox',
                                 checked: true,
                                 click: () => {
-                                    win.webContents.executeJavaScript('toggleView("limbs")');
+                                    win.webContents.executeJavaScript('toggleView("limbs")').catch(err => {
+                                        if (err)
+                                            logError(err);
+                                    });
                                     win.webContents.focus();
                                 }
                             },
@@ -425,7 +479,10 @@ var menuTemp = [
                                 type: 'checkbox',
                                 checked: true,
                                 click: () => {
-                                    win.webContents.executeJavaScript('toggleView("limbhealth")');
+                                    win.webContents.executeJavaScript('toggleView("limbhealth")').catch(err => {
+                                        if (err)
+                                            logError(err);
+                                    });
                                     win.webContents.focus();
                                 }
                             },
@@ -435,7 +492,10 @@ var menuTemp = [
                                 type: 'checkbox',
                                 checked: true,
                                 click: () => {
-                                    win.webContents.executeJavaScript('toggleView("limbarmor")');
+                                    win.webContents.executeJavaScript('toggleView("limbarmor")').catch(err => {
+                                        if (err)
+                                            logError(err);
+                                    });
                                     win.webContents.focus();
                                 }
                             },
@@ -447,7 +507,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("health")');
+                            win.webContents.executeJavaScript('toggleView("health")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -457,7 +520,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("experience")');
+                            win.webContents.executeJavaScript('toggleView("experience")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -467,7 +533,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("partyhealth")');
+                            win.webContents.executeJavaScript('toggleView("partyhealth")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -477,7 +546,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("combathealth")');
+                            win.webContents.executeJavaScript('toggleView("combathealth")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -487,7 +559,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("lagmeter")');
+                            win.webContents.executeJavaScript('toggleView("lagmeter")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     }
@@ -500,7 +575,10 @@ var menuTemp = [
                 type: 'checkbox',
                 checked: true,
                 click: () => {
-                  win.webContents.executeJavaScript('toggleView("buttons")');
+                  win.webContents.executeJavaScript('toggleView("buttons")').catch(err => {
+                                        if (err)
+                                            logError(err);
+                                    });
                 },
                 */
                 submenu: [
@@ -510,7 +588,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("buttons")');
+                            win.webContents.executeJavaScript('toggleView("buttons")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -521,7 +602,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("button.connect")');
+                            win.webContents.executeJavaScript('toggleView("button.connect")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -531,7 +615,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("button.characters")');
+                            win.webContents.executeJavaScript('toggleView("button.characters")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -547,7 +634,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("button.preferences")');
+                            win.webContents.executeJavaScript('toggleView("button.preferences")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -557,7 +647,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("button.log")');
+                            win.webContents.executeJavaScript('toggleView("button.log")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -567,7 +660,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("button.clear")');
+                            win.webContents.executeJavaScript('toggleView("button.clear")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -577,7 +673,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("button.lock")');
+                            win.webContents.executeJavaScript('toggleView("button.lock")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -587,7 +686,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("button.map")');
+                            win.webContents.executeJavaScript('toggleView("button.map")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -598,7 +700,10 @@ var menuTemp = [
                       type: 'checkbox',
                       checked: true,
                       click: () => {
-                        win.webContents.executeJavaScript('toggleView("button.mail")');
+                        win.webContents.executeJavaScript('toggleView("button.mail")').catch(err => {
+                                        if (err)
+                                            logError(err);
+                                    });
                             win.webContents.focus();
                       }
                     },
@@ -608,7 +713,10 @@ var menuTemp = [
                       type: 'checkbox',
                       checked: true,
                       click: () => {
-                        win.webContents.executeJavaScript('toggleView("button.compose")');
+                        win.webContents.executeJavaScript('toggleView("button.compose")').catch(err => {
+                                        if (err)
+                                            logError(err);
+                                    });
                             win.webContents.focus();
                       }
                     },
@@ -619,7 +727,10 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            win.webContents.executeJavaScript('toggleView("button.user")');
+                            win.webContents.executeJavaScript('toggleView("button.user")').catch(err => {
+                                if (err)
+                                    logError(err);
+                            });
                             win.webContents.focus();
                         }
                     },
@@ -635,7 +746,7 @@ var menuTemp = [
                         win.webContents.closeDevTools();
                     else
                         win.webContents.openDevTools();
-                        win.webContents.focus();
+                    win.webContents.focus();
                 }
             },
             {
@@ -679,7 +790,10 @@ var menuTemp = [
                 label: '&Immortal tools...',
                 id: 'immortal',
                 click: () => {
-                    win.webContents.executeJavaScript('showImmortalTools()');
+                    win.webContents.executeJavaScript('showImmortalTools()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 },
                 visible: false,
@@ -699,7 +813,10 @@ var menuTemp = [
                 label: '&Command history...',
                 id: 'history',
                 click: () => {
-                    win.webContents.executeJavaScript('showCommandHistory()');
+                    win.webContents.executeJavaScript('showCommandHistory()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 },
                 accelerator: 'CmdOrCtrl+Shift+H'
@@ -708,7 +825,10 @@ var menuTemp = [
             {
               label: '&Mail...',
               click: () => {
-                win.webContents.executeJavaScript('showMail()');
+                win.webContents.executeJavaScript('showMail()').catch(err => {
+                                        if (err)
+                                            logError(err);
+                                    });
               },
               visible: true,
               //accelerator: 'CmdOrCtrl+M'
@@ -716,7 +836,10 @@ var menuTemp = [
             {
               label: '&Compose mail...',
               click: () => {
-                win.webContents.executeJavaScript('showComposer()');
+                win.webContents.executeJavaScript('showComposer()').catch(err => {
+                                        if (err)
+                                            logError(err);
+                                    });
               },
               visible: true,
               //accelerator: 'CmdOrCtrl+M'
@@ -747,7 +870,10 @@ var menuTemp = [
             {
                 label: '&jiMUD...',
                 click: () => {
-                    win.webContents.executeJavaScript('showHelp()');
+                    win.webContents.executeJavaScript('showHelp()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     win.webContents.focus();
                 }
             },
@@ -896,7 +1022,10 @@ function createMenu() {
             checked: false,
             id: 'default',
             click: () => {
-                win.webContents.executeJavaScript('client.toggleProfile("default")');
+                win.webContents.executeJavaScript('client.toggleProfile("default")').catch(err => {
+                    if (err)
+                        logError(err);
+                });
             }
         });
 
@@ -936,7 +1065,10 @@ function createMenu() {
 
 function profileToggle(menuItem) {
     if (!win || !win.webContents) return;
-    win.webContents.executeJavaScript('client.toggleProfile("' + menuItem.label.toLowerCase() + '")');
+    win.webContents.executeJavaScript('client.toggleProfile("' + menuItem.label.toLowerCase() + '")').catch(err => {
+        if (err)
+            logError(err);
+    });
 }
 
 function createTray() {
@@ -972,7 +1104,10 @@ function createTray() {
                 if (s.isFullScreen)
                     win.setFullScreen(s.fullscreen);
                 win.focus();
-                win.webContents.executeJavaScript('showCharacters()');
+                win.webContents.executeJavaScript('showCharacters()').catch(err => {
+                    if (err)
+                        logError(err);
+                });
             }
         },
         {
@@ -1013,7 +1148,10 @@ function createTray() {
                 {
                     label: '&jiMUD...',
                     click: () => {
-                        win.webContents.executeJavaScript('showHelp()');
+                        win.webContents.executeJavaScript('showHelp()').catch(err => {
+                            if (err)
+                                logError(err);
+                        });
                     }
                 },
                 {
@@ -1233,7 +1371,10 @@ function createWindow() {
                 if (winMap) {
                     set.windows.mapper = getWindowState('mapper', winMap);
                     win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
-                    winMap.webContents.executeJavaScript('closeWindow()');
+                    winMap.webContents.executeJavaScript('closeWindow()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     winMap = null;
                 }
                 if (winEditor) {
@@ -1259,7 +1400,10 @@ function createWindow() {
                         edSet.state = getWindowState('code-editor', winCode);
                     }
                     edSet.save(parseTemplate(path.join('{data}', 'editor.json')));
-                    winCode.webContents.executeJavaScript('closeWindow()');
+                    winCode.webContents.executeJavaScript('closeWindow()').catch(err => {
+                        if (err)
+                            logError(err);
+                    });
                     winCode = null;
                 }
                 closeWindows(false, true);
@@ -1342,7 +1486,10 @@ function createWindow() {
 
         w.on('closed', () => {
             if (win && !win.isDestroyed() && win.webContents) {
-                win.webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`);
+                win.webContents.executeJavaScript(`childClosed('${url}', '${frameName}');`).catch(err => {
+                    if (err)
+                        logError(err);
+                });
             }
         });
 
@@ -1355,7 +1502,10 @@ function createWindow() {
         if (winMap) {
             set.windows.mapper = getWindowState('mapper', winMap);
             win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
-            winMap.webContents.executeJavaScript('closeWindow()');
+            winMap.webContents.executeJavaScript('closeWindow()').catch(err => {
+                if (err)
+                    logError(err);
+            });
             winMap = null;
         }
         if (winEditor) {
@@ -1380,7 +1530,10 @@ function createWindow() {
                 edSet.window.show = true;
             }
             edSet.save(parseTemplate(path.join('{data}', 'editor.json')));
-            winCode.webContents.executeJavaScript('closeWindow()');
+            winCode.webContents.executeJavaScript('closeWindow()').catch(err => {
+                if (err)
+                    logError(err);
+            });
             winCode = null;
         }
         closeWindows(true, false);
@@ -1457,7 +1610,10 @@ function createWindow() {
             return;
         }
         if (winMap && !winMap.isDestroyed() && !winMap.isVisible())
-            winMap.webContents.executeJavaScript('closeHidden()');
+            winMap.webContents.executeJavaScript('closeHidden()').catch(err => {
+                if (err)
+                    logError(err);
+            });
         set.save(global.settingsFile);
     });
 }
@@ -1656,7 +1812,10 @@ ipcMain.on('load-default', () => {
     set = settings.Settings.load(global.settingsFile);
 
     if (winMap) {
-        winMap.webContents.executeJavaScript('closeWindow()');
+        winMap.webContents.executeJavaScript('closeWindow()').catch(err => {
+            if (err)
+                logError(err);
+        });
         winMap = null;
     }
 
@@ -1671,7 +1830,10 @@ ipcMain.on('load-default', () => {
     for (name in windows) {
         if (!windows.hasOwnProperty(name) || !windows[name].window)
             continue;
-        windows[name].window.webContents.executeJavaScript('closed();');
+        windows[name].window.webContents.executeJavaScript('closed();').catch(err => {
+            if (err)
+                logError(err);
+        });
         set.windows[name] = getWindowState(name, windows[name].window);
         set.windows[name].options = copyWindowOptions(name);
         cWin = windows[name].window;
@@ -1722,7 +1884,10 @@ ipcMain.on('load-char', (event, char) => {
     if (winMap) {
         set.windows.mapper = getWindowState('mapper', winMap);
         win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
-        winMap.webContents.executeJavaScript('closeWindow()');
+        winMap.webContents.executeJavaScript('closeWindow()').catch(err => {
+            if (err)
+                logError(err);
+        });
         winMap = null;
     }
     if (winEditor) {
@@ -1745,7 +1910,10 @@ ipcMain.on('load-char', (event, char) => {
         win.webContents.send('load-char', char);
 
     if (winMap) {
-        winMap.webContents.executeJavaScript('closeWindow()');
+        winMap.webContents.executeJavaScript('closeWindow()').catch(err => {
+            if (err)
+                logError(err);
+        });
         winMap = null;
     }
 
@@ -1758,7 +1926,10 @@ ipcMain.on('load-char', (event, char) => {
         winChat = null;
     }
     if (winCode) {
-        winCode.webContents.executeJavaScript('closeWindow()');
+        winCode.webContents.executeJavaScript('closeWindow()').catch(err => {
+            if (err)
+                logError(err);
+        });
         winCode = null;
     }
     if (win && !win.isDestroyed() && win.webContents)
@@ -2819,7 +2990,10 @@ function createMapper(show, loading, loaded) {
     winMap.on('closed', (e) => {
         if (e.sender === winMap) {
             if (!winMap.isDestroyed() && !winMap.isVisible())
-                winMap.webContents.executeJavaScript('closeHidden()');
+                winMap.webContents.executeJavaScript('closeHidden()').catch(err => {
+                    if (err)
+                        logError(err);
+                });
             winMap = null;
         }
     });
@@ -2875,7 +3049,10 @@ function createMapper(show, loading, loaded) {
         set.save(global.settingsFile);
         if (winMap === e.sender && winMap && (set.mapper.enabled || set.mapper.persistent)) {
             e.preventDefault();
-            winMap.webContents.executeJavaScript('closeHidden()');
+            winMap.webContents.executeJavaScript('closeHidden()').catch(err => {
+                if (err)
+                    logError(err);
+            });
             winMap.hide();
         }
     });
@@ -3119,10 +3296,16 @@ function createEditor(show, loading) {
         win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
         win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: false, noSave: true });
         set.save(global.settingsFile);
-        e.sender.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');');
+        e.sender.webContents.executeJavaScript('tinymce.activeEditor.setContent(\'\');').catch(err => {
+            if (err)
+                logError(err);
+        });
         if (winEditor === e.sender && winEditor && (set.editorPersistent && !global.editorOnly)) {
             e.preventDefault();
-            winEditor.webContents.executeJavaScript('closeHidden()');
+            winEditor.webContents.executeJavaScript('closeHidden()').catch(err => {
+                if (err)
+                    logError(err);
+            });
             winEditor.hide();
         }
     });
@@ -3265,7 +3448,10 @@ function createChat(show, loading) {
         set.save(global.settingsFile);
         if (winChat === e.sender && winChat && (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)) {
             e.preventDefault();
-            winChat.webContents.executeJavaScript('closeHidden()');
+            winChat.webContents.executeJavaScript('closeHidden()').catch(err => {
+                if (err)
+                    logError(err);
+            });
             winChat.hide();
         }
     });
@@ -3450,7 +3636,10 @@ function createNewWindow(name, options) {
 
         w.on('close', () => {
             if (w && w.getParentWindow()) {
-                w.getParentWindow().webContents.executeJavaScript(`childClosed('${URL}', '${frameName}');`);
+                w.getParentWindow().webContents.executeJavaScript(`childClosed('${URL}', '${frameName}');`).catch(err => {
+                    if (err)
+                        logError(err);
+                });
             }
         });
 
@@ -3486,7 +3675,10 @@ function createNewWindow(name, options) {
             win.webContents.send('setting-changed', { type: 'window', name: name, value: set.windows[name], noSave: true });
         if (windows[name].window === e.sender && windows[name].window && windows[name].persistent) {
             e.preventDefault();
-            windows[name].window.webContents.executeJavaScript('closeHidden()');
+            windows[name].window.webContents.executeJavaScript('closeHidden()').catch(err => {
+                if (err)
+                    logError(err);
+            });
         }
     });
 }
@@ -3574,7 +3766,10 @@ function showColor(args) {
 
     cp.once('ready-to-show', () => {
         cp.show();
-        cp.webContents.executeJavaScript('setType("' + (args.type || 'forecolor') + '");setColor("' + (args.color || '') + '");setWindow("' + (args.window || '') + '");');
+        cp.webContents.executeJavaScript('setType("' + (args.type || 'forecolor') + '");setColor("' + (args.color || '') + '");setWindow("' + (args.window || '') + '");').catch(err => {
+            if (err)
+                logError(err);
+        });
     });
 }
 
@@ -3655,7 +3850,10 @@ function loadWindowScripts(window, name) {
     }
     if (isFileSync(path.join(app.getPath('userData'), name + '.js'))) {
         fs.readFile(path.join(app.getPath('userData'), name + '.js'), 'utf8', (err, data) => {
-            window.webContents.executeJavaScript(data);
+            window.webContents.executeJavaScript(data).catch(err => {
+                if (err)
+                    logError(err);
+            });
         });
     }
 }
@@ -3668,8 +3866,14 @@ function closeWindows(save, clear) {
     for (name in windows) {
         if (!windows.hasOwnProperty(name) || !windows[name].window)
             continue;
-        windows[name].window.webContents.executeJavaScript('closing();');
-        windows[name].window.webContents.executeJavaScript('closed();');
+        windows[name].window.webContents.executeJavaScript('if(closing) closing();').catch(err => {
+            if (err)
+                logError(err);
+        });
+        windows[name].window.webContents.executeJavaScript('if(closed) closed();').catch(err => {
+            if (err)
+                logError(err);
+        });
         set.windows[name] = getWindowState(name, windows[name].window);
         set.windows[name].options = copyWindowOptions(name);
         cWin = windows[name].window;
@@ -3833,7 +4037,10 @@ function createCodeEditor(show, loading, loaded) {
         edSet.save(parseTemplate(path.join('{data}', 'editor.json')));
         if (winCode === e.sender && winCode && !global.editorOnly && edSet.window.persistent) {
             e.preventDefault();
-            winCode.webContents.executeJavaScript('closeHidden()');
+            winCode.webContents.executeJavaScript('if(closeHidden) closeHidden()').catch(err => {
+                if (err)
+                    logError(err);
+            });
         }
     });
 
@@ -3903,7 +4110,10 @@ function createCodeEditor(show, loading, loaded) {
 
         w.on('close', () => {
             if (w && w.getParentWindow()) {
-                w.getParentWindow().webContents.executeJavaScript(`childClosed('${URL}', '${frameName}');`);
+                w.getParentWindow().webContents.executeJavaScript(`if(childClosed) childClosed('${URL}', '${frameName}');`).catch(err => {
+                    if (err)
+                        logError(err);
+                });
             }
         });
         w.loadURL(URL);

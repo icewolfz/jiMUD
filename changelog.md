@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Fixed check for updates open website dialog button
+  - Fixed issues when reloading preferences and closing child windows
   - Themes: tweaks to health bars to better handle zooming
 - **Changed:**
   - Update electron 5.0.8 to 6.0.2
