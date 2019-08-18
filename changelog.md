@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Fixed check for updates open website dialog button
+  - Themes: tweaks to health bars to better handle zooming
 - **Changed:**
   - Update electron 5.0.8 to 6.0.2
   - Update better-sqlite3 5.4.1 to 5.4.2

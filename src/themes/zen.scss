@@ -739,6 +739,10 @@ body {
     color: #{$panelInsetColor};
 }
 
+#hp-status span {
+    overflow: hidden;
+    display: inline-block;
+}
 .progressbar .progressbar-text {
     left: 20px;
     right: 0px;

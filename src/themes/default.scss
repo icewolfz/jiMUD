@@ -743,7 +743,12 @@ body {
 
 #hp-status {
     text-align: left;
-    color: #{$color};
+    color: #{$color};    
+}
+
+#hp-status span {
+    overflow: hidden;
+    display: inline-block;
 }
 
 .progressbar .progressbar-text {
