@@ -74,7 +74,7 @@ export class Chat {
     public captureTalk: boolean = false;
     //list of lines to capture
     public lines: string[] = [];
-    //dont capture when window hidden
+    //don't capture when window hidden
     public CaptureOnlyOpen: boolean = false;
     public alwaysOnTop: boolean = false;
     public alwaysOnTopClient: boolean = true;

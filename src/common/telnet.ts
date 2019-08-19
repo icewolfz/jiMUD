@@ -1,4 +1,4 @@
-// spell-checker:words TELOP, TERMINALTYPE, NEWENVIRON, Achaea, Webdings, ENDOFRECORD, USERVAR keepalive
+// spell-checker:words TELOP, TERMINALTYPE, NEWENVIRON, Achaea, Webdings, ENDOFRECORD, USERVAR keepalive, DONT
 import EventEmitter = require('events');
 import net = require('net');
 
@@ -1428,7 +1428,7 @@ export class Telnet extends EventEmitter {
                             }
                             tmp = this._fireReceiveOption(option, 250, Buffer.from(_sb.slice(1, _sb.length - 4)).toString('ascii'));
                             this.emit('receive-NEWENVIRON', msdp_val);
-                            //custom handled so dont do defaults
+                            //custom handled so don't do defaults
                             if (!tmp) {
                                 if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><SB><NEWENVIRON><IS><IAC><SE>');
                                 this.sendData([255, 250, option, 0, 255, 40], true);

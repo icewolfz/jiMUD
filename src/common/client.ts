@@ -402,7 +402,7 @@ export class Client extends EventEmitter {
                 this.profiles.load(profile, path.join(parseTemplate('{data}'), 'profiles'));
         }
         else {
-            //remove profile, dont bother unloading as they may turn it back on so just leave it loaded
+            //remove profile, don't bother unloading as they may turn it back on so just leave it loaded
             p = p.filter((a) => { return a !== profile; });
             //cant disable if only profile
             if (p.length === 0)

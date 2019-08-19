@@ -227,7 +227,7 @@ class MXPStyle {
  * @requires module:src/lib/rgbcolor
  * @namespace Parser
  *
- * @todo WELCOME element - just tags text as welcome for redirection purposes, dont support redirection to other windows so dont worry about this
+ * @todo WELCOME element - just tags text as welcome for redirection purposes, don't support redirection to other windows so don't worry about this
  * @todo <FRAME NAME ACTION(OPEN|CLOSE|REDIRECT) TITLE INTERNAL ALIGN(LEFT|RIGHT|BOTTOM|TOP) LEFT TOP WIDTH HEIGHT SCROLLING(yes|no) FLOATING>
  * @constructor
  *
@@ -591,7 +591,7 @@ export class Parser extends EventEmitter {
                     this._CurrentBackColor = -2;
                     break;
                 //zMUD log colors, seems zMUD uses the 50s for display info for bold colors, standards use it to control borders and other effects
-                //dont need zMUD colors here as we never need to open fonts, replace with the frames/overlined/etc... if it can be done in css
+                //don't need zMUD colors here as we never need to open fonts, replace with the frames/overlined/etc... if it can be done in css
                 case 53: //Overlined believe this draws a line above text, opposite of underline
                     this._CurrentAttributes |= FontStyle.Overline;
                     break;
