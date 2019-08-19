@@ -399,7 +399,7 @@ var menuTemp = [
                                 type: 'checkbox',
                                 checked: true,
                                 click: () => {
-                                    executeScript('toggleView("limbs")'), win, true);
+                                    executeScript('toggleView("limbs")', win, true);
                                 }
                             },
                             { type: 'separator' },
@@ -447,7 +447,7 @@ var menuTemp = [
                         type: 'checkbox',
                         checked: true,
                         click: () => {
-                            executeScript('toggleView("partyhealth")'), win, true);
+                            executeScript('toggleView("partyhealth")', win, true);
                         }
                     },
                     {
