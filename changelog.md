@@ -2,6 +2,8 @@
 
 ## v0.9.0
 
+- **New:**
+  - Added character manager doc
 - **Fixed:**
   - Fixed check for updates open website dialog button
   - Fixed issues when reloading preferences and closing child windows

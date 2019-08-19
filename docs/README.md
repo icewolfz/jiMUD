@@ -55,6 +55,7 @@ Basic questions answered about jiMUD
 - [Customizing](customizing.md)
 - [Assets](assets.md)
 - [Mapper](mapper.md)
+- [Character manager](character.manager.md)
 - [Immortal Tools](immortal.md)
 - [Code editor](codeeditor.md)
   - [Area designer](codeeditor.designer.md)
