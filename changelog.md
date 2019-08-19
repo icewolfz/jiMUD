@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.0
+## v0.9.0 2019-08-19
 
 - **New:**
   - Added character manager doc
