@@ -696,7 +696,7 @@ function UpdateItemNode(item, updateNode?, old?) {
     }
     if (updateNode.id === currentNode.id)
         $('#editor-title').text(updateNode.dataAttr.type + ': ' + updateNode.text);
-    sortNodeChildren('Profile' + newNode.dataAttr.profile + key);
+    sortNodeChildren('Profile' + profileID(newNode.dataAttr.profile) + key);
 }
 
 function getEditorValue(editor, style: ItemStyle) {

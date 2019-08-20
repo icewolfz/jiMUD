@@ -3,7 +3,8 @@
 ## v0.9.1
 
 - **Fixed:**
-  - Help: fixed character manager help topic not being listed
+  - Help: Fixed character manager help topic not being listed
+  - Profile manager: Fix issue when trying to update a profile that contained a non Alpha numeric character, :, ., or -
 - **Changed:**
   - Update electron 6.0.2 to 6.0.3
 
