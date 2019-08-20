@@ -2,6 +2,9 @@
 
 ## v0.9.1
 
+- **Fixed:**
+  - Help: fixed character manager help topic not being listed
+
 ## v0.9.0 2019-08-19
 
 - **New:**
