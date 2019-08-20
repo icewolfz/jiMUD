@@ -4,6 +4,8 @@
 
 - **Fixed:**
   - Help: fixed character manager help topic not being listed
+- **Changed:**
+  - Update electron 6.0.2 to 6.0.3
 
 ## v0.9.0 2019-08-19
 
