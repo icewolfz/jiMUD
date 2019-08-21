@@ -2160,13 +2160,19 @@
                             label: '&Monster...',
                             //accelerator: "CmdOrCtrl+N",
                             click: monsterWizard
-                        },
+                        }/*,
                         { type: 'separator' },
+                        
                         {
                             label: '&Templates',
                             submenu: menuTemplates
                         }
+                        */
                     ]
+                },
+                {
+                    label: '&New from template',
+                    submenu: menuTemplates
                 },
                 { type: 'separator' },
                 {
@@ -8237,9 +8243,7 @@
                 menu.push({
                     label: capitalize(path.basename(files[f], path.extname(files[f])).replace(/_/g, ' ')),
                     path: path.join(root, files[f]),
-                    click: (item) => {
-                        newFromFile(parseTemplate(path.join('{assets}', 'templates', item.path)), item.label.toLowerCase());
-                    }
+                    click: openTemplate
                 });
             }
         }
@@ -8251,13 +8255,15 @@
                     label: 'base',
                     newName: path.basename(p).replace(/_/g, ' ').slice(0, -1),
                     path: path.join(root, 'base.c'),
-                    click: (item) => {
-                        newFromFile(parseTemplate(path.join('{assets}', 'templates', item.path)), item.newName.toLowerCase());
-                    }
+                    click: openTemplate
                 }
             );
         }
         return menu;
+    }
+
+    function openTemplate(item) {
+        newFromFile(parseTemplate(path.join('{assets}', 'templates', item.path)), (item.newName || item.label).toLowerCase());
     }
 
     function findEditor(file) {

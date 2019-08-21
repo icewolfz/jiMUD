@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Help: Fixed character manager help topic not being listed
+  - Code editor: a quick fix to crash due to menu issues in electron 6
   - Profile manager: Fix issue when trying to update a profile that contained a non Alpha numeric character, :, ., or -
 - **Changed:**
   - Update electron 6.0.2 to 6.0.3
