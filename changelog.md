@@ -2,6 +2,9 @@
 
 ## v0.9.2
 
+- **Changed:**
+  - About: Update copyright date
+
 ## v0.9.1 2019-08-21
 
 - **Fixed:**
