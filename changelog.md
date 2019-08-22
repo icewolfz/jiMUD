@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.1
+## v0.9.1 2019-08-21
 
 - **Fixed:**
   - Help: Fixed character manager help topic not being listed
