@@ -4048,12 +4048,12 @@ function showAbout() {
 
     let about = new BrowserWindow({
         parent: getParentWindow(),
-        modal: true,
+        modal: false,
         x: Math.floor(b.x + b.width / 2 - 250),
         y: Math.floor(b.y + b.height / 2 - 280),
         width: 500,
         height: 560,
-        movable: false,
+        movable: true,
         minimizable: false,
         maximizable: false,
         skipTaskbar: true,

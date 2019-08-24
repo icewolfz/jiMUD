@@ -3,7 +3,9 @@
 ## v0.9.2
 
 - **Changed:**
-  - About: Update copyright date
+  - About:
+    - Update copyright date
+    - No longer a modal dialog and movable
 - **Fixed:**
   - Fixed progress dialog titles not being correctly set in places
   - Display: Fixed incorrect vertical scrollbar height
