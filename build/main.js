@@ -1183,14 +1183,14 @@ function createWindow() {
             type: 'info',
             message: 'Unresponsive',
             buttons: ['Reopen', 'Keep waiting', 'Close']
-        }, result => {
+        }).then(result => {
             if (!win)
                 return;
-            if (result === 0) {
+            if (result.response === 0) {
                 win.reload();
                 logError('Client unresponsive, reload.\n', true);
             }
-            else if (result === 2) {
+            else if (result.response === 2) {
                 set = settings.Settings.load(global.settingsFile);
                 set.windows.main = getWindowState('main', win);
                 if (winMap) {
@@ -1288,14 +1288,14 @@ function createWindow() {
                 type: 'info',
                 message: 'Unresponsive',
                 buttons: ['Reopen', 'Keep waiting', 'Close']
-            }, result => {
+            }).then(result => {
                 if (!w)
                     return;
-                if (result === 0) {
+                if (result.response === 0) {
                     w.reload();
                     logError(`${url} unresponsive, reload.\n`, true);
                 }
-                else if (result === 2) {
+                else if (result.response === 2) {
                     w.destroy();
                 }
                 else
@@ -2256,14 +2256,14 @@ ipcMain.on('progress-show', (event, title) => {
                 type: 'info',
                 message: 'Unresponsive',
                 buttons: ['Reopen', 'Keep waiting', 'Close']
-            }, result => {
+            }).then(result => {
                 if (!winProgress)
                     return;
-                if (result === 0) {
+                if (result.response === 0) {
                     winProgress.reload();
                     logError('Progress unresponsive, reload.\n', true);
                 }
-                else if (result === 2) {
+                else if (result.response === 2) {
                     winProgress.destroy();
                 }
                 else
@@ -2707,14 +2707,14 @@ function showPrefs() {
             type: 'info',
             message: 'Unresponsive',
             buttons: ['Reopen', 'Keep waiting', 'Close']
-        }, result => {
+        }).then(result => {
             if (!pref)
                 return;
-            if (result === 0) {
+            if (result.response === 0) {
                 pref.reload();
                 logError('Preferences unresponsive, reload.\n', true);
             }
-            else if (result === 2) {
+            else if (result.response === 2) {
                 pref.destroy();
             }
             else
@@ -2765,14 +2765,14 @@ function createMapper(show, loading, loaded) {
             type: 'info',
             message: 'Unresponsive',
             buttons: ['Reopen', 'Keep waiting', 'Close']
-        }, result => {
+        }).then(result => {
             if (!winMap)
                 return;
-            if (result === 0) {
+            if (result.response === 0) {
                 winMap.reload();
                 logError('Mapper unresponsive, reload.\n', true);
             }
-            else if (result === 2) {
+            else if (result.response === 2) {
                 winMap.destroy();
             }
             else
@@ -2900,14 +2900,14 @@ function showProfiles() {
             type: 'info',
             message: 'Unresponsive',
             buttons: ['Reopen', 'Keep waiting', 'Close']
-        }, result => {
+        }).then(result => {
             if (!winProfiles)
                 return;
-            if (result === 0) {
+            if (result.response === 0) {
                 winProfiles.reload();
                 logError('Profile manager unresponsive, reload.\n', true);
             }
-            else if (result === 2) {
+            else if (result.response === 2) {
                 winProfiles.destroy();
             }
             else
@@ -3003,14 +3003,14 @@ function createEditor(show, loading) {
             type: 'info',
             message: 'Unresponsive',
             buttons: ['Reopen', 'Keep waiting', 'Close']
-        }, result => {
+        }).then(result => {
             if (!winEditor)
                 return;
-            if (result === 0) {
+            if (result.response === 0) {
                 winEditor.reload();
                 logError('Advanced editor unresponsive, reload.\n', true);
             }
-            else if (result === 2) {
+            else if (result.response === 2) {
                 winEditor.destroy();
             }
             else
@@ -3146,14 +3146,14 @@ function createChat(show, loading) {
             type: 'info',
             message: 'Unresponsive',
             buttons: ['Reopen', 'Keep waiting', 'Close']
-        }, result => {
+        }).then(result => {
             if (!winChat)
                 return;
-            if (result === 0) {
+            if (result.response === 0) {
                 winChat.reload();
                 logError('Chat capture unresponsive, reload.\n', true);
             }
-            else if (result === 2) {
+            else if (result.response === 2) {
                 winChat.destroy();
             }
             else
@@ -3296,14 +3296,14 @@ function createNewWindow(name, options) {
             type: 'info',
             message: 'Unresponsive',
             buttons: ['Reopen', 'Keep waiting', 'Close']
-        }, result => {
+        }).then(result => {
             if (!windows[name].window)
                 return;
-            if (result === 0) {
+            if (result.response === 0) {
                 windows[name].window.reload();
                 logError(`${name} unresponsive, reload.\n`, true);
             }
-            else if (result === 2) {
+            else if (result.response === 2) {
                 windows[name].window.destroy();
             }
             else
@@ -3400,14 +3400,14 @@ function createNewWindow(name, options) {
                 type: 'info',
                 message: 'Unresponsive',
                 buttons: ['Reopen', 'Keep waiting', 'Close']
-            }, result => {
+            }).then(result => {
                 if (!w)
                     return;
-                if (result === 0) {
+                if (result.response === 0) {
                     w.reload();
                     logError(`${URL} unresponsive, reload.\n`, true);
                 }
-                else if (result === 2) {
+                else if (result.response === 2) {
                     w.destroy();
                 }
                 else
@@ -3511,14 +3511,14 @@ function showColor(args) {
             type: 'info',
             message: 'Unresponsive',
             buttons: ['Reopen', 'Keep waiting', 'Close']
-        }, result => {
+        }).then(result => {
             if (!cp)
                 return;
-            if (result === 0) {
+            if (result.response === 0) {
                 cp.reload();
                 logError('Colorpicker unresponsive, reload.\n', true);
             }
-            else if (result === 2) {
+            else if (result.response === 2) {
                 cp.destroy();
             }
             else
@@ -3701,14 +3701,14 @@ function createCodeEditor(show, loading, loaded) {
             type: 'info',
             message: 'Unresponsive',
             buttons: ['Reopen', 'Keep waiting', 'Close']
-        }, result => {
+        }).then(result => {
             if (!winCode)
                 return;
-            if (result === 0) {
+            if (result.response === 0) {
                 winCode.reload();
                 logError('Code editor unresponsive, reload.\n', true);
             }
-            else if (result === 2) {
+            else if (result.response === 2) {
                 winCode.destroy();
             }
             else
@@ -3854,14 +3854,14 @@ function createCodeEditor(show, loading, loaded) {
                 type: 'info',
                 message: 'Unresponsive',
                 buttons: ['Reopen', 'Keep waiting', 'Close']
-            }, result => {
+            }).then(result => {
                 if (!w)
                     return;
-                if (result === 0) {
+                if (result.response === 0) {
                     w.reload();
                     logError(`${URL} unresponsive, reload.\n`, true);
                 }
-                else if (result === 2) {
+                else if (result.response === 2) {
                     w.destroy();
                 }
                 else
@@ -3982,11 +3982,11 @@ function checkForUpdatesManual() {
             title: 'Found Updates',
             message: 'Found updates, do you want update now?',
             buttons: ['Yes', 'No', 'Open website']
-        }, (buttonIndex) => {
-            if (buttonIndex === 0)
+        }).then(buttonIndex => {
+            if (buttonIndex.response === 0)
                 autoUpdater.downloadUpdate();
             else {
-                if (buttonIndex === 2)
+                if (buttonIndex.response === 2)
                     shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest', '_blank');
                 if (global.editorOnly)
                     winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
@@ -4001,8 +4001,8 @@ function checkForUpdatesManual() {
             title: 'No Updates',
             message: 'Current version is up-to-date.',
             buttons: ['Ok', 'Open website']
-        }, (buttonIndex) => {
-            if (buttonIndex === 1)
+        }.then(buttonIndex => {
+            if (buttonIndex.response === 1)
                 shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest', '_blank');
             if (global.editorOnly)
                 winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
@@ -4025,7 +4025,7 @@ function checkForUpdatesManual() {
         dialog.showMessageBox(getParentWindow(), {
             title: 'Install Updates',
             message: 'Updates downloaded, application will be quit for update...'
-        }, () => {
+        }).then(() => {
             //store current line arguments to use on next load
             fs.writeFileSync(path.join(app.getPath('userData'), 'argv.json'), JSON.stringify(process.argv));
             setImmediate(() => autoUpdater.quitAndInstall());
@@ -4075,14 +4075,14 @@ function showAbout() {
             type: 'info',
             message: 'Unresponsive',
             buttons: ['Reopen', 'Keep waiting', 'Close']
-        }, result => {
+        }).then(result => {
             if (!about)
                 return;
-            if (result === 0) {
+            if (result.response === 0) {
                 about.reload();
                 logError('About unresponsive, reload.\n', true);
             }
-            else if (result === 2) {
+            else if (result.response === 2) {
                 about.destroy();
             }
             else

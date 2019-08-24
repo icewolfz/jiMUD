@@ -3016,7 +3016,7 @@ export function doRefresh() {
             message: 'All unsaved or applied changes will be lost, refresh?',
             buttons: ['Yes', 'No'],
             defaultId: 1
-        }).then((response) => {
+        }).then(response => {
             if (response.response === 0) {
                 filesChanged = false;
                 resetUndo();
@@ -3366,7 +3366,7 @@ export function saveProfiles(clearNow?: boolean) {
             message: 'Profiles have been updated outside of manager, save anyways?',
             buttons: ['Yes', 'No'],
             defaultId: 1
-        }).then((response) => {
+        }).then(response => {
             if (response.response === 0) {
                 const p = path.join(parseTemplate('{data}'), 'profiles');
                 if (!existsSync(p))
@@ -3552,7 +3552,7 @@ function DeleteProfileConfirm(profile) {
         message: 'Delete ' + profile.name + '?',
         buttons: ['Yes', 'No'],
         defaultId: 1
-    }).then((response) => {
+    }).then(response => {
         if (response.response === 0) DeleteProfile(profile);
     });
 }
@@ -3587,7 +3587,7 @@ function DeleteItems(type, key, profile) {
         message: 'Are you sure you want to delete all ' + key + '?',
         buttons: ['Yes', 'No'],
         defaultId: 1
-    }).then((response) => {
+    }).then(response => {
         if (response.response === 0) {
             const _u = { action: 'group', add: [], delete: [] };
             const n = $('#profile-tree').treeview('findNodes', ['Profile' + profileID(profile.name) + key, 'id']);
@@ -3608,7 +3608,7 @@ function DeleteItemConfirm(type, key, idx, profile) {
         message: 'Are you sure you want to delete this ' + type + '?',
         buttons: ['Yes', 'No'],
         defaultId: 1
-    }).then((response) => {
+    }).then(response => {
         if (response.response === 0) {
             DeleteItem(type.toLowerCase(), key, idx, profile);
         }
@@ -3666,7 +3666,7 @@ export function doClose() {
             message: 'All unsaved changes will be lost, close?',
             buttons: ['Yes', 'No', 'Never ask again'],
             defaultId: 1
-        }).then((response) => {
+        }).then(response => {
             if (response.response === 0)
                 window.close();
             else if (response.response === 2) {
@@ -3707,7 +3707,7 @@ export function doReset(node) {
         message: 'Resetting will loose all profile data, reset?',
         buttons: ['Yes', 'No'],
         defaultId: 1
-    }).then((response) => {
+    }).then(response => {
         if (response.response === 0) {
             pushUndo({ action: 'reset', type: 'profile', profile: profile.clone() });
             let o;

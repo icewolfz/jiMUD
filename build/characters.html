@@ -238,8 +238,8 @@
                     message: 'All changes will be lost, refresh?',
                     buttons: ['Yes', 'No'],
                     defaultId: 1,
-                }, (response) => {
-                    if (response === 0)
+                }).then((response) => {
+                    if (response.response === 0)
                         loadCharacters();
                 });
             }
