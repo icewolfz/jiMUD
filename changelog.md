@@ -5,7 +5,8 @@
 - **Changed:**
   - About: Update copyright date
 - **Fixed:**
-  - Fixed progress dialog titles not being correctly set in places  
+  - Fixed progress dialog titles not being correctly set in places
+  - Display: Fixed incorrect vertical scrollbar height
 
 ## v0.9.1 2019-08-21
 

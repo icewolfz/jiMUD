@@ -3324,6 +3324,7 @@ export class ScrollBar extends EventEmitter {
     set type(value: ScrollType) {
         if (this._type !== value) {
             this._type = value;
+            this.trackOffsetSize = { width: 0, height: 0 };
             this.track.className = 'scroll-track scroll-' + (this._type === ScrollType.horizontal ? 'horizontal' : 'vertical');
             this.updateLocation();
             this.resize();
