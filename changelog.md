@@ -14,6 +14,7 @@
   - Fixed progress dialog titles not being correctly set in places
   - Display: Fixed incorrect vertical scrollbar height
   - Fixed dialogs boxes broken in electron 6 update
+  - Code editor: do not add a newline if throw is a function for a object
 
 ## v0.9.1 2019-08-21
 

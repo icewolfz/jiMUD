@@ -1552,9 +1552,12 @@ export class LPCFormatter extends EventEmitter {
                             case 'while':
                             //case 'catch':
                             case 'try':
-                            case 'throw':
                             case 'using':
                                 if (!op.rtrim().endsWith('\n'))
+                                    op += '\n' + leading + '   ';
+                                break;
+                            case 'throw':
+                                if (!op.rtrim().endsWith('\n') && !op.endsWith('->'))
                                     op += '\n' + leading + '   ';
                                 break;
                             case 'if':
