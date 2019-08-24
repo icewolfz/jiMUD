@@ -2239,7 +2239,8 @@ ipcMain.on('progress-show', (event, title) => {
         });
 
         winProgress.once('ready-to-show', () => {
-            progressReady = 1;
+            if (progressReady !== 2)
+                progressReady = 1;
             winProgress.show();
             if (typeof title === 'string')
                 setProgressTitle(title);
@@ -2940,7 +2941,8 @@ function showProfiles() {
         if (s.maximized)
             winProfiles.maximize();
         winProfiles.show();
-        profilesReady = 1;
+        if (profilesReady !== 2)
+            profilesReady = 1;
     });
 
     winProfiles.on('close', () => {
@@ -3072,7 +3074,8 @@ function createEditor(show, loading) {
             clearTimeout(loadID);
             loadID = setTimeout(() => { win.focus(); }, 500);
         }
-        editorReady = 1;
+        if (editorReady !== 2)
+            editorReady = 1;
     });
 
     winEditor.on('close', (e) => {
@@ -3210,7 +3213,8 @@ function createChat(show, loading) {
         }
         else
             chatMax = s.maximized;
-        chatReady = 1;
+        if (chatReady !== 2)
+            chatReady = 1;
         if (loading) {
             clearTimeout(loadID);
             loadID = setTimeout(() => { win.focus(); }, 500);
@@ -3774,7 +3778,8 @@ function createCodeEditor(show, loading, loaded) {
         }
         if (loaded)
             loaded();
-        codeReady = 1;
+        if (codeReady !== 2)
+            codeReady = 1;
         if (global.editorOnly) {
             updateJumpList();
             checkForUpdates();
