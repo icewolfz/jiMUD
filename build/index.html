@@ -1375,9 +1375,10 @@
                 var choice, count = 0;
                 var windows;
                 var current;
+                if (remote.getGlobal('updating'))
+                    closeWindow = true;
                 if (!closeWindow && client.options.askonclose && client.connected) {
                     evt.returnValue = false;
-
                     setTimeout(() => {
                         if (client.options.askonchildren) {
                             windows = remote.BrowserWindow.getAllWindows();
@@ -2050,6 +2051,7 @@
             if (!$('#update-progress')[0].open) {
                 $('#update-progress-title').html('Downloading update&hellip;');
                 $('#update-progress')[0].show();
+                client.commandInput[0].focus();
             }
             $('#update-progressbar').val(progressObj.percent);
         });

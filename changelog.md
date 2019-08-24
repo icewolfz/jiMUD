@@ -2,10 +2,13 @@
 
 ## v0.9.2
 
+- **New:**
+  - Auto updater: Option to install update later next time the client is started
 - **Changed:**
   - About:
     - Update copyright date
     - No longer a modal dialog and movable
+  - Auto updater: Force close even if connected or sub windows open
 - **Fixed:**
   - Fixed progress dialog titles not being correctly set in places
   - Display: Fixed incorrect vertical scrollbar height

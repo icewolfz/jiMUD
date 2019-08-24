@@ -108,6 +108,7 @@ global.title = '';
 global.debug = false;
 global.editorOnly = false;
 global.connected = false;
+global.updating = false;
 
 let states = {
     'main': { x: 0, y: 0, width: 800, height: 600 },
@@ -4001,7 +4002,7 @@ function checkForUpdatesManual() {
             title: 'No Updates',
             message: 'Current version is up-to-date.',
             buttons: ['Ok', 'Open website']
-        }.then(buttonIndex => {
+        }).then(buttonIndex => {
             if (buttonIndex.response === 1)
                 shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest', '_blank');
             if (global.editorOnly)
@@ -4022,13 +4023,17 @@ function checkForUpdatesManual() {
             win.setProgressBar(-1);
             win.webContents.send('update-downloaded');
         }
-        dialog.showMessageBox(getParentWindow(), {
+        dialog.showMessageBox({
             title: 'Install Updates',
-            message: 'Updates downloaded, application will be quit for update...'
-        }).then(() => {
-            //store current line arguments to use on next load
-            fs.writeFileSync(path.join(app.getPath('userData'), 'argv.json'), JSON.stringify(process.argv));
-            setImmediate(() => autoUpdater.quitAndInstall());
+            message: 'Updates downloaded, application will be quit for update or when you next restart the application...',
+            buttons: ['Now', 'Later']
+        }).then(result => {
+            if (result.response === 1) {
+                global.updating = true;
+                //store current line arguments to use on next load
+                fs.writeFileSync(path.join(app.getPath('userData'), 'argv.json'), JSON.stringify(process.argv));
+                setImmediate(() => autoUpdater.quitAndInstall());
+            }
         });
     });
     if (global.editorOnly)
