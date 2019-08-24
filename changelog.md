@@ -9,6 +9,7 @@
     - Update copyright date
     - No longer a modal dialog and movable
   - Auto updater: Force close even if connected or sub windows open
+  - Update electron 6.0.3 to 6.0.4
 - **Fixed:**
   - Fixed progress dialog titles not being correctly set in places
   - Display: Fixed incorrect vertical scrollbar height
