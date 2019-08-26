@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.2
+## v0.9.2 2019-08-26
 
 - **New:**
   - Auto updater: Option to install update later next time the client is started
