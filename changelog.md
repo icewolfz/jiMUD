@@ -2,6 +2,9 @@
 
 ## v0.9.3
 
+- **New:**
+  - About: re-add memory display using 3rd party module until electron 7 is released
+
 ## v0.9.2 2019-08-26
 
 - **New:**
