@@ -5,7 +5,7 @@
 - **New:**
   - About: re-add memory display using 3rd party module until electron 7 is released
 - **Changed:**
-  - Update electron 6.0.4 to 6.0.6
+  - Update electron 6.0.4 to 6.0.7
 
 ## v0.9.2 2019-08-26
 
