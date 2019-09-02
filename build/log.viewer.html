@@ -464,12 +464,11 @@
                     filters: $fileFilters,
                     properties: ['multiSelections', 'openFile'],
                     defaultPath: (manager.active && manager.active.file) ? path.dirname(manager.active.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0]) : logPath)
-                },
-                function (fileNames) {
-                    if (fileNames === undefined) {
+                }).then(result => {
+                    if (result.filePaths === undefined) {
                         return;
                     }
-                    openFiles(fileNames, true, dock);
+                    openFiles(result.filePaths, true, dock);
                 });
         }
         else {

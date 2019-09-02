@@ -2162,7 +2162,6 @@
                             click: monsterWizard
                         }/*,
                         { type: 'separator' },
-                        
                         {
                             label: '&Templates',
                             submenu: menuTemplates
@@ -2279,9 +2278,8 @@
                                         filters: $fileFilters,
                                         properties: ['openFile'],
                                         defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
-                                    },
-                                    function (fileNames) {
-                                        if (fileNames === undefined) {
+                                    }).then(result => {
+                                        if (result.filePaths === undefined) {
                                             return;
                                         }
                                         var pane = manager.panes.indexOf(manager.activePane);
@@ -2289,8 +2287,8 @@
                                             manager.active.editor.deactivate(window.$editors[pane]);
                                         if (manager.active.diffFile)
                                             stopWatchFile(manager.active.diffFile);
-                                        manager.active.editor.diff = manager.active.editor.read(fileNames[0]);
-                                        manager.active.diffFile = fileNames[0];
+                                        manager.active.editor.diff = manager.active.editor.read(result.filePaths[0]);
+                                        manager.active.diffFile = result.filePaths[0];
                                         watchFile(manager.active.diffFile);
                                         window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
                                         toggleDiffNav(true);
@@ -4621,12 +4619,11 @@
                 dialog.showOpenDialog(remote.getCurrentWindow(), {
                     defaultPath: $dialogs.area.path.value,
                     properties: ['openDirectory', 'createDirectory']
-                },
-                    function (fileNames) {
-                        if (fileNames === undefined) {
+                }).then(result => {
+                        if (result.filePaths === undefined) {
                             return;
                         }
-                        $dialogs.area.path.value = fileNames[0];
+                        $dialogs.area.path.value = result.filePaths[0];
                     });
             });
             $('#btn-new-area-remote-path').on('click', () => {
@@ -4776,12 +4773,11 @@
                 dialog.showOpenDialog(remote.getCurrentWindow(), {
                     defaultPath: $('#new-virtual-area-path').val(),
                     properties: ['openDirectory', 'createDirectory']
-                },
-                    function (fileNames) {
-                        if (fileNames === undefined) {
+                }).then(result => {
+                        if (result.filePaths === undefined) {
                             return;
                         }
-                        $('#new-virtual-area-path').val(fileNames[0]);
+                        $('#new-virtual-area-path').val(result.filePaths[0]);
                     });
             });
             $('#btn-new-virtual-area-remote-path').on('click', () => {
@@ -7711,12 +7707,11 @@
                         filters: $fileFilters,
                         properties: ['multiSelections', 'openFile'],
                         defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
-                    },
-                    function (fileNames) {
-                        if (fileNames === undefined) {
+                    }).then(result => {
+                        if (result.filePaths === undefined) {
                             return;
                         }
-                        openFiles(fileNames.map((l) => { return { file: l }; }), true, dock);
+                        openFiles(result.filePaths.map((l) => { return { file: l }; }), true, dock);
                     });
         }
         else if (isDirSync(file)) {
@@ -7744,7 +7739,7 @@
         if (files.length === 0) return;
         var panels = [];
         for (var f = 0, fl = files.length; f < fl; f++) {
-            if(typeof files[f].file !== 'string')
+            if (typeof files[f].file !== 'string')
                 continue;
             if (!files[f].remoteEdit && isDirSync(files[f].file)) {
                 dialog.showMessageBox(remote.getCurrentWindow(), {

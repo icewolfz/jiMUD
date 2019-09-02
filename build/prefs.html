@@ -13,79 +13,79 @@
     <link href="css/form.css" rel="stylesheet" type="text/css" />
     <style>
         body {
-      -webkit-user-select: none;
-      user-select: none;
-      overflow: hidden;
-    }
+            -webkit-user-select: none;
+            user-select: none;
+            overflow: hidden;
+        }
 
 
-    #pref-tree {
-      padding: 0px;
-      margin: 0;
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 57px;
-      width: 200px;
-      overflow: auto;
-    }
+        #pref-tree {
+            padding: 0px;
+            margin: 0;
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 57px;
+            width: 200px;
+            overflow: auto;
+        }
 
-    #pref-tree .list-group {
-      margin: 0;
-      box-shadow: none;
-    }
+        #pref-tree .list-group {
+            margin: 0;
+            box-shadow: none;
+        }
 
-    #content {
-      position: absolute;
-      right: 0px;
-      top: 0;
-      bottom: 57px;
-      left: 202px;
-      margin: 0;
-    }
+        #content {
+            position: absolute;
+            right: 0px;
+            top: 0;
+            bottom: 57px;
+            left: 202px;
+            margin: 0;
+        }
 
-    #pref-editor {
-      overflow: auto;
-      position: absolute;
-      right: 0;
-      top: 42px;
-      bottom: 0;
-      left: 0;
-      margin: 0;
-    }
+        #pref-editor {
+            overflow: auto;
+            position: absolute;
+            right: 0;
+            top: 42px;
+            bottom: 0;
+            left: 0;
+            margin: 0;
+        }
 
-    .node-pref-tree {
-      padding: 2px;
-      border-top-right-radius: 0px !important;
-      border-top-left-radius: 0px !important;
-      border-bottom-right-radius: 0px !important;
-      border-bottom-left-radius: 0px !important;
-    }
+        .node-pref-tree {
+            padding: 2px;
+            border-top-right-radius: 0px !important;
+            border-top-left-radius: 0px !important;
+            border-bottom-right-radius: 0px !important;
+            border-bottom-left-radius: 0px !important;
+        }
 
-    .pref-pane {
-      position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      margin: 0;
-      display: none;
-      padding-top: 15px;
-      padding-bottom: 15px;
-    }
+        .pref-pane {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            margin: 0;
+            display: none;
+            padding-top: 15px;
+            padding-bottom: 15px;
+        }
 
-    hr {
-      height: 1px;
-      background-color: #eee;
-      margin-top: 20px;
-      margin-bottom: 20px;
-      width: 75%;
-    }
+        hr {
+            height: 1px;
+            background-color: #eee;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            width: 75%;
+        }
 
-    .bootstrap-select .dropdown-menu {
-        max-height: 200px !important;
-    }
-  </style>
+        .bootstrap-select .dropdown-menu {
+            max-height: 200px !important;
+        }
+    </style>
     <script>
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
@@ -121,7 +121,7 @@
             if (document.getElementById('progress-dialog').open) {
                 event.preventDefault();
                 return false;
-            }            
+            }
             if (event.which === 27)
                 window.close();
         });
@@ -543,14 +543,13 @@
                 dialog.showOpenDialog(remote.getCurrentWindow(), {
                     defaultPath: parseTemplate($('#logPath').val()),
                     properties: ['openDirectory', 'createDirectory']
-                },
-                    function (fileNames) {
-                        if (fileNames === undefined) {
-                            return;
-                        }
-                        _settings.logPath = templatePath(fileNames[0]);
-                        $('#logPath').val(_settings.logPath);
-                    });
+                }).then(result => {
+                    if (result.filePaths === undefined) {
+                        return;
+                    }
+                    _settings.logPath = templatePath(result.filePaths[0]);
+                    $('#logPath').val(_settings.logPath);
+                });
             });
         });
 

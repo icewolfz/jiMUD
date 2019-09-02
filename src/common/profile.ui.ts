@@ -461,12 +461,11 @@ export function openImage(field?, callback?) {
             { name: 'Images (*.jpg, *.png, *.gif)', extensions: ['jpg', 'png', 'gif'] },
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
-    },
-        (fileNames) => {
-            if (fileNames === undefined) {
+    }).then(result => {
+            if (result.filePaths === undefined) {
                 return;
             }
-            $(field).keyup().val(fileNames[0]).keydown();
+            $(field).keyup().val(result.filePaths[0]).keydown();
             UpdateButtonSample();
             if (callback) callback();
         });
@@ -3081,20 +3080,19 @@ function importProfiles() {
             { name: 'All files (*.*)', extensions: ['*'] }
         ],
         properties: ['multiSelections']
-    },
-        (fileNames) => {
-            if (fileNames === undefined || fileNames.length === 0) {
+    }).then(result => {
+            if (result.filePaths === undefined || result.filePaths.length === 0) {
                 return;
             }
             const names = [];
             const _replace = [];
-            const fl = fileNames.length;
+            const fl = result.filePaths.length;
             let all = 0;
             let n;
             for (let f = 0; f < fl; f++) {
-                if (path.extname(fileNames[f]) === '.zip') {
+                if (path.extname(result.filePaths[f]) === '.zip') {
                     unarchiver = unarchiver || require('yauzl');
-                    unarchiver.open(fileNames[f], { lazyEntries: true }, (err, zipFile) => {
+                    unarchiver.open(result.filePaths[f], { lazyEntries: true }, (err, zipFile) => {
                         if (err) throw err;
                         zipFile.readEntry();
                         zipFile.on('error', (err2) => {
@@ -3190,7 +3188,7 @@ function importProfiles() {
                     });
                 }
                 else
-                    fs.readFile(fileNames[f], (err, data) => {
+                    fs.readFile(result.filePaths[f], (err, data) => {
                         if (err) throw err;
 
                         data = JSON.parse(data);

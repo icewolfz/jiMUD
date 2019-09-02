@@ -174,13 +174,12 @@
                         { name: 'LPC files (*.c, *.h, *.o)', extensions: ['c', 'h', 'o'] },
                         { name: 'All files (*.*)', extensions: ['*'] },
                     ]
-                },
-                function (fileNames) {
-                    if (fileNames === undefined) {
+                }).then(result => {
+                    if (result.filePaths === undefined) {
                         return;
                     }
-                    for (var f = 0, fl = fileNames.length; f < fl; f++)
-                        fs.readFile(fileNames[f], 'utf8', (err, data) => {
+                    for (var f = 0, fl = result.filePaths.length; f < fl; f++)
+                        fs.readFile(result.filePaths[f], 'utf8', (err, data) => {
                             if (err) {
                                 dialog.showMessageBox(remote.getCurrentWindow(), {
                                     type: 'error',

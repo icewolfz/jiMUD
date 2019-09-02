@@ -6,6 +6,7 @@
   - About: re-add memory display using 3rd party module until electron 7 is released
 - **Changed:**
   - Update electron 6.0.4 to 6.0.7
+  - Convert all open file dialogs to use newer syntaxes
 - **Fixed:**
   - Fixed save dialogs not working due to electron 6 dialog changes
 

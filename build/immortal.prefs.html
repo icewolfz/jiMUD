@@ -147,13 +147,12 @@
                         [
                             { name: 'All files (*.*)', extensions: ['*'] },
                         ]
-                },
-                    function (fileNames) {
-                        if (fileNames === undefined) {
+                }).then(result => {
+                        if (result.filePaths === undefined) {
                             return;
                         }
-                        $('#editor').val(fileNames[0]);
-                        _settings.extensions['immortal'].editor = fileNames[0];
+                        $('#editor').val(result.filePaths[0]);
+                        _settings.extensions['immortal'].editor = result.filePaths[0];
                     });
             });
         });

@@ -1079,13 +1079,12 @@
                         { name: 'Text files (*.txt)', extensions: ['txt'] },
                         { name: 'All files (*.*)', extensions: ['*'] },
                     ]
-                },
-                function (fileNames) {
-                    if (fileNames === undefined) {
+                }).then(result => {
+                    if (result.filePaths === undefined) {
                         return;
                     }
-                    for (var f = 0, fl = fileNames.length; f < fl; f++)
-                        fs.readFile(fileNames[f], (err, data) => {
+                    for (var f = 0, fl = result.filePaths.length; f < fl; f++)
+                        fs.readFile(result.filePaths[f], (err, data) => {
                             if (err) throw err;
                             data = JSON.parse(data);
                             if (!data) {
@@ -1111,13 +1110,12 @@
                         { name: 'Text files (*.txt)', extensions: ['txt'] },
                         { name: 'All files (*.*)', extensions: ['*'] },
                     ]
-                },
-                function (fileNames) {
-                    if (fileNames === undefined) {
+                }).then(result => {
+                    if (result.filePaths === undefined) {
                         return;
                     }
-                    for (var f = 0, fl = fileNames.length; f < fl; f++)
-                        fs.readFile(fileNames[f], (err, data) => {
+                    for (var f = 0, fl = result.filePaths.length; f < fl; f++)
+                        fs.readFile(result.filePaths[f], (err, data) => {
                             if (err) throw err;
                             data = JSON.parse(data);
                             if (!data) {
