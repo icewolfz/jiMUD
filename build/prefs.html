@@ -1110,7 +1110,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function backup() {
-            var file = dialog.showSaveDialog(remote.getCurrentWindow(), {
+            var file = dialog.showSaveDialogSync(remote.getCurrentWindow(), {
                 title: 'Save as...',
                 defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-data.zip'),
                 filters: [

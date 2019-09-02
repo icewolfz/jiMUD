@@ -4014,7 +4014,7 @@ $(window).keydown((event) => {
 
 // eslint-disable-next-line no-unused-vars
 function exportAllZip() {
-    const file = dialog.showSaveDialog(remote.getCurrentWindow(), {
+    const file = dialog.showSaveDialogSync(remote.getCurrentWindow(), {
         title: 'Save as...',
         defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-profiles.zip'),
         filters: [

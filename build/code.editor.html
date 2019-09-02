@@ -7744,6 +7744,8 @@
         if (files.length === 0) return;
         var panels = [];
         for (var f = 0, fl = files.length; f < fl; f++) {
+            if(typeof files[f].file !== 'string')
+                continue;
             if (!files[f].remoteEdit && isDirSync(files[f].file)) {
                 dialog.showMessageBox(remote.getCurrentWindow(), {
                     type: 'info',
@@ -7978,7 +7980,7 @@
             uploadFileAs(panel, true);
             return;
         }
-        var file = dialog.showSaveDialog(remote.getCurrentWindow(), {
+        var file = dialog.showSaveDialogSync(remote.getCurrentWindow(), {
             title: 'Save as...',
             defaultPath: panel.editor.file,
             filters: $fileFilters

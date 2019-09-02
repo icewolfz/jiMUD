@@ -4127,3 +4127,10 @@ function executeScript(script, w, f) {
     if (f)
         w.webContents.focus();
 }
+
+function focusAndPerform(methodName) {
+  return function(menuItem, window) {
+    window.webContents.focus();
+    window.webContents[methodName]();
+  };
+}
