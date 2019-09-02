@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.3
+## v0.9.3 2019-09-02
 
 - **New:**
   - About: re-add memory display using 3rd party module until electron 7 is released
