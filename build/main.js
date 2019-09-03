@@ -4028,7 +4028,7 @@ function checkForUpdatesManual() {
             message: 'Updates downloaded, application will be quit for update or when you next restart the application...',
             buttons: ['Now', 'Later']
         }).then(result => {
-            if (result.response === 1) {
+            if (result.response === 0) {
                 global.updating = true;
                 //store current line arguments to use on next load
                 fs.writeFileSync(path.join(app.getPath('userData'), 'argv.json'), JSON.stringify(process.argv));
