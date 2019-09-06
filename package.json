@@ -50,7 +50,7 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.3.31",
-    "@types/node": "^12.7.3",
+    "@types/node": "^12.7.4",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
     "electron": "^6.0.7",
@@ -129,7 +129,7 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^5.4.2",
+    "better-sqlite3": "^5.4.3",
     "buzz": "^1.2.1",
     "chokidar": "^3.0.2",
     "drivelist": "^8.0.6",
@@ -141,7 +141,7 @@
     "markdown-it": "^9.1.0",
     "mathjs-expression-parser": "^1.0.2",
     "moment": "^2.24.0",
-    "monaco-editor": "^0.17.1",
+    "monaco-editor": "^0.18.0",
     "pidusage": "^2.0.17",
     "rgbcolor": "^1.0.1",
     "spellchecker": "^3.7.0",
