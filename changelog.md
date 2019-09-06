@@ -5,7 +5,7 @@
 - **Fixed:**
   - Auto updater: fix now/later being reversed function
 - **Changed:**
-  - Update better-sqlite3 6.4.2 to 5.4.3
+  - Update better-sqlite3 5.4.2 to 5.4.3
   - Update monaco-editor 0.17.1 to 0.18.0
 
 ## v0.9.3 2019-09-02
