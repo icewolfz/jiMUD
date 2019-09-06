@@ -7,6 +7,7 @@
 - **Changed:**
   - Update better-sqlite3 5.4.2 to 5.4.3
   - Update monaco-editor 0.17.1 to 0.18.0
+  - Update yargs-parser 13.1.1 to 14.0.0
 
 ## v0.9.3 2019-09-02
 
