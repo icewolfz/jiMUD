@@ -394,11 +394,11 @@ body {
     background-image: url("#{$images}/status/weatherhailhard.png");
 }
 
-.weather-rain #environmentweather {
+.weather-rain #environmentweather, .weather-zombie_rain #environmentweather {
     background-image: url("#{$images}/status/weatherrain.png");
 }
 
-.weather-rain.intensity-hard #environmentweather {
+.weather-rain.intensity-hard #environmentweather,.weather-zombie_rain.intensity-hard #environmentweather {
     background-image: url("#{$images}/status/weatherrainhard.png");
 }
 
@@ -416,6 +416,14 @@ body {
 
 .weather-sleet.intensity-hard #environmentweather {
     background-image: url("#{$images}/status/weathersleethard.png");
+}
+
+.weather-blood_rain #environmentweather {
+    background-image: url("#{$images}/status/weatherblood_rain.png");
+}
+
+.weather-blood_rain.intensity-hard #environmentweather{
+    background-image: url("#{$images}/status/weatherblood_rainhard.png");
 }
 
 #environment {
