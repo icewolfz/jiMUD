@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Auto updater: fix now/later being reversed function
+  - Immortal tools: Add upload/download to folder context menus
 - **Changed:**
   - Update better-sqlite3 5.4.2 to 5.4.3
   - Update monaco-editor 0.17.1 to 0.18.0

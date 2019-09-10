@@ -2609,13 +2609,11 @@
             }));
             if (selected.length) {
                 c.append(new MenuItem({ type: 'separator' }));
-                if (!dirs) {
-                    c.append(new MenuItem({
-                        label: 'Upload',
-                        click: upload
-                    }));
-                    c.append(new MenuItem({ type: 'separator' }));
-                }
+                c.append(new MenuItem({
+                    label: 'Upload',
+                    click: upload
+                }));
+                c.append(new MenuItem({ type: 'separator' }));
                 c.append(new MenuItem({
                     label: 'Copy full path',
                     click: () => {
@@ -2695,13 +2693,11 @@
             }));
             if (selected.length > 0) {
                 c.append(new MenuItem({ type: 'separator' }));
-                if (!dirs) {
-                    c.append(new MenuItem({
-                        label: 'Download',
-                        click: download
-                    }));
-                    c.append(new MenuItem({ type: 'separator' }));
-                }
+                c.append(new MenuItem({
+                    label: 'Download',
+                    click: download
+                }));
+                c.append(new MenuItem({ type: 'separator' }));
                 c.append(new MenuItem({
                     label: 'Goto',
                     accelerator: 'CmdOrCtrl+G',
