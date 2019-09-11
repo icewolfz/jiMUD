@@ -138,7 +138,7 @@
     "fs-extra": "^8.1.0",
     "fswin": "^3.19.908",
     "lz-string": "^1.4.4",
-    "markdown-it": "^9.1.0",
+    "markdown-it": "^10.0.0",
     "mathjs-expression-parser": "^1.0.2",
     "moment": "^2.24.0",
     "monaco-editor": "^0.18.0",

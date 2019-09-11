@@ -10,6 +10,7 @@
   - Update monaco-editor 0.17.1 to 0.18.0
   - Update yargs-parser 13.1.1 to 14.0.0
   - Update fswin 3.18.918 to 3.19.908
+  - Update markdown-it 9.1.0 to 10.0.0
 
 ## v0.9.3 2019-09-02
 
