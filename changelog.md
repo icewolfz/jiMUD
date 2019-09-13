@@ -5,6 +5,7 @@
 - **Fixed:**
   - Auto updater: fix now/later being reversed function
   - Immortal tools: Add upload/download to folder context menus
+  - Remove some menu hacks as electron 6.0.8 seems to have fixed menu issues
 - **Changed:**
   - Update electron 6.0.7 to 6.0.9
   - Update better-sqlite3 5.4.2 to 5.4.3
