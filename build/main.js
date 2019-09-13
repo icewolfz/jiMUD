@@ -4124,13 +4124,15 @@ function executeScript(script, w, f) {
         if (err)
             logError(err);
     });
-    if (f)
-        w.webContents.focus();
+    //if (f)
+        //w.webContents.focus();
 }
 
+/*
 function focusAndPerform(methodName) {
   return function(menuItem, window) {
     window.webContents.focus();
     window.webContents[methodName]();
   };
 }
+*/
