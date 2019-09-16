@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.4
+## v0.9.4 2019-09-16
 
 - **Fixed:**
   - Auto updater: fix now/later being reversed function
