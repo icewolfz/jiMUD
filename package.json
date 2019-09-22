@@ -53,7 +53,7 @@
     "@types/node": "^12.7.5",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^6.0.9",
+    "electron": "^6.0.10",
     "electron-builder": "^21.2.0",
     "eslint": "^6.4.0",
     "eslint-plugin-html": "^6.0.0"
@@ -131,8 +131,8 @@
   "dependencies": {
     "better-sqlite3": "^5.4.3",
     "buzz": "^1.2.1",
-    "chokidar": "^3.1.0",
-    "drivelist": "^8.0.6",
+    "chokidar": "^3.1.1",
+    "drivelist": "^8.0.7",
     "electron-updater": "^4.1.2",
     "font-manager": "^0.3.0",
     "fs-extra": "^8.1.0",
@@ -141,7 +141,7 @@
     "markdown-it": "^10.0.0",
     "mathjs-expression-parser": "^1.0.2",
     "moment": "^2.24.0",
-    "monaco-editor": "^0.18.0",
+    "monaco-editor": "^0.18.1",
     "pidusage": "^2.0.17",
     "rgbcolor": "^1.0.1",
     "spellchecker": "^3.7.0",
