@@ -2,6 +2,8 @@
 
 ## v0.9.5
 
+- **Fixed:**
+  - Immortal tools: fix upload fail not being correctly registered
 - **Changed:**
   - Update electron 6.0.9 to 6.0.10
   - Update monaco-editor 0.18.0 to 0.18.1

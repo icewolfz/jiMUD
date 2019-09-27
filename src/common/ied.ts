@@ -122,18 +122,8 @@ export class IED extends EventEmitter {
                     break;
                 case 'encoded':
                     ipcRenderer.send('send-gmcp', 'IED.upload.chunk ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, data: e.data.data, last: e.data.last ? 1 : 0, compressed: e.data.compressed ? 1 : 0 }));
-                    if (e.data.last) {
-                        this.active.state = ItemState.done;
-                        this.emit('upload-finished', this.active);
-                        if (this.active)
-                            this.emit('message', 'Upload complete: ' + this.active.remote);
-                        else
-                            this.emit('message', 'Upload complete');
-                        this.removeActive();
-                    }
-                    else {
+                    if (!e.data.last)
                         this.emit('update', this.active);
-                    }
                     break;
             }
         };
@@ -414,6 +404,15 @@ export class IED extends EventEmitter {
                                 return;
                             }
                             this.uploadChunk(obj);
+                            break;
+                        case 'success':
+                            this.active.state = ItemState.done;
+                            this.emit('upload-finished', this.active);
+                            if (this.active)
+                                this.emit('message', 'Upload complete: ' + this.active.remote);
+                            else
+                                this.emit('message', 'Upload complete');
+                            this.removeActive();
                             break;
                     }
                     break;
