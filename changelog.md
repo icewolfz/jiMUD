@@ -5,9 +5,9 @@
 - **Fixed:**
   - Immortal tools: fix upload fail not being correctly registered
 - **Changed:**
-  - Update electron 6.0.9 to 6.0.10
+  - Update electron 6.0.9 to 6.0.11
   - Update monaco-editor 0.18.0 to 0.18.1
-  - Update chokidar 3.1.0 to 3.1.1
+  - Update chokidar 3.1.0 to 3.2.1
   - Update drivelist 8.0.6 to 8.0.7
 
 ## v0.9.4 2019-09-16
