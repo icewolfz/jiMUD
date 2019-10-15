@@ -410,12 +410,14 @@ export class IED extends EventEmitter {
                             this.uploadChunk(obj);
                             break;
                         case 'success':
-                            this.active.state = ItemState.done;
-                            this.emit('upload-finished', this.active);
-                            if (this.active)
-                                this.emit('message', 'Upload complete: ' + this.active.remote);
-                            else
-                                this.emit('message', 'Upload complete');
+                            if (this.active) {
+                                this.active.state = ItemState.done;
+                                this.emit('upload-finished', this.active);
+                                if (this.active)
+                                    this.emit('message', 'Upload complete: ' + this.active.remote);
+                                else
+                                    this.emit('message', 'Upload complete');
+                            }
                             this.removeActive();
                             break;
                     }
