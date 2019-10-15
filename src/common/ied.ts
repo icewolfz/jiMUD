@@ -107,16 +107,20 @@ export class IED extends EventEmitter {
                         ipcRenderer.send('send-gmcp', 'IED.download.more ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, compress: this.active.compress ? 1 : 0 }));
                     }
                     else {
-                        this.active.state = ItemState.done;
-                        try {
-                            this.active.moveFinal();
-                            this.active.info = IED.getFileInfo(this.active.local);
-                            this.emit('download-finished', this.active);
-                            this.emit('message', 'Download complete: ' + this.active.local);
+                        if (this.active) {
+                            this.active.state = ItemState.done;
+                            try {
+                                this.active.moveFinal();
+                                this.active.info = IED.getFileInfo(this.active.local);
+                                this.emit('download-finished', this.active);
+                                this.emit('message', 'Download complete: ' + this.active.local);
+                            }
+                            catch (err) {
+                                this.emit('error', err);
+                            }
                         }
-                        catch (err) {
-                            this.emit('error', err);
-                        }
+                        else
+                            this.emit('error', 'Invalid item');
                         this.removeActive();
                     }
                     break;
