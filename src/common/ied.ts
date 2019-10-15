@@ -411,6 +411,10 @@ export class IED extends EventEmitter {
                             break;
                         case 'success':
                             if (this.active) {
+                                if (!obj.tag.startsWith(this.prefix + 'upload')) {
+                                    this.nextGMCP();
+                                    return;
+                                }
                                 this.active.state = ItemState.done;
                                 this.emit('upload-finished', this.active);
                                 if (this.active)
