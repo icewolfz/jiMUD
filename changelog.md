@@ -10,6 +10,7 @@
   - Update chokidar 3.1.0 to 3.2.2
   - Update drivelist 8.0.6 to 8.0.7
   - Update yargs-parser 13.1.1 to 15.0.0
+  - Replace font-manager 0.3.0 with fontmanager-redux 0.4.0
 
 ## v0.9.4 2019-09-16
 

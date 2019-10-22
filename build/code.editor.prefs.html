@@ -87,7 +87,7 @@
         const EditorSettings = require('./js/editor/code.editor.settings').EditorSettings;
         var fontManager;
         try {
-            fontManager = require('font-manager');
+            fontManager = require('fontmanager-redux');
         }
         catch (ex) {
             ipcRenderer.send('error', ex);
