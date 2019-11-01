@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Immortal tools: fix upload fail not being correctly registered
+  - Code editor: Ignore formatting for inline comments
 - **Changed:**
   - Update electron 6.0.9 to 6.1.2
   - Update monaco-editor 0.18.0 to 0.18.1

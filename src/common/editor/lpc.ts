@@ -1472,6 +1472,7 @@ interface FormatToken {
 export class LPCFormatter extends EventEmitter {
     private $src = '';
     private $position = 0;
+    private $inComment = 0;
     //private tokens = [];
     private block = [];
     private b = [];
@@ -2045,7 +2046,12 @@ export class LPCFormatter extends EventEmitter {
                             return { value: ']', type: FormatTokenType.parenRBracket };
                     }
                 case 4:
-                    if (c === '\\') {
+                    if (this.$inComment && c === '\n') {
+                        this.$position = idx;
+                        state = 0;
+                        return { value: val, type: FormatTokenType.string };
+                    }
+                    else if (c === '\\') {
                         val += c;
                         state = 5;
                     }
@@ -2094,7 +2100,7 @@ export class LPCFormatter extends EventEmitter {
                 case 8:
                     switch (c) {
                         case '/':
-                            state = 0;
+                            this.$inComment = 1;
                             this.$position = idx + 1;
                             return { value: '//', type: FormatTokenType.commentInline };
                         case '*':
@@ -2307,6 +2313,7 @@ export class LPCFormatter extends EventEmitter {
                             break;
                         case '\n':
                             if (val.length > 0) return this.tokenType(val);
+                            this.$inComment = 0;
                             this.$position = idx + 1;
                             return { value: '\n', type: FormatTokenType.newline };
                         case ' ':
