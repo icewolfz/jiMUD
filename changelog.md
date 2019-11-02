@@ -6,11 +6,11 @@
   - Immortal tools: fix upload fail not being correctly registered
   - Code editor: Ignore formatting for inline comments
 - **Changed:**
-  - Update electron 6.0.9 to 6.1.2
+  - Update electron 6.0.9 to 6.1.3
   - Update monaco-editor 0.18.0 to 0.18.1
   - Update chokidar 3.1.0 to 3.2.3
   - Update drivelist 8.0.6 to 8.0.7
-  - Update yargs-parser 13.1.1 to 16.0.0
+  - Update yargs-parser 13.1.1 to 16.1.0
   - Replace font-manager 0.3.0 with fontmanager-redux 0.4.0
   - Update electron-updater 4.1.2 to 4.2.0
 
