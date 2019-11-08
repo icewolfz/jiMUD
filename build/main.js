@@ -1151,8 +1151,6 @@ function createWindow() {
         slashes: true
     }));
 
-    createMenu();
-    loadMenu();
     //win.setOverlayIcon(path.join(__dirname, '/../assets/icons/jimud.png'), 'Connected');
 
     // Open the DevTools.
@@ -1356,6 +1354,9 @@ function createWindow() {
     });
 
     win.once('ready-to-show', () => {
+        createMenu();
+        loadMenu();
+    
         addInputContext(win);
         if (isFileSync(path.join(app.getPath('userData'), 'monsters.css'))) {
             fs.readFile(path.join(app.getPath('userData'), 'monsters.css'), 'utf8', (err, data) => {
