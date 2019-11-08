@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.5
+## v0.10.0
 
 - **Fixed:**
   - Immortal tools: fix upload fail not being correctly registered
