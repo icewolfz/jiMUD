@@ -142,7 +142,6 @@
     "mathjs-expression-parser": "^1.0.2",
     "moment": "^2.24.0",
     "monaco-editor": "^0.18.1",
-    "pidusage": "^2.0.17",
     "rgbcolor": "^1.0.1",
     "spellchecker": "^3.7.0",
     "tmp": "^0.1.0",

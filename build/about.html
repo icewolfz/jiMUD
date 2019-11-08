@@ -162,7 +162,6 @@
     <script>
         const { version } = require('../package.json');
         const { remote } = require('electron');
-        const pidusage = require('pidusage');
 
         var memory;
         //function formatBytes(a,b){if(0==a)return"0 Bytes";var c=1e3,d=b||2,e=["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"],f=Math.floor(Math.log(a)/Math.log(c));return parseFloat((a/Math.pow(c,f)).toFixed(d))+" "+e[f];}
@@ -186,34 +185,38 @@
 
         function formatMemory(amt) {
             if (amt > 1024)
-                return (amt / 1024).toLocaleString(0, {minimumFractionDigits: 0, maximumFractionDigits: 0}) + 'M';
-            return amt.toLocaleString(0, {minimumFractionDigits: 0, maximumFractionDigits: 0}) + 'K';
+                return (amt / 1024).toLocaleString(0, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + 'M';
+            return amt.toLocaleString(0, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + 'K';
         }
 
         function updateMemory() {
             var mi = remote.app.getAppMetrics();
-            var total = [0, 0, 0];
+            var total = [0, 0, 0, 0, 0];
             var rows = '';
-            pidusage(mi.map(i => i.pid), function (err, stats) {
-                for (var i = 0; i < mi.length; i++) {
-                    rows += '<tr><td>' + mi[i].pid + '</td>';
-                    rows += '<td>' + mi[i].type + '</td>';
-                    rows += '<td>' + (mi[i].cpu.percentCPUUsage || 0.0).toFixed(3) + '%</td>';
-                    rows += '<td>' + formatMemory(stats[mi[i].pid].memory) + '</td>';
-                    rows += '<td>' + mi[i].cpu.idleWakeupsPerSecond + '</td></tr>';
-                    total[0] += (mi[i].cpu.percentCPUUsage || 0.0);
-                    total[1] += mi[i].cpu.idleWakeupsPerSecond;
-                    total[2] += stats[mi[i].pid].memory;
-                }
-                rows += '<tr class=\'totals\'><td>Total:</td>';
-                rows += '<td></td>';
-                rows += '<td>' + total[0].toFixed(3) + '%</td>';
-                rows += '<td>' + formatMemory(total[2]) + '</td>';
-                rows += '<td>' + total[1] + '</td></tr>';
-                memory.innerHTML = rows;
-            });
+            for (var i = 0; i < mi.length; i++) {
+                rows += '<tr><td>' + mi[i].pid + '</td>';
+                rows += '<td>' + mi[i].type + '</td>';
+                rows += '<td>' + (mi[i].cpu.percentCPUUsage || 0.0).toFixed(3) + '%</td>';
+                rows += '<td>' + formatMemory(mi[i].memory.peakWorkingSetSize) + '</td>';
+                rows += '<td>' + formatMemory(mi[i].memory.privateBytes) + '</td>';
+                rows += '<td>' + formatMemory(mi[i].memory.workingSetSize) + '</td>';
+                rows += '<td>' + mi[i].cpu.idleWakeupsPerSecond + '</td></tr>';
+                total[0] += (mi[i].cpu.percentCPUUsage || 0.0);
+                total[1] += mi[i].cpu.idleWakeupsPerSecond;
+                total[2] += mi[i].memory.peakWorkingSetSize;
+                total[3] += mi[i].memory.privateBytes;
+                total[4] += mi[i].memory.workingSetSize;
+            }
+            rows += '<tr class=\'totals\'><td>Total:</td>';
+            rows += '<td></td>';
+            rows += '<td>' + total[0].toFixed(3) + '%</td>';
+            rows += '<td>' + formatMemory(total[2]) + '</td>';
+            rows += '<td>' + formatMemory(total[3]) + '</td>';
+            rows += '<td>' + formatMemory(total[4]) + '</td>';
+            rows += '<td>' + total[1] + '</td></tr>';
+            memory.innerHTML = rows;
         }
-        //remote.getCurrentWindow().openDevTools();
+        remote.getCurrentWindow().openDevTools();
     </script>
 </head>
 
@@ -243,7 +246,9 @@
                             <th style="text-align: right">PID</th>
                             <th>Type</th>
                             <th style="text-align: right">CPU Usage</th>
-                            <th style="text-align: right">Memory</th>
+                            <th style="text-align: right">Peak Working Set Size</th>
+                            <th style="text-align: right">Private Bytes</th>
+                            <th style="text-align: right">Working Set Size</th>
                             <th style="text-align: right">idle Wake ups</th>
                         </tr>
                     </thead>
