@@ -1874,7 +1874,7 @@ ipcMain.on('connected', () => {
     if (winCode)
         winCode.webContents.send('connected');
     for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
             continue;
         windows[name].window.webContents.send('connected');
     }
@@ -1886,7 +1886,7 @@ ipcMain.on('set-color', (event, type, color, code, window) => {
     if (winCode)
         winCode.webContents.send('set-color', type, color, code, window);
     for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
             continue;
         windows[name].window.webContents.send('set-color', type, color, code, window);
     }
@@ -1956,7 +1956,7 @@ function sendEditor(text, window) {
         if (winCode)
             winCode.webContents.send('send-editor', text, window);
         for (var name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
+            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
                 continue;
             windows[name].window.webContents.send('send-editor', text, window);
         }
@@ -1986,7 +1986,7 @@ ipcMain.on('reload-mail', () => {
     if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('reload-mail');
     for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window || !windows[name].window.webContents)
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window || !windows[name].window.webContents)
             continue;
         windows[name].window.webContents.send('reload-mail');
     }
@@ -1997,7 +1997,7 @@ ipcMain.on('reload-profiles', () => {
     if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('reload-profiles');
     for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window || !windows[name].window.webContents)
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window || !windows[name].window.webContents)
             continue;
         windows[name].window.webContents.send('reload-profiles');
     }
@@ -2006,7 +2006,7 @@ ipcMain.on('reload-profiles', () => {
 ipcMain.on('chat', (event, text) => {
     sendChat(text);
     for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
             continue;
         windows[name].window.webContents.send('chat', text);
     }
@@ -2068,7 +2068,7 @@ ipcMain.on('setting-changed', (event, data) => {
     var name;
     if (data.type === 'windows')
         for (name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
+            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
                 continue;
 
             if (name === data.name) {
@@ -2086,7 +2086,7 @@ ipcMain.on('setting-changed', (event, data) => {
         }
     if (data.type === 'extensions')
         for (name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
+            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
                 continue;
             if (windows[name].window)
                 windows[name].window.webContents.send('setting-changed', data);
@@ -2113,7 +2113,7 @@ ipcMain.on('GMCP-received', (event, data) => {
     if (winCode)
         winCode.webContents.send('GMCP-received', data);
     for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
             continue;
         windows[name].window.webContents.send('GMCP-received', data);
     }
@@ -2145,7 +2145,7 @@ ipcMain.on('command-history', (event, history) => {
     if (winCode)
         winCode.webContents.send('command-history', history);
     for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
             continue;
         windows[name].window.webContents.send('command-history', history);
     }
@@ -3635,7 +3635,7 @@ function closeWindows(save, clear) {
     var name;
     var cWin;
     for (name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
             continue;
         executeScript('if(closing) closing();', windows[name].window);
         executeScript('if(closed) closed();', windows[name].window);
