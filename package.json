@@ -19,6 +19,8 @@
   "scripts": {
     "start": "electron .",
     "debug": "electron . -d",
+    "editor": "electron . -eo",
+    "editor:debug": "electron . -eo -d",    
     "build:debug": "./node_modules/.bin/electron-builder --dir",
     "build:debug-compile": "npm run compile && npm run build:debug",
     "build:debug-quick": "./node_modules/.bin/electron-builder --dir --c.npmRebuild=false",
