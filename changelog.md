@@ -5,6 +5,7 @@
 - **Fixed:**
   - Immortal tools: fix upload fail not being correctly registered
   - Code editor: Ignore formatting for inline comments
+  - About: update process memory info display using new built in api's
 - **Changed:**
   - Update electron 6.0.9 to 7.1.1
   - Update monaco-editor 0.18.0 to 0.18.1
