@@ -174,7 +174,7 @@ Create a new monster using a wizard for easy option selection
     - `Combat` a reaction during combat
     - `Combat party` a reaction during combat that effects party members
   - `Reaction` the reaction that causes monsters to react
-    - `low health ` fired when < 10% hp
+    - `low health` fired when < 10% hp
     - `half health` fired when < 50% hp
     - `hurt` fired when hp < max hp
     - `full health` fired when 100% hp
@@ -247,7 +247,7 @@ Allows you to edit a virtual map easily with out having to know all file formats
 - View all items in a list editor easily remove, add, or copy items
 - View all external exits in a list editor to easily remove, add, or copy external exits
 - View all raw data files that exist and are related to the current map.
-- Resize map allowing you to ancher top or bottom / left or right / up or down to determine how the rooms will be shifted when resized **Warning** when resized smaller, old rooms are lost and any dangling exits are removed
+- Resize map allowing you to anchor top or bottom / left or right / up or down to determine how the rooms will be shifted when resized **Warning** when resized smaller, old rooms are lost and any dangling exits are removed
 - Show colors, create a color scale map based on terrain indexes
 - Show terrains, show terrain numbers for each room
 - Allow walk exits, allows you to create exits by walking the map using num pad

@@ -219,7 +219,7 @@ export class Item {
         if (typeof data === 'object') {
             let prop;
             for (prop in data) {
-                if (!data.hasOwnProperty(prop)) {
+                if (!Object.prototype.hasOwnProperty.call(data, prop)) {
                     continue;
                 }
                 this[prop] = data[prop];
@@ -247,7 +247,7 @@ export class Button extends Item {
         if (typeof data === 'object') {
             let prop;
             for (prop in data) {
-                if (!data.hasOwnProperty(prop)) {
+                if (!Object.prototype.hasOwnProperty.call(data, prop)) {
                     continue;
                 }
                 this[prop] = data[prop];
@@ -277,7 +277,7 @@ export class Macro extends Item {
         if (typeof data === 'object') {
             let prop;
             for (prop in data) {
-                if (!data.hasOwnProperty(prop)) {
+                if (!Object.prototype.hasOwnProperty.call(data, prop)) {
                     continue;
                 }
                 this[prop] = data[prop];
@@ -308,7 +308,7 @@ export class Alias extends Item {
         if (typeof pattern === 'object') {
             let prop;
             for (prop in pattern) {
-                if (!pattern.hasOwnProperty(prop)) {
+                if (!Object.prototype.hasOwnProperty.call(pattern, prop)) {
                     continue;
                 }
                 this[prop] = pattern[prop];
@@ -337,7 +337,7 @@ export class Trigger extends Item {
         if (typeof data === 'object') {
             let prop;
             for (prop in data) {
-                if (!data.hasOwnProperty(prop)) {
+                if (!Object.prototype.hasOwnProperty.call(data, prop)) {
                     continue;
                 }
                 this[prop] = data[prop];
@@ -366,7 +366,7 @@ export class Context extends Item {
         if (typeof data === 'object') {
             let prop;
             for (prop in data) {
-                if (!data.hasOwnProperty(prop)) {
+                if (!Object.prototype.hasOwnProperty.call(data, prop)) {
                     continue;
                 }
                 if (prop === 'items') {
@@ -600,7 +600,7 @@ export class Profile {
         profile = new Profile(false);
         let prop;
         for (prop in data) {
-            if (!data.hasOwnProperty(prop)) {
+            if (!Object.prototype.hasOwnProperty.call(data, prop)) {
                 continue;
             }
             if (prop === 'aliases' || prop === 'triggers' || prop === 'macros' || prop === 'buttons' || prop === 'contexts')
@@ -764,7 +764,7 @@ export class Profile {
         const profile = new Profile(false);
         let prop;
         for (prop in data) {
-            if (!data.hasOwnProperty(prop)) {
+            if (!Object.prototype.hasOwnProperty.call(data, prop)) {
                 continue;
             }
             if (prop === 'aliases' || prop === 'triggers' || prop === 'macros' || prop === 'buttons' || prop === 'contexts')
@@ -830,7 +830,7 @@ export class Profile {
         if (typeof field === 'object') {
             for (let t = 0; t < l; t++) {
                 for (const v in field) {
-                    if (!field.hasOwnProperty(v)) continue;
+                    if (!Object.prototype.hasOwnProperty.call(field, v)) continue;
                     if (tmp[t][v] === field[v])
                         return tmp[t];
                 }
@@ -853,7 +853,7 @@ export class Profile {
         if (typeof field === 'object') {
             for (let t = 0; t < l; t++) {
                 for (const v in field) {
-                    if (!field.hasOwnProperty(v)) continue;
+                    if (!Object.prototype.hasOwnProperty.call(field, v)) continue;
                     if (tmp[t][v] === field[v])
                         return this[type].indexOf(tmp[t]);
                 }
@@ -876,7 +876,7 @@ export class Profile {
         if (typeof field === 'object') {
             for (let t = 0; t < l; t++) {
                 for (const v in field) {
-                    if (!field.hasOwnProperty(v)) continue;
+                    if (!Object.prototype.hasOwnProperty.call(field, v)) continue;
                     if (tmp[t][v] !== field[v]) continue;
                 }
                 return this[type].indexOf(tmp[t]);
@@ -1080,7 +1080,7 @@ export class ProfileCollection {
     public save(p) {
         let profile;
         for (profile in this.items) {
-            if (!this.items.hasOwnProperty(profile)) continue;
+            if (!Object.prototype.hasOwnProperty.call(this.items, profile)) continue;
             this.items[profile].save(p);
         }
     }

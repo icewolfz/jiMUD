@@ -296,7 +296,7 @@
         function setSettings(obj, root) {
             let option;
             for (option in obj) {
-                if (!obj.hasOwnProperty(option))
+                if (!Object.prototype.hasOwnProperty.call(obj, option))
                     continue;
                 if (typeof (obj[option]) === 'object') {
                     setSettings(obj[option], root + option + '-');

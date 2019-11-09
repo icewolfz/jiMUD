@@ -7,6 +7,7 @@
   - Code editor: Ignore formatting for inline comments
   - About: update process memory info display using new built in api's
 - **Changed:**
+  - Refactor hasOwnProperty checks to use proper calls for more security when running dynamic scripts
   - Update electron 6.0.9 to 7.1.1
   - Update monaco-editor 0.18.0 to 0.18.1
   - Update chokidar 3.1.0 to 3.3.3

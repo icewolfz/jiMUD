@@ -922,7 +922,7 @@
                         if (!mapper.SplitArea)
                             t = '';
                         for (rms in rooms) {
-                            if (!rooms.hasOwnProperty(rms)) continue;
+                            if (!Object.prototype.hasOwnProperty.call(rooms, rms)) continue;
                             room = rooms[rms];
                             if (room == null) continue;
                             if (x == null) {
@@ -966,7 +966,7 @@
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
                         ctx.font = '8pt Arial';
                         for (rms in rooms) {
-                            if (!rooms.hasOwnProperty(rms)) continue;
+                            if (!Object.prototype.hasOwnProperty.call(rooms, rms)) continue;
                             room = rooms[rms];
                             //no room
                             if (room == null) continue;

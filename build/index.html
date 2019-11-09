@@ -987,7 +987,7 @@
 
             client.on('notify', (title, message, options) => {
                 options = options || { silent: true };
-                if (!options.hasOwnProperty('silent'))
+                if (!Object.prototype.hasOwnProperty.call(options, 'silent'))
                     options.silent = true;
                 if (options.icon)
                     options.icon = parseTemplate(options.icon);

@@ -4588,7 +4588,7 @@
         if (!data) data = baseParseData();
         var d;
         for (d in data) {
-            if (!data.hasOwnProperty(d))
+            if (!Object.prototype.hasOwnProperty.call(data, d))
                 continue;
             if (data[d].regex)
                 template = template.replace(data[d].regex, data[d].value);
@@ -6807,14 +6807,14 @@
                             e.page.querySelector('#mon-wiz-auto-drop').value = e.wizard.defaults['mon-wiz-drop'] || '1';
                             e.page.querySelector('#mon-wiz-auto-drop-enabled').checked = e.wizard.defaults['mon-wiz-drop-enabled'] || false;
                             e.page.querySelector('#mon-wiz-storage').value = e.wizard.defaults['mon-wiz-storage'] || '3';
-                            e.page.querySelector('#mon-wiz-storage-enabled').checked = e.wizard.defaults.hasOwnProperty('#mon-wiz-storage-enabled') ? e.wizard.defaults['mon-wiz-storage-enabled'] : true;
+                            e.page.querySelector('#mon-wiz-storage-enabled').checked = Object.prototype.hasOwnProperty.call(e.wizard.defaults, '#mon-wiz-storage-enabled') ? e.wizard.defaults['mon-wiz-storage-enabled'] : true;
                             e.page.querySelector('#mon-wiz-auto-wield').value = e.wizard.defaults['mon-wiz-auto-wield'] || '3';
-                            e.page.querySelector('#mon-wiz-auto-wield-enabled').checked = e.wizard.defaults.hasOwnProperty('#mon-wiz-auto-wield-enabled') ? e.wizard.defaults['mon-wiz-auto-wield-enabled'] : true;
+                            e.page.querySelector('#mon-wiz-auto-wield-enabled').checked = Object.prototype.hasOwnProperty.call(e.wizard.defaults, '#mon-wiz-auto-wield-enabled') ? e.wizard.defaults['mon-wiz-auto-wield-enabled'] : true;
                             e.page.querySelector('#mon-wiz-auto-wear').value = e.wizard.defaults['mon-wiz-auto-wear'] || '3';
                             e.page.querySelector('#mon-wiz-auto-wear-enabled').checked = e.wizard.defaults['mon-wiz-auto-wear-enabled'] || false;
                             e.page.querySelector('#mon-wiz-auto-loot').value = e.wizard.defaults['mon-wiz-auto-loot'] || '1';
                             e.page.querySelector('#mon-wiz-auto-loot-enabled').checked = e.wizard.defaults['mon-wiz-auto-loot-enabled'] || false;
-                            e.page.querySelector('#mon-wiz-auto-stand').checked = e.wizard.defaults.hasOwnProperty('#mon-wiz-auto-stand') ? e.wizard.defaults['mon-wiz-auto-stand'] : true;
+                            e.page.querySelector('#mon-wiz-auto-stand').checked = Object.prototype.hasOwnProperty.call(e.wizard.defaults, '#mon-wiz-auto-stand') ? e.wizard.defaults['mon-wiz-auto-stand'] : true;
                             e.page.querySelector('#mon-wiz-wimpy').value = e.wizard.defaults['mon-wiz-wimpy'] || '0';
                         }
                     }),
@@ -8942,7 +8942,7 @@
                 for (let f = 0; f < fl; f++) {
                     if (files[f].local)
                         _ied.uploadTo(files[f].local, files[f].remote, false, 'editor-upload:' + (manager.active ? manager.active.id : 0) + ':' + f);
-                    else if (files[f].hasOwnProperty('value')) {
+                    else if (Object.prototype.hasOwnProperty.call(files[f], 'value')) {
                         var t2 = tmp.tmpNameSync(tmpOptions);
                         p.editor.write(files[f].value || '', t2);
                         _ied.uploadTo(t2.name, files[f].remote, false, 'editor-upload:' + (manager.active ? manager.active.id : 0) + ':' + f);

@@ -704,9 +704,9 @@ export class MonacoCodeEditor extends EditorBase {
         this.$model = monaco.editor.createModel(value, 'lpc', !this.new && this.file && this.file.length !== 0 && this.source === Source.local ? monaco.Uri.file(this.file) : null);
         if (this.$options)
             this.$model.updateOptions({
-                tabSize: this.$options.hasOwnProperty('tabSize') ? this.$options.tabSize : 3,
-                insertSpaces: this.$options.hasOwnProperty('tabSize') ? this.$options.insertSpaces : true,
-                trimAutoWhitespace: this.$options.hasOwnProperty('tabSize') ? this.$options.trimAutoWhitespace : true
+                tabSize: Object.prototype.hasOwnProperty.call(this.$options, 'tabSize') ? this.$options.tabSize : 3,
+                insertSpaces: Object.prototype.hasOwnProperty.call(this.$options, 'tabSize') ? this.$options.insertSpaces : true,
+                trimAutoWhitespace: Object.prototype.hasOwnProperty.call(this.$options, 'tabSize') ? this.$options.trimAutoWhitespace : true
             });
         else
             this.$model.updateOptions({
@@ -986,9 +986,9 @@ export class MonacoCodeEditor extends EditorBase {
             return;
         this.$options = value;
         this.$model.updateOptions({
-            tabSize: value.hasOwnProperty('tabSize') ? value.tabSize : 3,
-            insertSpaces: value.hasOwnProperty('tabSize') ? value.insertSpaces : true,
-            trimAutoWhitespace: value.hasOwnProperty('tabSize') ? value.trimAutoWhitespace : true
+            tabSize: Object.prototype.hasOwnProperty.call(value, 'tabSize') ? value.tabSize : 3,
+            insertSpaces: Object.prototype.hasOwnProperty.call(value, 'tabSize') ? value.insertSpaces : true,
+            trimAutoWhitespace: Object.prototype.hasOwnProperty.call(value, 'tabSize') ? value.trimAutoWhitespace : true
         });
     }
     public get options() { return this.$options; }

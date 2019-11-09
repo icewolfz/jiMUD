@@ -258,7 +258,7 @@ export class Display extends EventEmitter {
                     const overlays = [];
                     let ol;
                     for (ol in this._overlays) {
-                        if (!this._overlays.hasOwnProperty(ol) || ol === 'selection')
+                        if (!Object.prototype.hasOwnProperty.call(this._overlays, ol) || ol === 'selection')
                             continue;
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
@@ -291,7 +291,7 @@ export class Display extends EventEmitter {
                     const overlays = [];
                     let ol;
                     for (ol in this._overlays) {
-                        if (!this._overlays.hasOwnProperty(ol) || ol === 'selection')
+                        if (!Object.prototype.hasOwnProperty.call(this._overlays, ol) || ol === 'selection')
                             continue;
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
@@ -417,9 +417,9 @@ export class Display extends EventEmitter {
     constructor(display: string | JQuery | HTMLElement, options?);
     constructor(display?: any, options?: DisplayOptions) {
         super();
-        if (options && options.hasOwnProperty('backgroundColors'))
+        if (options && Object.prototype.hasOwnProperty.call(options, 'backgroundColors'))
             this._enableBackgroundColors = options.backgroundColors;
-        if (options && options.hasOwnProperty('colors'))
+        if (options && Object.prototype.hasOwnProperty.call(options, 'colors'))
             this._enableColors = options.colors;
         if (!display)
             throw new Error('Display must be an id, element or jquery object');
@@ -519,16 +519,16 @@ export class Display extends EventEmitter {
             let expire;
             if (!args || args.length === 0) {
                 for (line in this._expire2) {
-                    if (!this._expire2.hasOwnProperty(line))
+                    if (!Object.prototype.hasOwnProperty.call(this._expire2, line))
                         continue;
                     this.expireLineLinkFormat(this._expire2[line], +line);
                 }
                 for (expire in this._expire) {
-                    if (!this._expire.hasOwnProperty(expire))
+                    if (!Object.prototype.hasOwnProperty.call(this._expire, expire))
                         continue;
                     lines = this._expire[expire];
                     for (line in lines) {
-                        if (!lines.hasOwnProperty(line))
+                        if (!Object.prototype.hasOwnProperty.call(lines, line))
                             continue;
                         this.expireLineLinkFormat(lines[line], +line);
                     }
@@ -540,7 +540,7 @@ export class Display extends EventEmitter {
             else if (this._expire[args]) {
                 lines = this._expire[args];
                 for (line in lines) {
-                    if (!lines.hasOwnProperty(line))
+                    if (!Object.prototype.hasOwnProperty.call(lines, line))
                         continue;
                     this.expireLineLinkFormat(lines[line], +line);
                 }
@@ -1217,7 +1217,7 @@ export class Display extends EventEmitter {
         const overlays = [];
         let ol;
         for (ol in this._overlays) {
-            if (!this._overlays.hasOwnProperty(ol) || ol === 'selection')
+            if (!Object.prototype.hasOwnProperty.call(this._overlays, ol) || ol === 'selection')
                 continue;
             overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
         }
@@ -1359,13 +1359,13 @@ export class Display extends EventEmitter {
         }
         let ol;
         for (ol in this._overlays) {
-            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
+            if (!Object.prototype.hasOwnProperty.call(this._overlays, ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
                 continue;
             this._overlays[ol].splice(line, 1);
         }
 
         for (ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
+            if (!Object.prototype.hasOwnProperty.call(this._expire, ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
                 continue;
             this._expire[ol].splice(line, 1);
         }
@@ -1431,13 +1431,13 @@ export class Display extends EventEmitter {
         }
         let ol;
         for (ol in this._overlays) {
-            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
+            if (!Object.prototype.hasOwnProperty.call(this._overlays, ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
                 continue;
             this._overlays[ol].splice(line, amt);
         }
 
         for (ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
+            if (!Object.prototype.hasOwnProperty.call(this._expire, ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
                 continue;
             this._expire[ol].splice(line, amt);
         }
@@ -1510,13 +1510,13 @@ export class Display extends EventEmitter {
             }
             let ol;
             for (ol in this._overlays) {
-                if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
+                if (!Object.prototype.hasOwnProperty.call(this._overlays, ol) || this._overlays[ol].length === 0)
                     continue;
                 this._overlays[ol].splice(0, amt);
             }
 
             for (ol in this._expire) {
-                if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0)
+                if (!Object.prototype.hasOwnProperty.call(this._expire, ol) || this._expire[ol].length === 0)
                     continue;
                 this._expire[ol].splice(0, amt);
             }
@@ -1892,7 +1892,7 @@ export class Display extends EventEmitter {
             idx = this.lines.length - 1;
         const formats = this.lineFormats[idx];
         for (const ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol))
+            if (!Object.prototype.hasOwnProperty.call(this._expire, ol))
                 continue;
             if (this._expire[ol][idx])
                 delete this._expire[ol][idx];
@@ -2101,7 +2101,7 @@ export class Display extends EventEmitter {
         }
         let ol;
         for (ol in this._overlays[type]) {
-            if (!this._overlays[type].hasOwnProperty(ol))
+            if (!Object.prototype.hasOwnProperty.call(this._overlays[type], ol))
                 continue;
             this._overlays[type][ol] = `<div style="top: ${(+ol || 0) * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
             if (this.split && ol >= this.split._viewRange.start) {
@@ -3368,7 +3368,7 @@ export class ScrollBar extends EventEmitter {
         if (options) {
             this.setParent(options.parent, options.content);
             this.type = options.type || ScrollType.vertical;
-            if (options.hasOwnProperty('autoScroll'))
+            if (Object.prototype.hasOwnProperty.call(options, 'autoScroll'))
                 this.autoScroll = options.autoScroll;
         }
         else

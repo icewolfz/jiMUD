@@ -1,6 +1,6 @@
 //spell-checker:ignore MONTYPE ROOMTYPE datagrid propertygrid dropdown polyfill MODROOM, SUBCLASSER LOCKPICK selectall waterbreathing
 //spell-checker:ignore consolas lucida bitstream tabbable varargs crafter mgive blacksmithing glasssmithing stonemasonry doublewielding warhammer flamberge nodachi
-//spell-checker:ignore bandedmail splintmail chainmail ringmail scalemail overclothing polearm tekagi shuko tekko bardiche katana wakizashi pilum warstaff
+//spell-checker:ignore nonetrackable bandedmail splintmail chainmail ringmail scalemail overclothing polearm tekagi shuko tekko bardiche katana wakizashi pilum warstaff
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { createFunction, formatFunctionPointer, formatArgumentList, formatMapping } from './lpc';
 import { Splitter, Orientation } from '../splitter';
@@ -253,7 +253,7 @@ export class Room {
     constructor(x, y, z, data?, type?) {
         if (data)
             for (const prop in data) {
-                if (!data.hasOwnProperty(prop)) continue;
+                if (!Object.prototype.hasOwnProperty.call(data, prop)) continue;
                 this[prop] = copy(data[prop]);
             }
         this.type = type;
@@ -270,7 +270,7 @@ export class Room {
         if (!room) return false;
         let prop;
         for (prop in this) {
-            if (!this.hasOwnProperty(prop)) continue;
+            if (!Object.prototype.hasOwnProperty.call(this, prop)) continue;
             switch (prop) {
                 case 'x':
                 case 'y':
@@ -325,7 +325,7 @@ export class Room {
     public clear(data?, type?) {
         if (data)
             for (const prop in this) {
-                if (prop === 'x' || prop === 'y' || prop === 'z' || !this.hasOwnProperty(prop)) continue;
+                if (prop === 'x' || prop === 'y' || prop === 'z' || !Object.prototype.hasOwnProperty.call(this, prop)) continue;
                 this[prop] = copy(data[prop]);
             }
         else {
@@ -380,7 +380,7 @@ export class Room {
         if (this.flags !== RoomFlags.None) return false;
         if (this.baseFlags !== RoomBaseFlags.Default) return false;
         for (const prop in this) {
-            if (prop === 'baseFlags' || prop === 'x' || prop === 'y' || prop === 'z' || prop === 'type' || prop === 'forage' || prop === 'flags' || !this.hasOwnProperty(prop)) continue;
+            if (prop === 'baseFlags' || prop === 'x' || prop === 'y' || prop === 'z' || prop === 'type' || prop === 'forage' || prop === 'flags' || !Object.prototype.hasOwnProperty.call(this, prop)) continue;
             const tp = typeof this[prop];
             const value = <any>this[prop];
             if (Array.isArray(this[prop]) && (<any>this[prop]).length !== 0)
@@ -507,7 +507,7 @@ class Monster {
         }
         if (data) {
             for (const prop in data) {
-                if (!data.hasOwnProperty(prop)) continue;
+                if (!Object.prototype.hasOwnProperty.call(data, prop)) continue;
                 this[prop] = copy(data[prop]);
             }
             this.type = type || data.type;
@@ -527,7 +527,7 @@ class Monster {
         if (!monster) return false;
         let prop;
         for (prop in this) {
-            if (!this.hasOwnProperty(prop)) continue;
+            if (!Object.prototype.hasOwnProperty.call(this, prop)) continue;
             if (this[prop] !== monster[prop])
                 return false;
         }
@@ -537,7 +537,7 @@ class Monster {
     public clear(data?, type?) {
         if (data)
             for (const prop in this) {
-                if (prop === 'id' || !this.hasOwnProperty(prop)) continue;
+                if (prop === 'id' || !Object.prototype.hasOwnProperty.call(this, prop)) continue;
                 this[prop] = copy(data[prop]);
             }
         else {
@@ -643,7 +643,7 @@ class StdObject {
         }
         if (data) {
             for (const prop in data) {
-                if (!data.hasOwnProperty(prop)) continue;
+                if (!Object.prototype.hasOwnProperty.call(data, prop)) continue;
                 this[prop] = copy(data[prop]);
             }
             this.id = id || data.id || new Date().getTime();
@@ -656,7 +656,7 @@ class StdObject {
         const r = new StdObject();
         let prop;
         for (prop in this) {
-            if (!this.hasOwnProperty(prop)) continue;
+            if (!Object.prototype.hasOwnProperty.call(this, prop)) continue;
             r[prop] = copy(this[prop]);
         }
         return r;
@@ -666,7 +666,7 @@ class StdObject {
         if (!item) return false;
         let prop;
         for (prop in this) {
-            if (!this.hasOwnProperty(prop)) continue;
+            if (!Object.prototype.hasOwnProperty.call(this, prop)) continue;
             if (this[prop] !== item[prop])
                 return false;
         }
@@ -800,7 +800,7 @@ class Area {
             Object.keys(data.objects).forEach(k => {
                 area.objects[k] = new StdObject(k);
                 for (prop in data.objects[k]) {
-                    if (!data.objects[k].hasOwnProperty(prop)) continue;
+                    if (!Object.prototype.hasOwnProperty.call(data.objects[k], prop)) continue;
                     area.objects[k][prop] = data.objects[k][prop];
                 }
             });
@@ -812,7 +812,7 @@ class Area {
                 for (let y = 0; y < yl; y++) {
                     for (let x = 0; x < xl; x++) {
                         for (prop in data.rooms[z][y][x]) {
-                            if (!data.rooms[z][y][x].hasOwnProperty(prop)) continue;
+                            if (!Object.prototype.hasOwnProperty.call(data.rooms[z][y][x], prop)) continue;
                             area.rooms[z][y][x][prop] = data.rooms[z][y][x][prop];
                         }
                         if (data.version === 1) {
@@ -865,7 +865,7 @@ class Area {
         a.baseMonsters = Object.keys(this.baseMonsters).map(k => this.baseMonsters[k].clone());
         let prop;
         for (prop in this) {
-            if (prop === 'rooms' || prop === 'baseMonsters' || prop === 'baseRooms' || prop === 'objects' || prop === 'monsters' || !this.hasOwnProperty(prop)) continue;
+            if (prop === 'rooms' || prop === 'baseMonsters' || prop === 'baseRooms' || prop === 'objects' || prop === 'monsters' || !Object.prototype.hasOwnProperty.call(this, prop)) continue;
             a[prop] = this[prop];
         }
         return a;
@@ -3133,7 +3133,7 @@ export class AreaDesigner extends EditorBase {
                     oldValues[sl] = old.clone();
                     if (oDefault && nDefault)
                         for (prop in oDefault) {
-                            if (prop === 'type' || prop === 'x' || prop === 'y' || prop === 'z' || !oDefault.hasOwnProperty(prop)) continue;
+                            if (prop === 'type' || prop === 'x' || prop === 'y' || prop === 'z' || !Object.prototype.hasOwnProperty.call(oDefault, prop)) continue;
                             if (curr[prop] === oDefault[prop])
                                 curr[prop] = copy(nDefault[prop]);
                         }
@@ -3141,7 +3141,7 @@ export class AreaDesigner extends EditorBase {
                     this.RoomChanged(curr, old, true);
                     if (oDefault && nDefault)
                         for (prop in oDefault) {
-                            if (prop === 'type' || prop === 'x' || prop === 'y' || prop === 'z' || !oDefault.hasOwnProperty(prop)) continue;
+                            if (prop === 'type' || prop === 'x' || prop === 'y' || prop === 'z' || !Object.prototype.hasOwnProperty.call(oDefault, prop)) continue;
                             if (old[prop] === oDefault[prop])
                                 old[prop] = copy(nDefault[prop]);
                         }
@@ -6735,7 +6735,7 @@ export class AreaDesigner extends EditorBase {
                                 }
                                 const nObject = ed.value.clone();
                                 for (const prop in e.data) {
-                                    if (!e.data.hasOwnProperty(prop)) continue;
+                                    if (!Object.prototype.hasOwnProperty.call(e.data, prop)) continue;
                                     if (Array.isArray(e.data[prop]))
                                         nObject[prop.substr(4)] = e.data[prop];
                                     else if (typeof e.data[prop] === 'object')
@@ -7656,7 +7656,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-my-message').value = ed.value.myMessage || '';
                                             e.page.querySelector('#obj-your-message').value = ed.value.yourMessage || '';
                                             e.page.querySelector('#obj-empty-name').value = ed.value.emptyName || 'bottle';
-                                            e.page.querySelector('#obj-empty').checked = !ed.value.hasOwnProperty('empty') || ed.value.empty;
+                                            e.page.querySelector('#obj-empty').checked = !Object.prototype.hasOwnProperty.call(ed.value, 'empty') || ed.value.empty;
                                         }
                                     }));
                                     break;
@@ -7700,7 +7700,7 @@ export class AreaDesigner extends EditorBase {
                                             $(e.page.querySelector('#obj-quality')).val(ed.value.quality || 'average').selectpicker('render');
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-class').value = ed.value.class || '1';
-                                            e.page.querySelector('#obj-canBait').checked = !ed.value.hasOwnProperty('canBait') || ed.value.canBait;
+                                            e.page.querySelector('#obj-canBait').checked = !Object.prototype.hasOwnProperty.call(ed.value, 'canBait') || ed.value.canBait;
                                         }
                                     }), wizSkills, wizBonuses]);
                                     //spell-checker:enable
@@ -7789,7 +7789,7 @@ export class AreaDesigner extends EditorBase {
                                     const data = e.wizard.data;
                                     let sum = '';
                                     for (const prop in data) {
-                                        if (!data.hasOwnProperty(prop)) continue;
+                                        if (!Object.prototype.hasOwnProperty.call(data, prop)) continue;
                                         if (Array.isArray(data[prop]))
                                             sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].length + '</div>';
                                         else if (typeof data[prop] === 'object')
@@ -8591,7 +8591,7 @@ export class AreaDesigner extends EditorBase {
                     const room = new Room(dRoom.x - osX, dRoom.y - osY, dRoom.z - osZ, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom);
                     let prop;
                     for (prop in dRoom) {
-                        if (prop === 'x' || prop === 'y' || prop === 'z' || !dRoom.hasOwnProperty(prop)) continue;
+                        if (prop === 'x' || prop === 'y' || prop === 'z' || !Object.prototype.hasOwnProperty.call(dRoom, prop)) continue;
                         room[prop] = dRoom[prop];
                     }
                     this.addRoom(room);
@@ -10553,7 +10553,7 @@ export class AreaDesigner extends EditorBase {
             if (items.length > 0) {
                 items = items.sort((a, b) => { return b.item.length - a.item.length; });
                 for (c = 0, cl = items.length; c < cl; c++) {
-                    if(items[c].item.length === 0) continue;
+                    if (items[c].item.length === 0) continue;
                     str = str.replace(new RegExp('\\b(?!room-preview)(' + items[c].item + ')\\b', 'gi'), m => '<span data-id="' + this.parent.id + '-room-preview' + c + '">' + m + '</span>');
                 }
             }
@@ -10563,7 +10563,7 @@ export class AreaDesigner extends EditorBase {
             if (e !== RoomExit.None) {
                 ex = [];
                 for (exit in RoomExits) {
-                    if (!RoomExits.hasOwnProperty(exit)) continue;
+                    if (!Object.prototype.hasOwnProperty.call(RoomExits, exit)) continue;
                     if (!RoomExits[exit]) continue;
                     if ((e & RoomExits[exit]) === RoomExits[exit]) {
                         if (room.exitsDetails[exit]) {
@@ -10634,7 +10634,7 @@ export class AreaDesigner extends EditorBase {
             else {
                 ex = [];
                 for (exit in RoomExits) {
-                    if (!RoomExits.hasOwnProperty(exit)) continue;
+                    if (!Object.prototype.hasOwnProperty.call(RoomExits, exit)) continue;
                     if (!RoomExits[exit]) continue;
                     if ((e & RoomExits[exit]) === RoomExits[exit]) {
                         if (room.exitsDetails[exit]) {
@@ -13818,7 +13818,7 @@ export class AreaDesigner extends EditorBase {
         if (!data || !template || template.length === 0) return template;
         let d;
         for (d in data) {
-            if (!data.hasOwnProperty(d))
+            if (!Object.prototype.hasOwnProperty.call(data, d))
                 continue;
             if (data[d].regex)
                 template = template.replace(data[d].regex, data[d].value);

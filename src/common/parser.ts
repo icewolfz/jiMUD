@@ -2225,7 +2225,7 @@ export class Parser extends EventEmitter {
                     sArgs[e.attributeIndexes[x]] = sArg[0];
             }
             for (sArg in sArgs) {
-                if (!sArgs.hasOwnProperty(sArg)) continue;
+                if (!Object.prototype.hasOwnProperty.call(sArgs, sArg)) continue;
                 arg = arg.replace('&' + sArg + ';', sArgs[sArg]);
             }
             if (!e.empty) {

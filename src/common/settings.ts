@@ -535,12 +535,12 @@ export class Settings {
         let prop2;
 
         for (prop in data) {
-            if (!data.hasOwnProperty(prop)) {
+            if (!Object.prototype.hasOwnProperty.call(data, prop)) {
                 continue;
             }
             if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
                 for (prop2 in data[prop]) {
-                    if (!data[prop].hasOwnProperty(prop2)) {
+                    if (!Object.prototype.hasOwnProperty.call(data[prop], prop2)) {
                         continue;
                     }
                     settings[prop][prop2] = data[prop][prop2];

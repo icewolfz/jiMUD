@@ -60,7 +60,7 @@ export class Column {
         if (data) {
             let prop;
             for (prop in data) {
-                if (!data.hasOwnProperty(prop)) continue;
+                if (!Object.prototype.hasOwnProperty.call(data, prop)) continue;
                 this[prop] = data[prop];
             }
         }
@@ -627,9 +627,9 @@ export class DataGrid extends EventEmitter {
             const data = this.selected;
             const sortFn = this.$cols[this.$sort.column].sort;
             const rows = this.$rows;
-            if (this.$cols[this.$sort.column].hasOwnProperty('index'))
+            if (Object.prototype.hasOwnProperty.call(this.$cols[this.$sort.column], 'index'))
                 prop = this.$cols[this.$sort.column].index;
-            else if (this.$cols[this.$sort.column].hasOwnProperty('field'))
+            else if (Object.prototype.hasOwnProperty.call(this.$cols[this.$sort.column], 'field'))
                 prop = this.$cols[this.$sort.column].field;
             else
                 prop = this.$sort.column;
@@ -759,9 +759,9 @@ export class DataGrid extends EventEmitter {
             const data = this.selected;
             const sortFn = this.$cols[this.$sort.column].sort;
             const rows = this.$rows;
-            if (this.$cols[this.$sort.column].hasOwnProperty('index'))
+            if (Object.prototype.hasOwnProperty.call(this.$cols[this.$sort.column], 'index'))
                 prop = this.$cols[this.$sort.column].index;
-            else if (this.$cols[this.$sort.column].hasOwnProperty('field'))
+            else if (Object.prototype.hasOwnProperty.call(this.$cols[this.$sort.column], 'field'))
                 prop = this.$cols[this.$sort.column].field;
             else
                 prop = this.$sort.column;
@@ -865,9 +865,9 @@ export class DataGrid extends EventEmitter {
         const cols = this.$cols;
         let cl = cols.length;
         while (cl--) {
-            if (cols[cl].hasOwnProperty('index'))
+            if (Object.prototype.hasOwnProperty.call(cols[cl], 'index'))
                 data[cols[cl].index] = null;
-            else if (cols[cl].hasOwnProperty('field'))
+            else if (Object.prototype.hasOwnProperty.call(cols[cl], 'field'))
                 data[cols[cl].field] = null;
         }
         this.emit('add', e);
@@ -1242,9 +1242,9 @@ export class DataGrid extends EventEmitter {
         let prop;
         const sortFn = this.$cols[this.$sort.column].sort;
 
-        if (this.$cols[this.$sort.column].hasOwnProperty('index'))
+        if (Object.prototype.hasOwnProperty.call(this.$cols[this.$sort.column], 'index'))
             prop = this.$cols[this.$sort.column].index;
-        else if (this.$cols[this.$sort.column].hasOwnProperty('field'))
+        else if (Object.prototype.hasOwnProperty.call(this.$cols[this.$sort.column], 'field'))
             prop = this.$cols[this.$sort.column].field;
         else
             prop = this.$sort.column;
@@ -1551,9 +1551,9 @@ export class DataGrid extends EventEmitter {
                 w += 40;
             let field = null;
             let idx = c;
-            if (cols[c].hasOwnProperty('index'))
+            if (Object.prototype.hasOwnProperty.call(cols[c], 'index'))
                 idx = cols[c].index;
-            else if (cols[c].hasOwnProperty('field'))
+            else if (Object.prototype.hasOwnProperty.call(cols[c], 'field'))
                 field = cols[c].field;
             cell = document.createElement('td');
             cell.classList.add('datagrid-cell');
@@ -2337,7 +2337,7 @@ export class DataGrid extends EventEmitter {
             let editorOptions;
             if (this.$cols[col] && this.$cols[col].editor) {
                 editorOptions = this.$cols[col].editor.options;
-                if (this.$cols[col].editor.hasOwnProperty('show')) {
+                if (Object.prototype.hasOwnProperty.call(this.$cols[col].editor, 'show')) {
                     if (typeof this.$cols[col].editor.show === 'function') {
                         if (!this.$cols[col].editor.show(col, { index: +el.dataset.idx, column: col, rowIndex: +el.dataset.row, field: el.dataset.field, parent: +el.dataset.parent, child: +el.dataset.child, dataIndex: +el.dataset.dataIndex })) {
                             editor = null;

@@ -108,7 +108,7 @@ self.addEventListener('message', (e: MessageEvent) => {
         case 'options':
             let option;
             for (option in e.data.args) {
-                if (!e.data.args.hasOwnProperty(option))
+                if (!Object.prototype.hasOwnProperty.call(e.data.args, option))
                     continue;
                 if (option === 'colors') {
                     const _colors = e.data.args[option];

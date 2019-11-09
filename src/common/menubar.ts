@@ -105,8 +105,8 @@ export class Menubar {
         if (!items) return;
         item = items[0];
         tItem = items[1];
-        if (options.hasOwnProperty('enabled')) {
-            if (tItem.hasOwnProperty('rootEnabled'))
+        if (Object.prototype.hasOwnProperty.call(options, 'enabled')) {
+            if (Object.prototype.hasOwnProperty.call(tItem, 'rootEnabled'))
                 tItem.rootEnabled = options.enabled ? true : false;
             else
                 item.enabled = options.enabled ? true : false;
@@ -120,7 +120,7 @@ export class Menubar {
         if (options.position != null)
             item.position = options.position;
 
-        if (!tItem.hasOwnProperty('rootEnabled'))
+        if (!Object.prototype.hasOwnProperty.call(tItem, 'rootEnabled'))
             tItem.enabled = item.enabled;
         tItem.checked = item.checked;
         tItem.icon = item.icon;
@@ -133,9 +133,9 @@ export class Menubar {
         }
         if (tItem.root && !tItem.enabled) {
             tItem.submenu.forEach(f => {
-                if (f.hasOwnProperty('rootEnabled'))
+                if (Object.prototype.hasOwnProperty.call(f, 'rootEnabled'))
                     return f;
-                if (!f.hasOwnProperty('enabled'))
+                if (Object.prototype.hasOwnProperty.call(!f, 'enabled'))
                     f.rootEnabled = true;
                 else
                     f.rootEnabled = f.enabled || false;
@@ -147,7 +147,7 @@ export class Menubar {
         }
         else if (tItem.root && tItem.enabled) {
             tItem.submenu.forEach(f => {
-                if (!f.hasOwnProperty('rootEnabled')) return f;
+                if (!Object.prototype.hasOwnProperty.call(f, 'rootEnabled')) return f;
                 f.enabled = f.rootEnabled || false;
                 delete f.rootEnabled;
                 return f;

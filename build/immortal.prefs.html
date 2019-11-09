@@ -161,9 +161,9 @@
             if (!_settings.extensions['immortal'])
                 resetSettings();
             else {
-                if (!_settings.extensions['immortal'].hasOwnProperty('focusOnFinished'))
+                if (!Object.prototype.hasOwnProperty.call(_settings.extensions['immortal'], 'focusOnFinished'))
                     _settings.extensions['immortal'].focusOnFinished = true;
-                if (!_settings.extensions['immortal'].hasOwnProperty('selectOnFinished'))
+                if (!Object.prototype.hasOwnProperty.call(_settings.extensions['immortal'], 'selectOnFinished'))
                     _settings.extensions['immortal'].selectOnFinished = true;
             }
             $('#focusOnFinished').prop('checked', _settings.extensions['immortal'].focusOnFinished);

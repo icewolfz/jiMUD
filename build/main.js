@@ -1263,9 +1263,9 @@ function createWindow() {
             options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
         }
         options.show = false;
-        if (!options.hasOwnProperty('webPreferences'))
+        if (!Object.prototype.hasOwnProperty.call(options, 'webPreferences'))
             options.webPreferences = { nodeIntegration: true };
-        else if (!options.webPreferences.hasOwnProperty('webPreferences')) {
+        else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
             options.webPreferences.nodeIntegration = true;
             options.webPreferences.webviewTag = false;
             options.webPreferences.sandbox = false;
@@ -1356,7 +1356,7 @@ function createWindow() {
     win.once('ready-to-show', () => {
         createMenu();
         loadMenu();
-    
+
         addInputContext(win);
         if (isFileSync(path.join(app.getPath('userData'), 'monsters.css'))) {
             fs.readFile(path.join(app.getPath('userData'), 'monsters.css'), 'utf8', (err, data) => {
@@ -1607,7 +1607,7 @@ ipcMain.on('load-default', () => {
     var mf = parseTemplate(path.join('{data}', 'map.sqlite'));
     if (sf === global.settingsFile && mf === global.mapFile) {
         for (name in windows) {
-            if (!windows.hasOwnProperty(name) || !windows[name].window)
+            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
                 continue;
             windows[name].webContents.send('load-default');
         }
@@ -1634,7 +1634,7 @@ ipcMain.on('load-default', () => {
         winChat = null;
     }
     for (name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
             continue;
         executeScript('closed();', windows[name].window);
         set.windows[name] = getWindowState(name, windows[name].window);
@@ -1676,7 +1676,7 @@ ipcMain.on('load-char', (event, char) => {
         if (winMap)
             winMap.webContents.send('load-char', char);
         for (name in windows) {
-            if (!windows.hasOwnProperty(name) || !windows[name].window)
+            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
                 continue;
             windows[name].window.webContents.send('load-char', char);
         }
@@ -1835,7 +1835,7 @@ ipcMain.on('set-title', (event, title) => {
     if (winMap)
         winMap.webContents.send('set-title', title);
     for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
             continue;
         windows[name].window.webContents.send('set-title', title);
     }
@@ -1855,7 +1855,7 @@ ipcMain.on('closed', () => {
     if (winCode)
         winCode.webContents.send('closed');
     for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
             continue;
         windows[name].window.webContents.send('closed');
     }
@@ -1874,7 +1874,7 @@ ipcMain.on('connected', () => {
     if (winCode)
         winCode.webContents.send('connected');
     for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
             continue;
         windows[name].window.webContents.send('connected');
     }
@@ -1886,7 +1886,7 @@ ipcMain.on('set-color', (event, type, color, code, window) => {
     if (winCode)
         winCode.webContents.send('set-color', type, color, code, window);
     for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
             continue;
         windows[name].window.webContents.send('set-color', type, color, code, window);
     }
@@ -1956,7 +1956,7 @@ function sendEditor(text, window) {
         if (winCode)
             winCode.webContents.send('send-editor', text, window);
         for (var name in windows) {
-            if (!windows.hasOwnProperty(name) || !windows[name].window)
+            if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
                 continue;
             windows[name].window.webContents.send('send-editor', text, window);
         }
@@ -1986,7 +1986,7 @@ ipcMain.on('reload-mail', () => {
     if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('reload-mail');
     for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window || !windows[name].window.webContents)
+        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window || !windows[name].window.webContents)
             continue;
         windows[name].window.webContents.send('reload-mail');
     }
@@ -1997,7 +1997,7 @@ ipcMain.on('reload-profiles', () => {
     if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('reload-profiles');
     for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window || !windows[name].window.webContents)
+        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window || !windows[name].window.webContents)
             continue;
         windows[name].window.webContents.send('reload-profiles');
     }
@@ -2006,7 +2006,7 @@ ipcMain.on('reload-profiles', () => {
 ipcMain.on('chat', (event, text) => {
     sendChat(text);
     for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
             continue;
         windows[name].window.webContents.send('chat', text);
     }
@@ -2068,7 +2068,7 @@ ipcMain.on('setting-changed', (event, data) => {
     var name;
     if (data.type === 'windows')
         for (name in windows) {
-            if (!windows.hasOwnProperty(name) || !windows[name].window)
+            if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
                 continue;
 
             if (name === data.name) {
@@ -2086,7 +2086,7 @@ ipcMain.on('setting-changed', (event, data) => {
         }
     if (data.type === 'extensions')
         for (name in windows) {
-            if (!windows.hasOwnProperty(name) || !windows[name].window)
+            if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
                 continue;
             if (windows[name].window)
                 windows[name].window.webContents.send('setting-changed', data);
@@ -2113,7 +2113,7 @@ ipcMain.on('GMCP-received', (event, data) => {
     if (winCode)
         winCode.webContents.send('GMCP-received', data);
     for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
             continue;
         windows[name].window.webContents.send('GMCP-received', data);
     }
@@ -2145,7 +2145,7 @@ ipcMain.on('command-history', (event, history) => {
     if (winCode)
         winCode.webContents.send('command-history', history);
     for (var name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
             continue;
         windows[name].window.webContents.send('command-history', history);
     }
@@ -3377,9 +3377,9 @@ function createNewWindow(name, options) {
             options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
         }
         options.show = false;
-        if (!options.hasOwnProperty('webPreferences'))
+        if (!Object.prototype.hasOwnProperty.call(options, 'webPreferences'))
             options.webPreferences = { nodeIntegration: true };
-        else if (!options.webPreferences.hasOwnProperty('webPreferences')) {
+        else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
             options.webPreferences.nodeIntegration = true;
             options.webPreferences.webviewTag = true;
             options.webPreferences.sandbox = false;
@@ -3608,7 +3608,7 @@ function copyWindowOptions(name) {
     if (!name || !windows[name]) return {};
     var ops = {};
     for (var op in windows[name]) {
-        if (!windows[name].hasOwnProperty(op) || op === 'window')
+        if (!Object.prototype.hasOwnProperty.call(windows[name], op) || op === 'window')
             continue;
         ops[op] = windows[name][op];
     }
@@ -3635,7 +3635,7 @@ function closeWindows(save, clear) {
     var name;
     var cWin;
     for (name in windows) {
-        if (!windows.hasOwnProperty(name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(window, name) || !windows[name].window)
             continue;
         executeScript('if(closing) closing();', windows[name].window);
         executeScript('if(closed) closed();', windows[name].window);
@@ -3831,9 +3831,9 @@ function createCodeEditor(show, loading, loaded) {
             options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
         }
         options.show = false;
-        if (!options.hasOwnProperty('webPreferences'))
+        if (!Object.prototype.hasOwnProperty.call(options, 'webPreferences'))
             options.webPreferences = { nodeIntegration: true };
-        else if (!options.webPreferences.hasOwnProperty('webPreferences')) {
+        else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
             options.webPreferences.nodeIntegration = true;
             options.webPreferences.webviewTag = false;
             options.webPreferences.sandbox = false;
@@ -4119,6 +4119,7 @@ function getParentWindow() {
     return win;
 }
 
+// eslint-disable-next-line no-unused-vars
 function executeScript(script, w, f) {
     if (!w || !w.webContents) return;
     w.webContents.executeJavaScript(script).catch(err => {
@@ -4126,7 +4127,7 @@ function executeScript(script, w, f) {
             logError(err);
     });
     //if (f)
-        //w.webContents.focus();
+    //w.webContents.focus();
 }
 
 /*

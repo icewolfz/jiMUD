@@ -606,7 +606,7 @@
         function setSettings(obj, root) {
             let option;
             for (option in obj) {
-                if (!obj.hasOwnProperty(option))
+                if (!Object.prototype.hasOwnProperty.call(obj, option))
                     continue;
                 if (typeof (obj[option]) === 'object') {
                     setSettings(obj[option], root + option + '-');
@@ -1273,7 +1273,7 @@
                     </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="display">
-                    <div class="col-sm-6 fform-group">
+                    <div class="col-sm-6 form-group">
                         <label class="control-label">
                             Buffer size
                             <input type="number" id="bufferSize" class="input-sm form-control" min="100" max="1000000" />
@@ -1624,7 +1624,7 @@
                         </label>
                     </div>
                     <div class="col-sm-12 form-group">
-                        <label class="control-label">Newline shotcut</label>
+                        <label class="control-label">Newline shortcut</label>
                         <div class="btn-group" data-toggle="buttons">
                             <label class="btn btn-default btn-xs">
                                 <input type="radio" name="newlineShortcut" id="newlineShortcut-0"> None

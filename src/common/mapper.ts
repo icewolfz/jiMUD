@@ -620,7 +620,7 @@ export class Mapper extends EventEmitter {
             this.emit('debug', 'Draw room calculations time: ' + (new Date().getTime() - s));
             let rm;
             for (rm in rooms) {
-                if (!rooms.hasOwnProperty(rm)) continue;
+                if (!Object.prototype.hasOwnProperty.call(rooms, rm)) continue;
                 const room = rooms[rm];
                 this.DrawRoom(context, (room.X - x) * 32 * this._scale + ox, (room.Y - y) * 32 * this._scale + oy, room, ex, this._scale);
             }
@@ -991,7 +991,7 @@ export class Mapper extends EventEmitter {
             const stmt = this._db.prepare('INSERT INTO Exits VALUES (?, ?, ?, ?, ?)');
             let exit;
             for (exit in room.exits) {
-                if (!room.exits.hasOwnProperty(exit)) continue;
+                if (!Object.prototype.hasOwnProperty.call(room.exits, exit)) continue;
                 stmt.run(room.ID, exit, room.exits[exit].num, room.exits[exit].isdoor, room.exits[exit].isclosed);
             }
         }
@@ -1035,7 +1035,7 @@ export class Mapper extends EventEmitter {
             const stmt = this._db.prepare('INSERT OR REPLACE INTO Exits VALUES (?, ?, ?, ?, ?)');
             let exit;
             for (exit in room.exits) {
-                if (!room.exits.hasOwnProperty(exit)) continue;
+                if (!Object.prototype.hasOwnProperty.call(room.exits, exit)) continue;
                 stmt.run(room.ID, exit, room.exits[exit].num, room.exits[exit].isdoor, room.exits[exit].isclosed);
             }
         }
@@ -2063,7 +2063,7 @@ export class Mapper extends EventEmitter {
             let cx;
             let cy;
             for (id in rooms) {
-                if (!rooms.hasOwnProperty(id)) continue;
+                if (!Object.prototype.hasOwnProperty.call(rooms, id)) continue;
                 room = rooms[id];
                 if (ox == null) {
                     ox = room.x;
@@ -2077,7 +2077,7 @@ export class Mapper extends EventEmitter {
             }
 
             for (id in rooms) {
-                if (!rooms.hasOwnProperty(id)) continue;
+                if (!Object.prototype.hasOwnProperty.call(rooms, id)) continue;
                 room = rooms[id];
                 if (room == null) continue;
                 if (!roomsC[room.y - oy]) roomsC[room.y - oy] = [];
@@ -2095,7 +2095,7 @@ export class Mapper extends EventEmitter {
             }
 
             for (id in rooms) {
-                if (!rooms.hasOwnProperty(id)) continue;
+                if (!Object.prototype.hasOwnProperty.call(rooms, id)) continue;
                 room = rooms[id];
                 room = rooms[id];
                 x = (room.x - ox);
@@ -2183,7 +2183,7 @@ export class Mapper extends EventEmitter {
             let x2;
             let y2;
             for (id in rooms) {
-                if (!rooms.hasOwnProperty(id)) continue;
+                if (!Object.prototype.hasOwnProperty.call(rooms, id)) continue;
                 room = rooms[id];
                 if (ox == null) {
                     ox = room.x;
@@ -2197,7 +2197,7 @@ export class Mapper extends EventEmitter {
             }
 
             for (id in rooms) {
-                if (!rooms.hasOwnProperty(id)) continue;
+                if (!Object.prototype.hasOwnProperty.call(rooms, id)) continue;
                 room = rooms[id];
                 if (room == null) continue;
                 if (!roomsC[room.y - oy]) roomsC[room.y - oy] = [];
@@ -2215,7 +2215,7 @@ export class Mapper extends EventEmitter {
             }
 
             for (id in rooms) {
-                if (!rooms.hasOwnProperty(id)) continue;
+                if (!Object.prototype.hasOwnProperty.call(rooms, id)) continue;
                 room = rooms[id];
                 x = (room.x - ox);
                 y = (room.y - oy);
@@ -2353,7 +2353,7 @@ export class Mapper extends EventEmitter {
                 let exit;
                 const exits = room.exits;
                 for (exit in exits) {
-                    if (!exits.hasOwnProperty(exit)) continue;
+                    if (!Object.prototype.hasOwnProperty.call(exits, exit)) continue;
                     stmt.run([room.ID, exit, exits[exit].num, exits[exit].isdoor, exits[exit].isclosed]);
                     if (this._cancelImport) {
                         this._db.prepare('ROLLBACK').run();
@@ -2420,7 +2420,7 @@ export class Mapper extends EventEmitter {
                     for (prop in rows[r]) {
                         if (prop === 'ID')
                             continue;
-                        if (!rows[r].hasOwnProperty(prop)) {
+                        if (!Object.prototype.hasOwnProperty.call(rows[r], prop)) {
                             continue;
                         }
                         rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
@@ -2474,7 +2474,7 @@ export class Mapper extends EventEmitter {
                     for (prop in rows[r]) {
                         if (prop === 'ID')
                             continue;
-                        if (!rows[r].hasOwnProperty(prop)) {
+                        if (!Object.prototype.hasOwnProperty.call(rows[r], prop)) {
                             continue;
                         }
                         rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
@@ -2616,7 +2616,7 @@ export class Mapper extends EventEmitter {
             let exit;
             let dest;
             for (exit in room.exits) {
-                if (!room.exits.hasOwnProperty(exit)) continue;
+                if (!Object.prototype.hasOwnProperty.call(room.exits, exit)) continue;
                 dest = room.exits[exit].DestID || room.exits[exit].num || null;
                 room.exits[exit] = {
                     num: dest ? '' + dest : null,

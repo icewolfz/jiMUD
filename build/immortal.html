@@ -594,11 +594,11 @@
                 };
                 saveOptions();
             }
-            if (!options.hasOwnProperty('compress'))
+            if (!Object.prototype.hasOwnProperty.call(options, 'compress'))
                 options.compress = true;
-            if (!options.hasOwnProperty('focusOnFinished'))
+            if (!Object.prototype.hasOwnProperty.call(options, 'focusOnFinished'))
                 options.focusOnFinished = true;
-            if (!options.hasOwnProperty('selectOnFinished'))
+            if (!Object.prototype.hasOwnProperty.call(options, 'selectOnFinished'))
                 options.selectOnFinished = true;
             if (options.localSize < 202)
                 options.localSize = 202;
@@ -1507,7 +1507,7 @@
                     _qUpdate = [];
                     _qUpdateTracker = {};
                 }
-                if (_qUpdateTracker.hasOwnProperty(item.ID))
+                if (Object.prototype.hasOwnProperty.call(_qUpdateTracker, item.ID))
                     _qUpdate[_qUpdateTracker[item.ID]] = item;
                 else {
                     _qUpdateTracker[item.ID] = _qUpdate.length;
@@ -2414,12 +2414,7 @@
                         if (event.dataTransfer.files[f].path.startsWith('/jiMUD:')) continue;
                         if (event.dataTransfer.files[f].path.startsWith('/jiMUDPath:')) continue;
                         if (event.dataTransfer.files[f].size < 1) {
-                            try {
-                                var stat = fs.statSync(event.dataTransfer.files[f].path);
-                            }
-                            catch (error) {
-                                throw error;
-                            }
+                            var stat = fs.statSync(event.dataTransfer.files[f].path);
                             if (stat.isDirectory())
                                 uploadPath(event.dataTransfer.files[f].path);
                             else
@@ -2564,12 +2559,7 @@
                                 _ied.download(p);
                         }
                         else if (event.dataTransfer.files[f].size < 1) {
-                            try {
-                                var stat = fs.statSync(event.dataTransfer.files[f].path);
-                            }
-                            catch (error) {
-                                throw error;
-                            }
+                            var stat = fs.statSync(event.dataTransfer.files[f].path);
                             if (stat.isDirectory())
                                 uploadPath(event.dataTransfer.files[f].path);
                             else

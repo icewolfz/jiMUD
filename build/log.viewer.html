@@ -71,6 +71,7 @@
 <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
 <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
 <script type="text/javascript">
+    //spellchecker:ignore dockmanager prefs ismap yazl
     const { DockManager } = require('./js/dockmanager');
     const { remote, ipcRenderer, clipboard } = require('electron');
     const { dialog, Menu, app } = remote;
@@ -726,7 +727,6 @@
         }
         else {
             p.viewer.classList.add('text-viewer');
-            var contents = '';
             p.displayFunction = () => {
                 display.removeListener('parse-done', p.displayFunction);
                 p.viewer.innerHTML = display.html;
@@ -737,6 +737,7 @@
         }
     }
 
+    // eslint-disable-next-line no-unused-vars
     function createLine(text, formats) {
         const parts = [];
         let offset = 0;

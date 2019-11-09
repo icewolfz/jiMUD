@@ -87,7 +87,7 @@ export class Client extends EventEmitter {
             const a = [];
             let profile;
             for (profile in this.profiles.items) {
-                if (!this.profiles.items.hasOwnProperty(profile)) continue;
+                if (!Object.prototype.hasOwnProperty.call(this.profiles.items, profile)) continue;
                 if (this.profiles.items[profile].enabled)
                     a.push(profile);
             }

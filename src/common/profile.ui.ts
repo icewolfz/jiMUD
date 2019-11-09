@@ -462,13 +462,13 @@ export function openImage(field?, callback?) {
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
     }).then(result => {
-            if (result.filePaths === undefined) {
-                return;
-            }
-            $(field).keyup().val(result.filePaths[0]).keydown();
-            UpdateButtonSample();
-            if (callback) callback();
-        });
+        if (result.filePaths === undefined) {
+            return;
+        }
+        $(field).keyup().val(result.filePaths[0]).keydown();
+        UpdateButtonSample();
+        if (callback) callback();
+    });
 }
 
 function MacroKeys(item) {
@@ -830,7 +830,7 @@ function UpdateItem(item, type?, options?) {
     }
     let prop;
     for (prop in item) {
-        if (!item.hasOwnProperty(prop) || prop === 'enabled') {
+        if (!Object.prototype.hasOwnProperty.call(item, prop) || prop === 'enabled') {
             continue;
         }
         const id = '#' + type + '-' + prop;
@@ -1512,7 +1512,7 @@ export function doUndo() {
             if (action.type === 'profile') {
                 let prop;
                 for (prop in action.data) {
-                    if (!action.data.hasOwnProperty(prop)) {
+                    if (!Object.prototype.hasOwnProperty.call(action.data, prop)) {
                         continue;
                     }
                     if (prop === 'enabled') {
@@ -1561,7 +1561,7 @@ export function doUndo() {
                 const key = getKey(action.type);
                 let prop;
                 for (prop in action.data) {
-                    if (!action.data.hasOwnProperty(prop)) {
+                    if (!Object.prototype.hasOwnProperty.call(action.data, prop)) {
                         continue;
                     }
                     current[prop] = profiles.items[action.profile][key][action.item][prop];
@@ -1686,7 +1686,7 @@ export function doRedo() {
             if (action.type === 'profile') {
                 let prop;
                 for (prop in action.data) {
-                    if (!action.data.hasOwnProperty(prop)) {
+                    if (!Object.prototype.hasOwnProperty.call(action.data, prop)) {
                         continue;
                     }
                     if (prop === 'enabled') {
@@ -1735,7 +1735,7 @@ export function doRedo() {
                 const key = getKey(action.type);
                 let prop;
                 for (prop in action.data) {
-                    if (!action.data.hasOwnProperty(prop)) {
+                    if (!Object.prototype.hasOwnProperty.call(action.data, prop)) {
                         continue;
                     }
                     current[prop] = profiles.items[action.profile][key][action.item][prop];
@@ -2255,7 +2255,7 @@ function getProfileData() {
     let profile;
 
     for (profile in profiles.items) {
-        if (!profiles.items.hasOwnProperty(profile) || profile === 'default') continue;
+        if (!Object.prototype.hasOwnProperty.call(profiles.items, profile) || profile === 'default') continue;
         data.push(newProfileNode(profile));
     }
 
@@ -2975,7 +2975,7 @@ function sortTree() {
     let n;
 
     for (profile in profiles.items) {
-        if (!profiles.items.hasOwnProperty(profile) || profile === 'default') continue;
+        if (!Object.prototype.hasOwnProperty.call(profiles.items, profile) || profile === 'default') continue;
         n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + '$', 'id']);
         data.push(cleanNode(n[0]));
     }
@@ -3081,197 +3081,40 @@ function importProfiles() {
         ],
         properties: ['multiSelections']
     }).then(result => {
-            if (result.filePaths === undefined || result.filePaths.length === 0) {
-                return;
-            }
-            const names = [];
-            const _replace = [];
-            const fl = result.filePaths.length;
-            let all = 0;
-            let n;
-            for (let f = 0; f < fl; f++) {
-                if (path.extname(result.filePaths[f]) === '.zip') {
-                    unarchiver = unarchiver || require('yauzl');
-                    unarchiver.open(result.filePaths[f], { lazyEntries: true }, (err, zipFile) => {
-                        if (err) throw err;
-                        zipFile.readEntry();
-                        zipFile.on('error', (err2) => {
-                            throw err2;
-                        });
-                        zipFile.on('entry', entry => {
-                            if (!/^profiles\/.*\.json$/.test(entry.fileName)) {
-                                zipFile.readEntry();
-                                return;
-                            }
-                            zipFile.openReadStream(entry, (err2, readStream) => {
-                                if (err2)
-                                    throw err2;
-                                let data: any = [];
-                                readStream.on('data', (chunk) => {
-                                    data.push(chunk);
-                                });
-                                readStream.on('end', () => {
-                                    zipFile.readEntry();
-                                    data = Buffer.concat(data).toString('utf8');
-                                    data = JSON.parse(data);
-                                    const p = Profile.load(data);
-                                    if (profiles.contains(p)) {
-                                        if (all === 3) {
-                                            _replace.push(profiles.items[p.name.toLowerCase()].clone());
-                                            profiles.add(p);
-                                            _enabled = _enabled.filter((a) => { return a !== p.name.toLowerCase(); });
-                                            if (p.enabled)
-                                                _enabled.push(p.name.toLowerCase());
-                                            names.push(p.clone());
-                                            const nodes = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(p.name) + '$', 'id']);
-                                            $('#profile-tree').treeview('removeNode', [nodes, { silent: true }]);
-                                            $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
-                                        }
-                                        else if (all === 5) {
-                                            n = profileCopyName(p.name);
-                                            p.name = n;
-                                            p.file = n.toLowerCase();
-                                            if (p.enabled)
-                                                _enabled.push(p.name.toLowerCase());
-                                            profiles.add(p);
-                                            names.push(p.clone());
-                                            $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
-                                        }
-                                        else if (all !== 4) {
-                                            const response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-                                                type: 'question',
-                                                title: 'Profiles already exists',
-                                                message: 'Profile named \'' + p.name + '\' exist, replace?',
-                                                buttons: ['Yes', 'No', 'Copy', 'Replace All', 'No All', 'Copy All'],
-                                                defaultId: 1
-                                            });
-                                            if (response === 0) {
-                                                _replace.push(profiles.items[p.name.toLowerCase()].clone());
-                                                profiles.add(p);
-                                                _enabled = _enabled.filter((a) => { return a !== p.name.toLowerCase(); });
-                                                if (p.enabled)
-                                                    _enabled.push(p.name.toLowerCase());
-
-                                                names.push(p.clone());
-                                                const nodes = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(p.name) + '$', 'id']);
-                                                $('#profile-tree').treeview('removeNode', [nodes, { silent: true }]);
-                                                $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
-                                            }
-                                            else if (response === 2) {
-                                                n = profileCopyName(p.name);
-                                                p.name = n;
-                                                p.file = n.toLowerCase();
-                                                profiles.add(p);
-                                                if (p.enabled)
-                                                    _enabled.push(p.name.toLowerCase());
-                                                names.push(p.clone());
-                                                $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
-                                            }
-                                            else if (response > 2)
-                                                all = response;
-                                        }
-                                    }
-                                    else {
-                                        names.push(p.clone());
-                                        profiles.add(p);
-                                        $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
-                                    }
-                                });
-                            });
-                        })
-                            .once('error', (err2) => {
-                                throw err2;
-                            })
-                            .once('close', () => {
-
-                            });
+        if (result.filePaths === undefined || result.filePaths.length === 0) {
+            return;
+        }
+        const names = [];
+        const _replace = [];
+        const fl = result.filePaths.length;
+        let all = 0;
+        let n;
+        for (let f = 0; f < fl; f++) {
+            if (path.extname(result.filePaths[f]) === '.zip') {
+                unarchiver = unarchiver || require('yauzl');
+                unarchiver.open(result.filePaths[f], { lazyEntries: true }, (err, zipFile) => {
+                    if (err) throw err;
+                    zipFile.readEntry();
+                    zipFile.on('error', (err2) => {
+                        throw err2;
                     });
-                }
-                else
-                    fs.readFile(result.filePaths[f], (err, data) => {
-                        if (err) throw err;
-
-                        data = JSON.parse(data);
-                        if (!data || data.version !== 2) {
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
-                                type: 'error',
-                                title: 'Invalid Profile',
-                                message: 'Invalid profile unable to process.'
-                            });
+                    zipFile.on('entry', entry => {
+                        if (!/^profiles\/.*\.json$/.test(entry.fileName)) {
+                            zipFile.readEntry();
                             return;
                         }
-                        ipcRenderer.send('set-progress', { value: 0.5, options: { mode: 'indeterminate' } });
-                        if (data.profiles) {
-                            const keys = Object.keys(data.profiles);
-                            let k = 0;
-                            const kl = keys.length;
-                            let item: (Alias | Button | Macro | Trigger | Context);
-                            for (; k < kl; k++) {
-                                const p = new Profile(keys[k], false);
-                                p.priority = data.profiles[keys[k]].priority;
-                                //p.enabled = data.profiles[keys[k]].enabled;
-                                p.enableMacros = data.profiles[keys[k]].enableMacros;
-                                p.enableTriggers = data.profiles[keys[k]].enableTriggers;
-                                p.enableAliases = data.profiles[keys[k]].enableAliases;
-                                p.enableContexts = data.profiles[keys[k]].enableContexts;
-                                let l = data.profiles[keys[k]].macros.length;
-                                if (l > 0) {
-                                    for (let m = 0; m < l; m++) {
-                                        item = new Macro(data.profiles[keys[k]].macros[m]);
-                                        item.notes = data.profiles[keys[k]].macros[m].notes || '';
-                                        p.macros.push(item);
-                                    }
-                                }
-
-                                l = data.profiles[keys[k]].aliases.length;
-                                if (l > 0) {
-                                    for (let m = 0; m < l; m++) {
-                                        item = new Alias(data.profiles[keys[k]].aliases[m]);
-                                        item.notes = data.profiles[keys[k]].aliases[m].notes || '';
-                                        p.aliases.push(item);
-                                    }
-                                }
-
-                                l = data.profiles[keys[k]].triggers.length;
-                                if (l > 0) {
-                                    for (let m = 0; m < l; m++) {
-                                        item = new Trigger();
-                                        item.pattern = data.profiles[keys[k]].triggers[m].pattern;
-                                        item.value = data.profiles[keys[k]].triggers[m].value;
-                                        item.style = data.profiles[keys[k]].triggers[m].style;
-                                        item.verbatim = data.profiles[keys[k]].triggers[m].verbatim;
-                                        item.name = data.profiles[keys[k]].triggers[m].name;
-                                        item.group = data.profiles[keys[k]].triggers[m].group;
-                                        item.enabled = data.profiles[keys[k]].triggers[m].enabled;
-                                        item.priority = data.profiles[keys[k]].triggers[m].priority;
-                                        item.triggerNewline = data.profiles[keys[k]].triggers[m].triggernewline;
-                                        item.triggerPrompt = data.profiles[keys[k]].triggers[m].triggerprompt;
-                                        item.caseSensitive = data.profiles[keys[k]].triggers[m].caseSensitive;
-                                        item.temp = data.profiles[keys[k]].triggers[m].temp;
-                                        item.type = data.profiles[keys[k]].triggers[m].type;
-                                        item.notes = data.profiles[keys[k]].triggers[m].notes || '';
-                                        p.triggers.push(item);
-                                    }
-                                }
-
-                                if (data.profiles[keys[k]].buttons) {
-                                    l = data.profiles[keys[k]].buttons.length;
-                                    if (l > 0) {
-                                        for (let m = 0; m < l; m++) {
-                                            item = new Button(data.profiles[keys[k]].buttons[m]);
-                                            p.buttons.push(item);
-                                        }
-                                    }
-                                }
-                                if (data.profiles[keys[k]].contexts) {
-                                    l = data.profiles[keys[k]].contexts.length;
-                                    if (l > 0) {
-                                        for (let m = 0; m < l; m++) {
-                                            item = new Context(data.profiles[keys[k]].contexts[m]);
-                                            p.contexts.push(item);
-                                        }
-                                    }
-                                }
+                        zipFile.openReadStream(entry, (err2, readStream) => {
+                            if (err2)
+                                throw err2;
+                            let data: any = [];
+                            readStream.on('data', (chunk) => {
+                                data.push(chunk);
+                            });
+                            readStream.on('end', () => {
+                                zipFile.readEntry();
+                                data = Buffer.concat(data).toString('utf8');
+                                data = JSON.parse(data);
+                                const p = Profile.load(data);
                                 if (profiles.contains(p)) {
                                     if (all === 3) {
                                         _replace.push(profiles.items[p.name.toLowerCase()].clone());
@@ -3333,16 +3176,173 @@ function importProfiles() {
                                     profiles.add(p);
                                     $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                 }
+                            });
+                        });
+                    })
+                        .once('error', (err2) => {
+                            throw err2;
+                        })
+                        .once('close', () => {
+
+                        });
+                });
+            }
+            else
+                fs.readFile(result.filePaths[f], (err, data) => {
+                    if (err) throw err;
+
+                    data = JSON.parse(data);
+                    if (!data || data.version !== 2) {
+                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: 'Invalid Profile',
+                            message: 'Invalid profile unable to process.'
+                        });
+                        return;
+                    }
+                    ipcRenderer.send('set-progress', { value: 0.5, options: { mode: 'indeterminate' } });
+                    if (data.profiles) {
+                        const keys = Object.keys(data.profiles);
+                        let k = 0;
+                        const kl = keys.length;
+                        let item: (Alias | Button | Macro | Trigger | Context);
+                        for (; k < kl; k++) {
+                            const p = new Profile(keys[k], false);
+                            p.priority = data.profiles[keys[k]].priority;
+                            //p.enabled = data.profiles[keys[k]].enabled;
+                            p.enableMacros = data.profiles[keys[k]].enableMacros;
+                            p.enableTriggers = data.profiles[keys[k]].enableTriggers;
+                            p.enableAliases = data.profiles[keys[k]].enableAliases;
+                            p.enableContexts = data.profiles[keys[k]].enableContexts;
+                            let l = data.profiles[keys[k]].macros.length;
+                            if (l > 0) {
+                                for (let m = 0; m < l; m++) {
+                                    item = new Macro(data.profiles[keys[k]].macros[m]);
+                                    item.notes = data.profiles[keys[k]].macros[m].notes || '';
+                                    p.macros.push(item);
+                                }
+                            }
+
+                            l = data.profiles[keys[k]].aliases.length;
+                            if (l > 0) {
+                                for (let m = 0; m < l; m++) {
+                                    item = new Alias(data.profiles[keys[k]].aliases[m]);
+                                    item.notes = data.profiles[keys[k]].aliases[m].notes || '';
+                                    p.aliases.push(item);
+                                }
+                            }
+
+                            l = data.profiles[keys[k]].triggers.length;
+                            if (l > 0) {
+                                for (let m = 0; m < l; m++) {
+                                    item = new Trigger();
+                                    item.pattern = data.profiles[keys[k]].triggers[m].pattern;
+                                    item.value = data.profiles[keys[k]].triggers[m].value;
+                                    item.style = data.profiles[keys[k]].triggers[m].style;
+                                    item.verbatim = data.profiles[keys[k]].triggers[m].verbatim;
+                                    item.name = data.profiles[keys[k]].triggers[m].name;
+                                    item.group = data.profiles[keys[k]].triggers[m].group;
+                                    item.enabled = data.profiles[keys[k]].triggers[m].enabled;
+                                    item.priority = data.profiles[keys[k]].triggers[m].priority;
+                                    item.triggerNewline = data.profiles[keys[k]].triggers[m].triggernewline;
+                                    item.triggerPrompt = data.profiles[keys[k]].triggers[m].triggerprompt;
+                                    item.caseSensitive = data.profiles[keys[k]].triggers[m].caseSensitive;
+                                    item.temp = data.profiles[keys[k]].triggers[m].temp;
+                                    item.type = data.profiles[keys[k]].triggers[m].type;
+                                    item.notes = data.profiles[keys[k]].triggers[m].notes || '';
+                                    p.triggers.push(item);
+                                }
+                            }
+
+                            if (data.profiles[keys[k]].buttons) {
+                                l = data.profiles[keys[k]].buttons.length;
+                                if (l > 0) {
+                                    for (let m = 0; m < l; m++) {
+                                        item = new Button(data.profiles[keys[k]].buttons[m]);
+                                        p.buttons.push(item);
+                                    }
+                                }
+                            }
+                            if (data.profiles[keys[k]].contexts) {
+                                l = data.profiles[keys[k]].contexts.length;
+                                if (l > 0) {
+                                    for (let m = 0; m < l; m++) {
+                                        item = new Context(data.profiles[keys[k]].contexts[m]);
+                                        p.contexts.push(item);
+                                    }
+                                }
+                            }
+                            if (profiles.contains(p)) {
+                                if (all === 3) {
+                                    _replace.push(profiles.items[p.name.toLowerCase()].clone());
+                                    profiles.add(p);
+                                    _enabled = _enabled.filter((a) => { return a !== p.name.toLowerCase(); });
+                                    if (p.enabled)
+                                        _enabled.push(p.name.toLowerCase());
+                                    names.push(p.clone());
+                                    const nodes = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(p.name) + '$', 'id']);
+                                    $('#profile-tree').treeview('removeNode', [nodes, { silent: true }]);
+                                    $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                }
+                                else if (all === 5) {
+                                    n = profileCopyName(p.name);
+                                    p.name = n;
+                                    p.file = n.toLowerCase();
+                                    if (p.enabled)
+                                        _enabled.push(p.name.toLowerCase());
+                                    profiles.add(p);
+                                    names.push(p.clone());
+                                    $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                }
+                                else if (all !== 4) {
+                                    const response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                                        type: 'question',
+                                        title: 'Profiles already exists',
+                                        message: 'Profile named \'' + p.name + '\' exist, replace?',
+                                        buttons: ['Yes', 'No', 'Copy', 'Replace All', 'No All', 'Copy All'],
+                                        defaultId: 1
+                                    });
+                                    if (response === 0) {
+                                        _replace.push(profiles.items[p.name.toLowerCase()].clone());
+                                        profiles.add(p);
+                                        _enabled = _enabled.filter((a) => { return a !== p.name.toLowerCase(); });
+                                        if (p.enabled)
+                                            _enabled.push(p.name.toLowerCase());
+
+                                        names.push(p.clone());
+                                        const nodes = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(p.name) + '$', 'id']);
+                                        $('#profile-tree').treeview('removeNode', [nodes, { silent: true }]);
+                                        $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                    }
+                                    else if (response === 2) {
+                                        n = profileCopyName(p.name);
+                                        p.name = n;
+                                        p.file = n.toLowerCase();
+                                        profiles.add(p);
+                                        if (p.enabled)
+                                            _enabled.push(p.name.toLowerCase());
+                                        names.push(p.clone());
+                                        $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                    }
+                                    else if (response > 2)
+                                        all = response;
+                                }
+                            }
+                            else {
+                                names.push(p.clone());
+                                profiles.add(p);
+                                $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                             }
                         }
-                        ipcRenderer.send('set-progress', { value: -1, options: { mode: 'normal' } });
-                    });
-            }
-            if (names.length > 0) {
-                sortTree();
-                pushUndo({ action: 'add', type: 'profile', item: names, replaced: _replace });
-            }
-        });
+                    }
+                    ipcRenderer.send('set-progress', { value: -1, options: { mode: 'normal' } });
+                });
+        }
+        if (names.length > 0) {
+            sortTree();
+            pushUndo({ action: 'add', type: 'profile', item: names, replaced: _replace });
+        }
+    });
 }
 
 function trashProfiles(p) {
@@ -3839,7 +3839,7 @@ function UpdateEditor(editor, item, options?) {
         options['pre']();
     let prop;
     for (prop in item) {
-        if (!item.hasOwnProperty(prop)) {
+        if (!Object.prototype.hasOwnProperty.call(item, prop)) {
             continue;
         }
         const id = '#' + editor + '-' + prop;
@@ -3991,15 +3991,15 @@ function exportAll() {
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
     }).then((fileName) => {
-            if (fileName.filePath === undefined) {
-                return;
-            }
-            const data = {
-                version: 2,
-                profiles: profiles.clone(2)
-            };
-            fs.writeFileSync(fileName.filePath, JSON.stringify(data));
-        });
+        if (fileName.filePath === undefined) {
+            return;
+        }
+        const data = {
+            version: 2,
+            profiles: profiles.clone(2)
+        };
+        fs.writeFileSync(fileName.filePath, JSON.stringify(data));
+    });
 
 }
 
@@ -4092,15 +4092,15 @@ function exportCurrent() {
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
     }).then((fileName) => {
-            if (fileName.filePath === undefined) {
-                return;
-            }
-            const data = {
-                version: 2,
-                profiles: {}
-            };
-            data.profiles[currentProfile.name] = currentProfile.clone(2);
-            fs.writeFileSync(fileName.filePath, JSON.stringify(data));
-        });
+        if (fileName.filePath === undefined) {
+            return;
+        }
+        const data = {
+            version: 2,
+            profiles: {}
+        };
+        data.profiles[currentProfile.name] = currentProfile.clone(2);
+        fs.writeFileSync(fileName.filePath, JSON.stringify(data));
+    });
 
 }
