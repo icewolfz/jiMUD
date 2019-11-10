@@ -126,12 +126,12 @@ export class EditorSettings {
         let prop2;
 
         for (prop in data) {
-            if (!Object.prototype.hasOwnProperty.call(data, prop)) {
+            if (!data.hasOwnProperty(prop)) {
                 continue;
             }
             if (prop === 'designOptions' || prop === 'editorOptions' || prop === 'modelOptions' || prop === 'virtualOptions') {
                 for (prop2 in data[prop]) {
-                    if (!Object.prototype.hasOwnProperty.call(data[prop], prop2)) {
+                    if (!data[prop].hasOwnProperty(prop2)) {
                         continue;
                     }
                     settings[prop][prop2] = data[prop][prop2];

@@ -195,9 +195,9 @@ export class MSP extends EventEmitter {
     constructor(options?: MSPOptions) {
         super();
         if (options) {
-            if (Object.prototype.hasOwnProperty.call(options, 'forcedDefaultMusicURL'))
+            if (options.hasOwnProperty('forcedDefaultMusicURL'))
                 this.forcedDefaultMusicURL = options.forcedDefaultMusicURL;
-            if (Object.prototype.hasOwnProperty.call(options, 'forcedDefaultSoundURL'))
+            if (options.hasOwnProperty('forcedDefaultSoundURL'))
                 this.forcedDefaultSoundURL = options.forcedDefaultSoundURL;
         }
         this.MusicState.on('playing', (data) => { data.type = 1; this.emit('playing', data); });

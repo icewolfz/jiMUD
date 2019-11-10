@@ -44,7 +44,7 @@ export class Tests extends EventEmitter {
             let sample = 'Test commands:\n';
             let t;
             for (t in this.TestFunctions) {
-                if (!Object.prototype.hasOwnProperty.call(this.TestFunctions, t)) continue;
+                if (!this.TestFunctions.hasOwnProperty(t)) continue;
                 sample += `\t${this.Client.options.commandChar + t}\n`;
             }
             sample += `\t${this.Client.options.commandChar}testfile file\n`;

@@ -269,7 +269,7 @@ export class PropertyGrid extends EventEmitter {
             const prop = props[pl];
             const same = obs.filter(o => o[prop] === obj[prop]).length === obs.length;
             if (this.$options[prop]) {
-                if (Object.prototype.hasOwnProperty.call(this.$options[prop], 'visible') && !this.$options[prop].visible)
+                if (this.$options[prop].hasOwnProperty('visible') && !this.$options[prop].visible)
                     continue;
                 group = this.$options[prop].group || 'Misc';
                 if (!layout[group])
@@ -455,7 +455,7 @@ export class PropertyGrid extends EventEmitter {
         let editorOptions;
         if (this.$options[prop] && this.$options[prop].editor) {
             editorOptions = this.$options[prop].editor.options;
-            if (Object.prototype.hasOwnProperty.call(this.$options[prop].editor, 'show')) {
+            if (this.$options[prop].editor.hasOwnProperty('show')) {
                 if (typeof this.$options[prop].editor.show === 'function') {
                     if (!this.$options[prop].editor.show(prop, this.$objects[0][prop], this.$objects)) {
                         this.$editor = null;

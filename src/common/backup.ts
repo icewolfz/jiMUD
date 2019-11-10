@@ -161,13 +161,13 @@ export class Backup extends EventEmitter {
             data.profiles = this.client.profiles.clone(2);
 
         for (prop in this.client.options) {
-            if (!Object.prototype.hasOwnProperty.call(this.client.options, prop)) {
+            if (!this.client.options.hasOwnProperty(prop)) {
                 continue;
             }
             if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
                 if (!data.settings[prop]) data.settings[prop] = {};
                 for (prop2 in this.client.options[prop]) {
-                    if (!Object.prototype.hasOwnProperty.call(this.client.options[prop], prop2)) {
+                    if (!this.client.options[prop].hasOwnProperty(prop2)) {
                         continue;
                     }
                     data.settings[prop][prop2] = this.client.options[prop][prop2];
@@ -195,7 +195,7 @@ export class Backup extends EventEmitter {
                     for (prop in rows[r]) {
                         if (prop === 'ID')
                             continue;
-                        if (!Object.prototype.hasOwnProperty.call(rows[r], prop)) {
+                        if (!rows[r].hasOwnProperty(prop)) {
                             continue;
                         }
                         rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
@@ -528,12 +528,12 @@ export class Backup extends EventEmitter {
                 let prop2;
 
                 for (prop in this.client.options) {
-                    if (!Object.prototype.hasOwnProperty.call(this.client.options, prop) || !Object.prototype.hasOwnProperty.call(data.settings, prop)) {
+                    if (!this.client.options.hasOwnProperty(prop) || !data.settings.hasOwnProperty(prop)) {
                         continue;
                     }
                     if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
                         for (prop2 in this.client.options[prop]) {
-                            if (!Object.prototype.hasOwnProperty.call(this.client.options[prop], prop2)) {
+                            if (!this.client.options[prop].hasOwnProperty(prop2)) {
                                 continue;
                             }
                             this.client.options[prop][prop2] = data.settings[prop][prop2];

@@ -509,27 +509,27 @@ export class VirtualEditor extends EditorBase {
             this.$startValues.map = options.value || '';
             this.$mapRaw.value = this.$startValues.map;
             this.$files = {};
-            if (Object.prototype.hasOwnProperty.call(this.options, 'terrainValue')) {
+            if (this.options.hasOwnProperty('terrainValue')) {
                 this.$startValues['virtual.terrain'] = options.terrainValue || '';
                 this.$terrainRaw.value = this.$startValues['virtual.terrain'];
                 this.$files['virtual.terrain'] = true;
             }
-            if (Object.prototype.hasOwnProperty.call(this.options, 'startValues')) {
+            if (this.options.hasOwnProperty('startValues')) {
                 this.$startValues['virtual.state'] = options.stateValue || '';
                 this.$stateRaw.value = this.$startValues['virtual.state'];
                 this.$files['virtual.state'] = true;
             }
-            if (Object.prototype.hasOwnProperty.call(this.options, 'descriptionValue')) {
+            if (this.options.hasOwnProperty('descriptionValue')) {
                 this.$startValues['terrain.desc'] = options.descriptionValue || '';
                 this.$descriptionRaw.value = this.$startValues['terrain.desc'];
                 this.$files['terrain.desc'] = true;
             }
-            if (Object.prototype.hasOwnProperty.call(this.options, 'startValues')) {
+            if (this.options.hasOwnProperty('startValues')) {
                 this.$startValues['terrain.item'] = options.itemValue || '';
                 this.$itemRaw.value = this.$startValues['terrain.item'];
                 this.$files['terrain.item'] = true;
             }
-            if (Object.prototype.hasOwnProperty.call(this.options, 'exitsValue')) {
+            if (this.options.hasOwnProperty('exitsValue')) {
                 this.$startValues['virtual.exits'] = options.exitsValue || '';
                 this.$externalRaw.value = this.$startValues['virtual.exits'];
                 this.$files['virtual.exits'] = true;
@@ -4403,23 +4403,23 @@ export class VirtualEditor extends EditorBase {
         else {
             this.$files = {};
             this.$mapRaw.value = this.$startValues.map;
-            if (Object.prototype.hasOwnProperty.call(this.$startValues, 'virtual.terrain')) {
+            if (this.$startValues.hasOwnProperty('virtual.terrain')) {
                 this.$terrainRaw.value = this.$startValues['virtual.terrain'];
                 this.$files['virtual.terrain'] = true;
             }
-            if (Object.prototype.hasOwnProperty.call(this.$startValues, 'virtual.state')) {
+            if (this.$startValues.hasOwnProperty('virtual.state')) {
                 this.$stateRaw.value = this.$startValues['virtual.state'];
                 this.$files['virtual.state'] = true;
             }
-            if (Object.prototype.hasOwnProperty.call(this.$startValues, 'terrain.desc')) {
+            if (this.$startValues.hasOwnProperty('terrain.desc')) {
                 this.$descriptionRaw.value = this.$startValues['terrain.desc'];
                 this.$files['terrain.desc'] = true;
             }
-            if (Object.prototype.hasOwnProperty.call(this.$startValues, 'terrain.item')) {
+            if (this.$startValues.hasOwnProperty('terrain.item')) {
                 this.$itemRaw.value = this.$startValues['terrain.item'];
                 this.$files['terrain.item'] = true;
             }
-            if (Object.prototype.hasOwnProperty.call(this.$startValues, 'virtual.exits')) {
+            if (this.$startValues.hasOwnProperty('virtual.exits')) {
                 this.$externalRaw.value = this.$startValues['virtual.exits'];
                 this.$files['virtual.exits'] = true;
             }
@@ -7675,7 +7675,7 @@ export class VirtualEditor extends EditorBase {
                                 }
                                 exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
                                 for (exit in exits) {
-                                    if (exit.length === 0 || !Object.prototype.hasOwnProperty.call(exits, exit)) continue;
+                                    if (exit.length === 0 || !exits.hasOwnProperty(exit)) continue;
                                     block = 0;
                                     if (!exits[exit].startsWith('VIR ') && !exits[exit].startsWith('VIR+') && !exits[exit].startsWith('VV ') && !exits[exit].startsWith('VV+'))
                                         block = 1;
@@ -7831,7 +7831,7 @@ export class VirtualEditor extends EditorBase {
                                         const sounds = this.parseMapping(block);
                                         let sound;
                                         for (sound in sounds) {
-                                            if (sound.length === 0 || !Object.prototype.hasOwnProperty.call(sounds, sound)) continue;
+                                            if (sound.length === 0 || !sounds.hasOwnProperty(sound)) continue;
                                             if (sound === 'default') {
                                                 r.sound = sound;
                                                 break;
@@ -7887,7 +7887,7 @@ export class VirtualEditor extends EditorBase {
                                         const smells = this.parseMapping(block);
                                         let smell;
                                         for (smell in smells) {
-                                            if (smell.length === 0 || !Object.prototype.hasOwnProperty.call(smells, smell)) continue;
+                                            if (smell.length === 0 || !smells.hasOwnProperty(smell)) continue;
                                             if (smell === 'default') {
                                                 r.smell = smell;
                                                 break;
@@ -7918,7 +7918,7 @@ export class VirtualEditor extends EditorBase {
                                 const items = this.parseMapping(block);
                                 let item;
                                 for (item in items) {
-                                    if (item.length === 0 || !Object.prototype.hasOwnProperty.call(items, item)) continue;
+                                    if (item.length === 0 || !items.hasOwnProperty(item)) continue;
                                     if (item.startsWith('({') && item.endsWith('})')) {
                                         const k = item.slice(2, -2).splitQuote(',', 3, 3);
                                         let s;
@@ -7970,7 +7970,7 @@ export class VirtualEditor extends EditorBase {
                                 }
                                 exits = this.parseMapping(code.substring(idx, idx2 - 1).trim());
                                 for (exit in exits) {
-                                    if (exit.length === 0 || !Object.prototype.hasOwnProperty.call(exits, exit)) continue;
+                                    if (exit.length === 0 || !exits.hasOwnProperty(exit)) continue;
                                     this.parseProperty(r, exit, exits[exit]);
                                 }
                                 idx = idx2;
@@ -8508,7 +8508,7 @@ export class VirtualEditor extends EditorBase {
                     ex = [];
                     str += '<br>You can climb ';
                     for (exit in RoomExits) {
-                        if (!Object.prototype.hasOwnProperty.call(RoomExits, exit)) continue;
+                        if (!RoomExits.hasOwnProperty(exit)) continue;
                         if (!RoomExits[exit]) continue;
                         if ((e & RoomExits[exit]) === RoomExits[exit])
                             ex.push(exit);
@@ -8565,7 +8565,7 @@ export class VirtualEditor extends EditorBase {
                 else {
                     ex = [];
                     for (exit in RoomExits) {
-                        if (!Object.prototype.hasOwnProperty.call(RoomExits, exit)) continue;
+                        if (!RoomExits.hasOwnProperty(exit)) continue;
                         if (!RoomExits[exit]) continue;
                         if ((e & RoomExits[exit]) === RoomExits[exit])
                             ex.push(exit);
@@ -8657,7 +8657,7 @@ export class VirtualEditor extends EditorBase {
                 else {
                     ex = [];
                     for (exit in RoomExits) {
-                        if (!Object.prototype.hasOwnProperty.call(RoomExits, exit)) continue;
+                        if (!RoomExits.hasOwnProperty(exit)) continue;
                         if (!RoomExits[exit]) continue;
                         if ((e & RoomExits[exit]) === RoomExits[exit])
                             ex.push(exit);
@@ -8732,7 +8732,7 @@ export class VirtualEditor extends EditorBase {
         for (let d2 = 0; d2 < dl; d2++) {
             if (arr[d2].idx >= idx) {
                 arr[d2].idx--;
-                if (Object.prototype.hasOwnProperty.call(arr[d2], 'tag'))
+                if (arr[d2].hasOwnProperty('tag'))
                     arr[d2].tag--;
             }
         }
@@ -8743,7 +8743,7 @@ export class VirtualEditor extends EditorBase {
         for (let d2 = 0; d2 < dl; d2++) {
             if (arr[d2].idx >= idx) {
                 arr[d2].idx++;
-                if (Object.prototype.hasOwnProperty.call(arr[d2], 'tag'))
+                if (arr[d2].hasOwnProperty('tag'))
                     arr[d2].tag++;
             }
         }

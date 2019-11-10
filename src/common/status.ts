@@ -77,21 +77,21 @@ export class Status extends EventEmitter {
                     break;
                 case 'omud.ac':
                     for (limb in obj) {
-                        if (Object.prototype.hasOwnProperty.call(!obj, limb)) continue;
+                        if (!obj.hasOwnProperty(limb)) continue;
                         this.setLimbAC(limb, obj[limb]);
                         this.updateLimb(limb);
                     }
                     break;
                 case 'omud.limb':
                     for (limb in obj) {
-                        if (!Object.prototype.hasOwnProperty.call(obj, limb)) continue;
+                        if (!obj.hasOwnProperty(limb)) continue;
                         this.setLimbHealth(limb, obj[limb]);
                         this.updateLimb(limb);
                     }
                     break;
                 case 'omud.weapons':
                     for (limb in obj) {
-                        if (!Object.prototype.hasOwnProperty.call(obj, limb)) continue;
+                        if (!obj.hasOwnProperty(limb)) continue;
                         this.setWeapon(limb, obj[limb]);
                     }
                     break;

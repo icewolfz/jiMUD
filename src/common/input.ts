@@ -80,7 +80,7 @@ export class Input extends EventEmitter {
     }
 
     get repeatNumber() {
-        if (this._stack.length === 0 || !Object.prototype.hasOwnProperty.call(this.stack, 'repeatnum'))
+        if (this._stack.length === 0 || !this.stack.hasOwnProperty('repeatnum'))
             return window.repeatnum;
         return this.stack.repeatnum;
     }
@@ -2566,7 +2566,7 @@ export class Input extends EventEmitter {
                             tmp2 = this.stack.args.slice(1).join(' ');
                             this.stack.used = this.stack.args.length;
                         }
-                        else if (this.stack.named && Object.prototype.hasOwnProperty.call(this.stack.named, arg))
+                        else if (this.stack.named && this.stack.named.hasOwnProperty(arg))
                             tmp2 = this.stack.named[arg];
                         else {
                             if (this.stack.args && !isNaN(arg)) {
@@ -2650,7 +2650,7 @@ export class Input extends EventEmitter {
                     break;
                 case ParseState.paramsDNamed:
                     if (c.match(/[^a-zA-Z0-9_]/g)) {
-                        if (Object.prototype.hasOwnProperty.call(this.stack.named, arg)) {
+                        if (this.stack.named.hasOwnProperty(arg)) {
                             if (eAlias && findAlias)
                                 alias += this.stack.named[arg];
                             else
@@ -2693,7 +2693,7 @@ export class Input extends EventEmitter {
                             tmp2 = this.stack.args.slice(1).join(' ');
                             this.stack.used = this.stack.args.length;
                         }
-                        else if (this.stack.named && Object.prototype.hasOwnProperty.call(this.stack.named, arg))
+                        else if (this.stack.named && this.stack.named.hasOwnProperty(arg))
                             tmp2 = this.stack.named[arg];
                         else {
                             if (args && !isNaN(arg)) {
@@ -3336,7 +3336,7 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (alias.style) {
             case 1:
-                if (Object.prototype.hasOwnProperty.call(this.stack, 'repeatNumber'))
+                if (this.stack.hasOwnProperty('repeatNumber'))
                     this._stack.push({ repeatnum: this.repeatNumber, args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
                 else
                     this._stack.push({ args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
@@ -3563,7 +3563,7 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (trigger.style) {
             case 1:
-                if (Object.prototype.hasOwnProperty.call(this.stack, 'repeatNumber'))
+                if (this.stack.hasOwnProperty('repeatNumber'))
                     this._stack.push({ repeatnum: window.repeatnum, args: args, named: [], used: 0 });
                 else
                     this._stack.push({ args: args, named: [], used: 0 });
@@ -3652,7 +3652,7 @@ export class Input extends EventEmitter {
     public executeWait(text, delay: number, eAlias?: boolean, stacking?: boolean) {
         if (!text || text.length === 0) return;
         const s = { args: 0, named: 0, used: this.stack.used, append: this.stack.append };
-        if (Object.prototype.hasOwnProperty.call(this.stack, 'repeatNumber'))
+        if (this.stack.hasOwnProperty('repeatNumber'))
             (<any>s).repeatnum = this.repeatNumber;
         if (this.stack.args)
             s.args = this.stack.args.slice();

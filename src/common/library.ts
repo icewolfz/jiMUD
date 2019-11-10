@@ -558,7 +558,7 @@ export function cloneObject(obj) {
     const nObj = {};
     let prop;
     for (prop in obj) {
-        if (!Object.prototype.hasOwnProperty.call(obj, prop)) continue;
+        if (!obj.hasOwnProperty(prop)) continue;
         if (obj[prop])
             nObj[prop] = obj[prop];
         else if (typeof obj[prop] === 'object')
@@ -594,7 +594,7 @@ export function copy(o) {
         return o;
     output = Array.isArray(o) ? [] : {};
     for (key in o) {
-        if (!Object.prototype.hasOwnProperty.call(o, key)) continue;
+        if (!o.hasOwnProperty(key)) continue;
         v = o[key];
         output[key] = (v && (typeof v === 'object' || Array.isArray(v))) ? copy(v) : v;
     }
@@ -806,7 +806,7 @@ export function parseTemplate(str: string, data?) {
         const keys = Object.keys(data);
         let key;
         for (key in keys) {
-            if (!Object.prototype.hasOwnProperty.call(keys, key)) continue;
+            if (!keys.hasOwnProperty(key)) continue;
             const regex = new RegExp('{}' + key + '}', 'g');
             str = str.replace(regex, data[key]);
         }
@@ -1153,7 +1153,7 @@ export function invert(obj) {
     const new_obj = {};
     let prop;
     for (prop in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, prop)) {
+        if (obj.hasOwnProperty(prop)) {
             new_obj[obj[prop]] = prop;
         }
     }
@@ -1663,7 +1663,7 @@ export function pluralize(revert) {
     let word;
     // check for irregular forms
     for (word in irregular) {
-        if (!Object.prototype.hasOwnProperty.call(irregular, word)) continue;
+        if (!irregular.hasOwnProperty(word)) continue;
         let pattern;
         let replace;
         if (revert) {
@@ -1683,7 +1683,7 @@ export function pluralize(revert) {
 
     // check for matches using regular expressions
     for (reg in array) {
-        if (!Object.prototype.hasOwnProperty.call(array, reg)) continue;
+        if (!array.hasOwnProperty(reg)) continue;
         const pattern = new RegExp(reg, 'i');
 
         if (pattern.test(revert))

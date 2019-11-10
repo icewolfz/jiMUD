@@ -198,11 +198,11 @@ export class WizardDataGridPage extends WizardPage {
         el.style.top = '33px';
         this.page.appendChild(el);
         this.dataGrid = new DataGrid(el);
-        if (options && Object.prototype.hasOwnProperty.call(options, 'enterMoveFirst'))
+        if (options && options.hasOwnProperty('enterMoveFirst'))
             this.dataGrid.enterMoveFirst = options.enterMoveFirst;
-        if (options && Object.prototype.hasOwnProperty.call(options, 'enterMoveNext'))
+        if (options && options.hasOwnProperty('enterMoveNext'))
             this.dataGrid.enterMoveNext = options.enterMoveNext;
-        if (options && Object.prototype.hasOwnProperty.call(options, 'enterMoveNew'))
+        if (options && options.hasOwnProperty('enterMoveNew'))
             this.dataGrid.enterMoveNew = options.enterMoveNew;
         if (options && options.clipboard && options.clipboard.length !== 0)
             this.dataGrid.clipboardPrefix = options.clipboard;
