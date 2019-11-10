@@ -56,6 +56,8 @@
         });
 
         $(document).ready(() => {
+            if (process.platform === 'darwin')
+                document.getElementById('btn-close').style.display = 'block';
             var set = Settings.load(remote.getGlobal('settingsFile'));
             askonloadCharacter = set.askonloadCharacter;
             $('#characters-list').contextmenu((event) => {
@@ -862,6 +864,9 @@
                 <i class="fa fa-play"></i>
             </button>
         </div>
+        <button id="btn-close" type="button" class="btn btn-default btn-xs" style="display: none;float: right" title="Close" onclick="window.close()">
+            <i class="fa fa-window-close"></i>
+        </button>
     </div>
     <div id="main">
         <div id="characters-container" class="panel panel-default" style="position: absolute;left: 2px;top: 2px;bottom:2px;width:200px;overflow: auto;margin:0">
