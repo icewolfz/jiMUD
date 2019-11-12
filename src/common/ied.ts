@@ -1046,15 +1046,6 @@ export enum ItemState {
     error = 4
 }
 
-export interface FileInfo {
-    date?: Date;
-    hidden?: boolean;
-    path: string;
-    name: string;
-    type: string;
-    size: number;
-}
-
 export class Item {
     private _local: string = '';
     private _tmp: TempType = TempType.extension;
