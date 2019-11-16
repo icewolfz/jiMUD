@@ -20,7 +20,7 @@
     "start": "electron .",
     "debug": "electron . -d",
     "editor": "electron . -eo",
-    "editor:debug": "electron . -eo -d",    
+    "editor:debug": "electron . -eo -d",
     "build:debug": "./node_modules/.bin/electron-builder --dir",
     "build:debug-compile": "npm run compile && npm run build:debug",
     "build:debug-quick": "./node_modules/.bin/electron-builder --dir --c.npmRebuild=false",
@@ -52,7 +52,7 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.3.31",
-    "@types/node": "^12.12.6",
+    "@types/node": "^12.12.8",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
     "electron": "^7.1.1",
