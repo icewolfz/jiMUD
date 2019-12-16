@@ -3,7 +3,8 @@
 ## v0.10.1
 
 - **Changed:**
-  - Update electron 7.1.1 to 7.1.4
+  - Update electron 7.1.1 to 7.1.5
+  - Update chokidar 3.3.0 to 3.3.1
 
 ## v0.10.0 2019-11-11
 
@@ -16,7 +17,7 @@
   - Refactor hasOwnProperty checks to use proper calls for more security when running dynamic scripts
   - Update electron 6.0.9 to 7.1.1
   - Update monaco-editor 0.18.0 to 0.18.1
-  - Update chokidar 3.1.0 to 3.3.3
+  - Update chokidar 3.1.0 to 3.3.0
   - Update drivelist 8.0.6 to 8.0.9
   - Update yargs-parser 13.1.1 to 16.1.0
   - Replace font-manager 0.3.0 with fontmanager-redux 0.4.0
