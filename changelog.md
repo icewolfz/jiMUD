@@ -3,8 +3,9 @@
 ## v0.10.1
 
 - **Changed:**
-  - Update electron 7.1.1 to 7.1.5
+  - Update electron 7.1.1 to 7.1.7
   - Update chokidar 3.3.0 to 3.3.1
+  - Update monaco-editor 0.18.0 to 0.19.0
 
 ## v0.10.0 2019-11-11
 

@@ -1273,7 +1273,7 @@ export class MonacoCodeEditor extends EditorBase {
                     label: 'Toggle &Word Wrap',
                     accelerator: 'Alt+Z',
                     click: () => {
-                        this.$editor.updateOptions({ wordWrap: (this.$editor.getConfiguration().wrappingInfo.isViewportWrapping ? 'off' : 'on') });
+                        this.$editor.updateOptions({ wordWrap: (this.$editor.getRawOptions().wordWrap ? 'off' : 'on') });
                     }
                 },
                 { type: 'separator' },
