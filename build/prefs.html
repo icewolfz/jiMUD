@@ -400,6 +400,17 @@
                         if ($('#backup-load-settings').prop('checked'))
                             _settings.backupLoad |= 8;
                         break;
+                    case 'profiles-sortOrder-alpha':
+                    case 'profiles-sortOrder-priority':
+                    case 'profiles-sortOrder-index':
+                        _settings.profiles.sortOrder = 0;
+                        if ($('#profiles-sortOrder-alpha').prop('checked'))
+                            _settings.profiles.sortOrder |= 2;
+                        if ($('#profiles-sortOrder-priority').prop('checked'))
+                            _settings.profiles.sortOrder |= 4;
+                        if ($('#profiles-sortOrder-index').prop('checked'))
+                            _settings.profiles.sortOrder |= 8;
+                        break;
                     default:
                         id = $(this).attr('id').split('-');
                         if (id.length === 2)
@@ -709,6 +720,10 @@
             $('#trayDblClick-hide').prop('checked', _settings.trayDblClick === TrayClick.hide);
             $('#trayDblClick-toggle').prop('checked', _settings.trayDblClick === TrayClick.toggle);
             $('#trayDblClick-menu').prop('checked', _settings.trayDblClick === TrayClick.menu);
+
+            $('#profiles-sortOrder-alpha').prop('checked', (_settings.profiles.sortOrder & 2) === 2);
+            $('#profiles-sortOrder-priority').prop('checked', (_settings.profiles.sortOrder & 4) === 4);
+            $('#profiles-sortOrder-index').prop('checked', (_settings.profiles.sortOrder & 8) === 8);
 
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
@@ -2176,6 +2191,20 @@
                         <label class="control-label">
                             <input type="checkbox" id="askonloadCharacter" /> Enable warning dialog when loading a character from manager
                         </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">Profile manager sort order</label>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="profiles-sortOrder-alpha"> Alpha
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="profiles-sortOrder-priority"> Priority
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="profiles-sortOrder-index"> Index
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="tray">

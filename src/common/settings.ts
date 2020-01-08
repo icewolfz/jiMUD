@@ -1,6 +1,6 @@
 //spell-checker:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //spell-checker:ignore emoteto, emotetos askonchildren YYYYMMDD Hmmss
-import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -54,6 +54,7 @@ export class Profiles {
     public enabled: string[] = [];
     public codeEditor: boolean = true;
     public watchFiles: boolean = true;
+    public sortOrder: ProfileSortOrder = ProfileSortOrder.Priority | ProfileSortOrder.Index;
 }
 
 /**

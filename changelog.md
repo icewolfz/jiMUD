@@ -2,6 +2,8 @@
 
 ## v0.10.1
 
+- **New:**
+  - Profile manager: options to change how items are sorted: Alpha, index, or priority
 - **Changed:**
   - Update electron 7.1.1 to 7.1.7
   - Update chokidar 3.3.0 to 3.3.1
