@@ -197,10 +197,11 @@ Controls what is captured into the chat window
 - `Enable warning dialog when connected and closing client` disable or enable warning check when closing mud and connected
 - `Enable warning dialog when closing client and child windows are open` disable or enable warning dialog when closing and child windows are open
 - `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character
-- `Profile manager sort order` determine how items are sorted in the profile manager display tree, priority is first, then alpha, finally index, you cna have one or all three options enabled **note** Chaning this setting while profile manager is open will not resort the displayed items
+- `Profile manager sort order` determine how items are sorted in the profile manager display tree, priority is first, then alpha, finally index, you cna have one or all three options enabled **note** Changing this setting while profile manager is open will not resort the displayed items
   - `Alpha` sort by alpha numeric
   - `Index` sort by index
   - `Priority` sort by item priority
+- `Profile manager sort direction` select to display items in ascending or descending order  **note** Changing this setting while profile manager is open will not resort the displayed items
 
 ## Advanced > Tray
 

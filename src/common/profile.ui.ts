@@ -28,6 +28,7 @@ let _never = true;
 let _gamepads = false;
 let _watch = true;
 let _sort = 6;
+let _sortDir = 1;
 let _close;
 let _loading = 0;
 let _ide = true;
@@ -923,19 +924,19 @@ function UpdateProfileNode(profile?) {
 function sortNodes(a, b) {
     if ((_sort & 4) === 4) {
         if (a.dataAttr.priority > b.dataAttr.priority)
-            return -1;
+            return -1 * _sortDir;
         if (a.dataAttr.priority < b.dataAttr.priority)
-            return 1;
+            return 1 * _sortDir;
     }
     if ((_sort & 2) === 2) {
         const r = a.text.localeCompare(b.text);
-        if (r !== 0) return r;
+        if (r !== 0) return r * _sortDir;
     }
     if ((_sort & 8) === 8) {
         if (a.dataAttr.index < b.dataAttr.index)
-            return -1;
+            return -1 * _sortDir;
         if (a.dataAttr.index > b.dataAttr.index)
-            return 1;
+            return 1 * _sortDir;
     }
     return 0;
 }
@@ -2281,6 +2282,7 @@ function loadOptions() {
     _gamepads = options.gamepads;
     _watch = options.profiles.watchFiles;
     _sort = options.profiles.sortOrder;
+    _sortDir = options.profiles.sortDirection || 1;
     updatePads();
 
     let theme = parseTemplate(options.theme) + '.css';

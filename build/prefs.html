@@ -541,6 +541,9 @@
                     case 'chat-fontSize':
                         _settings.chat.fontSize = $(this).val();
                         break;
+                    case 'profiles-sortDirection':
+                        _settings.profiles.sortDirection = parseInt($(this).val(), 10);
+                        break;
                     default:
                         _settings[$(this).attr('id')] = $(this).val();
                         break;
@@ -649,6 +652,10 @@
             $('#chat-font').selectpicker('render');
             $('#chat-fontSize').val(_settings.chat.fontSize);
             $('#chat-font').change();
+
+            $('#profiles-sortDirection').val(_settings.profiles.sortDirection);
+            $('#profiles-sortDirection').selectpicker('render');
+            $('#profiles-sortDirection').change();
 
             LoadColors();
 
@@ -2178,6 +2185,28 @@
                         <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Must close and reopen profile manger</span>
                     </div>
                     <div class="col-sm-6 form-group">
+                        <label class="control-label">Profile manager sort order</label>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="profiles-sortOrder-alpha"> Alpha
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="profiles-sortOrder-priority"> Priority
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="profiles-sortOrder-index"> Index
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label>Profile manager sort direction
+                            <select id="profiles-sortDirection" style="width:100%" name="colorScheme" class="form-control selectpicker" data-container="body" data-width="100%">
+                                <option value="1">Ascending</option>
+                                <option value="-1">Descending</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="askonclose" /> Enable warning dialog when connected and closing client
                         </label>
@@ -2191,20 +2220,6 @@
                         <label class="control-label">
                             <input type="checkbox" id="askonloadCharacter" /> Enable warning dialog when loading a character from manager
                         </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">Profile manager sort order</label>
-                        <div class="btn-group" data-toggle="buttons">
-                            <label class="btn btn-default btn-xs">
-                                <input type="checkbox" id="profiles-sortOrder-alpha"> Alpha
-                            </label>
-                            <label class="btn btn-default btn-xs">
-                                <input type="checkbox" id="profiles-sortOrder-priority"> Priority
-                            </label>
-                            <label class="btn btn-default btn-xs">
-                                <input type="checkbox" id="profiles-sortOrder-index"> Index
-                            </label>
-                        </div>
                     </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="tray">

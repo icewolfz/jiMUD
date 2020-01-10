@@ -55,6 +55,7 @@ export class Profiles {
     public codeEditor: boolean = true;
     public watchFiles: boolean = true;
     public sortOrder: ProfileSortOrder = ProfileSortOrder.Priority | ProfileSortOrder.Index;
+    public sortDirection: number = 1;
 }
 
 /**
