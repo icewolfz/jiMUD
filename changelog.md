@@ -5,7 +5,7 @@
 - **New:**
   - Profile manager: options to change how items are sorted: Alpha, index, or priority
 - **Changed:**
-  - Update electron 7.1.1 to 7.1.7
+  - Update electron 7.1.1 to 7.1.8
   - Update chokidar 3.3.0 to 3.3.1
   - Update monaco-editor 0.18.1 to 0.19.2
 
