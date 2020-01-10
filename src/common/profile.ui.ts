@@ -2981,20 +2981,41 @@ function sortFiles(a, b, p) {
     return a.localeCompare(b);
 }
 
-function sortTree() {
+export function sortTree(s?: boolean) {
     const data = [];
     let profile;
     let n;
+    let c;
+    let cl;
 
     for (profile in profiles.items) {
         if (!profiles.items.hasOwnProperty(profile) || profile === 'default') continue;
         n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + '$', 'id']);
-        data.push(cleanNode(n[0]));
+        n = cleanNode(n[0]);
+        if (s) {
+            cl = n.nodes.length;
+            for (c = 0; c < cl; c++) {
+                if (!n.nodes[c].nodes || n.nodes[c].nodes.length === 0)
+                    continue;
+                n.nodes[c].nodes = n.nodes[c].nodes.sort(sortNodes);
+            }
+        }
+        data.push(n);
     }
     data.sort((a, b) => { return a.text.localeCompare(b.text); });
     n = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
-    if (n.length > 0)
-        data.unshift(cleanNode(n[0]));
+    if (n.length > 0) {
+        n = cleanNode(n[0]);
+        if (s) {
+            cl = n.nodes.length;
+            for (c = 0; c < cl; c++) {
+                if (!n.nodes[c].nodes || n.nodes[c].nodes.length === 0)
+                    continue;
+                n.nodes[c].nodes = n.nodes[c].nodes.sort(sortNodes);
+            }
+        }
+        data.unshift(n);
+    }
     return buildTreeview(data, true);
 }
 
@@ -3952,11 +3973,19 @@ ipcRenderer.on('profile-edit-item', (event, profile, type, index) => {
 });
 
 ipcRenderer.on('reload-options', (event) => {
+    const so = _sort;
+    const sd = _sortDir;
     loadOptions();
+    if (so !== _sort || sd !== _sortDir)
+        sortTree(true);
 });
 
 ipcRenderer.on('change-options', (event, file) => {
+    const so = _sort;
+    const sd = _sortDir;
     loadOptions();
+    if (so !== _sort || sd !== _sortDir)
+        sortTree(true);
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
 });
