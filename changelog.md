@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.10.1
+## v0.10.1 2020-01-13
 
 - **New:**
   - Profile manager:
