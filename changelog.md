@@ -2,6 +2,8 @@
 
 ## v0.10.2
 
+- **New:**
+  - Optimize macro execution
 - **Changed:**
   - Update monaco-editor 0.19.2 to 0.19.3
 

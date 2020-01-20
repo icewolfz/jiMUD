@@ -68,6 +68,7 @@ export class Input extends EventEmitter {
     private _controllersCount = 0;
     private _gamepadCaches = null;
     private _lastSuspend = -1;
+    private _MacroCache = {};
 
     public client: Client = null;
     public enableParsing: boolean = true;
@@ -3370,15 +3371,20 @@ export class Input extends EventEmitter {
 
     public ProcessMacros(keycode, alt, ctrl, shift, meta) {
         //if(!this.client.options.enableMacros) return false;
-        const macros = FilterArrayByKeyValue(this.client.macros, 'key', keycode);
+        const macros = this._MacroCache[keycode] || (this._MacroCache[keycode] = FilterArrayByKeyValue(this.client.macros, 'key', keycode));
         let m = 0;
         const ml = macros.length;
+        let mod = MacroModifiers.None;
+        if (alt)
+            mod |= MacroModifiers.Alt;
+        if (ctrl)
+            mod |= MacroModifiers.Ctrl;
+        if (shift)
+            mod |= MacroModifiers.Shift;
+        if (meta)
+            mod |= MacroModifiers.Meta;
         for (; m < ml; m++) {
-            if (!macros[m].enabled) continue;
-            if (alt === ((macros[m].modifiers & MacroModifiers.Alt) !== MacroModifiers.Alt)) continue;
-            if (ctrl === ((macros[m].modifiers & MacroModifiers.Ctrl) !== MacroModifiers.Ctrl)) continue;
-            if (shift === ((macros[m].modifiers & MacroModifiers.Shift) !== MacroModifiers.Shift)) continue;
-            if (meta === ((macros[m].modifiers & MacroModifiers.Meta) !== MacroModifiers.Meta)) continue;
+            if (!macros[m].enabled || mod !== macros[m].modifiers) continue;
             if (this.ExecuteMacro(macros[m]))
                 return true;
         }
@@ -3628,6 +3634,7 @@ export class Input extends EventEmitter {
         this._TriggerFunctionCache = {};
         this._gamepadCaches = null;
         this._lastSuspend = -1;
+        this._MacroCache = {};
     }
 
     public triggerEvent(event: string, args?) {
