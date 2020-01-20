@@ -2,6 +2,9 @@
 
 ## v0.10.2
 
+- **Changed:**
+  - Update monaco-editor 0.19.2 to 0.19.3
+
 ## v0.10.1 2020-01-13
 
 - **New:**
