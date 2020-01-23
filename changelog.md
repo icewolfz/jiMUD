@@ -6,6 +6,7 @@
   - Optimize macro execution
 - **Changed:**
   - Update monaco-editor 0.19.2 to 0.19.3
+  - Update electron 7.1.9 to 7.1.10
 
 ## v0.10.1 2020-01-13
 
