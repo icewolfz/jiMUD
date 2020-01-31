@@ -268,7 +268,7 @@
                         zoomMap(mapper.scale - 5);
                     else
                         zoomMap(mapper.scale + 5);
-                });
+                }, {passive: true});
 
                 mapper.active = options.mapper.active;
                 mapper.commandDelay = options.commandDelay;
@@ -580,7 +580,7 @@
                     else
                         MapperNavClicked(parseInt($(e.target).data('x'), 10), parseInt($(e.target).data('y'), 10));
                     MapperNavDown = false;
-                }));
+                }, {passive: true}));
 
                 $(window).trigger('resize');
 

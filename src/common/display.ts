@@ -3465,7 +3465,7 @@ export class ScrollBar extends EventEmitter {
         });
         this._parent.addEventListener('wheel', (event) => {
             this.scrollBy(this._type === ScrollType.horizontal ? event.deltaX : event.deltaY);
-        });
+        }, {passive: true});
         this._wMove = (e) => {
             this._lastMouse = e;
             if (this.state.dragging) {

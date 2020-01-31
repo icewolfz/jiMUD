@@ -955,7 +955,7 @@ export class DockPane extends EventEmitter {
             else if (this._scroll > this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth)
                 this._scroll = this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth;
             this.doUpdate(UpdateType.scroll);
-        });
+        }, {passive: true});
         this.$scrollLeft = document.createElement('a');
         this.$scrollLeft.innerHTML = '<i class="fa fa-chevron-left"></i>';
         this.$scrollLeft.id = 'cm-scroll-left';

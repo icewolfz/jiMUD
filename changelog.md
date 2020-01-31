@@ -4,6 +4,7 @@
 
 - **Changed:**
   - Update electron 7.1.10 to 7.1.11
+  - Make wheel mouse events passive to allow better optimizing of schooling for mapper and main display
 
 ## v0.10.2 2020-01-27
 
