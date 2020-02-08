@@ -2,6 +2,8 @@
 
 ## v0.11.0
 
+- **New:**
+  - Add wheel scroll support to button bar to allow scrolling overflown buttons
 - **Fixed:**
   - Profile manager: Fix issue when using capital letters and renaming a profile
 - **Changed:**

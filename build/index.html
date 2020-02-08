@@ -606,6 +606,12 @@
             window.addEventListener('resize', function () {
                 client.UpdateWindow();
             });
+            document.getElementById('buttonbar').addEventListener('wheel', (e) => {
+                    if (e.deltaY >= 0)
+                        document.getElementById('buttonbar').scrollTop += 32;
+                    else
+                        document.getElementById('buttonbar').scrollTop -= 32;
+                }, {passive: true});
             _logger = new Worker('./js/logging.js');
             _logger.onmessage = (e) => {
                 switch (e.data.event) {
