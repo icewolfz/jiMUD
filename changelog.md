@@ -2,6 +2,8 @@
 
 ## v0.11.0
 
+- **Fixed:**
+  - Profile manager: Fix issue when using capital letters and renaming a profile
 - **Changed:**
   - Update electron 7.1.10 to 8.0.0
   - Make wheel mouse events passive to allow better optimizing of schooling for mapper and main display

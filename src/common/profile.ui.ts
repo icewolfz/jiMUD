@@ -1154,7 +1154,7 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
 
         let node = $('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id'])[0];
         $('#profile-tree').treeview('updateNode', [node, newProfileNode()]);
-        node = $('#profile-tree').treeview('findNodes', ['^Profile' + val + '$', 'id'])[0];
+        node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
         if (selected) {
             $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
             currentNode = node;
