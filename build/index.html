@@ -564,6 +564,55 @@
             }
         }
 
+        function updateButtonBar() {
+            const $bar = document.getElementById('buttonbar');
+            const $scrollUp = document.getElementById('bb-scroll-up');
+            const $scrollDown = document.getElementById('bb-scroll-down');
+            if ($bar.scrollHeight > $bar.clientHeight) {
+                $bar.classList.add('scroll');
+                $scrollUp.classList.remove('hidden');
+                $scrollDown.classList.remove('hidden');
+                if ($bar.scrollTop === 0) {
+                    $scrollUp.classList.add('disabled');
+                    $scrollUp.classList.add('hidden');
+                }
+                else {
+                    $scrollUp.classList.remove('disabled');
+                    $scrollUp.classList.remove('hidden');
+                }
+                if ($bar.scrollTop >= $bar.scrollHeight - $bar.clientHeight) {
+                    $scrollDown.classList.add('disabled');
+                    $scrollDown.classList.add('hidden');
+                }
+                else {
+                    $scrollDown.classList.remove('disabled');
+                    $scrollDown.classList.remove('hidden');
+                }
+            }
+            else {
+                $bar.classList.remove('scroll');
+                $scrollUp.classList.add('hidden');
+                $scrollDown.classList.add('hidden');
+            }
+        }
+
+        var _buttonTimer;
+        function scrollButtonBar(amt) {
+            _buttonTimer = setTimeout(() => {
+                const $bar = document.getElementById('buttonbar');
+                var _scroll = $bar.scrollTop + amt;
+                if (_scroll < 0)
+                    $bar.scrollTop = 0;
+                else if (_scroll > $bar.scrollHeight - $bar.clientHeight)
+                    $bar.scrollTop = $bar.scrollHeight - $bar.clientHeight;
+                else {
+                    $bar.scrollTop = _scroll;
+                    scrollButtonBar(amt);
+                }
+                doUpdate(128);
+            }, 100);
+        }
+
         function init() {
             $('.dropdown').on('show.bs.dropdown', () => {
                 $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
@@ -605,13 +654,47 @@
             });
             window.addEventListener('resize', function () {
                 client.UpdateWindow();
+                doUpdate(128);
             });
             document.getElementById('buttonbar').addEventListener('wheel', (e) => {
-                    if (e.deltaY >= 0)
-                        document.getElementById('buttonbar').scrollTop += 32;
-                    else
-                        document.getElementById('buttonbar').scrollTop -= 32;
-                }, {passive: true});
+                if (e.deltaY >= 0)
+                    document.getElementById('buttonbar').scrollTop += 32;
+                else
+                    document.getElementById('buttonbar').scrollTop -= 32;
+                doUpdate(128);
+            }, { passive: true });
+
+            document.getElementById('bb-scroll-up').onmousedown = (e) => {
+                if (e.button !== 0)
+                    return;
+                if (document.getElementById('buttonbar').scrollTop > 0)
+                    scrollButtonBar(-32);
+                e.preventDefault();
+                e.cancelBubble = true;
+            };
+            document.getElementById('bb-scroll-up').onmouseup = () => {
+                clearTimeout(_buttonTimer);
+            };
+            document.getElementById('bb-scroll-up').onmouseleave = () => {
+                clearTimeout(_buttonTimer);
+            };
+
+            document.getElementById('bb-scroll-down').onmousedown = (e) => {
+                if (e.button !== 0)
+                    return;
+                const $bar = document.getElementById('buttonbar');
+                if ($bar.scrollTop < $bar.scrollHeight - $bar.clientHeight)
+                    scrollButtonBar(32);
+                e.preventDefault();
+                e.cancelBubble = true;
+            };
+            document.getElementById('bb-scroll-down').onmouseup = () => {
+                clearTimeout(_buttonTimer);
+            };
+            document.getElementById('bb-scroll-down').onmouseleave = () => {
+                clearTimeout(_buttonTimer);
+            };
+
             _logger = new Worker('./js/logging.js');
             _logger.onmessage = (e) => {
                 switch (e.data.event) {
@@ -1973,7 +2056,7 @@
                     buttons.append(button);
                 }
             }
-            doUpdate(64);
+            doUpdate(192);
         }
 
         function updateMenu() {
@@ -2485,6 +2568,10 @@
                     webFrame.clearCache();
                     $updating &= ~64;
                 }
+                if (($updating & 128) === 128) {
+                    updateButtonBar();
+                    $updating &= ~128;
+                }
                 this.doUpdate($updating);
             });
         }
@@ -2516,6 +2603,8 @@
             <i class="fa fa-edit"></i>
         </a>
     </div>
+    <a href="javascript:void(0)" id="bb-scroll-up" class="hidden button"><i class="fa fa-chevron-up"></i></a>
+    <a href="javascript:void(0)" id="bb-scroll-down" class="hidden button"><i class="fa fa-chevron-down"></i></a>
     <div id="buttonbar">
         <a href="javascript:void(0)" title="Connect" id="connect" class="button" onclick="client.connect();">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="-0.6 -0.6 17 16">

@@ -82,6 +82,18 @@ body {
     bottom: 0;
 }
 
+#bb-scroll-up {
+    left: 0;
+    top: 0;
+    background-size: contain;
+}
+
+#bb-scroll-down {
+    left:0;
+    bottom: 0;
+    background-size: contain;
+}
+
 /* Let's get this party started */
 
 .scroll-track {
