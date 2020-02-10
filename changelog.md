@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.11.0
+## v0.11.0 2020-02-10
 
 - **New:**
   - Add button bar overflow support to allow scrolling of buttons
