@@ -13,8 +13,8 @@
 - **Changed:**
   - Update electron 7.1.10 to 8.0.0
   - Update yargs-parser 16.1.0 to 17.0.0
-  - Make wheel mouse events passive to allow better optimizing of schooling for mapper and main display
-  - Code editor: revert a quick fix to menu issues
+  - Make wheel mouse events passive to allow better optimizing of scrolling  for mapper and main display
+  - Code editor: revert a quick hack to menu issues
 
 ## v0.10.2 2020-01-27
 
