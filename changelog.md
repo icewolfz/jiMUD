@@ -2,7 +2,9 @@
 
 ## v0.11.1
 
-- Update monaco-editor 0.19.3 to 0.20.0
+- **Changed:**
+  - Update monaco-editor 0.19.3 to 0.20.0
+  - Update electron 8.0.0 to 8.0.1
 
 ## v0.11.0 2020-02-10
 
