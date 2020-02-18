@@ -2,6 +2,8 @@
 
 ## v0.11.1
 
+- **New:**
+  - Triggers: Cache regular expression objects so they are only created first time a trigger is ran
 - **Changed:**
   - Update monaco-editor 0.19.3 to 0.20.0
   - Update electron 8.0.0 to 8.0.1

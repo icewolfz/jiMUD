@@ -59,6 +59,7 @@ export class Input extends EventEmitter {
     private _tests: Tests;
     private _TriggerCache: Trigger[] = null;
     private _TriggerFunctionCache = {};
+    private _TriggerRegExCache = {};
     private _scrollLock: boolean = false;
     private _gag: number = 0;
     private _gagID: NodeJS.Timer = null;
@@ -3546,9 +3547,11 @@ export class Input extends EventEmitter {
                 try {
                     let re;
                     if (trigger.caseSensitive)
-                        re = new RegExp(trigger.pattern, 'g');
+                        re = this._TriggerRegExCache['g' + trigger.pattern] || (this._TriggerRegExCache['g' + trigger.pattern] = new RegExp(trigger.pattern, 'g'));
+                        //re = new RegExp(trigger.pattern, 'g');
                     else
-                        re = new RegExp(trigger.pattern, 'gi');
+                        re = this._TriggerRegExCache['gi' + trigger.pattern] || (this._TriggerRegExCache['gi' + trigger.pattern] = new RegExp(trigger.pattern, 'gi'));
+                        //re = new RegExp(trigger.pattern, 'gi');
                     const res = re.exec(raw);
                     if (!res || !res.length) continue;
                     if (ret)
@@ -3622,7 +3625,7 @@ export class Input extends EventEmitter {
         }
     }
 
-    public clearTriggerCache() { this._TriggerCache = null; this._TriggerFunctionCache = {}; }
+    public clearTriggerCache() { this._TriggerCache = null; this._TriggerFunctionCache = {}; this._TriggerRegExCache = {}; }
 
     public buildTriggerCache() {
         if (this._TriggerCache == null) {
