@@ -7,6 +7,8 @@
 - **Changed:**
   - Update monaco-editor 0.19.3 to 0.20.0
   - Update electron 8.0.0 to 8.0.1
+  - Update drivelist 8.0.9 to 8.0.10
+  - Update electron-updater 4.2.0 to 4.2.2
 
 ## v0.11.0 2020-02-10
 
