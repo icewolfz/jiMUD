@@ -51,11 +51,11 @@
   },
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
-    "@types/jquery": "^3.3.32",
-    "@types/node": "^12.12.27",
+    "@types/jquery": "^3.3.33",
+    "@types/node": "^12.12.28",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^8.0.1",
+    "electron": "^8.0.2",
     "electron-builder": "^22.3.2",
     "eslint": "^6.8.0",
     "eslint-plugin-html": "^6.0.0",
@@ -133,7 +133,7 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^5.4.3",
+    "better-sqlite3": "^6.0.1",
     "buzz": "^1.2.1",
     "chokidar": "^3.3.1",
     "drivelist": "^8.0.10",

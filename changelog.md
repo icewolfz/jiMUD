@@ -6,9 +6,10 @@
   - Triggers: Cache regular expression objects so they are only created first time a trigger is ran
 - **Changed:**
   - Update monaco-editor 0.19.3 to 0.20.0
-  - Update electron 8.0.0 to 8.0.1
+  - Update electron 8.0.1 to 8.0.2
   - Update drivelist 8.0.9 to 8.0.10
   - Update electron-updater 4.2.0 to 4.2.2
+  - Update better-sqlite3 5.4.3 to 6.0.1
 
 ## v0.11.0 2020-02-10
 
