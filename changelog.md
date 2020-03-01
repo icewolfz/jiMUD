@@ -10,6 +10,7 @@
   - Update drivelist 8.0.9 to 8.0.10
   - Update electron-updater 4.2.0 to 4.2.2
   - Update better-sqlite3 5.4.3 to 6.0.1
+  - Update yargs-parser 17.0.0 to 17.1.0
 
 ## v0.11.0 2020-02-10
 
