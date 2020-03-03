@@ -55,7 +55,7 @@
     "@types/node": "^12.12.29",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^8.0.2",
+    "electron": "^8.0.3",
     "electron-builder": "^22.3.2",
     "eslint": "^6.8.0",
     "eslint-plugin-html": "^6.0.0",
@@ -149,7 +149,7 @@
     "rgbcolor": "^1.0.1",
     "spellchecker": "^3.7.0",
     "tmp": "^0.1.0",
-    "yargs-parser": "^17.1.0",
+    "yargs-parser": "^18.0.0",
     "yauzl": "^2.10.0",
     "yazl": "^2.5.1"
   }
