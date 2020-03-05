@@ -56,7 +56,7 @@
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
     "electron": "^8.0.3",
-    "electron-builder": "^22.3.2",
+    "electron-builder": "^22.4.0",
     "eslint": "^6.8.0",
     "eslint-plugin-html": "^6.0.0",
     "node-sass": "^4.13.1"
@@ -137,7 +137,7 @@
     "buzz": "^1.2.1",
     "chokidar": "^3.3.1",
     "drivelist": "^8.0.10",
-    "electron-updater": "^4.2.2",
+    "electron-updater": "^4.2.4",
     "fontmanager-redux": "^0.4.0",
     "fs-extra": "^8.1.0",
     "fswin": "^3.19.908",
