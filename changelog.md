@@ -10,7 +10,7 @@
   - Update drivelist 8.0.9 to 8.0.10
   - Update electron-updater 4.2.0 to 4.2.5
   - Update better-sqlite3 5.4.3 to 6.0.1
-  - Update yargs-parser 17.0.0 to 18.1.0
+  - Update yargs-parser 17.0.0 to 18.1.1
 
 ## v0.11.0 2020-02-10
 
@@ -21,7 +21,7 @@
 - **Changed:**
   - Update electron 7.1.10 to 8.0.0
   - Update yargs-parser 16.1.0 to 17.0.0
-  - Make wheel mouse events passive to allow better optimizing of scrolling  for mapper and main display
+  - Make wheel mouse events passive to allow better optimizing of scrolling for mapper and main display
   - Code editor: revert a quick hack to menu issues
 
 ## v0.10.2 2020-01-27
