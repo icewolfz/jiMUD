@@ -13,6 +13,7 @@
   - Update electron-updater 4.2.0 to 4.2.5
   - Update better-sqlite3 5.4.3 to 6.0.1
   - Update yargs-parser 17.0.0 to 18.1.1
+  - Update fs-extra from 8.1.0 to 9.0.0
 
 ## v0.11.0 2020-02-10
 
