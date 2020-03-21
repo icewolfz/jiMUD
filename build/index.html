@@ -251,7 +251,15 @@
         }
 
         function doLink(url) {
-            if (confirm('Open \'' + url + '\'?') === true)
+            if (dialog.showMessageBoxSync(
+                remote.getCurrentWindow(),
+                {
+                    type: 'warning',
+                    title: 'Open?',
+                    message: 'Open \'' + url + '\'?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                }) === 0)
                 shell.openExternal(encodeURI(url));
         }
 
@@ -259,7 +267,15 @@
         function doMXPLink(el, url) {
             if (url.startsWith('OoMUD://') || url.startsWith('jiMUD://') || url.startsWith('client://'))
                 doMXPSend(0, el, url.substring(8));
-            else if (confirm('Open \'' + url + '\'?') === true)
+            else if (dialog.showMessageBoxSync(
+                remote.getCurrentWindow(),
+                {
+                    type: 'warning',
+                    title: 'Open?',
+                    message: 'Open \'' + url + '\'?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                }) === 0)
                 shell.openExternal(encodeURI(url.replace('&text;', $(el).text())));
         }
 

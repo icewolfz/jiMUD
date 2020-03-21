@@ -4,6 +4,8 @@
 
 - **New:**
   - Triggers: Cache regular expression objects so they are only created first time a trigger is ran
+- **Fixed:**
+  - Fix command input lost when canceling open link confirm box
 - **Changed:**
   - Update monaco-editor 0.19.3 to 0.20.0
   - Update electron 8.0.1 to 8.1.1
