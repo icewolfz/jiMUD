@@ -36,6 +36,7 @@ let _macro = false;
 let archiver;
 let unarchiver;
 let archive;
+let _spellchecker = true;
 
 const _controllers = {};
 let _controllersCount = 0;
@@ -219,8 +220,13 @@ const menubar: Menubar = new Menubar([
     }
 ]);
 
+interface MenuItemConstructorOptionsCustom extends Electron.MenuItemConstructorOptions {
+    x?: number;
+    y?: number;
+}
+
 function addInputContext() {
-    window.addEventListener('contextmenu', (e) => {
+    remote.getCurrentWindow().webContents.on('context-menu', (e, props) => {
         e.preventDefault();
         const inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
             {
@@ -240,8 +246,40 @@ function addInputContext() {
             { type: 'separator' },
             { role: 'selectAll' }
         ]);
+        if (remote.getGlobal('debug')) {
+            inputMenu.append(new MenuItem({ type: 'separator' }));
+            inputMenu.append(new MenuItem(<MenuItemConstructorOptionsCustom>{
+                label: 'Inspect',
+                x: props.x,
+                y: props.y,
+                click: (item: any) => {
+                    remote.getCurrentWindow().webContents.inspectElement(item.x, item.y);
+                }
+            }));
+        }
+        if (_spellchecker && props.dictionarySuggestions.length) {
+            inputMenu.insert(0, new MenuItem({ type: 'separator' }));
+            for (let w = props.dictionarySuggestions.length - 1; w >= 0; w--) {
+                inputMenu.insert(0, new MenuItem(<MenuItemConstructorOptionsCustom>{
+                    label: props.dictionarySuggestions[w],
+                    x: props.x,
+                    y: props.y,
+                    click: (item: any) => {
+                        const el = $(document.elementFromPoint(item.x, item.y));
+                        let value: string = (<string>el.val());
+                        const start = (<HTMLInputElement>el[0]).selectionStart;
+                        value = value.substring(0, start) + item.label + value.substring((<HTMLInputElement>el[0]).selectionEnd);
+                        el.val(value);
+                        (<HTMLInputElement>el[0]).selectionStart = start;
+                        (<HTMLInputElement>el[0]).selectionEnd = start + value.length - 1;
+                        el.blur();
+                        el.focus();
+                    }
+                }));
+            }
+        }
         inputMenu.popup({ window: remote.getCurrentWindow() });
-    }, false);
+    });
 }
 
 function profileID(name) {
@@ -2283,6 +2321,7 @@ function loadOptions() {
     _watch = options.profiles.watchFiles;
     _sort = options.profiles.sortOrder;
     _sortDir = options.profiles.sortDirection || 1;
+    _spellchecker = options.spellchecking || true;
     updatePads();
 
     let theme = parseTemplate(options.theme) + '.css';
