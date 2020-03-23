@@ -3489,6 +3489,7 @@ function initEditor(id) {
     const textarea = $('#' + id).hide();
     $('#' + id + '-editor').css('display', 'block');
     ace.require('ace/ext/language_tools');
+    ace.require('ace/ext/spellcheck');
     editors[id] = ace.edit(id + '-editor');
     const session = editors[id].getSession();
     editors[id].$blockScrolling = Infinity;
