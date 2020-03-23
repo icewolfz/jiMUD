@@ -3748,7 +3748,7 @@ function createCodeEditor(show, loading, loaded) {
             nodeIntegration: true,
             webviewTag: false,
             sandbox: false,
-            spellcheck: set ? set.spellchecking : false
+            spellcheck: edSet ? edSet.spellchecking : false
         }
     });
 
