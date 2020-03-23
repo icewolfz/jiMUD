@@ -9,7 +9,7 @@ Reset - Resetting will revert all settings back to default values
 - `Auto create character` When connecting to mud and if it returns a character name, create/load character
 - `Auto login` Attempt to auto login using character and supplied password from character manager
 - `Show character manager onload` open the character manager when the client first loads.
-- `Enable spellchecking` support spellchecking in command line and advanced editor
+- `Enable spellchecking` support spellchecking in command line and advanced editor **Requires restart**
 - `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
 - `Theme` the theme for the main client window
 - `On disconnect do` What to do when disconnected from the mud

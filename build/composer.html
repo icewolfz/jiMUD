@@ -35,7 +35,6 @@
         const path = require('path');
 
 
-        var spellchecker;
         var mail;
         var draft = true;
         var closeWindow = false;
@@ -210,15 +209,6 @@
                         });
                 });
         }
-
-        webFrame.setSpellCheckProvider('en-US', {
-            spellCheck: function (text) {
-                if (!spellchecker || !options.spellchecking)
-                    return true;
-                return !(spellchecker.isMisspelled(text));
-            }
-        });
-        //https://www.npmjs.com/package/electron-spell-check-provider
 
         function buildHTMLStack(els) {
             var tag, $el, t, tl;
@@ -1110,40 +1100,66 @@
                     '*': 'color,background,background-color,text-decoration,font-weight'
                 }
             });
-
-            tinymce.activeEditor.on('contextmenu', function (e) {
-                e.preventDefault();
-                var cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu();
-                var selRng = tinymce.activeEditor.selection.getRng();
-                selRng.expand('word'); //expands the DOM range to the current word
-                //tinymce.activeEditor.selection.setRng(selRng);
-                var word = stripHTML(tinymce.activeEditor.selection.getContent());
-                var ol = word.length;
-                word = word.trimRight();
-                var l = ol - word.length;
-                ol = word.length;
-                if (l > 0)
-                    selRng.setEnd(selRng.endContainer, selRng.endOffset - l);
-                word = word.trimLeft();
-                l = ol - word.length;
-                if (l > 0)
-                    selRng.setStart(selRng.startContainer, selRng.startOffset - l);
-
-                if (options.spellchecking && spellchecker && spellchecker.isMisspelled(word)) {
-                    var words = spellchecker.getCorrectionsForMisspelling(word);
-                    if (words.length > 0)
-                        cMenu.insert(0, new MenuItem({ type: 'separator' }));
-                    for (var w = words.length - 1; w >= 0; w--)
-                        cMenu.insert(0, new MenuItem({
-                            label: words[w],
-                            click: function (item) {
-                                tinymce.activeEditor.undoManager.transact(function () {
-                                    tinymce.activeEditor.selection.setContent(item.label);
-                                });
+            remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
+                const { selectionText, isEditable } = params;
+                if (isEditable) {
+                    var cMenu;
+                    if (params.inputFieldType !== 'none') {
+                        cMenu = Menu.buildFromTemplate([
+                            { role: 'undo' },
+                            { role: 'redo' },
+                            { type: 'separator' },
+                            { role: 'cut' },
+                            { role: 'copy' },
+                            { role: 'paste' },
+                            { type: 'separator' },
+                            { role: 'selectAll' },
+                        ]);
+                        if (options.spellchecking && params.dictionarySuggestions.length) {
+                            cMenu.insert(0, new MenuItem({ type: 'separator' }));
+                            for (w = params.dictionarySuggestions.length - 1; w >= 0; w--) {
+                                cMenu.insert(0, new MenuItem({
+                                    label: params.dictionarySuggestions[w],
+                                    x: params.x,
+                                    y: params.y,
+                                    click: function (item) {
+                                        var el = $(document.elementFromPoint(item.x, item.y));
+                                        var value = el.val();
+                                        var start = el[0].selectionStart;
+                                        value = value.substring(0, start) + item.label + value.substring(el[0].selectionEnd);
+                                        el.val(value);
+                                        el[0].selectionStart = start;
+                                        el[0].selectionEnd = start + value.length - 1;
+                                        el.blur();
+                                        el.focus();
+                                    }
+                                }));
                             }
-                        }));
+                        }
+                    }
+                    else {
+                        cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu();
+                        if (options.spellchecking && params.dictionarySuggestions.length) {
+                            cMenu.insert(0, new MenuItem({ type: 'separator' }));
+                            for (var w = params.dictionarySuggestions.length - 1; w >= 0; w--)
+                                cMenu.insert(0, new MenuItem({
+                                    label: params.dictionarySuggestions[w],
+                                    click: function (item) {
+                                        tinymce.activeEditor.undoManager.transact(function () {
+                                            tinymce.activeEditor.selection.setContent(item.label);
+                                        });
+                                    }
+                                }));
+                        }
+                    }
+                    cMenu.popup({ window: remote.getCurrentWindow() });
+                } else if (selectionText && selectionText.trim() !== '') {
+                    Menu.buildFromTemplate([
+                        { role: 'copy' },
+                        { type: 'separator' },
+                        { role: 'selectAll' },
+                    ]).popup({ window: remote.getCurrentWindow() });
                 }
-                cMenu.popup({ window: remote.getCurrentWindow() });
             });
             loadOptions();
         });
@@ -1273,14 +1289,6 @@
 
         function loadOptions() {
             options = Settings.load(remote.getGlobal('settingsFile'));
-            try {
-                if (!spellchecker && options.spellchecking)
-                    spellchecker = require('spellchecker');
-            }
-            catch (ex) {
-                ipcRenderer.send('error', ex);
-            }
-
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', options.cmdfontSize);
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-family', options.cmdfont + ', monospace');
             if (tinymce.activeEditor.formatter)

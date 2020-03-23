@@ -147,7 +147,6 @@
     "moment": "^2.24.0",
     "monaco-editor": "^0.20.0",
     "rgbcolor": "^1.0.1",
-    "spellchecker": "^3.7.0",
     "tmp": "^0.1.0",
     "yargs-parser": "^18.1.1",
     "yauzl": "^2.10.0",

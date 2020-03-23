@@ -308,6 +308,7 @@
 
         }
 
+        /*
         webFrame.setSpellCheckProvider('en-US', {
             spellCheck: function (text) {
                 if (!spellchecker || !options.spellchecking)
@@ -315,6 +316,7 @@
                 return !(spellchecker.isMisspelled(text));
             }
         });
+        */
         //https://www.npmjs.com/package/electron-spell-check-provider
 
         function buildHTMLStack(els) {
@@ -1034,69 +1036,30 @@
                 }
             });
 
-            tinymce.activeEditor.on('contextmenu', function (e) {
-                e.preventDefault();
-                var cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu();
-
-                /*
-                                    sel = tinymce.activeEditor.selection.getSel();
-                                    if (!sel.isCollapsed) {
-
-                                        // Detect if selection is backwards
-                                        var range = document.createRange();
-                                        range.setStart(sel.anchorNode, sel.anchorOffset);
-                                        range.setEnd(sel.focusNode, sel.focusOffset);
-                                        var backwards = range.collapsed;
-                                        range.detach();
-
-                                        // modify() works on the focus of the selection
-                                        var endNode = sel.focusNode, endOffset = sel.focusOffset;
-                                        sel.collapse(sel.anchorNode, sel.anchorOffset);
-
-                                        var direction = [];
-                                        if (backwards) {
-                                            direction = ['backward', 'forward'];
-                                        } else {
-                                            direction = ['forward', 'backward'];
-                                        }
-
-                                        sel.modify("move", direction[0], "character");
-                                        sel.modify("move", direction[1], "word");
-                                        sel.extend(endNode, endOffset);
-                                        sel.modify("extend", direction[1], "character");
-                                        sel.modify("extend", direction[0], "word");
-                                    }
-                                    */
-                var selRng = tinymce.activeEditor.selection.getRng();
-                selRng.expand('word'); //expands the DOM range to the current word
-                //tinymce.activeEditor.selection.setRng(selRng);
-                var word = stripHTML(tinymce.activeEditor.selection.getContent());
-                var ol = word.length;
-                word = word.trimRight();
-                var l = ol - word.length;
-                ol = word.length;
-                if (l > 0)
-                    selRng.setEnd(selRng.endContainer, selRng.endOffset - l);
-                word = word.trimLeft();
-                l = ol - word.length;
-                if (l > 0)
-                    selRng.setStart(selRng.startContainer, selRng.startOffset - l);
-
-                if (options.spellchecking && spellchecker && spellchecker.isMisspelled(word)) {
-                    var words = spellchecker.getCorrectionsForMisspelling(word);
-                    if (words.length > 0)
+            remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
+                const { selectionText, isEditable } = params;
+                if (isEditable) {
+                    var cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu();
+                    if (options.spellchecking && params.dictionarySuggestions.length) {
                         cMenu.insert(0, new MenuItem({ type: 'separator' }));
-                    for (var w = words.length - 1; w >= 0; w--)
-                        cMenu.insert(0, new MenuItem({
-                            label: words[w],
-                            click: function (item) {
-                                tinymce.activeEditor.undoManager.transact(function () {
-                                    tinymce.activeEditor.selection.setContent(item.label);
-                                });
-                            }
-                        }));
+                        for (var w = params.dictionarySuggestions.length - 1; w >= 0; w--)
+                            cMenu.insert(0, new MenuItem({
+                                label: params.dictionarySuggestions[w],
+                                click: function (item) {
+                                    tinymce.activeEditor.undoManager.transact(function () {
+                                        tinymce.activeEditor.selection.setContent(item.label);
+                                    });
+                                }
+                            }));
+                    }
+                    cMenu.popup({ window: remote.getCurrentWindow() });
+                } else if (selectionText && selectionText.trim() !== '') {
+                    Menu.buildFromTemplate([
+                        { role: 'copy' },
+                        { type: 'separator' },
+                        { role: 'selectAll' },
+                    ]).popup({ window: remote.getCurrentWindow() });
                 }
-                cMenu.popup({ window: remote.getCurrentWindow() });
             });
             loadOptions();
         });

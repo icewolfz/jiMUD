@@ -166,15 +166,12 @@
         //    const fs = require('fs');
         const path = require('path');
         const { version } = require('../package.json');
-        var spellchecker;
         var autoConnectID;
         var autoLoginCounter = 0;
         var lastMouse;
         var chatWin;
         var _nextClear = Date.now() + 3600000;
         var set = Settings.load(remote.getGlobal('settingsFile'));
-        if (set.spellchecking)
-            loadSpellchecker();
         loadTheme(set.theme);
         delete set;
 
@@ -223,32 +220,6 @@
         window.onmousemove = function (e) {
             lastMouse = e;
         };
-
-        webFrame.setSpellCheckProvider('en-US', {
-            spellCheck(words, callback) {
-                setTimeout(() => {
-                    if (!spellchecker || !client.options.spellchecking)
-                        return;
-                    const misspelled = words.filter(x => spellchecker.isMisspelled(x));
-                    callback(misspelled);
-                }, 0);
-            }
-        });
-
-        function loadSpellchecker() {
-            try {
-                spellchecker = require('spellchecker');
-            }
-            catch (ex) {
-                if (!client)
-                    setTimeout(() => {
-                        if (!client)
-                            console.error(ex);
-                        else
-                            client.error(ex);
-                    }, 1000);
-            }
-        }
 
         function doLink(url) {
             if (dialog.showMessageBoxSync(
@@ -1122,8 +1093,6 @@
                 _backup.loadSelection = client.options.backupLoad;
                 _backup.saveSelection = client.options.backupSave;
                 doUpdate(3);
-                if (client.options.spellchecking)
-                    loadSpellchecker();
                 client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
                 if (_logger)
                     _logger.postMessage({
@@ -1846,67 +1815,86 @@
                 c.popup({ window: remote.getCurrentWindow() });
             });
 
-            $('#commandinput').on('contextmenu', (e) => {
-                e.preventDefault();
-                $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
-                $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
-                var inputMenu = Menu.buildFromTemplate([
-                    { role: 'undo', accelerator: 'CmdOrCtrl+Z' },
-                    { role: 'redo', accelerator: 'CmdOrCtrl+Y' },
-                    { type: 'separator' },
-                    { role: 'cut', accelerator: 'CmdOrCtrl+X' },
-                    { role: 'copy', accelerator: 'CmdOrCtrl+C' },
-                    { label: 'Paste', accelerator: 'CmdOrCtrl+V', click: paste },
-                    { label: 'Paste special', accelerator: 'CmdOrCtrL+Shift+V', click: () => { pasteSpecial(); } },
-                    { type: 'separator' },
-                    { role: 'selectAll', accelerator: 'CmdOrCtrl+A' },
-                ]);
-                inputMenu.on('menu-will-show', () => {
-                    $('#commandinput').data('context', true);
-                });
-                inputMenu.on('menu-will-close', () => {
-                    setTimeout(() => $('#commandinput').data('context', false), 200);
-                });
-                if (client.options.enableDebug || remote.getGlobal('debug')) {
-                    inputMenu.append(new MenuItem({ type: 'separator' }));
-                    inputMenu.append(new MenuItem({
-                        label: 'Inspect', click: () => {
-                            remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
-                        }
-                    }));
-                }
-                var word = e.currentTarget.value.substring(e.currentTarget.selectionStart, e.currentTarget.selectionEnd);
-                var ol = word.length;
-                word = word.trimRight();
-                var ll = ol - word.length;
-                if (ll > 0)
-                    e.currentTarget.selectionEnd = e.currentTarget.selectionEnd - ll;
-
-                if (client.options.spellchecking && spellchecker && spellchecker.isMisspelled(word)) {
-                    var words = spellchecker.getCorrectionsForMisspelling(word);
-                    if (words.length > 0)
-                        inputMenu.insert(0, new MenuItem({ type: 'separator' }));
-                    var start = e.currentTarget.selectionStart;
-                    var end = e.currentTarget.selectionEnd;
-                    for (var w = words.length - 1; w >= 0; w--) {
-                        inputMenu.insert(0, new MenuItem({
-                            label: words[w],
-                            start: start,
-                            end: end,
-                            click: function (item) {
-                                var value = $('#commandinput').val();
-                                value = value.substring(0, item.start) + item.label + value.substring(item.end);
-                                $('#commandinput').val(value);
-                                $('#commandinput')[0].selectionStart = value.length;
-                                $('#commandinput')[0].selectionEnd = value.length;
-                                $('#commandinput').blur();
-                                $('#commandinput').focus();
+            remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
+                var inputMenu, start, end, w, input;
+                const { selectionText, isEditable } = params;
+                if (isEditable) {
+                    input = document.elementFromPoint(params.x, params.y);
+                    if (input.id === 'commandinput') {
+                        //e.preventDefault();
+                        $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
+                        $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
+                        inputMenu = Menu.buildFromTemplate([
+                            { role: 'undo', accelerator: 'CmdOrCtrl+Z' },
+                            { role: 'redo', accelerator: 'CmdOrCtrl+Y' },
+                            { type: 'separator' },
+                            { role: 'cut', accelerator: 'CmdOrCtrl+X' },
+                            { role: 'copy', accelerator: 'CmdOrCtrl+C' },
+                            { label: 'Paste', accelerator: 'CmdOrCtrl+V', click: paste },
+                            { label: 'Paste special', accelerator: 'CmdOrCtrL+Shift+V', click: () => { pasteSpecial(); } },
+                            { type: 'separator' },
+                            { role: 'selectAll', accelerator: 'CmdOrCtrl+A' },
+                        ]);
+                        inputMenu.on('menu-will-show', () => {
+                            $('#commandinput').data('context', true);
+                        });
+                        inputMenu.on('menu-will-close', () => {
+                            setTimeout(() => $('#commandinput').data('context', false), 200);
+                        });
+                    }
+                    else
+                        inputMenu = Menu.buildFromTemplate([
+                            { role: 'undo' },
+                            { role: 'redo' },
+                            { type: 'separator' },
+                            { role: 'cut' },
+                            { role: 'copy' },
+                            { role: 'paste' },
+                            { type: 'separator' },
+                            { role: 'selectAll' },
+                        ]);
+                    if (client.options.enableDebug || remote.getGlobal('debug')) {
+                        inputMenu.append(new MenuItem({ type: 'separator' }));
+                        inputMenu.append(new MenuItem({
+                            label: 'Inspect', click: () => {
+                                remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
                             }
                         }));
                     }
+                    if (client.options.spellchecking && params.dictionarySuggestions.length) {
+                        inputMenu.insert(0, new MenuItem({ type: 'separator' }));
+                        start = input.selectionStart;
+                        end = input.selectionEnd;
+                        for (w = params.dictionarySuggestions.length - 1; w >= 0; w--) {
+                            inputMenu.insert(0, new MenuItem({
+                                label: params.dictionarySuggestions[w],
+                                start: start,
+                                end: end,
+                                x: params.x,
+                                y: params.y,
+                                click: function (item) {
+                                    var el = $(document.elementFromPoint(item.x, item.y));
+                                    var value = el.val();
+                                    value = value.substring(0, item.start) + item.label + value.substring(item.end);
+                                    el.val(value);
+                                    el[0].selectionStart = start;
+                                    el[0].selectionEnd = start + value.length - 1;
+                                    el.blur();
+                                    el.focus();
+                                }
+                            }));
+                        }
+                    }
+                    inputMenu.popup({ window: remote.getCurrentWindow() });
+                } else if (selectionText && selectionText.trim() !== '') {
+                    Menu.buildFromTemplate([
+                        { role: 'copy' },
+                        { type: 'separator' },
+                        { role: 'selectAll' },
+                    ]).popup({ window: remote.getCurrentWindow() });
                 }
-                inputMenu.popup({ window: remote.getCurrentWindow() });
             });
+
             client.display.on('word', () => {
                 client.options.find.word = client.display.MatchWord;
                 doUpdate(32);
@@ -2413,10 +2401,11 @@
             if (client.options.windows['composer'] && client.options.windows['composer'].options) {
                 client.options.windows['composer'].options.show = true;
                 client.options.windows['composer'].options.persistent = false;
+                client.options.windows['composer'].options.noInput = true;
                 ipcRenderer.send('show-window', 'composer', client.options.windows['composer'].options);
             }
             else
-                ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'composer', alwaysOnTopClient: true, persistent: false });
+                ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'composer', alwaysOnTopClient: true, persistent: false, noInput: true });
         }
 
         // eslint-disable-next-line no-unused-vars

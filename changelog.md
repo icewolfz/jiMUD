@@ -4,6 +4,7 @@
 
 - **New:**
   - Triggers: Cache regular expression objects so they are only created first time a trigger is ran
+  - Use native built in spellchecker systems, add support for most editable fields
 - **Fixed:**
   - Fix command input lost when canceling open link confirm box
 - **Changed:**
@@ -14,6 +15,7 @@
   - Update better-sqlite3 5.4.3 to 6.0.1
   - Update yargs-parser 17.0.0 to 18.1.1
   - Update fs-extra from 8.1.0 to 9.0.0
+  - Remove spellchecker 3.7.0
 
 ## v0.11.0 2020-02-10
 

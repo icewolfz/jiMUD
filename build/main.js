@@ -2,7 +2,7 @@
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
 const { app, BrowserWindow, shell } = require('electron');
-const { Tray, dialog, Menu } = require('electron');
+const { Tray, dialog, Menu, MenuItem } = require('electron');
 const ipcMain = require('electron').ipcMain;
 const path = require('path');
 const fs = require('fs');
@@ -816,30 +816,61 @@ if (process.platform === 'darwin') {
 
 let menubar;
 
-const selectionMenu = Menu.buildFromTemplate([
-    { role: 'copy' },
-    { type: 'separator' },
-    { role: 'selectAll' },
-]);
-
-const inputMenu = Menu.buildFromTemplate([
-    { role: 'undo' },
-    { role: 'redo' },
-    { type: 'separator' },
-    { role: 'cut' },
-    { role: 'copy' },
-    { role: 'paste' },
-    { type: 'separator' },
-    { role: 'selectAll' },
-]);
-
 function addInputContext(window) {
     window.webContents.on('context-menu', (e, props) => {
         const { selectionText, isEditable } = props;
         if (isEditable) {
+            const inputMenu = Menu.buildFromTemplate([
+                { role: 'undo' },
+                { role: 'redo' },
+                { type: 'separator' },
+                { role: 'cut' },
+                { role: 'copy' },
+                { role: 'paste' },
+                { type: 'separator' },
+                { role: 'selectAll' },
+            ]);
+            if (global.debug) {
+                inputMenu.append(new MenuItem({ type: 'separator' }));
+                inputMenu.append(new MenuItem({
+                    label: 'Inspect',
+                    x: props.x,
+                    y: props.y,
+                    click: (item) => {
+                        window.webContents.inspectElement(item.x, item.y);
+                    }
+                }));
+            }
+            if (set && set.spellchecking && props.dictionarySuggestions.length) {
+                inputMenu.insert(0, new MenuItem({ type: 'separator' }));
+                for (var w = props.dictionarySuggestions.length - 1; w >= 0; w--) {
+                    inputMenu.insert(0, new MenuItem({
+                        label: props.dictionarySuggestions[w],
+                        x: props.x,
+                        y: props.y,
+                        click: (item) => {
+                            executeScript(`(function spellTemp() {
+                                var el = $(document.elementFromPoint(${item.x}, ${item.y}));
+                                var value = el.val();
+                                var start = el[0].selectionStart;
+                                value = value.substring(0, start) + '${item.label}' + value.substring(el[0].selectionEnd);
+                                el.val(value);
+                                el[0].selectionStart = start;
+                                el[0].selectionEnd = start + value.length - 1;
+                                ${((window !== winCode) ? 'el.blur();\n' : '')}
+                                el.focus();
+                            })();`, window, true);
+                        }
+                    }));
+                }
+            }
             inputMenu.popup({ window: window });
         } else if (selectionText && selectionText.trim() !== '') {
-            selectionMenu.popup({ window: window });
+            Menu.buildFromTemplate([
+                { role: 'copy' },
+                { type: 'separator' },
+                { role: 'selectAll' },
+            ]).popup({ window: window });
         }
     });
 }
@@ -1139,7 +1170,8 @@ function createWindow() {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
             webviewTag: false,
-            sandbox: false
+            sandbox: false,
+            spellcheck: set ? set.spellchecking : false
         }
     });
     if (s.fullscreen)
@@ -1264,11 +1296,17 @@ function createWindow() {
         }
         options.show = false;
         if (!Object.prototype.hasOwnProperty.call(options, 'webPreferences'))
-            options.webPreferences = { nodeIntegration: true };
+            options.webPreferences = {
+                nodeIntegration: true,
+                webviewTag: false,
+                sandbox: false,
+                spellcheck: set ? set.spellchecking : false
+            };
         else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
             options.webPreferences.nodeIntegration = true;
             options.webPreferences.webviewTag = false;
             options.webPreferences.sandbox = false;
+            options.webPreferences.spellcheck = set ? set.spellchecking : false;
         }
         const w = new BrowserWindow(options);
         if (global.debug)
@@ -1357,7 +1395,7 @@ function createWindow() {
         createMenu();
         loadMenu();
 
-        addInputContext(win);
+        //addInputContext(win);
         if (isFileSync(path.join(app.getPath('userData'), 'monsters.css'))) {
             fs.readFile(path.join(app.getPath('userData'), 'monsters.css'), 'utf8', (err, data) => {
                 win.webContents.insertCSS(parseTemplate(data));
@@ -2219,7 +2257,8 @@ ipcMain.on('progress-show', (event, title) => {
             webPreferences: {
                 nodeIntegration: true,
                 webviewTag: false,
-                sandbox: false
+                sandbox: false,
+                spellcheck: set ? set.spellchecking : false
             }
         });
         winProgress.removeMenu();
@@ -2681,7 +2720,8 @@ function showPrefs() {
         webPreferences: {
             nodeIntegration: true,
             webviewTag: false,
-            sandbox: false
+            sandbox: false,
+            spellcheck: set ? set.spellchecking : false
         }
     });
     pref.removeMenu();
@@ -2744,7 +2784,8 @@ function createMapper(show, loading, loaded) {
         webPreferences: {
             nodeIntegration: true,
             webviewTag: false,
-            sandbox: false
+            sandbox: false,
+            spellcheck: set ? set.spellchecking : false
         }
     });
 
@@ -2889,7 +2930,8 @@ function showProfiles() {
         webPreferences: {
             nodeIntegration: true,
             webviewTag: false,
-            sandbox: false
+            sandbox: false,
+            spellcheck: set ? set.spellchecking : false
         }
     });
 
@@ -2992,7 +3034,8 @@ function createEditor(show, loading) {
         webPreferences: {
             nodeIntegration: true,
             webviewTag: false,
-            sandbox: false
+            sandbox: false,
+            spellcheck: set ? set.spellchecking : false
         }
     });
 
@@ -3064,7 +3107,7 @@ function createEditor(show, loading) {
 
     winEditor.once('ready-to-show', () => {
         loadWindowScripts(winEditor, 'editor');
-        addInputContext(winEditor);
+        //addInputContext(winEditor);
         if (show) {
             if (s.maximized)
                 winEditor.maximize();
@@ -3135,7 +3178,8 @@ function createChat(show, loading) {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
             webviewTag: false,
-            sandbox: false
+            sandbox: false,
+            spellcheck: set ? set.spellchecking : false
         }
     });
 
@@ -3281,7 +3325,8 @@ function createNewWindow(name, options) {
         webPreferences: {
             nodeIntegration: true,
             webviewTag: false,
-            sandbox: false
+            sandbox: false,
+            spellcheck: set ? set.spellchecking : false
         }
     });
     delete windows[name].width;
@@ -3378,11 +3423,17 @@ function createNewWindow(name, options) {
         }
         options.show = false;
         if (!Object.prototype.hasOwnProperty.call(options, 'webPreferences'))
-            options.webPreferences = { nodeIntegration: true };
+            options.webPreferences = {
+                nodeIntegration: true,
+                webviewTag: false,
+                sandbox: false,
+                spellcheck: set ? set.spellchecking : false
+            };
         else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
             options.webPreferences.nodeIntegration = true;
-            options.webPreferences.webviewTag = true;
+            options.webPreferences.webviewTag = false;
             options.webPreferences.sandbox = false;
+            options.webPreferences.spellcheck = set ? set.spellchecking : false;
         }
         const w = new BrowserWindow(options);
         if (global.debug)
@@ -3390,7 +3441,8 @@ function createNewWindow(name, options) {
         w.removeMenu();
         w.once('ready-to-show', () => {
             loadWindowScripts(w, frameName);
-            addInputContext(w);
+            if (!options.noInput)
+                addInputContext(w);
             w.show();
         });
         w.webContents.on('crashed', (event, killed) => {
@@ -3501,7 +3553,8 @@ function showColor(args) {
         webPreferences: {
             nodeIntegration: true,
             webviewTag: false,
-            sandbox: false
+            sandbox: false,
+            spellcheck: set ? set.spellchecking : false
         }
     });
     cp.webContents.on('crashed', (event, killed) => {
@@ -3694,7 +3747,8 @@ function createCodeEditor(show, loading, loaded) {
         webPreferences: {
             nodeIntegration: true,
             webviewTag: false,
-            sandbox: false
+            sandbox: false,
+            spellcheck: set ? set.spellchecking : false
         }
     });
 
@@ -3832,11 +3886,17 @@ function createCodeEditor(show, loading, loaded) {
         }
         options.show = false;
         if (!Object.prototype.hasOwnProperty.call(options, 'webPreferences'))
-            options.webPreferences = { nodeIntegration: true };
+            options.webPreferences = {
+                nodeIntegration: true,
+                webviewTag: false,
+                sandbox: false,
+                spellcheck: set ? set.spellchecking : false
+            };
         else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
             options.webPreferences.nodeIntegration = true;
             options.webPreferences.webviewTag = false;
             options.webPreferences.sandbox = false;
+            options.webPreferences.spellcheck = set ? set.spellchecking : false;
         }
         const w = new BrowserWindow(options);
         if (global.debug)
@@ -4069,7 +4129,8 @@ function showAbout() {
         webPreferences: {
             nodeIntegration: true,
             webviewTag: false,
-            sandbox: false
+            sandbox: false,
+            spellcheck: set ? set.spellchecking : false
         }
     });
     about.webContents.on('crashed', (event, killed) => {
