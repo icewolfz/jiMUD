@@ -31,7 +31,6 @@
         const fs = require('fs');
         const path = require('path');
 
-        var spellchecker;
         var editorOnly = remote.getGlobal('editorOnly');
 
         var _colors, _ColorTable, options, _colorCodes;
@@ -307,17 +306,6 @@
             tinymce.activeEditor.execCommand('insertHTML', false, stack.join(''));
 
         }
-
-        /*
-        webFrame.setSpellCheckProvider('en-US', {
-            spellCheck: function (text) {
-                if (!spellchecker || !options.spellchecking)
-                    return true;
-                return !(spellchecker.isMisspelled(text));
-            }
-        });
-        */
-        //https://www.npmjs.com/package/electron-spell-check-provider
 
         function buildHTMLStack(els) {
             var tag, $el, t, tl;
@@ -1190,16 +1178,6 @@
 
         function loadOptions() {
             options = Settings.load(remote.getGlobal('settingsFile'));
-
-            try {
-                if (!spellchecker && options.spellchecking)
-                    spellchecker = require('spellchecker');
-            }
-            catch (ex) {
-                ipcRenderer.send('error', ex);
-            }
-
-
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', options.cmdfontSize);
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-family', options.cmdfont + ', monospace');
             if (tinymce.activeEditor.formatter)

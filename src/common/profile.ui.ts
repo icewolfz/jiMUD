@@ -223,6 +223,9 @@ const menubar: Menubar = new Menubar([
 interface MenuItemConstructorOptionsCustom extends Electron.MenuItemConstructorOptions {
     x?: number;
     y?: number;
+    sel?: number;
+    idx?: number;
+    word?: string;
 }
 
 function addInputContext() {
@@ -264,14 +267,18 @@ function addInputContext() {
                     label: props.dictionarySuggestions[w],
                     x: props.x,
                     y: props.y,
+                    sel: props.selectionText.length - props.misspelledWord.length,
+                    idx:  props.selectionText.indexOf(props.misspelledWord),
+                    word: props.misspelledWord,
                     click: (item: any) => {
                         const el = $(document.elementFromPoint(item.x, item.y));
                         let value: string = (<string>el.val());
                         const start = (<HTMLInputElement>el[0]).selectionStart;
-                        value = value.substring(0, start) + item.label + value.substring((<HTMLInputElement>el[0]).selectionEnd);
+                        const wStart = start + item.idx;
+                        value = value.substring(0, wStart) + item.label + value.substring(wStart + item.word.length);
                         el.val(value);
                         (<HTMLInputElement>el[0]).selectionStart = start;
-                        (<HTMLInputElement>el[0]).selectionEnd = start + value.length - 1;
+                        (<HTMLInputElement>el[0]).selectionEnd = start + item.label.length + item.sel;
                         el.blur();
                         el.focus();
                     }

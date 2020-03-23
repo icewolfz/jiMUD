@@ -1863,22 +1863,24 @@
                     }
                     if (client.options.spellchecking && params.dictionarySuggestions.length) {
                         inputMenu.insert(0, new MenuItem({ type: 'separator' }));
-                        start = input.selectionStart;
-                        end = input.selectionEnd;
+                        start = input.selectionStart + params.selectionText.indexOf(params.misspelledWord);
+                        end = start + params.misspelledWord.length;
                         for (w = params.dictionarySuggestions.length - 1; w >= 0; w--) {
                             inputMenu.insert(0, new MenuItem({
                                 label: params.dictionarySuggestions[w],
                                 start: start,
                                 end: end,
+                                sel: params.selectionText.length - params.misspelledWord.length,
                                 x: params.x,
                                 y: params.y,
                                 click: function (item) {
                                     var el = $(document.elementFromPoint(item.x, item.y));
                                     var value = el.val();
+                                    var start = el[0].selectionStart;
                                     value = value.substring(0, item.start) + item.label + value.substring(item.end);
                                     el.val(value);
                                     el[0].selectionStart = start;
-                                    el[0].selectionEnd = start + value.length - 1;
+                                    el[0].selectionEnd = start + item.label.length + item.sel;
                                     el.blur();
                                     el.focus();
                                 }

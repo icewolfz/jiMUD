@@ -848,15 +848,19 @@ function addInputContext(window) {
                         label: props.dictionarySuggestions[w],
                         x: props.x,
                         y: props.y,
+                        sel: props.selectionText.length - props.misspelledWord.length,
+                        idx: props.selectionText.indexOf(props.misspelledWord),
+                        word: props.misspelledWord,
                         click: (item) => {
                             executeScript(`(function spellTemp() {
                                 var el = $(document.elementFromPoint(${item.x}, ${item.y}));
                                 var value = el.val();
                                 var start = el[0].selectionStart;
-                                value = value.substring(0, start) + '${item.label}' + value.substring(el[0].selectionEnd);
+                                var wStart = start + ${item.idx};
+                                value = value.substring(0, wStart) + '${item.label}' + value.substring(wStart + ${item.word.length});
                                 el.val(value);
                                 el[0].selectionStart = start;
-                                el[0].selectionEnd = start + value.length - 1;
+                                el[0].selectionEnd = start + ${item.label.length + item.sel};
                                 ${((window !== winCode) ? 'el.blur();\n' : '')}
                                 el.focus();
                             })();`, window, true);

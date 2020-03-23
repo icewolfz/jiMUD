@@ -1122,14 +1122,18 @@
                                     label: params.dictionarySuggestions[w],
                                     x: params.x,
                                     y: params.y,
+                                    sel: params.selectionText.length - params.misspelledWord.length,
+                                    idx: params.selectionText.indexOf(params.misspelledWord),
+                                    word: params.misspelledWord,
                                     click: function (item) {
                                         var el = $(document.elementFromPoint(item.x, item.y));
                                         var value = el.val();
                                         var start = el[0].selectionStart;
-                                        value = value.substring(0, start) + item.label + value.substring(el[0].selectionEnd);
+                                        const wStart = start + item.idx;
+                                        value = value.substring(0, wStart) + item.label + value.substring(wStart + item.word.length);
                                         el.val(value);
                                         el[0].selectionStart = start;
-                                        el[0].selectionEnd = start + value.length - 1;
+                                        el[0].selectionEnd = start + item.label.length + item.sel;
                                         el.blur();
                                         el.focus();
                                     }
