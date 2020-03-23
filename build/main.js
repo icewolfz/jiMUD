@@ -816,7 +816,7 @@ if (process.platform === 'darwin') {
 
 let menubar;
 
-function addInputContext(window) {
+function addInputContext(window, spellcheck) {
     window.webContents.on('context-menu', (e, props) => {
         const { selectionText, isEditable } = props;
         if (isEditable) {
@@ -841,7 +841,7 @@ function addInputContext(window) {
                     }
                 }));
             }
-            if (set && set.spellchecking && props.dictionarySuggestions.length) {
+            if (spellcheck && props.dictionarySuggestions.length) {
                 inputMenu.insert(0, new MenuItem({ type: 'separator' }));
                 for (var w = props.dictionarySuggestions.length - 1; w >= 0; w--) {
                     inputMenu.insert(0, new MenuItem({
@@ -1318,7 +1318,7 @@ function createWindow() {
         w.removeMenu();
         w.once('ready-to-show', () => {
             loadWindowScripts(w, frameName);
-            addInputContext(w);
+            addInputContext(w, set && set.spellchecking);
             w.show();
         });
         w.webContents.on('crashed', (event, killed) => {
@@ -1399,7 +1399,7 @@ function createWindow() {
         createMenu();
         loadMenu();
 
-        //addInputContext(win);
+        //addInputContext(win, set && set.spellchecking);
         if (isFileSync(path.join(app.getPath('userData'), 'monsters.css'))) {
             fs.readFile(path.join(app.getPath('userData'), 'monsters.css'), 'utf8', (err, data) => {
                 win.webContents.insertCSS(parseTemplate(data));
@@ -2767,7 +2767,7 @@ function showPrefs() {
                 logError('Preferences unresponsive, waiting.\n', true);
         });
     });
-    addInputContext(pref);
+    addInputContext(pref, set && set.spellchecking);
 }
 
 function createMapper(show, loading, loaded) {
@@ -2859,7 +2859,7 @@ function createMapper(show, loading, loaded) {
 
     winMap.once('ready-to-show', () => {
         loadWindowScripts(winMap, 'map');
-        addInputContext(winMap);
+        addInputContext(winMap, set && set.spellchecking);
         if (show) {
             if (s.maximized)
                 winMap.maximize();
@@ -2985,7 +2985,7 @@ function showProfiles() {
     }));
     winProfiles.once('ready-to-show', () => {
         loadWindowScripts(winProfiles, 'profiles');
-        //addInputContext(winProfiles);
+        //addInputContext(winProfiles, set && set.spellchecking);
         if (s.maximized)
             winProfiles.maximize();
         winProfiles.show();
@@ -3111,7 +3111,7 @@ function createEditor(show, loading) {
 
     winEditor.once('ready-to-show', () => {
         loadWindowScripts(winEditor, 'editor');
-        //addInputContext(winEditor);
+        //addInputContext(winEditor, set && set.spellchecking);
         if (show) {
             if (s.maximized)
                 winEditor.maximize();
@@ -3255,7 +3255,7 @@ function createChat(show, loading) {
 
     winChat.once('ready-to-show', () => {
         loadWindowScripts(winChat, 'chat');
-        addInputContext(winChat);
+        addInputContext(winChat, set && set.spellchecking);
         if (show) {
             if (s.maximized)
                 winChat.maximize();
@@ -3446,7 +3446,7 @@ function createNewWindow(name, options) {
         w.once('ready-to-show', () => {
             loadWindowScripts(w, frameName);
             if (!options.noInput)
-                addInputContext(w);
+                addInputContext(w, global.editorOnly ? (edSet && edSet.spellchecking) : (set && set.spellchecking));
             w.show();
         });
         w.webContents.on('crashed', (event, killed) => {
@@ -3489,7 +3489,7 @@ function createNewWindow(name, options) {
     windows[name].window.once('ready-to-show', () => {
         loadWindowScripts(windows[name].window, name);
         if (!options.noInput)
-            addInputContext(windows[name].window);
+            addInputContext(windows[name].window, global.editorOnly ? (edSet && edSet.spellchecking) : (set && set.spellchecking));
         if (options.show) {
             if (s.maximized)
                 windows[name].window.maximize();
@@ -3823,7 +3823,7 @@ function createCodeEditor(show, loading, loaded) {
 
     winCode.once('ready-to-show', () => {
         loadWindowScripts(winCode, 'code.editor');
-        addInputContext(winCode);
+        addInputContext(winCode, edSet && edSet.spellchecking);
         if (show) {
             if (s.maximized)
                 winCode.maximize();
@@ -3894,13 +3894,13 @@ function createCodeEditor(show, loading, loaded) {
                 nodeIntegration: true,
                 webviewTag: false,
                 sandbox: false,
-                spellcheck: set ? set.spellchecking : false
+                spellcheck: edSet ? edSet.spellchecking : false
             };
         else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
             options.webPreferences.nodeIntegration = true;
             options.webPreferences.webviewTag = false;
             options.webPreferences.sandbox = false;
-            options.webPreferences.spellcheck = set ? set.spellchecking : false;
+            options.webPreferences.spellcheck = edSet ? edSet.spellchecking : false;
         }
         const w = new BrowserWindow(options);
         if (global.debug)
@@ -3908,7 +3908,7 @@ function createCodeEditor(show, loading, loaded) {
         w.removeMenu();
         w.once('ready-to-show', () => {
             loadWindowScripts(w, frameName);
-            addInputContext(w);
+            addInputContext(w, edSet && edSet.spellchecking);
             w.show();
         });
         w.webContents.on('crashed', (event, killed) => {
