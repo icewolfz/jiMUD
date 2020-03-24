@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.11.1
+## v0.11.1 2020-03-23
 
 - **New:**
   - Triggers: Cache regular expression objects so they are only created first time a trigger is ran
