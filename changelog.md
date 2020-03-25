@@ -2,6 +2,9 @@
 
 ## v0.11.2
 
+- **Changed:**
+  - Update electron 8.1.1 to 8.2.0
+
 ## v0.11.1 2020-03-23
 
 - **New:**
