@@ -51,8 +51,8 @@
   },
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
-    "@types/jquery": "^3.3.33",
-    "@types/node": "^12.12.30",
+    "@types/jquery": "^3.3.34",
+    "@types/node": "^12.12.32",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
     "electron": "^8.2.0",
@@ -148,7 +148,7 @@
     "monaco-editor": "^0.20.0",
     "rgbcolor": "^1.0.1",
     "tmp": "^0.1.0",
-    "yargs-parser": "^18.1.1",
+    "yargs-parser": "^18.1.2",
     "yauzl": "^2.10.0",
     "yazl": "^2.5.1"
   }

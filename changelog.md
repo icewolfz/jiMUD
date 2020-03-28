@@ -4,6 +4,7 @@
 
 - **Changed:**
   - Update electron 8.1.1 to 8.2.0
+  - Update yargs-parser 18.1.1 to 18.1.2
 
 ## v0.11.1 2020-03-23
 
