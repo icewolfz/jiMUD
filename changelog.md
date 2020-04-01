@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.11.2
+## v0.11.2 2020-03-31
 
 - **Changed:**
   - Update electron 8.1.1 to 8.2.0
