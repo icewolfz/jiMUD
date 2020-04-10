@@ -52,13 +52,13 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.3.34",
-    "@types/node": "^12.12.32",
+    "@types/node": "^12.12.35",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
-    "electron": "^8.2.0",
+    "electron": "^8.2.1",
     "electron-builder": "^22.4.1",
     "eslint": "^6.8.0",
-    "eslint-plugin-html": "^6.0.0",
+    "eslint-plugin-html": "^6.0.1",
     "node-sass": "^4.13.1"
   },
   "build": {
