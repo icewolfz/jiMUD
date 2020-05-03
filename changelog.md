@@ -3,10 +3,13 @@
 ## v0.11.3
 
 - **Changed:**
-  - Update electron 8.2.0 to 8.2.3
+  - Update electron 8.2.0 to 8.2.5
   - Update yargs-parser 18.1.2 to 18.1.3
-  - Update tmp 0.1.0 to 0.2.0
+  - Update tmp 0.1.0 to 0.2.1
   - Update better-sqlite3 6.0.1 to 7.0.1
+  - Update chokidar 3.3.1 to 3.4.0
+  - Update electron-updater 4.2.5 to 4.3.1
+  - Update moment 2.24.0 to 2.25.1
 
 ## v0.11.2 2020-03-31
 
