@@ -9,7 +9,7 @@
   - Update better-sqlite3 6.0.1 to 7.0.1
   - Update chokidar 3.3.1 to 3.4.0
   - Update electron-updater 4.2.5 to 4.3.1
-  - Update moment 2.24.0 to 2.25.1
+  - Update moment 2.24.0 to 2.25.3
 
 ## v0.11.2 2020-03-31
 
