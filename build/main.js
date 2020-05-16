@@ -1425,6 +1425,7 @@ function createWindow() {
             createChat();
 
         for (var name in set.windows) {
+            if(name === 'main') continue;
             if (set.windows[name].options) {
                 if (set.windows[name].options.show)
                     showWindow(name, set.windows[name].options, true);
@@ -1795,6 +1796,7 @@ ipcMain.on('load-char', (event, char) => {
         createCodeEditor();
 
     for (name in set.windows) {
+        if(name === 'main') continue;
         if (set.windows[name].options) {
             if (set.windows[name].options.show)
                 showWindow(name, set.windows[name].options, true);
@@ -1862,6 +1864,11 @@ ipcMain.on('reload-options', (event, save) => {
     }
 
     for (var name in set.windows) {
+        if(name === 'main') continue;
+        if(set.windows[name].window) {
+            s = loadWindowState(name);
+            set.windows[name].window.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
+        }
         if (set.windows[name].options) {
             if (set.windows[name].options.show)
                 showWindow(name, set.windows[name].options, true);
@@ -2123,7 +2130,7 @@ ipcMain.on('setting-changed', (event, data) => {
     var name;
     if (data.type === 'windows')
         for (name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
+            if (name === 'main' || !Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
                 continue;
 
             if (name === data.name) {
@@ -2390,7 +2397,7 @@ ipcMain.on('show-window', (event, window, args) => {
 });
 
 function showSelectedWindow(window, args) {
-    if (!window) {
+    if (!window || window === 'main') {
         if (global.editorOnly) {
             let s = getWindowState('code-editor');
             if (!s) getWindowState('code-editor', winCode);
@@ -3530,6 +3537,7 @@ function createNewWindow(name, options) {
 }
 
 function showWindow(name, options, skipSave) {
+    if(name === 'main') return;
     if (!set)
         set = settings.Settings.load(global.settingsFile);
     options.show = true;
