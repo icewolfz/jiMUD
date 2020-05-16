@@ -2,6 +2,10 @@
 
 ## v0.11.3
 
+- **New:**
+  - Add button to reset window locations in preference dialog
+- **Fixed:**
+  - Preference reset would not correctly reset window states for open windows
 - **Changed:**
   - Update electron 8.2.0 to 8.2.5
   - Update yargs-parser 18.1.2 to 18.1.3

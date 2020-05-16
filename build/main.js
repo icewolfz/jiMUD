@@ -1427,17 +1427,18 @@ function createWindow() {
         for (var name in set.windows) {
             if (set.windows[name].options) {
                 if (set.windows[name].options.show)
-                    showWindow(name, set.windows[name].options);
+                    showWindow(name, set.windows[name].options, true);
                 else if (set.windows[name].options.persistent)
                     createNewWindow(name, set.windows[name].options);
             }
             else {
                 if (set.windows[name].show)
-                    showWindow(name, set.windows[name]);
+                    showWindow(name, set.windows[name], true);
                 else if (set.windows[name].persistent)
                     createNewWindow(name, set.windows[name]);
             }
         }
+        set.save(global.settingsFile);
 
         if (!edSet)
             edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
@@ -1796,17 +1797,18 @@ ipcMain.on('load-char', (event, char) => {
     for (name in set.windows) {
         if (set.windows[name].options) {
             if (set.windows[name].options.show)
-                showWindow(name, set.windows[name].options);
+                showWindow(name, set.windows[name].options, true);
             else if (set.windows[name].options.persistent)
                 createNewWindow(name, set.windows[name].options);
         }
         else {
             if (set.windows[name].show)
-                showWindow(name, set.windows[name]);
+                showWindow(name, set.windows[name], true);
             else if (set.windows[name].persistent)
                 createNewWindow(name, set.windows[name]);
         }
     }
+    set.save(global.settingsFile);
 });
 
 ipcMain.on('options-changed', () => {
@@ -1814,6 +1816,7 @@ ipcMain.on('options-changed', () => {
 });
 
 ipcMain.on('reload-options', (event, save) => {
+    var s;
     resetProfiles();
     closeWindows(save, true, true);
     if (win && !win.isDestroyed() && win.webContents)
@@ -1827,6 +1830,8 @@ ipcMain.on('reload-options', (event, save) => {
     }
 
     if (winMap) {
+        s = loadWindowState('mapper');
+        winMap.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
         winMap.webContents.send('reload-options');
         if (winMap.setParentWindow)
             winMap.setParentWindow(set.mapper.alwaysOnTopClient ? win : null);
@@ -1836,6 +1841,8 @@ ipcMain.on('reload-options', (event, save) => {
     else if (set.mapper.enabled)
         createMapper();
     if (winChat) {
+        s = loadWindowState('chat');
+        winMap.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
         winChat.webContents.send('reload-options');
         if (winChat.setParentWindow)
             winChat.setParentWindow(set.chat.alwaysOnTopClient ? win : null);
@@ -1843,26 +1850,32 @@ ipcMain.on('reload-options', (event, save) => {
         winChat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
     }
 
-    if (winProfiles)
+    if (winProfiles) {
+        s = loadWindowState('profiles');
+        winProfiles.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
         winProfiles.webContents.send('reload-options');
-    if (winEditor)
+    }
+    if (winEditor) {
+        s = loadWindowState('editor');
+        winEditor.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
         winEditor.webContents.send('reload-options');
+    }
 
     for (var name in set.windows) {
         if (set.windows[name].options) {
             if (set.windows[name].options.show)
-                showWindow(name, set.windows[name].options);
+                showWindow(name, set.windows[name].options, true);
             else if (set.windows[name].options.persistent)
                 createNewWindow(name, set.windows[name].options);
         }
         else {
             if (set.windows[name].show)
-                showWindow(name, set.windows[name]);
+                showWindow(name, set.windows[name], true);
             else if (set.windows[name].persistent)
                 createNewWindow(name, set.windows[name]);
         }
     }
-
+    set.save(global.settingsFile);
 
 });
 
@@ -2416,7 +2429,7 @@ function showSelectedWindow(window, args) {
     else if (window === 'code-editor')
         showCodeEditor();
     else if (windows[window] && windows[window].window)
-        showWindow(window, windows[window]);
+        showWindow(window, windows[window], false);
     else
         createNewWindow(window, args);
 }
@@ -3516,14 +3529,16 @@ function createNewWindow(name, options) {
     });
 }
 
-function showWindow(name, options) {
-    set = settings.Settings.load(global.settingsFile);
+function showWindow(name, options, skipSave) {
+    if (!set)
+        set = settings.Settings.load(global.settingsFile);
     options.show = true;
     if (!set.windows[name])
         set.windows[name] = {};
     set.windows[name].show = true;
     win.webContents.send('setting-changed', { type: 'window', name: name, value: set.windows[name], noSave: true });
-    set.save(global.settingsFile);
+    if (!skipSave)
+        set.save(global.settingsFile);
     if (!options) options = { show: true };
     if (windows[name] && windows[name].window) {
         if (windows[name].max)

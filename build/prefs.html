@@ -791,6 +791,16 @@
             loadSettings();
         }
 
+        function resetWindows() {
+            for (var name in _settings.windows) {
+                if(name == 'main') continue;
+                _settings.windows[name].x = 0;
+                _settings.windows[name].y = 0;
+                _settings.windows[name].width = 800;
+                _settings.windows[name].height = 600;
+            }
+        }
+
         function setColor(id, color, noChange) {
             if (!color || typeof color === 'undefined' || color.length === 0) {
                 $('#' + id).val('');
@@ -2349,6 +2359,7 @@
     <div class="dialog-footer">
         <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
         <button style="float: left" type="button" class="btn btn-default" onclick="backup()">Backup</button>
+        <button style="float: left" type="button" class="btn btn-default" onclick="resetWindows()">Reset Windows</button>
         <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
         <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
     </div>
