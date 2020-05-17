@@ -266,6 +266,7 @@ Value | Results
 2     | Map data
 4     | Profiles
 8     | Settings
+16    | Windows
 
 To pick more then 1 type simple add them 2 values together, eg
 2 + 4 = 6 to backup map and profiles only, 14 will load or save all
