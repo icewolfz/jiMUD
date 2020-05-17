@@ -4,6 +4,7 @@
 
 - **New:**
   - Add button to reset window locations in preference dialog
+  - New backup/restore option to save/ignore window states
 - **Fixed:**
   - Preference reset would not correctly reset window states for open windows
   - Fix rare chance of phantom window objects being created

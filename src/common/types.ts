@@ -43,7 +43,8 @@ export enum BackupSelection {
   Map = 2,
   Profiles = 4,
   Settings = 8,
-  All = 14
+  Windows = 16,
+  All = 30
 }
 
 export enum NewLineType {

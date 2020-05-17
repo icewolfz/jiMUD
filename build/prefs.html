@@ -381,6 +381,7 @@
                     case 'backup-save-settings':
                     case 'backup-save-profiles':
                     case 'backup-save-map':
+                    case 'backup-save-windows':
                         _settings.backupSave = 0;
                         if ($('#backup-save-map').prop('checked'))
                             _settings.backupSave |= 2;
@@ -388,10 +389,13 @@
                             _settings.backupSave |= 4;
                         if ($('#backup-save-settings').prop('checked'))
                             _settings.backupSave |= 8;
+                        if ($('#backup-save-windows').prop('checked'))
+                            _settings.backupSave |= 16;
                         break;
                     case 'backup-load-settings':
                     case 'backup-load-profiles':
                     case 'backup-load-map':
+                    case 'backup-load-windows':
                         _settings.backupLoad = 0;
                         if ($('#backup-load-map').prop('checked'))
                             _settings.backupLoad |= 2;
@@ -399,6 +403,8 @@
                             _settings.backupLoad |= 4;
                         if ($('#backup-load-settings').prop('checked'))
                             _settings.backupLoad |= 8;
+                        if ($('#backup-load-windows').prop('checked'))
+                            _settings.backupLoad |= 16;
                         break;
                     case 'profiles-sortOrder-alpha':
                     case 'profiles-sortOrder-priority':
@@ -695,10 +701,12 @@
             $('#backup-load-map').prop('checked', (_settings.backupLoad & 2) === 2);
             $('#backup-load-profiles').prop('checked', (_settings.backupLoad & 4) === 4);
             $('#backup-load-settings').prop('checked', (_settings.backupLoad & 8) === 8);
+            $('#backup-load-windows').prop('checked', (_settings.backupLoad & 16) === 16);
 
             $('#backup-save-map').prop('checked', (_settings.backupSave & 2) === 2);
             $('#backup-save-profiles').prop('checked', (_settings.backupSave & 4) === 4);
             $('#backup-save-settings').prop('checked', (_settings.backupSave & 8) === 8);
+            $('#backup-save-windows').prop('checked', (_settings.backupSave & 16) === 16);
 
             $('#logWhat-html').prop('checked', (_settings.logWhat & 1) === 1);
             $('#logWhat-text').prop('checked', (_settings.logWhat & 2) === 2);
@@ -2154,6 +2162,9 @@
                                 <label class="btn btn-default btn-xs">
                                     <input type="checkbox" id="backup-save-map"> Map
                                 </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" id="backup-save-windows"> Windows
+                                </label>
                             </div>
                         </div>
                         <div class="col-sm-6 form-group">
@@ -2167,6 +2178,9 @@
                                 </label>
                                 <label class="btn btn-default btn-xs">
                                     <input type="checkbox" id="backup-load-map"> Map
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" id="backup-load-windows"> Windows
                                 </label>
                             </div>
                         </div>
