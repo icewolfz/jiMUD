@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.11.3
+## v0.11.3 2020-05-18
 
 - **New:**
   - Add button to reset window locations in preference dialog
