@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.12.0
+
+- **Changed:**
+  - Update electron 8.3.0 to 9.0.0
+  - Update markdown-it 10.0.0 to 11.0.0
+
 ## v0.11.3 2020-05-18
 
 - **New:**

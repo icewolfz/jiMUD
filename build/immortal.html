@@ -370,7 +370,7 @@
                         label: 'E&xternal editor',
                         accelerator: 'CmdOrCtrl+Alt+E',
                         click: () => {
-                            shell.openItem(options.editor);
+                            shell.openPath(options.editor);
                         }
                     },
                     { type: 'separator' },
@@ -2887,7 +2887,7 @@
 
         function openItem(path) {
             if (!path || path.length === 0) return;
-            shell.openItem(path);
+            shell.openPath(path);
         }
 
         function download() {
