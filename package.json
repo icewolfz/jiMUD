@@ -101,10 +101,9 @@
     ],
     "extends": null,
     "asar": {
-      "smartUnpack": true
+      "smartUnpack": false
     },
     "asarUnpack": [
-      "./node_modules/spellchecker/vendor/**",
       "**/*.node",
       "./assets/icons/win/code.ico"
     ],
