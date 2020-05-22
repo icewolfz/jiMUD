@@ -5,7 +5,8 @@
 - **Changed:**
   - Update electron 8.3.0 to 9.0.0
   - Update markdown-it 10.0.0 to 11.0.0
-  - replace drivelist 8.0.10 with node-disk-info 1.0.4
+  - Replace drivelist 8.0.10 with node-disk-info 1.0.4
+  - Replace fontmanager-redux 0.4.0 with font-list 1.2.11
 
 ## v0.11.3 2020-05-18
 

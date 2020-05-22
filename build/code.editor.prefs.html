@@ -85,13 +85,7 @@
         const path = require('path');
         const fs = require('fs-extra');
         const EditorSettings = require('./js/editor/code.editor.settings').EditorSettings;
-        var fontManager;
-        try {
-            fontManager = require('fontmanager-redux');
-        }
-        catch (ex) {
-            ipcRenderer.send('error', ex);
-        }
+        const fontList = require('font-list');
 
         var _settings;
         if (window.module) module.module;
@@ -105,21 +99,14 @@
                 $('.win32').css('display', 'block');
             else
                 $('.win32').css('display', 'none');
-
-            if (fontManager) {
-                fontManager.getAvailableFonts((fonts) => {
+            fontList.getFonts()
+                .then(fonts => {
                     var fl = fonts.length;
                     var f = 0;
-                    var sFont = {};
                     var ops = [];
-                    fonts.sort((a,b) => a.family.localeCompare(b.family));
+                    //fonts.sort((a, b) => a.localeCompare(b));
                     for (f = 0; f < fl; f++) {
-                        if (sFont[fonts[f].family]) continue;
-                        if (fonts[f].monospace)
-                            ops.push(`<option style="font-family: '${fonts[f].family}', monospace" value="'${fonts[f].family}', monospace">'${fonts[f].family}', monospace</option>`);
-                        else
-                            ops.push(`<option style="font-family: '${fonts[f].family}'" value="'${fonts[f].family}'">'${fonts[f].family}'</option>`);
-                        sFont[fonts[f].family] = true;
+                        ops.push(`<option style="font-family: ${fonts[f].replace(/"/g, '\'')}" value="${fonts[f].replace(/"/g, '\'')}">${fonts[f].replace(/"/g, '')}</option>`);
                     }
                     ops = ops.join('');
                     $('#font-system').append(ops);
@@ -129,8 +116,11 @@
                     $('#virtualOptions-rawFontFamily').selectpicker('refresh');
                     $('#virtualOptions-previewFontFamily').selectpicker('refresh');
                     $('#designOptions-previewFontFamily').selectpicker('refresh');
+                })
+                .catch(err => {
+                    ipcRenderer.send('error', err);
                 });
-            }
+
             $('#editorOptions-fontFamily').change(() => {
                 $('#editorOptions-font-sample').css('font-family', $('#editorOptions-fontFamily').val());
                 $('#editorOptions-font-sample').css('font-size', $('#editorOptions-fontSize').val() + 'px');

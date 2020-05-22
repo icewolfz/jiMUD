@@ -103,17 +103,9 @@
         const RGBColor = require('rgbcolor');
         const path = require('path');
         const fs = require('fs');
-        var fontManager;
+        const fontList = require('font-list');
         var currentColors;
-
         var archiver, archive;
-
-        try {
-            fontManager = require('fontmanager-redux');
-        }
-        catch (ex) {
-            ipcRenderer.send('error', ex);
-        }
 
         var _settings;
         if (window.module) module.module;
@@ -208,20 +200,14 @@
                 $('.win32').css('display', 'inline-block');
             else
                 $('.win32').css('display', 'none');
-            if (fontManager) {
-                fontManager.getAvailableFonts((fonts) => {
+            fontList.getFonts()
+                .then(fonts => {
                     var fl = fonts.length;
                     var f = 0;
-                    var sFont = {};
                     var ops = [];
-                    fonts.sort((a, b) => a.family.localeCompare(b.family));
+                    //fonts.sort((a, b) => a.localeCompare(b));
                     for (f = 0; f < fl; f++) {
-                        if (sFont[fonts[f].family]) continue;
-                        if (fonts[f].monospace)
-                            ops.push(`<option style="font-family: '${fonts[f].family}', monospace" value="'${fonts[f].family}', monospace">'${fonts[f].family}', monospace</option>`);
-                        else
-                            ops.push(`<option style="font-family: '${fonts[f].family}'" value="'${fonts[f].family}'">'${fonts[f].family}'</option>`);
-                        sFont[fonts[f].family] = true;
+                        ops.push(`<option style="font-family: ${fonts[f].replace(/"/g, '\'')}" value="${fonts[f].replace(/"/g, '\'')}">${fonts[f].replace(/"/g, '')}</option>`);
                     }
                     ops = ops.join('');
                     $('#font-system').append(ops);
@@ -241,8 +227,11 @@
                     $('#chat-font').val(_settings.chat.font);
                     $('#chat-font').selectpicker('render');
                     $('#chat-font').change();
+                })
+                .catch(err => {
+                    ipcRenderer.send('error', err);
                 });
-            }
+
             $('#font').change(() => {
                 $('#font-sample').css('font-family', $('#font').val() + ', monospace');
                 $('#font-sample').css('font-size', $('#fontSize').val());

@@ -137,7 +137,7 @@
     "buzz": "^1.2.1",
     "chokidar": "^3.4.0",
     "electron-updater": "^4.3.1",
-    "fontmanager-redux": "^0.4.0",
+    "font-list": "^1.2.11",
     "fs-extra": "^9.0.0",
     "fswin": "^3.19.908",
     "lz-string": "^1.4.4",
