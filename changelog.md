@@ -7,6 +7,7 @@
   - Update markdown-it 10.0.0 to 11.0.0
   - Replace drivelist 8.0.10 with node-disk-info 1.0.4
   - Replace fontmanager-redux 0.4.0 with font-list 1.2.11
+  - Update bootstrap select from 1.12.4 to 1.13.2
 
 ## v0.11.3 2020-05-18
 
