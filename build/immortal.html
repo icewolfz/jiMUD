@@ -19,7 +19,7 @@
     <script src="../lib/datatables.min.js" type="text/javascript"></script>
     <script src="../lib/datatables.scrollresize.min.js" type="text/javascript"></script>
     <script>
-        //spell-checker:ignore hellip datatable, datatables, scrollresize, drivelist, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
+        //spell-checker:ignore hellip datatable, datatables, scrollresize, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
         //spell-checker:ignore keypress, haspopup, labelledby, tabindex, tablist, tabpanel
         const { IED, ItemState } = require('./js/ied');
         const { TempType, IEDCmdStatus, IEDError } = require('./js/types');
@@ -31,7 +31,7 @@
         const fs = require('fs-extra');
         const child_process = require('child_process');
         const path = require('path');
-        const drivelist = require('drivelist');
+        const nodeDiskInfo = require('node-disk-info');
         const moment = require('moment');
 
         var chokidar = require('chokidar');
@@ -682,32 +682,29 @@
             info.localFiles = all.length - dirs.length;
             $('#local-path').val(p);
             $('#local-navigate').empty();
-            drivelist.list().then((drives) => {
+            nodeDiskInfo.getDiskInfo().then((drives) => {
                 var paths = [];
                 var found = false;
                 var c = '', pt, d, dl, pl, cl;
                 if (drives.length > 0) {
                     for (d = 0, dl = drives.length; d < dl; d++) {
-                        if (drives[d].mountpoints.length === 0)
+                        if (drives[d].mounted.length === 0)
                             continue;
-                        for (var m = 0, ml = drives[d].mountpoints.length; m < ml; m++) {
-                            if (!drives[d].mountpoints[m].path) continue;
-                            var sd = drives[d].mountpoints[m].path.split(path.sep);
-                            c = '';
-                            for (pt = 0, pl = sd.length; pt < pl; pt++) {
-                                c = path.join(c, sd[pt], path.sep);
-                                if (c.toLowerCase() === parts[0].toLowerCase() + path.sep) {
-                                    found = true;
-                                    if (pt === 0)
-                                        paths.push({ drive: true, path: c, name: sd[pt], count: pt, open: parts.length === 1 });
-                                    else if (sd[pt].length > 0)
-                                        paths.push({ path: c, name: sd[pt], count: pt, open: parts.length === 1 });
-                                }
-                                else if (pt === 0)
-                                    paths.push({ drive: true, path: c, name: sd[pt], count: pt });
+                        var sd = drives[d].mounted.split(path.sep);
+                        c = '';
+                        for (pt = 0, pl = sd.length; pt < pl; pt++) {
+                            c = path.join(c, sd[pt], path.sep);
+                            if (c.toLowerCase() === parts[0].toLowerCase() + path.sep) {
+                                found = true;
+                                if (pt === 0)
+                                    paths.push({ drive: true, path: c, name: sd[pt], count: pt, open: parts.length === 1 });
                                 else if (sd[pt].length > 0)
-                                    paths.push({ path: c, name: sd[pt], count: pt });
+                                    paths.push({ path: c, name: sd[pt], count: pt, open: parts.length === 1 });
                             }
+                            else if (pt === 0)
+                                paths.push({ drive: true, path: c, name: sd[pt], count: pt });
+                            else if (sd[pt].length > 0)
+                                paths.push({ path: c, name: sd[pt], count: pt });
                         }
                     }
                 }

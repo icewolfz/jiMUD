@@ -24,7 +24,7 @@
     <script src="../lib/datatables.min.js" type="text/javascript"></script>
     <script src="../lib/datatables.scrollresize.min.js" type="text/javascript"></script>
     <script>
-        //spell-checker:ignore hellip datatable, datatables, scrollresize, drivelist, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
+        //spell-checker:ignore hellip datatable, datatables, scrollresize, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
         //spell-checker:ignore keypress, haspopup, labelledby, tabindex, tablist, tabpanel
         const { MailStatus, MailAction, MailFolders, MailReadFormat } = require('./js/types');
         const { remote, ipcRenderer, shell, clipboard } = require('electron');
@@ -37,7 +37,6 @@
         const fs = require('fs-extra');
         const child_process = require('child_process');
         const path = require('path');
-        const drivelist = require('drivelist');
         const moment = require('moment');
 
         var options;
