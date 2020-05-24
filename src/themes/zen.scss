@@ -936,5 +936,8 @@ body {
     color: #{$textColor};
 }
 
+.button:hover .overlay, .button.on:hover {
+    background-color: rgba(195,211,178, 0.40);
+}
 
 /** button end */

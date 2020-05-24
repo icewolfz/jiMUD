@@ -888,6 +888,10 @@ body {
     color: wheat;
 }
 
+.button:hover .overlay, .button.on:hover {
+    background-color: rgba(215,0,0, 0.40);
+}
+
 .button:active {
     background-color: #790000;
     color: wheat;

@@ -8,6 +8,7 @@
     vertical-align: middle;
     overflow: hidden;
     font-size: 30px;
+    position: relative;
 }
 
 .button-stretch img,
@@ -29,6 +30,24 @@
 .button .fa-stack .fa-stack-1x {
     font-size: 0.5em;
     margin-top: -3px;
+}
+
+.button .overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    width: 100%;
+    /*opacity: 0;*/
+    display:none;
+    /*transition: .5s ease;*/
+}
+
+.button:hover .overlay {
+    /*opacity: 1;*/
+    display: block;
 }
 
 .button .fa,
@@ -136,7 +155,7 @@
     border-right: 1px solid ButtonShadow;
     border-bottom: 1px solid ButtonShadow;
     z-index: 2000;
-    cursor: default;    
+    cursor: default;
 }
 
 .scroll-split-button.active:active {
@@ -150,7 +169,7 @@
     border-right: 1px solid ButtonHighlight;
     border-bottom: 1px solid ButtonHighlight;
     z-index: 2000;
-    cursor: default;    
+    cursor: default;
 }
 
 .scroll-split-button.disabled {
@@ -164,7 +183,7 @@
     border-top: 1px solid ButtonShadow;
     border-left: 1px solid ButtonShadow;
     border-right: 1px solid ButtonHighlight;
-    border-bottom: 1px solid ButtonHighlight;    
+    border-bottom: 1px solid ButtonHighlight;
 }
 
 .scroll-split-button i {

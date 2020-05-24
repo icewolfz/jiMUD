@@ -2056,7 +2056,7 @@
                     else if (item.icon.startsWith('.'))
                         button.html('<i class="fa button-icon ' + item.icon.substring(1) + '"></i>');
                     else if (item.icon.length > 0)
-                        button.html('<img src="' + parseTemplate(item.icon) + '" />');
+                        button.html('<img src="' + parseTemplate(item.icon) + '" /><div class="overlay"></div>');
                     else
                         button.html('<i class="fa fa-question"></i>');
                     buttons.append(button);

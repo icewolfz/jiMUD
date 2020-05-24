@@ -873,6 +873,11 @@ body {
     color: #fff;
 }
 
+.button:hover .overlay {
+    background-color: rgba(255,255,255, 0.40);
+    border: 1px solid #{$borderColor};
+}
+
 .button:hover svg, .button.on:hover svg {
     fill: #fff;
 }

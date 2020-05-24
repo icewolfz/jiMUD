@@ -918,6 +918,10 @@ body {
     color: #{$color};
 }
 
+.button:hover .overlay, .button.on:hover {
+    background-color: rgba(215,0,0, 0.40);
+}
+
 .button-sm {
     background-image: none;
     border: 1px solid #{$color};
