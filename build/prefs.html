@@ -553,7 +553,7 @@
                     defaultPath: parseTemplate($('#logPath').val()),
                     properties: ['openDirectory', 'createDirectory']
                 }).then(result => {
-                    if (result.filePaths === undefined) {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
                         return;
                     }
                     _settings.logPath = templatePath(result.filePaths[0]);

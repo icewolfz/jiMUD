@@ -383,7 +383,7 @@
                 ],
                 properties: ['promptToCreate']
             }).then(result => {
-                if (result.filePaths === undefined) {
+                if (result.filePaths === undefined || result.filePaths.length === 0) {
                     return;
                 }
                 $(field).val(templatePath(result.filePaths[0]));

@@ -5,6 +5,7 @@
 - **Fixed:**
   - Set the theme sooner to have a smoother loading feel
   - Buttons with image icons now have a colored overlay to better show they are the button to be clicked
+  - Fix open file dialogs not correctly canceling
 - **Changed:**
   - Update electron 8.3.0 to 9.0.0
   - Update markdown-it 10.0.0 to 11.0.0

@@ -466,7 +466,7 @@
                     properties: ['multiSelections', 'openFile'],
                     defaultPath: (manager.active && manager.active.file) ? path.dirname(manager.active.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0]) : logPath)
                 }).then(result => {
-                    if (result.filePaths === undefined) {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
                         return;
                     }
                     openFiles(result.filePaths, true, dock);

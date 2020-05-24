@@ -509,7 +509,7 @@ export function openImage(field?, callback?) {
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
     }).then(result => {
-        if (result.filePaths === undefined) {
+        if (result.filePaths === undefined || result.filePaths.length === 0) {
             return;
         }
         $(field).keyup().val(result.filePaths[0]).keydown();

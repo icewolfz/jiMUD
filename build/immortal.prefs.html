@@ -148,7 +148,7 @@
                             { name: 'All files (*.*)', extensions: ['*'] },
                         ]
                 }).then(result => {
-                        if (result.filePaths === undefined) {
+                        if (result.filePaths === undefined || result.filePaths.length === 0) {
                             return;
                         }
                         $('#editor').val(result.filePaths[0]);

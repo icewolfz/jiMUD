@@ -166,7 +166,7 @@
                         { name: 'All files (*.*)', extensions: ['*'] },
                     ]
                 }).then(result => {
-                    if (result.filePaths === undefined) {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
                         return;
                     }
                     for (var f = 0, fl = result.filePaths.length; f < fl; f++)

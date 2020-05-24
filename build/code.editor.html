@@ -2213,7 +2213,7 @@
                                         properties: ['openFile'],
                                         defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
                                     }).then(result => {
-                                        if (result.filePaths === undefined) {
+                                        if (result.filePaths === undefined || result.filePaths.length === 0) {
                                             return;
                                         }
                                         var pane = manager.panes.indexOf(manager.activePane);
@@ -4547,7 +4547,7 @@
                     defaultPath: $dialogs.area.path.value,
                     properties: ['openDirectory', 'createDirectory']
                 }).then(result => {
-                        if (result.filePaths === undefined) {
+                        if (result.filePaths === undefined || result.filePaths.length === 0) {
                             return;
                         }
                         $dialogs.area.path.value = result.filePaths[0];
@@ -4701,7 +4701,7 @@
                     defaultPath: $('#new-virtual-area-path').val(),
                     properties: ['openDirectory', 'createDirectory']
                 }).then(result => {
-                        if (result.filePaths === undefined) {
+                        if (result.filePaths === undefined || result.filePaths.length === 0) {
                             return;
                         }
                         $('#new-virtual-area-path').val(result.filePaths[0]);
@@ -7635,7 +7635,7 @@
                         properties: ['multiSelections', 'openFile'],
                         defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
                     }).then(result => {
-                        if (result.filePaths === undefined) {
+                        if (result.filePaths === undefined || result.filePaths.length === 0) {
                             return;
                         }
                         openFiles(result.filePaths.map((l) => { return { file: l }; }), true, dock);
