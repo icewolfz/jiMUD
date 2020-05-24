@@ -1193,7 +1193,6 @@ function createWindow() {
     // Open the DevTools.
     if (s.devTools)
         win.webContents.openDevTools();
-
     win.on('resize', () => {
         if (!win.isMaximized() && !win.isFullScreen())
             trackWindowState('main', win);
@@ -1398,7 +1397,7 @@ function createWindow() {
         win = null;
     });
 
-    win.once('ready-to-show', () => {
+    win.once('ready-to-show', async () => {
         createMenu();
         loadMenu();
 
@@ -1409,6 +1408,7 @@ function createWindow() {
             });
         }
         loadWindowScripts(win, 'user');
+        await executeScript('loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', win);
         if (s.maximized)
             win.maximize();
         win.show();
@@ -1428,7 +1428,7 @@ function createWindow() {
             createChat();
 
         for (var name in set.windows) {
-            if(name === 'main') continue;
+            if (name === 'main') continue;
             if (set.windows[name].options) {
                 if (set.windows[name].options.show)
                     showWindow(name, set.windows[name].options, true);
@@ -1799,7 +1799,7 @@ ipcMain.on('load-char', (event, char) => {
         createCodeEditor();
 
     for (name in set.windows) {
-        if(name === 'main') continue;
+        if (name === 'main') continue;
         if (set.windows[name].options) {
             if (set.windows[name].options.show)
                 showWindow(name, set.windows[name].options, true);
@@ -1867,8 +1867,8 @@ ipcMain.on('reload-options', (event, save) => {
     }
 
     for (var name in set.windows) {
-        if(name === 'main') continue;
-        if(set.windows[name].window) {
+        if (name === 'main') continue;
+        if (set.windows[name].window) {
             s = loadWindowState(name);
             set.windows[name].window.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
         }
@@ -3549,7 +3549,7 @@ function createNewWindow(name, options) {
 }
 
 function showWindow(name, options, skipSave) {
-    if(name === 'main') return;
+    if (name === 'main') return;
     if (!set)
         set = settings.Settings.load(global.settingsFile);
     options.show = true;
@@ -4225,11 +4225,17 @@ function getParentWindow() {
 }
 
 // eslint-disable-next-line no-unused-vars
-function executeScript(script, w, f) {
-    if (!w || !w.webContents) return;
-    w.webContents.executeJavaScript(script).catch(err => {
-        if (err)
-            logError(err);
+async function executeScript(script, w, f) {
+    return new Promise((resolve, reject) => {
+        if (!w || !w.webContents) {
+            reject();
+            return;
+        }
+        w.webContents.executeJavaScript(script).then(() => resolve()).catch(err => {
+            if (err)
+                logError(err);
+            reject();
+        });
     });
     //if (f)
     //w.webContents.focus();

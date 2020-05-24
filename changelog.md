@@ -2,6 +2,8 @@
 
 ## v0.12.0
 
+- **Fixed:**
+  - Set the theme sooner to have a smoother loading feel
 - **Changed:**
   - Update electron 8.3.0 to 9.0.0
   - Update markdown-it 10.0.0 to 11.0.0
