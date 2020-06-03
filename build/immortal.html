@@ -3192,7 +3192,7 @@
                 message: data.length > 1 ? 'Delete remote?' : 'Delete remote: ' + data[0].name + '?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
-            }, (result) => {
+            }).then((result) => {
                 if (result.response === 0) {
 
                     for (var d = 0, dl = data.length; d < dl; d++) {
