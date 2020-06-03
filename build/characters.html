@@ -240,8 +240,8 @@
                     message: 'All changes will be lost, refresh?',
                     buttons: ['Yes', 'No'],
                     defaultId: 1,
-                }).then((response) => {
-                    if (response.response === 0)
+                }).then((result) => {
+                    if (result.response === 0)
                         loadCharacters();
                 });
             }
