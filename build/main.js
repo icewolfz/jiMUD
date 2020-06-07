@@ -1408,7 +1408,7 @@ function createWindow() {
             });
         }
         loadWindowScripts(win, 'user');
-        await executeScript('loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', win);
+        await executeScript('loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');updateInterface();', win);
         if (s.maximized)
             win.maximize();
         win.show();

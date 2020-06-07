@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Set the theme sooner to have a smoother loading feel
+  - Resize interface before showing window to remove status bar resize flickering
   - Buttons with image icons now have a colored overlay to better show they are the button to be clicked
   - Fix open file dialogs not correctly canceling
   - Immortal tools: fix remote delete
