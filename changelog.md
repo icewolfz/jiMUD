@@ -9,7 +9,7 @@
   - Fix open file dialogs not correctly canceling
   - Immortal tools: fix remote delete
 - **Changed:**
-  - Update electron 8.3.0 to 9.0.3
+  - Update electron 8.3.0 to 9.0.4
   - Update markdown-it 10.0.0 to 11.0.0
   - Replace drivelist 8.0.10 with node-disk-info 1.1.0
   - Replace fontmanager-redux 0.4.0 with font-list 1.2.11
