@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.12.0
+## v0.12.0 2020-06-15
 
 - **Fixed:**
   - Set the theme sooner to have a smoother loading feel
