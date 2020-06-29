@@ -3,6 +3,7 @@
 ## v0.12.1
 
 - **Changed:**
+  - Update electron 9.0.4 to 9.0.5
   - Update moment 2.26.0 to 2.27.0
 
 ## v0.12.0 2020-06-15
