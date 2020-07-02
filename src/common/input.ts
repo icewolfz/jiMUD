@@ -4,7 +4,7 @@
 //spell-checker:ignore togglecl raiseevent raisedelayed raisede diceavg dicemin dicemax zdicedev dicedev zmud
 import EventEmitter = require('events');
 import { MacroModifiers } from './profile';
-import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync } from './library';
+import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType } from './profile';
@@ -2194,14 +2194,19 @@ export class Input extends EventEmitter {
                 }
                 return null;
             case 'profilelist':
-                i = 0;
-                al = this.client.profiles.length;
                 this.client.echo('\x1b[4mProfiles:\x1b[0m', -7, -8, true, true);
-                for (; i < al; i++) {
-                    if (this.client.profiles.items[this.client.profiles.items[i]].enabled)
-                        this.client.echo('   ' + this.client.profiles.items[i] + ' is enabled', -7, -8, true, true);
-                    else
-                        this.client.echo('   ' + this.client.profiles.items[i] + ' is disabled', -7, -8, true, true);
+                p = path.join(parseTemplate('{data}'), 'profiles');
+                if (isDirSync(p)) {
+                    const files = fs.readdirSync(p);
+                    al = files.length;
+                    for (i = 0; i < al; i++) {
+                        if (path.extname(files[i]) === '.json') {
+                            if (this.client.profiles.items[path.basename(files[i], '.json')] && this.client.profiles.items[path.basename(files[i], '.json')].enabled)
+                                this.client.echo('   ' + this.client.profiles.keys[i] + ' is enabled', -7, -8, true, true);
+                            else
+                                this.client.echo('   ' + path.basename(files[i], '.json') + ' is disabled', -7, -8, true, true);
+                        }
+                    }
                 }
                 return null;
             case 'profile':
@@ -2210,22 +2215,23 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
                 else if (args.length === 1) {
                     args[0] = this.parseOutgoing(args[0], false);
-                    if (!this.client.profiles.toggle(args[0])) {
-                        if (!this.client.profiles.contains(args[0]))
-                            throw new Error('Profile not found');
-                        else
-                            throw new Error(args[0] + ' can not be disabled as it is the only one enabled');
-                    }
-                    this.client.saveProfile(args[0]);
-                    if (this.client.profiles[args[0]].enabled)
+                    this.client.toggleProfile(args[0]);
+                    if (!this.client.profiles.contains(args[0]))
+                        throw new Error('Profile not found');
+                    else if (this.client.profiles.length === 1)
+                        throw new Error(args[0] + ' can not be disabled as it is the only one enabled');
+                    if (this.client.enabledProfiles.indexOf(args[0].toLowerCase()) !== -1)
                         args = args[0] + ' is enabled';
                     else
                         args = args[0] + ' is disabled';
                 }
                 else {
-                    args[0] = this.parseOutgoing(args[0], false);
-                    if (!this.client.profiles[args[0]])
-                        throw new Error('Profile not found');
+                    args[0] = this.parseOutgoing(args[0], false).toLowerCase();
+                    if (!this.client.profiles.contains(args[0])) {
+                        this.client.profiles.load(args[0], path.join(parseTemplate('{data}'), 'profiles'));
+                        if (!this.client.profiles.contains(args[0]))
+                            throw new Error('Profile not found');
+                    }
                     if (!args[1])
                         throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
                     args[1] = this.parseOutgoing(args[1], false);
@@ -2233,32 +2239,25 @@ export class Input extends EventEmitter {
                         case 'enable':
                         case 'on':
                         case 'yes':
-                            if (this.client.profiles[args[0]].enabled)
+                            if (this.client.enabledProfiles.indexOf(args[0].toLowerCase()) !== -1)
                                 args = args[0] + ' is already enabled';
                             else {
-                                if (!this.client.profiles.toggle(args[0])) {
-                                    if (!this.client.profiles.contains(args[0]))
-                                        throw new Error('Profile not found');
-                                    args = args[0] + ' remains disabled';
-                                }
-                                else
+                                this.client.toggleProfile(args[0]);
+                                if (this.client.enabledProfiles.indexOf(args[0].toLowerCase()) !== -1)
                                     args = args[0] + ' is enabled';
-                                this.client.saveProfile(args[0]);
+                                else
+                                    args = args[0] + ' remains disabled';
                             }
                             break;
                         case 'disable':
                         case 'off':
                         case 'no':
-                            if (!this.client.profiles[args[0]].enabled)
+                            if (this.client.enabledProfiles.indexOf(args[0].toLowerCase()) === -1)
                                 args = args[0] + ' is already disabled';
                             else {
-                                if (!this.client.profiles.toggle(args[0])) {
-                                    if (!this.client.profiles.contains(args[0]))
-                                        throw new Error('Profile not found');
-                                    else
-                                        throw new Error(args[0] + ' can not be disabled as it is the only one enabled');
-                                }
-                                this.client.saveProfile(args[0]);
+                                if (this.client.profiles.length === 1)
+                                    throw new Error(args[0] + ' can not be disabled as it is the only one enabled');
+                                this.client.toggleProfile(args[0]);
                                 args = args[0] + ' is disabled';
                             }
                             break;
@@ -3548,10 +3547,10 @@ export class Input extends EventEmitter {
                     let re;
                     if (trigger.caseSensitive)
                         re = this._TriggerRegExCache['g' + trigger.pattern] || (this._TriggerRegExCache['g' + trigger.pattern] = new RegExp(trigger.pattern, 'g'));
-                        //re = new RegExp(trigger.pattern, 'g');
+                    //re = new RegExp(trigger.pattern, 'g');
                     else
                         re = this._TriggerRegExCache['gi' + trigger.pattern] || (this._TriggerRegExCache['gi' + trigger.pattern] = new RegExp(trigger.pattern, 'gi'));
-                        //re = new RegExp(trigger.pattern, 'gi');
+                    //re = new RegExp(trigger.pattern, 'gi');
                     const res = re.exec(raw);
                     if (!res || !res.length) continue;
                     if (ret)

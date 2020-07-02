@@ -383,6 +383,10 @@ export class Client extends EventEmitter {
     }
 
     public saveProfile(profile: string) {
+        profile = profile.toLowerCase();
+        //is not loaded so no reason to even save it
+        if (!this.profiles.contains(profile))
+            return;
         const p = path.join(parseTemplate('{data}'), 'profiles');
         if (!existsSync(p))
             fs.mkdirSync(p);
