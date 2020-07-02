@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.12.1
+## v0.12.1 2020-07-02
 
 - **Fixed:**
   - Fixed #profilelist not working
