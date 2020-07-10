@@ -7,6 +7,8 @@
     - Fixed export image/data dialogs
     - Fixed export data cancel system, prevents crash and works
   - Fixed file save dialogs not correctly canceling
+- **Changed:**
+  - Update electron 9.0.5 to 9.1.0
 
 ## v0.12.1 2020-07-02
 
