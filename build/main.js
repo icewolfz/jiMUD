@@ -17,6 +17,7 @@ const { TrayClick } = require('./js/types');
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win, winWho, winMap, winProfiles, winEditor, winChat, winCode, winProgress;
+let _winProgressTimer = 0;
 let set, mapperMax = false, editorMax = false, chatMax = false, codeMax = false;
 let edSet;
 let chatReady = 0, codeReady = 0, editorReady = 0, progressReady = 0, profilesReady = 0;
@@ -2360,8 +2361,9 @@ ipcMain.on('progress-close', (event, progressObj) => {
 });
 
 function setProgress(progressObj) {
+    clearTimeout(_winProgressTimer);
     if (progressReady !== 2 || !winProgress)
-        setTimeout(() => setProgress(progressObj), 100);
+        _winProgressTimer = setTimeout(() => setProgress(progressObj), 100);
     else {
         winProgress.webContents.send('progress', progressObj);
         if (win)
@@ -2385,11 +2387,13 @@ ipcMain.on('progress-title', (event, title) => {
 ipcMain.on('progress-closed', () => {
     if (winProgress && winProgress.getParentWindow())
         winProgress.getParentWindow().webContents.send('progress-closed');
+    setProgress({ percent: 0 });
 });
 
 ipcMain.on('progress-canceled', () => {
     if (winProgress && winProgress.getParentWindow())
         winProgress.getParentWindow().webContents.send('progress-canceled');
+    setProgress({ percent: 0 });
 });
 
 ipcMain.on('progress-loaded', () => {

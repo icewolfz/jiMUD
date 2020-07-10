@@ -2508,7 +2508,7 @@ export class Mapper extends EventEmitter {
         if (this._cancelImport)
             return;
         this._cancelImport = true;
-        this.emit('import-progress', 101);
+        this.emit('import-progress', -1);
     }
 
     public compact() {
