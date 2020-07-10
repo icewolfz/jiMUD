@@ -2268,6 +2268,7 @@ ipcMain.on('progress-show', (event, title) => {
             setProgress(title);
     }
     else {
+        progressReady = 0;
         var sender = BrowserWindow.fromWebContents(event.sender);
         var b = sender.getBounds();
         winProgress = new BrowserWindow({
@@ -2297,7 +2298,7 @@ ipcMain.on('progress-show', (event, title) => {
         winProgress.removeMenu();
         winProgress.on('closed', () => {
             winProgress = null;
-            progressReady = 0;
+            progressReady = 3;
         });
         winProgress.loadURL(url.format({
             pathname: path.join(__dirname, 'progress.html'),
@@ -2362,7 +2363,8 @@ ipcMain.on('progress-close', (event, progressObj) => {
 
 function setProgress(progressObj) {
     clearTimeout(_winProgressTimer);
-    if (progressReady !== 2 || !winProgress)
+    if (progressReady === 3) return;
+    if (progressReady !== 2)
         _winProgressTimer = setTimeout(() => setProgress(progressObj), 100);
     else {
         winProgress.webContents.send('progress', progressObj);
@@ -2374,6 +2376,7 @@ function setProgress(progressObj) {
 }
 
 function setProgressTitle(title) {
+    if (progressReady === 3) return;
     if (progressReady !== 2 || !winProgress)
         setTimeout(() => setProgressTitle(title), 100);
     else
@@ -2390,9 +2393,11 @@ ipcMain.on('progress-closed', () => {
     setProgress({ percent: 0 });
 });
 
-ipcMain.on('progress-canceled', () => {
-    if (winProgress && winProgress.getParentWindow())
+ipcMain.on('progress-canceled', async () => {
+    if (winProgress && winProgress.getParentWindow()) {
         winProgress.getParentWindow().webContents.send('progress-canceled');
+        await executeScript('progressCanceled()', winProgress.getParentWindow());
+    }
     setProgress({ percent: 0 });
 });
 

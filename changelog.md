@@ -5,7 +5,7 @@
 - **Fixed:**
   - Mapper:
     - Fixed export image/data dialogs
-    - Fixed export crashing when canceled
+    - Fixed export data cancel system, prevents crash and works
   - Fixed file save dialogs not correctly canceling
 
 ## v0.12.1 2020-07-02
