@@ -731,7 +731,7 @@
                     { name: 'All files (*.*)', extensions: ['*'] },
                 ]
             });
-            if (file === undefined)
+            if (file === undefined || file.length === 0)
                 return;
 
             showProgressDialog();

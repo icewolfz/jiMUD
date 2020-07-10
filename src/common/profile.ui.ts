@@ -4078,15 +4078,15 @@ function exportAll() {
             { name: 'Text files (*.txt)', extensions: ['txt'] },
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
-    }).then((fileName) => {
-        if (fileName.filePath === undefined) {
+    }).then((result) => {
+        if (result.filePath === undefined || result.filePath.length === 0) {
             return;
         }
         const data = {
             version: 2,
             profiles: profiles.clone(2)
         };
-        fs.writeFileSync(fileName.filePath, JSON.stringify(data));
+        fs.writeFileSync(result.filePath, JSON.stringify(data));
     });
 
 }
@@ -4108,7 +4108,7 @@ function exportAllZip() {
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
     });
-    if (file === undefined)
+    if (file === undefined || file.length === 0)
         return;
 
     showProgressDialog();
@@ -4179,8 +4179,8 @@ function exportCurrent() {
             { name: 'Text files (*.txt)', extensions: ['txt'] },
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
-    }).then((fileName) => {
-        if (fileName.filePath === undefined) {
+    }).then((result) => {
+        if (result.filePath === undefined || result.filePath.length === 0) {
             return;
         }
         const data = {
@@ -4188,7 +4188,7 @@ function exportCurrent() {
             profiles: {}
         };
         data.profiles[currentProfile.name] = currentProfile.clone(2);
-        fs.writeFileSync(fileName.filePath, JSON.stringify(data));
+        fs.writeFileSync(result.filePath, JSON.stringify(data));
     });
 
 }

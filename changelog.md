@@ -2,6 +2,10 @@
 
 ## v0.12.2
 
+- **Fixed:**
+  - Mapper: Fixed export image/data dialogs
+  - Fixed file save dialogs not correctly canceling
+
 ## v0.12.1 2020-07-02
 
 - **Fixed:**

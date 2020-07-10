@@ -10,7 +10,8 @@
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/form.css" rel="stylesheet" type="text/css" />
     <style>
-        html, body {
+        html,
+        body {
             text-align: center;
             height: 100%;
             margin: 0;
@@ -26,6 +27,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="title">Progressing&hellip;</div>
     <div>
@@ -44,20 +46,37 @@
 <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
 <script>
     $(window).keydown((event) => {
-        if (event.which === 27) {
+        if (!noCancel && event.which === 27) {
             window.close();
             ipcRenderer.send('progress-canceled');
         }
     });
 
     const { ipcRenderer } = require('electron');
+    let noCancel = false;
 
     ipcRenderer.on('progress', (event, progressObj) => {
+        console.log(progressObj);
         if (progressObj.title) {
             document.getElementById('title').innerHTML = progressObj.title;
             document.title = document.getElementById('title').textContent;
         }
-        document.getElementById('progressbar').value = progressObj.percent;
+        if (Object.prototype.hasOwnProperty.call(progressObj, 'cancelable')) {
+            noCancel = !progressObj.cancelable;
+            if (noCancel) {
+                document.getElementById('cancel').style.display = 'none';
+                document.body.style.paddingTop = '10px';
+            }
+            else {
+                document.getElementById('cancel').style.display = '';
+                document.body.style.paddingTop = '';
+
+            }
+        }
+        if (progressObj.percent == -1)
+            document.getElementById('progressbar').removeAttribute('value');
+        else if (Object.prototype.hasOwnProperty.call(progressObj, 'percent'))
+            document.getElementById('progressbar').value = progressObj.percent;
     });
 
     ipcRenderer.on('progress-title', (event, title) => {
@@ -70,5 +89,19 @@
         window.close();
         ipcRenderer.send('progress-closed');
     });
+
+    ipcRenderer.on('progress-cancelable', (event, hide) => {
+        noCancel = !hide;
+        if (noCancel) {
+            document.getElementById('cancel').style.display = 'none';
+            document.body.style.paddingTop = '10px';
+        }
+        else {
+            document.getElementById('cancel').style.display = '';
+            document.body.style.paddingTop = '';
+
+        }
+    });
+
     ipcRenderer.send('progress-loaded');
 </script>

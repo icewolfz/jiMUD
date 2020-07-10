@@ -2261,6 +2261,10 @@ ipcMain.on('progress-show', (event, title) => {
     if (winProgress != null) {
         if (!progressReady) return;
         winProgress.show();
+        if (typeof title === 'string')
+            setProgressTitle(title);
+        else if (title)
+            setProgress(title);
     }
     else {
         var sender = BrowserWindow.fromWebContents(event.sender);
@@ -2379,21 +2383,25 @@ ipcMain.on('progress-title', (event, title) => {
 });
 
 ipcMain.on('progress-closed', () => {
-    if (winProgress.getParentWindow())
+    if (winProgress && winProgress.getParentWindow())
         winProgress.getParentWindow().webContents.send('progress-closed');
     setProgress({ percent: 0 });
 });
 
 ipcMain.on('progress-canceled', () => {
-    if (winProgress.getParentWindow())
+    if (winProgress && winProgress.getParentWindow())
         winProgress.getParentWindow().webContents.send('progress-canceled');
     setProgress({ percent: 0 });
 });
 
 ipcMain.on('progress-loaded', () => {
-    if (winProgress.getParentWindow())
+    if (winProgress && winProgress.getParentWindow())
         winProgress.getParentWindow().webContents.send('progress-loaded');
-    setProgress({ percent: 0 });
+});
+
+ipcMain.on('progress-cancelable', (enable) => {
+    if (winProgress)
+        winProgress.webContents.send('progress-cancelable', enable);
 });
 
 ipcMain.on('show-window', (event, window, args) => {

@@ -7907,7 +7907,7 @@
             defaultPath: panel.editor.file,
             filters: $fileFilters
         });
-        if (file === undefined)
+        if (file === undefined || file.length === 0)
             return false;
         let old = panel.editor.file;
         if (!panel.editor.canSaveAs())
@@ -9067,7 +9067,7 @@
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting started');
                 else if (type === 'designer')
-                    ipcRenderer.send('progress-show', 'Generating area&hellip;');
+                    ipcRenderer.send('progress-show', {title: 'Generating area&hellip;', percent: 0});
             });
             p.editor.on('progress-canceled', (type) => {
                 if (type === 'designer')
