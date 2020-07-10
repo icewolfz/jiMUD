@@ -56,7 +56,6 @@
     let noCancel = false;
 
     ipcRenderer.on('progress', (event, progressObj) => {
-        console.log(progressObj);
         if (progressObj.title) {
             document.getElementById('title').innerHTML = progressObj.title;
             document.title = document.getElementById('title').textContent;

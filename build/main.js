@@ -2385,13 +2385,11 @@ ipcMain.on('progress-title', (event, title) => {
 ipcMain.on('progress-closed', () => {
     if (winProgress && winProgress.getParentWindow())
         winProgress.getParentWindow().webContents.send('progress-closed');
-    setProgress({ percent: 0 });
 });
 
 ipcMain.on('progress-canceled', () => {
     if (winProgress && winProgress.getParentWindow())
         winProgress.getParentWindow().webContents.send('progress-canceled');
-    setProgress({ percent: 0 });
 });
 
 ipcMain.on('progress-loaded', () => {
