@@ -2,6 +2,10 @@
 
 ## v0.12.3
 
+- **Changed:**
+  - Update electron 9.1.0 to 9.1.1
+  - Update chokidar 3.4.0 to 3.4.1
+
 ## v0.12.2 2020-07-10
 
 - **Fixed:**
