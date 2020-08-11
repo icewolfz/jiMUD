@@ -2,6 +2,8 @@
 
 ## v0.12.3
 
+- **Fixed:**
+  - Color picker: Fixed tooltip color names
 - **Changed:**
   - Update electron 9.1.0 to 9.1.1
   - Update chokidar 3.4.0 to 3.4.1
