@@ -8,7 +8,6 @@
 - **Changed:**
   - Update electron 9.1.0 to 9.2.1
   - Update chokidar 3.4.0 to 3.4.2
-  - Update yargs-parser 18.1.3 to 19.0.1
 
 ## v0.12.2 2020-07-10
 
