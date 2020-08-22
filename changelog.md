@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Color picker: Fixed tooltip color names
+  - MXP: Remove version style attribute if not set when replying to mud
 - **Changed:**
   - Update electron 9.1.0 to 9.2.1
   - Update chokidar 3.4.0 to 3.4.2

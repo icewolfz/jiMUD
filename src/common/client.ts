@@ -729,8 +729,14 @@ export class Client extends EventEmitter {
                 return;
             switch (tag) {
                 case 'VERSION':
-                    this.debug(`MXP Tag REPLY: <VERSION MXP=1.0 STYLE=${this.display.MXPStyleVersion} CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>`);
-                    this.send(`\x1b[1z<VERSION MXP=1.0 STYLE=${this.display.MXPStyleVersion} CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>\r\n`);
+                    if (this.display.MXPStyleVersion && this.display.MXPStyleVersion.length) {
+                        this.debug(`MXP Tag REPLY: <VERSION MXP=1.0 STYLE=${this.display.MXPStyleVersion} CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>`);
+                        this.send(`\x1b[1z<VERSION MXP=1.0 STYLE=${this.display.MXPStyleVersion} CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>\r\n`);
+                    }
+                    else {
+                        this.debug(`MXP Tag REPLY: <VERSION MXP=1.0 CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>`);
+                        this.send(`\x1b[1z<VERSION MXP=1.0 CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>\r\n`);
+                    }
                     break;
                 case 'SUPPORT':
                     this.debug(`MXP Tag REPLY: <SUPPORTS ${args.join(' ')}>`);
