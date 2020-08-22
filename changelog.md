@@ -5,7 +5,7 @@
 - **Fixed:**
   - Color picker: Fixed tooltip color names
 - **Changed:**
-  - Update electron 9.1.0 to 9.2.0
+  - Update electron 9.1.0 to 9.2.1
   - Update chokidar 3.4.0 to 3.4.2
   - Update yargs-parser 18.1.3 to 19.0.1
 
