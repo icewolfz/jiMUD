@@ -5,6 +5,7 @@
 - **Fixed:**
   - Color picker: Fixed tooltip color names
   - MXP: Remove version style attribute if not set when replying to mud
+  - Fixed script type aliases, triggers, macros, buttons, context menus would error when last line was a //comment
 - **Changed:**
   - Update electron 9.1.0 to 10.1.0
   - Update chokidar 3.4.0 to 3.4.2

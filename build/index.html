@@ -1956,7 +1956,7 @@
                     break;
                 case 2:
                     /*jslint evil: true */
-                    var f = new Function('try { ' + item.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    var f = new Function('try { ' + item.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                     ret = f.apply(client);
                     if (ret)
                         ret = client.parseOutgoing(ret);
@@ -1996,7 +1996,7 @@
                     break;
                 case 2:
                     /*jslint evil: true */
-                    var f = new Function('try { ' + button.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    var f = new Function('try { ' + button.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                     ret = f.apply(client);
                     if (typeof ret === 'string')
                         ret = client.parseOutgoing(ret);

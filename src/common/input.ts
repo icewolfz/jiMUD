@@ -3346,7 +3346,7 @@ export class Input extends EventEmitter {
                 break;
             case 2:
                 /*jslint evil: true */
-                const f = new Function('try { ' + alias.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                const f = new Function('try { ' + alias.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                 ret = f.apply(this.client, this.GetNamedArguments(alias.params, args, alias.append));
                 if (typeof ret === 'string')
                     ret = this.parseOutgoing(ret);
@@ -3403,7 +3403,7 @@ export class Input extends EventEmitter {
                 break;
             case 2:
                 /*jslint evil: true */
-                const f = new Function('try { ' + macro.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                const f = new Function('try { ' + macro.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                 ret = f.apply(this.client);
                 break;
             default:
@@ -3584,13 +3584,13 @@ export class Input extends EventEmitter {
             case 2:
                 //do not cache temp triggers
                 if (trigger.temp) {
-                    ret = new Function('try { ' + trigger.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    ret = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                     ret = ret.apply(this.client, args);
                 }
                 else {
                     if (!this._TriggerFunctionCache[idx])
                         /*jslint evil: true */
-                        this._TriggerFunctionCache[idx] = new Function('try { ' + trigger.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        this._TriggerFunctionCache[idx] = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                     ret = this._TriggerFunctionCache[idx].apply(this.client, args);
                 }
                 if (typeof ret === 'string')
