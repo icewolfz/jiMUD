@@ -2,6 +2,8 @@
 
 ## v0.13.0
 
+- **New:**
+  - Add GMCP Client.Media support
 - **Fixed:**
   - Color picker: Fixed tooltip color names
   - MXP: Remove version style attribute if not set when replying to mud

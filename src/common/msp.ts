@@ -17,6 +17,17 @@ enum ParseMode {
     strict = 2
 }
 
+interface MSPData {
+    off: boolean;
+    file?: string;
+    url?: string;
+    volume?: number;
+    repeat?: number; 
+    priority?: number; 
+    type?: string; 
+    continue?: boolean;
+}
+
 class SoundState extends EventEmitter {
     public _file: string = '';
     private _repeats: number = 1;
@@ -245,7 +256,7 @@ export class MSP extends EventEmitter {
      * @returns {Object} return a MUSIC or SOUND argument object
      */
     private getArguments(text: string, type: number) {
-        const e = { off: false, file: '', url: '', volume: 100, repeat: 1, priority: 50, type: '', continue: true };
+        const e: MSPData = { off: false, file: '', url: '', volume: 100, repeat: 1, priority: 50, type: '', continue: true };
         const args = [];
         let state: number = 0;
         let str = [];
@@ -394,7 +405,7 @@ export class MSP extends EventEmitter {
      *
      * @param {Object} data Music argument object, contains all settings
      */
-    public music(data) {
+    public music(data: MSPData) {
         if (!this.enabled && !this.enableSound) return false;
         if (!data.file || data.file.length === 0) {
             if (data.off && data.url && data.url.length > 0)
@@ -445,7 +456,7 @@ export class MSP extends EventEmitter {
      * @param {Object} data Sound argument object, contains all settings
      * @todo make it play/stop sound
      */
-    public sound(data) {
+    public sound(data: MSPData) {
         if (!this.enabled && !this.enableSound) return false;
         if (!data.file || data.file.length === 0) {
             if (data.off && data.url && data.url.length > 0)
@@ -532,6 +543,53 @@ export class MSP extends EventEmitter {
                 data.telnet.sendData([255, 254, 90], true);
             }
             data.handled = true;
+        }
+    }
+
+    /**
+     * processGMCP - process incoming GMCP for Client.Media events
+     * @param {string} mod Client#received-GMCP module
+     * @param {Object} data Client#received-GMCP data object
+     */
+    public async processGMCP(mod: string, data: any) {
+        switch (mod) {
+            case 'Client.Media.Default':
+                if (data.type === 'sound' || !data.type)
+                    this.sound({ off: true, url: data.url });
+                else if (data.type === 'music')
+                    this.music({ off: true, url: data.url });
+                break;
+            //as we don't support loading and caching of media ignore this
+            case 'Client.Media.Load':
+                break;
+            case 'Client.Media.Play':
+                //start off with default values
+                const sound: MSPData = { off: false, file: data.name, url: '', volume: 50, repeat: 1, priority: 50, type: '', continue: true };
+                //process incoming data and set as needed
+                if (data.hasOwnProperty('url'))
+                    sound.url = data.url;
+                if (data.hasOwnProperty('tag'))
+                    sound.type = data.tag;
+                if (data.hasOwnProperty('volume'))
+                    sound.volume = data.volume;
+                if (data.hasOwnProperty('loops'))
+                    sound.repeat = data.loops;
+                if (data.hasOwnProperty('priority'))
+                    sound.priority = data.priority;
+                if (data.type === 'sound' || !data.type)
+                    this.sound(sound);
+                else if (data.type === 'music') {
+                    if (data.hasOwnProperty('continue') && (data.continue === 'false' || !data.continue))
+                        sound.continue = false;
+                    this.music(sound);
+                }
+                break;
+            case 'Client.Media.Stop':
+                if (data.type === 'sound' || !data.type)
+                    this.sound({ off: true });
+                else if (data.type === 'music')
+                    this.music({ off: true });
+                break;
         }
     }
 }

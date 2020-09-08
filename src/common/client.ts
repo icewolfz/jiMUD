@@ -707,6 +707,7 @@ export class Client extends EventEmitter {
                 return;
             }
             this.emit('received-GMCP', mod, obj);
+            this.MSP.processGMCP(mod, obj);
         });
 
         this.telnet.on('windowSize', () => { this.UpdateWindow(); });

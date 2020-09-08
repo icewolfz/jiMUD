@@ -854,6 +854,7 @@
             client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
             client.telnet.GMCPSupports.push('Room 1');
             client.telnet.GMCPSupports.push('IED 1');
+            client.telnet.GMCPSupports.push('Client.Media 1');
             //client.telnet.GMCPSupports.push("Post 1");
             //client.telnet.GMCPSupports.push('Comm 1');
             client.on('initialized', () => {
