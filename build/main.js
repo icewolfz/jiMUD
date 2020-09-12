@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, shell, screen } = require('electron');
 const { Tray, dialog, Menu, MenuItem } = require('electron');
 const ipcMain = require('electron').ipcMain;
 const path = require('path');
@@ -1164,8 +1164,8 @@ function createWindow() {
     // Create the browser window.
     win = new BrowserWindow({
         title: 'jiMUD',
-        x: s.x,
-        y: s.y,
+        x: getWindowX(s.x, s.width),
+        y: getWindowY(s.y, s.height),
         width: s.width,
         height: s.height,
         backgroundColor: '#000',
@@ -1315,6 +1315,10 @@ function createWindow() {
             options.webPreferences.spellcheck = set ? set.spellchecking : false;
             options.webPreferences.enableRemoteModule = true;
         }
+        if (Object.prototype.hasOwnProperty.call(options, 'x'))
+            options.x = getWindowX(options.x, options.width || 800);
+        if (Object.prototype.hasOwnProperty.call(options, 'y'))
+            options.x = getWindowY(options.y, options.height || 600);
         const w = new BrowserWindow(options);
         if (global.debug)
             w.webContents.openDevTools();
@@ -2817,8 +2821,8 @@ function createMapper(show, loading, loaded) {
         parent: set.mapper.alwaysOnTopClient ? getParentWindow() : null,
         alwaysOnTop: set.mapper.alwaysOnTop,
         title: 'Mapper',
-        x: s.x,
-        y: s.y,
+        x: getWindowX(s.x, s.width),
+        y: getWindowY(s.y, s.height),
         width: s.width,
         height: s.height,
         backgroundColor: '#eae4d6',
@@ -2960,8 +2964,8 @@ function showProfiles() {
     var s = loadWindowState('profiles');
     winProfiles = new BrowserWindow({
         parent: getParentWindow(),
-        x: s.x,
-        y: s.y,
+        x: getWindowX(s.x, s.width),
+        y: getWindowY(s.y, s.height),
         width: s.width,
         height: s.height,
         movable: true,
@@ -3069,8 +3073,8 @@ function createEditor(show, loading) {
     winEditor = new BrowserWindow({
         parent: getParentWindow(),
         title: 'Advanced Editor',
-        x: s.x,
-        y: s.y,
+        x: getWindowX(s.x, s.width),
+        y: getWindowY(s.y, s.height),
         width: s.width,
         height: s.height,
         backgroundColor: '#000',
@@ -3213,8 +3217,8 @@ function createChat(show, loading) {
     winChat = new BrowserWindow({
         parent: set.chat.alwaysOnTopClient ? getParentWindow() : null,
         title: 'Chat',
-        x: s.x,
-        y: s.y,
+        x: getWindowX(s.x, s.width),
+        y: getWindowY(s.y, s.height),
         width: s.width,
         height: s.height,
         backgroundColor: '#000',
@@ -3362,8 +3366,8 @@ function createNewWindow(name, options) {
     windows[name].window = new BrowserWindow({
         parent: windows[name].alwaysOnTopClient ? getParentWindow() : null,
         title: options.title || name,
-        x: options.x || s.x,
-        y: options.y || s.y,
+        x: getWindowX(options.x || s.x, options.width || s.width),
+        y: getWindowY(options.y || s.y, options.height || s.height),
         width: options.width || s.width,
         height: options.height || s.height,
         backgroundColor: options.background || '#000',
@@ -3486,6 +3490,10 @@ function createNewWindow(name, options) {
             options.webPreferences.spellcheck = set ? set.spellchecking : false;
             options.webPreferences.enableRemoteModule = true;
         }
+        if (Object.prototype.hasOwnProperty.call(options, 'x'))
+            options.x = getWindowX(options.x, options.width || 800);
+        if (Object.prototype.hasOwnProperty.call(options, 'y'))
+            options.x = getWindowY(options.y, options.height || 600);
         const w = new BrowserWindow(options);
         if (global.debug)
             w.webContents.openDevTools();
@@ -3791,8 +3799,8 @@ function createCodeEditor(show, loading, loaded) {
         parent: (!global.editorOnly && edSet.window.alwaysOnTopClient) ? win : null,
         alwaysOnTop: edSet.window.alwaysOnTop,
         title: 'Code editor',
-        x: s.x,
-        y: s.y,
+        x: getWindowX(s.x, s.width),
+        y: getWindowY(s.y, s.height),
         width: s.width,
         height: s.height,
         backgroundColor: 'grey',
@@ -3956,6 +3964,10 @@ function createCodeEditor(show, loading, loaded) {
             options.webPreferences.spellcheck = edSet ? edSet.spellchecking : false;
             options.webPreferences.enableRemoteModule = true;
         }
+        if (Object.prototype.hasOwnProperty.call(options, 'x'))
+            options.x = getWindowX(options.x, options.width || 800);
+        if (Object.prototype.hasOwnProperty.call(options, 'y'))
+            options.x = getWindowY(options.y, options.height || 600);
         const w = new BrowserWindow(options);
         if (global.debug)
             w.webContents.openDevTools();
@@ -4254,6 +4266,32 @@ async function executeScript(script, w, f) {
     });
     //if (f)
     //w.webContents.focus();
+}
+
+function getWindowX(x, w) {
+    if (!set)
+        set = settings.Settings.load(global.settingsFile);
+    if (set.fixHiddenWindows) {
+        const { width } = screen.getPrimaryDisplay().workAreaSize;
+        if (x + w >= width)
+            return width - w;
+        if (x + w < 0)
+            return 0;
+    }
+    return x;
+}
+
+function getWindowY(y, h) {
+    if (!set)
+        set = settings.Settings.load(global.settingsFile);
+    if (set.fixHiddenWindows) {
+        const { height } = screen.getPrimaryDisplay().workAreaSize;
+        if (y + h >= height)
+            return height - h;
+        if (y + h < 0)
+            return 0;
+    }
+    return y;
 }
 
 /*

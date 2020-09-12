@@ -381,6 +381,7 @@ export class Settings {
     public onDisconnect: OnDisconnect = OnDisconnect.ReconnectDialog;
     public commandEcho: boolean = true;
     public enableSound: boolean = true;
+    public fixHiddenWindows: boolean = true;
 
     public enableKeepAlive: boolean = false;
     public keepAliveDelay: number = 0;

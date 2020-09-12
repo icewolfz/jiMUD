@@ -4,6 +4,7 @@
 
 - **New:**
   - Add GMCP Client.Media support
+  - Preferences: Fix hidden windows, move any hidden windows to main screen when they are opened
 - **Fixed:**
   - Color picker: Fixed tooltip color names
   - MXP: Remove version style attribute if not set when replying to mud
