@@ -113,6 +113,7 @@ Settings to control how to handle telnet options and emulation
 - `Persistent` causes the mapper window to remain in memory to help speed up load times on future uses, note this setting only has effect if mapper is not enabled
 - `Always on top of the main window` Force mapper window to always be above main client window, when ever client window is focused it will bring the mapper along with it. _When disabled requires mapper to be closed to fully exits client_ **Requires restart on windows**
 - `Always on top of all windows` Force mapper to always be on top of all windows
+- `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**
 
 ## Chat
 
@@ -145,6 +146,7 @@ Controls what is captured into the chat window
 - `Always on top of the main window` Force chat window to always be above main client window, when ever client window is focused it will bring the chat window along with it. _When disabled requires chat to be closed to fully exits client_ **Requires restart on windows**
 - `Always on top of all windows` Force chat window to always be on top of all windows
 - `Persistent` causes the chat window to remain in memory to help speed up load times on future uses, note this setting only has effect if capture settings are off
+- `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**
 
 ## Status
 

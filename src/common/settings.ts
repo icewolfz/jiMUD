@@ -35,6 +35,7 @@ export class Mapper {
             zone: 0
         };
     public persistent: boolean = true;
+    public showInTaskBar: boolean = false;
 }
 
 /**
@@ -56,6 +57,7 @@ export class Profiles {
     public watchFiles: boolean = true;
     public sortOrder: ProfileSortOrder = ProfileSortOrder.Priority | ProfileSortOrder.Index;
     public sortDirection: number = 1;
+    public showInTaskBar: boolean = false;
 }
 
 /**
@@ -94,6 +96,7 @@ export class Chat {
     public showSplitButton: boolean = true;
     public bufferSize: number = 5000;
     public flashing: boolean = false;
+    public showInTaskBar: boolean = false;
 }
 
 /*
@@ -505,6 +508,7 @@ export class Settings {
     public hideOnMinimize: boolean = false;
     public showTrayIcon: boolean = false;
     public statusExperienceNeededProgressbar: boolean = false;
+    public showEditorInTaskBar: boolean = true;
 
     public trayClick: TrayClick = TrayClick.show;
     public trayDblClick: TrayClick = TrayClick.none;

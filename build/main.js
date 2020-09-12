@@ -1846,7 +1846,7 @@ ipcMain.on('reload-options', (event, save) => {
         if (winMap.setParentWindow)
             winMap.setParentWindow(set.mapper.alwaysOnTopClient ? win : null);
         winMap.setAlwaysOnTop(set.mapper.alwaysOnTop);
-        winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
+        winMap.setSkipTaskbar((!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false);
     }
     else if (set.mapper.enabled)
         createMapper();
@@ -1857,7 +1857,7 @@ ipcMain.on('reload-options', (event, save) => {
         if (winChat.setParentWindow)
             winChat.setParentWindow(set.chat.alwaysOnTopClient ? win : null);
         winChat.setAlwaysOnTop(set.chat.alwaysOnTop);
-        winChat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
+        winChat.setSkipTaskbar((!set.chat.showInTaskBar && (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop)) ? true : false);
     }
 
     if (winProfiles) {
@@ -2109,11 +2109,11 @@ ipcMain.on('setting-changed', (event, data) => {
     if (data.type === 'mapper' && data.name === 'alwaysOnTopClient') {
         if (winMap.setParentWindow)
             winMap.setParentWindow(data.value ? win : null);
-        winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
+        winMap.setSkipTaskbar((!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false);
     }
     if (data.type === 'mapper' && data.name === 'setAlwaysOnTop') {
         winMap.setAlwaysOnTop(data.value);
-        winMap.setSkipTaskbar((set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false);
+        winMap.setSkipTaskbar((!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false);
     }
     if (win && event.sender != win.webContents)
         win.webContents.send('setting-changed', data);
@@ -2123,11 +2123,11 @@ ipcMain.on('setting-changed', (event, data) => {
     if (data.type === 'chat' && data.name === 'alwaysOnTopClient') {
         if (winChat.setParentWindow)
             winChat.setParentWindow(data.value ? win : null);
-        winChat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
+        winChat.setSkipTaskbar((!set.chat.showInTaskBar && (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop)) ? true : false);
     }
     if (data.type === 'chat' && data.name === 'setAlwaysOnTop') {
         winChat.setAlwaysOnTop(data.value);
-        winChat.setSkipTaskbar((set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false);
+        winChat.setSkipTaskbar((!set.chat.showInTaskBar && (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop)) ? true : false);
     }
     if (data.type === 'mapper' && data.name === 'enabled' && !winMap && data.value)
         createMapper();
@@ -2827,7 +2827,7 @@ function createMapper(show, loading, loaded) {
         height: s.height,
         backgroundColor: '#eae4d6',
         show: false,
-        skipTaskbar: (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop) ? true : false,
+        skipTaskbar: (!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false,
         icon: path.join(__dirname, '../assets/icons/png/map.png'),
         webPreferences: {
             nodeIntegration: true,
@@ -2971,7 +2971,7 @@ function showProfiles() {
         movable: true,
         minimizable: true,
         maximizable: true,
-        skipTaskbar: true,
+        skipTaskbar: !set.profiles.showInTaskBar,
         resizable: true,
         title: 'Profile Manger',
         icon: path.join(__dirname, '../assets/icons/png/profiles.png'),
@@ -3079,7 +3079,7 @@ function createEditor(show, loading) {
         height: s.height,
         backgroundColor: '#000',
         show: false,
-        skipTaskbar: false,
+        skipTaskbar: !set.showEditorInTaskBar,
         icon: path.join(__dirname, '../assets/icons/png/edit.png'),
         webPreferences: {
             nodeIntegration: true,
@@ -3223,7 +3223,7 @@ function createChat(show, loading) {
         height: s.height,
         backgroundColor: '#000',
         show: false,
-        skipTaskbar: (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop) ? true : false,
+        skipTaskbar: (!set.chat.showInTaskBar && (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop)) ? true : false,
         icon: path.join(__dirname, '../assets/icons/png/chat.png'),
         webPreferences: {
             nodeIntegration: true,
@@ -3372,7 +3372,7 @@ function createNewWindow(name, options) {
         height: options.height || s.height,
         backgroundColor: options.background || '#000',
         show: false,
-        skipTaskbar: (windows[name].alwaysOnTopClient || windows[name].alwaysOnTop) ? true : false,
+        skipTaskbar: (!windows[name].showInTaskBar && (windows[name].alwaysOnTopClient || windows[name].alwaysOnTop)) ? true : false,
         icon: path.join(__dirname, '../assets/icons/png/' + (options.icon || name) + '.png'),
         webPreferences: {
             nodeIntegration: true,
