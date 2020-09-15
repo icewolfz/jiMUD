@@ -12,9 +12,12 @@
   - MXP: Remove version style attribute if not set when replying to mud
   - Fixed script type aliases, triggers, macros, buttons, context menus would error when last line was a //comment
 - **Changed:**
-  - Update electron 9.1.0 to 10.1.1
+  - Update electron 9.1.0 to 10.1.2
   - Update chokidar 3.4.0 to 3.4.2
   - Update yargs-parser 18.1.3 to 20.0.0
+  - Update better-sqlite3 7.1.0 to 7.1.1
+  - Update markdown-it 11.0.0 to 11.0.1
+  - Update moment 2.27.0 to 2.28.0
 
 ## v0.12.2 2020-07-10
 
