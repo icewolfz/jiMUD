@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.13.0
+## v0.13.0 2020-09-15
 
 - **New:**
   - Add GMCP Client.Media support
