@@ -34,7 +34,7 @@ export interface DataGridPageOptions extends PageOptions {
 export class WizardPage extends EventEmitter {
     private $body;
     private $el: HTMLElement;
-    public title;
+    private _title;
     public wizard: Wizard;
 
     constructor(options?: PageOptions) {
@@ -75,6 +75,9 @@ export class WizardPage extends EventEmitter {
     public get body() { return this.$body; }
 
     public get page() { return this.$el; }
+
+    public get title() { return this._title; }
+    public set title(value: any) { this._title = value; }
 }
 
 export class WizardDataGridPage extends WizardPage {
