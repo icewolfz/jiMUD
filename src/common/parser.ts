@@ -2584,7 +2584,8 @@ export class Parser extends EventEmitter {
             for (idx = 0; idx < tl; idx++) {
                 c = text.charAt(idx);
                 i = text.charCodeAt(idx);
-                rawBuilder.push(c);
+                if (idx >= mOffset)
+                    rawBuilder.push(c);
                 this.rawLength++;
                 switch (state) {
                     case ParserState.AnsiParams:
