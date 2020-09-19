@@ -933,6 +933,7 @@ function createMenu() {
         });
     menubar = Menu.buildFromTemplate(menuTemp);
     win.setMenu(menubar);
+    Menu.setApplicationMenu(menubar);
     win.webContents.send('menu-reload');
 }
 
