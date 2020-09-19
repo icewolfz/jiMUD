@@ -2508,6 +2508,7 @@ export class Parser extends EventEmitter {
         let pState: ParserState = ParserState.None;
         let lineLength = 0;
         let iTmp;
+        let mOffset = 0;
         let _MXPTag;
         let _MXPOTag;
         let _MXPEntity;
@@ -2544,13 +2545,14 @@ export class Parser extends EventEmitter {
                     stringBuilder.push(iTmp.substring(0, format.offset));
                     iTmp = iTmp.substring(format.offset);
                     if (this.mxpState.locked || this.mxpState.on)
-                        iTmp = htmlEncode(iTmp);
+                        mOffset = iTmp.length;
                     text = iTmp + text;
                 }
-                else if (this.mxpState.locked || this.mxpState.on)
-                    text = htmlEncode(iTmp) + text;
-                else
+                else {
+                    if (this.mxpState.locked || this.mxpState.on)
+                        mOffset = iTmp.length;
                     text = iTmp + text;
+                }
                 if (_MXPComment.endsWith(iTmp))
                     rawBuilder.push(_MXPComment.substr(0, _MXPComment.length - iTmp.length));
                 else
@@ -2945,6 +2947,17 @@ export class Parser extends EventEmitter {
                             state = ParserState.None;
                             this._SplitBuffer = '';
                         }
+                        //Malformed broken so just display it
+                        else if (c === '<') {
+                            idx--;
+                            rawBuilder.pop();
+                            this.rawLength--;
+                            stringBuilder.push(_MXPTag);
+                            lineLength += _MXPTag.length;
+                            this.textLength += _MXPTag.length;
+                            state = ParserState.None;
+                            this._SplitBuffer = '';
+                        }
                         else {
                             this._SplitBuffer += c;
                             _MXPTag += c;
@@ -3061,8 +3074,8 @@ export class Parser extends EventEmitter {
                                 }
                                 stringBuilder.push(htmlDecode('&' + _MXPEntity));
                                 this.MXPCapture('&' + _MXPEntity);
-                                lineLength++;
-                                this.textLength++;
+                                lineLength += _MXPEntity.length + 1;
+                                this.textLength += _MXPEntity.length + 1;
                                 this.mxpState.noBreak = false;
                                 //Abnormal end, send as is
                                 state = ParserState.None;
@@ -3087,8 +3100,8 @@ export class Parser extends EventEmitter {
                                 this.MXPCapture('&');
                                 this.MXPCapture(_MXPEntity);
                                 this.MXPCapture(';');
-                                lineLength++;
-                                this.textLength++;
+                                lineLength += _MXPEntity.length + 2;
+                                this.textLength += _MXPEntity.length + 2;
                                 this.mxpState.noBreak = false;
                                 this._SplitBuffer = '';
                             }
@@ -3540,7 +3553,7 @@ export class Parser extends EventEmitter {
                             this.textLength++;
                             this.mxpState.noBreak = false;
                         }
-                        else if (c === '<') {
+                        else if (c === '<' && idx >= mOffset) {
                             if (this.enableMXP && this.mxpState.on) {
                                 _MXPTag = '';
                                 _MXPArgs = [];
@@ -3561,7 +3574,7 @@ export class Parser extends EventEmitter {
                             this.textLength++;
                             this.mxpState.noBreak = false;
                         }
-                        else if (c === '&') {
+                        else if (c === '&' && idx >= mOffset) {
                             if (this.enableMXP && this.mxpState.on) {
                                 _MXPEntity = '';
                                 this._SplitBuffer += c;  //store in split buffer incase split command
