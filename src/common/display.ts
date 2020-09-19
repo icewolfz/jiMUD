@@ -1010,6 +1010,13 @@ export class Display extends EventEmitter {
         return this._parser.enableMXP;
     }
 
+    set showInvalidMXPTags(value: boolean) {
+        this._parser.showInvalidMXPTags = value;
+    }
+    get showInvalidMXPTags(): boolean {
+        return this._parser.showInvalidMXPTags;
+    }
+
     set enableBell(value: boolean) {
         this._parser.enableBell = value;
     }

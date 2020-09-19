@@ -478,7 +478,8 @@ export class Settings {
         showSplitButton: true,
         hideTrailingEmptyLine: true,
         enableColors: true,
-        enableBackgroundColors: true
+        enableBackgroundColors: true,
+        showInvalidMXPTags: false
     };
 
     public extensions = {

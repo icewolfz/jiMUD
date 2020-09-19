@@ -36,6 +36,7 @@ Reset - Resetting will revert all settings back to default values
 - `Hide trailing line`  Hide trailing empty line, **note** if more then one it will only hide the final line
 - `Enable colors` disable or enable all colors
 - `Enable background colors` disable or enable just background colors
+- `Show invalid MXP tags` display any MXP tags as normal text if they are not standard or custom elements
 
 ## Display > Fonts
 

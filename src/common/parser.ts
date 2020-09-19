@@ -291,6 +291,7 @@ export class Parser extends EventEmitter {
     public enableMXP: boolean = true;
     public DefaultImgUrl: string = 'themes/general';
     public enableDebug: boolean = false;
+    public showInvalidMXPTags: boolean = false;
     public enableLinks: boolean = true;
     public enableMSP: boolean = true;
     public enableURLDetection: boolean = true;
@@ -312,6 +313,9 @@ export class Parser extends EventEmitter {
                 this.enableMXP = options.enableMXP;
             if (options.enableDebug != null)
                 this.enableDebug = options.enableDebug;
+            if (options.showInvalidMXPTags != null)
+                this.showInvalidMXPTags = options.showInvalidMXPTags;
+
             if (options.enableMSP != null)
                 this.enableMSP = options.enableMSP;
             if (options.enableURLDetection != null)
@@ -996,6 +1000,7 @@ export class Parser extends EventEmitter {
         let hint = '';
         let expire = '';
         let prompt = false;
+        const oTag = tag;
         tag = tag.toUpperCase();
         if (this.enableDebug) {
             this.emit('debug', 'MXP Tag: ' + tag);
@@ -2272,6 +2277,56 @@ export class Parser extends EventEmitter {
                 return null;
             this.mxpState.expanded = true;
             return { format: null, text: arg };
+        }
+        if (this.showInvalidMXPTags) {
+            switch (tag) {
+                case 'IMAGE':
+                case '!AT':
+                case '!ATTLIST':
+                case '!TAG':
+                case '!EL':
+                case '!ELEMENT':
+                case '!EN':
+                case '!ENTITY':
+                case '/V':
+                case '/VAR':
+                case 'V':
+                case 'VAR':
+                case 'GAUGE':
+                case 'STAT':
+                case 'MUSIC':
+                case 'SOUND':
+                case 'EXPIRE':
+                case 'VERSION':
+                case 'USER':
+                case 'PASSWORD':
+                case 'SUPPORT':
+                case 'A':
+                case 'SEND':
+                case 'H1':
+                case 'H2':
+                case 'H3':
+                case 'H4':
+                case 'H5':
+                case 'H6':
+                case '/A':
+                case '/SEND':
+                case '/H1':
+                case '/H2':
+                case '/H3':
+                case '/H4':
+                case '/H5':
+                case '/H6':
+                case 'NOBR':
+                case '/P':
+                case 'P':
+                case 'SBR':
+                case 'RESET':
+                case 'HR':
+                    return null;
+
+            }
+            return { format: null, text: '<' + oTag + '>' };
         }
         return null;
     }

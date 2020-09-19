@@ -157,6 +157,7 @@ export interface ParserOptions {
   enableBell?: boolean;
   display?: any;
   enableLinks?: boolean;
+  showInvalidMXPTags?: boolean;
 }
 
 export class Size {

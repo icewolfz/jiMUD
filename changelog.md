@@ -2,6 +2,8 @@
 
 ## v0.13.1
 
+- **New:**
+  - Preferences: Add Show invalid MXP tags to display any MXP tags as normal text if they are not standard or custom elements
 - **Fixed:**
   - MXP: Fixed issue with fragmented line parsing and disappearing text
 

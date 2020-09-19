@@ -810,6 +810,7 @@ export class Client extends EventEmitter {
         this.display.maxLines = this.options.bufferSize;
         this.display.enableFlashing = this.options.flashing;
         this.display.enableMXP = this.options.enableMXP;
+        this.display.showInvalidMXPTags = this.options.display.showInvalidMXPTags;
         this.display.enableURLDetection = this.options.enableURLDetection;
         this.display.enableMSP = this.options.enableMSP;
         this.display.enableColors = this.options.display.enableColors;
