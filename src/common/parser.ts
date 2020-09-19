@@ -2955,9 +2955,9 @@ export class Parser extends EventEmitter {
                             idx--;
                             rawBuilder.pop();
                             this.rawLength--;
-                            stringBuilder.push(_MXPTag);
-                            lineLength += _MXPTag.length;
-                            this.textLength += _MXPTag.length;
+                            stringBuilder.push('<' + _MXPTag);
+                            lineLength += _MXPTag.length + 1;
+                            this.textLength += _MXPTag.length + 1;
                             state = ParserState.None;
                             this._SplitBuffer = '';
                         }
