@@ -98,6 +98,8 @@ if (!process.env.PORTABLE_EXECUTABLE_DIR) {
     }
 }
 
+Menu.setApplicationMenu(null);
+
 global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
 global.mapFile = parseTemplate(path.join('{data}', 'map.sqlite'));
 global.profiles = null;
