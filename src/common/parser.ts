@@ -3075,10 +3075,11 @@ export class Parser extends EventEmitter {
                                     state = ParserState.None;
                                     continue;
                                 }
-                                stringBuilder.push(htmlDecode('&' + _MXPEntity));
+                                _MXPOTag = htmlDecode('&' + _MXPEntity);
+                                stringBuilder.push(_MXPOTag);
                                 this.MXPCapture('&' + _MXPEntity);
-                                lineLength += _MXPEntity.length + 1;
-                                this.textLength += _MXPEntity.length + 1;
+                                lineLength += _MXPOTag.length;
+                                this.textLength += _MXPOTag.length;
                                 this.mxpState.noBreak = false;
                                 //Abnormal end, send as is
                                 state = ParserState.None;
@@ -3099,12 +3100,13 @@ export class Parser extends EventEmitter {
                                     state = pState;
                                     continue;
                                 }
-                                stringBuilder.push(htmlDecode('&' + _MXPEntity + ';'));
+                                _MXPOTag = htmlDecode('&' + _MXPEntity + ';');
+                                stringBuilder.push(_MXPOTag);
                                 this.MXPCapture('&');
                                 this.MXPCapture(_MXPEntity);
                                 this.MXPCapture(';');
-                                lineLength += _MXPEntity.length + 2;
-                                this.textLength += _MXPEntity.length + 2;
+                                lineLength += _MXPOTag.length;
+                                this.textLength += _MXPOTag.length;
                                 this.mxpState.noBreak = false;
                                 this._SplitBuffer = '';
                             }
