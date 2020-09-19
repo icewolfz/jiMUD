@@ -2,6 +2,9 @@
 
 ## v0.13.1
 
+- **Fixed:**
+  - MXP: Fixed issue with fragmented line parsing and disappearing text
+
 ## v0.13.0 2020-09-15
 
 - **New:**

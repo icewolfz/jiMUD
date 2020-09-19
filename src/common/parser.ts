@@ -2,7 +2,7 @@
 import EventEmitter = require('events');
 import RGBColor = require('rgbcolor');
 import { ParserLine, FormatType, ParserOptions, FontStyle, LineFormat, LinkFormat, ImageFormat, Size } from './types';
-import { stripQuotes, CharAllowedInURL, htmlDecode } from './library';
+import { stripQuotes, CharAllowedInURL, htmlDecode, htmlEncode } from './library';
 
 interface MXPBlock {
     format: LineFormat | LinkFormat | ImageFormat;
@@ -2488,8 +2488,12 @@ export class Parser extends EventEmitter {
                 if (format.offset !== 0) {
                     stringBuilder.push(iTmp.substring(0, format.offset));
                     iTmp = iTmp.substring(format.offset);
+                    if (this.mxpState.locked || this.mxpState.on)
+                        iTmp = htmlEncode(iTmp);
                     text = iTmp + text;
                 }
+                else if (this.mxpState.locked || this.mxpState.on)
+                    text = htmlEncode(iTmp) + text;
                 else
                     text = iTmp + text;
                 if (_MXPComment.endsWith(iTmp))
