@@ -985,7 +985,7 @@ export class Parser extends EventEmitter {
         return formats;
     }
 
-    private getMXPBlock(tag: string, args, remote): MXPBlock {
+    private getMXPBlock(tag: string, args, remote, oTag?): MXPBlock {
         let tmp;
         let arg;
         let sArg;
@@ -1000,7 +1000,6 @@ export class Parser extends EventEmitter {
         let hint = '';
         let expire = '';
         let prompt = false;
-        const oTag = tag;
         tag = tag.toUpperCase();
         if (this.enableDebug) {
             this.emit('debug', 'MXP Tag: ' + tag);
@@ -2510,6 +2509,7 @@ export class Parser extends EventEmitter {
         let lineLength = 0;
         let iTmp;
         let _MXPTag;
+        let _MXPOTag;
         let _MXPEntity;
         let _MXPComment;
         let _MXPArgs;
@@ -2871,6 +2871,7 @@ export class Parser extends EventEmitter {
                             this._SplitBuffer += c;
                         }
                         else if (c === '>') {
+                            _MXPOTag = _MXPTag;
                             _MXPTag = _MXPTag.toUpperCase();
                             if (_MXPTag === 'HR' && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
                                 if (lineLength > 0) {
@@ -2917,7 +2918,7 @@ export class Parser extends EventEmitter {
                                 formatBuilder.push(format = this.getFormatBlock(lineLength));
                             }
                             else {
-                                _MXPTag = this.getMXPBlock(_MXPTag, [], remote);
+                                _MXPTag = this.getMXPBlock(_MXPTag, [], remote, _MXPOTag);
                                 if (this.mxpState.expanded) {
                                     if (_MXPTag && _MXPTag.text !== null) text = text.splice(idx + 1, _MXPTag.text);
                                     tl = text.length;
@@ -2999,7 +3000,7 @@ export class Parser extends EventEmitter {
                         }
                         else if (c === '>') {
                             if (_MXPTag.toUpperCase() === 'IMAGE' && (this.mxpState.lineType === lineType.Secure || this.mxpState.lineType === lineType.LockSecure || this.mxpState.lineType === lineType.TempSecure)) {
-                                _MXPTag = this.getMXPBlock(_MXPTag, _MXPArgs, remote);
+                                _MXPTag = this.getMXPBlock(_MXPTag, _MXPArgs, remote, _MXPTag);
                                 if (_MXPTag !== null && _MXPTag.format !== null) {
                                     _MXPTag.format.offset = lineLength;
                                     formatBuilder.push(_MXPTag.format);
@@ -3007,7 +3008,7 @@ export class Parser extends EventEmitter {
                                 formatBuilder.push(format = this.getFormatBlock(lineLength));
                             }
                             else {
-                                _MXPTag = this.getMXPBlock(_MXPTag, _MXPArgs, remote);
+                                _MXPTag = this.getMXPBlock(_MXPTag, _MXPArgs, remote, _MXPTag);
                                 if (this.mxpState.expanded) {
                                     if (_MXPTag !== null) text = text.splice(idx + 1, _MXPTag.text);
                                     tl = text.length;
