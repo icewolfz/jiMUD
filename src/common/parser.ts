@@ -2950,6 +2950,8 @@ export class Parser extends EventEmitter {
                         }
                         //Malformed broken so just display it
                         else if (c === '<') {
+                            if (this.enableDebug)
+                                this.emit('debug', 'Malformed MXP Tag: ' + _MXPTag);
                             idx--;
                             rawBuilder.pop();
                             this.rawLength--;
@@ -3108,6 +3110,26 @@ export class Parser extends EventEmitter {
                             }
                             else
                                 _MXPTag += '&' + _MXPEntity + ';';
+                            format.unicode = true;
+                            state = pState;
+                        }
+                        //malformed entity
+                        else if (c === '&') {
+                            if (this.enableDebug) this.emit('debug', 'Malformed MXP Entity: ' + _MXPEntity);
+                            if (<ParserState>pState !== ParserState.MXPTag) {
+                                stringBuilder.push('&' + _MXPEntity);
+                                this.MXPCapture('&');
+                                this.MXPCapture(_MXPEntity);
+                                lineLength += _MXPEntity.length + 1;
+                                this.textLength += _MXPEntity.length + 1;
+                                this.mxpState.noBreak = false;
+                                this._SplitBuffer = '';
+                                idx--;
+                                rawBuilder.pop();
+                                this.rawLength--;
+                            }
+                            else
+                                _MXPTag += '&' + _MXPEntity;
                             format.unicode = true;
                             state = pState;
                         }

@@ -5,10 +5,12 @@
 - **New:**
   - Preferences: Add Show invalid MXP tags to display any MXP tags as normal text if they are not standard or custom elements
 - **Fixed:**
-  - MXP:
-    - Fixed issue with fragmented line parsing and disappearing text
-    - Fixed issue when malformed tag processed
-    - Fixed bug when applying formats and not found entities
+  - Parser:
+    - MXP:
+      - Fixed issue with fragmented line parsing and disappearing text
+      - Fixed issue when malformed tag processed
+      - Fixed issue with malformed entities
+      - Fixed bug when applying formats and not found entities
   - Hopefully fix issue where menu bar is default menu instead of proper menu
 - **Changed:**
   - Update electron-updater 4.3.4 to 4.3.5
