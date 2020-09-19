@@ -2,7 +2,7 @@
 import EventEmitter = require('events');
 import RGBColor = require('rgbcolor');
 import { ParserLine, FormatType, ParserOptions, FontStyle, LineFormat, LinkFormat, ImageFormat, Size } from './types';
-import { stripQuotes, CharAllowedInURL, htmlDecode, htmlEncode } from './library';
+import { stripQuotes, CharAllowedInURL, htmlDecode } from './library';
 
 interface MXPBlock {
     format: LineFormat | LinkFormat | ImageFormat;
