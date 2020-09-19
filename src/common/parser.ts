@@ -2928,6 +2928,7 @@ export class Parser extends EventEmitter {
                                     this.mxpState.expanded = false;
                                     state = ParserState.None;
                                     _MXPTag = '';
+                                    this._SplitBuffer = '';
                                     continue;
                                 }
                                 if (_MXPTag) {
@@ -3030,6 +3031,7 @@ export class Parser extends EventEmitter {
                                     tl = text.length;
                                     this.mxpState.expanded = false;
                                     state = ParserState.None;
+                                    this._SplitBuffer = '';
                                     continue;
                                 }
                                 if (_MXPTag !== null) {
@@ -3073,6 +3075,7 @@ export class Parser extends EventEmitter {
                                     tl = text.length;
                                     this.mxpState.expanded = false;
                                     state = ParserState.None;
+                                    this._SplitBuffer = '';
                                     continue;
                                 }
                                 _MXPOTag = htmlDecode('&' + _MXPEntity);
@@ -3098,6 +3101,7 @@ export class Parser extends EventEmitter {
                                     tl = text.length;
                                     this.mxpState.expanded = false;
                                     state = pState;
+                                    this._SplitBuffer = '';
                                     continue;
                                 }
                                 _MXPOTag = htmlDecode('&' + _MXPEntity + ';');

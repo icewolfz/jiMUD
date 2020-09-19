@@ -11,6 +11,7 @@
       - Fixed issue when malformed tag processed
       - Fixed issue with malformed entities
       - Fixed bug when applying formats and not found entities
+      - Fixed issue with custom tags and elements causing double display
   - Hopefully fix issue where menu bar is default menu instead of proper menu
 - **Changed:**
   - Update electron-updater 4.3.4 to 4.3.5
