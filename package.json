@@ -147,7 +147,7 @@
     "node-disk-info": "^1.1.0",
     "rgbcolor": "^1.0.1",
     "tmp": "^0.2.1",
-    "yargs-parser": "^20.0.0",
+    "yargs-parser": "^20.1.0",
     "yauzl": "^2.10.0",
     "yazl": "^2.5.1"
   }

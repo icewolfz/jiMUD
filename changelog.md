@@ -15,6 +15,7 @@
   - Hopefully fix issue where menu bar is default menu instead of proper menu
 - **Changed:**
   - Update electron-updater 4.3.4 to 4.3.5
+  - Update yargs-parser 20.0.0 to 20.1.0
 
 ## v0.13.0 2020-09-15
 
