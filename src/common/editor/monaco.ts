@@ -75,7 +75,7 @@ export function SetupEditor() {
                         });
                         return s;
                     },
-                    resolveCompletionItem(model, position, item, token) {
+                    resolveCompletionItem(item, token) {
                         return item;
                     }
                 });

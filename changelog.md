@@ -15,7 +15,9 @@
   - Hopefully fix issue where menu bar is default menu instead of proper menu
 - **Changed:**
   - Update electron-updater 4.3.4 to 4.3.5
-  - Update yargs-parser 20.0.0 to 20.1.0
+  - Update yargs-parser 20.0.0 to 20.2.0
+  - Update moment 2.28.0 to 2.29.0
+  - Update monaco-editor 0.20.0 to 0.21.1
 
 ## v0.13.0 2020-09-15
 
