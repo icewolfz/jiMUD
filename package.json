@@ -57,7 +57,7 @@
     "devtron": "^1.4.0",
     "electron": "^10.1.2",
     "electron-builder": "^22.8.1",
-    "eslint": "^7.9.0",
+    "eslint": "^7.10.0",
     "eslint-plugin-html": "^6.1.0",
     "node-sass": "^4.14.1"
   },
@@ -143,7 +143,7 @@
     "markdown-it": "^11.0.1",
     "mathjs-expression-parser": "^1.0.2",
     "moment": "^2.29.0",
-    "monaco-editor": "^0.21.1",
+    "monaco-editor": "^0.21.2",
     "node-disk-info": "^1.1.0",
     "rgbcolor": "^1.0.1",
     "tmp": "^0.2.1",
