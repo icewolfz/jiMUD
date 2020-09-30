@@ -14,6 +14,7 @@
       - Fixed issue with custom tags and elements causing double display
   - Hopefully fix issue where menu bar is default menu instead of proper menu
 - **Changed:**
+  - Update electron 10.1.2 to 10.1.3
   - Update electron-updater 4.3.4 to 4.3.5
   - Update yargs-parser 20.0.0 to 20.2.0
   - Update moment 2.28.0 to 2.29.0
