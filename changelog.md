@@ -17,7 +17,7 @@
   - Update electron 10.1.2 to 10.1.3
   - Update electron-updater 4.3.4 to 4.3.5
   - Update yargs-parser 20.0.0 to 20.2.1
-  - Update moment 2.28.0 to 2.29.0
+  - Update moment 2.28.0 to 2.29.1
   - Update monaco-editor 0.20.0 to 0.21.2
 
 ## v0.13.0 2020-09-15
