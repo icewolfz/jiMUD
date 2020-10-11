@@ -239,8 +239,17 @@
                 editor.updateOptions(options.editorOptions);
         }
 
-        SetupEditor().then((monaco) => {
-            var pane = document.getElementById('cm-tabpane');
+        SetupEditor().then(SetupEditorFinish);
+
+        function SetupEditorFinish(monaco) {
+            //var pane = document.getElementById('cm-tabpane');
+            var pane = manager.activePane.pane;
+            if (!pane) {
+                setTimeout(() => {
+                    SetupEditorFinish(monaco);
+                }, 500);
+                return;
+            }
             var el = document.createElement('div');
             el.classList.add('editor-container');
             pane.appendChild(el);
@@ -252,64 +261,64 @@
                 theme: 'lpcTheme',
                 model: null,
             }, {
-                    /*
-                    codeEditorService: {
-                            addCodeEditor: (editor) => {
-                                console.log('addCodeEditor');
-                            },
-                            openCodeEditor: function (input, source, sideBySide) {
-                                console.log('openCodeEditor');
-                                // this actually sets the opened source
-                                //actions.set({ opened: input.resource.path })
-                                // this just returns the editor itself
-                                //return Promise.resolve({ getControl: () => getEditor(e) })
-                                return Promise.resolve({});
-                            },
-                            resolveEditor: function () {
-                                return Promise.resolve({});
-                            }
+                /*
+                codeEditorService: {
+                        addCodeEditor: (editor) => {
+                            console.log('addCodeEditor');
                         },
+                        openCodeEditor: function (input, source, sideBySide) {
+                            console.log('openCodeEditor');
+                            // this actually sets the opened source
+                            //actions.set({ opened: input.resource.path })
+                            // this just returns the editor itself
+                            //return Promise.resolve({ getControl: () => getEditor(e) })
+                            return Promise.resolve({});
+                        },
+                        resolveEditor: function () {
+                            return Promise.resolve({});
+                        }
+                    },
+                    */
+                textModelService: {
+                    createModelReference: resource => {
+                        var model = monaco.editor.getModel(resource);
+                        var d = false;
+                        if (!model) {
+                            var e = findEditor(resource.fsPath);
+                            if (e && e.editor && e.editor.model)
+                                model = e.editor.model;
+                            else {
+                                model = monaco.editor.createModel(fs.readFileSync(resource.fsPath, 'utf8'), 'lpc');
+                                d = true;
+                            }
+                        }
+                        var model2 = {
+                            load() {
+                                return Promise.resolve(model);
+                            },
+                            // in my case, I have nothing to dispose as I just re-use existing resources
+                            dispose() { if (d && !model.isDisposed()) model.dispose(); },
+                            textEditorModel: model
+                        };
+                        return window.monaco.Promise.as({
+                            object: model2,
+                            dispose: () => { if (d && !model.isDisposed()) model.dispose(); }
+                        });
+
+                        /*
+                        const simpleModel = resourceModel
+                            ? new SimpleModel(resourceModel)
+                            : null;
+
+                        return window.monaco.Promise.as({
+                            object: simpleModel,
+                            dispose: () => { }
+                        });
                         */
-                    textModelService: {
-                        createModelReference: resource => {
-                            var model = monaco.editor.getModel(resource);
-                            var d = false;
-                            if (!model) {
-                                var e = findEditor(resource.fsPath);
-                                if (e && e.editor && e.editor.model)
-                                    model = e.editor.model;
-                                else {
-                                    model = monaco.editor.createModel(fs.readFileSync(resource.fsPath, 'utf8'), 'lpc');
-                                    d = true;
-                                }
-                            }
-                            var model2 = {
-                                load() {
-                                    return Promise.resolve(model);
-                                },
-                                // in my case, I have nothing to dispose as I just re-use existing resources
-                                dispose() { if (d && !model.isDisposed()) model.dispose(); },
-                                textEditorModel: model
-                            };
-                            return window.monaco.Promise.as({
-                                object: model2,
-                                dispose: () => { if (d && !model.isDisposed()) model.dispose(); }
-                            });
-
-                            /*
-                            const simpleModel = resourceModel
-                                ? new SimpleModel(resourceModel)
-                                : null;
-
-                            return window.monaco.Promise.as({
-                                object: simpleModel,
-                                dispose: () => { }
-                            });
-                            */
-                        },
-                        registerTextModelContentProvider: () => ({ dispose: () => { } })
-                    }
-                })];
+                    },
+                    registerTextModelContentProvider: () => ({ dispose: () => { } })
+                }
+            })];
             initEditor(window.$editors[0]);
             el = document.createElement('div');
             el.classList.add('diff-container');
@@ -330,7 +339,7 @@
             ];
             initEditor(window.$dEditors[0], 1);
             _ready = true;
-        });
+        }
     </script>
 </head>
 
@@ -4547,11 +4556,11 @@
                     defaultPath: $dialogs.area.path.value,
                     properties: ['openDirectory', 'createDirectory']
                 }).then(result => {
-                        if (result.filePaths === undefined || result.filePaths.length === 0) {
-                            return;
-                        }
-                        $dialogs.area.path.value = result.filePaths[0];
-                    });
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
+                        return;
+                    }
+                    $dialogs.area.path.value = result.filePaths[0];
+                });
             });
             $('#btn-new-area-remote-path').on('click', () => {
                 showBrowseDialog({
@@ -4701,11 +4710,11 @@
                     defaultPath: $('#new-virtual-area-path').val(),
                     properties: ['openDirectory', 'createDirectory']
                 }).then(result => {
-                        if (result.filePaths === undefined || result.filePaths.length === 0) {
-                            return;
-                        }
-                        $('#new-virtual-area-path').val(result.filePaths[0]);
-                    });
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
+                        return;
+                    }
+                    $('#new-virtual-area-path').val(result.filePaths[0]);
+                });
             });
             $('#btn-new-virtual-area-remote-path').on('click', () => {
                 showBrowseDialog({
@@ -9067,7 +9076,7 @@
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting started');
                 else if (type === 'designer')
-                    ipcRenderer.send('progress-show', {title: 'Generating area&hellip;', percent: 0});
+                    ipcRenderer.send('progress-show', { title: 'Generating area&hellip;', percent: 0 });
             });
             p.editor.on('progress-canceled', (type) => {
                 if (type === 'designer')
