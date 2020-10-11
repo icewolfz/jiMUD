@@ -7138,7 +7138,10 @@ export class VirtualEditor extends EditorBase {
         let r;
         let xl;
         let yl;
-        if (!this.$mapContext) return;
+        if (!this.$mapContext)  {
+            this.doUpdate(UpdateType.drawMap);
+            return;
+        }
         this.$mapContext.save();
         this.$mapContext.fillStyle = 'white';
         this.$mapContext.fillRect(0, 0, this.$mapSize.right, this.$mapSize.bottom);
@@ -7287,10 +7290,6 @@ export class VirtualEditor extends EditorBase {
         if (this._updating === UpdateType.none)
             return;
         window.requestAnimationFrame(() => {
-            if ((this._updating & UpdateType.drawMap) === UpdateType.drawMap) {
-                this.DrawMap();
-                this._updating &= ~UpdateType.drawMap;
-            }
             if ((this._updating & UpdateType.buildRooms) === UpdateType.buildRooms) {
                 this.BuildRooms();
                 this._updating &= ~UpdateType.buildRooms;
@@ -7319,6 +7318,10 @@ export class VirtualEditor extends EditorBase {
                 this.$exitGrid.refresh();
                 this._updating &= ~UpdateType.refreshExits;
             }
+            if ((this._updating & UpdateType.drawMap) === UpdateType.drawMap) {
+                this._updating &= ~UpdateType.drawMap;
+                this.DrawMap();
+            }            
             this.doUpdate(this._updating);
         });
     }
@@ -8923,8 +8926,6 @@ export class VirtualEditor extends EditorBase {
                 this.DrawMap();
             }, 250);
         }
-        this.doUpdate(UpdateType.drawMap);
-        this.DrawMap();
         this.doUpdate(UpdateType.drawMap);
         const cols = this.$exitGrid.columns;
         if (this.$mapSize.depth < 2) {

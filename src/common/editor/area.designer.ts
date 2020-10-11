@@ -10199,7 +10199,10 @@ export class AreaDesigner extends EditorBase {
         let r;
         let xl;
         let yl;
-        if (!this.$mapContext) return;
+        if (!this.$mapContext)  {
+            this.doUpdate(UpdateType.drawMap);
+            return;
+        }
         this.$mapContext.save();
         this.$mapContext.fillStyle = 'white';
         this.$mapContext.fillRect(0, 0, this.$area.size.right, this.$area.size.bottom);
@@ -10343,10 +10346,6 @@ export class AreaDesigner extends EditorBase {
         if (this._updating === UpdateType.none)
             return;
         window.requestAnimationFrame(() => {
-            if ((this._updating & UpdateType.drawMap) === UpdateType.drawMap) {
-                this.DrawMap();
-                this._updating &= ~UpdateType.drawMap;
-            }
             if ((this._updating & UpdateType.buildMap) === UpdateType.buildMap) {
                 this.BuildMap();
                 this._updating &= ~UpdateType.buildMap;
@@ -10359,6 +10358,10 @@ export class AreaDesigner extends EditorBase {
                 this.updateStatus();
                 this._updating &= ~UpdateType.status;
             }
+            if ((this._updating & UpdateType.drawMap) === UpdateType.drawMap) {
+                this._updating &= ~UpdateType.drawMap;
+                this.DrawMap();
+            }            
             this.doUpdate(this._updating);
         });
     }
@@ -10766,7 +10769,6 @@ export class AreaDesigner extends EditorBase {
                 this.DrawMap();
             }, 500);
         }
-        this.DrawMap();
         this.doUpdate(UpdateType.drawMap);
         if (this.$area.size.depth < 2) {
             this.$depth = 0;

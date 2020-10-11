@@ -15,6 +15,7 @@
   - Hopefully fix issue where menu bar is default menu instead of proper menu
   - Code Editor:
     - Fixed issue where editor would randomly hang
+    - Fixed issue where virtual/area designer maps would not be drawn on first load
 - **Changed:**
   - Update electron 10.1.2 to 10.1.3
   - Update electron-updater 4.3.4 to 4.3.5
