@@ -23,7 +23,7 @@
   - Update moment 2.28.0 to 2.29.1
   - Update monaco-editor 0.20.0 to 0.21.2
   - Update chokidar 3.4.2 to 3.4.3
-  - Update markdown-it 11.0.1 to 12.0.0
+  - Update markdown-it 11.0.1 to 12.0.1
 
 ## v0.13.0 2020-09-15
 
