@@ -251,3 +251,12 @@ input.input-dropdown::-webkit-calendar-picker-indicator  {
     background-position: right;
     border-left: 1px solid #CCCCCC;    
 }
+
+button:focus,
+button:active:focus,
+button.active:focus,
+button.focus,
+button:active.focus,
+button.active.focus {
+  outline: none !important;
+}
