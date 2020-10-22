@@ -13,6 +13,7 @@
       - Fixed bug when applying formats and not found entities
       - Fixed issue with custom tags and elements causing double display
   - Hopefully fix issue where menu bar is default menu instead of proper menu
+  - Fix command history window list delay update on first command
   - Code Editor:
     - Fixed issue where editor would randomly hang
     - Fixed issue where virtual/area designer maps would not be drawn on first load

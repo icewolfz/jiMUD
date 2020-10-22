@@ -39,13 +39,23 @@
     ipcRenderer.send('request-command-history');
     ipcRenderer.on('command-history', (event, history) => {
         var l = history.length;
-        while (this.list.firstChild)
-            this.list.removeChild(this.list.firstChild);
-        var lst = '';
+        while (list.firstChild)
+            list.removeChild(list.firstChild);
+        //var lst = '';
+        var fragment = document.createDocumentFragment();
         for (var i = 0; i < l; i++) {
-            lst += `<option value="${history[i]}">${history[i]}</option>`;
+            //lst += `<option value="${history[i]}">${history[i]}</option>`;
+            var opt = document.createElement('option');
+            opt.appendChild(document.createTextNode(history[i]));
+            opt.value = history[i];
+            fragment.append(opt);
         }
-        list.innerHTML = lst;
+        //list.innerHTML = lst;
+        list.appendChild(fragment);
+        if(l == 1) {
+            list.style.display = 'none';
+            list.style.display = 'block';
+        }
     });
     list.addEventListener('dblclick', () => {
         ipcRenderer.send('add-command-history', list.value);
