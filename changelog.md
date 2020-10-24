@@ -18,13 +18,13 @@
     - Fixed issue where editor would randomly hang
     - Fixed issue where virtual/area designer maps would not be drawn on first load
 - **Changed:**
-  - Update electron 10.1.2 to 10.1.4
+  - Update electron 10.1.2 to 10.1.5
   - Update electron-updater 4.3.4 to 4.3.5
   - Update yargs-parser 20.0.0 to 20.2.3
   - Update moment 2.28.0 to 2.29.1
   - Update monaco-editor 0.20.0 to 0.21.2
   - Update chokidar 3.4.2 to 3.4.3
-  - Update markdown-it 11.0.1 to 12.0.1
+  - Update markdown-it 11.0.1 to 12.0.2
 
 ## v0.13.0 2020-09-15
 
