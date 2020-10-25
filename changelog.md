@@ -17,6 +17,7 @@
   - Code Editor:
     - Fixed issue where editor would randomly hang
     - Fixed issue where virtual/area designer maps would not be drawn on first load
+    - Fixed issue when virtual/area designer property editor would fail to create an editor on click
 - **Changed:**
   - Update electron 10.1.2 to 10.1.5
   - Update electron-updater 4.3.4 to 4.3.5

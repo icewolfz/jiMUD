@@ -3745,7 +3745,7 @@ export class VirtualEditor extends EditorBase {
             if (oldValues.length > 0)
                 this.pushUndo(undoAction.edit, undoType.room, { property: prop === 'external' ? 'ee' : prop, values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
             this.stopUndoGroup();
-            setTimeout(() => this.UpdateEditor(this.$selectedRooms));
+            //setTimeout(() => this.UpdateEditor(this.$selectedRooms));
             this.UpdatePreview(this.selectedFocusedRoom);
         });
         this.$roomEditor.setPropertyOptions([

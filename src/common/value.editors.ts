@@ -308,6 +308,7 @@ export class TextValueEditor extends ValueEditor {
                     if (notes.open)
                         notes.close();
                     notes.remove();
+                    this.$editor.focus();
                 });
                 notes.showModal();
                 return;

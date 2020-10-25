@@ -3180,7 +3180,7 @@ export class AreaDesigner extends EditorBase {
                 }
                 this.pushUndo(undoAction.edit, undoType.room, { property: prop, values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
             }
-            setTimeout(() => this.UpdateEditor(this.$selectedRooms));
+            //setTimeout(() => this.UpdateEditor(this.$selectedRooms));
             this.UpdatePreview(this.selectedFocusedRoom);
         });
         this.$roomEditor.setPropertyOptions([
