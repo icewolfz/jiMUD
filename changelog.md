@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.13.1
+## v0.13.1 2020-10-26
 
 - **New:**
   - Preferences: Add Show invalid MXP tags to display any MXP tags as normal text if they are not standard or custom elements
