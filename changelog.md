@@ -2,6 +2,11 @@
 
 ## v0.13.2
 
+- **Fixed:**
+  - Chat Capture:
+    - Cache regex objects to improve performance
+    - Optimize `Capture only when open` preference when not enabled
+
 ## v0.13.1 2020-10-26
 
 - **New:**

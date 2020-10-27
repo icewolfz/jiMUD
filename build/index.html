@@ -961,12 +961,14 @@
 
                 if (_noCapture || _noCaptureStore > 0) return;
 
-                if (!chatWin || chatWin.isDestroyed()) {
-                    chatWin = remote.BrowserWindow.getAllWindows().filter(w => w.getTitle() === 'Chat');
-                    chatWin = chatWin.length !== 0 ? chatWin[0] : null;
+                if (client.options.chat.CaptureOnlyOpen) {
+                    if (!chatWin || chatWin.isDestroyed()) {
+                        chatWin = remote.BrowserWindow.getAllWindows().filter(w => w.getTitle() === 'Chat');
+                        chatWin = chatWin.length !== 0 ? chatWin[0] : null;
+                    }
+                    if (!chatWin || !chatWin.isVisible() || chatWin.isMinimized())
+                        return;
                 }
-                var shown = chatWin ? chatWin.isVisible() && !chatWin.isMinimized() : false;
-                if (!shown && client.options.chat.CaptureOnlyOpen) return;
 
                 //capture indented text
                 if (capture > 0 && data.line.startsWith('    ')) {
@@ -976,8 +978,8 @@
                 }
                 //search capture review blocks
                 for (c = 0, cl = _captureReviews.length; c < cl; c++) {
-                    re = new RegExp(_captureReviews[c], 'g');
-                    res = re.exec(data.line);
+                    //re = new RegExp(_captureReviews[c], 'g');
+                    res = _captureReviews[c].exec(data.line);
                     if (!res || res.length === 0)
                         continue;
                     captureReview = 1;
@@ -1004,8 +1006,8 @@
 
                 //capture lines based on matching regex's
                 for (c = 0, cl = _captures.length; c < cl; c++) {
-                    re = new RegExp(_captures[c], 'g');
-                    res = re.exec(data.line);
+                    //re = new RegExp(_captures[c], 'g');
+                    res = _captures[c].exec(data.line);
                     if (!res || res.length === 0)
                         continue;
                     if (capture > 0)
@@ -2101,44 +2103,44 @@
             _captures = [];
             _captureReviews = [];
             if (client.options.chat.captureTells) {
-                _captures.push('^([a-zA-Z\'\\s_-]*) tells you:(.*)$',
-                    '^You tell ([a-zA-Z\'\\s_-]*):(.*)$',
-                    '^\\*([a-zA-Z\'\\s_-]*)(\\s?)(.*?)$',
-                    '^([a-zA-Z\'\\s_-]*) is idle, and may not have been paying attention.$',
-                    '^([a-zA-Z\'\\s_-]*) is in combat and may not have heard you.$',
-                    '^([a-zA-Z\'\\s_-]*) is in edit and may not be in a position to respond.$',
-                    '^([a-zA-Z\'\\s_-]*) is arrested and can not respond.$',
-                    '^\\*You emote to ([a-zA-Z\'\\s_-]*):(.*)$',
-                    '^([a-zA-Z\'\\s_-]*) shouts in ([a-zA-Z\'\\s_-]*):(.*)$',
-                    '^You shout in ([a-zA-Z\'\\s_-]*):(.*)$'
+                _captures.push(new RegExp('^([a-zA-Z\'\\s_-]*) tells you:(.*)$'),
+                    new RegExp('^You tell ([a-zA-Z\'\\s_-]*):(.*)$'),
+                    new RegExp('^\\*([a-zA-Z\'\\s_-]*)(\\s?)(.*?)$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) is idle, and may not have been paying attention.$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) is in combat and may not have heard you.$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) is in edit and may not be in a position to respond.$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) is arrested and can not respond.$'),
+                    new RegExp('^\\*You emote to ([a-zA-Z\'\\s_-]*):(.*)$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) shouts in ([a-zA-Z\'\\s_-]*):(.*)$'),
+                    new RegExp('^You shout in ([a-zA-Z\'\\s_-]*):(.*)$')
                 );
                 if (client.options.chat.captureReviews)
-                    _captureReviews.push('^-=-=- Tell Review -=-=-$');
+                    _captureReviews.push(new RegExp('^-=-=- Tell Review -=-=-$'));
             }
             if (client.options.chat.captureTalk) {
-                _captures.push('^([a-zA-Z\'\\s_-]*) says:(.*)$',
-                    '^You say:(.*)$',
-                    '^([a-zA-Z\'\\s_-]*) whispers to you:(.*)$',
-                    'You whisper to ([a-zA-Z\'\\s_-]*):(.*)',
-                    '^([a-zA-Z\'\\s_-]*) yells:(.*)$',
-                    '^You yell:(.*)$',
-                    'You say in (.*):(.*)',
-                    '([a-zA-Z\'\\s_-]*) says something in (.*).',
-                    '([a-zA-Z\'\\s_-]*) says in (.*):(.*)');
+                _captures.push(new RegExp('^([a-zA-Z\'\\s_-]*) says:(.*)$'),
+                    new RegExp('^You say:(.*)$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) whispers to you:(.*)$'),
+                    new RegExp('You whisper to ([a-zA-Z\'\\s_-]*):(.*)'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) yells:(.*)$'),
+                    new RegExp('^You yell:(.*)$'),
+                    new RegExp('You say in (.*):(.*)'),
+                    new RegExp('([a-zA-Z\'\\s_-]*) says something in (.*).'),
+                    new RegExp('([a-zA-Z\'\\s_-]*) says in (.*):(.*)'));
                 if (client.options.chat.captureReviews)
-                    _captureReviews.push('^-=-=- Say Review -=-=-$');
+                    _captureReviews.push(new RegExp('^-=-=- Say Review -=-=-$'));
             }
             if (client.options.chat.captureLines) {
                 if (client.options.chat.captureAllLines) {
-                    _captures.push('^\\[(.*)\\](.*)$');
+                    _captures.push(new RegExp('^\\[(.*)\\](.*)$'));
                     if (client.options.chat.captureReviews)
-                        _captureReviews.push('^-=-=- ((?:(?!\\b(Say|Tell|End)\\b).)+) Review -=-=-$');
+                        _captureReviews.push(new RegExp('^-=-=- ((?:(?!\\b(Say|Tell|End)\\b).)+) Review -=-=-$'));
                 }
                 else
                     for (var l = 0, ll = client.options.chat.lines.length; l < ll; l++) {
-                        _captures.push('\\[' + client.options.chat.lines[l].trim() + '\\](.*)');
+                        _captures.push(new RegExp('\\[' + client.options.chat.lines[l].trim() + '\\](.*)'));
                         if (client.options.chat.captureReviews)
-                            _captureReviews.push('^-=-=- ' + client.options.chat.lines[l].trim() + ' Review -=-=-$');
+                            _captureReviews.push(new RegExp('^-=-=- ' + client.options.chat.lines[l].trim() + ' Review -=-=-$'));
                     }
             }
         }
@@ -2830,11 +2832,11 @@
                 <p>You have been Disconnected.</p>
                 <p>
                     The reason for this may vary:
-                    <p style="padding-left: 20px;background-color:#F5F5F5">
-                        You quit.
-                        <br> Mud crashed.
-                        <br> Lost network connection.
-                    </p>
+                <p style="padding-left: 20px;background-color:#F5F5F5">
+                    You quit.
+                    <br> Mud crashed.
+                    <br> Lost network connection.
+                </p>
                 </p>
                 <p style="font-weight: bold">Reconnecting in ...
                     <span id="disconnectTimer"></span>
