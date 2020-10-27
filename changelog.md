@@ -6,8 +6,12 @@
   - Chat Capture:
     - Cache regex objects to improve performance
     - Optimize `Capture only when open` preference when not enabled
-  - Improve auto login performance checks
-
+    - Fixed issue when reloading settings and chat window open
+  - Auto login:
+    - Improve performance checks
+    - Use login name not character manager name when auto logging in
+    - Cache login name to improve performance checks
+  
 ## v0.13.1 2020-10-26
 
 - **New:**

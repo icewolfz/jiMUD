@@ -1855,7 +1855,7 @@ ipcMain.on('reload-options', (event, save) => {
         createMapper();
     if (winChat) {
         s = loadWindowState('chat');
-        winMap.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
+        winChat.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
         winChat.webContents.send('reload-options');
         if (winChat.setParentWindow)
             winChat.setParentWindow(set.chat.alwaysOnTopClient ? win : null);

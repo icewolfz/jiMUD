@@ -191,6 +191,7 @@
         var _disconnectTimerID;
         var _disconnectTimer = 0;
         var _disconnectCounter = 0;
+        var _charName = 0;
 
         window.onerror = function (msg, url, line, col, error) {
             if (client) {
@@ -879,12 +880,12 @@
             client.on('add-line', (data) => {
                 var res, c, cl;
                 //no more then 3 tries
-                if (autoLoginCounter < 3 && client.options.autoLogin && remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
+                if (autoLoginCounter < 3 && client.options.autoLogin && _charName && _charName.length > 0) {
                     //testchar doesn't exist here. To create a new character, please type <new> at the name prompt.
-                    if (data.line === remote.getGlobal('character') + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
+                    if (data.line === _charName + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
                         autoLoginCounter = 4;
                     if (data.fragment && data.line === 'Enter your character\'s name (or \'new\' for a new character): ') {
-                        setTimeout(() => client.sendCommand(remote.getGlobal('characterLogin')), 100);
+                        setTimeout(() => client.sendCommand(_charName), 100);
                         autoLoginCounter++;
                     }
                     else if (data.fragment && data.line === 'Password: ') {
@@ -1032,8 +1033,8 @@
 
             /*
             client.on('MXP-tag-reply', (e) => {
-                if (client.options.autoLogin && e.tag === 'USER' && remote.getGlobal('character') && remote.getGlobal('character').length > 0)
-                    client.send(remote.getGlobal('character') + '\r\n');
+                if (client.options.autoLogin && e.tag === 'USER' && _charName && _charName.length > 0)
+                    client.send(_charName + '\r\n');
                 else if (client.options.autoLogin && e.tag === 'PASSWORD') {
                     var pass = remote.getGlobal('characterPass');
                     if (pass && pass.length > 0) {
@@ -1435,9 +1436,10 @@
                 _logger.postMessage({ action: 'name', args: title });
                 ipcRenderer.send('set-title', title);
             });
-            if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
-                _logger.postMessage({ action: 'name', args: remote.getGlobal('character') });
-                $('#character-name').text(remote.getGlobal('character'));
+            _charName = remote.getGlobal('characterLogin');
+            if (_charName && _charName.length > 0) {
+                _logger.postMessage({ action: 'name', args: _charName });
+                $('#character-name').text(_charName);
             }
             updateInterface();
             doUpdate(7);
@@ -2194,9 +2196,10 @@
         });
 
         ipcRenderer.on('load-char', (event, char) => {
+            _charName = remote.getGlobal('characterLogin');
             if (!client.connected) {
-                _logger.postMessage({ action: 'name', args: char });
-                $('#character-name').text(char);
+                _logger.postMessage({ action: 'name', args: _charName });
+                $('#character-name').text(_charName);
             }
             _backup.mapFile = remote.getGlobal('mapFile');
             client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
@@ -2204,6 +2207,7 @@
         });
 
         ipcRenderer.on('load-default', () => {
+            _charName = 0;
             if (!client.connected) {
                 _logger.postMessage({ action: 'name', args: '' });
                 $('#character-name').text('&nbsp;');
