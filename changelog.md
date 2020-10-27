@@ -6,6 +6,7 @@
   - Chat Capture:
     - Cache regex objects to improve performance
     - Optimize `Capture only when open` preference when not enabled
+  - Improve auto login performance checks
 
 ## v0.13.1 2020-10-26
 

@@ -877,7 +877,7 @@
             });
             client.on('command-history-changed', history => ipcRenderer.send('command-history', history));
             client.on('add-line', (data) => {
-                var res, re, c, cl;
+                var res, c, cl;
                 //no more then 3 tries
                 if (autoLoginCounter < 3 && client.options.autoLogin && remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
                     //testchar doesn't exist here. To create a new character, please type <new> at the name prompt.
@@ -894,6 +894,8 @@
                             pass = decrypt(pass[0], pass[1], pass[2]);
                             client.send(pass + '\n');
                         }
+                        //sent password skip future auto login checks
+                        autoLoginCounter = 4;
                     }
                 }
                 /*
@@ -931,10 +933,12 @@
                     _noCapture = true;
                     return;
                 }
-                if (_noCapture && (data.line.match(/^Current name: .*$/) ||
-                    data.line.match(/^Enter up to 2 nouns, [#] to remove, 'f' to finish, 'q' to quit:.*$/) ||
-                    data.line.match(/^Enter up to 3 adjectives, 'f' to finish, 'q' to quit:.*$/) ||
-                    data.line.match(/^Enter selection .*$/)
+
+                if (_noCapture && (
+                    data.indexOf('Current name: ') === 0 ||
+                    data.indexOf('Enter up to 2 nouns, [#] to remove, \'f\' to finish, \'q\' to quit:') === 0 ||
+                    data.indexOf('Enter up to 3 adjectives, \'f\' to finish, \'q\' to quit:') === 0 ||
+                    data.indexOf('Enter selection ') === 0
                 )) {
                     capture = 0;
                     _noCapture = false;
@@ -991,9 +995,13 @@
                 if (captureReview > 0) {
                     ipcRenderer.send('chat', data);
                     data.gagged = client.options.chat.gag;
+                    if (data.line == '-=-=- End Review -=-=-')
+                        captureReview = -1;
+                    /*
                     res = /^-=-=- End Review -=-=-$/.exec(data.line);
                     if (res && res.length > 0)
                         captureReview = -1;
+                    */
                     return;
                 }
                 //review requires 1 extra capture to get the current date/time
@@ -1133,6 +1141,7 @@
             });
 
             client.on('connecting', () => {
+                autoLoginCounter = 0;
                 if (client.options.buttons.connect) {
                     $('#connect').css('display', 'none');
                     $('#disconnect').css('display', '');
