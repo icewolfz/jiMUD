@@ -334,7 +334,7 @@ export class Display extends EventEmitter {
                     h = (h / this._innerHeight * 100);
                     this.split.style.height = h + '%';
                     this.split._innerHeight = this.split.clientHeight;
-                    this.doUpdate(UpdateType.scrollView | UpdateType.view);
+                    this.doUpdate(UpdateType.scrollView | UpdateType.view | UpdateType.scroll);
                 }
                 this.emit('split-move', h);
             };
