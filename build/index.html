@@ -726,7 +726,7 @@
             };
             client = new Client($('#display'), $('#commandinput'), remote.getGlobal('settingsFile'));
 
-            client.sendChat = (text) => ipcRenderer.send('chat', text);
+            client.sendChat = updateChat;
 
             window.$selectedurl = '';
             window.$selectedline = '';
@@ -901,7 +901,7 @@
                 }
                 /*
                 if (_captureComm) {
-                  ipcRenderer.send('chat', data);
+                  updateChat(data);
                   data.gagged = client.options.chat.gag;
                   return;
                 }
@@ -977,7 +977,7 @@
 
                 //capture indented text
                 if (capture > 0 && data.line.startsWith('    ')) {
-                    ipcRenderer.send('chat', data);
+                    updateChat(data);
                     data.gagged = client.options.chat.gag;
                     return;
                 }
@@ -988,13 +988,13 @@
                     if (!res || res.length === 0)
                         continue;
                     captureReview = 1;
-                    ipcRenderer.send('chat', data);
+                    updateChat(data);
                     data.gagged = client.options.chat.gag;
                     return;
                 }
                 //if in a review capture until end review
                 if (captureReview > 0) {
-                    ipcRenderer.send('chat', data);
+                    updateChat(data);
                     data.gagged = client.options.chat.gag;
                     if (data.line == '-=-=- End Review -=-=-')
                         captureReview = -1;
@@ -1007,7 +1007,7 @@
                 }
                 //review requires 1 extra capture to get the current date/time
                 if (captureReview === -1) {
-                    ipcRenderer.send('chat', data);
+                    updateChat(data);
                     data.gagged = client.options.chat.gag;
                     captureReview = 0;
                     return;
@@ -1022,7 +1022,7 @@
                     if (capture > 0)
                         capture--;
                     capture++;
-                    ipcRenderer.send('chat', data);
+                    updateChat(data);
                     data.gagged = client.options.chat.gag;
                     return;
                 }
@@ -2550,6 +2550,22 @@
             }
             $('#disconnectDialog')[0].close();
             $('#commandinput').focus();
+        }
+
+        function updateChat(data) {
+            ipcRenderer.send('chat', data);
+            /*
+            if (typeof data === 'string') {
+                display.append(data);
+                data = {
+                    line: data,
+                    formats: [{ formatType: 0 }],
+                    raw: data
+                };
+            }
+            else
+                display.addParserLine(data);
+            */
         }
 
         $(document).ready(init);
