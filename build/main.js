@@ -3713,7 +3713,7 @@ function logError(err, skipClient) {
         msg = err;
 
 
-    if (win && !win.isDestroyed() && win.webContents && !skipClient)
+    if (!global.editorOnly && win && !win.isDestroyed() && win.webContents && !skipClient)
         win.webContents.send('error', msg);
     else if (set.logErrors) {
         if (err.stack && !set.showErrorsExtended)
