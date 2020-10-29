@@ -16,11 +16,26 @@
     <link href="css/editorcontent.css" rel="stylesheet" type="text/css" />
     <script>
         // eslint-disable-next-line no-unused-vars
-        /* global _ready, doUpdate, manager, inverse, capitalize, options, monaco, initEditor, shell, setViewState, findEditor, fs, openFile */
+        /* global _loading, ipcRenderer, _ready, doUpdate, manager, inverse, capitalize, options, monaco, initEditor, shell, setViewState, findEditor, fs, openFile */
         // eslint-disable-next-line no-unused-vars
         var _ready = false;
+        var _loading = 1;
         const { SetupEditor } = require('./js/editor/code.editor');
         const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
+
+        window.onerror = function (msg, url, line, col, error) {
+            ipcRenderer.send('log-error', error, true);
+            if (options && options.debug) {
+                console.error('Message: ' + msg);
+                console.error('Url: ' + url);
+                console.error('Line: ' + line);
+                console.error('Column: ' + col);
+                console.error(error);
+            }
+            if (_loading && menubar)
+                menubar.enabled = true;
+            return true;
+        };
 
         function initEditor(editor, diff) {
             if (diff) {
@@ -1887,7 +1902,6 @@
     var krypto = null;
     var menubar;
     var options, _updating = 0;
-    var _loading = 1;
     var _opening = {};
     var _open;
     var newCounter = 1;

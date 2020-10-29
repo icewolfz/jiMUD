@@ -12,6 +12,7 @@
     - Use login name not character manager name when auto logging in
     - Cache login name to improve performance checks
   - Display: Fixed Split scroll live update when enabled
+  - Code Editor: Add better error logging when editor breaks
   
 ## v0.13.1 2020-10-26
 
