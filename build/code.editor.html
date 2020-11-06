@@ -258,13 +258,13 @@
 
         function SetupEditorFinish(monaco) {
             //var pane = document.getElementById('cm-tabpane');
-            var pane = manager.activePane.pane;
-            if (!pane) {
+            if (!manager || !manager.activePane || !manager.activePane.pane) {
                 setTimeout(() => {
                     SetupEditorFinish(monaco);
                 }, 500);
                 return;
             }
+            var pane = manager.activePane.pane;
             var el = document.createElement('div');
             el.classList.add('editor-container');
             pane.appendChild(el);
