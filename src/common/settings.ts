@@ -381,6 +381,7 @@ export class Settings {
     public autoConnect: boolean = true;
     public autoConnectDelay: number = 600;
     public autoLogin: boolean = true;
+    public autoTakeoverLogin: boolean = false;
     public onDisconnect: OnDisconnect = OnDisconnect.ReconnectDialog;
     public commandEcho: boolean = true;
     public enableSound: boolean = true;

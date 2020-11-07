@@ -2,6 +2,8 @@
 
 ## v0.13.2
 
+- **New:**
+  - Preferences: Add `Auto takeover login` to automatically issue yes to takeover character after login
 - **Fixed:**
   - Chat Capture:
     - Cache regex objects to improve performance

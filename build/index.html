@@ -899,6 +899,8 @@
                         autoLoginCounter = 4;
                     }
                 }
+                if (client.options.autoTakeoverLogin && data.line === 'Do you want to take over this login? (y/n)' && data.fragment)
+                    client.send('y\n');
                 /*
                 if (_captureComm) {
                   updateChat(data);
