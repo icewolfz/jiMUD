@@ -52,13 +52,13 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.4",
-    "@types/node": "^12.19.3",
+    "@types/node": "^12.19.4",
     "babel-minify": "^0.4.3",
     "devtron": "^1.4.0",
     "electron": "^10.1.5",
     "electron-builder": "^22.9.1",
-    "eslint": "^7.12.1",
-    "eslint-plugin-html": "^6.1.0",
+    "eslint": "^7.13.0",
+    "eslint-plugin-html": "^6.1.1",
     "node-sass": "^5.0.0"
   },
   "build": {
@@ -147,7 +147,7 @@
     "node-disk-info": "^1.1.0",
     "rgbcolor": "^1.0.1",
     "tmp": "^0.2.1",
-    "yargs-parser": "^20.2.3",
+    "yargs-parser": "^20.2.4",
     "yauzl": "^2.10.0",
     "yazl": "^2.5.1"
   }

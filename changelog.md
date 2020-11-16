@@ -17,7 +17,9 @@
   - Code Editor:
     - Add better error logging when editor breaks
     - Fix random hang issue
-  
+  - **Changed:**
+    - Update yargs-parser 20.2.3 to 20.2.4
+
 ## v0.13.1 2020-10-26
 
 - **New:**
