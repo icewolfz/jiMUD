@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.13.2
+## v0.13.2 2020-11-16
 
 - **New:**
   - Preferences: Add `Auto takeover login` to automatically issue yes to takeover character after login
