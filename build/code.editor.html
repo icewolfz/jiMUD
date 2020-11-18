@@ -20,6 +20,7 @@
         // eslint-disable-next-line no-unused-vars
         var _ready = false;
         var _loading = 1;
+        var manager;
         const { SetupEditor } = require('./js/editor/code.editor');
         const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
 
@@ -2394,7 +2395,7 @@
         }
     ]);
     menubar.enabled = false;
-    var manager = new DockManager();
+    manager = new DockManager();
     var dock = $('.dock-manager');
     var toolbar = $('#toolbar');
     manager.hideTabstrip = false;
