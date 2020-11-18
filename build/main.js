@@ -1180,7 +1180,8 @@ function createWindow() {
             webviewTag: false,
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            contextIsolation: false
         }
     });
     if (s.fullscreen)
@@ -1309,7 +1310,8 @@ function createWindow() {
                 webviewTag: false,
                 sandbox: false,
                 spellcheck: set ? set.spellchecking : false,
-                enableRemoteModule: true
+                enableRemoteModule: true,
+                contextIsolation: false
             };
         else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
             options.webPreferences.nodeIntegration = true;
@@ -1317,6 +1319,7 @@ function createWindow() {
             options.webPreferences.sandbox = false;
             options.webPreferences.spellcheck = set ? set.spellchecking : false;
             options.webPreferences.enableRemoteModule = true;
+            options.webPreferences.contextIsolation = false;
         }
         if (Object.prototype.hasOwnProperty.call(options, 'x'))
             options.x = getWindowX(options.x, options.width || 800);
@@ -2299,7 +2302,8 @@ ipcMain.on('progress-show', (event, title) => {
                 webviewTag: false,
                 sandbox: false,
                 spellcheck: set ? set.spellchecking : false,
-                enableRemoteModule: true
+                enableRemoteModule: true,
+                contextIsolation: false
             }
         });
         winProgress.removeMenu();
@@ -2772,7 +2776,8 @@ function showPrefs() {
             webviewTag: false,
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            contextIsolation: false
         }
     });
     pref.removeMenu();
@@ -2837,7 +2842,8 @@ function createMapper(show, loading, loaded) {
             webviewTag: false,
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            contextIsolation: false
         }
     });
 
@@ -2984,7 +2990,8 @@ function showProfiles() {
             webviewTag: false,
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            contextIsolation: false
         }
     });
 
@@ -3089,7 +3096,8 @@ function createEditor(show, loading) {
             webviewTag: false,
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            contextIsolation: false
         }
     });
 
@@ -3234,7 +3242,8 @@ function createChat(show, loading) {
             webviewTag: false,
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            contextIsolation: false
         }
     });
 
@@ -3382,7 +3391,8 @@ function createNewWindow(name, options) {
             webviewTag: false,
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            contextIsolation: false
         }
     });
     delete windows[name].width;
@@ -3484,7 +3494,8 @@ function createNewWindow(name, options) {
                 webviewTag: false,
                 sandbox: false,
                 spellcheck: set ? set.spellchecking : false,
-                enableRemoteModule: true
+                enableRemoteModule: true,
+                contextIsolation: false
             };
         else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
             options.webPreferences.nodeIntegration = true;
@@ -3492,6 +3503,7 @@ function createNewWindow(name, options) {
             options.webPreferences.sandbox = false;
             options.webPreferences.spellcheck = set ? set.spellchecking : false;
             options.webPreferences.enableRemoteModule = true;
+            options.webPreferences.contextIsolation = false;
         }
         if (Object.prototype.hasOwnProperty.call(options, 'x'))
             options.x = getWindowX(options.x, options.width || 800);
@@ -3620,7 +3632,8 @@ function showColor(args) {
             webviewTag: false,
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            contextIsolation: false
         }
     });
     cp.webContents.on('crashed', (event, killed) => {
@@ -3815,7 +3828,8 @@ function createCodeEditor(show, loading, loaded) {
             webviewTag: false,
             sandbox: false,
             spellcheck: edSet ? edSet.spellchecking : false,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            contextIsolation: false
         }
     });
 
@@ -3958,7 +3972,8 @@ function createCodeEditor(show, loading, loaded) {
                 webviewTag: false,
                 sandbox: false,
                 spellcheck: edSet ? edSet.spellchecking : false,
-                enableRemoteModule: true
+                enableRemoteModule: true,
+                contextIsolation: false
             };
         else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
             options.webPreferences.nodeIntegration = true;
@@ -3966,6 +3981,7 @@ function createCodeEditor(show, loading, loaded) {
             options.webPreferences.sandbox = false;
             options.webPreferences.spellcheck = edSet ? edSet.spellchecking : false;
             options.webPreferences.enableRemoteModule = true;
+            options.webPreferences.contextIsolation = false;
         }
         if (Object.prototype.hasOwnProperty.call(options, 'x'))
             options.x = getWindowX(options.x, options.width || 800);
@@ -4204,7 +4220,8 @@ function showAbout() {
             webviewTag: false,
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            contextIsolation: false
         }
     });
     about.webContents.on('crashed', (event, killed) => {
