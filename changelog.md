@@ -3,7 +3,7 @@
 ## v0.14.0
 
 - **Changed:**
-  - Update electron 10.1.5 to 11.0.0
+  - Update electron 10.1.5 to 11.0.1
 
 ## v0.13.2 2020-11-16
 
