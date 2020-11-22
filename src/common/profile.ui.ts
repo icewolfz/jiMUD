@@ -2166,7 +2166,7 @@ function updateCurrent(): UpdateState {
 }
 
 function buildTreeview(data, skipInit?) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         currentNode = 0;
         $('#profile-tree').treeview({
             showBorder: false,

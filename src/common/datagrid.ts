@@ -2053,7 +2053,7 @@ export class DataGrid extends EventEmitter {
     }
 
     public expandRows(rows) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             if ((this._updating & UpdateType.rows) === UpdateType.rows || (this._updating & UpdateType.buildRows) === UpdateType.buildRows) {
                 setTimeout(() => {
                     this.expandRows(rows).then(resolve);
@@ -2082,7 +2082,7 @@ export class DataGrid extends EventEmitter {
     }
 
     public collapseRows(rows) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             if ((this._updating & UpdateType.rows) === UpdateType.rows || (this._updating & UpdateType.buildRows) === UpdateType.buildRows) {
                 setTimeout(() => {
                     this.collapseRows(rows).then(resolve);
