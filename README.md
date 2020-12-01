@@ -24,6 +24,25 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
 
 Build and package files are all saved to dist folder
 
+## Run
+
+1. npm install - install node modules
+1. npm run compile - compile typescript into javascript files
+1. npm run start - start jiMud
+
+This will allow you to run jiMud directly from this folder with out the need to
+package into a self contained folder or building an installer.
+
+## Standalone application
+
+1. npm install - install node modules
+1. npm run build:debug-compile
+
+This will compile typescript into javascript, rebuild native node modules and create
+a runnable package that can be ran from dist/ARCH-unpacked folder. This can be used
+for debugging or running it as full app with out the need to install, just run
+the jiMUD executable in dist/ARCH-unpacked folder.
+
 ## FAQ
 
 Basic questions answered about jiMUD
