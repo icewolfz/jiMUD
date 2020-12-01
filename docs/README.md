@@ -17,10 +17,10 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
 1. npm install - install all the node modules
 1. npm run release:linux - build tar, deb, appImage, and rpm packages
 
-### OSX
+### Mac
 
 1. npm install - install node modules
-1. npm run release:osx - build OSX packages
+1. npm run release:mac - build Mac packages
 
 Build and package files are all saved to dist folder
 
