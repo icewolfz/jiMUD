@@ -28,9 +28,9 @@ Build and package files are all saved to dist folder
 
 1. npm install - install node modules
 1. npm run compile - compile typescript into javascript files
-1. npm run start - start jiMud
+1. npm run start - start jiMUD
 
-This will allow you to run jiMud directly from this folder with out the need to
+This will allow you to run jiMUD directly from this folder with out the need to
 package into a self contained folder or building an installer.
 
 ## Standalone application
