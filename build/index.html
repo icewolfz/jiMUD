@@ -938,10 +938,10 @@
                 }
 
                 if (_noCapture && (
-                    data.indexOf('Current name: ') === 0 ||
-                    data.indexOf('Enter up to 2 nouns, [#] to remove, \'f\' to finish, \'q\' to quit:') === 0 ||
-                    data.indexOf('Enter up to 3 adjectives, \'f\' to finish, \'q\' to quit:') === 0 ||
-                    data.indexOf('Enter selection ') === 0
+                    data.line.indexOf('Current name: ') === 0 ||
+                    data.line.indexOf('Enter up to 2 nouns, [#] to remove, \'f\' to finish, \'q\' to quit:') === 0 ||
+                    data.line.indexOf('Enter up to 3 adjectives, \'f\' to finish, \'q\' to quit:') === 0 ||
+                    data.line.indexOf('Enter selection ') === 0
                 )) {
                     capture = 0;
                     _noCapture = false;
