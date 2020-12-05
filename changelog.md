@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.14.0
+## v0.14.0 2020-12-05
 
 - **Fixed:**
   - Chat capture: fixed issue introduced in v0.13.2
