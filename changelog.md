@@ -2,6 +2,10 @@
 
 ## v0.14.1
 
+- **Changed:**
+  - Update electron 11.0.3 to 11.0.4
+  - Update markdown-it 12.0.2 to 12.0.3
+
 ## v0.14.0 2020-12-05
 
 - **Fixed:**
