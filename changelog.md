@@ -3,8 +3,8 @@
 ## v0.14.1
 
 - **Changed:**
-  - Update electron 11.0.3 to 11.1.0
-  - Update markdown-it 12.0.2 to 12.0.3
+  - Update electron 11.0.3 to 11.1.1
+  - Update markdown-it 12.0.2 to 12.0.4
   - Update better-sqlite3 7.1.1 to 7.1.2
 
 ## v0.14.0 2020-12-05
