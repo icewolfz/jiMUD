@@ -3,9 +3,11 @@
 ## v0.14.1
 
 - **Changed:**
-  - Update electron 11.0.3 to 11.1.1
+  - Update electron 11.0.3 to 11.2.0
   - Update markdown-it 12.0.2 to 12.0.4
   - Update better-sqlite3 7.1.1 to 7.1.2
+  - Update chokidar 3.4.3 to 3.5.0
+  - Update fswin 3.19.908 to 3.21.107
 
 ## v0.14.0 2020-12-05
 
