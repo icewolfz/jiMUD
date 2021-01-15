@@ -1923,7 +1923,7 @@
     var $dialog;
     var $dialogs = {};
     var $queue = [];
-    var tmpOptions = { prefix: 'jiMUD-', dir: getTempDir(), postfix: '.tmp' };
+    var tmpOptions = { prefix: 'jiMUD-', dir: getTempDir(), postfix: '.tmp', tmpdir: parseTemplate('{data}') };
     var $id = 0;
 
     var $fileFilters = [

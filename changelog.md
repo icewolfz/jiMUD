@@ -8,6 +8,8 @@
   - Update better-sqlite3 7.1.1 to 7.1.2
   - Update chokidar 3.4.3 to 3.5.0
   - Update fswin 3.19.908 to 3.21.107
+- **Fixed:**
+  - Code Editor: Fix remote diff/editing systems, broken in v0.11.3 due to tmp changing how temp directories worked
 
 ## v0.14.0 2020-12-05
 
