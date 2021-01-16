@@ -2,14 +2,14 @@
 
 ## v0.14.1
 
+- **Fixed:**
+  - Code Editor: Fix remote diff/editing systems, broken in v0.11.3 due to tmp changing how temp directories worked
 - **Changed:**
   - Update electron 11.0.3 to 11.2.0
   - Update markdown-it 12.0.2 to 12.0.4
   - Update better-sqlite3 7.1.1 to 7.1.2
-  - Update chokidar 3.4.3 to 3.5.0
+  - Update chokidar 3.4.3 to 3.5.1
   - Update fswin 3.19.908 to 3.21.107
-- **Fixed:**
-  - Code Editor: Fix remote diff/editing systems, broken in v0.11.3 due to tmp changing how temp directories worked
 
 ## v0.14.0 2020-12-05
 
