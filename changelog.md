@@ -10,6 +10,7 @@
   - Update better-sqlite3 7.1.1 to 7.1.2
   - Update chokidar 3.4.3 to 3.5.1
   - Update fswin 3.19.908 to 3.21.107
+  - Update monaco-editor 0.21.2 to 0.21.3
 
 ## v0.14.0 2020-12-05
 
