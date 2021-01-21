@@ -11,6 +11,7 @@
   - Update chokidar 3.4.3 to 3.5.1
   - Update fswin 3.19.908 to 3.21.107
   - Update monaco-editor 0.21.2 to 0.21.3
+  - Update fs-extra 9.0.1 to 9.1.0
 
 ## v0.14.0 2020-12-05
 
