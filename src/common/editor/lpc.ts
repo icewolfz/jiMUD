@@ -24,8 +24,8 @@ export const conf: IRichLanguageConfiguration = {
         ['(', ')']
     ],
     autoClosingPairs: [
-        { open: '([', close: '])' },
-        { open: '({', close: '})' },
+        { open: '([', close: ']' },
+        { open: '({', close: '}' },
         { open: '[', close: ']' },
         { open: '{', close: '}' },
         { open: '(', close: ')' },

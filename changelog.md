@@ -6,6 +6,7 @@
   - Code Editor:
     - Fix remote diff/editing systems, broken in v0.11.3 due to tmp changing how temp directories worked
     - Fix new area dialog title and default name being [Object object]
+    - Fix ([]) and ({}) from adding an extra )
 - **Changed:**
   - Update electron 11.0.3 to 11.2.2
   - Update markdown-it 12.0.2 to 12.0.4
