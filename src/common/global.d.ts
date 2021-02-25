@@ -50,7 +50,8 @@ interface CanvasRenderingContext2D {
 /**
  * Remove once typscript nativly supports ResizeObserver 
  */
-interface ResizeObserver {
+/*
+ interface ResizeObserver {
 	observe: (target: Element) => void;
 	unobserve: (target: Element) => void;
 	disconnect: () => void;
@@ -74,4 +75,5 @@ declare var ResizeObserverEntry: {
 	prototype: ResizeObserverEntry;
 	new(): ResizeObserverEntry;
 };
+*/
 /** End ResizeObserver */
