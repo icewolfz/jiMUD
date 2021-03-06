@@ -3181,7 +3181,7 @@
         function deleteLocal() {
             var data = localTable.rows({ selected: true }).data().pluck('path');
             for (var d = 0, dl = data.length; d < dl; d++)
-                shell.moveItemToTrash(data[d]);
+                shell.trashItem(data[d]);
         }
 
         function deleteRemote() {

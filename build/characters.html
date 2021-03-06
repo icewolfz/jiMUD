@@ -613,10 +613,10 @@
             if (response === 0) {
                 var sf = parseTemplate(characters.characters[name].settings);
                 if (isFileSync(sf))
-                    shell.moveItemToTrash(sf);
+                    shell.trashItem(sf);
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf))
-                    shell.moveItemToTrash(sf);
+                    shell.trashItem(sf);
                 if (characters.load === name)
                     characters.load = 0;
                 delete characters.characters[name];
