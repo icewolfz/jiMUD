@@ -2541,6 +2541,97 @@ ipcMain.on('ondragstart', (event, files, icon) => {
         });
 });
 
+ipcMain.on('get-global', (event, key) => {
+    switch (key) {
+        case 'editorOnly':
+            event.returnValue = global.editorOnly;
+            break;
+        case 'settingsFile':
+            event.returnValue = global.settingsFile;
+            break;
+        case 'mapFile':
+            event.returnValue = global.mapFile;
+            break;
+        case 'profiles':
+            event.returnValue = global.profiles;
+            break;
+        case 'character':
+            event.returnValue = global.character;
+            break;
+        case 'characterLogin':
+            event.returnValue = global.characterLogin;
+            break;
+        case 'characterPass':
+            event.returnValue = global.characterPass;
+            break;
+        case 'dev':
+            event.returnValue = global.dev;
+            break;
+        case 'title':
+            event.returnValue = global.title;
+            break;
+        case 'debug':
+            event.returnValue = global.debug;
+            break;
+        case 'connected':
+            event.returnValue = global.connected;
+            break;
+        case 'updating':
+            event.returnValue = global.updating;
+            break;
+        default:
+            event.returnValue = null;
+            break;
+    }
+});
+
+ipcMain.on('set-global', (event, key, value) => {
+    switch (key) {
+        case 'editorOnly':
+            global.editorOnly = value;
+            break;
+        case 'settingsFile':
+            global.settingsFile = value;
+            break;
+        case 'mapFile':
+            global.mapFile = value;
+            break;
+        case 'profiles':
+            global.profiles = value;
+            break;
+        case 'character':
+            global.character = value;
+            break;
+        case 'characterLogin':
+            global.characterLogin = value;
+            break;
+        case 'characterPass':
+            global.characterPass = value;
+            break;
+        case 'dev':
+            global.dev = value;
+            break;
+        case 'title':
+            global.title = value;
+            break;
+        case 'debug':
+            global.debug = value;
+            break;
+        case 'connected':
+            global.connected = value;
+            break;
+        case 'updating':
+            global.updating = value;
+            break;
+    }
+});
+
+ipcMain.handle('get-app', (event, key)=> {
+    if(key == 'getAppMetrics')
+       return app.getAppMetrics();
+    return null;
+});
+
 function updateMenuItem(args) {
     var item, i = 0, items;
     var tItem, tItems;
