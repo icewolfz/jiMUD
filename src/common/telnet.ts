@@ -1568,7 +1568,7 @@ export class Telnet extends EventEmitter {
         processed = Buffer.from(processed);
         //force UTF8 or if charset is enabled and type is UTF8 process data as UTF8 data
         if (this.UTF8 || (this.options.CHARSET && this.server.CHARSET))
-            return processed.toString('UTF8');
+            return processed.toString('utf8');
         return processed;
     }
 
