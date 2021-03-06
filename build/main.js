@@ -2626,10 +2626,66 @@ ipcMain.on('set-global', (event, key, value) => {
     }
 });
 
-ipcMain.handle('get-app', (event, key)=> {
-    if(key == 'getAppMetrics')
-       return app.getAppMetrics();
+ipcMain.handle('get-app', (event, key) => {
+    if (key === 'getAppMetrics')
+        return app.getAppMetrics();
     return null;
+});
+
+ipcMain.on('show-dialog-sync', (event, type, ...args) => {
+    var sWindow = BrowserWindow.fromWebContents(event.sender);
+    if (type === 'showMessageBox')
+        event.returnValue = dialog.showMessageBoxSync(sWindow, ...args);
+    else if (type === 'showSaveDialog')
+        event.returnValue = dialog.showSaveDialogSync(sWindow, ...args);
+    else if (type === 'showOpenDialog')
+        event.returnValue = dialog.showOpenDialogSync(sWindow, ...args);
+});
+
+ipcMain.handle('show-dialog', (event, type, ...args) => {
+    return new Promise((resolve, reject) => {
+        var sWindow = BrowserWindow.fromWebContents(event.sender);
+        if (type === 'showMessageBox')
+            dialog.showMessageBox(sWindow, ...args).then(resolve).catch(reject);
+        else if (type === 'showSaveDialog')
+            dialog.showSaveDialog(sWindow, ...args).then(resolve).catch(reject);
+        else if (type === 'showOpenDialog')
+            dialog.showOpenDialog(sWindow, ...args).then(resolve).catch(reject);
+    });
+});
+
+ipcMain.on('show-context-sync', (event, template, options) => {
+    if (!template)
+        return;
+    if (!options) options = {};
+    options.window = BrowserWindow.fromWebContents(event.sender);
+    template.map((item, idx) => {
+        if (typeof item.click === 'string'){
+            var click = item.click;
+            item.click = () => event.sender.executeJavaScript(click);
+        }
+        else
+            item.click = () => event.sender.executeJavaScript(`executeContextItem(${idx}, "${item.id}", "${item.label}", "${item.role}");`);
+    });
+    var cMenu = Menu.buildFromTemplate(template);
+    cMenu.popup(options);
+});
+
+ipcMain.handle('show-context', (event, template, options) => {
+    if (!template)
+        return;
+    if (!options) options = {};
+    options.window = BrowserWindow.fromWebContents(event.sender);
+    template.map((item, idx) => {
+        if (typeof item.click === 'string') {
+            var click = item.click;
+            item.click = () => event.sender.executeJavaScript(click);
+        }
+        else
+            item.click = () => event.sender.executeJavaScript(`executeContextItem(${idx}, "${item.id}", "${item.label}", "${item.role}");`);
+    });
+    var cMenu = Menu.buildFromTemplate(template);
+    cMenu.popup(options);
 });
 
 function updateMenuItem(args) {
