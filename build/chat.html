@@ -13,13 +13,14 @@
     <link href="css/ansi.css" rel="stylesheet" type="text/css" />
     <link href="css/chat.css" rel="stylesheet" type="text/css" />
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
     <script src="../lib/bootstrap.min.js"></script>
     <script src="../lib/bootstrap-select.min.js"></script>
-    <script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
         const { clipboard, ipcRenderer, remote, webFrame } = require('electron');
         const { parseTemplate } = require('./js/library.js');
         const { Settings } = require('./js/settings');

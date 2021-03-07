@@ -86,7 +86,7 @@
             max-height: 200px !important;
         }
     </style>
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
@@ -108,7 +108,7 @@
         var archiver, archive;
 
         var _settings;
-        if (window.module) module.module;
+        if (window.module) module = window.module;
         $(window).keydown((event) => {
             if (document.getElementById('progress-dialog').open) {
                 event.preventDefault();

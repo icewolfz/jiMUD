@@ -558,7 +558,7 @@
             <progress max="100" id="progress-dialog-progressbar"></progress>
         </div>
     </dialog>    
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
@@ -573,7 +573,8 @@
     <script src="../lib/ace/ext-themelist.js" type="text/javascript"></script>
     <script src="../lib/ace/ext-modelist.js" type="text/javascript"></script>
 
-    <script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
         const profileUI = require('./js/profile.ui');
         // eslint-disable-next-line no-unused-vars
         const MacroDisplay = profileUI.MacroDisplay;

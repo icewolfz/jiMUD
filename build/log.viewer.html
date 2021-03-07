@@ -64,13 +64,14 @@
         </div>
     </dialog>
 </body>
-<script>
+<script type="text/javascript">
     if (typeof module === 'object') { window.module = module; module = undefined; }
 </script>
 <script src="../lib/jquery.min.js" type="text/javascript"></script>
 <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
 <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
 <script type="text/javascript">
+    if (window.module) module = window.module;
     //spellchecker:ignore dockmanager prefs ismap yazl
     const { DockManager } = require('./js/dockmanager');
     const { remote, ipcRenderer, clipboard } = require('electron');

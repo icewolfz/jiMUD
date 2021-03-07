@@ -14,7 +14,7 @@
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
     <link href="css/datagrid.css" rel="stylesheet" type="text/css" />
     <link href="css/editorcontent.css" rel="stylesheet" type="text/css" />
-    <script>
+    <script type="text/javascript">
         // eslint-disable-next-line no-unused-vars
         /* global _loading, ipcRenderer, _ready, doUpdate, manager, inverse, capitalize, options, monaco, initEditor, shell, setViewState, findEditor, fs, openFile */
         // eslint-disable-next-line no-unused-vars
@@ -1866,13 +1866,14 @@
         </div>
     </div>
 </body>
-<script>
+<script type="text/javascript">
     if (typeof module === 'object') { window.module = module; module = undefined; }
 </script>
 <script src="../lib/jquery.min.js" type="text/javascript"></script>
 <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
 <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
-<script>
+<script type="text/javascript">
+    if (window.module) module = window.module;
     /*global _ready:true*/
     const { shell, remote, ipcRenderer, webFrame, clipboard } = require('electron');
     const { DockManager } = require('./js/dockmanager');

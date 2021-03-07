@@ -11,13 +11,14 @@
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/help.css" rel="stylesheet" type="text/css" />
     <link href="css/form.css" rel="stylesheet" type="text/css" />
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js" type="text/javascript"></script>
     <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
     <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
-    <script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
         //spellchecker:ignore codeeditor
         const { remote } = require('electron');
         const { Menu } = remote;

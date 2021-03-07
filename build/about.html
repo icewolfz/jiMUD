@@ -151,15 +151,15 @@
             top: 0;
         }
     </style>
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
     <script src="../lib/bootstrap.min.js"></script>
-    <script>
-        if (window.module) module.module;
+    <script type="text/javascript">
+        if (window.module) module = window.module;
     </script>
-    <script>
+    <script type="text/javascript">
         //spellchecker:ignore Wakeups
         const { version } = require('../package.json');
         const { ipcRenderer } = require('electron');

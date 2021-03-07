@@ -26,13 +26,14 @@
                 overflow: hidden;
             }
         </style>
-        <script>
+        <script type="text/javascript">
             if (typeof module === 'object') { window.module = module; module = undefined; }
         </script>
         <script src="../lib/jquery.min.js"></script>
         <script src="../lib/bootstrap.min.js"></script>
         <script src="../lib/bootstrap-select.min.js"></script>
-        <script>
+        <script type="text/javascript">
+            if (window.module) module = window.module;
             //spell-checker:ignore tinymce, rgbcolor, forecolor, colorbtn, colorbutton
             const { remote, ipcRenderer } = require('electron');
             const { Settings } = require('./js/settings');

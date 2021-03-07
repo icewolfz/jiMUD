@@ -68,13 +68,14 @@
             padding-left: 0px;
         }
     </style>
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
     <script src="../lib/bootstrap.min.js"></script>
     <script src="../lib/bootstrap-select.min.js"></script>
-    <script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
         const { TempType } = require('./js/types');
         const Settings = require('./js/settings').Settings;
@@ -83,7 +84,7 @@
         const path = require('path');
 
         var _settings;
-        if (window.module) module.module;
+        if (window.module) module = window.module;
         $(window).keydown((event) => {
             if (event.which === 27)
                 window.close();
