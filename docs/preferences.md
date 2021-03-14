@@ -192,6 +192,7 @@ Controls what is captured into the chat window
 - `Fix hidden windows` Move windows that have been hidden off screen to on onscreen
 - `Enable Keep alive` Enable socket keep alive
 - `Keep alive delay` The number of seconds for initial keep alive delay
+- `Enable allow Half Open sockets` Indicates whether half-opened TCP connections are allowed
 - `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
 - `Backup save` what to save when using remote backup systems
 - `Backup load` what to load when using remote backup systems

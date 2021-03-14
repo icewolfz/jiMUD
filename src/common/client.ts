@@ -834,6 +834,7 @@ export class Client extends EventEmitter {
         this.telnet.enablePing = this.options.enablePing;
         this.telnet.keepAlive = this.options.enableKeepAlive;
         this.telnet.keepAliveDelay = this.options.keepAliveDelay;
+        this.telnet.allowHalfOpen = this.options.allowHalfOpen;
 
         this.MSP.enabled = this.options.enableMSP;
         this.MSP.enableSound = this.options.enableSound;

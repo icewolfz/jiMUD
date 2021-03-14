@@ -342,7 +342,8 @@ export let SettingList: any[] = [
     ['display.hideTrailingEmptyLine', 0, 1, true],
     ['display.enableColors', 0, 1, true],
     ['display.enableBackgroundColors', 0, 1, true],
-    ['enableSound', 0, 1, true]
+    ['enableSound', 0, 1, true],
+    ['allowHalfOpen', 0, 1, true]
 ];
 
 /**
@@ -389,6 +390,7 @@ export class Settings {
 
     public enableKeepAlive: boolean = false;
     public keepAliveDelay: number = 0;
+    public allowHalfOpen: boolean = true;
 
     public newlineShortcut: NewLineType = NewLineType.Ctrl;
 

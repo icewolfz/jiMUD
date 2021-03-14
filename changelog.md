@@ -2,7 +2,10 @@
 
 ## v0.15.0
 
-- Update electron 11.3.0 to 12.0.0
+- **New**
+  - Enable allow Half Open sockets - Indicates whether half-opened TCP connections are allowed
+- **Changed:**
+  - Update electron 11.3.0 to 12.0.0
 
 ## v0.14.1 2021-02-24
 

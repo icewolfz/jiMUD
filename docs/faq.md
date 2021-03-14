@@ -220,6 +220,7 @@ display.hideTrailingEmptyLine     | boolean | true
 display.enableColors              | boolean | true
 display.enableBackgroundColors    | boolean | true
 enableSound                       | boolean | true
+allowHalfOpen                     | boolean | true
 
 ### trayClick and trayDblClick values
 
