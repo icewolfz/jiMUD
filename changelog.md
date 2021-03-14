@@ -6,6 +6,7 @@
   - Enable allow Half Open sockets - Indicates whether half-opened TCP connections are allowed
 - **Changed:**
   - Update electron 11.3.0 to 12.0.0
+  - Updated crash logging to newer more detailed version
 
 ## v0.14.1 2021-02-24
 

@@ -1281,8 +1281,8 @@ function createWindow() {
             win.hide();
     });
 
-    win.webContents.on('crashed', (event, killed) => {
-        logError(`Client crashed, killed: ${killed}\n`, true);
+    win.webContents.on('render-process-gone', (event, details) => {
+        logError(`Client render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
 
     win.webContents.on('new-window', (event, url, frameName, disposition, options) => {
@@ -1334,8 +1334,8 @@ function createWindow() {
             addInputContext(w, set && set.spellchecking);
             w.show();
         });
-        w.webContents.on('crashed', (event, killed) => {
-            logError(`${url} crashed, killed: ${killed}\n`, true);
+        w.webContents.on('render-process-gone', (event, details) => {
+            logError(`${url} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
         });
         w.on('unresponsive', () => {
             dialog.showMessageBox({
@@ -2334,8 +2334,8 @@ ipcMain.on('progress-show', (event, title) => {
                 setProgress(title);
         });
 
-        winProgress.webContents.on('crashed', (event, killed) => {
-            logError(`Progress crashed, killed: ${killed}\n`, true);
+        winProgress.webContents.on('render-process-gone', (event, details) => {
+            logError(`Progress render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
         });
         winProgress.on('unresponsive', () => {
             dialog.showMessageBox({
@@ -2944,8 +2944,8 @@ function showPrefs() {
         pref.show();
     });
 
-    pref.webContents.on('crashed', (event, killed) => {
-        logError(`Preferences crashed, killed: ${killed}\n`, true);
+    pref.webContents.on('render-process-gone', (event, details) => {
+        logError(`Preferences render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
     pref.on('unresponsive', () => {
         dialog.showMessageBox({
@@ -3004,8 +3004,8 @@ function createMapper(show, loading, loaded) {
         slashes: true
     }));
 
-    winMap.webContents.on('crashed', (event, killed) => {
-        logError(`Mapper crashed, killed: ${killed}\n`, true);
+    winMap.webContents.on('render-process-gone', (event, details) => {
+        logError(`Mapper render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
 
     winMap.on('unresponsive', () => {
@@ -3142,8 +3142,8 @@ function showProfiles() {
         }
     });
 
-    winProfiles.webContents.on('crashed', (event, killed) => {
-        logError(`Profile manager crashed, killed: ${killed}\n`, true);
+    winProfiles.webContents.on('render-process-gone', (event, details) => {
+        logError(`Profile manager render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
 
     winProfiles.on('unresponsive', () => {
@@ -3248,8 +3248,8 @@ function createEditor(show, loading) {
         }
     });
 
-    winEditor.webContents.on('crashed', (event, killed) => {
-        logError(`Advanced editor crashed, killed: ${killed}\n`, true);
+    winEditor.webContents.on('render-process-gone', (event, details) => {
+        logError(`Advanced editor process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
 
     winEditor.on('unresponsive', () => {
@@ -3394,8 +3394,8 @@ function createChat(show, loading) {
         }
     });
 
-    winChat.webContents.on('crashed', (event, killed) => {
-        logError(`Chat capture crashed, killed: ${killed}\n`, true);
+    winChat.webContents.on('render-process-gone', (event, details) => {
+        logError(`Chat capture render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
 
     winChat.on('unresponsive', () => {
@@ -3547,8 +3547,8 @@ function createNewWindow(name, options) {
     delete windows[name].x;
     delete windows[name].y;
 
-    windows[name].window.webContents.on('crashed', (event, killed) => {
-        logError(`${name} crashed, killed: ${killed}\n`, true);
+    windows[name].window.webContents.on('render-process-gone', (event, details) => {
+        logError(`${name} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
 
     windows[name].window.on('unresponsive', () => {
@@ -3666,8 +3666,8 @@ function createNewWindow(name, options) {
                 addInputContext(w, global.editorOnly ? (edSet && edSet.spellchecking) : (set && set.spellchecking));
             w.show();
         });
-        w.webContents.on('crashed', (event, killed) => {
-            logError(`${URL} crashed, killed: ${killed}\n`, true);
+        w.webContents.on('render-process-gone', (event, details) => {
+            logError(`${URL} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
         });
 
         w.on('unresponsive', () => {
@@ -3783,8 +3783,8 @@ function showColor(args) {
             contextIsolation: false
         }
     });
-    cp.webContents.on('crashed', (event, killed) => {
-        logError(`Colorpicker crashed, killed: ${killed}\n`, true);
+    cp.webContents.on('render-process-gone', (event, details) => {
+        logError(`Colorpicker render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
 
     cp.on('unresponsive', () => {
@@ -4009,8 +4009,8 @@ function createCodeEditor(show, loading, loaded) {
         slashes: true
     }));
 
-    winCode.webContents.on('crashed', (event, killed) => {
-        logError(`Code editor crashed, killed: ${killed}\n`, true);
+    winCode.webContents.on('render-process-gone', (event, details) => {
+        logError(`Code editor render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
 
     winCode.on('closed', (e) => {
@@ -4143,8 +4143,8 @@ function createCodeEditor(show, loading, loaded) {
             addInputContext(w, edSet && edSet.spellchecking);
             w.show();
         });
-        w.webContents.on('crashed', (event, killed) => {
-            logError(`${URL} crashed, killed: ${killed}\n`, true);
+        w.webContents.on('render-process-gone', (event, details) => {
+            logError(`${URL} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
         });
 
         w.on('unresponsive', () => {
@@ -4371,8 +4371,8 @@ function showAbout() {
             contextIsolation: false
         }
     });
-    about.webContents.on('crashed', (event, killed) => {
-        logError(`About crashed, killed: ${killed}\n`, true);
+    about.webContents.on('render-process-gone', (event, details) => {
+        logError(`About render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
 
     about.on('unresponsive', () => {
