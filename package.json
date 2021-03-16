@@ -52,12 +52,12 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.5",
-    "@types/node": "^14.14.31",
+    "@types/node": "^14.14.35",
     "babel-minify": "^0.4.3",
-    "electron": "^12.0.0",
+    "electron": "^12.0.1",
     "electron-builder": "^22.10.5",
-    "eslint": "^7.21.0",
-    "eslint-plugin-html": "^6.1.1",
+    "eslint": "^7.22.0",
+    "eslint-plugin-html": "^6.1.2",
     "node-sass": "^5.0.0"
   },
   "build": {
@@ -135,7 +135,7 @@
     "buzz": "^1.2.1",
     "chokidar": "^3.5.1",
     "electron-updater": "^4.3.8",
-    "font-list": "^1.2.12",
+    "font-list": "^1.2.13",
     "fs-extra": "^9.1.0",
     "fswin": "^3.21.107",
     "lz-string": "^1.4.4",
@@ -146,7 +146,7 @@
     "node-disk-info": "^1.1.0",
     "rgbcolor": "^1.0.1",
     "tmp": "^0.2.1",
-    "yargs-parser": "^20.2.6",
+    "yargs-parser": "^20.2.7",
     "yauzl": "^2.10.0",
     "yazl": "^2.5.1"
   }

@@ -5,8 +5,10 @@
 - **New**
   - Enable allow Half Open sockets - Indicates whether half-opened TCP connections are allowed
 - **Changed:**
-  - Update electron 11.3.0 to 12.0.0
+  - Update electron 11.3.0 to 12.0.1
   - Updated crash logging to newer more detailed version
+  - Update font-list 1.2.12 to 1.2.13
+  - Update yargs-parser 20.2.6 to 20.2.7
 
 ## v0.14.1 2021-02-24
 
