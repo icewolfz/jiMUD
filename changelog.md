@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.15.0
+## v0.15.0 2021-03-15
 
 - **New**
   - Enable allow Half Open sockets - Indicates whether half-opened TCP connections are allowed
