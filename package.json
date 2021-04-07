@@ -52,11 +52,11 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.5",
-    "@types/node": "^14.14.35",
+    "@types/node": "^14.14.37",
     "babel-minify": "^0.4.3",
-    "electron": "^12.0.1",
+    "electron": "^12.0.2",
     "electron-builder": "^22.10.5",
-    "eslint": "^7.22.0",
+    "eslint": "^7.23.0",
     "eslint-plugin-html": "^6.1.2",
     "node-sass": "^5.0.0"
   },
@@ -131,7 +131,7 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^7.1.2",
+    "better-sqlite3": "^7.1.4",
     "buzz": "^1.2.1",
     "chokidar": "^3.5.1",
     "electron-updater": "^4.3.8",
@@ -143,7 +143,7 @@
     "mathjs-expression-parser": "^1.0.2",
     "moment": "^2.29.1",
     "monaco-editor": "^0.21.3",
-    "node-disk-info": "^1.1.0",
+    "node-disk-info": "^1.2.0",
     "rgbcolor": "^1.0.1",
     "tmp": "^0.2.1",
     "yargs-parser": "^20.2.7",

@@ -2,6 +2,11 @@
 
 ## v0.15.1
 
+- **Changed:**
+  - Update better-sqlite3 7.1.2 to 7.1.4
+  - Update electron 12.0.1 to 12.0.2
+  - Update node-disk-info 1.1.0 to 1.2.0
+
 ## v0.15.0 2021-03-15
 
 - **New**
