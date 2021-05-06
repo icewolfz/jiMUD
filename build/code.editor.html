@@ -4262,7 +4262,9 @@
                 options.opened.forEach((o, i) => {
                     var a = o.filter(f => f.active);
                     if (a.length > 0) {
-                        manager.switchToPanel(findEditor(a[0].file), manager.panes[i]);
+                        last = findEditor(a[0].file);
+                        if (last)
+                            manager.switchToPanel(last, manager.panes[i]);
                     }
                 });
             }
