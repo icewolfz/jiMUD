@@ -2027,6 +2027,18 @@
             });
 
             $(document).keydown((event) => {
+                if ($('#newFolder')[0].open) {
+                    if (event.which === 27)
+                        $('#newFolder')[0].close();
+                    else if (event.which === 13)
+                        newFolderOk()
+                    return;
+                }
+                if ($('#Progress')[0].open) {
+                    if (event.which === 27)
+                        progressCancel()
+                    return;
+                }
 
                 //event.altKey, event.ctrlKey, event.shiftKey, event.metaKey
 
