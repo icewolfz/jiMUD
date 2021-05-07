@@ -85,6 +85,7 @@
       "!node_modules/**/test*",
       "!node_modules/**/*.debug.js'",
       "!node_modules/better-sqlite3/deps/*",
+      "!node_modules/better-sqlite3/build/deps/*",
       "!node_modules/better-sqlite3/obj/*",
       "!node_modules/better-sqlite3/build/Release/obj/**/*",
       "!node_modules/better-sqlite3/build/Release/test_extension.node",
