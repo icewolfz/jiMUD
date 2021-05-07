@@ -2,6 +2,8 @@
 
 ## v0.15.1
 
+- **Fixed:**
+  - Files not correctly moved to trash, reverted change until electron fixes the bug in new code
 - **Changed:**
   - Update better-sqlite3 7.1.2 to 7.3.1
   - Update electron 12.0.1 to 12.0.6

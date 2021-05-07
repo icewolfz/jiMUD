@@ -2660,7 +2660,7 @@ ipcMain.on('show-context-sync', (event, template, options) => {
     if (!options) options = {};
     options.window = BrowserWindow.fromWebContents(event.sender);
     template.map((item, idx) => {
-        if (typeof item.click === 'string'){
+        if (typeof item.click === 'string') {
             var click = item.click;
             item.click = () => event.sender.executeJavaScript(click);
         }
@@ -2687,6 +2687,13 @@ ipcMain.handle('show-context', (event, template, options) => {
     var cMenu = Menu.buildFromTemplate(template);
     cMenu.popup(options);
 });
+
+ipcMain.handle('trash-item', (event, file) => {
+    if (!file)
+        return;
+    shell.trashItem(file).catch(err=>logError(err));
+});
+
 
 function updateMenuItem(args) {
     var item, i = 0, items;

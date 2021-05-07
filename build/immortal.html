@@ -3194,7 +3194,7 @@
         function deleteLocal() {
             var data = localTable.rows({ selected: true }).data().pluck('path');
             for (var d = 0, dl = data.length; d < dl; d++)
-                shell.trashItem(data[d]);
+                shell.moveItemToTrash(data[d]);
         }
 
         function deleteRemote() {
@@ -3489,6 +3489,8 @@
                     focusRow(row);
                     localTable.rows().deselect();
                     row.select();
+                    var row = localTable.rows({ selected: true });
+                    if (!row || row.length === 0) return;
                     rename(row, _local, (o, n) => {
                         fs.renameSync(o, path.join(path.dirname(o), n));
                     });

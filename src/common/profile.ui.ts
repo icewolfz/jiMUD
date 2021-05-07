@@ -268,7 +268,7 @@ function addInputContext() {
                     x: props.x,
                     y: props.y,
                     sel: props.selectionText.length - props.misspelledWord.length,
-                    idx:  props.selectionText.indexOf(props.misspelledWord),
+                    idx: props.selectionText.indexOf(props.misspelledWord),
                     word: props.misspelledWord,
                     click: (item: any) => {
                         const el = $(document.elementFromPoint(item.x, item.y));
@@ -3428,7 +3428,7 @@ function trashProfiles(p) {
     if (_remove.length > 0) {
         const rl = _remove.length;
         for (let r = 0; r < rl; r++) {
-            shell.trashItem(path.join(p, _remove[r].file.toLowerCase() + '.json'));
+            shell.moveItemToTrash(path.join(p, _remove[r].file.toLowerCase() + '.json'));
         }
     }
 }

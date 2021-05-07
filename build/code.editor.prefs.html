@@ -414,7 +414,7 @@
                         files = fs.readdirSync(p);
                         for (i = 0; i < files.length; i++) {
                             if (path.extname(files[i]) === '.state') continue;
-                            shell.trashItem(path.join(p, files[i]));
+                            shell.moveItemToTrash(path.join(p, files[i]));
                         }
                     }
                 }
@@ -438,7 +438,7 @@
                         files = fs.readdirSync(p);
                         for (i = 0; i < files.length; i++) {
                             if (path.extname(files[i]) !== '.state') continue;
-                            shell.trashItem(path.join(p, files[i]));
+                            shell.moveItemToTrash(path.join(p, files[i]));
                         }
                     }
                 }
@@ -461,7 +461,7 @@
                     else {
                         files = fs.readdirSync(p);
                         for (i = 0; i < files.length; i++) {
-                            shell.trashItem(path.join(p, files[i]));
+                            shell.moveItemToTrash(path.join(p, files[i]));
                         }
                     }
                 }
