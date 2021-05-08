@@ -6,7 +6,7 @@
   - Files not correctly moved to trash, reverted change until electron fixes the bug in new code
 - **Changed:**
   - Update better-sqlite3 7.1.2 to 7.3.1
-  - Update electron 12.0.1 to 12.0.6
+  - Update electron 12.0.1 to 12.0.7
   - Update node-disk-info 1.1.0 to 1.3.0
   - Update markdown-it 12.0.4 to 12.0.6
   - Update fs-extra 9.1.0 to 10.0.0
