@@ -4,7 +4,9 @@
 
 - **Fixed:**
   - Files not correctly moved to trash, reverted change until electron fixes the bug in new code
-  - Code Editor: undo, redo, cut, copy, and paste did not work from menus/context after upgrading to 0.21.x monaco-editor
+  - Code Editor:
+    - Fix undo, redo, cut, copy, and paste did not work from menus/context after upgrading to 0.21.x monaco-editor
+    - Fix custom actions when using diff system
 - **Changed:**
   - Update better-sqlite3 7.1.2 to 7.3.1
   - Update electron 12.0.1 to 12.0.7
