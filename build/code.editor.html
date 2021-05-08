@@ -186,6 +186,54 @@
                 }
             });
 
+            //hack to attempt to readd edit commands
+
+            editor.addAction({
+                id: 'undo',
+                label: 'Undo',
+                run: () => {
+                    editor?.focus()
+                    if (!document.execCommand('undo')) {
+                        editor.getModel()?.undo()
+                    }
+                },
+            })
+            editor.addAction({
+                id: 'redo',
+                label: 'Redo',
+                run: () => {
+                    editor?.focus()
+                    if (!document.execCommand('redo')) {
+                        editor.getModel()?.redo()
+                    }
+                },
+            })
+
+            editor.addAction({
+                id: 'editor.action.clipboardCutAction',
+                label: 'Cut',
+                run: () => {
+                    editor?.focus()
+                    document.execCommand('cut')
+                },
+            })
+            editor.addAction({
+                id: 'editor.action.clipboardCopyAction',
+                label: 'Copy',
+                run: () => {
+                    editor?.focus()
+                    document.execCommand('copy')
+                },
+            })
+            editor.addAction({
+                id: 'editor.action.clipboardPasteAction',
+                label: 'Paste',
+                run: () => {
+                    editor?.focus()
+                    document.execCommand('paste')
+                },
+            })
+
             if (editor.getEditorType() === 'vs.editor.ICodeEditor') {
                 editor.onContextMenu((e) => {
                     let idx = window.$editors.indexOf(editor);
