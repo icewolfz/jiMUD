@@ -228,38 +228,6 @@
                 }
             });
 
-            editor.addAction({
-                id: 'jimud.action.insertColor',
-                label: 'Insert color code',
-                run: function (editor) {
-                    let selections = editor.getSelections();
-                    let model = editor.getModel();
-                    let commands = [];
-
-                    for (let i = 0, len = selections.length; i < len; i++) {
-                        let selection = selections[i];
-                        if (selection.isEmpty()) {
-                            let cursor = selection.getStartPosition();
-                            let word = model.getWordAtPosition(cursor);
-                            if (!word) {
-                                continue;
-                            }
-
-                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                            let text = model.getValueInRange(wordRange);
-                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                        } else {
-                            let text = model.getValueInRange(selection);
-                            commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
-                        }
-                    }
-                    editor.pushUndoStop();
-                    editor.executeCommands(this.id, commands);
-                    editor.pushUndoStop();
-                }
-            });
-
             //if actions do not exist create custom replacements
             if (!editor.getAction('undo'))
                 editor.addAction({
