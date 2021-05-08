@@ -2202,7 +2202,7 @@
                                 if (manager.active.diffFile)
                                     stopWatchFile(manager.active.diffFile);
                                 manager.active.diffFile = null;
-                                window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+                                window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
                                 toggleDiffNav(false);
                                 window.$editors[pane]._domElement.style.display = 'block';
                                 manager.active.editor.activate(window.$editors[pane]);
@@ -2220,7 +2220,7 @@
                                 manager.active.editor.diff = manager.active.editor.read();
                                 manager.active.diffFile = manager.active.editor.file;
                                 watchFile(manager.active.diffFile);
-                                window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                                window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
                                 toggleDiffNav(true);
                                 window.$editors[pane]._domElement.style.display = '';
                                 manager.active.editor.activate(window.$dEditors[pane]);
@@ -2249,7 +2249,7 @@
                                         manager.active.editor.diff = manager.active.editor.read(result.filePaths[0]);
                                         manager.active.diffFile = result.filePaths[0];
                                         watchFile(manager.active.diffFile);
-                                        window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                                        window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
                                         toggleDiffNav(true);
                                         window.$editors[pane]._domElement.style.display = '';
                                         manager.active.editor.activate(window.$dEditors[pane]);
@@ -2464,7 +2464,7 @@
     manager.on('removed', (e, pane) => {
         closeEditor(e.panel);
         if (manager.panes[pane].panels.length === 0) {
-            window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+            window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
             window.$editors[pane]._domElement.style.display = '';
             toggleDiffNav(false);
         }
@@ -2473,7 +2473,7 @@
     manager.on('dock-changed', (e, pane, oPane) => {
         if (manager.panes[oPane].panels.length === 0) {
             window.$editors[oPane]._domElement.style.display = '';
-            window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+            window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
             toggleDiffNav(false);
         }
         doUpdate(129);
@@ -2490,7 +2490,7 @@
         if (e.panel.editor) {
             if (e.panel.editor.type === 1) {
                 if (e.panel.editor.diff) {
-                    window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                    window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
                     window.$editors[pane]._domElement.style.display = '';
                     e.panel.editor.activate(window.$dEditors[pane]);
                     window.$dEditors[pane].layout();
@@ -2498,7 +2498,7 @@
                 }
                 else {
                     window.$editors[pane]._domElement.style.display = 'block';
-                    window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+                    window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
                     e.panel.editor.activate(window.$editors[pane]);
                     if (!e.panel.restored) {
                         var state = getViewState(e.panel.editor.file);
@@ -2512,7 +2512,7 @@
             }
             else {
                 window.$editors[pane]._domElement.style.display = '';
-                window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+                window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
                 e.panel.editor.activate();
                 toggleDiffNav(false);
             }
@@ -2520,7 +2520,7 @@
         }
         else {
             window.$editors[pane]._domElement.style.display = '';
-            window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+            window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
             toggleDiffNav(false);
         }
         doUpdate(1);
@@ -2907,7 +2907,7 @@
                             stopWatchFile(_editors[p].diffFile);
                         _editors[p].diffFile = null;
                         if (a) {
-                            window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+                            window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
                             window.$editors[pane]._domElement.style.display = 'block';
                             toggleDiffNav(false);
                             _editors[p].editor.activate(window.$editors[pane]);
@@ -4054,7 +4054,7 @@
                 if (manager.active.diffFile)
                     stopWatchFile(manager.active.diffFile);
                 manager.active.editor.diff = manager.active.editor.read(item.local);
-                window.$dEditors[dock].modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                window.$dEditors[dock]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
                 toggleDiffNav(true);
                 window.$editors[dock]._domElement.style.display = '';
                 manager.active.editor.activate(window.$dEditors[dock]);
