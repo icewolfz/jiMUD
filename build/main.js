@@ -2689,6 +2689,7 @@ ipcMain.handle('show-context', (event, template, options) => {
 });
 
 ipcMain.handle('trash-item', (event, file) => {
+    console.log(file);
     if (!file)
         return;
     shell.trashItem(file).catch(err=>logError(err));
@@ -3333,7 +3334,10 @@ function createEditor(show, loading) {
             editorMax = s.maximized;
         if (loading) {
             clearTimeout(loadID);
-            loadID = setTimeout(() => { win.focus(); }, 500);
+            if(editorOnly && winCode)
+                loadID = setTimeout(() => { winCode.focus(); }, 500);
+            else if(win)
+                loadID = setTimeout(() => { win.focus(); }, 500);
         }
         if (editorReady !== 2)
             editorReady = 1;
@@ -3343,8 +3347,10 @@ function createEditor(show, loading) {
         set = settings.Settings.load(global.settingsFile);
         set.showEditor = false;
         set.windows.editor = getWindowState('editor', winEditor || e.sender);
-        win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
-        win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: false, noSave: true });
+        if(win) {
+            win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
+            win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: false, noSave: true });
+        }
         set.save(global.settingsFile);
         executeScript('tinymce.activeEditor.setContent(\'\');', e.sender);
         if (winEditor === e.sender && winEditor && (set.editorPersistent && !global.editorOnly)) {
@@ -3358,7 +3364,8 @@ function createEditor(show, loading) {
 function showEditor(loading) {
     set = settings.Settings.load(global.settingsFile);
     set.showEditor = true;
-    win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: true, noSave: true });
+    if(win)
+        win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: true, noSave: true });
     set.save(global.settingsFile);
     if (winEditor != null) {
         if (!editorReady)
