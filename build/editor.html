@@ -24,8 +24,8 @@
         //spell-checker:ignore smtextcolor, rgbcolor, noflash, dblunderline, shadowfore, shadowback, textcolor, cmdfont, editorcontent
         //spell-checker:ignore hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime
         /* global tinymce */
-        const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
-        const { nativeImage, dialog, Menu, MenuItem } = remote;
+        const { nativeImage, remote, ipcRenderer, webFrame, clipboard } = require('electron');
+        const { dialog, Menu, MenuItem } = remote;
         const { stripHTML, htmlEncode, invert, getColors } = require('./js/library');
         const { Settings } = require('./js/settings');
         const rgbcolor = require('rgbcolor');

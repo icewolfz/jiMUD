@@ -1,7 +1,7 @@
 //spell-checker:ignore dropdown, selectall, treeview, displaytype, uncheck, selectpicker, Profiledefault, askoncancel, triggernewline, triggerprompt, exportmenu
 //spell-checker:ignore gamepadconnected gamepaddisconnected
-import { shell, remote, ipcRenderer } from 'electron';
-const { dialog, Menu, MenuItem, nativeImage } = remote;
+import { remote, ipcRenderer, nativeImage } from 'electron';
+const { dialog, Menu, MenuItem } = remote;
 import { FilterArrayByKeyValue, parseTemplate, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode, walkSync } from './library';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroModifiers, ItemStyle } from './profile';
 export { MacroDisplay } from './profile';

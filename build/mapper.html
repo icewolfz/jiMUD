@@ -20,8 +20,8 @@
         if (window.module) module = window.module;
         //spell-checker:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby
         const { RoomDetails, Mapper, ImportType } = require('./js/mapper');
-        const { remote, ipcRenderer } = require('electron');
-        const { nativeImage, dialog, Menu, MenuItem } = remote;
+        const { nativeImage, remote, ipcRenderer } = require('electron');
+        const { dialog, Menu, MenuItem } = remote;
         const { Settings } = require('./js/settings');
         const { Menubar } = require('./js/menubar');
         const fs = require('fs');
