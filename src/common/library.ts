@@ -807,7 +807,7 @@ export function parseTemplate(str: string, data?) {
         let key;
         for (key in keys) {
             if (!keys.hasOwnProperty(key)) continue;
-            const regex = new RegExp('{}' + key + '}', 'g');
+            const regex = new RegExp('{' + key + '}', 'g');
             str = str.replace(regex, data[key]);
         }
     }

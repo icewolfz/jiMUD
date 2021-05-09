@@ -2859,11 +2859,10 @@ function parseTemplate(str, data) {
     str = str.replace(/{characters}/g, path.join(app.getPath('userData'), 'characters'));
     str = str.replace(/{themes}/g, path.join(__dirname, '..', 'build', 'themes'));
     str = str.replace(/{assets}/g, path.join(__dirname, '..', 'assets'));
-
     if (data) {
         var keys = Object.keys(data);
         for (var key in keys) {
-            var regex = new RegExp('{}' + key + '}', 'g');
+            var regex = new RegExp('{' + key + '}', 'g');
             str = str.replace(regex, data[key]);
         }
     }
