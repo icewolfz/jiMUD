@@ -934,7 +934,7 @@
                 read: 0,
                 to: to,
                 cc: cc,
-                from: remote.getGlobal('character') || '',
+                from: ipcRenderer.sendSync('get-global', 'character') || '',
                 raw: getFormatedText().replace(/(?:\r)/g, ''),
                 ansi: getAnsiText().replace(/(?:\r)/g, '')
             }, options.extensions['mail'] ? options.extensions['mail'].saveSent : true);
@@ -966,7 +966,7 @@
                 read: 0,
                 to: to,
                 cc: cc,
-                from: remote.getGlobal('character') || '',
+                from: ipcRenderer.sendSync('get-global', 'character') || '',
                 raw: getText().replace(/(?:\r)/g, ''),
                 ansi: getText().replace(/(?:\r)/g, '')
             }, options.extensions['mail'] ? options.extensions['mail'].saveSent : true);
@@ -974,7 +974,7 @@
 
         $(document).ready(() => {
             initShadowMUD();
-            var file = remote.getGlobal('character');
+            var file = ipcRenderer.sendSync('get-global', 'character');
             if (!file || file.length === 0)
                 file = parseTemplate(path.join('{data}', 'mail.sqlite'));
             else
@@ -1293,7 +1293,7 @@
         }
 
         function loadOptions() {
-            options = Settings.load(remote.getGlobal('settingsFile'));
+            options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', options.cmdfontSize);
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-family', options.cmdfont + ', monospace');
             if (tinymce.activeEditor.formatter)
@@ -1372,7 +1372,7 @@
                             read: 0,
                             to: $('#to').val().split(/ |,/),
                             cc: $('#CC').val().split(/ |,/),
-                            from: remote.getGlobal('character') || '',
+                            from: ipcRenderer.sendSync('get-global', 'character') || '',
                             raw: getFormatedText().replace(/(?:\r)/g, ''),
                             ansi: getAnsiText().replace(/(?:\r)/g, ''),
                             html: getHTML()
@@ -1401,7 +1401,7 @@
                     read: 0,
                     to: $('#to').val().split(/ |,/),
                     cc: $('#CC').val().split(/ |,/),
-                    from: remote.getGlobal('character') || '',
+                    from: ipcRenderer.sendSync('get-global', 'character') || '',
                     raw: getFormatedText().replace(/(?:\r)/g, ''),
                     ansi: getAnsiText().replace(/(?:\r)/g, ''),
                     html: getHTML()

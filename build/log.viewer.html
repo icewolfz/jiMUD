@@ -403,7 +403,7 @@
     }
 
     function loadOptions(data) {
-        var set = Settings.load(remote.getGlobal('settingsFile'));
+        var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
         if (!data)
             options = set.extensions['log-viewer'];
         else
@@ -623,7 +623,7 @@
                     selected = !sel.isCollapsed && sel.type === 'Range' && manager.active.viewer.contains(sel.anchorNode);
                 }
                 let inputMenu;
-                if (remote.getGlobal('debug')) {
+                if (ipcRenderer.sendSync('get-global', 'debug')) {
                     if (selected) {
                         inputMenu = Menu.buildFromTemplate([
                             {

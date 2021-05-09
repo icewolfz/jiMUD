@@ -566,7 +566,7 @@
 
         function loadOptions(data) {
             if (!data) {
-                var set = Settings.load(remote.getGlobal('settingsFile'));
+                var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 options = set.extensions['immortal'];
             }
             else

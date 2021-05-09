@@ -252,8 +252,8 @@
 
         $(document).ready(() => {
             try {
-                if (remote.getGlobal('character') && remote.getGlobal('character').length > 0)
-                    document.title = 'Mapper - ' + remote.getGlobal('character');
+                if (ipcRenderer.sendSync('get-global', 'character') && ipcRenderer.sendSync('get-global', 'character').length > 0)
+                    document.title = 'Mapper - ' + ipcRenderer.sendSync('get-global', 'character');
                 else
                     document.title = 'Mapper';
                 $('#mapper-room input').prop('disabled', true);
@@ -261,8 +261,8 @@
                 $('#mapper-room select').prop('disabled', true);
                 $('#mapper-room button').prop('disabled', true);
 
-                var options = Settings.load(remote.getGlobal('settingsFile'));
-                mapper = new Mapper(document.getElementById('MapperCanvas'), options.mapper.memory, options.mapper.memorySavePeriod, remote.getGlobal('mapFile'));
+                var options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+                mapper = new Mapper(document.getElementById('MapperCanvas'), options.mapper.memory, options.mapper.memorySavePeriod, ipcRenderer.sendSync('get-global', 'mapFile'));
 
                 document.getElementById('MapperCanvas').addEventListener('wheel', (e) => {
                     if (e.deltaY >= 0)
@@ -749,7 +749,7 @@
             else
                 document.title = 'Mapper';
             try {
-                mapper.mapFile = remote.getGlobal('mapFile');
+                mapper.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
             }
             catch (err) {
                 if (typeof err === 'string')
@@ -760,8 +760,8 @@
         });
 
         ipcRenderer.on('load-default', () => {
-            if (remote.getGlobal('character') && remote.getGlobal('character').length > 0)
-                document.title = 'Mapper - ' + remote.getGlobal('character');
+            if (ipcRenderer.sendSync('get-global', 'character') && ipcRenderer.sendSync('get-global', 'character').length > 0)
+                document.title = 'Mapper - ' + ipcRenderer.sendSync('get-global', 'character');
             else
                 document.title = 'Mapper';
         });
@@ -776,10 +776,10 @@
         ipcRenderer.on('reload-options', () => {
             save(function () {
                 try {
-                    var options = Settings.load(remote.getGlobal('settingsFile'));
+                    var options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                     mapper.memorySavePeriod = options.mapper.memorySavePeriod;
                     mapper.memory = options.mapper.memory;
-                    mapper.mapFile = remote.getGlobal('mapFile');
+                    mapper.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
 
                     mapper.commandDelay = options.commandDelay;
                     mapper.commandDelayCount = options.commandDelayCount;

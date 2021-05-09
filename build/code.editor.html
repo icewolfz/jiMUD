@@ -1945,7 +1945,7 @@
     var sbName = document.getElementById('statusbar-file');
     var sbLocation = document.getElementById('statusbar-location');
     var sbMessage = document.getElementById('statusbar-message');
-    var connected = remote.getGlobal('connected') === true;
+    var connected = ipcRenderer.sendSync('get-global', 'connected') === true;
     var _ied;
     var $dialog;
     var $dialogs = {};
@@ -2364,7 +2364,7 @@
                 {
                     label: '&jiMUD...',
                     click: () => {
-                        var set = require('./js/settings').Settings.load(remote.getGlobal('settingsFile'));
+                        var set = require('./js/settings').Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                         if (set.windows['help'] && set.windows['help'].options) {
                             set.windows['help'].options.show = true;
                             ipcRenderer.send('show-window', 'help', set.windows['help'].options);
@@ -4579,7 +4579,7 @@
     }
 
     function baseParseData() {
-        var character = capitalize(remote.getGlobal('characterLogin') || remote.getGlobal('character')) || 'Unknown';
+        var character = capitalize(ipcRenderer.sendSync('get-global', 'characterLogin') || ipcRenderer.sendSync('get-global', 'character')) || 'Unknown';
         return {
             'your name': character,
             'character': character,

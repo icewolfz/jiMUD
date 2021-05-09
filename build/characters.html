@@ -59,7 +59,7 @@
         $(document).ready(() => {
             if (process.platform === 'darwin')
                 document.getElementById('btn-close').style.display = 'block';
-            var set = Settings.load(remote.getGlobal('settingsFile'));
+            var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             askonloadCharacter = set.askonloadCharacter;
             $('#characters-list').contextmenu((event) => {
                 event.preventDefault();

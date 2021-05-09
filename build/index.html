@@ -171,7 +171,7 @@
         var lastMouse;
         var chatWin;
         var _nextClear = Date.now() + 3600000;
-        var set = Settings.load(remote.getGlobal('settingsFile'));
+        var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
         loadTheme(set.theme);
         delete set;
 
@@ -724,15 +724,15 @@
                 else
                     client.error(e);
             };
-            client = new Client($('#display'), $('#commandinput'), remote.getGlobal('settingsFile'));
+            client = new Client($('#display'), $('#commandinput'), ipcRenderer.sendSync('get-global', 'settingsFile'));
 
             client.sendChat = updateChat;
 
             window.$selectedurl = '';
             window.$selectedline = '';
 
-            if (remote.getGlobal('profiles') && remote.getGlobal('profiles').length > 0)
-                client.enabledProfiles = remote.getGlobal('profiles');
+            if (ipcRenderer.sendSync('get-global', 'profiles') && ipcRenderer.sendSync('get-global', 'profiles').length > 0)
+                client.enabledProfiles = ipcRenderer.sendSync('get-global', 'profiles');
             client.display.enableBell = false;
             client.display.on('bell', () => {
                 shell.beep();
@@ -801,7 +801,7 @@
                             client.clear();
                         }
                     }));
-                    if (client.options.enableDebug || remote.getGlobal('debug')) {
+                    if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
                         c.append(new MenuItem({ type: 'separator' }));
                         c.append(new MenuItem({
                             label: 'Inspect', click: () => {
@@ -852,7 +852,7 @@
 
             client.version = version;
             client.host = 'www.shadowmud.com';
-            client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
+            client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
             client.telnet.GMCPSupports.push('Room 1');
             client.telnet.GMCPSupports.push('IED 1');
             client.telnet.GMCPSupports.push('Client.Media 1');
@@ -889,7 +889,7 @@
                         autoLoginCounter++;
                     }
                     else if (data.fragment && data.line === 'Password: ') {
-                        var pass = remote.getGlobal('characterPass');
+                        var pass = ipcRenderer.sendSync('get-global', 'characterPass');
                         if (pass && pass.length > 0) {
                             pass = pass.split(':');
                             pass = decrypt(pass[0], pass[1], pass[2]);
@@ -1038,7 +1038,7 @@
                 if (client.options.autoLogin && e.tag === 'USER' && _charName && _charName.length > 0)
                     client.send(_charName + '\r\n');
                 else if (client.options.autoLogin && e.tag === 'PASSWORD') {
-                    var pass = remote.getGlobal('characterPass');
+                    var pass = ipcRenderer.sendSync('get-global', 'characterPass');
                     if (pass && pass.length > 0) {
                     pass = pass.split(':');
                     pass = decrypt(pass[0], pass[1], pass[2]);
@@ -1107,7 +1107,7 @@
                 _backup.loadSelection = client.options.backupLoad;
                 _backup.saveSelection = client.options.backupSave;
                 doUpdate(3);
-                client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
+                client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
                 if (_logger)
                     _logger.postMessage({
                         action: 'options', args: {
@@ -1337,7 +1337,7 @@
                 ipcRenderer.send('options-changed');
             });
 
-            _backup = new Backup(client, remote.getGlobal('mapFile'));
+            _backup = new Backup(client, ipcRenderer.sendSync('get-global', 'mapFile'));
             _backup.loadSelection = client.options.backupLoad;
             _backup.saveSelection = client.options.backupSave;
 
@@ -1438,7 +1438,7 @@
                 _logger.postMessage({ action: 'name', args: title });
                 ipcRenderer.send('set-title', title);
             });
-            _charName = remote.getGlobal('characterLogin');
+            _charName = ipcRenderer.sendSync('get-global', 'characterLogin');
             if (_charName && _charName.length > 0) {
                 _logger.postMessage({ action: 'name', args: _charName });
                 $('#character-name').text(_charName);
@@ -1465,7 +1465,7 @@
                 var choice, count = 0;
                 var windows;
                 var current;
-                if (remote.getGlobal('updating'))
+                if (ipcRenderer.sendSync('get-global', 'updating'))
                     closeWindow = true;
                 if (!closeWindow && client.options.askonclose && client.connected) {
                     evt.returnValue = false;
@@ -1691,7 +1691,7 @@
                         toggleView('lagmeter');
                     }
                 }));
-                if (client.options.enableDebug || remote.getGlobal('debug')) {
+                if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Inspect', click: () => {
@@ -1820,7 +1820,7 @@
                         }
                     }));
                 }
-                if (client.options.enableDebug || remote.getGlobal('debug')) {
+                if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Inspect', click: () => {
@@ -1869,7 +1869,7 @@
                             { type: 'separator' },
                             { role: 'selectAll' },
                         ]);
-                    if (client.options.enableDebug || remote.getGlobal('debug')) {
+                    if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
                         inputMenu.append(new MenuItem({ type: 'separator' }));
                         inputMenu.append(new MenuItem({
                             label: 'Inspect', click: () => {
@@ -2198,13 +2198,13 @@
         });
 
         ipcRenderer.on('load-char', (event, char) => {
-            _charName = remote.getGlobal('characterLogin');
+            _charName = ipcRenderer.sendSync('get-global', 'characterLogin');
             if (!client.connected) {
                 _logger.postMessage({ action: 'name', args: _charName });
                 $('#character-name').text(_charName);
             }
-            _backup.mapFile = remote.getGlobal('mapFile');
-            client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
+            _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
+            client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
             //autoConnect();
         });
 
@@ -2214,11 +2214,11 @@
                 _logger.postMessage({ action: 'name', args: '' });
                 $('#character-name').text('&nbsp;');
             }
-            _backup.mapFile = remote.getGlobal('mapFile');
+            _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
         });
 
         ipcRenderer.on('change-options', () => {
-            client.settingsFile = remote.getGlobal('settingsFile');
+            client.settingsFile = ipcRenderer.sendSync('get-global', 'settingsFile');
             autoConnect();
         });
 

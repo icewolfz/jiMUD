@@ -249,7 +249,7 @@ function addInputContext() {
             { type: 'separator' },
             { role: 'selectAll' }
         ]);
-        if (remote.getGlobal('debug')) {
+        if (ipcRenderer.sendSync('get-global', 'debug')) {
             inputMenu.append(new MenuItem({ type: 'separator' }));
             inputMenu.append(new MenuItem(<MenuItemConstructorOptionsCustom>{
                 label: 'Inspect',
@@ -2320,7 +2320,7 @@ function getProfileData() {
 }
 
 function loadOptions() {
-    const options = Settings.load(remote.getGlobal('settingsFile'));
+    const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
     _never = options.profiles.askoncancel;
     _enabled = options.profiles.enabled;
     _ide = options.profiles.codeEditor;
@@ -3110,7 +3110,7 @@ export function doRefresh() {
                         profiles.add(Profile.Default);
                     startWatcher(p);
                 }
-                const options = Settings.load(remote.getGlobal('settingsFile'));
+                const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 _enabled = options.profiles.enabled;
                 buildTreeview(getProfileData());
             }
@@ -3130,7 +3130,7 @@ export function doRefresh() {
                 profiles.add(Profile.Default);
             startWatcher(p);
         }
-        const options = Settings.load(remote.getGlobal('settingsFile'));
+        const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
         _enabled = options.profiles.enabled;
         buildTreeview(getProfileData());
     }
@@ -3450,9 +3450,9 @@ export function saveProfiles(clearNow?: boolean) {
                     fs.mkdirSync(p);
                 profiles.save(p);
                 trashProfiles(p);
-                const options = Settings.load(remote.getGlobal('settingsFile'));
+                const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 options.profiles.enabled = _enabled;
-                options.save(remote.getGlobal('settingsFile'));
+                options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
                 ipcRenderer.send('reload-profiles');
                 if (clearNow)
@@ -3468,9 +3468,9 @@ export function saveProfiles(clearNow?: boolean) {
         profiles.save(p);
         trashProfiles(p);
 
-        const options = Settings.load(remote.getGlobal('settingsFile'));
+        const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
         options.profiles.enabled = _enabled;
-        options.save(remote.getGlobal('settingsFile'));
+        options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
         ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
         ipcRenderer.send('reload-profiles');
         if (clearNow)

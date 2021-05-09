@@ -95,7 +95,7 @@
                 $('.win32').css('display', 'block');
             else
                 $('.win32').css('display', 'none');
-            _settings = Settings.load(remote.getGlobal('settingsFile'));
+            _settings = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             loadSettings();
             $('input[type="checkbox"]').change(function () {
                 switch ($(this).attr('id')) {

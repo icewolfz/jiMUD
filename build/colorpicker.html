@@ -35,7 +35,7 @@
         <script type="text/javascript">
             if (window.module) module = window.module;
             //spell-checker:ignore tinymce, rgbcolor, forecolor, colorbtn, colorbutton
-            const { remote, ipcRenderer } = require('electron');
+            const { ipcRenderer } = require('electron');
             const { Settings } = require('./js/settings');
             const { getColors } = require('./js/library');
             const rgbcolor = require('rgbcolor');
@@ -320,11 +320,11 @@
             });
 
             $(document).ready(() => {
-                options = Settings.load(remote.getGlobal('settingsFile'));
+                options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 loadColors();
             });
             ipcRenderer.on('reload-options', () => {
-                options = Settings.load(remote.getGlobal('settingsFile'));
+                options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 loadColors();
             });
 

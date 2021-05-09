@@ -31,7 +31,7 @@
         var display, _logger, _zoom = 1.0;
 
         function loadOptions() {
-            options = Settings.load(remote.getGlobal('settingsFile'));
+            options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             if (display) {
                 display.updateFont(options.chat.font, options.chat.fontSize);
                 display.maxLines = options.chat.bufferSize;

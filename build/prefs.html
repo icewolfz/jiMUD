@@ -262,7 +262,7 @@
                 $('#chat-font-sample').css('font-size', $('#chat-fontSize').val());
             });
 
-            _settings = Settings.load(remote.getGlobal('settingsFile'));
+            _settings = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             loadThemes();
             loadSettings();
 
@@ -1130,7 +1130,7 @@
         // eslint-disable-next-line no-unused-vars
         function saveSettings() {
             _settings.chat.lines = $('#chat-lines').val().split(',');
-            _settings.save(remote.getGlobal('settingsFile'));
+            _settings.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
             ipcRenderer.send('reload-options', false);
             window.close();
         }
