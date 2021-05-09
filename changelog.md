@@ -8,9 +8,14 @@
     - Fix undo, redo, cut, copy, and paste did not work from menus/context after upgrading to 0.21.x monaco-editor
     - Fix custom actions when using diff system
     - Fix issue with advanced editor in editor only mode
+    - Only clear the menu recent documents, not the os recent documents
+    - Fix native icon support
+  - Log viewer:
+    - Only clear the menu recent documents, not the os recent documents
   - Advanced editor: Fix due to typo added by mistake
 - **Changed:**
   - Recode internal path parser to remove remote reliance and simplify code base by having only one function
+  - Moved all app calls to main process using IPC
   - Update better-sqlite3 7.1.2 to 7.3.1
   - Update electron 12.0.1 to 12.0.7
   - Update node-disk-info 1.1.0 to 1.3.0

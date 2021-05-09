@@ -2626,10 +2626,43 @@ ipcMain.on('set-global', (event, key, value) => {
     }
 });
 
-ipcMain.handle('get-app', (event, key) => {
-    if (key === 'getAppMetrics')
-        return app.getAppMetrics();
+ipcMain.handle('get-app', async (event, key, ...args) => {
+    switch (key) {
+        case 'getAppMetrics':
+            return app.getAppMetrics();
+        case 'getPath':
+            return app.getPath(...args);
+        case 'addRecentDocument':
+            app.addRecentDocument(...args);
+            return null;
+        case 'clearRecentDocuments':
+            app.clearRecentDocuments();
+            return null;
+        case 'getFileIcon':
+            return app.getFileIcon(...args);
+        case 'getFileIconDataUrl':
+            let icon = await app.getFileIcon(...args);
+            return icon.toDataURL();
+    }
     return null;
+});
+
+ipcMain.on('get-app-sync', async (event, key, ...args) => {
+    switch (key) {
+        case 'getPath':
+            event.returnValue = app.getPath(...args);
+            break;
+        case 'addRecentDocument':
+            app.addRecentDocument(...args);
+            break;
+        case 'clearRecentDocuments':
+            app.clearRecentDocuments();
+            break;
+        case 'getFileIconDataUrl':
+            let icon = await app.getFileIcon(...args);
+            event.returnValue = icon.toDataURL();
+            break;
+    }
 });
 
 ipcMain.on('show-dialog-sync', (event, type, ...args) => {
@@ -2691,10 +2724,10 @@ ipcMain.handle('show-context', (event, template, options) => {
 ipcMain.on('trash-item', (event, file) => {
     if (!file)
         return;
-    shell.trashItem(file).catch(err=>logError(err));
+    shell.trashItem(file).catch(err => logError(err));
 });
 
-ipcMain.on('parseTemplate', (event, str, data)=> {
+ipcMain.on('parseTemplate', (event, str, data) => {
     event.returnValue = parseTemplate(str, data);
 });
 
@@ -3336,9 +3369,9 @@ function createEditor(show, loading) {
             editorMax = s.maximized;
         if (loading) {
             clearTimeout(loadID);
-            if(editorOnly && winCode)
+            if (editorOnly && winCode)
                 loadID = setTimeout(() => { winCode.focus(); }, 500);
-            else if(win)
+            else if (win)
                 loadID = setTimeout(() => { win.focus(); }, 500);
         }
         if (editorReady !== 2)
@@ -3349,7 +3382,7 @@ function createEditor(show, loading) {
         set = settings.Settings.load(global.settingsFile);
         set.showEditor = false;
         set.windows.editor = getWindowState('editor', winEditor || e.sender);
-        if(win) {
+        if (win) {
             win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
             win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: false, noSave: true });
         }
@@ -3366,7 +3399,7 @@ function createEditor(show, loading) {
 function showEditor(loading) {
     set = settings.Settings.load(global.settingsFile);
     set.showEditor = true;
-    if(win)
+    if (win)
         win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: true, noSave: true });
     set.save(global.settingsFile);
     if (winEditor != null) {

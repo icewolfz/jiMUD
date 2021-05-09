@@ -75,7 +75,7 @@
     //spellchecker:ignore dockmanager prefs ismap yazl
     const { DockManager } = require('./js/dockmanager');
     const { remote, ipcRenderer, clipboard } = require('electron');
-    const { dialog, Menu, app } = remote;
+    const { dialog, Menu } = remote;
     const { Menubar } = require('./js/menubar');
     const { Settings } = require('./js/settings');
     const { Display } = require('./js/display');
@@ -516,7 +516,7 @@
             options.recent = recent.slice(0, options.maxRecent);
         else
             options.recent = recent;
-        app.addRecentDocument(file);
+        ipcRenderer.invoke('get-app', 'addRecentDocument', file);
         doUpdate(20);
     }
 
@@ -561,7 +561,6 @@
                 label: 'Clear Recently Opened',
                 click: () => {
                     options.recent = [];
-                    app.clearRecentDocuments();
                     doUpdate(20);
                 }
             });

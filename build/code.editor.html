@@ -1908,7 +1908,7 @@
     const { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
 
-    const { dialog, Menu, MenuItem, app } = remote;
+    const { dialog, Menu, MenuItem } = remote;
     const { Menubar } = require('./js/menubar');
     const { Wizard, WizardPage, WizardDataGridPage } = require('./js/wizard');
 
@@ -4521,9 +4521,9 @@
                 _editors[p].editor.options = options.modelOptions;
                 manager.setPanelIconClass(getFileIcon(_editors[p].editor.file), _editors[p]);
                 if (options.nativeIcons)
-                    app.getFileIcon((path.extname(_editors[p].editor.file).length !== 0 ? _editors[p].editor.file : '.*'), { size: 'small' }, (err, icon) => {
-                        if (err || !icon) return;
-                        manager.setPanelIcon(icon.toDataURL(), _editors[p]);
+                    ipcRenderer.invoke('get-app', 'getFileIconDataUrl', (path.extname(_editors[p].editor.file).length !== 0 ? _editors[p].editor.file : '.*'), { size: 'small' }).then(icon =>{
+                        if (!icon) return;
+                        manager.setPanelIcon(icon, _editors[p]);
                     });
             }
             else if (_editors[p].editor.type === 2)
@@ -7825,7 +7825,7 @@
             options.recent = recent.slice(0, options.maxRecent);
         else
             options.recent = recent;
-        app.addRecentDocument(file);
+        ipcRenderer.invoke('get-app', 'addRecentDocument', file);
         doUpdate(20);
     }
 
@@ -7871,7 +7871,6 @@
                 label: 'Clear Recently Opened',
                 click: () => {
                     options.recent = [];
-                    app.clearRecentDocuments();
                     doUpdate(20);
                 }
             });
@@ -8784,10 +8783,10 @@
                         console.log(err);
                 }
                 if (options.nativeIcons)
-                    app.getFileIcon((path.extname(data.source ? data.remote : data.file).length !== 0 ? data.source ? data.remote : data.file : '.*'), { size: 'small' }, (err, icon) => {
-                        if (err || !icon) return;
-                        manager.setPanelIcon(icon.toDataURL(), p);
-                    });
+                    ipcRenderer.invoke('get-app', 'getFileIconDataUrl', (path.extname(data.source ? data.remote : data.file).length !== 0 ? data.source ? data.remote : data.file : '.*'), { size: 'small' }).then(icon =>{
+                        if (!icon) return;
+                        manager.setPanelIcon(icon, _editors[p]);
+                    });                 
                 p.editor.options = options.modelOptions;
             }
             /*

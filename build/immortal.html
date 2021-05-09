@@ -25,7 +25,7 @@
         const { IED, ItemState } = require('./js/ied');
         const { TempType, IEDCmdStatus, IEDError } = require('./js/types');
         const { remote, ipcRenderer, shell, clipboard } = require('electron');
-        const { app, dialog, Menu, MenuItem } = remote;
+        const { dialog, Menu, MenuItem } = remote;
         const { parseTemplate, existsSync, formatSize, walk } = require('./js/library');
         const { Settings } = require('./js/settings');
         const { Menubar } = require('./js/menubar');
@@ -650,9 +650,9 @@
 
         function updateLocal(p) {
             if (!p || p.length === 0)
-                p = options.local || app.getPath('downloads');
+                p = options.local || ipcRenderer.sendSync('get-app-sync', 'getPath', 'downloads');
             else if (!existsSync(p))
-                p = app.getPath('downloads');
+                p = ipcRenderer.sendSync('get-app-sync', 'getPath', 'downloads');
             options.local = p;
             createWatcher();
             saveOptions();
