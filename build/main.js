@@ -2694,6 +2694,9 @@ ipcMain.on('trash-item', (event, file) => {
     shell.trashItem(file).catch(err=>logError(err));
 });
 
+ipcMain.on('parseTemplate', (event, str, data)=> {
+    event.returnValue = parseTemplate(str, data);
+});
 
 function updateMenuItem(args) {
     var item, i = 0, items;
@@ -2862,6 +2865,7 @@ function parseTemplate(str, data) {
     if (data) {
         var keys = Object.keys(data);
         for (var key in keys) {
+            if (!data.hasOwnProperty(key)) continue;
             var regex = new RegExp('{' + key + '}', 'g');
             str = str.replace(regex, data[key]);
         }

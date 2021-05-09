@@ -8,7 +8,7 @@
 const path = require('path');
 const fs = require('fs');
 let crypto;
-const { app } = require('electron').remote;
+import { ipcRenderer } from 'electron';
 
 declare global {
     interface String {
@@ -788,30 +788,7 @@ export function getTimeSpan(i: number): string {
 }
 
 export function parseTemplate(str: string, data?) {
-    str = str.replace(/{home}/g, app.getPath('home'));
-    str = str.replace(/{path}/g, app.getAppPath());
-    str = str.replace(/{appData}/g, app.getPath('appData'));
-    str = str.replace(/{data}/g, app.getPath('userData'));
-    str = str.replace(/{temp}/g, app.getPath('temp'));
-    str = str.replace(/{desktop}/g, app.getPath('desktop'));
-    str = str.replace(/{documents}/g, app.getPath('documents'));
-    str = str.replace(/{downloads}/g, app.getPath('downloads'));
-    str = str.replace(/{music}/g, app.getPath('music'));
-    str = str.replace(/{pictures}/g, app.getPath('pictures'));
-    str = str.replace(/{videos}/g, app.getPath('videos'));
-    str = str.replace(/{characters}/g, path.join(app.getPath('userData'), 'characters'));
-    str = str.replace(/{themes}/g, path.join(__dirname, '..', 'themes'));
-    str = str.replace(/{assets}/g, path.join(__dirname, '..', '..', 'assets'));
-    if (data) {
-        const keys = Object.keys(data);
-        let key;
-        for (key in keys) {
-            if (!keys.hasOwnProperty(key)) continue;
-            const regex = new RegExp('{' + key + '}', 'g');
-            str = str.replace(regex, data[key]);
-        }
-    }
-    return str;
+    return ipcRenderer.sendSync('parseTemplate', str, data);
 }
 
 export function templatePath(p: string) {

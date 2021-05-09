@@ -10,6 +10,7 @@
     - Fix issue with advanced editor in editor only mode
   - Advanced editor: Fix due to typo added by mistake
 - **Changed:**
+  - Recode internal path parser to remove remote reliance and simplify code base by having only one function
   - Update better-sqlite3 7.1.2 to 7.3.1
   - Update electron 12.0.1 to 12.0.7
   - Update node-disk-info 1.1.0 to 1.3.0
