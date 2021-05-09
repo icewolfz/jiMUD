@@ -2688,8 +2688,7 @@ ipcMain.handle('show-context', (event, template, options) => {
     cMenu.popup(options);
 });
 
-ipcMain.handle('trash-item', (event, file) => {
-    console.log(file);
+ipcMain.on('trash-item', (event, file) => {
     if (!file)
         return;
     shell.trashItem(file).catch(err=>logError(err));

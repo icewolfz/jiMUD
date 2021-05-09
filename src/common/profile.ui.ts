@@ -3428,7 +3428,7 @@ function trashProfiles(p) {
     if (_remove.length > 0) {
         const rl = _remove.length;
         for (let r = 0; r < rl; r++) {
-            shell.moveItemToTrash(path.join(p, _remove[r].file.toLowerCase() + '.json'));
+            ipcRenderer.send('trash-item', path.join(p, _remove[r].file.toLowerCase() + '.json'));
         }
     }
 }

@@ -3,7 +3,7 @@
 ## v0.15.1
 
 - **Fixed:**
-  - Files not correctly moved to trash, reverted change until electron fixes the bug in new code
+  - Files not correctly moved to trash
   - Code Editor:
     - Fix undo, redo, cut, copy, and paste did not work from menus/context after upgrading to 0.21.x monaco-editor
     - Fix custom actions when using diff system
