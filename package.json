@@ -32,7 +32,7 @@
     "compile:common": "tsc -p .",
     "compile:worker": "tsc -p ./src/worker",
     "compile:common-debug": "tsc -p . --listEmittedFiles",
-    "compile:worker-debug": "tsc -p ./src/worker --listEmittedFiles",    
+    "compile:worker-debug": "tsc -p ./src/worker --listEmittedFiles",
     "compile:css": "sass src/css:build/css --style compressed --no-source-map",
     "compile:themes": "sass src/themes:build/themes --style=compressed --no-source-map",
     "package": "npm run package:win && npm run package:linux",
@@ -57,7 +57,7 @@
     "@types/node": "^14.14.37",
     "babel-minify": "^0.5.1",
     "electron": "^12.0.6",
-    "electron-builder": "^22.11.1",
+    "electron-builder": "^22.11.2",
     "eslint": "^7.25.0",
     "eslint-plugin-html": "^6.1.2",
     "sass": "^1.32.12"
