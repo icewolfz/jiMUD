@@ -10,7 +10,8 @@ import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType } from './profile';
 import { NewLineType } from './types';
 import { SettingList } from './settings';
-const mathjs = require('mathjs-expression-parser');
+import { create, all } from 'mathjs';
+const mathjs = create(all, {});
 const buzz = require('buzz');
 const path = require('path');
 const moment = require('moment');
@@ -128,7 +129,7 @@ export class Input extends EventEmitter {
                 c = parseInt(res[1]);
                 sides = res[2];
                 if (res.length > 3 && args[2])
-                    mod = mathjs.eval(res[3]);
+                    mod = mathjs.evaluate(res[3]);
             }
             else if (args.length > 1) {
                 c = parseInt(args[0].toString());
@@ -152,7 +153,7 @@ export class Input extends EventEmitter {
             if (sides === '%')
                 sum /= 100;
             if (mod)
-                return mathjs.eval(sum + mod);
+                return mathjs.evaluate(sum + mod);
             return sum;
         };
 
@@ -160,7 +161,7 @@ export class Input extends EventEmitter {
 
         mathjs.import({
             dice: dice
-        });
+        }, {});
 
         this._tests = new Tests(client);
         this._commandHistory = [];
@@ -2588,9 +2589,9 @@ export class Input extends EventEmitter {
                                     tmp2 = tmp;
                                 else if (this.client.options.allowEval) {
                                     if (this.stack.named)
-                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 }, this.stack.named));
+                                        tmp2 = '' + mathjs.evaluate(this.parseOutgoing(arg), Object.assign({ i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 }, this.stack.named));
                                     else
-                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
+                                        tmp2 = '' + mathjs.evaluate(this.parseOutgoing(arg), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
                                 }
                                 else {
                                     tmp2 += '%';
@@ -2715,9 +2716,9 @@ export class Input extends EventEmitter {
                                     tmp2 = c;
                                 else if (this.client.options.allowEval) {
                                     if (this.stack.named)
-                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 }, this.stack.named));
+                                        tmp2 = '' + mathjs.evaluate(this.parseOutgoing(arg), Object.assign({ i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 }, this.stack.named));
                                     else
-                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
+                                        tmp2 = '' + mathjs.evaluate(this.parseOutgoing(arg), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
                                 }
                                 else {
                                     tmp2 = '$';
@@ -3127,7 +3128,7 @@ export class Input extends EventEmitter {
             case 'proper':
                 return ProperCase(this.parseOutgoing(res[2]));
             case 'eval':
-                return '' + mathjs.eval(this.parseOutgoing(res[2]), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
+                return '' + mathjs.evaluate(this.parseOutgoing(res[2]), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
             case 'dice':
                 args = this.parseOutgoing(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid dice');
@@ -3167,7 +3168,7 @@ export class Input extends EventEmitter {
                 if (sides === '%')
                     sum /= 100;
                 if (mod)
-                    return mathjs.eval(sum + mod);
+                    return mathjs.evaluate(sum + mod);
                 return '' + sum;
             case 'diceavg':
                 //The average of any XdY is X*(Y+1)/2.
@@ -3203,7 +3204,7 @@ export class Input extends EventEmitter {
                     max = parseInt(sides);
 
                 if (mod)
-                    return mathjs.eval(((min + max) / 2 * c) + mod);
+                    return mathjs.evaluate(((min + max) / 2 * c) + mod);
                 return '' + ((min + max) / 2 * c);
             case 'dicemin':
                 args = this.parseOutgoing(res[2]).split(',');
@@ -3233,7 +3234,7 @@ export class Input extends EventEmitter {
                     sides = parseInt(sides);
 
                 if (mod)
-                    return mathjs.eval((min * c) + mod);
+                    return mathjs.evaluate((min * c) + mod);
                 return '' + (min * c);
             case 'dicemax':
                 args = this.parseOutgoing(res[2]).split(',');
@@ -3262,7 +3263,7 @@ export class Input extends EventEmitter {
                 else
                     max = parseInt(sides);
                 if (mod)
-                    return mathjs.eval((max * c) + mod);
+                    return mathjs.evaluate((max * c) + mod);
                 return '' + (max * c);
             case 'zdicedev':
             case 'dicedev':
@@ -3297,7 +3298,7 @@ export class Input extends EventEmitter {
                 if (fun === 'zdicedev')
                     max--;
                 if (mod)
-                    return mathjs.eval(Math.sqrt((max * max - 1) / 12 * c) + mod);
+                    return mathjs.evaluate(Math.sqrt((max * max - 1) / 12 * c) + mod);
                 return '' + Math.sqrt((max * max - 1) / 12 * c);
         }
         return null;
