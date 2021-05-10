@@ -115,7 +115,8 @@
     },
     "nsis": {
       "installerIcon": "./assets/icons/win/app.ico",
-      "artifactName": "${productName}_Setup_${version}_Windows-${arch}.${ext}"
+      "artifactName": "${productName}_Setup_${version}_Windows-${arch}.${ext}",
+      "doNotPackElevateHelper": true
     },
     "portable": {
       "artifactName": "${productName}_${version}_Windows_portable-${arch}.${ext}"
