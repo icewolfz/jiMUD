@@ -501,10 +501,9 @@ export function UpdateContextSample() {
 
 export function openImage(field?, callback?) {
     if (!field) field = '#button-icon';
-    dialog.showOpenDialog(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
         defaultPath: path.dirname($(field).val()),
         filters: [
-
             { name: 'Images (*.jpg, *.png, *.gif)', extensions: ['jpg', 'png', 'gif'] },
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
@@ -512,7 +511,7 @@ export function openImage(field?, callback?) {
         if (result.filePaths === undefined || result.filePaths.length === 0) {
             return;
         }
-        $(field).keyup().val(result.filePaths[0]).keydown();
+        $(field).trigger('keyup').val(result.filePaths[0]).trigger('keydown');
         UpdateButtonSample();
         if (callback) callback();
     });
@@ -2475,18 +2474,18 @@ export function init() {
         addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
     });
 
-    $('#macro-key').keydown((e) => {
+    $('#macro-key').on('keydown', e => {
         e.preventDefault();
         e.stopPropagation();
         return false;
     });
 
-    $('#macro-key').keypress((e) => {
+    $('#macro-key').on('keypress', e => {
         e.preventDefault();
         e.stopPropagation();
         return false;
     });
-    $('#macro-key').keyup((e) => {
+    $('#macro-key').on('keyup', e => {
         e.preventDefault();
         e.stopPropagation();
         const c = [];
@@ -2524,15 +2523,15 @@ export function init() {
         return false;
     });
 
-    $('#macro-key').focus(() => {
+    $('#macro-key').on('focus', () => {
         _macro = true;
         updatePads();
     });
-    $('#macro-key').blur(() => {
+    $('#macro-key').on('blur', () => {
         _macro = false;
     });
 
-    $('.btn-adv').click(function () {
+    $('.btn-adv').on('click', function () {
         const editor = $(this).closest('.panel-body').attr('id');
         let state = $(this).data('open') || false;
         state = !state;
@@ -2608,7 +2607,7 @@ export function init() {
     $('select').on('focus', function () {
         // Store the current value on focus and on change
         $(this).data('previous-value', (<HTMLInputElement>this).value);
-    }).change(function () {
+    }).on('change', function () {
         updateCurrent();
         $(this).data('previous-value', (<HTMLInputElement>this).value);
     });
@@ -2623,7 +2622,7 @@ export function init() {
     $('input[type=\'number\']').on('focus', function () {
         // Store the current value on focus and on change
         $(this).data('previous-value', (<HTMLInputElement>this).value);
-    }).change(function () {
+    }).on('change', function () {
         updateCurrent();
         $(this).data('previous-value', (<HTMLInputElement>this).value);
     });
@@ -2644,7 +2643,7 @@ export function init() {
             $('#export .dropdown-menu').removeClass('dropdown-menu-right');
     });
 
-    $('#export').click(function () {
+    $('#export').on('click', function () {
         $(this).addClass('open');
         const pos = $(this).offset();
         const x = Math.floor(pos.left);
@@ -3081,7 +3080,7 @@ function loadActions(p, root) {
 
 export function setIcon(icon, field?, callback?) {
     if (!field) field = 'button';
-    $('#' + field + '-icon').keydown().val(path.join('{assets}', 'actions', icon)).keyup();
+    $('#' + field + '-icon').trigger('keydown').val(path.join('{assets}', 'actions', icon)).trigger('keyup');
     UpdateButtonSample();
     if (callback) callback();
 }
