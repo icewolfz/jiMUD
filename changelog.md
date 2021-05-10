@@ -23,7 +23,7 @@
   - Update fs-extra 9.1.0 to 10.0.0
   - Update font-list 1.2.13 to 1.2.14
   - Update monaco-editor 0.21.3 to 0.23.0
-  - Replace mathjs-expression-parser with mathjs due to mathjs not being updated
+  - Replace mathjs-expression-parser with mathjs due to mathjs-expression-parser not being updated
 
 ## v0.15.0 2021-03-15
 
