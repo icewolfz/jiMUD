@@ -22,7 +22,7 @@
   - Update markdown-it 12.0.4 to 12.0.6
   - Update fs-extra 9.1.0 to 10.0.0
   - Update font-list 1.2.13 to 1.2.14
-  - Update monaco-editor 0.21.3 to 0.23.0
+  - Update monaco-editor 0.21.3 to 0.24.0
   - Replace mathjs-expression-parser with mathjs due to mathjs-expression-parser not being updated
   - Update electron-updater 4.3.5 to 4.3.9
   
