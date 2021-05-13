@@ -2605,7 +2605,7 @@
                 }
                 if (($updating & 64) === 64) {
                     client.saveOptions();
-                    remote.getCurrentWindow().webContents.session.clearCache(() => { if (client.options.enableDebug) console.log('Cache cleared'); });
+                    remote.getCurrentWindow().webContents.session.clearCache().then(() => { if (client.options.enableDebug) console.log('Cache cleared'); });
                     webFrame.clearCache();
                     $updating &= ~64;
                 }

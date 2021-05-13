@@ -2731,6 +2731,53 @@ ipcMain.on('parseTemplate', (event, str, data) => {
     event.returnValue = parseTemplate(str, data);
 });
 
+ipcMain.handle('window-action', (event, action, ...args) => {
+    var current = BrowserWindow.fromWebContents(event.sender);
+    if (action === "hide")
+        current.hide();
+    else if (action === "minimize")
+        current.minimize();
+    else if (action === "close")
+        current.close();
+    else if(action === 'clearCache')
+        return remote.getCurrentWindow().webContents.session.clearCache();
+});
+
+ipcMain.on('window-info', (event, info, ...args) => {
+    if (info === "child-count") {
+        var windows = BrowserWindow.getAllWindows();
+        var current = BrowserWindow.fromWebContents(event.sender);
+        var count = 0;
+        for (var w = 0, wl = windows.length; w < wl; w++) {
+            if (windows[w] === current || !windows[w].isVisible())
+                continue;
+            if (!windows[w].getTitle().startsWith(args[0]))
+                continue;
+            if (windows[w].getParentWindow() !== current)
+                continue;
+            count++;
+        }
+        event.returnValue = count;
+    }
+    else if (info === 'window-open') {
+        var windows = BrowserWindow.getAllWindows();
+        var current = BrowserWindow.fromWebContents(event.sender);
+        for (var w = 0, wl = windows.length; w < wl; w++) {
+            if (windows[w] === current || !windows[w].isVisible())
+                continue;
+            if (!windows[w].getTitle().startsWith(args[0])) {
+                event.returnValue = 1;
+                return;
+            }
+        }
+        event.returnValue = 0;
+    }
+    else if (info === 'isVisible') {
+        var current = BrowserWindow.fromWebContents(event.sender);
+        event.returnValue = current ? current.isVisible() : 0;
+    }
+});
+
 function updateMenuItem(args) {
     var item, i = 0, items;
     var tItem, tItems;
