@@ -2751,21 +2751,19 @@ ipcMain.on('window-info', (event, info, ...args) => {
         for (var w = 0, wl = windows.length; w < wl; w++) {
             if (windows[w] === current || !windows[w].isVisible())
                 continue;
-            if (!windows[w].getTitle().startsWith(args[0]))
-                continue;
             if (windows[w].getParentWindow() !== current)
                 continue;
             count++;
         }
         event.returnValue = count;
     }
-    else if (info === 'window-open') {
+    else if (info === 'child-open') {
         var windows = BrowserWindow.getAllWindows();
         var current = BrowserWindow.fromWebContents(event.sender);
         for (var w = 0, wl = windows.length; w < wl; w++) {
             if (windows[w] === current || !windows[w].isVisible())
                 continue;
-            if (!windows[w].getTitle().startsWith(args[0])) {
+            if (windows[w].getTitle().startsWith(args[0]) && windows[w].getParentWindow() === current) {
                 event.returnValue = 1;
                 return;
             }
