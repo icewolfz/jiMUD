@@ -263,10 +263,7 @@
                     {
                         label: '&Toggle Developer Tools',
                         click: () => {
-                            if (remote.getCurrentWindow().isDevToolsOpened())
-                                remote.getCurrentWindow().closeDevTools();
-                            else
-                                remote.getCurrentWindow().openDevTools();
+                            ipcRenderer.invoke('window', 'toggleDevtools');
                         }
                     },
                     {
@@ -1004,7 +1001,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function closeHidden() {
-            remote.getCurrentWindow().hide();
+            ipcRenderer.invoke('window', 'hide');
         }
     </script>
 </head>

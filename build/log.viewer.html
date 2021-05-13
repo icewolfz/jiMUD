@@ -49,7 +49,7 @@
         </button>
         <button id="btn-backup" type="button" class="btn btn-default btn-xs" title="Backup" onclick="backup()">
             <i class="fa fa-upload"></i>
-        </button>        
+        </button>
     </div>
     <div id="statusbar" class="statusbar">
         <span id="statusbar-file" class="left"></span>
@@ -86,7 +86,7 @@
 
     const path = require('path');
     const fs = require('fs');
-    remote.getCurrentWindow().setEnabled(false);
+    ipcRenderer.invoke('window', 'setEnabled', false);
 
     var menubar, options;
     let $closeWindow = false;
@@ -197,10 +197,7 @@
                 {
                     label: '&Toggle Developer Tools',
                     click: () => {
-                        if (remote.getCurrentWindow().isDevToolsOpened())
-                            remote.getCurrentWindow().closeDevTools();
-                        else
-                            remote.getCurrentWindow().openDevTools();
+                        ipcRenderer.invoke('window', 'toggleDevTools');
                     },
                     enabled: true
                 },
@@ -1027,12 +1024,12 @@
         }
         if (!savedOpened())
             return;
-        remote.getCurrentWindow().hide();
+        ipcRenderer.invoke('window', 'hide');
     }
 
     // eslint-disable-next-line no-unused-vars
     function closeWindow() {
-        remote.getCurrentWindow().close();
+        ipcRenderer.invoke('window', 'clearCache')
     }
 
     window.onbeforeunload = function (evt) {
@@ -1065,12 +1062,12 @@
                 while (p--)
                     closeViewer(_viewers[keys[p]]);
                 $closeWindow = true;
-                remote.getCurrentWindow().close();
+                ipcRenderer.invoke('window', 'close');
             });
             return 'no';
         }
         $closeWindow = true;
-        remote.getCurrentWindow().close();
+        ipcRenderer.invoke('window', 'close');
         return;
     };
 
@@ -1092,7 +1089,7 @@
         else
             openFiles(options.opened);
         doUpdate(4);
-        remote.getCurrentWindow().setEnabled(true);
+        ipcRenderer.invoke('window', 'setEnabled', true);
         //menubar.enabled = true;
     });
 

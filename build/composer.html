@@ -1379,7 +1379,7 @@
                         }, () => {
                             mail.close();
                             closeWindow = true;
-                            remote.getCurrentWindow().close();
+                            ipcRenderer.invoke('window', 'close');
                         });
                         return;
                     }
@@ -1389,7 +1389,7 @@
                         ipcRenderer.send('setting-changed', { type: 'extensions', name: 'mail', value: options.extensions['mail'] });
                     }
                     closeWindow = true;
-                    remote.getCurrentWindow().close();
+                    ipcRenderer.invoke('window', 'close');
                 });
                 return;
             }
@@ -1408,19 +1408,19 @@
                 }, () => {
                     mail.close();
                     closeWindow = true;
-                    remote.getCurrentWindow().close();
+                    ipcRenderer.invoke('window', 'close');
                 });
                 return;
             }
             else if (mail)
                 mail.close();
             closeWindow = true;
-            remote.getCurrentWindow().close();
+            ipcRenderer.invoke('window', 'close');
         };
 
         // eslint-disable-next-line no-unused-vars
         function closeHidden() {
-            remote.getCurrentWindow().hide();
+            ipcRenderer.invoke('window', 'hide');
         }
     </script>
     <style>

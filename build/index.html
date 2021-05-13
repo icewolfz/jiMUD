@@ -1058,21 +1058,13 @@
 
             client.on('hide', () => {
                 if (client.options.hideOnMinimize)
-                    remote.getCurrentWindow().hide();
+                    ipcRenderer.invoke('window', 'hide');
                 else
-                    remote.getCurrentWindow().minimize();
+                    ipcRenderer.invoke('window', 'minimize');
             });
 
             client.on('toggle', () => {
-                var win = remote.getCurrentWindow();
-                if (win.isVisible()) {
-                    if (client.options.hideOnMinimize)
-                        win.hide();
-                    else
-                        win.minimize();
-                }
-                else
-                    ipcRenderer.send('show-window');
+                ipcRenderer.invoke('window', 'toggle', 'main');
             });
 
             client.on('notify', (title, message, options) => {
@@ -1471,18 +1463,7 @@
                     evt.returnValue = false;
                     setTimeout(() => {
                         if (client.options.askonchildren) {
-                            windows = remote.BrowserWindow.getAllWindows();
-                            current = remote.getCurrentWindow();
-                            for (var w = 0, wl = windows.length; w < wl; w++) {
-                                if (windows[w] === current || !windows[w].isVisible())
-                                    continue;
-                                if (!windows[w].getTitle().startsWith('Code Editor'))
-                                    continue;
-                                if (windows[w].getParentWindow() !== current)
-                                    continue;
-                                count++;
-                            }
-                            if (count > 0) {
+                            if (ipcRenderer.sendSync('window-info', 'child-open', 'Code Editor')) {
                                 choice = dialog.showMessageBoxSync(
                                     remote.getCurrentWindow(),
                                     {
@@ -1517,7 +1498,7 @@
                             client.options.askonclose = false;
                             client.saveOptions();
                             closeWindow = true;
-                            remote.getCurrentWindow().close();
+                            ipcRenderer.invoke('window', 'close');
                             return;
                         }
                         if (choice !== 0) {
@@ -1527,27 +1508,14 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
-                        remote.getCurrentWindow().close();
+                        ipcRenderer.invoke('window', 'close');
                     });
                     return;
                 }
                 else if (!closeWindow && client.options.askonchildren) {
                     evt.returnValue = false;
                     setTimeout(() => {
-                        windows = remote.BrowserWindow.getAllWindows();
-                        current = remote.getCurrentWindow();
-                        for (var w = 0, wl = windows.length; w < wl; w++) {
-                            if (windows[w] === current || !windows[w].isVisible())
-                                continue;
-                            if (!windows[w].getTitle().startsWith('Code Editor')) {
-                                windows[w].close();
-                                continue;
-                            }
-                            if (windows[w].getParentWindow() !== current)
-                                continue;
-                            count++;
-                        }
-                        if (count > 0) {
+                        if (ipcRenderer.sendSync('window-info', 'child-close', 'Code Editor')) {
                             choice = dialog.showMessageBoxSync(
                                 remote.getCurrentWindow(),
                                 {
@@ -1569,7 +1537,7 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
-                        remote.getCurrentWindow().close();
+                        ipcRenderer.invoke('window', 'close');
                     });
                     return;
                 }
@@ -1585,13 +1553,13 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
-                        remote.getCurrentWindow().close();
+                        ipcRenderer.invoke('window', 'close');
                     });
                 }
                 client.raise('closed');
                 _logger.postMessage({ action: 'flush' });
                 closeWindow = true;
-                remote.getCurrentWindow().close();
+                ipcRenderer.invoke('window', 'close');
                 return;
             };
             $('#status').on('contextmenu', (e) => {
@@ -2605,7 +2573,7 @@
                 }
                 if (($updating & 64) === 64) {
                     client.saveOptions();
-                    remote.getCurrentWindow().webContents.session.clearCache().then(() => { if (client.options.enableDebug) console.log('Cache cleared'); });
+                    ipcRenderer.invoke('window', 'clearCache').then(() => { if (client.options.enableDebug) console.log('Cache cleared'); });
                     webFrame.clearCache();
                     $updating &= ~64;
                 }

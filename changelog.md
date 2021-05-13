@@ -16,6 +16,7 @@
 - **Changed:**
   - Recode internal path parser to remove remote reliance and simplify code base by having only one function
   - Moved all app calls to main process using IPC
+  - Moved all window operations into main process using IPC
   - Update better-sqlite3 7.1.2 to 7.3.1
   - Update electron 12.0.1 to 12.0.7
   - Update node-disk-info 1.1.0 to 1.3.0

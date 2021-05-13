@@ -2593,7 +2593,7 @@ export function init() {
                 ipcRenderer.send('setting-changed', { type: 'profiles', name: 'askoncancel', value: false });
             if (choice === 0 || choice === 2) {
                 _close = true;
-                remote.getCurrentWindow().close();
+                ipcRenderer.invoke('window', 'close');
                 return;
             }
             evt.returnValue = false;

@@ -2731,16 +2731,43 @@ ipcMain.on('parseTemplate', (event, str, data) => {
     event.returnValue = parseTemplate(str, data);
 });
 
-ipcMain.handle('window-action', (event, action, ...args) => {
+ipcMain.handle('window', (event, action, ...args) => {
     var current = BrowserWindow.fromWebContents(event.sender);
+    if (!current) return;
     if (action === "hide")
         current.hide();
     else if (action === "minimize")
         current.minimize();
     else if (action === "close")
         current.close();
-    else if(action === 'clearCache')
-        return remote.getCurrentWindow().webContents.session.clearCache();
+    else if (action === 'clearCache')
+        return current.webContents.session.clearCache();
+    else if (action === 'openDevTools')
+        current.openDevTools();
+    else if (action === 'show')
+        current.show();
+    else if (action === 'toggle') {
+        if (args && args.length)
+            showSelectedWindow(args[0], args.slice(1));
+        else if (current.isVisible()) {
+            if (args[0])
+                current.hide();
+            else
+                current.minimize();
+        }
+        else
+            current.show();
+    }
+    else if (action === 'setEnabled')
+        current.setEnabled(...args);
+    else if (action === 'toggleDevTools') {
+        if (current.isDevToolsOpened())
+            current.closeDevTools();
+        else
+            current.openDevTools();
+    }
+    else if (action === 'reload')
+        current.reload();
 });
 
 ipcMain.on('window-info', (event, info, ...args) => {
@@ -2758,6 +2785,11 @@ ipcMain.on('window-info', (event, info, ...args) => {
         event.returnValue = count;
     }
     else if (info === 'child-open') {
+        if(!args || args.length === 0)
+        {
+            event.returnValue = 0;
+            return
+        }
         var windows = BrowserWindow.getAllWindows();
         var current = BrowserWindow.fromWebContents(event.sender);
         for (var w = 0, wl = windows.length; w < wl; w++) {
@@ -2770,9 +2802,34 @@ ipcMain.on('window-info', (event, info, ...args) => {
         }
         event.returnValue = 0;
     }
+    else if (info === 'child-close') {
+        var windows = BrowserWindow.getAllWindows();
+        var current = BrowserWindow.fromWebContents(event.sender);
+        var count = 0;
+        for (var w = 0, wl = windows.length; w < wl; w++) {
+            if (windows[w] === current || !windows[w].isVisible())
+                continue;
+            if (args.length && !windows[w].getTitle().startsWith(args[0])) {
+                windows[w].close();
+                continue;
+            }
+            if (windows[w].getParentWindow() !== current)
+                continue;
+            count++;
+        }
+        event.returnValue = count;
+    }
     else if (info === 'isVisible') {
         var current = BrowserWindow.fromWebContents(event.sender);
         event.returnValue = current ? current.isVisible() : 0;
+    }
+    else if (info === 'isEnabled') {
+        var current = BrowserWindow.fromWebContents(event.sender);
+        event.returnValue = current ? current.isEnabled() : 0;
+    }
+    else if (info === 'isDevToolsOpened') {
+        var current = BrowserWindow.fromWebContents(event.sender);
+        event.returnValue = current ? current.isDevToolsOpened() : 0;
     }
 });
 
