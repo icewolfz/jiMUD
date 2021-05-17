@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.15.1
+## v0.15.1 2021-05-16
 
 - **Fixed:**
   - Files not correctly moved to trash
@@ -17,14 +17,14 @@
   - Recode internal path parser to remove remote reliance and simplify code base by having only one function
   - Moved all app calls to main process using IPC
   - Moved all window operations into main process using IPC
-  - Update better-sqlite3 7.1.2 to 7.3.1
+  - Update better-sqlite3 7.1.2 to 7.4.0
   - Update electron 12.0.1 to 12.0.7
   - Update node-disk-info 1.1.0 to 1.3.0
   - Update markdown-it 12.0.4 to 12.0.6
   - Update fs-extra 9.1.0 to 10.0.0
   - Update font-list 1.2.13 to 1.2.14
   - Update monaco-editor 0.21.3 to 0.24.0
-  - Replace mathjs-expression-parser with mathjs due to mathjs-expression-parser not being updated
+  - Replace mathjs-expression-parser with mathjs  9.4.0 due to mathjs-expression-parser not being updated
   - Update electron-updater 4.3.5 to 4.3.9
   
 
