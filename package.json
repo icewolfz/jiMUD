@@ -33,7 +33,7 @@
     "compile:worker": "tsc -p ./src/worker",
     "compile:common-debug": "tsc -p . --listEmittedFiles",
     "compile:worker-debug": "tsc -p ./src/worker --listEmittedFiles",
-    "compile:css": "sass src/css:build/css --style compressed --no-source-map",
+    "compile:css": "sass src/css:build/css --style=compressed --no-source-map",
     "compile:themes": "sass src/themes:build/themes --style=compressed --no-source-map",
     "package": "npm run package:win && npm run package:linux",
     "package:win": "electron-builder --win nsis portable --ia32 --x64",
