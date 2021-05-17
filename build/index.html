@@ -1183,6 +1183,8 @@
                             _disconnectTimer = 10;
                         else if (_disconnectCounter === 10)
                             _disconnectTimer = 30;
+                        else if (client.options.maxReconnectDelay > 0 && _disconnectCounter >= client.options.maxReconnectDelay)
+                            _disconnectTimer = client.options.maxReconnectDelay;
                         else
                             _disconnectTimer = _disconnectCounter * 2;
                         _disconnectCounter = _disconnectTimer;

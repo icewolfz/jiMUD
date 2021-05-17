@@ -387,6 +387,7 @@ export class Settings {
     public commandEcho: boolean = true;
     public enableSound: boolean = true;
     public fixHiddenWindows: boolean = true;
+    public maxReconnectDelay: number = 3600;
 
     public enableKeepAlive: boolean = false;
     public keepAliveDelay: number = 0;

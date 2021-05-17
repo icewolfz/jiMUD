@@ -19,6 +19,7 @@ Reset - Resetting will revert all settings back to default values
   - `Reconnect dialog` show the reconnect dialog with options and delayed reconnect timer
   - `Character manager` show character manager
   - `Close` close the client
+- `Max reconnect delay` set the maximum time in seconds, for reconnecting when using reconnect dialog, setting to 0 will revert to classic unlimited behavior.
 - `Check for updates on load` check for new version every time you load the client
 - `Enable sound` disable or enable sound globally
 

@@ -2,6 +2,9 @@
 
 ## v0.15.2
 
+- **New:**
+  - Added `Max reconnect delay` to set the maximum time before reconnecting when using reconnect dialog.
+
 ## v0.15.1 2021-05-16
 
 - **Fixed:**
