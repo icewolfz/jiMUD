@@ -54,10 +54,10 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.5",
-    "@types/mathjs": "^6.0.12",
-    "@types/node": "^14.14.37",
+    "@types/mathjs": "^9.3.0",
+    "@types/node": "^14.17.0",
     "babel-minify": "^0.5.1",
-    "electron": "^12.0.6",
+    "electron": "^12.0.8",
     "electron-builder": "^22.10.5",
     "eslint": "^7.25.0",
     "eslint-plugin-html": "^6.1.2",

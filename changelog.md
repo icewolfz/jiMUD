@@ -4,6 +4,8 @@
 
 - **New:**
   - Added `Max reconnect delay` to set the maximum time before reconnecting when using reconnect dialog.
+- **Changed:**
+  - Update electron 12.0.7 to 12.0.8
 
 ## v0.15.1 2021-05-16
 
