@@ -59,9 +59,9 @@
     "babel-minify": "^0.5.1",
     "electron": "^12.0.9",
     "electron-builder": "^22.10.5",
-    "eslint": "^7.25.0",
+    "eslint": "^7.27.0",
     "eslint-plugin-html": "^6.1.2",
-    "sass": "^1.33.0"
+    "sass": "^1.34.0"
   },
   "build": {
     "appId": "jiMUD",
@@ -138,7 +138,7 @@
     "better-sqlite3": "^7.4.0",
     "buzz": "^1.2.1",
     "chokidar": "^3.5.1",
-    "electron-updater": "^4.3.8",
+    "electron-updater": "^4.3.9",
     "font-list": "^1.2.14",
     "fs-extra": "^10.0.0",
     "fswin": "^3.21.107",
