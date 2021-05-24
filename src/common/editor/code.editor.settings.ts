@@ -17,6 +17,7 @@ export class EditorSettings {
     public spellchecking: true;
     public remote = '.';
     public uploadAs;
+    public enableBackgroundThrottling: boolean = true;
 
     public window = {
         persistent: false,

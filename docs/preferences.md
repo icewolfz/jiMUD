@@ -209,6 +209,10 @@ Controls what is captured into the chat window
   - `Index` sort by index
   - `Priority` sort by item priority
 - `Profile manager sort direction` select to display items in ascending or descending order  **note** Changing this setting while profile manager is open will not resort the displayed items
+- `Enable warning dialog when connected and closing client` confirm closing of window when connected
+- `Enable warning dialog when closing client and child windows are open` confirm closing of child windows when closing
+- `Enable warning dialog when loading a character from manager` confirm loading of a character
+- `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden
 
 ## Advanced > Tray
 

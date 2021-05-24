@@ -1181,7 +1181,8 @@ function createWindow() {
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
             enableRemoteModule: true,
-            contextIsolation: false
+            contextIsolation: false,
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
     if (s.fullscreen)
@@ -1311,7 +1312,8 @@ function createWindow() {
                 sandbox: false,
                 spellcheck: set ? set.spellchecking : false,
                 enableRemoteModule: true,
-                contextIsolation: false
+                contextIsolation: false,
+                backgroundThrottling: set ? set.enableBackgroundThrottling : true
             };
         else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
             options.webPreferences.nodeIntegration = true;
@@ -1320,6 +1322,7 @@ function createWindow() {
             options.webPreferences.spellcheck = set ? set.spellchecking : false;
             options.webPreferences.enableRemoteModule = true;
             options.webPreferences.contextIsolation = false;
+            options.webPreferences.backgroundThrottling = set ? set.enableBackgroundThrottling : true;
         }
         if (Object.prototype.hasOwnProperty.call(options, 'x'))
             options.x = getWindowX(options.x, options.width || 800);
@@ -1838,6 +1841,8 @@ ipcMain.on('reload-options', (event, save) => {
     if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('reload-options');
     set = settings.Settings.load(global.settingsFile);
+    if (win && !win.isDestroyed() && win.webContents)
+        win.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
     if (set.showTrayIcon && !tray)
         createTray();
     else if (!set.showTrayIcon && tray) {
@@ -1853,6 +1858,7 @@ ipcMain.on('reload-options', (event, save) => {
             winMap.setParentWindow(set.mapper.alwaysOnTopClient ? win : null);
         winMap.setAlwaysOnTop(set.mapper.alwaysOnTop);
         winMap.setSkipTaskbar((!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false);
+        winMap.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
     }
     else if (set.mapper.enabled)
         createMapper();
@@ -1864,17 +1870,20 @@ ipcMain.on('reload-options', (event, save) => {
             winChat.setParentWindow(set.chat.alwaysOnTopClient ? win : null);
         winChat.setAlwaysOnTop(set.chat.alwaysOnTop);
         winChat.setSkipTaskbar((!set.chat.showInTaskBar && (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop)) ? true : false);
+        winChat.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
     }
 
     if (winProfiles) {
         s = loadWindowState('profiles');
         winProfiles.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
         winProfiles.webContents.send('reload-options');
+        winProfiles.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
     }
     if (winEditor) {
         s = loadWindowState('editor');
         winEditor.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
         winEditor.webContents.send('reload-options');
+        winEditor.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
     }
 
     for (var name in set.windows) {
@@ -1882,6 +1891,8 @@ ipcMain.on('reload-options', (event, save) => {
         if (set.windows[name].window) {
             s = loadWindowState(name);
             set.windows[name].window.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
+            if (set.windows[name].window.webContents)
+                set.windows[name].window.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
         }
         if (set.windows[name].options) {
             if (set.windows[name].options.show)
@@ -2170,8 +2181,11 @@ ipcMain.on('setting-changed', (event, data) => {
 });
 
 ipcMain.on('editor-setting-changed', (event, data) => {
-    if (winCode)
+    if (winCode) {
         winCode.webContents.send('editor-setting-changed');
+        if (edSet)
+            winCode.webPreferences.setBackgroundThrottling(edSet.enableBackgroundThrottling);
+    }
     if (winCode.setParentWindow)
         winCode.setParentWindow((!global.editorOnly && data.alwaysOnTopClient) ? win : null);
     winCode.setSkipTaskbar((!global.editorOnly && (data.alwaysOnTopClient || data.alwaysOnTop)) ? true : false);
@@ -2303,7 +2317,8 @@ ipcMain.on('progress-show', (event, title) => {
                 sandbox: false,
                 spellcheck: set ? set.spellchecking : false,
                 enableRemoteModule: true,
-                contextIsolation: false
+                contextIsolation: false,
+                backgroundThrottling: set ? set.enableBackgroundThrottling : true
             }
         });
         winProgress.removeMenu();
@@ -2785,8 +2800,7 @@ ipcMain.on('window-info', (event, info, ...args) => {
         event.returnValue = count;
     }
     else if (info === 'child-open') {
-        if(!args || args.length === 0)
-        {
+        if (!args || args.length === 0) {
             event.returnValue = 0;
             return
         }
@@ -3069,7 +3083,8 @@ function showPrefs() {
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
             enableRemoteModule: true,
-            contextIsolation: false
+            contextIsolation: false,
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
     pref.removeMenu();
@@ -3135,7 +3150,8 @@ function createMapper(show, loading, loaded) {
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
             enableRemoteModule: true,
-            contextIsolation: false
+            contextIsolation: false,
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
 
@@ -3283,7 +3299,8 @@ function showProfiles() {
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
             enableRemoteModule: true,
-            contextIsolation: false
+            contextIsolation: false,
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
 
@@ -3389,7 +3406,8 @@ function createEditor(show, loading) {
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
             enableRemoteModule: true,
-            contextIsolation: false
+            contextIsolation: false,
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
 
@@ -3541,7 +3559,8 @@ function createChat(show, loading) {
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
             enableRemoteModule: true,
-            contextIsolation: false
+            contextIsolation: false,
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
 
@@ -3690,7 +3709,8 @@ function createNewWindow(name, options) {
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
             enableRemoteModule: true,
-            contextIsolation: false
+            contextIsolation: false,
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
     delete windows[name].width;
@@ -3793,7 +3813,8 @@ function createNewWindow(name, options) {
                 sandbox: false,
                 spellcheck: set ? set.spellchecking : false,
                 enableRemoteModule: true,
-                contextIsolation: false
+                contextIsolation: false,
+                backgroundThrottling: set ? set.enableBackgroundThrottling : true
             };
         else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
             options.webPreferences.nodeIntegration = true;
@@ -3802,6 +3823,7 @@ function createNewWindow(name, options) {
             options.webPreferences.spellcheck = set ? set.spellchecking : false;
             options.webPreferences.enableRemoteModule = true;
             options.webPreferences.contextIsolation = false;
+            options.webPreferences.backgroundThrottling = set ? set.enableBackgroundThrottling : true;
         }
         if (Object.prototype.hasOwnProperty.call(options, 'x'))
             options.x = getWindowX(options.x, options.width || 800);
@@ -3931,7 +3953,8 @@ function showColor(args) {
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
             enableRemoteModule: true,
-            contextIsolation: false
+            contextIsolation: false,
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
     cp.webContents.on('render-process-gone', (event, details) => {
@@ -4127,8 +4150,10 @@ function createCodeEditor(show, loading, loaded) {
             sandbox: false,
             spellcheck: edSet ? edSet.spellchecking : false,
             enableRemoteModule: true,
-            contextIsolation: false
+            contextIsolation: false,
+            backgroundThrottling: edSet ? edSet.enableBackgroundThrottling : true
         }
+
     });
 
     winCode.on('unresponsive', () => {
@@ -4271,7 +4296,8 @@ function createCodeEditor(show, loading, loaded) {
                 sandbox: false,
                 spellcheck: edSet ? edSet.spellchecking : false,
                 enableRemoteModule: true,
-                contextIsolation: false
+                contextIsolation: false,
+                backgroundThrottling: edSet ? edSet.enableBackgroundThrottling : true
             };
         else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
             options.webPreferences.nodeIntegration = true;
@@ -4280,6 +4306,7 @@ function createCodeEditor(show, loading, loaded) {
             options.webPreferences.spellcheck = edSet ? edSet.spellchecking : false;
             options.webPreferences.enableRemoteModule = true;
             options.webPreferences.contextIsolation = false;
+            options.webPreferences.backgroundThrottling = edSet ? edSet.enableBackgroundThrottling : true;
         }
         if (Object.prototype.hasOwnProperty.call(options, 'x'))
             options.x = getWindowX(options.x, options.width || 800);
@@ -4519,7 +4546,8 @@ function showAbout() {
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
             enableRemoteModule: true,
-            contextIsolation: false
+            contextIsolation: false,
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
     about.webContents.on('render-process-gone', (event, details) => {

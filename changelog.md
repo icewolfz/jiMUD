@@ -3,7 +3,11 @@
 ## v0.15.2
 
 - **New:**
-  - Added `Max reconnect delay` to set the maximum time before reconnecting when using reconnect dialog.
+  - Preferences:
+    - Add `Max reconnect delay` to set the maximum time before reconnecting when using reconnect dialog.
+    - Add `Enable Background Throttling` to allow disabling of throttling when a window is in the background or hidden
+- **Fixed:**
+  - Filled in some missing docs for preference settings
 - **Changed:**
   - Update electron 12.0.7 to 12.0.9
 

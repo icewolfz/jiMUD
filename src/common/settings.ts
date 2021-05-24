@@ -388,6 +388,7 @@ export class Settings {
     public enableSound: boolean = true;
     public fixHiddenWindows: boolean = true;
     public maxReconnectDelay: number = 3600;
+    public enableBackgroundThrottling: boolean = true;
 
     public enableKeepAlive: boolean = false;
     public keepAliveDelay: number = 0;

@@ -404,7 +404,8 @@ Editor preferences are stored in their own file independent of client or charact
 - `Show Minimap Slider` when to display minimap slider
 - `Render the actual text on a line in minimap` show text or blocks in minimap
 - `Minimap location` where minimap is placed in editor
-- `Insert spaces`
+- `Insert spaces` prefer spaces over tabs
+- `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden
 
 ## Known issues
 
