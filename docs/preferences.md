@@ -184,35 +184,41 @@ Controls what is captured into the chat window
 
 ## Advanced
 
-- `Connect to development` Connect to the development mud.
 - `Enable gamepads` Enable gamepad support to allow creating macros using gamepad axes or buttons. **Experimental**
 - `Enable GMCP Ping for lag meter` When text received from mud send back a GMCP ping if enabled to get a better time for the lag meter.
 - `Enable debug` Will display debug data to the dev tool console
 - `Log errors` Log errors to {data}/jimud.error.log [FAQ - Predefined path variables](faq.md#what-predefined-variables-can-be-use-for-paths)
 - `Show extended error messages` Display extended stack information for errors
 - `Fix hidden windows` Move windows that have been hidden off screen to on onscreen
-- `Enable Keep alive` Enable socket keep alive
-- `Keep alive delay` The number of seconds for initial keep alive delay
-- `Enable allow Half Open sockets` Indicates whether half-opened TCP connections are allowed
 - `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
-- `Backup save` what to save when using remote backup systems
-- `Backup load` what to load when using remote backup systems
-- `Backup all profiles` backup all profiles or just enabled profiles
 - `Hide when minimized` will hide the main window and any window set as a child
-- `Enable profile manager code editor` disable or enable the code editor for the profile manager
-- `Enable profile manager file watcher` disable or enable watching for profile file changes to warn when saving overrides
+- `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden
 - `Enable warning dialog when connected and closing client` disable or enable warning check when closing mud and connected
 - `Enable warning dialog when closing client and child windows are open` disable or enable warning dialog when closing and child windows are open
 - `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character
+
+## Advanced > Backup
+
+- `Backup save` what to save when using remote backup systems
+- `Backup load` what to load when using remote backup systems
+- `Backup all profiles` backup all profiles or just enabled profiles
+
+## Advanced > Connection
+
+- `Connect to development` Connect to the development mud.
+- `Enable Keep alive` Enable socket keep alive
+- `Keep alive delay` The number of seconds for initial keep alive delay
+- `Enable allow Half Open sockets` Indicates whether half-opened TCP connections are allowed
+
+## Advanced > Profile manager
+
+- `Enable profile manager code editor` disable or enable the code editor for the profile manager
+- `Enable profile manager file watcher` disable or enable watching for profile file changes to warn when saving overrides
 - `Profile manager sort order` determine how items are sorted in the profile manager display tree, priority is first, then alpha, finally index, you cna have one or all three options enabled **note** Changing this setting while profile manager is open will not resort the displayed items
   - `Alpha` sort by alpha numeric
   - `Index` sort by index
   - `Priority` sort by item priority
 - `Profile manager sort direction` select to display items in ascending or descending order  **note** Changing this setting while profile manager is open will not resort the displayed items
-- `Enable warning dialog when connected and closing client` confirm closing of window when connected
-- `Enable warning dialog when closing client and child windows are open` confirm closing of child windows when closing
-- `Enable warning dialog when loading a character from manager` confirm loading of a character
-- `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden
 
 ## Advanced > Tray
 

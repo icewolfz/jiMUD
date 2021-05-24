@@ -9,6 +9,7 @@
 - **Fixed:**
   - Filled in some missing docs for preference settings
 - **Changed:**
+  - Separated backups, connection, and profile manager preferences into sub advanced pages to make advanced page easier to read
   - Update electron 12.0.7 to 12.0.9
 
 ## v0.15.1 2021-05-16

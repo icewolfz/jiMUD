@@ -185,6 +185,9 @@
                     {
                         text: 'Advanced',
                         nodes: [
+                            { text: 'Backup' },
+                            { text: 'Connection' },
+                            { text: 'Profile manager' },
                             { text: 'Tray' }
                         ]
                     },
@@ -2127,11 +2130,6 @@
                 <div role="tabpanel" class="pref-pane" id="advanced">
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="dev" /> Connect to development
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
                             <input type="checkbox" id="gamepads" /> Enable gamepads
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
                         </label>
@@ -2155,30 +2153,34 @@
                         <label class="control-label">
                             <input type="checkbox" id="fixHiddenWindows" /> Fix hidden windows
                         </label>
-                    </div>                    
-                    <div class="col-sm-12 form-group" style="padding: 0px;">
-                        <div class="col-sm-6 form-group">
-                            <label class="control-label">
-                                <input type="checkbox" id="enableKeepAlive" /> Enable Keep alive
-                            </label>
-                        </div>
-                        <div class="col-sm-6 form-group">
-                            <label class="control-label">
-                                Keep alive delay
-                                <div class="input-group">
-                                    <input type="number" id="keepAliveDelay" class="input-sm form-control" min="0" max="10000" />
-                                    <div class="input-group-addon">s</div>
-                                </div>
-                            </label>
-                        </div>
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="allowHalfOpen" /> Enable allow Half Open sockets
+                            <input type="checkbox" id="hideOnMinimize" /> Hide when minimized
                         </label>
-                        <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires reconnection to take effect</span>
-                    </div>                    
-
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="enableBackgroundThrottling" /> Enable Background Throttling
+                        </label>
+                    </div>                       
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="askonclose" /> Enable warning dialog when connected and closing client
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="askonchildren" /> Enable warning dialog when closing client and child windows are open
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="askonloadCharacter" /> Enable warning dialog when loading a character from manager
+                        </label>
+                    </div>
+                </div>
+                <div role="tabpanel" class="pref-pane" id="backup">
                     <div class="col-sm-12 form-group" style="padding: 0px;">
                         <div class="col-sm-6 form-group">
                             <label class="control-label">Backup save</label>
@@ -2219,12 +2221,38 @@
                         <label class="control-label">
                             <input type="checkbox" id="backupAllProfiles" /> Backup all profiles
                         </label>
+                    </div>                    
+                </div>
+                <div role="tabpanel" class="pref-pane" id="connection">
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="dev" /> Connect to development
+                        </label>
+                    </div>
+                    <div class="col-sm-12 form-group" style="padding: 0px;">
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">
+                                <input type="checkbox" id="enableKeepAlive" /> Enable Keep alive
+                            </label>
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">
+                                Keep alive delay
+                                <div class="input-group">
+                                    <input type="number" id="keepAliveDelay" class="input-sm form-control" min="0" max="10000" />
+                                    <div class="input-group-addon">s</div>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="hideOnMinimize" /> Hide when minimized
+                            <input type="checkbox" id="allowHalfOpen" /> Enable allow Half Open sockets
                         </label>
-                    </div>
+                        <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires reconnection to take effect</span>
+                    </div>                        
+                </div>                
+                <div role="tabpanel" class="pref-pane" id="profile-manager">
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="profiles-codeEditor" /> Enable profile manager code editor
@@ -2257,26 +2285,6 @@
                                 <option value="1">Ascending</option>
                                 <option value="-1">Descending</option>
                             </select>
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="askonclose" /> Enable warning dialog when connected and closing client
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="askonchildren" /> Enable warning dialog when closing client and child windows are open
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="askonloadCharacter" /> Enable warning dialog when loading a character from manager
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="enableBackgroundThrottling" /> Enable Background Throttling
                         </label>
                     </div>                    
                 </div>
