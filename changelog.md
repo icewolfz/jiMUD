@@ -11,6 +11,7 @@
 - **Changed:**
   - Separated backups, connection, and profile manager preferences into sub advanced pages to make advanced page easier to read
   - Update electron 12.0.7 to 12.0.9
+  - Update mathjs 9.4.0 to 9.4.1
 
 ## v0.15.1 2021-05-16
 
@@ -36,7 +37,7 @@
   - Update fs-extra 9.1.0 to 10.0.0
   - Update font-list 1.2.13 to 1.2.14
   - Update monaco-editor 0.21.3 to 0.24.0
-  - Replace mathjs-expression-parser with mathjs  9.4.0 due to mathjs-expression-parser not being updated
+  - Replace mathjs-expression-parser with mathjs 9.4.0 due to mathjs-expression-parser not being updated
   - Update electron-updater 4.3.5 to 4.3.9
   
 
