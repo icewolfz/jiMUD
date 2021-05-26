@@ -2,6 +2,8 @@
 
 ## v0.16.0
 
+- **Fixed:**
+  - Fix opening child windows
 - **Changed:**
   - Update electron 12.0.9 to 13.0.1
 

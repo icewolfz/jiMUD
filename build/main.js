@@ -1293,9 +1293,9 @@ function createWindow() {
         }
     });
 
-    win.webContents.on('did-create-window', (w) => {
-        let frameName = w.getTitle();
-        let url = w.webContents.getURL();
+    win.webContents.on('did-create-window', (w, details) => {
+        let frameName = details.frameName;
+        let url = details.url;
         if (global.debug)
             w.webContents.openDevTools();
         w.removeMenu();
@@ -3758,9 +3758,9 @@ function createNewWindow(name, options) {
         }
     });
 
-    windows[name].window.webContents.on('did-create-window', (w) => {
-        let frameName = w.getTitle();
-        let url = w.webContents.getURL();
+    windows[name].window.webContents.on('did-create-window', (w, details) => {
+        let frameName = details.frameName;
+        let url = details.url;
         if (global.debug)
             w.webContents.openDevTools();
         w.removeMenu();
@@ -4205,9 +4205,9 @@ function createCodeEditor(show, loading, loaded) {
         }
     });    
 
-    winCode.webContents.on('did-create-window', (w) => {
-        let frameName = w.getTitle();
-        let url = w.webContents.getURL();        
+    winCode.webContents.on('did-create-window', (w, details) => {
+        let frameName = details.frameName;
+        let url = details.url;    
         if (global.debug)
             w.webContents.openDevTools();
         w.removeMenu();
