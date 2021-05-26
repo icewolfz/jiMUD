@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.15.2
+## v0.15.2 2021-05-26
 
 - **New:**
   - Preferences:
