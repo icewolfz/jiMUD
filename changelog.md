@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.0
+## v0.16.0 2021-05-26
 
 - **Fixed:**
   - Fix opening child windows
