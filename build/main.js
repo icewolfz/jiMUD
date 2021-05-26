@@ -1286,49 +1286,16 @@ function createWindow() {
         logError(`Client render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
 
-    win.webContents.on('new-window', (event, url, frameName, disposition, options) => {
-        event.preventDefault();
-        if (frameName === 'modal') {
-            // open window as modal
-            Object.assign(options, {
-                modal: true,
-                parent: win,
-                movable: false,
-                minimizable: false,
-                maximizable: false,
-                skipTaskbar: true,
-                resizable: false
-            });
+    win.webContents.setWindowOpenHandler((details) => {
+        return {
+            action: 'allow',
+            overrideBrowserWindowOptions: buildOptions(details, win, set)
+        }
+    });
 
-            var b = win.getBounds();
-            options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
-            options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
-        }
-        options.show = false;
-        if (!Object.prototype.hasOwnProperty.call(options, 'webPreferences'))
-            options.webPreferences = {
-                nodeIntegration: true,
-                webviewTag: false,
-                sandbox: false,
-                spellcheck: set ? set.spellchecking : false,
-                enableRemoteModule: true,
-                contextIsolation: false,
-                backgroundThrottling: set ? set.enableBackgroundThrottling : true
-            };
-        else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
-            options.webPreferences.nodeIntegration = true;
-            options.webPreferences.webviewTag = false;
-            options.webPreferences.sandbox = false;
-            options.webPreferences.spellcheck = set ? set.spellchecking : false;
-            options.webPreferences.enableRemoteModule = true;
-            options.webPreferences.contextIsolation = false;
-            options.webPreferences.backgroundThrottling = set ? set.enableBackgroundThrottling : true;
-        }
-        if (Object.prototype.hasOwnProperty.call(options, 'x'))
-            options.x = getWindowX(options.x, options.width || 800);
-        if (Object.prototype.hasOwnProperty.call(options, 'y'))
-            options.x = getWindowY(options.y, options.height || 600);
-        const w = new BrowserWindow(options);
+    win.webContents.on('did-create-window', (w) => {
+        let frameName = w.getTitle();
+        let url = w.webContents.getURL();
         if (global.debug)
             w.webContents.openDevTools();
         w.removeMenu();
@@ -1365,9 +1332,6 @@ function createWindow() {
                 executeScript(`childClosed('${url}', '${frameName}');`, win, true);
             }
         });
-
-        w.loadURL(url);
-        event.newGuest = w;
     });
 
     // Emitted when the window is closed.
@@ -3782,54 +3746,21 @@ function createNewWindow(name, options) {
         states[name].maximized = false;
     });
 
-    windows[name].window.webContents.on('new-window', (event, URL, frameName, disposition, options) => {
-        event.preventDefault();
-        var u = new url.URL(URL);
+    windows[name].window.webContents.setWindowOpenHandler((details) => {
+        var u = new url.URL(details.url);
         if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
-            shell.openExternal(URL);
-            return;
+            shell.openExternal(url);
+            return { action: 'deny' };
+        }        
+        return {
+            action: 'allow',
+            overrideBrowserWindowOptions: buildOptions(details, windows[name].window, set)
         }
-        if (frameName === 'modal') {
-            // open window as modal
-            Object.assign(options, {
-                modal: true,
-                parent: windows[name].window,
-                movable: false,
-                minimizable: false,
-                maximizable: false,
-                skipTaskbar: true,
-                resizable: false
-            });
+    });
 
-            var b = windows[name].window.getBounds();
-            options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
-            options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
-        }
-        options.show = false;
-        if (!Object.prototype.hasOwnProperty.call(options, 'webPreferences'))
-            options.webPreferences = {
-                nodeIntegration: true,
-                webviewTag: false,
-                sandbox: false,
-                spellcheck: set ? set.spellchecking : false,
-                enableRemoteModule: true,
-                contextIsolation: false,
-                backgroundThrottling: set ? set.enableBackgroundThrottling : true
-            };
-        else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
-            options.webPreferences.nodeIntegration = true;
-            options.webPreferences.webviewTag = false;
-            options.webPreferences.sandbox = false;
-            options.webPreferences.spellcheck = set ? set.spellchecking : false;
-            options.webPreferences.enableRemoteModule = true;
-            options.webPreferences.contextIsolation = false;
-            options.webPreferences.backgroundThrottling = set ? set.enableBackgroundThrottling : true;
-        }
-        if (Object.prototype.hasOwnProperty.call(options, 'x'))
-            options.x = getWindowX(options.x, options.width || 800);
-        if (Object.prototype.hasOwnProperty.call(options, 'y'))
-            options.x = getWindowY(options.y, options.height || 600);
-        const w = new BrowserWindow(options);
+    windows[name].window.webContents.on('did-create-window', (w) => {
+        let frameName = w.getTitle();
+        let url = w.webContents.getURL();
         if (global.debug)
             w.webContents.openDevTools();
         w.removeMenu();
@@ -3840,7 +3771,7 @@ function createNewWindow(name, options) {
             w.show();
         });
         w.webContents.on('render-process-gone', (event, details) => {
-            logError(`${URL} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
+            logError(`${url} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
         });
 
         w.on('unresponsive', () => {
@@ -3853,24 +3784,21 @@ function createNewWindow(name, options) {
                     return;
                 if (result.response === 0) {
                     w.reload();
-                    logError(`${URL} unresponsive, reload.\n`, true);
+                    logError(`${url} unresponsive, reload.\n`, true);
                 }
                 else if (result.response === 2) {
                     w.destroy();
                 }
                 else
-                    logError(`${URL} unresponsive, waiting.\n`, true);
+                    logError(`${url} unresponsive, waiting.\n`, true);
             });
         });
 
         w.on('close', () => {
             if (w && w.getParentWindow()) {
-                executeScript(`childClosed('${URL}', '${frameName}');`, w.getParentWindow());
+                executeScript(`childClosed('${url}', '${frameName}');`, w.getParentWindow());
             }
         });
-
-        w.loadURL(URL);
-        event.newGuest = w;
     });
 
     if (global.debug)
@@ -4265,54 +4193,21 @@ function createCodeEditor(show, loading, loaded) {
         }
     });
 
-    winCode.webContents.on('new-window', (event, URL, frameName, disposition, options) => {
-        event.preventDefault();
-        var u = new url.URL(URL);
+    winCode.webContents.setWindowOpenHandler((details) => {
+        var u = new url.URL(details.url);
         if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
-            shell.openExternal(URL);
-            return;
+            shell.openExternal(url);
+            return { action: 'deny' };
         }
-        if (frameName === 'modal') {
-            // open window as modal
-            Object.assign(options, {
-                modal: true,
-                parent: winCode,
-                movable: false,
-                minimizable: false,
-                maximizable: false,
-                skipTaskbar: true,
-                resizable: false
-            });
+        return {
+            action: 'allow',
+            overrideBrowserWindowOptions: buildOptions(details, winCode, edSet)
+        }
+    });    
 
-            var b = winCode.getBounds();
-            options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
-            options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
-        }
-        options.show = false;
-        if (!Object.prototype.hasOwnProperty.call(options, 'webPreferences'))
-            options.webPreferences = {
-                nodeIntegration: true,
-                webviewTag: false,
-                sandbox: false,
-                spellcheck: edSet ? edSet.spellchecking : false,
-                enableRemoteModule: true,
-                contextIsolation: false,
-                backgroundThrottling: edSet ? edSet.enableBackgroundThrottling : true
-            };
-        else if (!Object.prototype.hasOwnProperty.call(options.webPreferences, 'webPreferences')) {
-            options.webPreferences.nodeIntegration = true;
-            options.webPreferences.webviewTag = false;
-            options.webPreferences.sandbox = false;
-            options.webPreferences.spellcheck = edSet ? edSet.spellchecking : false;
-            options.webPreferences.enableRemoteModule = true;
-            options.webPreferences.contextIsolation = false;
-            options.webPreferences.backgroundThrottling = edSet ? edSet.enableBackgroundThrottling : true;
-        }
-        if (Object.prototype.hasOwnProperty.call(options, 'x'))
-            options.x = getWindowX(options.x, options.width || 800);
-        if (Object.prototype.hasOwnProperty.call(options, 'y'))
-            options.x = getWindowY(options.y, options.height || 600);
-        const w = new BrowserWindow(options);
+    winCode.webContents.on('did-create-window', (w) => {
+        let frameName = w.getTitle();
+        let url = w.webContents.getURL();        
         if (global.debug)
             w.webContents.openDevTools();
         w.removeMenu();
@@ -4322,7 +4217,7 @@ function createCodeEditor(show, loading, loaded) {
             w.show();
         });
         w.webContents.on('render-process-gone', (event, details) => {
-            logError(`${URL} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
+            logError(`${url} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
         });
 
         w.on('unresponsive', () => {
@@ -4335,23 +4230,21 @@ function createCodeEditor(show, loading, loaded) {
                     return;
                 if (result.response === 0) {
                     w.reload();
-                    logError(`${URL} unresponsive, reload.\n`, true);
+                    logError(`${url} unresponsive, reload.\n`, true);
                 }
                 else if (result.response === 2) {
                     w.destroy();
                 }
                 else
-                    logError(`${URL} unresponsive, waiting.\n`, true);
+                    logError(`${url} unresponsive, waiting.\n`, true);
             });
         });
 
         w.on('close', () => {
             if (w && w.getParentWindow()) {
-                executeScript(`if(childClosed) childClosed('${URL}', '${frameName}');`, w.getParentWindow());
+                executeScript(`if(childClosed) childClosed('${url}', '${frameName}');`, w.getParentWindow());
             }
         });
-        w.loadURL(URL);
-        event.newGuest = w;
     });
 }
 
@@ -4648,3 +4541,56 @@ function focusAndPerform(methodName) {
   };
 }
 */
+
+function buildOptions(details, window, settings) {
+    options = {
+        backgroundColor: '#000',
+        show: false,
+        icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
+        webPreferences: {
+            nodeIntegration: true,
+            nodeIntegrationInWorker: true,
+            webviewTag: false,
+            sandbox: false,
+            spellcheck: settings ? settings.spellchecking : false,
+            enableRemoteModule: true,
+            contextIsolation: false,
+            backgroundThrottling: settings ? settings.enableBackgroundThrottling : true
+        },
+        width: 800,
+        height: 600
+    };
+    if (details.features.length) {
+        features = details.features.split(',');
+        for (var f = 0, fl = features.length; f < fl; f++) {
+            feature = features[f].split('=');
+             if(feature[0] == "width" || feature[0] == "height" || feature[0] == 'x' || feature[0] == 'y')
+                options[feature[0]] = parseInt(feature[1], 10);
+            else
+                options[feature[0]] = feature[1];
+        }
+    }
+    if (details.frameName === 'modal') {
+        // open window as modal
+        Object.assign(options, {
+            modal: true,
+            parent: win,
+            movable: false,
+            minimizable: false,
+            maximizable: false,
+            skipTaskbar: true,
+            resizable: false
+        });
+
+        var b = window.getBounds();
+        options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
+        options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
+    }
+    else {
+        if (Object.prototype.hasOwnProperty.call(options, 'x'))
+            options.x = getWindowX(options.x, options.width);
+        if (Object.prototype.hasOwnProperty.call(options, 'y'))
+            options.x = getWindowY(options.y, options.height);
+    }
+    return options;
+}
