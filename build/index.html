@@ -805,7 +805,7 @@
                         c.append(new MenuItem({ type: 'separator' }));
                         c.append(new MenuItem({
                             label: 'Inspect', click: () => {
-                                remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                                ipcRenderer.send('inspect', e.pageX, e.pageY);
                             }
                         }));
                     }
@@ -1665,7 +1665,7 @@
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Inspect', click: () => {
-                            remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                            ipcRenderer.send('inspect', e.pageX, e.pageY);
                         }
                     }));
                 }
@@ -1794,7 +1794,7 @@
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Inspect', click: () => {
-                            remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                            ipcRenderer.send('inspect', e.pageX, e.pageY);
                         }
                     }));
                 }
@@ -1843,7 +1843,7 @@
                         inputMenu.append(new MenuItem({ type: 'separator' }));
                         inputMenu.append(new MenuItem({
                             label: 'Inspect', click: () => {
-                                remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                                ipcRenderer.send('inspect', params.x, params.y);
                             }
                         }));
                     }

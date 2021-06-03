@@ -2811,6 +2811,10 @@ ipcMain.on('window-info', (event, info, ...args) => {
     }
 });
 
+ipcMain.on('inspect', (event, x, y) => {
+    event.sender.inspectElement(x || 0, y || 0);
+});
+
 function updateMenuItem(args) {
     var item, i = 0, items;
     var tItem, tItems;
