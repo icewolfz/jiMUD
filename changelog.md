@@ -2,6 +2,11 @@
 
 ## v0.16.1
 
+- **Fixed:**
+  - Fixed debug inspect content menu item
+- **Changed:**
+  - Update electron 13.0.1 to 13.1.0
+
 ## v0.16.0 2021-05-26
 
 - **Fixed:**
