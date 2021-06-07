@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.1
+## v0.16.1 2021-06-07
 
 - **Fixed:**
   - Fixed debug inspect content menu item
