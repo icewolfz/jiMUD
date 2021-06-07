@@ -5,7 +5,9 @@
 - **Fixed:**
   - Fixed debug inspect content menu item
 - **Changed:**
-  - Update electron 13.0.1 to 13.1.0
+  - Update electron 13.0.1 to 13.1.1
+  - Update better-sqlite3 7.4.0 to 7.4.1
+  - Update mathjs 9.4.1 to 9.4.2  
 
 ## v0.16.0 2021-05-26
 
