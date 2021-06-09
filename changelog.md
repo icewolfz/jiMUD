@@ -4,6 +4,8 @@
 
 - **New:**
   - Character manager: Added `Disconnect on load` for each character allowing you to force the current connection to disconnect and using the new characters auto connect settings
+- **Changed:**
+  - Update electron 13.1.1 to 13.1.2
 
 ## v0.16.1 2021-06-07
 
