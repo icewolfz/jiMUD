@@ -192,6 +192,7 @@
         var _disconnectTimer = 0;
         var _disconnectCounter = 0;
         var _charName = 0;
+        var _skipDisconnect = 0;
 
         window.onerror = function (msg, url, line, col, error) {
             if (client) {
@@ -1169,6 +1170,7 @@
                 ipcRenderer.send('closed');
                 _logger.postMessage({ action: 'connected', args: client.connected });
                 _logger.postMessage({ action: 'stop' });
+                if(_skipDisconnect) return;
                 switch (client.options.onDisconnect) {
                     case 1: //reconnect
                         autoConnect();
@@ -2175,6 +2177,10 @@
             }
             _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
             client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
+            if(client.connected && ipcRenderer.sendSync('get-global', 'disconnect')) {
+                _skipDisconnect = 1;
+                client.close();
+            }
             //autoConnect();
         });
 
@@ -2185,9 +2191,13 @@
                 $('#character-name').text('&nbsp;');
             }
             _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
+            if(client.connected && ipcRenderer.sendSync('get-global', 'disconnect'))
+                client.close();
+
         });
 
         ipcRenderer.on('change-options', () => {
+            _skipDisconnect = 0;
             client.settingsFile = ipcRenderer.sendSync('get-global', 'settingsFile');
             autoConnect();
         });

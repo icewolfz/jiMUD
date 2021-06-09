@@ -197,6 +197,11 @@
                 characters.characters[current].dev = $('#dev').prop('checked');
             }
 
+            if ($('#disconnect').prop('checked') != characters.characters[current].disconnect) {
+                changed++;
+                characters.characters[current].disconnect = $('#disconnect').prop('checked');
+            }
+
             v = $('#password').val() || '';
             if (v && v.length > 0) {
                 var key, iv;
@@ -303,6 +308,7 @@
                 $('#name').val(characters.characters[current].name || current);
                 $('#auto-load').prop('checked', current === characters.load);
                 $('#dev').prop('checked', characters.characters[current].dev);
+                $('#disconnect').prop('checked', characters.characters[current].disconnect);
 
                 if (characters.characters[current].password && characters.characters[current].password.length > 0) {
                     var pass = characters.characters[current].password.split(':');
@@ -917,6 +923,10 @@
                     <input disabled="disabled" type="checkbox" id="dev" /> Development
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Connect to development port</span>
                 </label>
+                <label class="control-label">
+                    <input disabled="disabled" type="checkbox" id="disconnect" /> Disconnect on load
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Disconnect current connection</span>
+                </label>                
             </div>
         </div>
     </div>

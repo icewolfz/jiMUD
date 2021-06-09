@@ -17,3 +17,4 @@ argument, -c=[name] or --character=[name].
 - `Map` The map file to use, defaults to character path + character name, generated using default map file.
 - `Auto load` Load this profile when ever jiMUD is first loaded, can only have one auto loading character, will unset previous set.
 - `Development` This character will login to the development port of the mud instead of normal
+- `Disconnect on load` Disconnect from the mud when this character is loaded

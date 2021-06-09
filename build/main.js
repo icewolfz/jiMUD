@@ -107,6 +107,7 @@ global.character = null;
 global.characterLogin = null;
 global.characterPass = null;
 global.dev = false;
+global.disconnect = false;
 global.title = '';
 global.debug = false;
 global.editorOnly = false;
@@ -136,6 +137,7 @@ function loadCharacter(char) {
         global.characterLogin = null;
         global.characterPass = null;
         global.dev = false;
+        global.disconnect = false;
         global.title = '';
         global.debug = false;
         global.editorOnly = false;
@@ -157,6 +159,7 @@ function loadCharacter(char) {
     global.mapFile = parseTemplate(characters.characters[char].map);
     global.characterLogin = characters.characters[char].name || (char || '').replace(/[^a-zA-Z0-9]+/g, '');
     global.dev = characters.characters[char].dev;
+    global.disconnect = characters.characters[char].disconnect || false;
     global.characterPass = characters.characters[char].password || '';
     global.title = char;
     updateTray();
@@ -2546,6 +2549,9 @@ ipcMain.on('get-global', (event, key) => {
         case 'dev':
             event.returnValue = global.dev;
             break;
+        case 'disconnect':
+            event.returnValue = global.disconnect;
+            break;
         case 'title':
             event.returnValue = global.title;
             break;
@@ -2589,6 +2595,9 @@ ipcMain.on('set-global', (event, key, value) => {
             break;
         case 'dev':
             global.dev = value;
+            break;
+        case 'disconnect':
+            global.disconnect = value;
             break;
         case 'title':
             global.title = value;
@@ -3755,7 +3764,7 @@ function createNewWindow(name, options) {
         if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
             shell.openExternal(url);
             return { action: 'deny' };
-        }        
+        }
         return {
             action: 'allow',
             overrideBrowserWindowOptions: buildOptions(details, windows[name].window, set)
@@ -4207,11 +4216,11 @@ function createCodeEditor(show, loading, loaded) {
             action: 'allow',
             overrideBrowserWindowOptions: buildOptions(details, winCode, edSet)
         }
-    });    
+    });
 
     winCode.webContents.on('did-create-window', (w, details) => {
         let frameName = details.frameName;
-        let url = details.url;    
+        let url = details.url;
         if (global.debug)
             w.webContents.openDevTools();
         w.removeMenu();
@@ -4568,7 +4577,7 @@ function buildOptions(details, window, settings) {
         features = details.features.split(',');
         for (var f = 0, fl = features.length; f < fl; f++) {
             feature = features[f].split('=');
-             if(feature[0] == "width" || feature[0] == "height" || feature[0] == 'x' || feature[0] == 'y')
+            if (feature[0] == "width" || feature[0] == "height" || feature[0] == 'x' || feature[0] == 'y')
                 options[feature[0]] = parseInt(feature[1], 10);
             else
                 options[feature[0]] = feature[1];
