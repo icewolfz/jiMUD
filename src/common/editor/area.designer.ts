@@ -6957,16 +6957,6 @@ export class AreaDesigner extends EditorBase {
                                     wiz.defaults['obj-damaged'] = ed.value.damaged || [];
                                     wiz.defaults['obj-skills'] = ed.value.skills || [];
                                     wiz.title = 'Edit armor...';
-                                    let encumbrance = '';
-                                    if (StdObjectType.armor_of_holding == ty) {
-                                        encumbrance = ` <div class="col-sm-6 form-group">
-                                                    <label class="control-label">
-                                                        Max encumbrance
-                                                        <input type="number" id="obj-encumbrance" class="input-sm form-control" min="0" value="100000000" />
-                                                    </label>
-                                                </div>`;
-                                        wiz.title = 'Edit armor of holding...';
-                                    }
                                     //type, quality, limbs, enchantment
                                     wiz.addPages([new WizardPage({
                                         id: 'obj-armor',
@@ -7011,7 +7001,7 @@ export class AreaDesigner extends EditorBase {
                                         <label class="control-label">
                                             <input type="checkbox" id="obj-limbsOptional" /> Limbs optional
                                         </label>
-                                    </div>${encumbrance}`,
+                                    </div>`,
                                         reset: (e) => {
                                             $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'accessory').selectpicker('render');
                                             e.page.querySelector('#obj-limbs').value = ed.value.limbs || '';
@@ -7019,7 +7009,6 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-maxWearable').value = ed.value.maxWearable || '0';
                                             e.page.querySelector('#obj-limbsOptional').checked = ed.value.limbsOptional || false;
-                                            e.page.querySelector('#obj-encumbrance').value = ed.value.encumbrance || '40000';
                                             initEditDropdown(e.page.querySelector('#obj-limbs-list').closest('.edit-dropdown'));
                                         }
                                     }), new WizardDataGridPage({
@@ -7136,6 +7125,35 @@ export class AreaDesigner extends EditorBase {
                                         enterMoveNext: this.$enterMoveNext,
                                         enterMoveNew: this.$enterMoveNew
                                     }), wizSkills, wizBonuses]);
+                                    if (StdObjectType.armor_of_holding == ty) {
+                                        wiz.insertPages(1, new WizardPage({
+                                            id: 'obj-bag',
+                                            title: 'Armor of holding properties',
+                                            body: ` <div class="col-sm-6 form-group">
+                                            <label class="control-label">
+                                                Max encumbrance
+                                                <input type="number" id="obj-encumbrance" class="input-sm form-control" min="0" value="100000000" />
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 form-group">
+                                            <label class="control-label">
+                                                Min encumbrance
+                                                <input type="number" id="obj-minencumbrance" class="input-sm form-control" min="0" value="100" />
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 form-group">
+                                            <label class="control-label">
+                                                Max items
+                                                <input type="number" id="obj-maxitems" class="input-sm form-control" min="0" value="100" />
+                                            </label>
+                                        </div>`,
+                                            reset: (e) => {
+                                                e.page.querySelector('#obj-encumbrance').value = ed.value.encumbrance || '40000';
+                                                e.page.querySelector('#obj-minencumbrance').value = ed.value.minencumbranc || '500';
+                                                e.page.querySelector('#obj-maxitems').value = ed.value.maxitems || '0';
+                                            }
+                                        }));
+                                    }
                                     break;
                                 case StdObjectType.chest:
                                     wiz.defaults['obj-contents'] = ed.value.contents || [];
@@ -7765,16 +7783,30 @@ export class AreaDesigner extends EditorBase {
                                     wiz.title = 'Edit bag of holding...';
                                     //quality, enchantment
                                     wiz.addPages(new WizardPage({
-                                        id: 'obj-weapon',
+                                        id: 'obj-bag',
                                         title: 'Bag of holding properties',
                                         body: ` <div class="col-sm-6 form-group">
                                         <label class="control-label">
                                             Max encumbrance
                                             <input type="number" id="obj-encumbrance" class="input-sm form-control" min="0" value="100000000" />
                                         </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Min encumbrance
+                                            <input type="number" id="obj-minencumbrance" class="input-sm form-control" min="0" value="100" />
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Max items
+                                            <input type="number" id="obj-maxitems" class="input-sm form-control" min="0" value="100" />
+                                        </label>
                                     </div>`,
                                         reset: (e) => {
                                             e.page.querySelector('#obj-encumbrance').value = ed.value.encumbrance || '40000';
+                                            e.page.querySelector('#obj-minencumbrance').value = ed.value.minencumbranc || '500';
+                                            e.page.querySelector('#obj-maxitems').value = ed.value.maxitems || '0';
                                         }
                                     }));
                                     break;
@@ -12823,6 +12855,33 @@ export class AreaDesigner extends EditorBase {
                     data['create arguments'] += `, ${obj.enchantment}`;
                     data['create arguments comment'] += ', Natural enchantment';
                 }
+                if (obj.type === StdObjectType.armor_of_holding) {
+                    if (obj.enchantment === 0) {
+                        data['create arguments'] += `, 0`;
+                        data['create arguments comment'] += ', Natural enchantment';
+                    }
+                    if (obj.encumbrance !== 40000) {
+                        data['create arguments'] += `, ${obj.encumbrance}`;
+                        data['create arguments comment'] += ', Max encumbrance'
+                    }
+                    else if (obj.maxitems !== 0 || obj.minencumbrance !== 500) {
+                        data['create arguments'] += ', 40000';
+                        data['create arguments comment'] += ', Max encumbrance'
+                    }
+                    if (obj.maxitems !== 0) {
+                        data['create arguments'] += `, ${obj.maxitems}`;
+                        data['create arguments comment'] += ', Max items'
+                    }
+                    else if (obj.minencumbrance !== 500) {
+                        data['create arguments'] += `, 0`;
+                        data['create arguments comment'] += ', Max items'
+                    }
+                    if (obj.minencumbrance !== 500) {
+                        data['create arguments'] += `, ${obj.minencumbrance}`;
+                        data['create arguments comment'] += ', Min encumbrance'
+                    }
+                }
+
                 if (obj.maxWearable !== 0)
                     tempProps['max_wearable'] = `"${obj.maxWearable}"`;
                 if (obj.limbsOptional)
@@ -12913,8 +12972,6 @@ export class AreaDesigner extends EditorBase {
                         data['create body'] += tmp.join(',\n       ');
                         data['create body'] += '\n     ]) );\n';
                     }
-                    if (obj.type === StdObjectType.armor_of_holding && obj.encumbrance !== 40000)
-                        data['create body'] += `   set_max_encumbrance(${obj.encumbrance});\n`;
                 }
                 break;
             //#endregion
@@ -13362,8 +13419,27 @@ export class AreaDesigner extends EditorBase {
             case StdObjectType.bag_of_holding:
                 //#region bag_of_holding
                 data.inherit = 'OBJ_BAGOFHOLDING';
-                if (obj.encumbrance !== 40000)
-                    data['create body'] += `   set_max_encumbrance(${obj.encumbrance});\n`;
+                data['create arguments comment'] = '';
+                if (obj.encumbrance !== 40000) {
+                    data['create arguments'] = `${obj.encumbrance}`;
+                    data['create arguments comment'] = '// Max encumbrance'
+                }
+                else if (obj.maxitems !== 0 || obj.minencumbrance !== 500) {
+                    data['create arguments'] = '40000';
+                    data['create arguments comment'] = '// Max encumbrance'
+                }
+                if (obj.maxitems !== 0) {
+                    data['create arguments'] += `, ${obj.maxitems}`;
+                    data['create arguments comment'] += ', Max items'
+                }
+                else if (obj.minencumbrance !== 500) {
+                    data['create arguments'] += `, 0`;
+                    data['create arguments comment'] += ', Max items'
+                }
+                if (obj.minencumbrance !== 500) {
+                    data['create arguments'] += `, ${obj.minencumbrance}`;
+                    data['create arguments comment'] += ', Min encumbrance'
+                }
                 //#endregion
                 break;
             default:

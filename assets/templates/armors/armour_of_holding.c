@@ -16,13 +16,12 @@ inherit OBJ_ARMOUR_OF_HOLDING;
 
 void create()
 {
-   ::create("", "", "", ({ "" }),  0);
+   //Type, Material, Quality, Limbs, Natural enchantment, Max amount of weight it can hold, max items, min encumbrance
+   ::create("", "", "", ({ "" }),  0, 40000, 0, 500);
    set_nouns("");
    set_adjectives("");
    set_name("");
    set_short("");
    set_long("");
    set_material("");
-   //Max amount of weight it can hold
-   set_max_encumbrance(40000);
 }

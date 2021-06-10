@@ -316,3 +316,6 @@ Create objects for your area
       - `Reduce mass` adjust the mass of an item put in a pack, mass * reduct = final mass
     - `Bag of holding`
       - `Max encumbrance` the max mass the bag can hold
+      - `Min encumbrance` the min mass the bag can hold when using % based encumbrance
+      - `Max items` the max number of items bag can hold up to max of 100
+    - `Armor of holding` has combined properties of armor and bag of holding
