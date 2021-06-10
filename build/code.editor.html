@@ -822,7 +822,7 @@
             <button style="float: right" type="button" class="btn btn-primary" onclick="createVirtualArea()">Ok</button>
         </div>
     </dialog>
-    <dialog id="remoteBrowse" data-title="Open remote file" style="width: 500px; height: 350px; padding: 5px;">
+    <dialog id="remoteBrowse" data-title="Open remote file" style="overflow: hidden;width: 500px; height: 350px; padding: 5px;">
         <div class="dialog-body panel panel-default" style="top: 0;bottom: 85px;left: 0px;right: 0px;padding: 0px;margin: 0px;position: absolute;border:0;border-radius: 0">
             <div class="panel-heading">
                 <label class="control-label" for="remote-path">
@@ -836,7 +836,7 @@
                             <button id="button-remote" class="btn btn-default" style="width: 17px;min-width:17px;border-radius:0;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul id="remote-navigate" style="max-height: 265px" class="dropdown-menu pull-right" aria-labelledby="button-remote" data-container="body"></ul>
+                            <ul id="remote-navigate" style="max-height: 200px" class="dropdown-menu pull-right" aria-labelledby="button-remote" data-container="body"></ul>
                             <button id="btn-remote-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory">
                                 <span class="fa-stack" style="top: -5px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                     <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1.2em"></i>
@@ -933,7 +933,7 @@
                             <button id="btn-mon-wiz-alignment" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-alignment" data-container="body">
+                            <ul style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-alignment" data-container="body">
                                 <li>
                                     <a href="#">demonic</a>
                                 </li>
@@ -980,7 +980,7 @@
                             <button id="btn-mon-wiz-race" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul id="mon-wiz-race-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-race" data-container="body">
+                            <ul id="mon-wiz-race-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-race" data-container="body">
                             </ul>
                         </span>
                     </div>
@@ -994,7 +994,7 @@
                             <button id="btn-mon-wiz-class" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-class" data-container="body">
+                            <ul style="max-height: 180px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-class" data-container="body">
                                 <li>
                                     <a href="#" class="main">cleric</a>
                                 </li>
@@ -1113,7 +1113,7 @@
                             <button id="btn-mon-wiz-language" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-language" data-container="body">
+                            <ul style="max-height: 180px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-language" data-container="body">
                                 <li>
                                     <a href="#">eltherian</a>
                                 </li>
@@ -1290,7 +1290,7 @@
                                 <button id="btn-mon-wiz-eye" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <span class="caret" style="margin-left: -1px;"></span>
                                 </button>
-                                <ul id="mon-wiz-eye-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-eye" data-container="body">
+                                <ul id="mon-wiz-eye-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-eye" data-container="body">
                                 </ul>
                             </span>
                         </div>
@@ -1304,7 +1304,7 @@
                                 <button id="btn-mon-wiz-hair" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <span class="caret" style="margin-left: -1px;"></span>
                                 </button>
-                                <ul id="mon-wiz-hair-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-hair" data-container="body">
+                                <ul id="mon-wiz-hair-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-hair" data-container="body">
                                 </ul>
                             </span>
                         </div>
@@ -1329,7 +1329,7 @@
                             <button id="btn-mon-wiz-body" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul id="mon-wiz-body-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-body" data-container="body">
+                            <ul id="mon-wiz-body-list" style="max-height: 160px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-body" data-container="body">
                             </ul>
                         </span>
                     </div>
@@ -1429,7 +1429,7 @@
                             <button id="btn-mon-wiz-class" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-class" data-container="body">
+                            <ul style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-class" data-container="body">
                                 <li>
                                     <a href="#">say</a>
                                 </li>
@@ -1611,7 +1611,7 @@
                             <button id="btn-room-wiz-terrain" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul id="room-wiz-terrain-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-terrain" data-container="body">
+                            <ul id="room-wiz-terrain-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-terrain" data-container="body">
                                 <li>
                                     <a href="#">beach</a>
                                 </li>
@@ -1861,7 +1861,7 @@
                             <button id="btn-room-wiz-dirt" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul id="room-wiz-dirt-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-dirt" data-container="body">
+                            <ul id="room-wiz-dirt-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-dirt" data-container="body">
                                 <li>
                                     <a href="#" data-value=''>none</a>
                                 </li>

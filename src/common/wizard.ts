@@ -452,8 +452,11 @@ export class Wizard extends EventEmitter {
         el.classList.add('dialog-footer');
         this.$nav = document.createElement('select');
         this.$nav.style.cssFloat = 'left';
-        this.$nav.classList.add('form-control', 'selectpicker');
+        this.$nav.classList.add('form-control', 'selectpicker', 'dropup');
         this.$nav.dataset.width = '200px';
+        //this.$nav.dataset.container = '.' + this.id;
+        this.$nav.dataset.dropupAuto = 'false';
+        this.$nav.dataset.size = '12';
         this.$nav.addEventListener('change', (e) => {
             this.goto(+(<HTMLSelectElement>e.target).selectedIndex);
         });
