@@ -604,7 +604,7 @@ class Monster {
 }
 
 export enum StdObjectType {
-    object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink, fishing_pole, backpack, bag_of_holding
+    object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink, fishing_pole, backpack, bag_of_holding, armor_of_holding
 }
 
 interface Property {
@@ -6952,10 +6952,21 @@ export class AreaDesigner extends EditorBase {
                                     }), wizSkills, wizBonuses]);
                                     break;
                                 case StdObjectType.armor:
+                                case StdObjectType.armor_of_holding:
                                     wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];
                                     wiz.defaults['obj-damaged'] = ed.value.damaged || [];
                                     wiz.defaults['obj-skills'] = ed.value.skills || [];
                                     wiz.title = 'Edit armor...';
+                                    let encumbrance = '';
+                                    if (StdObjectType.armor_of_holding == ty) {
+                                        encumbrance = ` <div class="col-sm-6 form-group">
+                                                    <label class="control-label">
+                                                        Max encumbrance
+                                                        <input type="number" id="obj-encumbrance" class="input-sm form-control" min="0" value="100000000" />
+                                                    </label>
+                                                </div>`;
+                                        wiz.title = 'Edit armor of holding...';
+                                    }
                                     //type, quality, limbs, enchantment
                                     wiz.addPages([new WizardPage({
                                         id: 'obj-armor',
@@ -7000,7 +7011,7 @@ export class AreaDesigner extends EditorBase {
                                         <label class="control-label">
                                             <input type="checkbox" id="obj-limbsOptional" /> Limbs optional
                                         </label>
-                                    </div>`,
+                                    </div>${encumbrance}`,
                                         reset: (e) => {
                                             $(e.page.querySelector('#obj-subType')).val(ed.value.subType || 'accessory').selectpicker('render');
                                             e.page.querySelector('#obj-limbs').value = ed.value.limbs || '';
@@ -7008,6 +7019,7 @@ export class AreaDesigner extends EditorBase {
                                             e.page.querySelector('#obj-enchantment').value = ed.value.enchantment || '0';
                                             e.page.querySelector('#obj-maxWearable').value = ed.value.maxWearable || '0';
                                             e.page.querySelector('#obj-limbsOptional').checked = ed.value.limbsOptional || false;
+                                            e.page.querySelector('#obj-encumbrance').value = ed.value.encumbrance || '40000';
                                             initEditDropdown(e.page.querySelector('#obj-limbs-list').closest('.edit-dropdown'));
                                         }
                                     }), new WizardDataGridPage({
@@ -10199,7 +10211,7 @@ export class AreaDesigner extends EditorBase {
         let r;
         let xl;
         let yl;
-        if (!this.$mapContext)  {
+        if (!this.$mapContext) {
             this.doUpdate(UpdateType.drawMap);
             return;
         }
@@ -12776,11 +12788,15 @@ export class AreaDesigner extends EditorBase {
         data.help.push('mattypes');
         const limbs = ['ALLLIMBS', 'OVERALL', 'LIMBONLY', 'TORSO', 'HEAD', 'LEFTARM', 'RIGHTARM', 'LEFTHAND', 'RIGHTHAND', 'LEFTLEG', 'RIGHTLEG', 'LEFTFOOT', 'RIGHTFOOT', 'RIGHTWING', 'LEFTWING', 'LEFTHOOF', 'RIGHTHOOF', 'TAIL', 'ARMS', 'LEGS', 'HANDS', 'FEET', 'WINGS', 'HOOVES', 'LOWERBODY', 'COREBODY', 'UPPERCORE', 'UPPERBODY', 'WINGEDCORE', 'WINGEDUPPER', 'UPPERTRUNK', 'LOWERTRUNK', 'TRUNK', 'WINGEDTRUNK', 'FULLBODY', 'TOTALBODY', 'WINGEDBODY'];
         switch (obj.type) {
+            case StdObjectType.armor_of_holding:
             case StdObjectType.armor:
                 //#region Armor
                 bonuses = true;
                 skills = true;
-                data.inherit = 'OBJ_ARMOUR';
+                if (obj.type === StdObjectType.armor_of_holding)
+                    data.inherit = 'OBJ_ARMOR_OF_HOLDING';
+                else
+                    data.inherit = 'OBJ_ARMOUR';
                 data['doc'].push('/doc/build/armours/tutorial');
                 data.help.push('atypes');
                 data.includes += '\n#include <limbs.h>';
@@ -12897,6 +12913,8 @@ export class AreaDesigner extends EditorBase {
                         data['create body'] += tmp.join(',\n       ');
                         data['create body'] += '\n     ]) );\n';
                     }
+                    if (obj.type === StdObjectType.armor_of_holding && obj.encumbrance !== 40000)
+                        data['create body'] += `   set_max_encumbrance(${obj.encumbrance});\n`;
                 }
                 break;
             //#endregion
