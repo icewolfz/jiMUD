@@ -6,7 +6,9 @@
   - Character manager: Added `Disconnect on load` for each character allowing you to force the current connection to disconnect and using the new characters auto connect settings
   - Code Editor: add armour of holding support to area designer and code template
 - **Fixed:**
-  - Code Editor: select drop downs cutoff or causing scrolling when used in dialogs
+  - Code Editor:
+    - Select drop downs cutoff or causing scrolling when used in dialogs
+    - Fix native tab icons when opening multiple files at once
 - **Changed:**
   - Update electron 13.1.1 to 13.1.2
   - Update font-list 1.2.14 to 1.2.15

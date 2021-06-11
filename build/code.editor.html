@@ -8782,7 +8782,7 @@
                 if (options.nativeIcons)
                     ipcRenderer.invoke('get-app', 'getFileIconDataUrl', (path.extname(data.source ? data.remote : data.file).length !== 0 ? data.source ? data.remote : data.file : '.*'), { size: 'small' }).then(icon =>{
                         if (!icon) return;
-                        manager.setPanelIcon(icon, _editors[p]);
+                        manager.setPanelIcon(icon, p);
                     });                 
                 p.editor.options = options.modelOptions;
             }
