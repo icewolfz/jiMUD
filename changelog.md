@@ -9,6 +9,7 @@
   - Code Editor: select drop downs cutoff or causing scrolling when used in dialogs
 - **Changed:**
   - Update electron 13.1.1 to 13.1.2
+  - Update font-list 1.2.14 to 1.2.15
 
 ## v0.16.1 2021-06-07
 
