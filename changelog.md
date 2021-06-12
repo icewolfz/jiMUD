@@ -11,7 +11,8 @@
     - Fix native tab icons when opening multiple files at once
 - **Changed:**
   - Update electron 13.1.1 to 13.1.2
-  - Update font-list 1.2.14 to 1.2.15
+  - Update font-list 1.2.14 to 1.3.0
+  - Update monaco-editor 0.24.0 to 0.25.0
 
 ## v0.16.1 2021-06-07
 
