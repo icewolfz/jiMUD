@@ -11,8 +11,9 @@
     - Fix native tab icons when opening multiple files at once
 - **Changed:**
   - Update electron 13.1.1 to 13.1.2
-  - Update font-list 1.2.14 to 1.3.0
-  - Update monaco-editor 0.24.0 to 0.25.0
+  - Update font-list 1.2.14 to 1.3.1
+  - Update monaco-editor 0.24.0 to 0.25.1
+  - Update chokidar 3.5.1 to 3.5.2
 
 ## v0.16.1 2021-06-07
 
@@ -21,7 +22,7 @@
 - **Changed:**
   - Update electron 13.0.1 to 13.1.1
   - Update better-sqlite3 7.4.0 to 7.4.1
-  - Update mathjs 9.4.1 to 9.4.2  
+  - Update mathjs 9.4.1 to 9.4.2
 
 ## v0.16.0 2021-05-26
 
