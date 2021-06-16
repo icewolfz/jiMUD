@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.2
+## v0.16.2 2021-06-16
 
 - **New:**
   - Character manager: Added `Disconnect on load` for each character allowing you to force the current connection to disconnect and using the new characters auto connect settings
