@@ -2,6 +2,9 @@
 
 ## v0.16.3
 
+- **Changed:**
+  - Update monaco-editor 0.25.1 to 0.25.2
+
 ## v0.16.2 2021-06-16
 
 - **New:**
