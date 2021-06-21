@@ -4,6 +4,8 @@
 
 - **Changed:**
   - Update monaco-editor 0.25.1 to 0.25.2
+  - Update electron 13.1.2 to 13.1.3
+  - Update yargs-parser 20.2.7 to 20.2.9
 
 ## v0.16.2 2021-06-16
 
