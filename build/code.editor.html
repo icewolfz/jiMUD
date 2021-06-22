@@ -342,7 +342,7 @@
                             dispose() { if (d && !model.isDisposed()) model.dispose(); },
                             textEditorModel: model
                         };
-                        return window.monaco.Promise.as({
+                        return Promise.resolve({
                             object: model2,
                             dispose: () => { if (d && !model.isDisposed()) model.dispose(); }
                         });

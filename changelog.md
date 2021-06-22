@@ -2,6 +2,8 @@
 
 ## v0.16.3
 
+- **Fixed:**
+  - Code editor: fix issue using old promises
 - **Changed:**
   - Update monaco-editor 0.25.1 to 0.25.2
   - Update electron 13.1.2 to 13.1.3
