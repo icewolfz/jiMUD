@@ -5,10 +5,12 @@
 - **Fixed:**
   - Code editor: fix issue using old promises
 - **Changed:**
-  - Update monaco-editor 0.25.1 to 0.25.2
+  - Update monaco-editor 0.25.1 to 0.26.1
   - Update electron 13.1.2 to 13.1.4
   - Update yargs-parser 20.2.7 to 20.2.9
-  - Update electron 13.1.2 to 13.1.4
+  - Update electron 13.1.2 to 13.1.7
+  - Update markdown-it 12.1.0 to 12.0.6
+  - Update mathjs 9.4.3 to 9.4.4
 
 ## v0.16.2 2021-06-16
 
