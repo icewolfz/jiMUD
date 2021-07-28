@@ -135,7 +135,7 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^7.4.1",
+    "better-sqlite3": "^7.4.3",
     "buzz": "^1.2.1",
     "chokidar": "^3.5.2",
     "electron-updater": "^4.3.9",

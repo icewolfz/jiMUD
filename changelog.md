@@ -11,6 +11,7 @@
   - Update electron 13.1.2 to 13.1.7
   - Update markdown-it 12.1.0 to 12.0.6
   - Update mathjs 9.4.3 to 9.4.4
+  - Update better-sqlite3 7.4.1 to 7.4.3
 
 ## v0.16.2 2021-06-16
 
