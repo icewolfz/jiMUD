@@ -3,7 +3,9 @@
 ## v0.16.3
 
 - **Fixed:**
-  - Code editor: fix issue using old promises
+  - Code editor:
+    - Fix issue using old promises
+    - Fix issue with recent open list not being updated fast enough
 - **Changed:**
   - Update monaco-editor 0.25.1 to 0.26.1
   - Update electron 13.1.2 to 13.1.8

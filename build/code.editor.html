@@ -7629,7 +7629,8 @@
         var p;
         if (p = findEditor('remote:' + remoteFile)) {
             manager.switchToPanel(p);
-            doUpdate(25);
+            doUpdate(17);
+            flushRecent();
             return;
         }
         if (!connected) {
@@ -7707,7 +7708,8 @@
             if (!remoteEdit)
                 _recent.unshift({ file: file, remote: remoteFile });
             createEditor({ file: file, open: true, remote: remoteFile, source: remoteEdit ? 1 : 0 }, true, dock, tmpObj);
-            doUpdate(25);
+            doUpdate(17);
+            flushRecent()
             delete _opening[file];
         }
     }
@@ -7752,7 +7754,8 @@
             delete _opening[files[f].file || files[f].path];
         }
         manager.addPanels(panels, dock);
-        doUpdate(25);
+        doUpdate(17);
+        flushRecent()
     }
 
     function setRemoteCache(file, remoteFile) {
