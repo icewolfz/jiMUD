@@ -141,6 +141,10 @@ export class EditorSettings {
             else
                 settings[prop] = data[prop];
         }
+        if (settings.editorOptions.find.seedSearchStringFromSelection !== 'selection' &&
+            settings.editorOptions.find.seedSearchStringFromSelection !== 'never' &&
+            settings.editorOptions.find.seedSearchStringFromSelection !== 'always')
+            settings.editorOptions.find.seedSearchStringFromSelection = settings.editorOptions.find.seedSearchStringFromSelection ? 'selection' : 'never';
         return settings;
     }
     public save(file) {
