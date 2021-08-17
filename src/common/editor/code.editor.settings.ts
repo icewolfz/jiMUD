@@ -40,7 +40,7 @@ export class EditorSettings {
         cursorStyle: 'line',
         emptySelectionClipboard: true,
         find: {
-            seedSearchStringFromSelection: true
+            seedSearchStringFromSelection: 'selection'
         },
         folding: true,
         fontSize: 14,

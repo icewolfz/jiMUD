@@ -7,8 +7,8 @@
     - Fix issue using old promises
     - Fix issue with recent open list not being updated fast enough
 - **Changed:**
-  - Update monaco-editor 0.25.1 to 0.26.1
-  - Update electron 13.1.2 to 13.1.8
+  - Update monaco-editor 0.25.1 to 0.27.0
+  - Update electron 13.1.2 to 13.1.9
   - Update yargs-parser 20.2.7 to 20.2.9
   - Update markdown-it 12.0.6 to 12.2.0
   - Update mathjs 9.4.3 to 9.4.4
