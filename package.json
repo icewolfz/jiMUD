@@ -28,7 +28,7 @@
     "clean": "npm run clean:code && npm run clean:css",
     "compile": "npm run compile:css && npm run compile:themes && npm run compile:worker && npm run compile:common && npm run min && echo Compile Done",
     "compile:debug": "npm run compile:css && npm run compile:themes && npm run compile:worker-debug && npm run compile:common-debug && copy out\\*.js build\\js\\ && xcopy /Y /E /I out\\editor build\\js\\editor && echo Compile Done",
-    "compile:debug-linux": "npm run compile:css && npm run compile:themes && npm run compile:worker-debug && npm run compile:common-debug && cp out/*.js build/js/ && cp out/editor build/js/editor && echo Compile Done",
+    "compile:debug-linux": "npm run compile:css && npm run compile:themes && npm run compile:worker-debug && npm run compile:common-debug && cp out/*.js build/js/ && cp -r out/editor build/js/editor && echo Compile Done",
     "compile:common": "tsc -p .",
     "compile:worker": "tsc -p ./src/worker",
     "compile:common-debug": "tsc -p . --listEmittedFiles",
