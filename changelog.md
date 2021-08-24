@@ -2,6 +2,9 @@
 
 ## v0.16.3
 
+- **New:**
+  - Preferences: showInTaskBar
+  - Tray icon: add known issues when using linux
 - **Fixed:**
   - Code editor:
     - Fix issue using old promises

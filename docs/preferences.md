@@ -191,7 +191,8 @@ Controls what is captured into the chat window
 - `Show extended error messages` Display extended stack information for errors
 - `Fix hidden windows` Move windows that have been hidden off screen to on onscreen
 - `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
-- `Hide when minimized` will hide the main window and any window set as a child
+- `Hide when minimized` will hide the main window and any window set as a child **note** due to bugs in linux this feature may not work
+- `Show in taskbar` will show or hide the main window from the system's taskbar
 - `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden
 - `Enable warning dialog when connected and closing client` disable or enable warning check when closing mud and connected
 - `Enable warning dialog when closing client and child windows are open` disable or enable warning dialog when closing and child windows are open

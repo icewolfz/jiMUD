@@ -1177,6 +1177,7 @@ function createWindow() {
         backgroundColor: '#000',
         show: false,
         icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
+        skipTaskbar: !set.showInTaskBar ? true : false,
         webPreferences: {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
@@ -1808,8 +1809,10 @@ ipcMain.on('reload-options', (event, save) => {
     if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('reload-options');
     set = settings.Settings.load(global.settingsFile);
-    if (win && !win.isDestroyed() && win.webContents)
+    if (win && !win.isDestroyed() && win.webContents) {
         win.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
+        win.setSkipTaskbar(!set.showInTaskBar ? true : false);        
+    }
     if (set.showTrayIcon && !tray)
         createTray();
     else if (!set.showTrayIcon && tray) {
@@ -2099,8 +2102,10 @@ ipcMain.on('setting-changed', (event, data) => {
         winMap.setAlwaysOnTop(data.value);
         winMap.setSkipTaskbar((!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false);
     }
-    if (win && event.sender != win.webContents)
+    if (win && event.sender != win.webContents) {
         win.webContents.send('setting-changed', data);
+        win.setSkipTaskbar(!set.showInTaskBar ? true : false);   
+    }
     if (winMap && event.sender != winMap.webContents)
         winMap.webContents.send('setting-changed', data);
 
