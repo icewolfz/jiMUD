@@ -12,6 +12,7 @@
     - Fix issue using old promises
     - Fix issue with recent open list not being updated fast enough
   - Add hack for linux not firing minimize event
+  - Auto update: Add message box for linux non Appimage installs as they are not supported
 - **Changed:**
   - Update monaco-editor 0.25.1 to 0.27.0
   - Update electron 13.1.2 to 13.2.2

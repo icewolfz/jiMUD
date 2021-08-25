@@ -4361,6 +4361,15 @@ function checkForUpdates() {
     if (!set)
         set = settings.Settings.load(global.settingsFile);
     if (set.checkForUpdates) {
+        //resources/app-update.yml
+        if(!isFileSync(path.join(app.getAppPath(), '..', 'app-update.yml')))
+        {
+            dialog.showMessageBox({
+                type: 'info',
+                message: 'Auto update not supported with this version of jiMUD'
+            });            
+            return;
+        }
         const autoUpdater = createUpdater();
         autoUpdater.on('update-downloaded', () => {
             if (win) {
@@ -4379,6 +4388,14 @@ function checkForUpdates() {
 }
 
 function checkForUpdatesManual() {
+    if(!isFileSync(path.join(app.getAppPath(), '..', 'app-update.yml')))
+    {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Auto update not supported with this version of jiMUD'
+        });            
+        return;
+    }    
     const autoUpdater = createUpdater();
     autoUpdater.autoDownload = false;
     autoUpdater.on('error', (error) => {

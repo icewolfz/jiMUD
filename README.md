@@ -84,6 +84,7 @@ Basic questions answered about jiMUD
 - Linux:
   - The minimize event does not correctly fire, thus `Hide when minimized` may not work
   - Tray icon: When app indicator is used on Linux, the click event is ignored, see [Electron docs for more limits](https://www.electronjs.org/docs/api/tray)
+  - Auto updating is only supported by Appimage
 - Display:
   - Unicode RTL text selection display is not correct
   - MXP Image height is limited to line height
