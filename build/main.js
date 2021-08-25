@@ -1811,7 +1811,7 @@ ipcMain.on('reload-options', (event, save) => {
     set = settings.Settings.load(global.settingsFile);
     if (win && !win.isDestroyed() && win.webContents) {
         win.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
-        win.setSkipTaskbar(!set.showInTaskBar ? true : false);        
+        win.setSkipTaskbar(!set.showInTaskBar ? true : false);
     }
     if (set.showTrayIcon && !tray)
         createTray();
@@ -2104,7 +2104,7 @@ ipcMain.on('setting-changed', (event, data) => {
     }
     if (win && event.sender != win.webContents) {
         win.webContents.send('setting-changed', data);
-        win.setSkipTaskbar(!set.showInTaskBar ? true : false);   
+        win.setSkipTaskbar(!set.showInTaskBar ? true : false);
     }
     if (winMap && event.sender != winMap.webContents)
         winMap.webContents.send('setting-changed', data);
@@ -2222,13 +2222,22 @@ ipcMain.on('set-overlay', (event, args) => {
     if (!win) return;
     switch (args) {
         case 1:
-            win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
+            if (process.platform === 'linux')
+                win.setIcon(path.join(__dirname, '../assets/icons/png/connected.png'));
+            else
+                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
             break;
         case 2:
-            win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received data');
+            if (process.platform === 'linux')
+                win.setIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'));
+            else
+                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received data');
             break;
         default:
-            win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');
+            if (process.platform === 'linux')
+                win.setIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'));
+            else
+                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');
             break;
     }
     updateTray();
@@ -2761,7 +2770,7 @@ ipcMain.handle('window', (event, action, ...args) => {
     }
     else if (action === 'reload')
         current.reload();
-    else if(action === 'setIcon')
+    else if (action === 'setIcon')
         current.setIcon(...args);
 });
 
@@ -2833,7 +2842,7 @@ ipcMain.on('window-info', (event, info, ...args) => {
 
 ipcMain.on('window-info-by-title', (event, title, info) => {
     var current = BrowserWindow.getAllWindows().filter(w => w.getTitle() === title);
-    if(!current)
+    if (!current)
         event.returnValue = 0;
     else if (info === 'isVisible')
         event.returnValue = current ? current.isVisible() : 0;
@@ -4362,12 +4371,11 @@ function checkForUpdates() {
         set = settings.Settings.load(global.settingsFile);
     if (set.checkForUpdates) {
         //resources/app-update.yml
-        if(!isFileSync(path.join(app.getAppPath(), '..', 'app-update.yml')))
-        {
+        if (!isFileSync(path.join(app.getAppPath(), '..', 'app-update.yml'))) {
             dialog.showMessageBox({
                 type: 'info',
                 message: 'Auto update not supported with this version of jiMUD'
-            });            
+            });
             return;
         }
         const autoUpdater = createUpdater();
@@ -4388,14 +4396,13 @@ function checkForUpdates() {
 }
 
 function checkForUpdatesManual() {
-    if(!isFileSync(path.join(app.getAppPath(), '..', 'app-update.yml')))
-    {
+    if (!isFileSync(path.join(app.getAppPath(), '..', 'app-update.yml'))) {
         dialog.showMessageBox({
             type: 'info',
             message: 'Auto update not supported with this version of jiMUD'
-        });            
+        });
         return;
-    }    
+    }
     const autoUpdater = createUpdater();
     autoUpdater.autoDownload = false;
     autoUpdater.on('error', (error) => {
