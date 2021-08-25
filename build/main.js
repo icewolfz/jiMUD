@@ -2223,19 +2223,19 @@ ipcMain.on('set-overlay', (event, args) => {
     switch (args) {
         case 1:
             if (process.platform === 'linux')
-                win.setIcon(path.join(__dirname, '../assets/icons/png/connected.png'));
+                win.setIcon(path.join(__dirname, '../assets/icons/png/connected2.png'));
             else
                 win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
             break;
         case 2:
             if (process.platform === 'linux')
-                win.setIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'));
+                win.setIcon(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
             else
                 win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received data');
             break;
         default:
             if (process.platform === 'linux')
-                win.setIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'));
+                win.setIcon(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
             else
                 win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');
             break;
