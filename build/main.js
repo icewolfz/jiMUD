@@ -2823,6 +2823,26 @@ ipcMain.on('window-info', (event, info, ...args) => {
         var current = BrowserWindow.fromWebContents(event.sender);
         event.returnValue = current ? current.isDevToolsOpened() : 0;
     }
+    else if (info === 'isMinimized') {
+        var current = BrowserWindow.fromWebContents(event.sender);
+        event.returnValue = current ? current.isMinimized() : 0;
+    }
+});
+
+ipcMain.on('window-info-by-title', (event, title, info) => {
+    var current = BrowserWindow.getAllWindows().filter(w => w.getTitle() === title);
+    if(!current)
+        event.returnValue = 0;
+    else if (info === 'isVisible')
+        event.returnValue = current ? current.isVisible() : 0;
+    else if (info === 'isEnabled')
+        event.returnValue = current ? current.isEnabled() : 0;
+    else if (info === 'isDevToolsOpened')
+        event.returnValue = current ? current.isDevToolsOpened() : 0;
+    else if (info === 'isMinimized')
+        event.returnValue = current ? current.isMinimized() : 0;
+    else if (info === 'isDestroyed')
+        event.returnValue = current ? current.isDestroyed() : 0;
 });
 
 ipcMain.on('inspect', (event, x, y) => {

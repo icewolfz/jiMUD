@@ -2554,6 +2554,12 @@
 
         document.addEventListener('load', () => doUpdate(1));
 
+        document.addEventListener('visibilitychange', ()=> {
+            //fake minimize due ot bug in linux not supporting minimize event
+            if(document.visibilityState === 'hidden' && client.options.hideOnMinimize && process.platform === 'linux' && ipcRenderer.sendSync('window-info', 'isMinimized'))
+                ipcRenderer.invoke('window', 'hide');
+        });
+
         var $updating = 0;
         function doUpdate(type) {
             $updating |= type;
