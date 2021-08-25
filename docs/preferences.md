@@ -224,7 +224,7 @@ Controls what is captured into the chat window
 ## Advanced > Tray
 
 - `Show tray icon` display an icon in the system tray/notification area
-- `Tray icon single click` set what happens when the tray icon is clicked
+- `Tray icon single click` set what happens when the tray icon is clicked  **note** see known issues with linux
   - `None` - do nothing when clicked
   - `Show` - show or focus on client window
   - `Hide` - hide or minimize client window based on `Hide when minimized` setting

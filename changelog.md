@@ -3,7 +3,9 @@
 ## v0.16.3
 
 - **New:**
-  - Preferences: showInTaskBar
+  - Preferences:
+    - Add showInTaskBar option for main window
+    - Add help blocks for tray click events when using linux
   - Tray icon: add known issues when using linux
 - **Fixed:**
   - Code editor:

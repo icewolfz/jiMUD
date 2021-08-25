@@ -203,6 +203,10 @@
                 $('.win32').css('display', 'inline-block');
             else
                 $('.win32').css('display', 'none');
+            if (process.platform === 'linux')
+                $('.linux').css('display', 'inline-block');
+            else
+                $('.linux').css('display', 'none');            
             fontList.getFonts()
                 .then(fonts => {
                     var fl = fonts.length;
@@ -2320,6 +2324,7 @@
                                 </label>
 
                             </div>
+                            <span class="linux help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">When app indicator is used on Linux, the click event is ignored</span>
                         </div>
 
                         <div class="col-sm-6 form-group">
@@ -2340,8 +2345,8 @@
                                 <label class="btn btn-default btn-xs">
                                     <input type="radio" name="trayDblClick" id="trayDblClick-menu"> Menu
                                 </label>
-
                             </div>
+                            <span class="linux help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Windows and Mac only</span>
                         </div>
                     </div>
                 </div>
