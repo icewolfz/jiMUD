@@ -6,7 +6,7 @@
   - Preferences:
     - Add showInTaskBar option for main window
     - Add help blocks for tray click events when using linux
-  - Tray icon: add known issues when using linux
+  - Tray icon: Add known issues when using linux to readme
 - **Fixed:**
   - Code editor:
     - Fix issue using old promises
