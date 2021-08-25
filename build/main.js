@@ -2471,7 +2471,7 @@ ipcMain.on('import-map', (event, data) => {
     if (winMap)
         winMap.webContents.send('import', data);
     else if (data) {
-        createMapper(false, false, () => { winMap.webContents.send('import', data); });
+        createMapper(false, true, () => { winMap.webContents.send('import', data); });
     }
 });
 
@@ -2736,7 +2736,9 @@ ipcMain.on('parseTemplate', (event, str, data) => {
 ipcMain.handle('window', (event, action, ...args) => {
     var current = BrowserWindow.fromWebContents(event.sender);
     if (!current) return;
-    if (action === "hide")
+    if (action === "focus")
+        current.focus();    
+    else if (action === "hide")
         current.hide();
     else if (action === "minimize")
         current.minimize();

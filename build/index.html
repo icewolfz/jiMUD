@@ -1170,7 +1170,7 @@
                 ipcRenderer.send('closed');
                 _logger.postMessage({ action: 'connected', args: client.connected });
                 _logger.postMessage({ action: 'stop' });
-                if(_skipDisconnect) return;
+                if (_skipDisconnect) return;
                 switch (client.options.onDisconnect) {
                     case 1: //reconnect
                         autoConnect();
@@ -1356,6 +1356,9 @@
                     title: 'Import error',
                     message: err || 'Error importing or exporting data.'
                 });
+                setTimeout(() => {
+                    ipcRenderer.invoke('window', 'focus');
+                }, 500);
                 $('#commandinput').focus();
             });
 
@@ -1368,6 +1371,9 @@
                     title: 'Aborted',
                     message: err || 'Aborted importing or exporting data.'
                 });
+                setTimeout(() => {
+                    ipcRenderer.invoke('window', 'focus');
+                }, 500);
                 $('#commandinput').focus();
             });
 
@@ -1375,6 +1381,9 @@
                 if ($('#Progress')[0].open)
                     $('#Progress')[0].close();
                 $('#commandinput').focus();
+                setTimeout(() => {
+                    ipcRenderer.invoke('window', 'focus');
+                }, 500);
                 ipcRenderer.send('set-progress', { value: -1 });
             });
 
@@ -2177,7 +2186,7 @@
             }
             _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
             client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
-            if(client.connected && ipcRenderer.sendSync('get-global', 'disconnect')) {
+            if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect')) {
                 _skipDisconnect = 1;
                 client.close();
             }
@@ -2191,7 +2200,7 @@
                 $('#character-name').text('&nbsp;');
             }
             _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
-            if(client.connected && ipcRenderer.sendSync('get-global', 'disconnect'))
+            if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect'))
                 client.close();
 
         });
@@ -2554,9 +2563,9 @@
 
         document.addEventListener('load', () => doUpdate(1));
 
-        document.addEventListener('visibilitychange', ()=> {
+        document.addEventListener('visibilitychange', () => {
             //fake minimize due ot bug in linux not supporting minimize event
-            if(document.visibilityState === 'hidden' && client.options.hideOnMinimize && process.platform === 'linux' && ipcRenderer.sendSync('window-info', 'isMinimized'))
+            if (document.visibilityState === 'hidden' && client.options.hideOnMinimize && process.platform === 'linux' && ipcRenderer.sendSync('window-info', 'isMinimized'))
                 ipcRenderer.invoke('window', 'hide');
         });
 
