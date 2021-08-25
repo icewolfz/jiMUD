@@ -2761,6 +2761,8 @@ ipcMain.handle('window', (event, action, ...args) => {
     }
     else if (action === 'reload')
         current.reload();
+    else if(action === 'setIcon')
+        current.setIcon(...args);
 });
 
 ipcMain.on('window-info', (event, info, ...args) => {
