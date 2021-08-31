@@ -38,17 +38,24 @@
         ipcRenderer.on('skills', (event, skills) => {
             _skills = skills;
             var cats = { default: '' };
+            var cnt = 0;
             for (skill in _skills) {
                 if (!Object.prototype.hasOwnProperty.call(_skills, skill))
                     continue;
                 cats[_skills[skill].category || 'default'] += createLabel(skill);
+                cnt++;;
             }
             var body = '';
-            for (cat in cats) {
-                body += '<div class="category" id="' + cat + '">';
-                body += '<div class="category-title">' + capitalize(cat) + '</div>';
-                body += '<div class="category-body" id="' + cat + 'Body">' + cats[cat] + '</div></div>';
+            if (cnt > 0) {
+                for (cat in cats) {
+                    body += '<div class="category" id="' + cat + '">';
+                    if (cnt > 1 || cat != 'default')
+                        body += '<div class="category-title">' + capitalize(cat) + '</div>';
+                    body += '<div class="category-body" id="' + cat + 'Body">' + cats[cat] + '</div></div>';
+                }
             }
+            else
+                body = body += '<div class="category" id="default">No skills</div>';
             document.body.innerHTML = body;
         });
 
