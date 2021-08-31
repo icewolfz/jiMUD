@@ -40,6 +40,23 @@
                     $('#' + $('#filter-skills').find(':selected').text().toLowerCase()).css('display', '');
                 }
             });
+            document.getElementById('body').addEventListener('contextmenu', e => {
+                e.preventDefault();
+                const sel = getSelection();
+                let inputMenu;
+                if (!sel.isCollapsed && sel.type === 'Range' && document.getElementById('body').contains(sel.anchorNode)) {
+                    inputMenu = [
+                        { role: 'copy' },
+                        { type: 'separator' },
+                        { role: 'selectAll' }
+                    ];
+                }
+                else
+                    inputMenu = [
+                        { role: 'selectAll' }
+                    ];
+                ipcRenderer.invoke('show-context', inputMenu);
+            });
         });
 
         ipcRenderer.on('skills', (event, skills) => {
@@ -282,6 +299,7 @@
             padding-top: 2px;
             padding-bottom: 2px;
             text-align: center;
+            user-select: none;
         }
 
         #toolbar .btn {
