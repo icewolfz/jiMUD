@@ -1436,6 +1436,13 @@
                     _nextClear = Date.now() + 3600000;
                 }
             });
+            _status.on('skill updated', (skill, data) => {
+                ipcRenderer.send('skill-updated', skill, data);
+            });
+            _status.on('skill init', (skill, data) => {
+                ipcRenderer.send('skill-reset');
+            });            
+            
             _status.ac = client.options.showArmor;
             _status.on('set-title', (title) => {
                 if (client.options.autoCreateCharacter)
@@ -2338,6 +2345,10 @@
             client.error(err);
         });
 
+        ipcRenderer.on('get-skills', (event, window) => {
+            ipcRenderer.send('skills', _status.skills, window);
+        });
+
         // eslint-disable-next-line no-unused-vars
         function childClosed(url, name) {
             if (path.basename(url) === 'characters.html')
@@ -2415,6 +2426,15 @@
             }
             else
                 ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'composer', alwaysOnTopClient: true, persistent: false, noInput: true });
+        }
+
+        function showSkills() {
+            if (client.options.windows['skills'] && client.options.windows['skills'].options) {
+                client.options.windows['skills'].options.show = true;
+                ipcRenderer.send('show-window', 'skills', client.options.windows['skills'].options);
+            }
+            else
+                ipcRenderer.send('show-window', 'skills', { show: true, file: 'skills.html', icon: 'skills', alwaysOnTopClient: true });            
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -2565,7 +2585,7 @@
 
         document.addEventListener('visibilitychange', () => {
             //fake minimize due ot bug in linux not supporting minimize event
-            if (document.visibilityState === 'hidden' && client.options.hideOnMinimize && process.platform === 'linux' && ipcRenderer.sendSync('window-info', 'isMinimized'))
+            if (document.visibilityState === 'hidden' && client && client.options && client.options.hideOnMinimize && process.platform === 'linux' && ipcRenderer.sendSync('window-info', 'isMinimized'))
                 ipcRenderer.invoke('window', 'hide');
         });
 

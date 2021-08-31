@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Skills</title>
+    <link rel="shortcut icon" href="../assets/icons/png/skills.png" />
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/main.css" rel="stylesheet" type="text/css" />
+    <link href="css/theme.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript">
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
+    <script src="../lib/bootstrap-select.min.js"></script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
+        const { ipcRenderer } = require('electron');
+        const { Settings } = require('./js/settings');
+        const { capitalize } = require('./js/library');
+        var options;
+        var _skills = {};
+
+        function loadOptions() {
+            options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+        }
+
+        $(document).ready(function () {
+            loadOptions();
+            ipcRenderer.send('get-skills', 'skills');
+            document.body.innerHTML = '';
+        });
+
+        ipcRenderer.on('skills', (event, skills) => {
+            _skills = skills;
+            var cats = { default: '' };
+            for (skill in _skills) {
+                if (!Object.prototype.hasOwnProperty.call(_skills, skill))
+                    continue;
+                cats[_skills[skill].category || 'default'] += createLabel(skill);
+            }
+            var body = '';
+            for (cat in cats) {
+                body += '<div class="category" id="' + cat + '">';
+                body += '<div class="category-title">' + capitalize(cat) + '</div>';
+                body += '<div class="category-body" id="' + cat + 'Body">' + cats[cat] + '</div></div>';
+            }
+            document.body.innerHTML = body;
+        });
+
+        ipcRenderer.on('skill-updated', (event, skill, data) => {
+            _skills[skill] = data;
+            _el = $('#' + sanitizeID(skill));
+            if (_el.length === 0) {
+                _el = $('#' + (data.category || 'default') + 'Body');
+                if (_el.length === 0) {
+                    body = '<div class="category">';
+                    body += '<div class="category-title">' + (data.category || 'default') + '</div>';
+                    body += '<div class="category-body" id="' + (data.category || 'default') + 'Body">' + createLabel(skill) + '</div></div>';
+                    $('body').append(body);
+                }
+                else
+                    _el.append(createLabel(skill));
+            }
+            else {
+                $('#' + sanitizeID(skill) + 'Amount').text(data.amount);
+                if (data.bonus > 0)
+                    $('#' + sanitizeID(skill) + 'Bonus').text('+' + data.bonus);
+                else if (data.bonus < 0)
+                    $('#' + sanitizeID(skill) + 'Bonus').text('<span class="neg">-' + data.bonus + '</span>');
+                else
+                    $('#' + sanitizeID(skill) + 'Bonus').text(data.bonus);
+                if (data.percent === 100)
+                    $('#' + sanitizeID(skill) + 'Percent').text('<span class="maxed">MAX!</span>');
+                else
+                    $('#' + sanitizeID(skill) + 'Percent').text(data.percent + '%');
+            }
+        });
+
+        ipcRenderer.on('skills-reset', (event, skill, data) => {
+            document.body.innerHTML = '';
+        });
+
+        function createLabel(skill) {
+            label = '<div title="' + skill + '" class="label" id="' + sanitizeID(skill) + '">';
+            label += '<div class="skill" id="' + sanitizeID(skill) + 'Label">' + capitalize(skill) + '</div>';
+            label += '<div class="amount" id="' + sanitizeID(skill) + 'Amount">' + _skills[skill].amount + '</div>';
+            if (_skills[skill].bonus > 0)
+                label += '<div class="bonus" id="' + sanitizeID(skill) + 'Bonus">+' + _skills[skill].bonus + '</div>';
+            else if (_skills[skill].bonus < 0)
+                label += '<div class="bonus" id="' + sanitizeID(skill) + 'Bonus"><span class="neg">-' + _skills[skill].bonus + '</span></div>';
+            else
+                label += '<div class="bonus" id="' + sanitizeID(skill) + 'Bonus">' + _skills[skill].bonus + '</div>';
+            if (_skills[skill].percent === 100)
+                label += '<div class="percent" id="' + sanitizeID(skill) + 'Percent"><span class="maxed">MAX!</span></div>';
+            else
+                label += '<div class="percent" id="' + sanitizeID(skill) + 'Percent">' + _skills[skill].percent + '%</div>';
+            label += '</div>';
+            return label;
+        }
+
+        function sanitizeID(id) {
+            id = id.replace(/\s/gi, '-');
+            return id.replace(/[^a-zA-Z0-9_-]/gi, '');
+        }
+
+    </script>
+    <style>
+        body {
+            overflow: auto;
+            background-color: black;
+            font-family: Consolas, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
+            font-size: 20px;
+            color: rgb(187, 187, 187);
+            user-select: auto;
+        }
+
+        .label {
+            display: inline-block;
+            width: 285px;
+            text-align: left;
+            margin-right: 15px;
+            color: rgb(187, 187, 187);
+        }
+
+        .skill {
+            display: inline-block;
+            text-align: left;
+            width: 145px;
+            margin-right: 5px;
+        }
+
+        .amount {
+            display: inline-block;
+            width: 30px;
+            text-align: right;
+            margin-right: 5px;
+        }
+
+        .bonus {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+            color: white;
+            margin-right: 5px;
+        }
+
+        .bonus::before {
+            content: '(';
+            color: rgb(187, 187, 187);
+            float: left;
+        }
+
+        .bonus::after {
+            content: ')';
+            color: rgb(187, 187, 187);
+        }
+
+
+        .percent {
+            display: inline-block;
+            width: 30px;
+            text-align: right;
+            margin-right: 5px;
+        }
+
+        .percent::before {
+            content: '(';
+            color: rgb(0, 128, 128);
+            float: left;
+        }
+
+        .percent::after {
+            content: ')';
+            color: rgb(0, 128, 128);
+        }
+
+        .category {
+            width: 100%;
+        }
+
+        .category-title {
+            width: 100%;
+            border-bottom: 1px solid;
+            color: white;
+            text-align: center;
+        }
+
+        .maxed {
+            color: rgb(128, 0, 0);
+        }
+
+        .neg {
+            color: rgb(255, 0, 0);
+        }
+    </style>
+</head>
+
+<body>
+
+</body>
+
+</html>

@@ -668,6 +668,14 @@ var menuTemp = [
                 accelerator: 'CmdOrCtrl+T'
             },
             {
+                label: '&Skills...',
+                id: 'skills',
+                click: () => {
+                    executeScript('showSkills()', win, true);
+                },
+                accelerator: 'CmdOrCtrl+S'
+            },            
+            {
                 label: '&Command history...',
                 id: 'history',
                 click: () => {
@@ -2368,6 +2376,47 @@ ipcMain.on('progress-close', (event, progressObj) => {
         winCode.setProgressBar(0);
 });
 
+ipcMain.on('get-skills', (event, window) => {
+    if (win)
+        win.webContents.send('get-skills', window);
+});
+
+ipcMain.on('skills', (event, skills, window) => {
+    if (window) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window].window)
+            return;
+        windows[window].window.webContents.send('skills', skills);
+    }
+    else
+        for (let name in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
+                continue;
+            windows[name].window.webContents.send('skills', skills);
+        }
+});
+
+ipcMain.on('skill-updated', (event, skill, data) => {
+    for (let name in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
+            continue;
+        windows[name].window.webContents.send('skill-updated', skill, data);
+    }
+});
+
+ipcMain.on('skills-reset', (event, window) => {
+    if (window) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window].window)
+            return;
+        windows[window].window.webContents.send('skills-reset');
+    }
+    else
+        for (let name in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
+                continue;
+            windows[name].window.webContents.send('skills-reset');
+        }
+});
+
 function setProgress(progressObj) {
     clearTimeout(_winProgressTimer);
     if (progressReady === 3) return;
@@ -2737,7 +2786,7 @@ ipcMain.handle('window', (event, action, ...args) => {
     var current = BrowserWindow.fromWebContents(event.sender);
     if (!current) return;
     if (action === "focus")
-        current.focus();    
+        current.focus();
     else if (action === "hide")
         current.hide();
     else if (action === "minimize")

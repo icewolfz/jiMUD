@@ -2,6 +2,11 @@
 
 ## v0.16.4
 
+- **New:**
+  = Add skills window
+- **Fixed:**
+  - Fixed error with linux on hide minimize hack when first loading
+
 ## v0.16.3 2021-08-25
 
 - **New:**
