@@ -37,17 +37,27 @@
 
         ipcRenderer.on('skills', (event, skills) => {
             _skills = skills;
-            var cats = { default: '' };
+            var cats = {};
             var cnt = 0;
-            for (skill in _skills) {
+            var keys;
+            keys = Object.keys(_skills).sort();
+            for (key in keys) {
+                skill = keys[key];
                 if (!Object.prototype.hasOwnProperty.call(_skills, skill))
                     continue;
-                cats[_skills[skill].category || 'default'] += createLabel(skill);
+                if(!cats[_skills[skill].category || 'default'])
+                    cats[_skills[skill].category || 'default'] = createLabel(skill);
+                else
+                    cats[_skills[skill].category || 'default'] += createLabel(skill);
                 cnt++;;
             }
             var body = '';
             if (cnt > 0) {
-                for (cat in cats) {
+                keys = Object.keys(cats).sort();
+                for (key in keys) {
+                    cat = keys[key];
+                    if (cats[cat].length === 0 || !Object.prototype.hasOwnProperty.call(cats, cat))
+                        continue;
                     body += '<div class="category" id="' + cat + '">';
                     if (cnt > 1 || cat != 'default')
                         body += '<div class="category-title">' + capitalize(cat) + '</div>';
@@ -64,25 +74,53 @@
             _el = $('#' + sanitizeID(skill));
             if (_el.length === 0) {
                 _el = $('#' + (data.category || 'default') + 'Body');
+                var found = 0;
+                var nodes;
                 if (_el.length === 0) {
+                    var cat = capitalize(data.category || 'default');
                     body = '<div class="category">';
-                    body += '<div class="category-title">' + (data.category || 'default') + '</div>';
+                    body += '<div class="category-title">' + cat + '</div>';
                     body += '<div class="category-body" id="' + (data.category || 'default') + 'Body">' + createLabel(skill) + '</div></div>';
-                    $('body').append(body);
+                    nodes = document.getElementsByClassName("category");
+                    for(var n = 0, nl = nodes.length; n < nl; n++)
+                    {
+                        if(nodes[n].children[0].textContent < cat)
+                            continue;
+                        $(body).insertBefore(nodes[n]);
+                        found = 1;
+                        break;
+                    }
+                    if(!found)
+                        $('body').append(body);
                 }
                 else
-                    _el.append(createLabel(skill));
+                {
+                    nodes = document.getElementById((data.category || 'default') + 'Body').children;
+                    found = 0;
+                    for(var n = 0, nl = nodes.length; n < nl; n++)
+                    {
+                        console.log(skill);
+                        console.log(nodes[n].getAttribute("title"));
+                        if(nodes[n].getAttribute("title") < skill)
+                            continue;
+                        $(createLabel(skill)).insertBefore(nodes[n]);
+                        found = 1;
+                        break;
+                    }
+                    if(!found)                   
+                        _el.append(createLabel(skill));
+                }
             }
             else {
                 $('#' + sanitizeID(skill) + 'Amount').text(data.amount);
                 if (data.bonus > 0)
                     $('#' + sanitizeID(skill) + 'Bonus').text('+' + data.bonus);
                 else if (data.bonus < 0)
-                    $('#' + sanitizeID(skill) + 'Bonus').text('<span class="neg">-' + data.bonus + '</span>');
+                    $('#' + sanitizeID(skill) + 'Bonus').html('<span class="neg">-' + data.bonus + '</span>');
                 else
                     $('#' + sanitizeID(skill) + 'Bonus').text(data.bonus);
                 if (data.percent === 100)
-                    $('#' + sanitizeID(skill) + 'Percent').text('<span class="maxed">MAX!</span>');
+                    $('#' + sanitizeID(skill) + 'Percent').html('<span class="maxed">MAX!</span>');
                 else
                     $('#' + sanitizeID(skill) + 'Percent').text(data.percent + '%');
             }
@@ -93,7 +131,7 @@
         });
 
         function createLabel(skill) {
-            label = '<div title="' + skill + '" class="label" id="' + sanitizeID(skill) + '">';
+            var label = '<div title="' + skill + '" class="label" id="' + sanitizeID(skill) + '">';
             label += '<div class="skill" id="' + sanitizeID(skill) + 'Label">' + capitalize(skill) + '</div>';
             label += '<div class="amount" id="' + sanitizeID(skill) + 'Amount">' + _skills[skill].amount + '</div>';
             if (_skills[skill].bonus > 0)
