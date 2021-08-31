@@ -57,7 +57,7 @@
     "@types/mathjs": "^9.4.2",
     "@types/node": "^15.14.9",
     "babel-minify": "^0.5.1",
-    "electron": "^13.2.2",
+    "electron": "^13.2.3",
     "electron-builder": "^22.11.7",
     "eslint": "^7.32.0",
     "eslint-plugin-html": "^6.1.2",

@@ -6,6 +6,8 @@
   = Add skills window
 - **Fixed:**
   - Fixed error with linux on hide minimize hack when first loading
+- **Changed:**
+  - Update electron 13.2.2 to 13.2.3
 
 ## v0.16.3 2021-08-25
 
