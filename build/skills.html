@@ -22,6 +22,7 @@
         const { capitalize } = require('./js/library');
         var options;
         var _skills = {};
+        var _cats = [];
 
         function loadOptions() {
             options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
@@ -30,7 +31,15 @@
         $(document).ready(function () {
             loadOptions();
             ipcRenderer.send('get-skills', 'skills');
-            document.body.innerHTML = '';
+            resetSkills();
+            $('#filter-skills').change(() => {
+                if ($('#filter-skills').find(':selected').text() === 'All')
+                    $('.category').css('display', '');
+                else {
+                    $('.category').css('display', 'none');
+                    $('#' + $('#filter-skills').find(':selected').text().toLowerCase()).css('display', '');
+                }
+            });
         });
 
         ipcRenderer.on('skills', (event, skills) => {
@@ -43,7 +52,7 @@
                 skill = keys[key];
                 if (!Object.prototype.hasOwnProperty.call(_skills, skill))
                     continue;
-                if(!cats[_skills[skill].category || 'default'])
+                if (!cats[_skills[skill].category || 'default'])
                     cats[_skills[skill].category || 'default'] = createLabel(skill);
                 else
                     cats[_skills[skill].category || 'default'] += createLabel(skill);
@@ -51,20 +60,23 @@
             }
             var body = '';
             if (cnt > 0) {
-                keys = Object.keys(cats).sort();
-                for (key in keys) {
-                    cat = keys[key];
+                _cats = Object.keys(cats).sort();
+                for (key in _cats) {
+                    cat = _cats[key];
+                    $('#filter-skills').append($('<option></option>').val(capitalize(cat)).html(capitalize(cat)));
                     if (cats[cat].length === 0 || !Object.prototype.hasOwnProperty.call(cats, cat))
                         continue;
-                    body += '<div class="category" id="' + cat + '">';
+                    body += '<div class="category" id="' + cat.toLowerCase() + '">';
                     if (cnt > 1 || cat != 'default')
                         body += '<div class="category-title">' + capitalize(cat) + '</div>';
                     body += '<div class="category-body" id="' + cat + 'Body">' + cats[cat] + '</div></div>';
                 }
             }
-            else
+            else {
+                _cats = [];
                 body = body += '<div class="category" id="default">No skills</div>';
-            document.body.innerHTML = body;
+            }
+            document.getElementById('body').innerHTML = body;
         });
 
         ipcRenderer.on('skill-updated', (event, skill, data) => {
@@ -76,34 +88,33 @@
                 var nodes;
                 if (_el.length === 0) {
                     var cat = capitalize(data.category || 'default');
-                    body = '<div class="category">';
+                    _cats.push(cat.toLowerCase());
+                    body = '<div class="category" id="' + cat.toLowerCase() + '">';
                     body += '<div class="category-title">' + cat + '</div>';
                     body += '<div class="category-body" id="' + (data.category || 'default') + 'Body">' + createLabel(skill) + '</div></div>';
                     nodes = document.getElementsByClassName("category");
-                    for(var n = 0, nl = nodes.length; n < nl; n++)
-                    {
-                        if(nodes[n].children[0].textContent < cat)
+                    for (var n = 0, nl = nodes.length; n < nl; n++) {
+                        if (nodes[n].children[0].textContent < cat)
                             continue;
                         $(body).insertBefore(nodes[n]);
                         found = 1;
                         break;
                     }
-                    if(!found)
-                        $('body').append(body);
+                    if (!found)
+                        $('#body').append(body);
+                    updateFilter();
                 }
-                else
-                {
+                else {
                     nodes = document.getElementById((data.category || 'default') + 'Body').children;
                     found = 0;
-                    for(var n = 0, nl = nodes.length; n < nl; n++)
-                    {
-                        if(nodes[n].getAttribute("title") < skill)
+                    for (var n = 0, nl = nodes.length; n < nl; n++) {
+                        if (nodes[n].getAttribute("title") < skill)
                             continue;
                         $(createLabel(skill)).insertBefore(nodes[n]);
                         found = 1;
                         break;
                     }
-                    if(!found)                   
+                    if (!found)
                         _el.append(createLabel(skill));
                 }
             }
@@ -122,9 +133,27 @@
             }
         });
 
+        function updateFilter() {
+            var val = $('#filter-skills').val();
+            $('#filter-skills option').remove();
+            $('#filter-skills').append($('<option></option>').val('All').html('All'));
+            _cats.sort();
+            for (key in _cats)
+                $('#filter-skills').append($('<option></option>').val(capitalize(_cats[key])).html(capitalize(_cats[key])));
+            $('#filter-skills').val(val);
+        }
+
         ipcRenderer.on('skills-reset', (event, skill, data) => {
-            document.body.innerHTML = '';
+            resetSkills();
         });
+
+        function resetSkills() {
+            document.getElementById('body').innerHTML = '';
+            $('#filter-skills option').remove();
+            $('#filter-skills').append($('<option></option>').val('All').html('All'));
+            $('#filter-skills').val('All');
+            _cats = [];
+        }
 
         function createLabel(skill) {
             var label = '<div title="' + skill + '" class="label" id="' + sanitizeID(skill) + '">';
@@ -151,13 +180,18 @@
 
     </script>
     <style>
-        body {
+        #body {
             overflow: auto;
             background-color: black;
             font-family: Consolas, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
             font-size: 16px;
             color: rgb(187, 187, 187);
             user-select: auto;
+            top: 26px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            position: absolute;
         }
 
         .label {
@@ -240,11 +274,61 @@
         .neg {
             color: rgb(255, 0, 0);
         }
+
+        #toolbar {
+            background-color: menu;
+            margin-left: 2px;
+            margin-right: 2px;
+            padding-top: 2px;
+            padding-bottom: 2px;
+            text-align: center;
+        }
+
+        #toolbar .btn {
+            outline: none !important;
+        }
+
+        #toolbar button {
+            min-width: 26px;
+        }
+
+        #toolbar input {
+            padding: 0px 2px;
+            margin: 0px;
+            width: 60px;
+            float: left;
+            height: 22px;
+            margin-left: 5px;
+        }
+
+        #toolbar .fa-circle {
+            color: red;
+        }
+
+        #toolbar select {
+            float: left;
+            min-width: 100px;
+            width: auto;
+            padding: 0px 2px;
+            margin: 0px;
+            height: 22px;
+            margin-left: 5px;
+        }
+
+        #toolbar label {
+            margin-bottom: 0 !important;
+        }
     </style>
 </head>
 
 <body>
-
+    <div id="toolbar" class="btn-toolbar" role="toolbar">
+        <div class="btn-group" style="float: none;">
+            <label for="filter-skills" style="float: left">Display:</label>
+            <select id="filter-skills" class="form-control" title="Filter Skills"></select>
+        </div>
+    </div>
+    <div id="body"></div>
 </body>
 
 </html>
