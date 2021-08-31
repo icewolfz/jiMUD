@@ -9,8 +9,6 @@
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
-    <link href="css/main.css" rel="stylesheet" type="text/css" />
-    <link href="css/theme.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
@@ -99,8 +97,6 @@
                     found = 0;
                     for(var n = 0, nl = nodes.length; n < nl; n++)
                     {
-                        console.log(skill);
-                        console.log(nodes[n].getAttribute("title"));
                         if(nodes[n].getAttribute("title") < skill)
                             continue;
                         $(createLabel(skill)).insertBefore(nodes[n]);
@@ -159,7 +155,7 @@
             overflow: auto;
             background-color: black;
             font-family: Consolas, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
-            font-size: 20px;
+            font-size: 16px;
             color: rgb(187, 187, 187);
             user-select: auto;
         }
@@ -170,6 +166,8 @@
             text-align: left;
             margin-right: 15px;
             color: rgb(187, 187, 187);
+            font-weight: normal;
+            font-size: 100%;
         }
 
         .skill {
