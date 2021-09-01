@@ -98,8 +98,7 @@
         const { parseTemplate, templatePath, existsSync, getColors, isFileSync, isDirSync, walkSync } = require('./js/library');
         const { TrayClick } = require('./js/types');
         const Settings = require('./js/settings').Settings;
-        const { remote, ipcRenderer } = require('electron');
-        const { dialog } = remote;
+        const { ipcRenderer } = require('electron');
         const RGBColor = require('rgbcolor');
         const path = require('path');
         const fs = require('fs');
@@ -206,7 +205,7 @@
             if (process.platform === 'linux')
                 $('.linux').css('display', 'inline-block');
             else
-                $('.linux').css('display', 'none');            
+                $('.linux').css('display', 'none');
             fontList.getFonts()
                 .then(fonts => {
                     var fl = fonts.length;
@@ -356,7 +355,7 @@
                     case 'mapper-memory':
                         _settings.mapper.memory = this.checked;
                         if (this.checked) {
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'warning',
                                 title: 'Warning',
                                 message: 'If client or OS crash, all in memory data will be lost and not saved to disk'
@@ -556,7 +555,7 @@
                 updateScheme($(this).index());
             });
             $('#btn-logPath').on('click', () => {
-                dialog.showOpenDialog(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
                     defaultPath: parseTemplate($('#logPath').val()),
                     properties: ['openDirectory', 'createDirectory']
                 }).then(result => {
@@ -1144,7 +1143,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function backup() {
-            var file = dialog.showSaveDialogSync(remote.getCurrentWindow(), {
+            var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
                 title: 'Save as...',
                 defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-data.zip'),
                 filters: [
@@ -1260,7 +1259,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="autoTakeoverLogin" /> Auto takeover login
                         </label>
-                    </div>                    
+                    </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="showCharacterManager" /> Show character manager on load
@@ -1309,7 +1308,7 @@
                                 <div class="input-group-addon">s</div>
                             </div>
                         </label>
-                    </div>                    
+                    </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="checkForUpdates" /> Check for updates on load
@@ -1396,7 +1395,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="display-showInvalidMXPTags" /> Show invalid MXP tags
                         </label>
-                    </div>                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="display-fonts">
                     <div class="col-sm-12 form-group">
@@ -2052,7 +2051,7 @@
                             <input type="checkbox" id="chat-showInTaskBar" /> Show in taskbar
                             <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Ignored when Always on top enabled in windows</span>
                         </label>
-                    </div>                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="telnet">
                     <div class="col-sm-6 form-group">
@@ -2167,12 +2166,12 @@
                         <label class="control-label">
                             <input type="checkbox" id="showInTaskBar" /> Show in taskbar
                         </label>
-                    </div>                    
+                    </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="enableBackgroundThrottling" /> Enable Background Throttling
                         </label>
-                    </div>                       
+                    </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="askonclose" /> Enable warning dialog when connected and closing client
@@ -2230,7 +2229,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="backupAllProfiles" /> Backup all profiles
                         </label>
-                    </div>                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="connection">
                     <div class="col-sm-6 form-group">
@@ -2259,8 +2258,8 @@
                             <input type="checkbox" id="allowHalfOpen" /> Enable allow Half Open sockets
                         </label>
                         <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires reconnection to take effect</span>
-                    </div>                        
-                </div>                
+                    </div>
+                </div>
                 <div role="tabpanel" class="pref-pane" id="profile-manager">
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
@@ -2295,7 +2294,7 @@
                                 <option value="-1">Descending</option>
                             </select>
                         </label>
-                    </div>                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="tray">
                     <div class="col-sm-6 form-group">
