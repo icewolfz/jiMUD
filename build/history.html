@@ -33,8 +33,7 @@
 <script src="../lib/bootstrap.min.js"></script>
 <script type="text/javascript">
     if (window.module) module = window.module;
-    const { remote, ipcRenderer } = require('electron');
-    const { Menu, MenuItem } = remote;
+    const { ipcRenderer } = require('electron');
 
     var list = document.getElementById('history');
     ipcRenderer.send('request-command-history');
@@ -53,7 +52,7 @@
         }
         //list.innerHTML = lst;
         list.appendChild(fragment);
-        if(l == 1) {
+        if (l == 1) {
             list.style.display = 'none';
             list.style.display = 'block';
         }
@@ -68,31 +67,33 @@
     });
     list.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        var c = new Menu();
+        var c = [];
         if (list.selectedIndex !== -1) {
-            c.append(new MenuItem({
+            c.push({
                 label: '&Send',
-                click: () => {
-                    ipcRenderer.send('add-command-history', list.value);
-                    ipcRenderer.send('send-command', list.value);
-                }
-            }));
-            c.append(new MenuItem({ type: 'separator' }));
+                click: 'executeContext("add")'
+            });
+            c.push({ type: 'separator' });
         }
-        c.append(new MenuItem({
+        c.push({
             label: '&Refresh',
-            click: () => {
-                ipcRenderer.send('request-command-history');
-            }
-        }));
-        c.append(new MenuItem({
+            click: 'executeContext("request-command-history")'
+        });
+        c.push({
             label: '&Clear history',
-            click: () => {
-                ipcRenderer.send('clear-command-history');
-            }
-        }));
-        c.popup({ window: remote.getCurrentWindow() });
+            click: 'executeContext("clear-command-history")'
+        });
+        ipcRenderer.invoke('show-context', c);
     });
+
+    function executeContext(action) {
+        if (action === 'add') {
+            ipcRenderer.send('add-command-history', list.value);
+            ipcRenderer.send('send-command', list.value);
+        }
+        else
+            ipcRenderer.send(action);
+    }
 </script>
 
 </html>
