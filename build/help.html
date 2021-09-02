@@ -20,8 +20,7 @@
     <script type="text/javascript">
         if (window.module) module = window.module;
         //spellchecker:ignore codeeditor
-        const { remote } = require('electron');
-        const { Menu } = remote;
+        const { ipcRenderer } = require('electron');
         const { Search } = require('./js/search');
         const path = require('path');
         const fs = require('fs');
@@ -130,6 +129,23 @@
                 oDoc.body.appendChild(container);
                 container = $(container);
                 loadUrl('README');
+                container[0].addEventListener('contextmenu', e => {
+                    e.preventDefault();
+                    const sel = oDoc.getSelection();
+                    let inputMenu;
+                    if (!sel.isCollapsed && sel.type === 'Range' && container[0].contains(sel.anchorNode)) {
+                        inputMenu = [
+                            { role: 'copy' },
+                            { type: 'separator' },
+                            { role: 'selectAll' }
+                        ];
+                    }
+                    else
+                        inputMenu = [
+                            { role: 'selectAll' }
+                        ];
+                    ipcRenderer.invoke('show-context', inputMenu);
+                });
             };
             contents = $('#contents');
             $search = new Search(document.body);
@@ -140,24 +156,6 @@
                 _history.push(contents.val());
                 _current = _history.length - 1;
                 updateButtons();
-            });
-
-            container[0].addEventListener('contextmenu', e => {
-                e.preventDefault();
-                const sel = getSelection();
-                let inputMenu;
-                if (!sel.isCollapsed && sel.type === 'Range' && container[0].contains(sel.anchorNode)) {
-                    inputMenu = Menu.buildFromTemplate([
-                        { role: 'copy' },
-                        { type: 'separator' },
-                        { role: 'selectAll' }
-                    ]);
-                }
-                else
-                    inputMenu = Menu.buildFromTemplate([
-                        { role: 'selectAll' }
-                    ]);
-                inputMenu.popup({ window: remote.getCurrentWindow() });
             });
 
             $('#btn-history-dropdown').click(function () {
@@ -173,18 +171,18 @@
                         index: i,
                         type: i === _current ? 'radio' : 'normal',
                         checked: i === _current,
-                        click: (item) => {
-                            _current = i;
-                            contents.val(item.url).selectpicker('render');
-                            loadContents(item.url);
-                            updateButtons();
-                        }
                     });
                 });
-                Menu.buildFromTemplate(addMenu).popup({ window: remote.getCurrentWindow(), x: x, y: y });
+                ipcRenderer.invoke('show-context', addMenu, { x: x, y: y });
             });
-
         });
+
+        function executeContextItem(idx, id, label, role) {
+            _current = idx;
+            contents.val(_history[idx]).selectpicker('render');
+            loadContents(_history[idx]);
+            updateButtons();
+        }
     </script>
 </head>
 
