@@ -9,6 +9,7 @@
 - **Changed:**
   - Replaced more remote module calls
   - Update electron 13.2.2 to 13.3.0
+  - Update fswin 3.21.107 to 2.31.902
 
 ## v0.16.3 2021-08-25
 
