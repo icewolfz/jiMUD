@@ -2825,6 +2825,18 @@ ipcMain.handle('window', (event, action, ...args) => {
         current.setIcon(...args);
 });
 
+ipcMain.handle('attach-context-event', event => {
+    event.sender.on('context-menu', (e, props) => {
+        executeScriptContents(`executeContextMenu(${JSON.stringify(props)})`, event.sender);
+    });
+});
+
+ipcMain.handle('attach-context-event-prevent', event => {
+    event.sender.on('context-menu', (e, props) => {
+        executeScriptContents(`executeContextMenu(${JSON.stringify(props)})`, event.sender);
+    });
+});
+
 ipcMain.on('window-info', (event, info, ...args) => {
     if (info === "child-count") {
         var windows = BrowserWindow.getAllWindows();
@@ -4626,6 +4638,21 @@ async function executeScript(script, w, f) {
     });
     //if (f)
     //w.webContents.focus();
+}
+
+// eslint-disable-next-line no-unused-vars
+async function executeScriptContents(script, w) {
+    return new Promise((resolve, reject) => {
+        if (!w) {
+            reject();
+            return;
+        }
+        w.executeJavaScript(script).then(() => resolve()).catch(err => {
+            if (err)
+                logError(err);
+            reject();
+        });
+    });
 }
 
 function getWindowX(x, w) {
