@@ -26,7 +26,7 @@
         //spell-checker:ignore BOLDOFF ITALICOFF UNDERLINEOFF FLASHOFF INVERSEOFF STRIKEOUTOFF OVERLINEOFF hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime
         /* global tinymce */
         const { remote, ipcRenderer, webFrame, nativeImage } = require('electron');
-        const { dialog, Menu, MenuItem } = remote;
+        const { Menu, MenuItem } = remote;
         const { stripHTML, htmlEncode, parseTemplate, getColors } = require('./js/library');
         const { Settings } = require('./js/settings');
         const { Mail } = require('./js/mail');

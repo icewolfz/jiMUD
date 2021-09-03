@@ -8,8 +8,7 @@ import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, stripQuotes } from '../library';
-const { clipboard, remote, ipcRenderer } = require('electron');
-const { Menu } = remote;
+const { clipboard, ipcRenderer } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
 import { Wizard, WizardPage, WizardDataGridPage } from '../wizard';
@@ -1488,17 +1487,17 @@ export class AreaDesigner extends EditorBase {
             const sel = getSelection();
             let inputMenu;
             if (!sel.isCollapsed && sel.type === 'Range' && this.$roomPreview.container.contains(sel.anchorNode)) {
-                inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
+                inputMenu = [
                     { role: 'copy' },
                     { type: 'separator' },
                     { role: 'selectAll' }
-                ]);
+                ];
             }
             else
-                inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
+                inputMenu = [
                     { role: 'selectAll' }
-                ]);
-            inputMenu.popup({ window: remote.getCurrentWindow() });
+                ];
+            ipcRenderer.invoke('show-context', inputMenu);
         });
         this.$roomPreview.short = document.createElement('div');
         this.$roomPreview.short.classList.add('room-short');

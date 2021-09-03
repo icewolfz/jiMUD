@@ -28,8 +28,7 @@
         //spell-checker:ignore yazl askonload keypress rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
         const { parseTemplate, templatePath, isFileSync, isDirSync, decrypt, encrypt, clone, walkSync } = require('./js/library');
         const Settings = require('./js/settings').Settings;
-        const { shell, remote, ipcRenderer } = require('electron');
-        const { dialog, Menu, MenuItem } = remote;
+        const { shell, ipcRenderer } = require('electron');
         const path = require('path');
         const fs = require('fs');
         const crypto = require('crypto');
@@ -65,40 +64,19 @@
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
-                var c = new Menu();
+                var c = [];
                 var item = $(event.target).data('name');
-                c.append(new MenuItem({
-                    label: 'Add default', click: add
-                }));
-                c.append(new MenuItem({
-                    label: 'Add empty', click: addEmpty
-                }));
+                c.push({ label: 'Add default', click: "add()" });
+                c.push({ label: 'Add empty', click: "addEmpty()" });
                 if (item !== undefined) {
-                    c.append(new MenuItem({ type: 'separator' }));
-                    c.append(new MenuItem({
-                        label: 'Rename', click: () => {
-                            rename(item);
-                        }
-                    }));
-
-                    c.append(new MenuItem({
-                        label: 'Copy', click: () => {
-                            copy(item);
-                        }
-                    }));
-                    c.append(new MenuItem({
-                        label: 'Delete', click: () => {
-                            remove(item);
-                        }
-                    }));
-                    c.append(new MenuItem({ type: 'separator' }));
-                    c.append(new MenuItem({
-                        label: 'Load', click: () => {
-                            load(item);
-                        }
-                    }));
+                    c.push({ type: 'separator' });
+                    c.push({ label: 'Rename', click: `rename(${item})` });
+                    c.push({ label: 'Copy', click: `copy(${item})` });
+                    c.push({ label: 'Delete', click: `remove(${item})` });
+                    c.push({ type: 'separator' });
+                    c.push({ label: 'Load', click: `load(${item})` });
                 }
-                c.popup({ window: remote.getCurrentWindow() });
+                ipcRenderer.invoke('show-context', c);
             });
             loadCharacters();
 
@@ -107,20 +85,13 @@
                 var pos = $(this).offset();
                 var x = Math.floor(pos.left);
                 var y = Math.floor(pos.top + $(this).outerHeight() + 2);
-                const addMenu = new Menu();
-                addMenu.append(new MenuItem({
-                    label: 'Add default', click() {
-                        clearButton('#btn-add-dropdown');
-                        add();
-                    }
-                }));
-                addMenu.append(new MenuItem({
-                    label: 'Add empty', click() {
-                        clearButton('#btn-add-dropdown');
-                        addEmpty();
-                    }
-                }));
-                addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
+                const addMenu = [{
+                    label: 'Add default', click: "clearButton('#btn-add-dropdown');add();"
+                },
+                {
+                    label: 'Add empty', click: "clearButton('#btn-add-dropdown');addEmpty();"
+                }];
+                ipcRenderer.invoke('show-context', addMenu, { x: x, y: y });
             });
 
             $('#get-name-ok').click(function () {

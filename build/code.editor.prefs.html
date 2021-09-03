@@ -80,8 +80,7 @@
     <script type="text/javascript">
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
         const { parseTemplate, isDirSync } = require('./js/library.js');
-        const { remote, ipcRenderer, shell } = require('electron');
-        const { dialog, Menu, MenuItem } = remote;
+        const { ipcRenderer, shell } = require('electron');
         const path = require('path');
         const fs = require('fs-extra');
         const EditorSettings = require('./js/editor/code.editor.settings').EditorSettings;
@@ -242,27 +241,12 @@
                 const pos = $(this).offset();
                 const x = Math.floor(pos.left);
                 const y = Math.floor(pos.top + $(this).outerHeight() + 2);
-                const addMenu = new Menu();
-                addMenu.append(new MenuItem({
-                    label: 'All', click() {
-                        clearButton('#btn-clear-dropdown');
-                        clearCache();
-                    }
-                }));
-                addMenu.append(new MenuItem({ type: 'separator' }));
-                addMenu.append(new MenuItem({
-                    label: 'Remote', click() {
-                        clearButton('#btn-clear-dropdown');
-                        clearCache(1);
-                    }
-                }));
-                addMenu.append(new MenuItem({
-                    label: 'State', click() {
-                        clearButton('#btn-clear-dropdown');
-                        clearCache(2);
-                    }
-                }));
-                addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
+                const addMenu = [];
+                addMenu.push({ label: 'All', click: "clearButton('#btn-clear-dropdown');clearCache();" });
+                addMenu.push({ type: 'separator' });
+                addMenu.push({ label: 'Remote', click: "clearButton('#btn-clear-dropdown');clearCache(1);" });
+                addMenu.push({ label: 'State', click: "clearButton('#btn-clear-dropdown');clearCache(2);" });
+                ipcRenderer.invoke('show-context', addMenu, { x: x, y: y });
             });
 
         });
@@ -527,7 +511,7 @@
                         <input type="checkbox" id="debug" /> Enable debug
                     </label>
                 </div>
-             
+
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="editor">
                 <div class="col-sm-6 form-group">
@@ -1012,7 +996,7 @@
                     <label class="control-label">
                         <input type="checkbox" id="enableBackgroundThrottling" /> Enable Background Throttling
                     </label>
-                </div>                    
+                </div>
             </div>
         </div>
         <div class="dialog-footer">

@@ -25,7 +25,7 @@
         //spell-checker:ignore hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime
         /* global tinymce */
         const { nativeImage, remote, ipcRenderer, webFrame, clipboard } = require('electron');
-        const { dialog, Menu, MenuItem } = remote;
+        const { Menu, MenuItem } = remote;
         const { stripHTML, htmlEncode, invert, getColors } = require('./js/library');
         const { Settings } = require('./js/settings');
         const rgbcolor = require('rgbcolor');
