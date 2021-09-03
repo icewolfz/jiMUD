@@ -2739,35 +2739,13 @@ ipcMain.handle('show-dialog', (event, type, ...args) => {
 });
 
 ipcMain.on('show-context-sync', (event, template, options, show, close) => {
-    if (!template)
-        return;
-    if (!options) options = {};
-    options.window = BrowserWindow.fromWebContents(event.sender);
-    if (options.callback) {
-        var callback = options.callback;
-        options.callback = () => event.sender.executeJavaScript(callback);
-    }    
-    template.map((item, idx) => {
-        if (typeof item.click === 'string') {
-            var click = item.click;
-            item.click = () => event.sender.executeJavaScript(click);
-        }
-        else
-            item.click = () => event.sender.executeJavaScript(`executeContextItem(${idx}, "${item.id}", "${item.label}", "${item.role}");`);
-    });
-    var cMenu = Menu.buildFromTemplate(template);
-    if (show)
-        cMenu.on('menu-will-show', () => {
-            event.sender.executeJavaScript(show);
-        });
-    if (close)
-        cMenu.on('menu-will-close', () => {
-            event.sender.executeJavaScript(close);
-        });
-    cMenu.popup(options);
+    showContext(event, template, options, show, close);
+    event.returnValue = true;
 });
 
-ipcMain.handle('show-context', (event, template, options, show, close) => {
+ipcMain.handle('show-context', showContext);
+
+function showContext(event, template, options, show, close) {
     if (!template)
         return;
     if (!options) options = {};
@@ -2794,7 +2772,7 @@ ipcMain.handle('show-context', (event, template, options, show, close) => {
             event.sender.executeJavaScript(close);
         });
     cMenu.popup(options);
-});
+}
 
 ipcMain.on('trash-item', (event, file) => {
     if (!file)
