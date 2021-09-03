@@ -930,7 +930,7 @@
             $('#bottom-loading').css('display', 'none');
             if (!_currentLetter) return;
             if (!letter) {
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'Letter not found',
                     message: 'Letter could not be found.'

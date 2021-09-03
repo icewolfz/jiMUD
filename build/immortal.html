@@ -1261,21 +1261,21 @@
                 if (error && error.code) {
                     switch (error.code) {
                         case IEDError.USER_DENIED:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Permission denied',
                                 message: 'Permission denied'
                             });
                             break;
                         case IEDError.RESET:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Reset',
                                 message: 'Server reset: ' + error.msg
                             });
                             break;
                         case IEDError.USERRESET:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Reset',
                                 message: error.msg
@@ -1284,13 +1284,13 @@
                         case IEDError.CMD_EXIST:
                             if (error && !error.tag.startsWith(_ied.prefix + 'mkdirIgnore') && !error.tag.startsWith(_ied.prefix + 'mkdirPIgnore')) {
                                 if (error.path && error.file)
-                                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                         type: 'error',
                                         title: 'Already exist',
                                         message: `File or directory already exist: '${error.path}/${error.file}`
                                     });
                                 else
-                                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                         type: 'error',
                                         title: 'Already exist',
                                         message: error.msg
@@ -1298,28 +1298,28 @@
                             }
                             break;
                         case IEDError.CMD_DIRECTORY:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Is a directory',
                                 message: `File is a directory: '${error.path}/${error.file}`
                             });
                             break;
                         case IEDError.CMD_NOEXIST:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Does not exist',
                                 message: `File or directory does not exist: '${error.path}/${error.file}`
                             });
                             break;
                         case IEDError.CMD_FILE:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Not a directory',
                                 message: `File not a directory: '${error.path}/${error.file}`
                             });
                             break;
                         case IEDError.DIR_CANTREAD:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Can not read',
                                 message: 'Can not read or permission denied'
@@ -1534,7 +1534,7 @@
                     }
                     else {
                         logMessage(`Failed to delete: ${obj.path}/${obj.file}`);
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Could not delete',
                             message: 'Could not delete: ' + obj.path + '/' + obj.file,
@@ -1570,7 +1570,7 @@
                     }
                     else {
                         logMessage(`Failed to rename: ${obj.path}/${obj.file}`);
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Could not rename',
                             message: 'Could not rename: ' + obj.file,
@@ -1609,7 +1609,7 @@
                     }
                     else {
                         logMessage(`Failed to create directory: ${obj.path}`);
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Could not create directory',
                             message: 'Could not create: ' + path.basename(obj.path),
@@ -1636,7 +1636,7 @@
                     }
                     else {
                         logMessage(`Failed to remove directory: ${obj.path}`);
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Could not remove directory',
                             message: 'Could not remove: ' + path.basename(obj.path),
@@ -3192,13 +3192,13 @@
             var data = localTable.rows({ selected: true }).data().pluck('path');
             for (var d = 0, dl = data.length; d < dl; d++)
                 ipcRenderer.send('trash-item', data[d]);
-                //shell.moveItemToTrash(data[d]);
-                //shell.trashItem(data[d]).catch(err=>console.log(err));
+            //shell.moveItemToTrash(data[d]);
+            //shell.trashItem(data[d]).catch(err=>console.log(err));
         }
 
         function deleteRemote() {
             var data = remoteTable.rows({ selected: true }).data();
-            dialog.showMessageBox(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                 type: 'warning',
                 title: 'Delete?',
                 message: data.length > 1 ? 'Delete remote?' : 'Delete remote: ' + data[0].name + '?',
@@ -3252,7 +3252,7 @@
         function newFolderOk() {
             var n = $('#newFolder-name').val();
             if (!n || n.length === 0) {
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'Name required',
                     message: 'You must supply a valid name!'
@@ -3260,7 +3260,7 @@
                 return;
             }
             if (IED.invalidFile(n)) {
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'Invalid folder name',
                     message: 'The name you supplied contains invalid characters!'
@@ -3270,7 +3270,7 @@
             if ($('#newFolder').data('type') === 'local') {
                 if (_local[n]) {
                     n = getNewName(n, _local);
-                    if (dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                    if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File or folder exist?',
                         message: `Do you want to rename to "${n}"?`,
@@ -3287,7 +3287,7 @@
             else if ($('#newFolder').data('type') === 'remote') {
                 if (_remote[n]) {
                     n = getNewName(n, _remote);
-                    if (dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                    if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File or folder exist?',
                         message: `Do you want to rename to "${n}"?`,
@@ -3331,7 +3331,7 @@
                 }
                 else if (editor.val() != editor.original) {
                     var n = getNewName(editor.val(), list);
-                    if (dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                    if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'Rename file?',
                         message: `Do you want to rename "${editor.original}" to "${n}"?`,

@@ -6,8 +6,8 @@ import { PropertyGrid } from '../propertygrid';
 import { EditorType, ValueEditor } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, isFileSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString, pinkfishToHTML } from '../library';
-const { clipboard, remote } = require('electron');
-const { Menu, MenuItem, dialog } = remote;
+const { clipboard, remote, ipcRenderer } = require('electron');
+const { Menu, MenuItem } = remote;
 const path = require('path');
 const fs = require('fs');
 
@@ -782,8 +782,7 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$descriptionGrid.on('delete', (e) => {
-            if (dialog.showMessageBoxSync(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -939,8 +938,7 @@ export class VirtualEditor extends EditorBase {
                 e.data[d].data.idx = idx;
                 e.data[d].items.idx = idx;
                 if (!all && idx < this.$items.length) {
-                    choice = dialog.showMessageBoxSync(
-                        remote.getCurrentWindow(),
+                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                         {
                             type: 'warning',
                             title: 'Replace items',
@@ -1112,8 +1110,7 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$itemGrid.on('delete', (e) => {
-            if (dialog.showMessageBoxSync(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -1547,8 +1544,7 @@ export class VirtualEditor extends EditorBase {
             }
         });
         this.$exitGrid.on('delete', (e) => {
-            if (dialog.showMessageBoxSync(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -4373,8 +4369,7 @@ export class VirtualEditor extends EditorBase {
         if (!this.$files[file] || !isFileSync(path.join(path.dirname(this.file), file)))
             return 0;
         //ask and return answer
-        return dialog.showMessageBoxSync(
-            remote.getCurrentWindow(),
+        return ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
             {
                 type: 'warning',
                 title: 'Confirm Save As',
@@ -9873,8 +9868,7 @@ export class ExternalExitValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (dialog.showMessageBoxSync(
-                    remote.getCurrentWindow(),
+                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
                         title: 'Delete',
@@ -10214,8 +10208,7 @@ export class ItemsValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (dialog.showMessageBoxSync(
-                    remote.getCurrentWindow(),
+                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
                         title: 'Delete',

@@ -240,7 +240,7 @@
         // eslint-disable-next-line no-unused-vars
         function refresh() {
             if (changed > 0) {
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'warning',
                     title: 'Refresh characters',
                     message: 'All changes will be lost, refresh?',
@@ -382,7 +382,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function openFile(field, ext, callback) {
-            dialog.showOpenDialog(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
                 defaultPath: path.dirname(parseTemplate($(field).val())),
                 filters: [
                     { name: ext[0].substr(0, 1).toUpperCase() + ext[0].substr(1) + ' (*.' + ext.join(', *.') + ')', extensions: ext },
@@ -404,7 +404,7 @@
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response, d;
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Setting file for ' + name + ' exist, replace?',
@@ -422,7 +422,7 @@
                 }
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Map file for ' + name + ' exist, replace?',
@@ -453,7 +453,7 @@
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response, d;
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Setting file for ' + name + ' exist, replace?',
@@ -471,7 +471,7 @@
                 }
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Map file for ' + name + ' exist, replace?',
@@ -502,7 +502,7 @@
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response;
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Setting file for ' + name + ' exist, replace?',
@@ -517,7 +517,7 @@
                 f = parseTemplate(characters.characters[oldName].map);
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Map file for ' + name + ' exist, replace?',
@@ -566,7 +566,7 @@
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response;
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Setting file for ' + name + ' exist, replace?',
@@ -581,7 +581,7 @@
                 f = parseTemplate(characters.characters[oldName].map);
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Map file for ' + name + ' exist, replace?',
@@ -609,7 +609,7 @@
         function remove(name) {
             if (name === undefined)
                 name = current;
-            var response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+            var response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                 type: 'warning',
                 title: 'Remove character',
                 message: 'Remove ' + name + '?',
@@ -643,7 +643,7 @@
                 ipcRenderer.send('load-char', name);
                 return;
             }
-            var response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+            var response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                 type: 'warning',
                 title: 'Load character',
                 message: 'Load ' + name + '?',
@@ -671,7 +671,7 @@
                 ipcRenderer.send('load-default', name);
                 return;
             }
-            var response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+            var response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                 type: 'warning',
                 title: 'Load defaults',
                 message: 'Load defaults?',
@@ -730,7 +730,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function backup() {
-            var file = dialog.showSaveDialogSync(remote.getCurrentWindow(), {
+            var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
                 title: 'Save as...',
                 defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-characters-data.zip'),
                 filters: [
@@ -926,7 +926,7 @@
                 <label class="control-label">
                     <input disabled="disabled" type="checkbox" id="disconnect" /> Disconnect on load
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Disconnect current connection</span>
-                </label>                
+                </label>
             </div>
         </div>
     </div>

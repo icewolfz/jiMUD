@@ -138,7 +138,7 @@
                     _settings.extensions['immortal'][$(this).attr('id')] = $(this).val();
             });
             $('#btn-editor').on('click', () => {
-                dialog.showOpenDialog(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
                     defaultPath: path.dirname($('#editor').val()),
                     filters: process.platform === 'win32' ? [
                         { name: 'Programs (*.exe, *.com)', extensions: ['exe', 'com', 'com'] },
@@ -149,12 +149,12 @@
                             { name: 'All files (*.*)', extensions: ['*'] },
                         ]
                 }).then(result => {
-                        if (result.filePaths === undefined || result.filePaths.length === 0) {
-                            return;
-                        }
-                        $('#editor').val(result.filePaths[0]);
-                        _settings.extensions['immortal'].editor = result.filePaths[0];
-                    });
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
+                        return;
+                    }
+                    $('#editor').val(result.filePaths[0]);
+                    _settings.extensions['immortal'].editor = result.filePaths[0];
+                });
             });
         });
 

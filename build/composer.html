@@ -26,7 +26,7 @@
         //spell-checker:ignore BOLDOFF ITALICOFF UNDERLINEOFF FLASHOFF INVERSEOFF STRIKEOUTOFF OVERLINEOFF hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime
         /* global tinymce */
         const { remote, ipcRenderer, webFrame, nativeImage } = require('electron');
-        const {  dialog, Menu, MenuItem } = remote;
+        const { dialog, Menu, MenuItem } = remote;
         const { stripHTML, htmlEncode, parseTemplate, getColors } = require('./js/library');
         const { Settings } = require('./js/settings');
         const { Mail } = require('./js/mail');
@@ -167,7 +167,7 @@
         }
 
         function appendFile() {
-            dialog.showOpenDialog(remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
                 {
                     filters: [
                         { name: 'Text files (*.txt)', extensions: ['txt'] },
@@ -181,7 +181,7 @@
                     for (var f = 0, fl = result.filePaths.length; f < fl; f++)
                         fs.readFile(result.filePaths[f], 'utf8', (err, data) => {
                             if (err) {
-                                dialog.showMessageBox(remote.getCurrentWindow(), {
+                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                     type: 'error',
                                     title: 'Error importing file',
                                     message: err
@@ -914,7 +914,7 @@
             if (to.length === 0) {
                 p.addClass('has-error');
                 p.addClass('has-feedback');
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'No recipient',
                     message: 'Must supply at least one recipient'
@@ -947,7 +947,7 @@
                 var p = $('#to-form');
                 p.addClass('has-error');
                 p.addClass('has-feedback');
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'No recipient',
                     message: 'Must supply at least one recipient'
@@ -992,7 +992,7 @@
             });
             mail.on('letter-sent', (to) => {
                 if (!to || to.length === 0) {
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                         type: 'error',
                         title: 'No recipients',
                         message: 'No recipients found.'
@@ -1008,14 +1008,14 @@
             mail.on('error', (err) => {
                 switch (err) {
                     case MailStatus.NO_RECIPIENTS:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'No recipients',
                             message: 'No recipients found.'
                         });
                         break;
                     default:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Error sending',
                             message: 'Error sending mail.'
@@ -1350,8 +1350,7 @@
             if (!closeWindow && draft && !ask) {
                 evt.returnValue = false;
                 setTimeout(() => {
-                    var choice = dialog.showMessageBoxSync(
-                        remote.getCurrentWindow(),
+                    var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                         {
                             type: 'warning',
                             title: 'Unsaved',

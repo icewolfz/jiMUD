@@ -908,7 +908,7 @@
 
         function exportImage() {
             clearButton('#export');
-            dialog.showSaveDialog(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
                 title: 'Export image',
                 defaultPath: 'jiMUD' + (!mapper.SplitArea ? '' : '.' + mapper.active.area) + '.png',
                 filters: [
@@ -933,7 +933,7 @@
                 if (!rooms || rooms.length === 0) {
                     ipcRenderer.send('progress-close');
                     ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                         type: 'error',
                         title: 'Error generating',
                         message: 'Could not generate map'
@@ -976,7 +976,7 @@
                 if (canvas && canvas.getContext)
                     ctx = canvas.getContext('2d');
                 else {
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                         type: 'error',
                         title: 'Error generating',
                         message: 'Could not generate map'
@@ -1019,7 +1019,7 @@
                 mapper.DrawLegend(ctx, rectWidth - 185, -10, 1);
                 fs.writeFile(file, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG(), err => {
                     if (err)
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Error generating',
                             message: 'Could not save map'
@@ -1032,7 +1032,7 @@
 
         function exportCurrentImage() {
             clearButton('#export');
-            dialog.showSaveDialog(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
                 title: 'Export clipped view',
                 defaultPath: 'jiMUD.clipped.png',
                 filters: [
@@ -1060,7 +1060,7 @@
             mapper.draw(newCanvas, context, true, () => {
                 fs.writeFile(file, nativeImage.createFromDataURL(newCanvas.toDataURL('image/png')).toPNG(), err => {
                     if (err)
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Error generating',
                             message: 'Could not save map'
@@ -1073,7 +1073,7 @@
 
         function exportCurrentArea() {
             clearButton('#export');
-            dialog.showSaveDialog(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
                 title: 'Export current area',
                 defaultPath: 'jiMUD.' + mapper.active.area + '.txt',
                 filters: [
@@ -1094,7 +1094,7 @@
 
         function exportAll() {
             clearButton('#export');
-            dialog.showSaveDialog(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
                 title: 'Export all',
                 defaultPath: 'jiMUD.txt',
                 filters: [
@@ -1115,7 +1115,7 @@
 
         function importMerge() {
             clearButton('#export');
-            dialog.showOpenDialog(remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
                 {
                     filters: [
                         { name: 'Text files (*.txt)', extensions: ['txt'] },
@@ -1130,7 +1130,7 @@
                             if (err) throw err;
                             data = JSON.parse(data);
                             if (!data) {
-                                dialog.showMessageBox(remote.getCurrentWindow(), {
+                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                     type: 'error',
                                     title: 'Invalid map data',
                                     message: 'Invalid map data unable to process.'
@@ -1146,7 +1146,7 @@
 
         function importReplace() {
             clearButton('#export');
-            dialog.showOpenDialog(remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
                 {
                     filters: [
                         { name: 'Text files (*.txt)', extensions: ['txt'] },
@@ -1161,7 +1161,7 @@
                             if (err) throw err;
                             data = JSON.parse(data);
                             if (!data) {
-                                dialog.showMessageBox(remote.getCurrentWindow(), {
+                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                     type: 'error',
                                     title: 'Invalid map data',
                                     message: 'Invalid map data unable to process.'
@@ -1177,7 +1177,7 @@
 
         function removeSelectedRoom() {
             clearButton('#remove');
-            dialog.showMessageBox(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                 type: 'question',
                 title: 'Remove selected room',
                 message: 'Are you sure you want to remove selected room?',
@@ -1191,7 +1191,7 @@
 
         function removeCurrentRoom() {
             clearButton('#remove');
-            dialog.showMessageBox(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                 type: 'question',
                 title: 'Remove current room',
                 message: 'Are you sure you want to remove current room?',
@@ -1205,7 +1205,7 @@
 
         function removeCurrentArea() {
             clearButton('#remove');
-            dialog.showMessageBox(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                 type: 'question',
                 title: 'Remove ' + mapper.active.area,
                 message: 'Are you sure you want to remove all rooms from ' + mapper.active.area + '?',
@@ -1219,7 +1219,7 @@
 
         function removeAll() {
             clearButton('#remove');
-            dialog.showMessageBox(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                 type: 'question',
                 title: 'Remove all',
                 message: 'Are you sure you want to remove all rooms?',

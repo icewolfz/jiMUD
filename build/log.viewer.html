@@ -458,7 +458,7 @@
 
     function openFile(file, dock) {
         if (!file || file.length === 0) {
-            dialog.showOpenDialog(remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
                 {
                     filters: $fileFilters,
                     properties: ['multiSelections', 'openFile'],
@@ -483,7 +483,7 @@
         for (var f = 0, fl = files.length; f < fl; f++) {
             if (!existsSync(files[f])) {
                 if (exists)
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                         type: 'info',
                         title: 'Path does not exist',
                         message: 'The path \'' + files[f] + '\' does not seem to exist anymore on disk.'
@@ -536,7 +536,7 @@
                     idx: r,
                     click: (item) => {
                         if (!existsSync(options.recent[item.idx])) {
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'info',
                                 title: 'Path does not exist',
                                 message: 'The path \'' + options.recent[item.idx] + '\' does not seem to exist anymore on disk.'
@@ -1010,8 +1010,7 @@
         var e = 0, el = dialogs.length;
         for (; e < el; e++) {
             if (dialogs[e].open) {
-                if (dialog.showMessageBoxSync(
-                    remote.getCurrentWindow(),
+                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'question',
                         title: 'Open dialog',
@@ -1042,8 +1041,7 @@
                 var e = 0, el = dialogs.length;
                 for (; e < el; e++) {
                     if (dialogs[e].open) {
-                        if (dialog.showMessageBoxSync(
-                            remote.getCurrentWindow(),
+                        if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                             {
                                 type: 'question',
                                 title: 'Open dialog',
@@ -1106,7 +1104,7 @@
 
     // eslint-disable-next-line no-unused-vars
     function backup() {
-        var file = dialog.showSaveDialogSync(remote.getCurrentWindow(), {
+        var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
             title: 'Save as...',
             defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-logs.zip'),
             filters: [
@@ -1126,8 +1124,7 @@
         if (isDirSync(path.join(data, 'logs'))) {
             files = walkSync(path.join(data, 'logs'));
             if (files.length === 0) {
-                dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                ipcRenderer.invoke('show-dialog', 'showMessageBox',
                     {
                         type: 'error',
                         title: 'No logs found',

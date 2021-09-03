@@ -224,8 +224,7 @@
         };
 
         function doLink(url) {
-            if (dialog.showMessageBoxSync(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Open?',
@@ -240,8 +239,7 @@
         function doMXPLink(el, url) {
             if (url.startsWith('OoMUD://') || url.startsWith('jiMUD://') || url.startsWith('client://'))
                 doMXPSend(0, el, url.substring(8));
-            else if (dialog.showMessageBoxSync(
-                remote.getCurrentWindow(),
+            else if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Open?',
@@ -1351,7 +1349,7 @@
                     $('#Progress')[0].close();
                 ipcRenderer.send('set-progress', { value: -1 });
                 client.error(err);
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'Import error',
                     message: err || 'Error importing or exporting data.'
@@ -1366,7 +1364,7 @@
                 if ($('#Progress')[0].open)
                     $('#Progress')[0].close();
                 ipcRenderer.send('set-progress', { value: -1 });
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'Aborted',
                     message: err || 'Aborted importing or exporting data.'
@@ -1441,8 +1439,8 @@
             });
             _status.on('skill init', (skill, data) => {
                 ipcRenderer.send('skills-reset');
-            });            
-            
+            });
+
             _status.ac = client.options.showArmor;
             _status.on('set-title', (title) => {
                 if (client.options.autoCreateCharacter)
@@ -1484,8 +1482,7 @@
                     setTimeout(() => {
                         if (client.options.askonchildren) {
                             if (ipcRenderer.sendSync('window-info', 'child-open', 'Code Editor')) {
-                                choice = dialog.showMessageBoxSync(
-                                    remote.getCurrentWindow(),
+                                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                                     {
                                         type: 'warning',
                                         title: 'Code editor open',
@@ -1503,8 +1500,7 @@
                                 }
                             }
                         }
-                        choice = dialog.showMessageBoxSync(
-                            remote.getCurrentWindow(),
+                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                             {
                                 type: 'warning',
                                 title: 'Connected',
@@ -1536,8 +1532,7 @@
                     evt.returnValue = false;
                     setTimeout(() => {
                         if (ipcRenderer.sendSync('window-info', 'child-close', 'Code Editor')) {
-                            choice = dialog.showMessageBoxSync(
-                                remote.getCurrentWindow(),
+                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                                 {
                                     type: 'warning',
                                     title: 'Code editor open',
@@ -2434,7 +2429,7 @@
                 ipcRenderer.send('show-window', 'skills', client.options.windows['skills'].options);
             }
             else
-                ipcRenderer.send('show-window', 'skills', { show: true, file: 'skills.html', icon: 'skills', alwaysOnTopClient: true });            
+                ipcRenderer.send('show-window', 'skills', { show: true, file: 'skills.html', icon: 'skills', alwaysOnTopClient: true });
         }
 
         // eslint-disable-next-line no-unused-vars

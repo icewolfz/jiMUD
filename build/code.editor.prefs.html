@@ -396,8 +396,7 @@
             var files;
             var i;
             if (type === 1) {
-                choice = dialog.showMessageBoxSync(
-                    remote.getCurrentWindow(),
+                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
                         title: 'Delete',
@@ -420,8 +419,7 @@
                 }
             }
             else if (type === 2) {
-                choice = dialog.showMessageBoxSync(
-                    remote.getCurrentWindow(),
+                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
                         title: 'Delete',
@@ -444,8 +442,7 @@
                 }
             }
             else {
-                choice = dialog.showMessageBoxSync(
-                    remote.getCurrentWindow(),
+                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
                         title: 'Delete',

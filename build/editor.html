@@ -159,7 +159,7 @@
         }
 
         function appendFile() {
-            dialog.showOpenDialog(remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
                 {
                     filters: [
                         { name: 'Text files (*.txt)', extensions: ['txt'] },
@@ -173,7 +173,7 @@
                     for (var f = 0, fl = result.filePaths.length; f < fl; f++)
                         fs.readFile(result.filePaths[f], 'utf8', (err, data) => {
                             if (err) {
-                                dialog.showMessageBox(remote.getCurrentWindow(), {
+                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                     type: 'error',
                                     title: 'Error importing file',
                                     message: err

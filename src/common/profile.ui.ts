@@ -1,7 +1,7 @@
 //spell-checker:ignore dropdown, selectall, treeview, displaytype, uncheck, selectpicker, Profiledefault, askoncancel, triggernewline, triggerprompt, exportmenu
 //spell-checker:ignore gamepadconnected gamepaddisconnected
 import { remote, ipcRenderer, nativeImage } from 'electron';
-const { dialog, Menu, MenuItem } = remote;
+const { Menu, MenuItem } = remote;
 import { FilterArrayByKeyValue, parseTemplate, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode, walkSync } from './library';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroModifiers, ItemStyle } from './profile';
 export { MacroDisplay } from './profile';
@@ -1175,7 +1175,7 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
         data.name = val;
         changed++;
         if (profiles.contains(val)) {
-            dialog.showMessageBox(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                 type: 'error',
                 title: 'Profile name already used',
                 message: 'The name is already in use, pick a different one'
@@ -2580,8 +2580,7 @@ export function init() {
             return;
         evt.returnValue = false;
         setTimeout(() => {
-            const choice = dialog.showMessageBoxSync(
-                remote.getCurrentWindow(),
+            const choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Profiles changed',
@@ -3087,7 +3086,7 @@ export function setIcon(icon, field?, callback?) {
 
 export function doRefresh() {
     if (_undo.length > 0)
-        dialog.showMessageBox(remote.getCurrentWindow(), {
+        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
             type: 'warning',
             title: 'Refresh profiles',
             message: 'All unsaved or applied changes will be lost, refresh?',
@@ -3149,7 +3148,7 @@ function profileCopyName(name) {
 }
 
 function importProfiles() {
-    dialog.showOpenDialog({
+    ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
         title: 'Import profiles',
         filters: [
             { name: 'Supported files (*.txt, *.zip)', extensions: ['txt', 'zip'] },
@@ -3216,7 +3215,7 @@ function importProfiles() {
                                         $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                     }
                                     else if (all !== 4) {
-                                        const response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                                        const response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                                             type: 'question',
                                             title: 'Profiles already exists',
                                             message: 'Profile named \'' + p.name + '\' exist, replace?',
@@ -3271,7 +3270,7 @@ function importProfiles() {
 
                     data = JSON.parse(data);
                     if (!data || data.version !== 2) {
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Invalid Profile',
                             message: 'Invalid profile unable to process.'
@@ -3373,7 +3372,7 @@ function importProfiles() {
                                     $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                 }
                                 else if (all !== 4) {
-                                    const response = dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                                    const response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                                         type: 'question',
                                         title: 'Profiles already exists',
                                         message: 'Profile named \'' + p.name + '\' exist, replace?',
@@ -3436,7 +3435,7 @@ export function saveProfiles(clearNow?: boolean) {
     if (updateCurrent() !== UpdateState.NoChange)
         return false;
     if (filesChanged)
-        dialog.showMessageBox(remote.getCurrentWindow(), {
+        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
             type: 'question',
             title: 'Profiles updated',
             message: 'Profiles have been updated outside of manager, save anyways?',
@@ -3623,7 +3622,7 @@ function updateUndoState() {
 }
 
 function DeleteProfileConfirm(profile) {
-    dialog.showMessageBox(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
         type: 'question',
         title: 'Delete profile?',
         message: 'Delete ' + profile.name + '?',
@@ -3658,7 +3657,7 @@ function DeleteProfile(profile, customUndo?: boolean) {
 }
 
 function DeleteItems(type, key, profile) {
-    dialog.showMessageBox(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
         type: 'question',
         title: 'Delete ' + type + '?',
         message: 'Are you sure you want to delete all ' + key + '?',
@@ -3679,7 +3678,7 @@ function DeleteItems(type, key, profile) {
 }
 
 function DeleteItemConfirm(type, key, idx, profile) {
-    dialog.showMessageBox(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
         type: 'question',
         title: 'Delete ' + type + '?',
         message: 'Are you sure you want to delete this ' + type + '?',
@@ -3737,7 +3736,7 @@ export function doClose() {
         window.close();
     }
     else {
-        dialog.showMessageBox(remote.getCurrentWindow(), {
+        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
             type: 'warning',
             title: 'Profiles changed',
             message: 'All unsaved changes will be lost, close?',
@@ -3778,7 +3777,7 @@ export function doReset(node) {
         if (!node) return;
     }
     const profile = profiles.items[node.dataAttr.profile];
-    dialog.showMessageBox(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
         type: 'warning',
         title: 'Reset ' + profile.name,
         message: 'Resetting will loose all profile data, reset?',
@@ -4070,7 +4069,7 @@ ipcRenderer.on('profile-toggled', (event, profile, enabled) => {
 
 function exportAll() {
     clearButton('#export');
-    dialog.showSaveDialog(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
         title: 'Export all profiles',
         defaultPath: 'jiMUD.profiles.txt',
         filters: [
@@ -4099,7 +4098,7 @@ $(window).keydown((event) => {
 
 // eslint-disable-next-line no-unused-vars
 function exportAllZip() {
-    const file = dialog.showSaveDialogSync(remote.getCurrentWindow(), {
+    const file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
         title: 'Save as...',
         defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-profiles.zip'),
         filters: [
@@ -4119,8 +4118,7 @@ function exportAllZip() {
     if (isDirSync(path.join(data, 'profiles'))) {
         files = walkSync(path.join(data, 'profiles'));
         if (files.length === 0) {
-            dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showMessageBox',
                 {
                     type: 'error',
                     title: 'No logs found',
@@ -4171,7 +4169,7 @@ function cancelProgress() {
 
 function exportCurrent() {
     clearButton('#export');
-    dialog.showSaveDialog(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
         title: 'Export profile',
         defaultPath: 'jiMUD.' + profileID(currentProfile.name) + '.txt',
         filters: [
