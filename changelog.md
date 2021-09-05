@@ -3,7 +3,8 @@
 ## v0.16.4
 
 - **New:**
-  = Add skills window
+  - Add skills window
+  - Added [#testspeedfiler](docs/commands.md) to load a file and run timed test as if it was sent from a mud
 - **Fixed:**
   - Fixed error with linux on hide minimize hack when first loading
 - **Changed:**

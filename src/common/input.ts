@@ -581,6 +581,9 @@ export class Input extends EventEmitter {
         let p;
         let reload;
         let trigger;
+        let avg;
+        let max;
+        let min;        
         switch (fun.toLowerCase()) {
             case 'testfile':
                 args = this.parseOutgoing(args.join(' '), false);
@@ -607,9 +610,9 @@ export class Input extends EventEmitter {
                 tmp = fs.readFileSync(args, 'utf-8');
                 n = this.client.options.enableCommands;
                 this.client.options.enableCommands = true;
-                let avg = 0;
-                let max = 0;
-                let min = 0;
+                avg = 0;
+                max = 0;
+                min = 0;
                 for (i = 0; i < 10; i++) {
                     const start = new Date().getTime();
                     this.client.sendCommand(tmp);
@@ -626,6 +629,33 @@ export class Input extends EventEmitter {
                 items.push(`Max - ${max}`);
                 this.client.print(items.join('\n') + '\n', true);
                 this.client.options.enableCommands = n;
+                return null;
+            case 'testspeedfiler':
+                args = this.parseOutgoing(args.join(' '), false);
+                items = [];
+                if (!args || args.length === 0)
+                    throw new Error('Invalid syntax use #testspeedfile file');
+                if (!isFileSync(args))
+                    throw new Error('Invalid file "' + args + '"');
+                tmp = fs.readFileSync(args, 'utf-8');
+                avg = 0;
+                max = 0;
+                min = 0;
+                for (i = 0; i < 10; i++) {
+                    const start = new Date().getTime();
+                    this.client.telnet.receivedData(Buffer.from(tmp), true);
+                    const end = new Date().getTime();
+                    p = end - start;
+                    avg += p;
+                    if (p > max) max = p;
+                    if (!min || p < min) min = p;
+                    items.push(`${i} - ${p}`);
+                }
+                items.push(`Total - ${avg}`);
+                items.push(`Average - ${avg / 10}`);
+                items.push(`Min - ${min}`);
+                items.push(`Max - ${max}`);
+                this.client.print(items.join('\n') + '\n', true);
                 return null;
             //spell-checker:ignore chatprompt chatp
             case 'chatprompt':
@@ -1870,7 +1900,7 @@ export class Input extends EventEmitter {
                 this.client.MSP.MusicState.close();
                 this.client.MSP.SoundState.close();
                 return null;
-            case 'showprompt':
+            case 'showprompt': f
             case 'showp':
                 args = this.parseOutgoing(args.join(' '), false);
                 this.client.telnet.receivedData(Buffer.from(args), true);

@@ -126,6 +126,7 @@ Test commands allow you to debug or test features of the client
 |#TestXTermRGB|Display a more detailed XTerm color pattern
 |#TestSize|Test the current width and height of the client in characters by repeating `w` for # of columns as line 0 and displaying the numbers 1 to height - 1
 |#TestSpeed|Test the speed of the client by running the commands `#TestMXPColors`, `#TestMXP`, `#TestColors`, `#TestColorsDetails`, `#TestXTerm`, `#TestXTermRGB` 10 times taking the time it took to parse, then display. After all test have been ran it will display 0 to 9 and each time and an avg time. **Note** this will cause the client to become unresponsive or locked while running this test, either wait til done or close.
-|#TestSpeedFile file|Works exactly like #testspeed by will use file argument instead of built in test functions, **Note** file load time can cause test to run longer then total time returned
+|#TestSpeedFile file|Works exactly like #testspeed but will use file argument instead of built in test functions, **Note** file load time can cause test to run longer then total time returned
+|#TestSpeedFiler file|Works exactly like #TestSpeedFile but will attempt to emulate as if sent from remote mud for processing
 |#TestFile file|Loads a file, displays it and time to display **Note** this will cause the client to become unresponsive or locked while running this test, either wait til done or close.
 |#TestPeriod|Toggle on/off a test that will alternate between #testcolors, #textxterm, #testlist every 2 seconds to simulate constant streaming of text
