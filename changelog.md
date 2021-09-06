@@ -2,6 +2,9 @@
 
 ## v0.16.5
 
+- **Fixed:**
+  - Auto update: when error happens correctly reenable menu item
+
 ## v0.16.4 2021-09-06
 
 - **New:**

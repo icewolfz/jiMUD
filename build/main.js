@@ -4478,6 +4478,10 @@ function checkForUpdatesManual() {
     autoUpdater.autoDownload = false;
     autoUpdater.on('error', (error) => {
         dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
+        if (global.editorOnly)
+            winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
+        else
+            updateMenuItem({ menu: ['help', 'updater'], enabled: true });
     });
 
     autoUpdater.on('update-available', () => {
