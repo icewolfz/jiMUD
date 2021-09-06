@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.4
+## v0.16.4 2021-09-06
 
 - **New:**
   - Add skills window
