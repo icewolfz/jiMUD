@@ -4,6 +4,9 @@
 
 - **Fixed:**
   - Auto update: when error happens correctly reenable menu item
+- **Changed:**
+  - Update electron 13.3.0 to 13.4.0
+  - Update fswin 2.21.905 to 2.21.914
 
 ## v0.16.4 2021-09-06
 
@@ -16,7 +19,7 @@
   - Replace more remote context menus
   - Replace all remote module dialogs
   - Update electron 13.2.2 to 13.3.0
-  - Update fswin 3.21.107 to 2.31.905
+  - Update fswin 3.21.107 to 2.21.905
 
 ## v0.16.3 2021-08-25
 
