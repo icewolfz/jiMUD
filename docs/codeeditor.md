@@ -343,6 +343,7 @@ Editor preferences are stored in their own file independent of client or charact
 - `Enable folding` enable or disable code folding
 - `Enable detecting links` enable detection
 - `Enable highlighting of matching brackets` highlight the matching end bracket
+- `Enable bracket colorization` enable or disable matching bracket colorization
 - `Select line when line number clicked` select line when line number clicked
 - `Trim whitespace` trim whitespace
 - `Scroll beyond last line` allows you to scroll up to one screen past last line

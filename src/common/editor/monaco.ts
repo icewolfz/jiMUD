@@ -665,7 +665,8 @@ export class MonacoCodeEditor extends EditorBase {
     private $options = {
         tabSize: 3,
         insertSpaces: true,
-        trimAutoWhitespace: true
+        trimAutoWhitespace: true,
+        bracketColorization: true
     };
 
     public decorations;
@@ -684,7 +685,8 @@ export class MonacoCodeEditor extends EditorBase {
             this.options = {
                 tabSize: 3,
                 insertSpaces: true,
-                trimAutoWhitespace: true
+                trimAutoWhitespace: true,
+                bracketColorization: true
             };
     }
 
@@ -705,14 +707,16 @@ export class MonacoCodeEditor extends EditorBase {
         if (this.$options)
             this.$model.updateOptions({
                 tabSize: this.$options.hasOwnProperty('tabSize') ? this.$options.tabSize : 3,
-                insertSpaces: this.$options.hasOwnProperty('tabSize') ? this.$options.insertSpaces : true,
-                trimAutoWhitespace: this.$options.hasOwnProperty('tabSize') ? this.$options.trimAutoWhitespace : true
+                insertSpaces: this.$options.hasOwnProperty('insertSpaces') ? this.$options.insertSpaces : true,
+                trimAutoWhitespace: this.$options.hasOwnProperty('trimAutoWhitespace') ? this.$options.trimAutoWhitespace : true,
+                bracketColorizationOptions: { enabled: this.$options.hasOwnProperty('bracketColorization') ? this.$options.bracketColorization : true }
             });
         else
             this.$model.updateOptions({
                 tabSize: 3,
                 insertSpaces: true,
-                trimAutoWhitespace: true
+                trimAutoWhitespace: true,
+                bracketColorizationOptions: { enabled: true }
             });
         if (this.rawDecorations && this.rawDecorations.length !== 0) {
             this.$model.deltaDecorations([], this.rawDecorations);
@@ -987,8 +991,9 @@ export class MonacoCodeEditor extends EditorBase {
         this.$options = value;
         this.$model.updateOptions({
             tabSize: value.hasOwnProperty('tabSize') ? value.tabSize : 3,
-            insertSpaces: value.hasOwnProperty('tabSize') ? value.insertSpaces : true,
-            trimAutoWhitespace: value.hasOwnProperty('tabSize') ? value.trimAutoWhitespace : true
+            insertSpaces: value.hasOwnProperty('insertSpaces') ? value.insertSpaces : true,
+            trimAutoWhitespace: value.hasOwnProperty('trimAutoWhitespace') ? value.trimAutoWhitespace : true,
+            bracketColorizationOptions: { enabled: value.hasOwnProperty('bracketColorization') ? value.bracketColorization : true }
         });
     }
     public get options() { return this.$options; }

@@ -29,7 +29,8 @@ export class EditorSettings {
     public modelOptions = {
         tabSize: 3,
         insertSpaces: true,
-        trimAutoWhitespace: true
+        trimAutoWhitespace: true,
+        bracketColorization: true
     };
 
     public editorOptions = {
@@ -64,6 +65,9 @@ export class EditorSettings {
             renderCharacters: true,
             showSlider: 'mouseover',
             side: 'right'
+        },
+        bracketPairColorization: {
+            enabled: true
         }
     };
 
