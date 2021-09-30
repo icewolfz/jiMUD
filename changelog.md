@@ -3,10 +3,13 @@
 ## v0.16.5
 
 - **Fixed:**
-  - Auto update: when error happens correctly reenable menu item
+  - Auto update: when error happens correctly re-enable menu item
 - **Changed:**
-  - Update electron 13.3.0 to 13.4.0
-  - Update fswin 2.21.905 to 2.21.914
+  - Update electron 13.3.0 to 13.5.0
+  - Update fswin 2.21.905 to 2.21.929
+  - Update monaco-editor 0.27.0 to 0.28.1
+  - Update mathjs 9.4.4 to 9.5.0
+  - Update font-list 1.3.1 to 1.4.0
 
 ## v0.16.4 2021-09-06
 
