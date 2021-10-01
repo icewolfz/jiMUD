@@ -18,6 +18,7 @@ export class EditorSettings {
     public remote = '.';
     public uploadAs;
     public enableBackgroundThrottling: boolean = true;
+    public theme: number = 0;
 
     public window = {
         persistent: false,

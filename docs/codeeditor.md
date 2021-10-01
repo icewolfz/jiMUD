@@ -350,6 +350,7 @@ Editor preferences are stored in their own file independent of client or charact
 - `Line numbers` display line numbers
 - `Show Folding Controls` how to show folding controls
 - `Tab size` how many spaces equal a tab
+- `Theme` set the main editor as dark or light theme
 
 ### Editor Font
 

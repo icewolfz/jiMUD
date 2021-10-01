@@ -4,7 +4,11 @@
 
 - **Fixed:**
   - Auto update: when error happens correctly re-enable menu item
-  - Code editor: Add bracket colorization matching
+  - Code editor:
+    - Add bracket colorization matching
+    - Add dark theme support for editors
+- **Fixed:**
+  - Code editor: fix Enable Background Throttling preference not being set
 - **Changed:**
   - Update electron 13.3.0 to 13.5.0
   - Update fswin 2.21.905 to 2.21.929

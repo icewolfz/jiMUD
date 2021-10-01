@@ -288,6 +288,7 @@
             $('#reopen').prop('checked', _settings.reopen);
             $('#maxRecent').val(_settings.maxRecent);
             setSettings(_settings, '');
+            $('#theme').selectpicker('render');
 
             $('#editorOptions-fontFamily').val(_settings.editorOptions.fontFamily);
             $('#editorOptions-fontFamily').selectpicker('render');
@@ -595,6 +596,15 @@
                         <input type="number" id="modelOptions-tabSize" class="input-sm form-control" min="1" />
                     </label>
                 </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Theme
+                        <br>
+                        <select id="theme" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <option value="0">Light</option>
+                            <option value="1">Dark</option>
+                        </select>
+                    </label>
+                </div>                
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="editorFont">
                 <div class="col-sm-6 form-group">

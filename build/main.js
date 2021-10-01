@@ -2164,7 +2164,7 @@ ipcMain.on('editor-setting-changed', (event, data) => {
     if (winCode) {
         winCode.webContents.send('editor-setting-changed');
         if (edSet)
-            winCode.webPreferences.setBackgroundThrottling(edSet.enableBackgroundThrottling);
+            winCode.webContents.setBackgroundThrottling(edSet.enableBackgroundThrottling);
     }
     if (winCode.setParentWindow)
         winCode.setParentWindow((!global.editorOnly && data.alwaysOnTopClient) ? win : null);

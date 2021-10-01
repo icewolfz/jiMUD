@@ -300,7 +300,7 @@
                 autoIndent: true,
                 rulers: [80],
                 contextmenu: false,
-                theme: 'lpcTheme',
+                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
                 model: null,
             }, {
                 /*
@@ -370,7 +370,7 @@
                 autoIndent: true,
                 rulers: [80],
                 contextmenu: false,
-                theme: 'lpcTheme',
+                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
                 model: null,
             })];
             window.$dNavs = [
@@ -2439,7 +2439,7 @@
             autoIndent: true,
             rulers: [80],
             contextmenu: false,
-            theme: 'lpcTheme',
+            theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
             model: null
         });
         initEditor(editor);
@@ -2452,7 +2452,7 @@
             autoIndent: true,
             rulers: [80],
             contextmenu: false,
-            theme: 'lpcTheme',
+            theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
             model: null
         });
         initEditor(editor, 1);
@@ -2968,6 +2968,7 @@
         if (!options.maxRecent)
             options.maxRecent = 15;
         if (_ready) {
+            monaco.editor.setTheme(options.theme ? 'lpcThemeDark' : 'lpcTheme');
             var e = window.$editors.length;
             while (e--) {
                 window.$editors[e].updateOptions(options.editorOptions);
