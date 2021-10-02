@@ -10,7 +10,7 @@
 - **Fixed:**
   - Code editor: fix Enable Background Throttling preference not being set
 - **Changed:**
-  - Update electron 13.3.0 to 13.5.0
+  - Update electron 13.3.0 to 13.5.1
   - Update fswin 2.21.905 to 2.21.929
   - Update monaco-editor 0.27.0 to 0.28.1
   - Update mathjs 9.4.4 to 9.5.0
