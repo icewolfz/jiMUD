@@ -28,7 +28,8 @@
         //spell-checker:ignore hellip datatable, datatables, scrollresize, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
         //spell-checker:ignore keypress, haspopup, labelledby, tabindex, tablist, tabpanel
         const { MailStatus, MailAction, MailFolders, MailReadFormat } = require('./js/types');
-        const { remote, ipcRenderer, shell, clipboard } = require('electron');
+        const { ipcRenderer, shell, clipboard } = require('electron');
+        const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
         const { parseTemplate, existsSync } = require('./js/library');
         const { Settings } = require('./js/settings');

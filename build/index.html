@@ -160,7 +160,8 @@
         const Status = require('./js/status.js').Status;
         const Backup = require('./js/backup.js').Backup;
         const { Settings } = require('./js/settings');
-        const { shell, clipboard, ipcRenderer, remote, webFrame, nativeImage } = require('electron');
+        const { shell, clipboard, ipcRenderer, webFrame, nativeImage } = require('electron');
+        const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
         const { parseTemplate, setSelectionRange, isFileSync, decrypt } = require('./js/library.js');
         //    const fs = require('fs');

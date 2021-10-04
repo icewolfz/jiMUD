@@ -74,7 +74,8 @@
     if (window.module) module = window.module;
     //spellchecker:ignore dockmanager prefs ismap yazl
     const { DockManager } = require('./js/dockmanager');
-    const { remote, ipcRenderer, clipboard } = require('electron');
+    const { ipcRenderer, clipboard } = require('electron');
+    const remote = require('@electron/remote');
     const { Menu } = remote;
     const { Menubar } = require('./js/menubar');
     const { Settings } = require('./js/settings');

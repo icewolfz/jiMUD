@@ -1901,7 +1901,8 @@
 <script type="text/javascript">
     if (window.module) module = window.module;
     /*global _ready:true*/
-    const { shell, remote, ipcRenderer, webFrame, clipboard } = require('electron');
+    const { shell, ipcRenderer, webFrame, clipboard } = require('electron');
+    const remote = require('@electron/remote');
     const { DockManager } = require('./js/dockmanager');
     const { EditorType } = require('./js/value.editors');
     const { DataGrid } = require('./js/datagrid');

@@ -24,7 +24,8 @@
         //spell-checker:ignore keypress, haspopup, labelledby, tabindex, tablist, tabpanel
         const { IED, ItemState } = require('./js/ied');
         const { TempType, IEDCmdStatus, IEDError } = require('./js/types');
-        const { remote, ipcRenderer, shell, clipboard } = require('electron');
+        const { ipcRenderer, shell, clipboard } = require('electron');
+        const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
         const { parseTemplate, existsSync, formatSize, walk } = require('./js/library');
         const { Settings } = require('./js/settings');

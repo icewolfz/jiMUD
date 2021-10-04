@@ -11,7 +11,7 @@ const settings = require('./js/settings');
 const { EditorSettings } = require('./js/editor/code.editor.settings');
 const { TrayClick } = require('./js/types');
 
-
+require('@electron/remote/main').initialize()
 //require('electron-local-crash-reporter').start();
 
 // Keep a global reference of the window object, if you don't, the window will
