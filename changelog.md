@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.5
+## v0.16.5 2021-10-03
 
 - **New:**
   - Code editor:
