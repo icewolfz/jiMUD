@@ -1197,6 +1197,7 @@ function createWindow() {
             backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
+    require("@electron/remote/main").enable(win.webContents);
     if (s.fullscreen)
         win.setFullScreen(s.fullscreen);
     // and load the index.html of the app.
@@ -1310,6 +1311,7 @@ function createWindow() {
         let url = details.url;
         if (global.debug)
             w.webContents.openDevTools();
+        require("@electron/remote/main").enable(w.webContents);
         w.removeMenu();
         w.once('ready-to-show', () => {
             loadWindowScripts(w, frameName);
@@ -2310,6 +2312,7 @@ ipcMain.on('progress-show', (event, title) => {
                 backgroundThrottling: set ? set.enableBackgroundThrottling : true
             }
         });
+        require("@electron/remote/main").enable(winProgress.webContents);
         winProgress.removeMenu();
         winProgress.on('closed', () => {
             winProgress = null;
@@ -3165,6 +3168,7 @@ function showPrefs() {
             backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
+    require("@electron/remote/main").enable(pref.webContents);
     pref.removeMenu();
     pref.on('closed', () => {
         pref = null;
@@ -3232,7 +3236,7 @@ function createMapper(show, loading, loaded) {
             backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
-
+    require("@electron/remote/main").enable(winMap.webContents);
     if (s.fullscreen)
         winMap.setFullScreen(s.fullscreen);
 
@@ -3381,7 +3385,7 @@ function showProfiles() {
             backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
-
+    require("@electron/remote/main").enable(winProfiles.webContents);
     winProfiles.webContents.on('render-process-gone', (event, details) => {
         logError(`Profile manager render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
@@ -3488,7 +3492,7 @@ function createEditor(show, loading) {
             backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
-
+    require("@electron/remote/main").enable(winEditor.webContents);
     winEditor.webContents.on('render-process-gone', (event, details) => {
         logError(`Advanced editor process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
@@ -3641,7 +3645,7 @@ function createChat(show, loading) {
             backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
-
+    require("@electron/remote/main").enable(winChat.webContents);
     winChat.webContents.on('render-process-gone', (event, details) => {
         logError(`Chat capture render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
@@ -3791,6 +3795,7 @@ function createNewWindow(name, options) {
             backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
+    require("@electron/remote/main").enable(windows[name].window.webContents);
     delete windows[name].width;
     delete windows[name].height;
     delete windows[name].x;
@@ -3999,6 +4004,7 @@ function showColor(args) {
             backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
+    require("@electron/remote/main").enable(cp.webContents);
     cp.webContents.on('render-process-gone', (event, details) => {
         logError(`Colorpicker render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
@@ -4197,7 +4203,7 @@ function createCodeEditor(show, loading, loaded) {
         }
 
     });
-
+    require("@electron/remote/main").enable(winCode.webContents);
     winCode.on('unresponsive', () => {
         dialog.showMessageBox({
             type: 'info',
@@ -4582,6 +4588,7 @@ function showAbout() {
             backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
+    require("@electron/remote/main").enable(about.webContents);
     about.webContents.on('render-process-gone', (event, details) => {
         logError(`About render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
