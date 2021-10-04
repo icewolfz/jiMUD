@@ -1,13 +1,13 @@
 # Changelog
 
-## v0.16.5 2021-10-03
+## v0.16.5
 
-- **Fixed:**
-  - Auto update: when error happens correctly re-enable menu item
+- **New:**
   - Code editor:
     - Add bracket colorization matching
     - Add dark theme support for editors
 - **Fixed:**
+  - Auto update: when error happens correctly re-enable menu item
   - Code editor: fix Enable Background Throttling preference not being set
 - **Changed:**
   - Update electron 13.3.0 to 13.5.1
