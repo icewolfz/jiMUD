@@ -69,6 +69,11 @@ export class EditorSettings {
         },
         bracketPairColorization: {
             enabled: true
+        },
+        guides: {
+            bracketPairs: true,
+            highlightActiveIndentation: true,
+            indentation: true
         }
     };
 

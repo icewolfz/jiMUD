@@ -3,7 +3,9 @@
 ## v0.17.0
 
 - **Changed:**
-  - Update electron 13.5.1 to 15.1.0
+  - Update electron 13.5.1 to 15.1.2
+  - Update fswin 2.21.929 to 2.21.1008
+  - Update monaco-editor 0.28.1 to 0.29.0
 
 ## v0.16.5 2021-10-03
 
