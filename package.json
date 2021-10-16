@@ -100,7 +100,8 @@
       "!node_modules/moment/min/*",
       "!node_modules/spellchecker/vendor/hunspell/*",
       "!node_modules/{tar,strip-ansi,string-width,wide-align,signal-exit,has-unicode,console-control-strings,aproba,gauge,end-of-stream,xtend,prebuild-install,detect-libc,expand-template,github-from-package,node-abi,noop-logger,npmlog,os-homedir,tar-fs,pump,rc,simple-get,tunnel-agent,which-pm-runs,tar-stream,tar-stream/readable-stream}${/*}",
-      "node_modules/monaco-editor/min/**/*"
+      "node_modules/monaco-editor/min/**/*",
+      "node_modules/@electron/remote/**/*"
     ],
     "extends": null,
     "asar": {
