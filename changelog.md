@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.17.0
+## v0.17.0 2021-10-17
 
 - **Changed:**
   - Update electron 13.5.1 to 15.2.0
