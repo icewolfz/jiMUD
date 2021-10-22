@@ -2,6 +2,8 @@
 
 ## v0.17.0
 
+- ** Fixed: **
+ - Fix scripting predefined variables $selectedword, $selectedline, $selectedurl, $selword, $selline, $selurl so they are correctly set for use in javascript
 - **Changed:**
   - Update electron 13.5.1 to 15.2.0
   - Update fswin 2.21.929 to 2.21.1015

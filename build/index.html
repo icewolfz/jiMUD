@@ -105,6 +105,49 @@
             configurable: true
         });
 
+        Object.defineProperty(window, '$selword', {
+            get: function () {
+                if (!client) return '';
+                return client._input.vStack['$selword'] || _selword || '';
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selurl', {
+            get: function () {
+                if (!client) return '';
+                return client._input.vStack['$selurl'] || _selurl || '';
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selline', {
+            get: function () {
+                if (!client) return '';
+                return client._input.vStack['$selline'] || _selline || '';
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selectedword', {
+            get: function () {
+                if (!client) return '';
+                return client._input.vStack['$selectedword'] || _selword || '';
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selectedurl', {
+            get: function () {
+                if (!client) return '';
+                return client._input.vStack['$selectedurl'] || _selurl || '';
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selectedline', {
+            get: function () {
+                if (!client) return '';
+                return client._input.vStack['$selectedline'] || _selline || '';
+            },
+            configurable: true
+        });
+
         window.addEventListener('keydown', (event) => {
             if ($('#disconnectDialog')[0].open) {
                 if (event.which === 81) {
@@ -728,8 +771,8 @@
 
             client.sendChat = updateChat;
 
-            window.$selectedurl = '';
-            window.$selectedline = '';
+            //window.$selectedurl = '';
+            //window.$selectedline = '';
 
             if (ipcRenderer.sendSync('get-global', 'profiles') && ipcRenderer.sendSync('get-global', 'profiles').length > 0)
                 client.enabledProfiles = ipcRenderer.sendSync('get-global', 'profiles');
