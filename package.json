@@ -65,7 +65,6 @@
   },
   "build": {
     "appId": "jiMUD",
-    "buildDependenciesFromSource": true,
     "publish": [
       "github"
     ],
