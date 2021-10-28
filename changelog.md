@@ -5,10 +5,11 @@
 - **Fixed:**
  - Fix scripting predefined variables $selectedword, $selectedline, $selectedurl, $selword, $selline, $selurl so they are correctly set for use in javascript
 - **Changed:**
-  - Update electron 13.5.1 to 15.2.0
+  - Update electron 13.5.1 to 15.3.0
   - Update fswin 2.21.929 to 2.21.1015
   - Update monaco-editor 0.28.1 to 0.29.1
   - Update mathjs 9.5.0 to 9.5.1
+  - Update better-sqlite3 7.4.3 to 7.4.4
 
 ## v0.16.5 2021-10-03
 
