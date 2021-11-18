@@ -5,7 +5,7 @@
 - **Fixed:**
  - Fix scripting predefined variables $selectedword, $selectedline, $selectedurl, $selword, $selline, $selurl so they are correctly set for use in javascript
 - **Changed:**
-  - Update electron 13.5.1 to 16.0.0
+  - Update electron 13.5.1 to 16.0.1
   - Update fswin 2.21.929 to 2.21.1015
   - Update monaco-editor 0.28.1 to 0.30.1
   - Update mathjs 9.5.0 to 10.0.0
