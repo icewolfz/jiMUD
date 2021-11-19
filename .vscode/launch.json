@@ -15,7 +15,7 @@
             },
             "args": [
                 ".",
-                "-d",
+                "-d"
             ],
             "program": "${workspaceRoot}/build/main.js",
             "protocol": "inspector",
@@ -53,6 +53,57 @@
                 "--inspect=5858",
             ]
         },
+        {
+            "name": "Debug Client Custom Data Dir",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
+            "windows": {
+                "runtimeExecutable": "${workspaceRoot}\\node_modules\\.bin\\electron.cmd"
+            },
+            "args": [
+                ".",
+                "-d",
+                "-data-dir=${workspaceRoot}/data"
+            ],
+            "program": "${workspaceRoot}/build/main.js",
+            "protocol": "inspector",
+            "address": "localhost",
+            "outputCapture": "std",
+            "sourceMaps": false,
+            "port": 5858,
+            "runtimeArgs": [
+                ".",
+                "--inspect-brk=5858"
+            ]
+        },
+        {
+            "name": "Debug Editor Custom Data Dir",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
+            "windows": {
+                "runtimeExecutable": "${workspaceRoot}\\node_modules\\.bin\\electron.cmd"
+            },
+            "args": [
+                ".",
+                "-d",
+                "-eo",
+                "-data-dir=${workspaceRoot}/data"
+            ],
+            "program": "${workspaceRoot}/build/main.js",
+            "protocol": "inspector",
+            "address": "localhost",
+            "outputCapture": "std",
+            "sourceMaps": false,
+            "port": 5858,
+            "runtimeArgs": [
+                ".",
+                "--inspect=5858",
+            ]
+        },   
         {
             "name": "Debug child process",
             "type": "node",
