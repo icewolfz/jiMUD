@@ -42,4 +42,4 @@ dist/*
 /build/css/characters.css
 /build/css/immortal.css
 /build/css/cm.css
-data/*
+data/
