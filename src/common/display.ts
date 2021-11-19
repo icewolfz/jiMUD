@@ -2217,7 +2217,7 @@ export class Display extends EventEmitter {
         for (ol in this._overlays[type]) {
             if (!this._overlays[type].hasOwnProperty(ol))
                 continue;
-            this._overlays[type][ol] = `<div style="top: ${_lines[+ol || 0].top}px;height:${_lines[+ol || 0].height}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
+            this._overlays[type][ol] = `<div style="top: ${_lines[+ol || 0].top}px;height:${_lines[+ol || 0].height}px;line-height: ${(_lines[+ol || 0].height) - 4}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
             if (this.split && ol >= this.split._viewRange.start) {
                 this.split.dirty = true;
                 this.doUpdate(UpdateType.scrollViewOverlays);
@@ -2325,9 +2325,9 @@ export class Display extends EventEmitter {
                 s = this.lineWidth(sL, 0, s);
             }
             if (this._roundedRanges)
-                this._overlays.selection[sL] = `<div style="top: ${this._lines[sL].top}px;height:${this._lines[sL].height}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
+                this._overlays.selection[sL] = `<div style="top: ${this._lines[sL].top}px;height:${this._lines[sL].height}px;line-height: ${this._lines[sL].height - 4}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
             else
-                this._overlays.selection[sL] = `<div style="top: ${this._lines[sL].top}px;height:${this._lines[sL].height}px;" class="overlay-line"><span class="select-text" style="left: ${s}px;width: ${e}px"></span></div>`;
+                this._overlays.selection[sL] = `<div style="top: ${this._lines[sL].top}px;height:${this._lines[sL].height}px;line-height: ${this._lines[sL].height - 4}px;" class="overlay-line"><span class="select-text" style="left: ${s}px;width: ${e}px"></span></div>`;
 
             /*
                         const ranges = [];
@@ -2489,7 +2489,7 @@ export class Display extends EventEmitter {
             if (endStyle.bottom === CornerType.Intern)
                 parts.push(`<span class="select-text ieb" style="top:${_lines[line].height - 7}px;left:${(cl) + w}px;"></span>`);
 
-            this._overlays.selection[line] = `<div style="top: ${_lines[line].top}px;height:${_lines[line].height}px;" class="overlay-line">${parts.join('')}</div>`;
+            this._overlays.selection[line] = `<div style="top: ${_lines[line].top}px;height:${_lines[line].height}px;line-height: ${this._lines[line].height - 4}px;" class="overlay-line">${parts.join('')}</div>`;
         }
         if (this.split && (sL >= this.split._viewRange.start || eL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start || this._prevSelection.end.y >= this.split._viewRange.start)) {
             this.split.dirty = true;
@@ -2678,33 +2678,33 @@ export class Display extends EventEmitter {
             styles += '.background > span span {background-color: inherit !important;}';
         this._styles.innerHTML = styles;
     }
-/**
- *
- * @private
- * @param {number} [idx]
- * @param {number} [mv]
- * @returns
- * @memberof Display
- * @todo needs wrap for links, mxp send, mxp link
- * @todo track links to properly add link formats at the start of wrapped lines
- * @todo optimize
- * @todo wrap is not 100% perfect, at < charwidth * 5 sometimes leaves more then 1 character
- * Test:
-wrap = client.display.calculateWrapLines(3, 370);
-for(let w = 0, wl = wrap.length; w < wl; w++)
-{
-	var os = wrap[w].formats[0].offset;
-	var t = w === wl - 1 ? client.display.lines[3].substring(wrap[w].offset) : client.display.lines[3].substring(wrap[w].offset, wrap[w+1].offset);
-    //fake indent
-    if(w !== 0) {
-		t = '    ' + t;
-		os -= 4;
-		wrap[w].formats.unshift({ bStyle:"background:rgb(0, 0, 0);", background:40, color:37, fCls:"", fStyle:"color:rgb(187, 187, 187);", font:0, formatType:0, offset:os, size:0, style:0, unicode:false, width:0 })
-	}
-	client.display.addParserLine({raw: t, line: t, formats: wrap[w].formats.map(f=>{f.offset -= os; return f; })});
-}
- */
-private calculateWrapLines(idx?: number, mv?: number) {
+    /**
+     *
+     * @private
+     * @param {number} [idx]
+     * @param {number} [mv]
+     * @returns
+     * @memberof Display
+     * @todo needs wrap for links, mxp send, mxp link
+     * @todo track links to properly add link formats at the start of wrapped lines
+     * @todo optimize
+     * @todo wrap is not 100% perfect, at < charwidth * 5 sometimes leaves more then 1 character
+     * Test:
+    wrap = client.display.calculateWrapLines(3, 370);
+    for(let w = 0, wl = wrap.length; w < wl; w++)
+    {
+        var os = wrap[w].formats[0].offset;
+        var t = w === wl - 1 ? client.display.lines[3].substring(wrap[w].offset) : client.display.lines[3].substring(wrap[w].offset, wrap[w+1].offset);
+        //fake indent
+        if(w !== 0) {
+            t = '    ' + t;
+            os -= 4;
+            wrap[w].formats.unshift({ bStyle:"background:rgb(0, 0, 0);", background:40, color:37, fCls:"", fStyle:"color:rgb(187, 187, 187);", font:0, formatType:0, offset:os, size:0, style:0, unicode:false, width:0 })
+        }
+        client.display.addParserLine({raw: t, line: t, formats: wrap[w].formats.map(f=>{f.offset -= os; return f; })});
+    }
+     */
+    private calculateWrapLines(idx?: number, mv?: number) {
         if (idx === undefined) {
             idx = this.lines.length - 1;
             mv = this._maxView;
@@ -3087,9 +3087,9 @@ private calculateWrapLines(idx?: number, mv?: number) {
                     tmp.push('width:', formatUnit(format.w), ';');
 
                 if (format.height)
-                    tmp.push('height:', format.height, 'px;');
+                    tmp.push('height:', format.height, 'px;line-height:', <any>(format.height - 4), 'px;');
                 else if (format.h.length > 0)
-                    tmp.push('height:', formatUnit(format.h, ch), ';');
+                    tmp.push('height:', formatUnit(format.h, ch), ';line-height:', formatUnit(format.h - 4, ch), ';');
 
                 switch (format.align.toLowerCase()) {
                     case 'left':
@@ -3124,8 +3124,8 @@ private calculateWrapLines(idx?: number, mv?: number) {
             }
         }
         if (right)
-            return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${this._lines[idx].height}px;min-width:${mv}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${this._lines[idx].height}px;min-width:${mv}px;">${back.join('')}<br></span>`];
-        return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${this._lines[idx].height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${this._lines[idx].height}px;">${back.join('')}<br></span>`];
+            return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${this._lines[idx].height}px;line-height:${this._lines[idx].height}px;min-width:${mv}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${this._lines[idx].height}px;line-height:${this._lines[idx].height}px;min-width:${mv}px;">${back.join('')}<br></span>`];
+        return [`<span class="line" data-id="${id}" style="top:${this._lines[idx].top}px;height:${this._lines[idx].height}px;line-height:${this._lines[idx].height}px;">${fore.join('')}<br></span>`, `<span class="background-line" style="top:${this._lines[idx].top}px;height:${this._lines[idx].height}px;line-height:${this._lines[idx].height}px;">${back.join('')}<br></span>`];
     }
 
     public getLineHTML(idx?: number, start?: number, len?: number) {
@@ -3294,7 +3294,7 @@ private calculateWrapLines(idx?: number, mv?: number) {
                 if (format.w.length > 0)
                     parts.push('width:', formatUnit(format.w), ';');
                 if (format.h.length > 0)
-                    parts.push('height:', formatUnit(format.h, this._charHeight), ';');
+                    parts.push('height:', formatUnit(format.h, this._charHeight), ';line-height:', formatUnit(format.h - 4, this._charHeight),';');
                 switch (format.align.toLowerCase()) {
                     case 'left':
                         parts.push('float:left;');
