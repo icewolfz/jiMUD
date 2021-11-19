@@ -11,7 +11,7 @@
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/composer.css" rel="stylesheet" type="text/css" />
     <link href="css/form.css" rel="stylesheet" type="text/css" />
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
@@ -19,13 +19,15 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script src="../lib/tinymce/tinymce.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/smtextcolor.tinymce.js" type="text/javascript" charset="utf-8"></script>
-    <script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
         //spell-checker:words tinymce
         //spell-checker:ignore smtextcolor, rgbcolor, noflash, dblunderline, shadowfore, shadowback, textcolor, cmdfont, editorcontent
-        //spell-checker:ignore hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime
+        //spell-checker:ignore BOLDOFF ITALICOFF UNDERLINEOFF FLASHOFF INVERSEOFF STRIKEOUTOFF OVERLINEOFF hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime
         /* global tinymce */
-        const { remote, ipcRenderer, webFrame } = require('electron');
-        const { nativeImage, dialog, Menu, MenuItem } = remote;
+        const { ipcRenderer, webFrame, nativeImage } = require('electron');
+        const remote = require('@electron/remote');
+        const { Menu, MenuItem } = remote;
         const { stripHTML, htmlEncode, parseTemplate, getColors } = require('./js/library');
         const { Settings } = require('./js/settings');
         const { Mail } = require('./js/mail');
@@ -35,7 +37,6 @@
         const path = require('path');
 
 
-        var spellchecker;
         var mail;
         var draft = true;
         var closeWindow = false;
@@ -167,22 +168,21 @@
         }
 
         function appendFile() {
-            dialog.showOpenDialog(remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
                 {
                     filters: [
                         { name: 'Text files (*.txt)', extensions: ['txt'] },
                         { name: 'LPC files (*.c, *.h, *.o)', extensions: ['c', 'h', 'o'] },
                         { name: 'All files (*.*)', extensions: ['*'] },
                     ]
-                },
-                function (fileNames) {
-                    if (fileNames === undefined) {
+                }).then(result => {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
                         return;
                     }
-                    for (var f = 0, fl = fileNames.length; f < fl; f++)
-                        fs.readFile(fileNames[f], 'utf8', (err, data) => {
+                    for (var f = 0, fl = result.filePaths.length; f < fl; f++)
+                        fs.readFile(result.filePaths[f], 'utf8', (err, data) => {
                             if (err) {
-                                dialog.showMessageBox(remote.getCurrentWindow(), {
+                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                     type: 'error',
                                     title: 'Error importing file',
                                     message: err
@@ -211,15 +211,6 @@
                         });
                 });
         }
-
-        webFrame.setSpellCheckProvider('en-US', true, {
-            spellCheck: function (text) {
-                if (!spellchecker || !options.spellchecking)
-                    return true;
-                return !(spellchecker.isMisspelled(text));
-            }
-        });
-        //https://www.npmjs.com/package/electron-spell-check-provider
 
         function buildHTMLStack(els) {
             var tag, $el, t, tl;
@@ -735,7 +726,7 @@
                     cMenu.append(new MenuItem({ role: 'paste', icon: path.join(__dirname, '../assets/icons/png/paste.png') }));
                     cMenu.append(new MenuItem({ role: 'delete', icon: path.join(__dirname, '../assets/icons/png/delete.png') }));
                     cMenu.append(new MenuItem({ type: 'separator' }));
-                    cMenu.append(new MenuItem({ role: 'selectall' }));
+                    cMenu.append(new MenuItem({ role: 'selectAll' }));
                     cMenu.append(new MenuItem({ type: 'separator' }));
 
                     cMenu.append(new MenuItem({
@@ -924,7 +915,7 @@
             if (to.length === 0) {
                 p.addClass('has-error');
                 p.addClass('has-feedback');
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'No recipient',
                     message: 'Must supply at least one recipient'
@@ -944,7 +935,7 @@
                 read: 0,
                 to: to,
                 cc: cc,
-                from: remote.getGlobal('character') || '',
+                from: ipcRenderer.sendSync('get-global', 'character') || '',
                 raw: getFormatedText().replace(/(?:\r)/g, ''),
                 ansi: getAnsiText().replace(/(?:\r)/g, '')
             }, options.extensions['mail'] ? options.extensions['mail'].saveSent : true);
@@ -957,7 +948,7 @@
                 var p = $('#to-form');
                 p.addClass('has-error');
                 p.addClass('has-feedback');
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'No recipient',
                     message: 'Must supply at least one recipient'
@@ -976,7 +967,7 @@
                 read: 0,
                 to: to,
                 cc: cc,
-                from: remote.getGlobal('character') || '',
+                from: ipcRenderer.sendSync('get-global', 'character') || '',
                 raw: getText().replace(/(?:\r)/g, ''),
                 ansi: getText().replace(/(?:\r)/g, '')
             }, options.extensions['mail'] ? options.extensions['mail'].saveSent : true);
@@ -984,7 +975,7 @@
 
         $(document).ready(() => {
             initShadowMUD();
-            var file = remote.getGlobal('character');
+            var file = ipcRenderer.sendSync('get-global', 'character');
             if (!file || file.length === 0)
                 file = parseTemplate(path.join('{data}', 'mail.sqlite'));
             else
@@ -1002,7 +993,7 @@
             });
             mail.on('letter-sent', (to) => {
                 if (!to || to.length === 0) {
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                         type: 'error',
                         title: 'No recipients',
                         message: 'No recipients found.'
@@ -1018,14 +1009,14 @@
             mail.on('error', (err) => {
                 switch (err) {
                     case MailStatus.NO_RECIPIENTS:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'No recipients',
                             message: 'No recipients found.'
                         });
                         break;
                     default:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Error sending',
                             message: 'Error sending mail.'
@@ -1111,40 +1102,70 @@
                     '*': 'color,background,background-color,text-decoration,font-weight'
                 }
             });
-
-            tinymce.activeEditor.on('contextmenu', function (e) {
-                e.preventDefault();
-                var cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu();
-                var selRng = tinymce.activeEditor.selection.getRng();
-                selRng.expand('word'); //expands the DOM range to the current word
-                //tinymce.activeEditor.selection.setRng(selRng);
-                var word = stripHTML(tinymce.activeEditor.selection.getContent());
-                var ol = word.length;
-                word = word.trimRight();
-                var l = ol - word.length;
-                ol = word.length;
-                if (l > 0)
-                    selRng.setEnd(selRng.endContainer, selRng.endOffset - l);
-                word = word.trimLeft();
-                l = ol - word.length;
-                if (l > 0)
-                    selRng.setStart(selRng.startContainer, selRng.startOffset - l);
-
-                if (options.spellchecking && spellchecker && spellchecker.isMisspelled(word)) {
-                    var words = spellchecker.getCorrectionsForMisspelling(word);
-                    if (words.length > 0)
-                        cMenu.insert(0, new MenuItem({ type: 'separator' }));
-                    for (var w = words.length - 1; w >= 0; w--)
-                        cMenu.insert(0, new MenuItem({
-                            label: words[w],
-                            click: function (item) {
-                                tinymce.activeEditor.undoManager.transact(function () {
-                                    tinymce.activeEditor.selection.setContent(item.label);
-                                });
+            remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
+                const { selectionText, isEditable } = params;
+                if (isEditable) {
+                    var cMenu;
+                    if (params.inputFieldType !== 'none') {
+                        cMenu = Menu.buildFromTemplate([
+                            { role: 'undo' },
+                            { role: 'redo' },
+                            { type: 'separator' },
+                            { role: 'cut' },
+                            { role: 'copy' },
+                            { role: 'paste' },
+                            { type: 'separator' },
+                            { role: 'selectAll' },
+                        ]);
+                        if (options.spellchecking && params.dictionarySuggestions.length) {
+                            cMenu.insert(0, new MenuItem({ type: 'separator' }));
+                            for (w = params.dictionarySuggestions.length - 1; w >= 0; w--) {
+                                cMenu.insert(0, new MenuItem({
+                                    label: params.dictionarySuggestions[w],
+                                    x: params.x,
+                                    y: params.y,
+                                    sel: params.selectionText.length - params.misspelledWord.length,
+                                    idx: params.selectionText.indexOf(params.misspelledWord),
+                                    word: params.misspelledWord,
+                                    click: function (item) {
+                                        var el = $(document.elementFromPoint(item.x, item.y));
+                                        var value = el.val();
+                                        var start = el[0].selectionStart;
+                                        const wStart = start + item.idx;
+                                        value = value.substring(0, wStart) + item.label + value.substring(wStart + item.word.length);
+                                        el.val(value);
+                                        el[0].selectionStart = start;
+                                        el[0].selectionEnd = start + item.label.length + item.sel;
+                                        el.blur();
+                                        el.focus();
+                                    }
+                                }));
                             }
-                        }));
+                        }
+                    }
+                    else {
+                        cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu();
+                        if (options.spellchecking && params.dictionarySuggestions.length) {
+                            cMenu.insert(0, new MenuItem({ type: 'separator' }));
+                            for (var w = params.dictionarySuggestions.length - 1; w >= 0; w--)
+                                cMenu.insert(0, new MenuItem({
+                                    label: params.dictionarySuggestions[w],
+                                    click: function (item) {
+                                        tinymce.activeEditor.undoManager.transact(function () {
+                                            tinymce.activeEditor.selection.setContent(item.label);
+                                        });
+                                    }
+                                }));
+                        }
+                    }
+                    cMenu.popup({ window: remote.getCurrentWindow() });
+                } else if (selectionText && selectionText.trim() !== '') {
+                    Menu.buildFromTemplate([
+                        { role: 'copy' },
+                        { type: 'separator' },
+                        { role: 'selectAll' },
+                    ]).popup({ window: remote.getCurrentWindow() });
                 }
-                cMenu.popup({ window: remote.getCurrentWindow() });
             });
             loadOptions();
         });
@@ -1273,15 +1294,7 @@
         }
 
         function loadOptions() {
-            options = Settings.load(remote.getGlobal('settingsFile'));
-            try {
-                if (!spellchecker && options.spellchecking)
-                    spellchecker = require('spellchecker');
-            }
-            catch (ex) {
-                ipcRenderer.send('error', ex);
-            }
-
+            options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', options.cmdfontSize);
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-family', options.cmdfont + ', monospace');
             if (tinymce.activeEditor.formatter)
@@ -1338,8 +1351,7 @@
             if (!closeWindow && draft && !ask) {
                 evt.returnValue = false;
                 setTimeout(() => {
-                    var choice = dialog.showMessageBox(
-                        remote.getCurrentWindow(),
+                    var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                         {
                             type: 'warning',
                             title: 'Unsaved',
@@ -1360,14 +1372,14 @@
                             read: 0,
                             to: $('#to').val().split(/ |,/),
                             cc: $('#CC').val().split(/ |,/),
-                            from: remote.getGlobal('character') || '',
+                            from: ipcRenderer.sendSync('get-global', 'character') || '',
                             raw: getFormatedText().replace(/(?:\r)/g, ''),
                             ansi: getAnsiText().replace(/(?:\r)/g, ''),
                             html: getHTML()
                         }, () => {
                             mail.close();
                             closeWindow = true;
-                            remote.getCurrentWindow().close();
+                            ipcRenderer.invoke('window', 'close');
                         });
                         return;
                     }
@@ -1377,7 +1389,7 @@
                         ipcRenderer.send('setting-changed', { type: 'extensions', name: 'mail', value: options.extensions['mail'] });
                     }
                     closeWindow = true;
-                    remote.getCurrentWindow().close();
+                    ipcRenderer.invoke('window', 'close');
                 });
                 return;
             }
@@ -1389,26 +1401,26 @@
                     read: 0,
                     to: $('#to').val().split(/ |,/),
                     cc: $('#CC').val().split(/ |,/),
-                    from: remote.getGlobal('character') || '',
+                    from: ipcRenderer.sendSync('get-global', 'character') || '',
                     raw: getFormatedText().replace(/(?:\r)/g, ''),
                     ansi: getAnsiText().replace(/(?:\r)/g, ''),
                     html: getHTML()
                 }, () => {
                     mail.close();
                     closeWindow = true;
-                    remote.getCurrentWindow().close();
+                    ipcRenderer.invoke('window', 'close');
                 });
                 return;
             }
             else if (mail)
                 mail.close();
             closeWindow = true;
-            remote.getCurrentWindow().close();
+            ipcRenderer.invoke('window', 'close');
         };
 
         // eslint-disable-next-line no-unused-vars
         function closeHidden() {
-            remote.getCurrentWindow().hide();
+            ipcRenderer.invoke('window', 'hide');
         }
     </script>
     <style>

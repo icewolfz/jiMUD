@@ -5,7 +5,7 @@
  * 
  * @author {your name}
  * @created {date}
- * @typeof object
+ * @typeof monster
  * @doc /doc/build/monster/tutorial
 {doc} */
 #include <std.h>{includes}

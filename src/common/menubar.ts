@@ -1,4 +1,4 @@
-import { remote } from 'electron';
+const remote = require('@electron/remote');
 const { Menu } = remote;
 
 export enum ItemType {

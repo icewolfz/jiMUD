@@ -6,8 +6,9 @@ import { PropertyGrid } from '../propertygrid';
 import { EditorType, ValueEditor } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, isFileSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString, pinkfishToHTML } from '../library';
-const { clipboard, remote } = require('electron');
-const { Menu, MenuItem, dialog } = remote;
+const { clipboard, ipcRenderer } = require('electron');
+const remote = require('@electron/remote');
+const { Menu, MenuItem } = remote;
 const path = require('path');
 const fs = require('fs');
 
@@ -782,8 +783,7 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$descriptionGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -939,8 +939,7 @@ export class VirtualEditor extends EditorBase {
                 e.data[d].data.idx = idx;
                 e.data[d].items.idx = idx;
                 if (!all && idx < this.$items.length) {
-                    choice = dialog.showMessageBox(
-                        remote.getCurrentWindow(),
+                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                         {
                             type: 'warning',
                             title: 'Replace items',
@@ -1112,8 +1111,7 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$itemGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -1547,8 +1545,7 @@ export class VirtualEditor extends EditorBase {
             }
         });
         this.$exitGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -2009,15 +2006,15 @@ export class VirtualEditor extends EditorBase {
             const sel = getSelection();
             let inputMenu;
             if (!sel.isCollapsed && sel.type === 'Range' && this.$roomPreview.container.contains(sel.anchorNode)) {
-                inputMenu = Menu.buildFromTemplate([
+                inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
                     { role: 'copy' },
                     { type: 'separator' },
-                    { role: 'selectall' }
+                    { role: 'selectAll' }
                 ]);
             }
             else
-                inputMenu = Menu.buildFromTemplate([
-                    { role: 'selectall' }
+                inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
+                    { role: 'selectAll' }
                 ]);
             inputMenu.popup({ window: remote.getCurrentWindow() });
         });
@@ -3745,7 +3742,7 @@ export class VirtualEditor extends EditorBase {
             if (oldValues.length > 0)
                 this.pushUndo(undoAction.edit, undoType.room, { property: prop === 'external' ? 'ee' : prop, values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
             this.stopUndoGroup();
-            setTimeout(() => this.UpdateEditor(this.$selectedRooms));
+            //setTimeout(() => this.UpdateEditor(this.$selectedRooms));
             this.UpdatePreview(this.selectedFocusedRoom);
         });
         this.$roomEditor.setPropertyOptions([
@@ -4120,14 +4117,14 @@ export class VirtualEditor extends EditorBase {
                     { role: 'copy' },
                     { role: 'paste' },
                     { type: 'separator' },
-                    { role: 'selectall' }
+                    { role: 'selectAll' }
                 ];
             }
             else
                 tmp = [
                     { role: 'paste' },
                     { type: 'separator' },
-                    { role: 'selectall' }
+                    { role: 'selectAll' }
                 ];
             if (this.$undo.length > 0 || this.$redo.length > 0)
                 tmp.unshift({ type: 'separator' });
@@ -4373,8 +4370,7 @@ export class VirtualEditor extends EditorBase {
         if (!this.$files[file] || !isFileSync(path.join(path.dirname(this.file), file)))
             return 0;
         //ask and return answer
-        return dialog.showMessageBox(
-            remote.getCurrentWindow(),
+        return ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
             {
                 type: 'warning',
                 title: 'Confirm Save As',
@@ -7138,7 +7134,10 @@ export class VirtualEditor extends EditorBase {
         let r;
         let xl;
         let yl;
-        if (!this.$mapContext) return;
+        if (!this.$mapContext)  {
+            this.doUpdate(UpdateType.drawMap);
+            return;
+        }
         this.$mapContext.save();
         this.$mapContext.fillStyle = 'white';
         this.$mapContext.fillRect(0, 0, this.$mapSize.right, this.$mapSize.bottom);
@@ -7287,10 +7286,6 @@ export class VirtualEditor extends EditorBase {
         if (this._updating === UpdateType.none)
             return;
         window.requestAnimationFrame(() => {
-            if ((this._updating & UpdateType.drawMap) === UpdateType.drawMap) {
-                this.DrawMap();
-                this._updating &= ~UpdateType.drawMap;
-            }
             if ((this._updating & UpdateType.buildRooms) === UpdateType.buildRooms) {
                 this.BuildRooms();
                 this._updating &= ~UpdateType.buildRooms;
@@ -7319,6 +7314,10 @@ export class VirtualEditor extends EditorBase {
                 this.$exitGrid.refresh();
                 this._updating &= ~UpdateType.refreshExits;
             }
+            if ((this._updating & UpdateType.drawMap) === UpdateType.drawMap) {
+                this._updating &= ~UpdateType.drawMap;
+                this.DrawMap();
+            }            
             this.doUpdate(this._updating);
         });
     }
@@ -8606,8 +8605,10 @@ export class VirtualEditor extends EditorBase {
 
                 if (items.length > 0 && room.item >= 0 && room.item < items.length && items[room.item] && items[room.item].children && items[room.item].children.length > 0) {
                     items = items[room.item].children.slice().sort((a, b) => { return b.item.length - a.item.length; });
-                    for (c = 0, cl = items.length; c < cl; c++)
-                        str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'gi'), (m) => '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + m + '</span>');
+                    for (c = 0, cl = items.length; c < cl; c++) {
+                        if (items[c].item.length === 0) continue;
+                        str = str.replace(new RegExp('\\b(?!room-preview)(' + items[c].item + ')\\b', 'gi'), (m) => '<span data-id="' + this.parent.id + '-room-preview' + c + '">' + m + '</span>');
+                    }
                 }
                 else
                     items = null;
@@ -8615,9 +8616,11 @@ export class VirtualEditor extends EditorBase {
                 this.$roomPreview.long.innerHTML = pinkfishToHTML(str);
                 if (items && items.length > 0) {
                     for (c = 0, cl = items.length; c < cl; c++) {
-                        item = document.getElementById(this.parent.id + '-room-preview' + c);
-                        if (item)
-                            item.title = items[c].description;
+                        item = document.querySelectorAll(`[data-id=${this.parent.id}-room-preview${c}]`);
+                        item.forEach(el => {
+                            el.title = items[c].description;
+                            el.classList.add('room-item');
+                        });
                     }
                 }
                 if (data.smell.length > 0 && data.smell !== '0' && data.sound.length > 0 && data.sound !== '0') {
@@ -8919,8 +8922,6 @@ export class VirtualEditor extends EditorBase {
                 this.DrawMap();
             }, 250);
         }
-        this.doUpdate(UpdateType.drawMap);
-        this.DrawMap();
         this.doUpdate(UpdateType.drawMap);
         const cols = this.$exitGrid.columns;
         if (this.$mapSize.depth < 2) {
@@ -9868,8 +9869,7 @@ export class ExternalExitValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
                         title: 'Delete',
@@ -10209,8 +10209,7 @@ export class ItemsValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
                         title: 'Delete',

@@ -11,6 +11,7 @@
 - `Import/Export` export or import profiles
   - `Export current` export current profile
   - `Export all` export all profiles as one file
+  - `Export all as zip` export all profiles in a zip file, **Note** incompatible with web client
   - `Import` import profiles
 
 ## Profiles

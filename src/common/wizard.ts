@@ -1,8 +1,7 @@
 //spellchecker:ignore datagrid
 import EventEmitter = require('events');
 import { DataGrid } from './datagrid';
-const { remote } = require('electron');
-const { dialog } = remote;
+const { ipcRenderer } = require('electron');
 
 export interface WizardOptions {
     id: string;
@@ -34,7 +33,7 @@ export interface DataGridPageOptions extends PageOptions {
 export class WizardPage extends EventEmitter {
     private $body;
     private $el: HTMLElement;
-    public title;
+    private _title;
     public wizard: Wizard;
 
     constructor(options?: PageOptions) {
@@ -75,6 +74,9 @@ export class WizardPage extends EventEmitter {
     public get body() { return this.$body; }
 
     public get page() { return this.$el; }
+
+    public get title() { return this._title; }
+    public set title(value: any) { this._title = value; }
 }
 
 export class WizardDataGridPage extends WizardPage {
@@ -229,8 +231,7 @@ export class WizardDataGridPage extends WizardPage {
         this.dataGrid.on('delete', (e) => {
             const ep = { preventDefault: false };
             this.emit('delete-prompt', ep);
-            if (!ep.preventDefault && dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (!ep.preventDefault && ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -449,8 +450,11 @@ export class Wizard extends EventEmitter {
         el.classList.add('dialog-footer');
         this.$nav = document.createElement('select');
         this.$nav.style.cssFloat = 'left';
-        this.$nav.classList.add('form-control', 'selectpicker');
+        this.$nav.classList.add('form-control', 'selectpicker', 'dropup');
         this.$nav.dataset.width = '200px';
+        //this.$nav.dataset.container = '.' + this.id;
+        this.$nav.dataset.dropupAuto = 'false';
+        this.$nav.dataset.size = '12';
         this.$nav.addEventListener('change', (e) => {
             this.goto(+(<HTMLSelectElement>e.target).selectedIndex);
         });

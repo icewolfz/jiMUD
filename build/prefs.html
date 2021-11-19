@@ -13,108 +13,106 @@
     <link href="css/form.css" rel="stylesheet" type="text/css" />
     <style>
         body {
-      -webkit-user-select: none;
-      user-select: none;
-      overflow: hidden;
-    }
+            -webkit-user-select: none;
+            user-select: none;
+            overflow: hidden;
+        }
 
 
-    #pref-tree {
-      padding: 0px;
-      margin: 0;
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 57px;
-      width: 200px;
-      overflow: auto;
-    }
+        #pref-tree {
+            padding: 0px;
+            margin: 0;
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 57px;
+            width: 200px;
+            overflow: auto;
+        }
 
-    #pref-tree .list-group {
-      margin: 0;
-      box-shadow: none;
-    }
+        #pref-tree .list-group {
+            margin: 0;
+            box-shadow: none;
+        }
 
-    #content {
-      position: absolute;
-      right: 0px;
-      top: 0;
-      bottom: 57px;
-      left: 202px;
-      margin: 0;
-    }
+        #content {
+            position: absolute;
+            right: 0px;
+            top: 0;
+            bottom: 57px;
+            left: 202px;
+            margin: 0;
+        }
 
-    #pref-editor {
-      overflow: auto;
-      position: absolute;
-      right: 0;
-      top: 42px;
-      bottom: 0;
-      left: 0;
-      margin: 0;
-    }
+        #pref-editor {
+            overflow: auto;
+            position: absolute;
+            right: 0;
+            top: 42px;
+            bottom: 0;
+            left: 0;
+            margin: 0;
+        }
 
-    .node-pref-tree {
-      padding: 2px;
-      border-top-right-radius: 0px !important;
-      border-top-left-radius: 0px !important;
-      border-bottom-right-radius: 0px !important;
-      border-bottom-left-radius: 0px !important;
-    }
+        .node-pref-tree {
+            padding: 2px;
+            border-top-right-radius: 0px !important;
+            border-top-left-radius: 0px !important;
+            border-bottom-right-radius: 0px !important;
+            border-bottom-left-radius: 0px !important;
+        }
 
-    .pref-pane {
-      position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      margin: 0;
-      display: none;
-      padding-top: 15px;
-      padding-bottom: 15px;
-    }
+        .pref-pane {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            margin: 0;
+            display: none;
+            padding-top: 15px;
+            padding-bottom: 15px;
+        }
 
-    hr {
-      height: 1px;
-      background-color: #eee;
-      margin-top: 20px;
-      margin-bottom: 20px;
-      width: 75%;
-    }
+        hr {
+            height: 1px;
+            background-color: #eee;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            width: 75%;
+        }
 
-    .bootstrap-select .dropdown-menu {
-        max-height: 200px !important;
-    }
-  </style>
-    <script>
+        .bootstrap-select .dropdown-menu {
+            max-height: 200px !important;
+        }
+    </style>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
     <script src="../lib/bootstrap.min.js"></script>
     <script src="../lib/bootstrap-select.min.js"></script>
     <script src="../lib/bootstrap-treeview.min.js"></script>
-    <script>
+    <script type="text/javascript">
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        const { parseTemplate, templatePath, existsSync, getColors } = require('./js/library');
+        const { parseTemplate, templatePath, existsSync, getColors, isFileSync, isDirSync, walkSync } = require('./js/library');
         const { TrayClick } = require('./js/types');
         const Settings = require('./js/settings').Settings;
-        const { remote, ipcRenderer } = require('electron');
-        const { dialog } = remote;
+        const { ipcRenderer } = require('electron');
         const RGBColor = require('rgbcolor');
         const path = require('path');
         const fs = require('fs');
-        var fontManager;
+        const fontList = require('font-list');
         var currentColors;
-        try {
-            fontManager = require('font-manager');
-        }
-        catch (ex) {
-            ipcRenderer.send('error', ex);
-        }
+        var archiver, archive;
 
         var _settings;
-        if (window.module) module.module;
+        if (window.module) module = window.module;
         $(window).keydown((event) => {
+            if (document.getElementById('progress-dialog').open) {
+                event.preventDefault();
+                return false;
+            }
             if (event.which === 27)
                 window.close();
         });
@@ -186,6 +184,9 @@
                     {
                         text: 'Advanced',
                         nodes: [
+                            { text: 'Backup' },
+                            { text: 'Connection' },
+                            { text: 'Profile manager' },
                             { text: 'Tray' }
                         ]
                     },
@@ -201,20 +202,18 @@
                 $('.win32').css('display', 'inline-block');
             else
                 $('.win32').css('display', 'none');
-            if (fontManager) {
-                fontManager.getAvailableFonts((fonts) => {
+            if (process.platform === 'linux')
+                $('.linux').css('display', 'inline-block');
+            else
+                $('.linux').css('display', 'none');
+            fontList.getFonts()
+                .then(fonts => {
                     var fl = fonts.length;
                     var f = 0;
-                    var sFont = {};
                     var ops = [];
-                    fonts.sort((a, b) => a.family.localeCompare(b.family));
+                    //fonts.sort((a, b) => a.localeCompare(b));
                     for (f = 0; f < fl; f++) {
-                        if (sFont[fonts[f].family]) continue;
-                        if (fonts[f].monospace)
-                            ops.push(`<option style="font-family: '${fonts[f].family}', monospace" value="'${fonts[f].family}', monospace">'${fonts[f].family}', monospace</option>`);
-                        else
-                            ops.push(`<option style="font-family: '${fonts[f].family}'" value="'${fonts[f].family}'">'${fonts[f].family}'</option>`);
-                        sFont[fonts[f].family] = true;
+                        ops.push(`<option style="font-family: ${fonts[f].replace(/"/g, '\'')}" value="${fonts[f].replace(/"/g, '\'')}">${fonts[f].replace(/"/g, '')}</option>`);
                     }
                     ops = ops.join('');
                     $('#font-system').append(ops);
@@ -234,8 +233,11 @@
                     $('#chat-font').val(_settings.chat.font);
                     $('#chat-font').selectpicker('render');
                     $('#chat-font').change();
+                })
+                .catch(err => {
+                    ipcRenderer.send('error', err);
                 });
-            }
+
             $('#font').change(() => {
                 $('#font-sample').css('font-family', $('#font').val() + ', monospace');
                 $('#font-sample').css('font-size', $('#fontSize').val());
@@ -266,7 +268,7 @@
                 $('#chat-font-sample').css('font-size', $('#chat-fontSize').val());
             });
 
-            _settings = Settings.load(remote.getGlobal('settingsFile'));
+            _settings = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             loadThemes();
             loadSettings();
 
@@ -353,7 +355,7 @@
                     case 'mapper-memory':
                         _settings.mapper.memory = this.checked;
                         if (this.checked) {
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'warning',
                                 title: 'Warning',
                                 message: 'If client or OS crash, all in memory data will be lost and not saved to disk'
@@ -374,6 +376,7 @@
                     case 'backup-save-settings':
                     case 'backup-save-profiles':
                     case 'backup-save-map':
+                    case 'backup-save-windows':
                         _settings.backupSave = 0;
                         if ($('#backup-save-map').prop('checked'))
                             _settings.backupSave |= 2;
@@ -381,10 +384,13 @@
                             _settings.backupSave |= 4;
                         if ($('#backup-save-settings').prop('checked'))
                             _settings.backupSave |= 8;
+                        if ($('#backup-save-windows').prop('checked'))
+                            _settings.backupSave |= 16;
                         break;
                     case 'backup-load-settings':
                     case 'backup-load-profiles':
                     case 'backup-load-map':
+                    case 'backup-load-windows':
                         _settings.backupLoad = 0;
                         if ($('#backup-load-map').prop('checked'))
                             _settings.backupLoad |= 2;
@@ -392,6 +398,19 @@
                             _settings.backupLoad |= 4;
                         if ($('#backup-load-settings').prop('checked'))
                             _settings.backupLoad |= 8;
+                        if ($('#backup-load-windows').prop('checked'))
+                            _settings.backupLoad |= 16;
+                        break;
+                    case 'profiles-sortOrder-alpha':
+                    case 'profiles-sortOrder-priority':
+                    case 'profiles-sortOrder-index':
+                        _settings.profiles.sortOrder = 0;
+                        if ($('#profiles-sortOrder-alpha').prop('checked'))
+                            _settings.profiles.sortOrder |= 2;
+                        if ($('#profiles-sortOrder-priority').prop('checked'))
+                            _settings.profiles.sortOrder |= 4;
+                        if ($('#profiles-sortOrder-index').prop('checked'))
+                            _settings.profiles.sortOrder |= 8;
                         break;
                     default:
                         id = $(this).attr('id').split('-');
@@ -523,6 +542,9 @@
                     case 'chat-fontSize':
                         _settings.chat.fontSize = $(this).val();
                         break;
+                    case 'profiles-sortDirection':
+                        _settings.profiles.sortDirection = parseInt($(this).val(), 10);
+                        break;
                     default:
                         _settings[$(this).attr('id')] = $(this).val();
                         break;
@@ -533,17 +555,16 @@
                 updateScheme($(this).index());
             });
             $('#btn-logPath').on('click', () => {
-                dialog.showOpenDialog(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
                     defaultPath: parseTemplate($('#logPath').val()),
                     properties: ['openDirectory', 'createDirectory']
-                },
-                    function (fileNames) {
-                        if (fileNames === undefined) {
-                            return;
-                        }
-                        _settings.logPath = templatePath(fileNames[0]);
-                        $('#logPath').val(_settings.logPath);
-                    });
+                }).then(result => {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
+                        return;
+                    }
+                    _settings.logPath = templatePath(result.filePaths[0]);
+                    $('#logPath').val(_settings.logPath);
+                });
             });
         });
 
@@ -600,7 +621,7 @@
         function setSettings(obj, root) {
             let option;
             for (option in obj) {
-                if (!obj.hasOwnProperty(option))
+                if (!Object.prototype.hasOwnProperty.call(obj, option))
                     continue;
                 if (typeof (obj[option]) === 'object') {
                     setSettings(obj[option], root + option + '-');
@@ -632,6 +653,10 @@
             $('#chat-font').selectpicker('render');
             $('#chat-fontSize').val(_settings.chat.fontSize);
             $('#chat-font').change();
+
+            $('#profiles-sortDirection').val(_settings.profiles.sortDirection);
+            $('#profiles-sortDirection').selectpicker('render');
+            $('#profiles-sortDirection').change();
 
             LoadColors();
 
@@ -671,10 +696,12 @@
             $('#backup-load-map').prop('checked', (_settings.backupLoad & 2) === 2);
             $('#backup-load-profiles').prop('checked', (_settings.backupLoad & 4) === 4);
             $('#backup-load-settings').prop('checked', (_settings.backupLoad & 8) === 8);
+            $('#backup-load-windows').prop('checked', (_settings.backupLoad & 16) === 16);
 
             $('#backup-save-map').prop('checked', (_settings.backupSave & 2) === 2);
             $('#backup-save-profiles').prop('checked', (_settings.backupSave & 4) === 4);
             $('#backup-save-settings').prop('checked', (_settings.backupSave & 8) === 8);
+            $('#backup-save-windows').prop('checked', (_settings.backupSave & 16) === 16);
 
             $('#logWhat-html').prop('checked', (_settings.logWhat & 1) === 1);
             $('#logWhat-text').prop('checked', (_settings.logWhat & 2) === 2);
@@ -703,6 +730,10 @@
             $('#trayDblClick-hide').prop('checked', _settings.trayDblClick === TrayClick.hide);
             $('#trayDblClick-toggle').prop('checked', _settings.trayDblClick === TrayClick.toggle);
             $('#trayDblClick-menu').prop('checked', _settings.trayDblClick === TrayClick.menu);
+
+            $('#profiles-sortOrder-alpha').prop('checked', (_settings.profiles.sortOrder & 2) === 2);
+            $('#profiles-sortOrder-priority').prop('checked', (_settings.profiles.sortOrder & 4) === 4);
+            $('#profiles-sortOrder-index').prop('checked', (_settings.profiles.sortOrder & 8) === 8);
 
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
@@ -761,6 +792,15 @@
                     'reopen': true
                 };
             loadSettings();
+        }
+
+        function resetWindows() {
+            for (var name in _settings.windows) {
+                _settings.windows[name].x = 0;
+                _settings.windows[name].y = 0;
+                _settings.windows[name].width = 800;
+                _settings.windows[name].height = 600;
+            }
         }
 
         function setColor(id, color, noChange) {
@@ -1096,9 +1136,88 @@
         // eslint-disable-next-line no-unused-vars
         function saveSettings() {
             _settings.chat.lines = $('#chat-lines').val().split(',');
-            _settings.save(remote.getGlobal('settingsFile'));
+            _settings.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
             ipcRenderer.send('reload-options', false);
             window.close();
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function backup() {
+            var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
+                title: 'Save as...',
+                defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-data.zip'),
+                filters: [
+                    { name: 'Zip files (*.zip)', extensions: ['zip'] },
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+            });
+            if (file === undefined || file.length === 0)
+                return;
+
+            showProgressDialog();
+            archiver = archiver || require('yazl');
+            var data = parseTemplate('{data}');
+            archive = new archiver.ZipFile();
+
+            if (isFileSync(path.join(data, 'characters.json')))
+                archive.addFile(path.join(data, 'characters.json'), 'characters.json');
+            if (isFileSync(path.join(data, 'map.sqlite')))
+                archive.addFile(path.join(data, 'map.sqlite'), 'map.sqlite');
+            if (isFileSync(path.join(data, 'mail.sqlite')))
+                archive.addFile(path.join(data, 'mail.sqlite'), 'mail.sqlite');
+            if (isFileSync(path.join(data, 'settings.json')))
+                archive.addFile(path.join(data, 'settings.json'), 'settings.json');
+            if (isFileSync(path.join(data, 'editor.json')))
+                archive.addFile(path.join(data, 'editor.json'), 'editor.json');
+            var files;
+            if (isDirSync(path.join(data, 'profiles'))) {
+                files = walkSync(path.join(data, 'profiles'));
+                files.files.forEach(file => {
+                    archive.addFile(file, file.substring(data.length + 1).replace(/\\/g, '/'));
+                });
+            }
+            if (isDirSync(path.join(data, 'characters'))) {
+                files = walkSync(path.join(data, 'characters'));
+                files.files.forEach(file => {
+                    archive.addFile(file, file.substring(data.length + 1).replace(/\\/g, '/'));
+                });
+            }
+
+            archive.outputStream.pipe(fs.createWriteStream(file)).on('close', function () {
+                closeProgressDialog();
+            });
+            archive.end(() => {
+                closeProgressDialog();
+            });
+        }
+
+        function showProgressDialog() {
+            var progress = document.getElementById('progress-dialog');
+            if (progress.open) return;
+            setProgressDialogValue(0);
+            progress.showModal();
+        }
+
+        function setProgressDialogValue(value) {
+            ipcRenderer.send('set-progress', { value: value });
+            ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+            document.getElementById('progress-dialog-progressbar').value = value * 100;
+        }
+
+        function closeProgressDialog() {
+            var progress = document.getElementById('progress-dialog');
+            if (progress.open)
+                progress.close();
+            setProgressDialogValue(-1);
+            document.getElementById('progress-dialog-progressbar').removeAttribute('value');
+            archive = null;
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function cancelProgress() {
+            if (archive)
+                archive.abort();
+            closeProgressDialog();
         }
     </script>
 </head>
@@ -1134,6 +1253,11 @@
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="autoLogin" /> Auto login
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="autoTakeoverLogin" /> Auto takeover login
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
@@ -1178,6 +1302,15 @@
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
+                            Max reconnect delay
+                            <div class="input-group">
+                                <input type="number" id="maxReconnectDelay" class="input-sm form-control" min="0" max="10000" />
+                                <div class="input-group-addon">s</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
                             <input type="checkbox" id="checkForUpdates" /> Check for updates on load
                         </label>
                     </div>
@@ -1185,10 +1318,10 @@
                         <label class="control-label">
                             <input type="checkbox" id="enableSound" /> Enable sound
                         </label>
-                    </div>                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="display">
-                    <div class="col-sm-6 fform-group">
+                    <div class="col-sm-6 form-group">
                         <label class="control-label">
                             Buffer size
                             <input type="number" id="bufferSize" class="input-sm form-control" min="100" max="1000000" />
@@ -1256,6 +1389,11 @@
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="display-enableBackgroundColors" /> Enable background colors
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="display-showInvalidMXPTags" /> Show invalid MXP tags
                         </label>
                     </div>
                 </div>
@@ -1539,7 +1677,7 @@
                         </label>
                     </div>
                     <div class="col-sm-12 form-group">
-                        <label class="control-label">Newline shotcut</label>
+                        <label class="control-label">Newline shortcut</label>
                         <div class="btn-group" data-toggle="buttons">
                             <label class="btn btn-default btn-xs">
                                 <input type="radio" name="newlineShortcut" id="newlineShortcut-0"> None
@@ -1755,7 +1893,12 @@
                             </label>
                         </div>
                     </div>
-
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="mapper-showInTaskBar" /> Show in taskbar
+                            <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Ignored when Always on top enabled in windows</span>
+                        </label>
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="chat">
                     <div class="col-sm-12 form-group" style="margin:0;padding:0">
@@ -1903,6 +2046,12 @@
                             <input type="checkbox" id="chat-persistent" /> Persistent
                         </label>
                     </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-showInTaskBar" /> Show in taskbar
+                            <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Ignored when Always on top enabled in windows</span>
+                        </label>
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="telnet">
                     <div class="col-sm-6 form-group">
@@ -1984,11 +2133,6 @@
                 <div role="tabpanel" class="pref-pane" id="advanced">
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="dev" /> Connect to development
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
                             <input type="checkbox" id="gamepads" /> Enable gamepads
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Experimental</span>
                         </label>
@@ -2008,6 +2152,91 @@
                             <input type="checkbox" id="showErrorsExtended" /> Show extended error messages
                         </label>
                     </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="fixHiddenWindows" /> Fix hidden windows
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="hideOnMinimize" /> Hide when minimized
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="showInTaskBar" /> Show in taskbar
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="enableBackgroundThrottling" /> Enable Background Throttling
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="askonclose" /> Enable warning dialog when connected and closing client
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="askonchildren" /> Enable warning dialog when closing client and child windows are open
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="askonloadCharacter" /> Enable warning dialog when loading a character from manager
+                        </label>
+                    </div>
+                </div>
+                <div role="tabpanel" class="pref-pane" id="backup">
+                    <div class="col-sm-12 form-group" style="padding: 0px;">
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">Backup save</label>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" id="backup-save-settings"> Settings
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" id="backup-save-profiles"> Profiles
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" id="backup-save-map"> Map
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" id="backup-save-windows"> Windows
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">Backup load</label>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" id="backup-load-settings"> Settings
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" id="backup-load-profiles"> Profiles
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" id="backup-load-map"> Map
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="checkbox" id="backup-load-windows"> Windows
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="backupAllProfiles" /> Backup all profiles
+                        </label>
+                    </div>
+                </div>
+                <div role="tabpanel" class="pref-pane" id="connection">
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="dev" /> Connect to development
+                        </label>
+                    </div>
                     <div class="col-sm-12 form-group" style="padding: 0px;">
                         <div class="col-sm-6 form-group">
                             <label class="control-label">
@@ -2024,47 +2253,14 @@
                             </label>
                         </div>
                     </div>
-
-                    <div class="col-sm-12 form-group" style="padding: 0px;">
-                        <div class="col-sm-6 form-group">
-                            <label class="control-label">Backup save</label>
-                            <div class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-save-settings"> Settings
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-save-profiles"> Profiles
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-save-map"> Map
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 form-group">
-                            <label class="control-label">Backup load</label>
-                            <div class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-load-settings"> Settings
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-load-profiles"> Profiles
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-load-map"> Map
-                                </label>
-                            </div>
-                        </div>
-                    </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="backupAllProfiles" /> Backup all profiles
+                            <input type="checkbox" id="allowHalfOpen" /> Enable allow Half Open sockets
                         </label>
+                        <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires reconnection to take effect</span>
                     </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="hideOnMinimize" /> Hide when minimized
-                        </label>
-                    </div>
+                </div>
+                <div role="tabpanel" class="pref-pane" id="profile-manager">
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="profiles-codeEditor" /> Enable profile manager code editor
@@ -2077,7 +2273,28 @@
                         </label>
                         <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Must close and reopen profile manger</span>
                     </div>
-
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">Profile manager sort order</label>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="profiles-sortOrder-alpha"> Alpha
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="profiles-sortOrder-priority"> Priority
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="profiles-sortOrder-index"> Index
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label>Profile manager sort direction
+                            <select id="profiles-sortDirection" style="width:100%" name="colorScheme" class="form-control selectpicker" data-container="body" data-width="100%">
+                                <option value="1">Ascending</option>
+                                <option value="-1">Descending</option>
+                            </select>
+                        </label>
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="tray">
                     <div class="col-sm-6 form-group">
@@ -2106,6 +2323,7 @@
                                 </label>
 
                             </div>
+                            <span class="linux help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">When app indicator is used on Linux, the click event is ignored</span>
                         </div>
 
                         <div class="col-sm-6 form-group">
@@ -2126,8 +2344,8 @@
                                 <label class="btn btn-default btn-xs">
                                     <input type="radio" name="trayDblClick" id="trayDblClick-menu"> Menu
                                 </label>
-
                             </div>
+                            <span class="linux help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Windows and Mac only</span>
                         </div>
                     </div>
                 </div>
@@ -2202,11 +2420,20 @@
                 </div>
             </div>
         </div>
-        <div class="dialog-footer">
-            <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
-            <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
-            <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
+    </div>
+    <div class="dialog-footer">
+        <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
+        <button style="float: left" type="button" class="btn btn-default" onclick="backup()">Backup</button>
+        <button style="float: left" type="button" class="btn btn-default" onclick="resetWindows()">Reset Windows</button>
+        <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
+        <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
+    </div>
+    <dialog id="progress-dialog" style="z-index:1000;text-align:center">
+        <div id="progress-dialog-title">Saving&hellip;</div>
+        <div>
+            <progress max="100" id="progress-dialog-progressbar"></progress>
         </div>
+    </dialog>
 </body>
 
 </html>

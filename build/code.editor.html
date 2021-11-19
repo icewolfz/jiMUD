@@ -14,13 +14,29 @@
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
     <link href="css/datagrid.css" rel="stylesheet" type="text/css" />
     <link href="css/editorcontent.css" rel="stylesheet" type="text/css" />
-    <script>
+    <script type="text/javascript">
         // eslint-disable-next-line no-unused-vars
-        /* global _ready, doUpdate, manager, inverse, capitalize, options, monaco, initEditor, shell, setViewState, findEditor, fs, openFile */
+        /* global _loading, ipcRenderer, _ready, doUpdate, manager, inverse, capitalize, options, monaco, initEditor, shell, setViewState, findEditor, fs, openFile */
         // eslint-disable-next-line no-unused-vars
         var _ready = false;
+        var _loading = 1;
+        var manager;
         const { SetupEditor } = require('./js/editor/code.editor');
         const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
+
+        window.onerror = function (msg, url, line, col, error) {
+            ipcRenderer.send('log-error', error, true);
+            if (options && options.debug) {
+                console.error('Message: ' + msg);
+                console.error('Url: ' + url);
+                console.error('Line: ' + line);
+                console.error('Column: ' + col);
+                console.error(error);
+            }
+            if (_loading && menubar)
+                menubar.enabled = true;
+            return true;
+        };
 
         function initEditor(editor, diff) {
             if (diff) {
@@ -49,6 +65,8 @@
                     }
                     return Promise.resolve();
                 };
+                editorAddActions(editor.getOriginalEditor());
+                editorAddActions(editor.getModifiedEditor());
             }
             else {
                 editor.getContribution('editor.linkDetector').openerService.open = (url) => {
@@ -73,102 +91,8 @@
                     }
                     return Promise.resolve();
                 };
+                editorAddActions(editor);
             }
-            editor.addAction({
-                id: 'jimud.action.transformToInverse',
-                label: 'Transform to Inverse',
-                run: function (editor) {
-                    let selections = editor.getSelections();
-                    let model = editor.getModel();
-                    let commands = [];
-
-                    for (let i = 0, len = selections.length; i < len; i++) {
-                        let selection = selections[i];
-                        if (selection.isEmpty()) {
-                            let cursor = selection.getStartPosition();
-                            let word = model.getWordAtPosition(cursor);
-                            if (!word) {
-                                continue;
-                            }
-
-                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                            let text = model.getValueInRange(wordRange);
-                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, inverse(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                        } else {
-                            let text = model.getValueInRange(selection);
-                            commands.push(new ReplaceCommandThatPreservesSelection(selection, inverse(text), selection));
-                        }
-                    }
-                    editor.pushUndoStop();
-                    editor.executeCommands(this.id, commands);
-                    editor.pushUndoStop();
-                }
-            });
-
-            editor.addAction({
-                id: 'jimud.action.transformToCapitalize',
-                label: 'Transform to Capitalize',
-                run: function (editor) {
-                    let selections = editor.getSelections();
-                    let model = editor.getModel();
-                    let commands = [];
-
-                    for (let i = 0, len = selections.length; i < len; i++) {
-                        let selection = selections[i];
-                        if (selection.isEmpty()) {
-                            let cursor = selection.getStartPosition();
-                            let word = model.getWordAtPosition(cursor);
-                            if (!word) {
-                                continue;
-                            }
-
-                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                            let text = model.getValueInRange(wordRange);
-                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                        } else {
-                            let text = model.getValueInRange(selection);
-                            commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
-                        }
-                    }
-                    editor.pushUndoStop();
-                    editor.executeCommands(this.id, commands);
-                    editor.pushUndoStop();
-                }
-            });
-
-            editor.addAction({
-                id: 'jimud.action.insertColor',
-                label: 'Transform to Capitalize',
-                run: function (editor) {
-                    let selections = editor.getSelections();
-                    let model = editor.getModel();
-                    let commands = [];
-
-                    for (let i = 0, len = selections.length; i < len; i++) {
-                        let selection = selections[i];
-                        if (selection.isEmpty()) {
-                            let cursor = selection.getStartPosition();
-                            let word = model.getWordAtPosition(cursor);
-                            if (!word) {
-                                continue;
-                            }
-
-                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
-                            let text = model.getValueInRange(wordRange);
-                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
-
-                        } else {
-                            let text = model.getValueInRange(selection);
-                            commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
-                        }
-                    }
-                    editor.pushUndoStop();
-                    editor.executeCommands(this.id, commands);
-                    editor.pushUndoStop();
-                }
-            });
 
             if (editor.getEditorType() === 'vs.editor.ICodeEditor') {
                 editor.onContextMenu((e) => {
@@ -239,8 +163,135 @@
                 editor.updateOptions(options.editorOptions);
         }
 
-        SetupEditor().then((monaco) => {
-            var pane = document.getElementById('cm-tabpane');
+        function editorAddActions(editor) {
+            editor.addAction({
+                id: 'jimud.action.transformToInverse',
+                label: 'Transform to Inverse',
+                run: function (editor) {
+                    let selections = editor.getSelections();
+                    let model = editor.getModel();
+                    let commands = [];
+
+                    for (let i = 0, len = selections.length; i < len; i++) {
+                        let selection = selections[i];
+                        if (selection.isEmpty()) {
+                            let cursor = selection.getStartPosition();
+                            let word = model.getWordAtPosition(cursor);
+                            if (!word) {
+                                continue;
+                            }
+
+                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                            let text = model.getValueInRange(wordRange);
+                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, inverse(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                        } else {
+                            let text = model.getValueInRange(selection);
+                            commands.push(new ReplaceCommandThatPreservesSelection(selection, inverse(text), selection));
+                        }
+                    }
+                    editor.pushUndoStop();
+                    editor.executeCommands(this.id, commands);
+                    editor.pushUndoStop();
+                }
+            });
+
+            editor.addAction({
+                id: 'jimud.action.transformToCapitalize',
+                label: 'Transform to Capitalize',
+                run: function (editor) {
+                    let selections = editor.getSelections();
+                    let model = editor.getModel();
+                    let commands = [];
+
+                    for (let i = 0, len = selections.length; i < len; i++) {
+                        let selection = selections[i];
+                        if (selection.isEmpty()) {
+                            let cursor = selection.getStartPosition();
+                            let word = model.getWordAtPosition(cursor);
+                            if (!word) {
+                                continue;
+                            }
+
+                            let wordRange = new monaco.Range(cursor.lineNumber, word.startColumn, cursor.lineNumber, word.endColumn);
+                            let text = model.getValueInRange(wordRange);
+                            commands.push(new ReplaceCommandThatPreservesSelection(wordRange, capitalize(text), new monaco.Selection(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column)));
+
+                        } else {
+                            let text = model.getValueInRange(selection);
+                            commands.push(new ReplaceCommandThatPreservesSelection(selection, capitalize(text), selection));
+                        }
+                    }
+                    editor.pushUndoStop();
+                    editor.executeCommands(this.id, commands);
+                    editor.pushUndoStop();
+                }
+            });
+
+            //if actions do not exist create custom replacements
+            if (!editor.getAction('undo'))
+                editor.addAction({
+                    id: 'undo',
+                    label: 'Undo',
+                    run: () => {
+                        editor?.focus()
+                        if (!document.execCommand('undo')) {
+                            editor.getModel()?.undo()
+                        }
+                    },
+                });
+            if (!editor.getAction('redo'))
+                editor.addAction({
+                    id: 'redo',
+                    label: 'Redo',
+                    run: () => {
+                        editor?.focus()
+                        if (!document.execCommand('redo')) {
+                            editor.getModel()?.redo()
+                        }
+                    },
+                });
+            if (!editor.getAction('editor.action.clipboardCutAction'))
+                editor.addAction({
+                    id: 'editor.action.clipboardCutAction',
+                    label: 'Cut',
+                    run: () => {
+                        editor?.focus()
+                        document.execCommand('cut')
+                    },
+                });
+            if (!editor.getAction('editor.action.clipboardCopyAction'))
+                editor.addAction({
+                    id: 'editor.action.clipboardCopyAction',
+                    label: 'Copy',
+                    run: () => {
+                        editor?.focus()
+                        document.execCommand('copy')
+                    },
+                });
+            if (!editor.getAction('editor.action.clipboardPasteAction'))
+                editor.addAction({
+                    id: 'editor.action.clipboardPasteAction',
+                    label: 'Paste',
+                    run: () => {
+                        editor?.focus()
+                        document.execCommand('paste')
+                    },
+                });
+
+        }
+
+        SetupEditor().then(SetupEditorFinish);
+
+        function SetupEditorFinish(monaco) {
+            //var pane = document.getElementById('cm-tabpane');
+            if (!manager || !manager.activePane || !manager.activePane.pane) {
+                setTimeout(() => {
+                    SetupEditorFinish(monaco);
+                }, 500);
+                return;
+            }
+            var pane = manager.activePane.pane;
             var el = document.createElement('div');
             el.classList.add('editor-container');
             pane.appendChild(el);
@@ -249,67 +300,67 @@
                 autoIndent: true,
                 rulers: [80],
                 contextmenu: false,
-                theme: 'lpcTheme',
+                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
                 model: null,
             }, {
-                    /*
-                    codeEditorService: {
-                            addCodeEditor: (editor) => {
-                                console.log('addCodeEditor');
-                            },
-                            openCodeEditor: function (input, source, sideBySide) {
-                                console.log('openCodeEditor');
-                                // this actually sets the opened source
-                                //actions.set({ opened: input.resource.path })
-                                // this just returns the editor itself
-                                //return Promise.resolve({ getControl: () => getEditor(e) })
-                                return Promise.resolve({});
-                            },
-                            resolveEditor: function () {
-                                return Promise.resolve({});
-                            }
+                /*
+                codeEditorService: {
+                        addCodeEditor: (editor) => {
+                            console.log('addCodeEditor');
                         },
+                        openCodeEditor: function (input, source, sideBySide) {
+                            console.log('openCodeEditor');
+                            // this actually sets the opened source
+                            //actions.set({ opened: input.resource.path })
+                            // this just returns the editor itself
+                            //return Promise.resolve({ getControl: () => getEditor(e) })
+                            return Promise.resolve({});
+                        },
+                        resolveEditor: function () {
+                            return Promise.resolve({});
+                        }
+                    },
+                    */
+                textModelService: {
+                    createModelReference: resource => {
+                        var model = monaco.editor.getModel(resource);
+                        var d = false;
+                        if (!model) {
+                            var e = findEditor(resource.fsPath);
+                            if (e && e.editor && e.editor.model)
+                                model = e.editor.model;
+                            else {
+                                model = monaco.editor.createModel(fs.readFileSync(resource.fsPath, 'utf8'), 'lpc');
+                                d = true;
+                            }
+                        }
+                        var model2 = {
+                            load() {
+                                return Promise.resolve(model);
+                            },
+                            // in my case, I have nothing to dispose as I just re-use existing resources
+                            dispose() { if (d && !model.isDisposed()) model.dispose(); },
+                            textEditorModel: model
+                        };
+                        return Promise.resolve({
+                            object: model2,
+                            dispose: () => { if (d && !model.isDisposed()) model.dispose(); }
+                        });
+
+                        /*
+                        const simpleModel = resourceModel
+                            ? new SimpleModel(resourceModel)
+                            : null;
+
+                        return window.monaco.Promise.as({
+                            object: simpleModel,
+                            dispose: () => { }
+                        });
                         */
-                    textModelService: {
-                        createModelReference: resource => {
-                            var model = monaco.editor.getModel(resource);
-                            var d = false;
-                            if (!model) {
-                                var e = findEditor(resource.fsPath);
-                                if (e && e.editor && e.editor.model)
-                                    model = e.editor.model;
-                                else {
-                                    model = monaco.editor.createModel(fs.readFileSync(resource.fsPath, 'utf8'), 'lpc');
-                                    d = true;
-                                }
-                            }
-                            var model2 = {
-                                load() {
-                                    return Promise.resolve(model);
-                                },
-                                // in my case, I have nothing to dispose as I just re-use existing resources
-                                dispose() { if (d && !model.isDisposed()) model.dispose(); },
-                                textEditorModel: model
-                            };
-                            return window.monaco.Promise.as({
-                                object: model2,
-                                dispose: () => { if (d && !model.isDisposed()) model.dispose(); }
-                            });
-
-                            /*
-                            const simpleModel = resourceModel
-                                ? new SimpleModel(resourceModel)
-                                : null;
-
-                            return window.monaco.Promise.as({
-                                object: simpleModel,
-                                dispose: () => { }
-                            });
-                            */
-                        },
-                        registerTextModelContentProvider: () => ({ dispose: () => { } })
-                    }
-                })];
+                    },
+                    registerTextModelContentProvider: () => ({ dispose: () => { } })
+                }
+            })];
             initEditor(window.$editors[0]);
             el = document.createElement('div');
             el.classList.add('diff-container');
@@ -319,7 +370,7 @@
                 autoIndent: true,
                 rulers: [80],
                 contextmenu: false,
-                theme: 'lpcTheme',
+                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
                 model: null,
             })];
             window.$dNavs = [
@@ -330,7 +381,7 @@
             ];
             initEditor(window.$dEditors[0], 1);
             _ready = true;
-        });
+        }
     </script>
 </head>
 
@@ -771,7 +822,7 @@
             <button style="float: right" type="button" class="btn btn-primary" onclick="createVirtualArea()">Ok</button>
         </div>
     </dialog>
-    <dialog id="remoteBrowse" data-title="Open remote file" style="width: 500px; height: 350px; padding: 5px;">
+    <dialog id="remoteBrowse" data-title="Open remote file" style="overflow: hidden;width: 500px; height: 350px; padding: 5px;">
         <div class="dialog-body panel panel-default" style="top: 0;bottom: 85px;left: 0px;right: 0px;padding: 0px;margin: 0px;position: absolute;border:0;border-radius: 0">
             <div class="panel-heading">
                 <label class="control-label" for="remote-path">
@@ -785,7 +836,7 @@
                             <button id="button-remote" class="btn btn-default" style="width: 17px;min-width:17px;border-radius:0;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul id="remote-navigate" style="max-height: 265px" class="dropdown-menu pull-right" aria-labelledby="button-remote" data-container="body"></ul>
+                            <ul id="remote-navigate" style="max-height: 200px" class="dropdown-menu pull-right" aria-labelledby="button-remote" data-container="body"></ul>
                             <button id="btn-remote-up" disabled="disabled" type="button" class="btn btn-default btn-xs" title="Go up a directory">
                                 <span class="fa-stack" style="top: -5px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                                     <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1.2em"></i>
@@ -882,7 +933,7 @@
                             <button id="btn-mon-wiz-alignment" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-alignment" data-container="body">
+                            <ul style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-alignment" data-container="body">
                                 <li>
                                     <a href="#">demonic</a>
                                 </li>
@@ -929,7 +980,7 @@
                             <button id="btn-mon-wiz-race" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul id="mon-wiz-race-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-race" data-container="body">
+                            <ul id="mon-wiz-race-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-race" data-container="body">
                             </ul>
                         </span>
                     </div>
@@ -943,7 +994,7 @@
                             <button id="btn-mon-wiz-class" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-class" data-container="body">
+                            <ul style="max-height: 180px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-class" data-container="body">
                                 <li>
                                     <a href="#" class="main">cleric</a>
                                 </li>
@@ -1062,7 +1113,7 @@
                             <button id="btn-mon-wiz-language" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-language" data-container="body">
+                            <ul style="max-height: 180px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-language" data-container="body">
                                 <li>
                                     <a href="#">eltherian</a>
                                 </li>
@@ -1239,7 +1290,7 @@
                                 <button id="btn-mon-wiz-eye" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <span class="caret" style="margin-left: -1px;"></span>
                                 </button>
-                                <ul id="mon-wiz-eye-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-eye" data-container="body">
+                                <ul id="mon-wiz-eye-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-eye" data-container="body">
                                 </ul>
                             </span>
                         </div>
@@ -1253,7 +1304,7 @@
                                 <button id="btn-mon-wiz-hair" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <span class="caret" style="margin-left: -1px;"></span>
                                 </button>
-                                <ul id="mon-wiz-hair-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-hair" data-container="body">
+                                <ul id="mon-wiz-hair-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-hair" data-container="body">
                                 </ul>
                             </span>
                         </div>
@@ -1278,7 +1329,7 @@
                             <button id="btn-mon-wiz-body" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul id="mon-wiz-body-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-body" data-container="body">
+                            <ul id="mon-wiz-body-list" style="max-height: 160px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-body" data-container="body">
                             </ul>
                         </span>
                     </div>
@@ -1378,7 +1429,7 @@
                             <button id="btn-mon-wiz-class" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-class" data-container="body">
+                            <ul style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-class" data-container="body">
                                 <li>
                                     <a href="#">say</a>
                                 </li>
@@ -1560,7 +1611,7 @@
                             <button id="btn-room-wiz-terrain" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul id="room-wiz-terrain-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-terrain" data-container="body">
+                            <ul id="room-wiz-terrain-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-terrain" data-container="body">
                                 <li>
                                     <a href="#">beach</a>
                                 </li>
@@ -1810,7 +1861,7 @@
                             <button id="btn-room-wiz-dirt" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="caret" style="margin-left: -1px;"></span>
                             </button>
-                            <ul id="room-wiz-dirt-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-dirt" data-container="body">
+                            <ul id="room-wiz-dirt-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-room-wiz-dirt" data-container="body">
                                 <li>
                                     <a href="#" data-value=''>none</a>
                                 </li>
@@ -1841,22 +1892,24 @@
         </div>
     </div>
 </body>
-<script>
+<script type="text/javascript">
     if (typeof module === 'object') { window.module = module; module = undefined; }
 </script>
 <script src="../lib/jquery.min.js" type="text/javascript"></script>
 <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
 <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
-<script>
+<script type="text/javascript">
+    if (window.module) module = window.module;
     /*global _ready:true*/
-    const { shell, remote, ipcRenderer, webFrame, clipboard } = require('electron');
+    const { shell, ipcRenderer, webFrame, clipboard } = require('electron');
+    const remote = require('@electron/remote');
     const { DockManager } = require('./js/dockmanager');
     const { EditorType } = require('./js/value.editors');
     const { DataGrid } = require('./js/datagrid');
     const { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
 
-    const { dialog, Menu, MenuItem, app } = remote;
+    const { Menu, MenuItem } = remote;
     const { Menubar } = require('./js/menubar');
     const { Wizard, WizardPage, WizardDataGridPage } = require('./js/wizard');
 
@@ -1873,12 +1926,11 @@
     const tmp = require('tmp');
     tmp.setGracefulCleanup();
 
-    remote.getCurrentWindow().setEnabled(false);
+    ipcRenderer.invoke('window', 'setEnabled', false);
 
     var krypto = null;
-    var spellchecker, menubar;
+    var menubar;
     var options, _updating = 0;
-    var _loading = 1;
     var _opening = {};
     var _open;
     var newCounter = 1;
@@ -1894,12 +1946,12 @@
     var sbName = document.getElementById('statusbar-file');
     var sbLocation = document.getElementById('statusbar-location');
     var sbMessage = document.getElementById('statusbar-message');
-    var connected = remote.getGlobal('connected') === true;
+    var connected = ipcRenderer.sendSync('get-global', 'connected') === true;
     var _ied;
     var $dialog;
     var $dialogs = {};
     var $queue = [];
-    var tmpOptions = { prefix: 'jiMUD-', dir: getTempDir(), postfix: '.tmp' };
+    var tmpOptions = { prefix: 'jiMUD-', dir: getTempDir(), postfix: '.tmp', tmpdir: parseTemplate('{data}') };
     var $id = 0;
 
     var $fileFilters = [
@@ -1932,73 +1984,6 @@
     outputDisplay.on('paste', (e) => {
         e.preventDefault();
         e.stopPropagation();
-    });
-
-    webFrame.setSpellCheckProvider('en-US', true, {
-        spellCheck: function (text) {
-            if (!spellchecker || !options.spellchecking)
-                return true;
-            return !(spellchecker.isMisspelled(text));
-        }
-    });
-
-    window.addEventListener('contextmenu', (e) => {
-        if (!options || !options.spellchecking || !spellchecker || !e.srcElement || !e.srcElement.spellcheck || (e.srcElement.tagName !== 'TEXTAREA' && e.srcElement.tagName !== 'INPUT'))
-            return;
-        e.preventDefault();
-        var inputMenu = Menu.buildFromTemplate([
-            { role: 'undo' },
-            { role: 'redo' },
-            { type: 'separator' },
-            { role: 'cut' },
-            { role: 'copy' },
-            { role: 'paste' },
-            { type: 'separator' },
-            { role: 'selectall' },
-        ]);
-        if (remote.getGlobal('debug')) {
-            inputMenu.append(new MenuItem({ type: 'separator' }));
-            inputMenu.append(new MenuItem({
-                label: 'Inspect', click: () => {
-                    remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
-                }
-            }));
-        }
-        if (options.spellchecking && spellchecker && e.srcElement.spellcheck && e.srcElement.value) {
-            var word = e.srcElement.value.substring(e.srcElement.selectionStart, e.srcElement.selectionEnd);
-            var ol = word.length;
-            word = word.trimRight();
-            var ll = ol - word.length;
-            if (ll > 0)
-                e.srcElement.selectionEnd = e.srcElement.selectionEnd - ll;
-
-            if (spellchecker.isMisspelled(word)) {
-                var words = spellchecker.getCorrectionsForMisspelling(word);
-                if (words.length > 0)
-                    inputMenu.insert(0, new MenuItem({ type: 'separator' }));
-                var start = e.srcElement.selectionStart;
-                var end = e.srcElement.selectionEnd;
-                for (var w = words.length - 1; w >= 0; w--) {
-                    inputMenu.insert(0, new MenuItem({
-                        label: words[w],
-                        start: start,
-                        end: end,
-                        click: function (item) {
-                            var value = e.srcElement.value;
-                            value = value.substring(0, item.start) + item.label + value.substring(item.end);
-                            e.srcElement.value = value;
-                            e.srcElement.selectionStart = start + item.label.length;
-                            e.srcElement.selectionEnd = start + item.label.length;
-                            e.srcElement.setSelectionRange(start + item.label.length, start + item.label.length);
-                            //e.srcElement.blur();
-                            e.srcElement.focus();
-                        }
-                    }));
-                }
-            }
-        }
-        inputMenu.popup({ window: remote.getCurrentWindow() });
-
     });
 
     var menuTemplates = loadTemplates(parseTemplate(path.join('{assets}', 'templates')), '', ['wizards']);
@@ -2097,10 +2082,7 @@
             {
                 label: '&Toggle Developer Tools',
                 click: () => {
-                    if (remote.getCurrentWindow().isDevToolsOpened())
-                        remote.getCurrentWindow().closeDevTools();
-                    else
-                        remote.getCurrentWindow().openDevTools();
+                    ipcRenderer.invoke('window', 'toggleDevTools');
                 },
                 enabled: true
             },
@@ -2108,15 +2090,15 @@
                 type: 'separator'
             },
             {
-                role: 'resetzoom',
+                role: 'resetZoom',
                 enabled: true
             },
             {
-                role: 'zoomin',
+                role: 'zoomIn',
                 enabled: true
             },
             {
-                role: 'zoomout',
+                role: 'zoomOut',
                 enabled: true
             },
         ]
@@ -2138,7 +2120,7 @@
                         {
                             label: '&Area...',
                             //accelerator: "CmdOrCtrl+N",
-                            click: newArea
+                            click: () => { newArea(); }
                         },
                         {
                             label: '&Virtual area...',
@@ -2163,11 +2145,17 @@
                         },
                         { type: 'separator' },
                         {
-                            label: '&Templates',
+                            label: 'From &template',
                             submenu: menuTemplates
                         }
                     ]
                 },
+                /*
+                {
+                    label: '&New from template',
+                    submenu: menuTemplates
+                },
+                */
                 { type: 'separator' },
                 {
                     label: '&Open...',
@@ -2238,7 +2226,7 @@
                                 if (manager.active.diffFile)
                                     stopWatchFile(manager.active.diffFile);
                                 manager.active.diffFile = null;
-                                window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+                                window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
                                 toggleDiffNav(false);
                                 window.$editors[pane]._domElement.style.display = 'block';
                                 manager.active.editor.activate(window.$editors[pane]);
@@ -2256,7 +2244,7 @@
                                 manager.active.editor.diff = manager.active.editor.read();
                                 manager.active.diffFile = manager.active.editor.file;
                                 watchFile(manager.active.diffFile);
-                                window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                                window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
                                 toggleDiffNav(true);
                                 window.$editors[pane]._domElement.style.display = '';
                                 manager.active.editor.activate(window.$dEditors[pane]);
@@ -2268,14 +2256,13 @@
                         {
                             label: '&Local...',
                             click: () => {
-                                dialog.showOpenDialog(remote.getCurrentWindow(),
+                                ipcRenderer.invoke('show-dialog', 'showOpenDialog',
                                     {
                                         filters: $fileFilters,
                                         properties: ['openFile'],
                                         defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
-                                    },
-                                    function (fileNames) {
-                                        if (fileNames === undefined) {
+                                    }).then(result => {
+                                        if (result.filePaths === undefined || result.filePaths.length === 0) {
                                             return;
                                         }
                                         var pane = manager.panes.indexOf(manager.activePane);
@@ -2283,10 +2270,10 @@
                                             manager.active.editor.deactivate(window.$editors[pane]);
                                         if (manager.active.diffFile)
                                             stopWatchFile(manager.active.diffFile);
-                                        manager.active.editor.diff = manager.active.editor.read(fileNames[0]);
-                                        manager.active.diffFile = fileNames[0];
+                                        manager.active.editor.diff = manager.active.editor.read(result.filePaths[0]);
+                                        manager.active.diffFile = result.filePaths[0];
                                         watchFile(manager.active.diffFile);
-                                        window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                                        window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
                                         toggleDiffNav(true);
                                         window.$editors[pane]._domElement.style.display = '';
                                         manager.active.editor.activate(window.$dEditors[pane]);
@@ -2375,7 +2362,7 @@
                 {
                     label: '&jiMUD...',
                     click: () => {
-                        var set = require('./js/settings').Settings.load(remote.getGlobal('settingsFile'));
+                        var set = require('./js/settings').Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                         if (set.windows['help'] && set.windows['help'].options) {
                             set.windows['help'].options.show = true;
                             ipcRenderer.send('show-window', 'help', set.windows['help'].options);
@@ -2433,7 +2420,7 @@
         }
     ]);
     menubar.enabled = false;
-    var manager = new DockManager();
+    manager = new DockManager();
     var dock = $('.dock-manager');
     var toolbar = $('#toolbar');
     manager.hideTabstrip = false;
@@ -2453,7 +2440,7 @@
             autoIndent: true,
             rulers: [80],
             contextmenu: false,
-            theme: 'lpcTheme',
+            theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
             model: null
         });
         initEditor(editor);
@@ -2466,7 +2453,7 @@
             autoIndent: true,
             rulers: [80],
             contextmenu: false,
-            theme: 'lpcTheme',
+            theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
             model: null
         });
         initEditor(editor, 1);
@@ -2501,7 +2488,7 @@
     manager.on('removed', (e, pane) => {
         closeEditor(e.panel);
         if (manager.panes[pane].panels.length === 0) {
-            window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+            window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
             window.$editors[pane]._domElement.style.display = '';
             toggleDiffNav(false);
         }
@@ -2510,7 +2497,7 @@
     manager.on('dock-changed', (e, pane, oPane) => {
         if (manager.panes[oPane].panels.length === 0) {
             window.$editors[oPane]._domElement.style.display = '';
-            window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+            window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
             toggleDiffNav(false);
         }
         doUpdate(129);
@@ -2527,7 +2514,7 @@
         if (e.panel.editor) {
             if (e.panel.editor.type === 1) {
                 if (e.panel.editor.diff) {
-                    window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                    window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
                     window.$editors[pane]._domElement.style.display = '';
                     e.panel.editor.activate(window.$dEditors[pane]);
                     window.$dEditors[pane].layout();
@@ -2535,7 +2522,7 @@
                 }
                 else {
                     window.$editors[pane]._domElement.style.display = 'block';
-                    window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+                    window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
                     e.panel.editor.activate(window.$editors[pane]);
                     if (!e.panel.restored) {
                         var state = getViewState(e.panel.editor.file);
@@ -2549,7 +2536,7 @@
             }
             else {
                 window.$editors[pane]._domElement.style.display = '';
-                window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+                window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
                 e.panel.editor.activate();
                 toggleDiffNav(false);
             }
@@ -2557,7 +2544,7 @@
         }
         else {
             window.$editors[pane]._domElement.style.display = '';
-            window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+            window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
             toggleDiffNav(false);
         }
         doUpdate(1);
@@ -2924,8 +2911,7 @@
             _editors[p].editor.watch(event, file, args);
             if (_editors[p] && _editors[p].diffFile === file) {
                 if (event === 'unlink') {
-                    choice = dialog.showMessageBox(
-                        remote.getCurrentWindow(),
+                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                         {
                             type: 'question',
                             title: 'File deleted',
@@ -2944,7 +2930,7 @@
                             stopWatchFile(_editors[p].diffFile);
                         _editors[p].diffFile = null;
                         if (a) {
-                            window.$dEditors[pane].modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+                            window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
                             window.$editors[pane]._domElement.style.display = 'block';
                             toggleDiffNav(false);
                             _editors[p].editor.activate(window.$editors[pane]);
@@ -2954,8 +2940,7 @@
                     }
                 }
                 else if (event !== 'raw') {
-                    choice = dialog.showMessageBox(
-                        remote.getCurrentWindow(),
+                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                         {
                             type: 'question',
                             title: 'File changed',
@@ -2983,14 +2968,8 @@
             options.outputSize = 170;
         if (!options.maxRecent)
             options.maxRecent = 15;
-        try {
-            if (!spellchecker && options.spellchecking)
-                spellchecker = require('spellchecker');
-        }
-        catch (ex) {
-            ipcRenderer.send('error', ex);
-        }
         if (_ready) {
+            monaco.editor.setTheme(options.theme ? 'lpcThemeDark' : 'lpcTheme');
             var e = window.$editors.length;
             while (e--) {
                 window.$editors[e].updateOptions(options.editorOptions);
@@ -3442,8 +3421,7 @@
                     if (connected)
                         _ied.getDir(p + data.row.file, true, 'remoteBrowse');
                     else
-                        dialog.showMessageBox(
-                            remote.getCurrentWindow(),
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox',
                             {
                                 type: 'error',
                                 title: 'Must be logged into the mud',
@@ -3582,8 +3560,7 @@
         if (connected)
             _ied.getDir(options.remote, false, 'remoteBrowse');
         else
-            dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showMessageBox',
                 {
                     type: 'error',
                     title: 'Must be logged into the mud',
@@ -3754,7 +3731,7 @@
             if (error && error.code) {
                 switch (error.code) {
                     case IEDError.USER_DENIED:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Permission denied',
                             message: 'Permission denied'
@@ -3764,7 +3741,7 @@
                     case IEDError.DL_NOTSTART:
                     case IEDError.DL_TOOMANY:
                     case IEDError.DL_INPROGRESS:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Download error',
                             message: `Download error for '${error.path}/${error.file}': ${error.msg}`
@@ -3776,7 +3753,7 @@
                     case IEDError.DL_USERABORT:
                     case IEDError.DL_INVALIDFILE:
                     case IEDError.DL_INVALIDPATH:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Download aborted',
                             message: `Download aborted for '${error.path}/${error.file}': ${error.msg}`
@@ -3784,7 +3761,7 @@
                         closeProgressDialog(error.tag);
                         break;
                     case IEDError.RESET:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Reset',
                             message: 'Server reset: ' + error.msg
@@ -3792,7 +3769,7 @@
                         closeProgressDialog(error.tag);
                         break;
                     case IEDError.USERRESET:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Reset',
                             message: error.msg
@@ -3800,7 +3777,7 @@
                         break;
                     case IEDError.UL_TOOMANY:
                     case IEDError.UL_INPROGRESS:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Upload error',
                             message: `Upload error for '${error.path}/${error.file}': ${error.msg}`
@@ -3817,7 +3794,7 @@
                     case IEDError.UL_INVALIDPATH:
                     case IEDError.UL_DENIED:
                     case IEDError.UL_FILE:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Upload aborted',
                             message: `Upload aborted for '${error.path}/${error.file}': ${error.msg}`
@@ -3825,7 +3802,7 @@
                         closeProgressDialog(error.tag);
                         break;
                     case IEDError.CMD_EXIST:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Already exist',
                             message: `File or directory already exist: '${error.path}/${error.file}`
@@ -3833,7 +3810,7 @@
                         closeProgressDialog(error.tag);
                         break;
                     case IEDError.CMD_DIRECTORY:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Is a directory',
                             message: `File is a directory: '${error.path}/${error.file}`
@@ -3841,7 +3818,7 @@
                         closeProgressDialog(error.tag);
                         break;
                     case IEDError.CMD_NOEXIST:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Does not exist',
                             message: `File or directory does not exist: '${error.path}/${error.file}`
@@ -3849,7 +3826,7 @@
                         closeProgressDialog(error.tag);
                         break;
                     case IEDError.CMD_FILE:
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Not a directory',
                             message: `File not a directory: '${error.path}/${error.file}`
@@ -3860,7 +3837,7 @@
                         if (error.tag && error.tag === 'editor-dir:remoteBrowse')
                             _ied.getDir('.', false, 'remoteBrowse');
                         else {
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Can not read',
                                 message: 'Can not read or permission denied'
@@ -4098,7 +4075,7 @@
                 if (manager.active.diffFile)
                     stopWatchFile(manager.active.diffFile);
                 manager.active.editor.diff = manager.active.editor.read(item.local);
-                window.$dEditors[dock].modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                window.$dEditors[dock]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
                 toggleDiffNav(true);
                 window.$editors[dock]._domElement.style.display = '';
                 manager.active.editor.activate(window.$dEditors[dock]);
@@ -4306,7 +4283,9 @@
                 options.opened.forEach((o, i) => {
                     var a = o.filter(f => f.active);
                     if (a.length > 0) {
-                        manager.switchToPanel(findEditor(a[0].file), manager.panes[i]);
+                        last = findEditor(a[0].file);
+                        if (last)
+                            manager.switchToPanel(last, manager.panes[i]);
                     }
                 });
             }
@@ -4319,7 +4298,7 @@
         buildRecent();
         $('#splashScreenMask').css('display', 'none');
         $('#splashLayout').css('display', 'none');
-        remote.getCurrentWindow().setEnabled(true);
+        ipcRenderer.invoke('window', 'setEnabled', true);
         menubar.enabled = true;
         _loading = 0;
     }
@@ -4382,8 +4361,7 @@
         var e = 0, el = dialogs.length;
         for (; e < el; e++) {
             if (dialogs[e].open) {
-                if (dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'question',
                         title: 'Open dialog',
@@ -4396,12 +4374,12 @@
         }
         if (!savedOpened())
             return;
-        remote.getCurrentWindow().hide();
+        ipcRenderer.invoke('window', 'hide');
     }
 
     // eslint-disable-next-line no-unused-vars
     function closeWindow() {
-        remote.getCurrentWindow().close();
+        ipcRenderer.invoke('window', 'close');
     }
 
     window.onbeforeunload = function (evt) {
@@ -4414,8 +4392,7 @@
                 var e = 0, el = dialogs.length;
                 for (; e < el; e++) {
                     if (dialogs[e].open) {
-                        if (dialog.showMessageBox(
-                            remote.getCurrentWindow(),
+                        if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                             {
                                 type: 'question',
                                 title: 'Open dialog',
@@ -4436,14 +4413,14 @@
                 if (watcher)
                     watcher.close();
                 $closeWindow = true;
-                remote.getCurrentWindow().close();
+                ipcRenderer.invoke('window', 'close');
             });
             return 'no';
         }
         if (watcher)
             watcher.close();
         $closeWindow = true;
-        remote.getCurrentWindow().close();
+        ipcRenderer.invoke('window', 'close');
         return;
     };
 
@@ -4537,9 +4514,9 @@
                 _editors[p].editor.options = options.modelOptions;
                 manager.setPanelIconClass(getFileIcon(_editors[p].editor.file), _editors[p]);
                 if (options.nativeIcons)
-                    app.getFileIcon((path.extname(_editors[p].editor.file).length !== 0 ? _editors[p].editor.file : '.*'), { size: 'small' }, (err, icon) => {
-                        if (err || !icon) return;
-                        manager.setPanelIcon(icon.toDataURL(), _editors[p]);
+                    ipcRenderer.invoke('get-app', 'getFileIconDataUrl', (path.extname(_editors[p].editor.file).length !== 0 ? _editors[p].editor.file : '.*'), { size: 'small' }).then(icon => {
+                        if (!icon) return;
+                        manager.setPanelIcon(icon, _editors[p]);
                     });
             }
             else if (_editors[p].editor.type === 2)
@@ -4584,7 +4561,7 @@
         if (!data) data = baseParseData();
         var d;
         for (d in data) {
-            if (!data.hasOwnProperty(d))
+            if (!Object.prototype.hasOwnProperty.call(data, d))
                 continue;
             if (data[d].regex)
                 template = template.replace(data[d].regex, data[d].value);
@@ -4595,7 +4572,7 @@
     }
 
     function baseParseData() {
-        var character = capitalize(remote.getGlobal('characterLogin') || remote.getGlobal('character')) || 'Unknown';
+        var character = capitalize(ipcRenderer.sendSync('get-global', 'characterLogin') || ipcRenderer.sendSync('get-global', 'character')) || 'Unknown';
         return {
             'your name': character,
             'character': character,
@@ -4612,16 +4589,15 @@
                 remote: document.getElementById('new-area-remote-path')
             };
             $('#btn-new-area-path').on('click', () => {
-                dialog.showOpenDialog(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
                     defaultPath: $dialogs.area.path.value,
                     properties: ['openDirectory', 'createDirectory']
-                },
-                    function (fileNames) {
-                        if (fileNames === undefined) {
-                            return;
-                        }
-                        $dialogs.area.path.value = fileNames[0];
-                    });
+                }).then(result => {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
+                        return;
+                    }
+                    $dialogs.area.path.value = result.filePaths[0];
+                });
             });
             $('#btn-new-area-remote-path').on('click', () => {
                 showBrowseDialog({
@@ -4767,16 +4743,15 @@
                 dialog: document.getElementById('new-virtual-area')
             };
             $('#btn-new-virtual-area-path').on('click', () => {
-                dialog.showOpenDialog(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
                     defaultPath: $('#new-virtual-area-path').val(),
                     properties: ['openDirectory', 'createDirectory']
-                },
-                    function (fileNames) {
-                        if (fileNames === undefined) {
-                            return;
-                        }
-                        $('#new-virtual-area-path').val(fileNames[0]);
-                    });
+                }).then(result => {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
+                        return;
+                    }
+                    $('#new-virtual-area-path').val(result.filePaths[0]);
+                });
             });
             $('#btn-new-virtual-area-remote-path').on('click', () => {
                 showBrowseDialog({
@@ -6805,14 +6780,14 @@
                             e.page.querySelector('#mon-wiz-auto-drop').value = e.wizard.defaults['mon-wiz-drop'] || '1';
                             e.page.querySelector('#mon-wiz-auto-drop-enabled').checked = e.wizard.defaults['mon-wiz-drop-enabled'] || false;
                             e.page.querySelector('#mon-wiz-storage').value = e.wizard.defaults['mon-wiz-storage'] || '3';
-                            e.page.querySelector('#mon-wiz-storage-enabled').checked = e.wizard.defaults.hasOwnProperty('#mon-wiz-storage-enabled') ? e.wizard.defaults['mon-wiz-storage-enabled'] : true;
+                            e.page.querySelector('#mon-wiz-storage-enabled').checked = Object.prototype.hasOwnProperty.call(e.wizard.defaults, '#mon-wiz-storage-enabled') ? e.wizard.defaults['mon-wiz-storage-enabled'] : true;
                             e.page.querySelector('#mon-wiz-auto-wield').value = e.wizard.defaults['mon-wiz-auto-wield'] || '3';
-                            e.page.querySelector('#mon-wiz-auto-wield-enabled').checked = e.wizard.defaults.hasOwnProperty('#mon-wiz-auto-wield-enabled') ? e.wizard.defaults['mon-wiz-auto-wield-enabled'] : true;
+                            e.page.querySelector('#mon-wiz-auto-wield-enabled').checked = Object.prototype.hasOwnProperty.call(e.wizard.defaults, '#mon-wiz-auto-wield-enabled') ? e.wizard.defaults['mon-wiz-auto-wield-enabled'] : true;
                             e.page.querySelector('#mon-wiz-auto-wear').value = e.wizard.defaults['mon-wiz-auto-wear'] || '3';
                             e.page.querySelector('#mon-wiz-auto-wear-enabled').checked = e.wizard.defaults['mon-wiz-auto-wear-enabled'] || false;
                             e.page.querySelector('#mon-wiz-auto-loot').value = e.wizard.defaults['mon-wiz-auto-loot'] || '1';
                             e.page.querySelector('#mon-wiz-auto-loot-enabled').checked = e.wizard.defaults['mon-wiz-auto-loot-enabled'] || false;
-                            e.page.querySelector('#mon-wiz-auto-stand').checked = e.wizard.defaults.hasOwnProperty('#mon-wiz-auto-stand') ? e.wizard.defaults['mon-wiz-auto-stand'] : true;
+                            e.page.querySelector('#mon-wiz-auto-stand').checked = Object.prototype.hasOwnProperty.call(e.wizard.defaults, '#mon-wiz-auto-stand') ? e.wizard.defaults['mon-wiz-auto-stand'] : true;
                             e.page.querySelector('#mon-wiz-wimpy').value = e.wizard.defaults['mon-wiz-wimpy'] || '0';
                         }
                     }),
@@ -7650,12 +7625,12 @@
         var p;
         if (p = findEditor('remote:' + remoteFile)) {
             manager.switchToPanel(p);
-            doUpdate(25);
+            doUpdate(17);
+            flushRecent();
             return;
         }
         if (!connected) {
-            dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showMessageBox',
                 {
                     type: 'error',
                     title: 'Must be logged into the mud',
@@ -7700,21 +7675,20 @@
             if (remoteEdit)
                 openRemote(remoteFile);
             else
-                dialog.showOpenDialog(remote.getCurrentWindow(),
+                ipcRenderer.invoke('show-dialog', 'showOpenDialog',
                     {
                         filters: $fileFilters,
                         properties: ['multiSelections', 'openFile'],
                         defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
-                    },
-                    function (fileNames) {
-                        if (fileNames === undefined) {
+                    }).then(result => {
+                        if (result.filePaths === undefined || result.filePaths.length === 0) {
                             return;
                         }
-                        openFiles(fileNames.map((l) => { return { file: l }; }), true, dock);
+                        openFiles(result.filePaths.map((l) => { return { file: l }; }), true, dock);
                     });
         }
         else if (isDirSync(file)) {
-            dialog.showMessageBox(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                 type: 'info',
                 title: 'Can not open folders',
                 message: '\'' + file + '\' is a folder not a file.'
@@ -7729,7 +7703,8 @@
             if (!remoteEdit)
                 _recent.unshift({ file: file, remote: remoteFile });
             createEditor({ file: file, open: true, remote: remoteFile, source: remoteEdit ? 1 : 0 }, true, dock, tmpObj);
-            doUpdate(25);
+            doUpdate(17);
+            flushRecent()
             delete _opening[file];
         }
     }
@@ -7738,8 +7713,10 @@
         if (files.length === 0) return;
         var panels = [];
         for (var f = 0, fl = files.length; f < fl; f++) {
+            if (typeof files[f].file !== 'string')
+                continue;
             if (!files[f].remoteEdit && isDirSync(files[f].file)) {
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'info',
                     title: 'Can not open folders',
                     message: '\'' + files[f].file + '\' is a folder not a file.'
@@ -7748,7 +7725,7 @@
             }
             if (!files[f].remoteEdit && !existsSync(files[f].file)) {
                 if (exists)
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                         type: 'info',
                         title: 'Path does not exist',
                         message: 'The path \'' + files[f].file + '\' does not seem to exist anymore on disk.'
@@ -7772,7 +7749,8 @@
             delete _opening[files[f].file || files[f].path];
         }
         manager.addPanels(panels, dock);
-        doUpdate(25);
+        doUpdate(17);
+        flushRecent()
     }
 
     function setRemoteCache(file, remoteFile) {
@@ -7842,7 +7820,7 @@
             options.recent = recent.slice(0, options.maxRecent);
         else
             options.recent = recent;
-        app.addRecentDocument(file);
+        ipcRenderer.invoke('get-app', 'addRecentDocument', file);
         doUpdate(20);
     }
 
@@ -7866,7 +7844,7 @@
                     idx: r,
                     click: (item) => {
                         if (!existsSync(options.recent[item.idx].file)) {
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'info',
                                 title: 'Path does not exist',
                                 message: 'The path \'' + options.recent[item.idx].file + '\' does not seem to exist anymore on disk.'
@@ -7888,7 +7866,6 @@
                 label: 'Clear Recently Opened',
                 click: () => {
                     options.recent = [];
-                    app.clearRecentDocuments();
                     doUpdate(20);
                 }
             });
@@ -7908,8 +7885,7 @@
             panel.editor.save();
         }
         catch (err) {
-            dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showMessageBox',
                 {
                     type: 'error',
                     title: 'Error saving',
@@ -7920,8 +7896,7 @@
         }
         if (panel.editor.source === 1) {
             if (!connected) {
-                dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                ipcRenderer.invoke('show-dialog', 'showMessageBox',
                     {
                         type: 'error',
                         title: 'Must be logged into the mud',
@@ -7959,8 +7934,7 @@
         }
         if (panel.editor.source === 1) {
             if (!connected) {
-                dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                ipcRenderer.invoke('show-dialog', 'showMessageBox',
                     {
                         type: 'error',
                         title: 'Must be logged into the mud',
@@ -7972,12 +7946,12 @@
             uploadFileAs(panel, true);
             return;
         }
-        var file = dialog.showSaveDialog(remote.getCurrentWindow(), {
+        var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
             title: 'Save as...',
             defaultPath: panel.editor.file,
             filters: $fileFilters
         });
-        if (file === undefined)
+        if (file === undefined || file.length === 0)
             return false;
         let old = panel.editor.file;
         if (!panel.editor.canSaveAs())
@@ -7992,8 +7966,7 @@
             panel.editor.save();
         }
         catch (err) {
-            dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showMessageBox',
                 {
                     type: 'error',
                     title: 'Error saving',
@@ -8015,8 +7988,7 @@
 
     function uploadFile(panel) {
         if (!connected) {
-            dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showMessageBox',
                 {
                     type: 'error',
                     title: 'Must be logged into the mud',
@@ -8051,8 +8023,7 @@
 
     function uploadFileAs(panel, remoteEdit) {
         if (!connected) {
-            dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showMessageBox',
                 {
                     type: 'error',
                     title: 'Must be logged into the mud',
@@ -8118,8 +8089,7 @@
         }
         var choice;
         if (panel.editor.changed && panel.editor.new) {
-            choice = dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'question',
                     title: 'Revert new file?',
@@ -8131,8 +8101,7 @@
                 panel.editor.revert();
         }
         else if (panel.editor.changed && !panel.editor.new) {
-            choice = dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'question',
                     title: 'Revert file?',
@@ -8187,8 +8156,7 @@
                 return false;
             panel = manager.active;
         }
-        var choice = dialog.showMessageBox(
-            remote.getCurrentWindow(),
+        var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
             {
                 type: 'question',
                 title: panel.editor.new ? 'Save file?' : 'Save changes?',
@@ -8237,9 +8205,7 @@
                 menu.push({
                     label: capitalize(path.basename(files[f], path.extname(files[f])).replace(/_/g, ' ')),
                     path: path.join(root, files[f]),
-                    click: (item) => {
-                        newFromFile(parseTemplate(path.join('{assets}', 'templates', item.path)), item.label.toLowerCase());
-                    }
+                    click: openTemplate
                 });
             }
         }
@@ -8251,13 +8217,15 @@
                     label: 'base',
                     newName: path.basename(p).replace(/_/g, ' ').slice(0, -1),
                     path: path.join(root, 'base.c'),
-                    click: (item) => {
-                        newFromFile(parseTemplate(path.join('{assets}', 'templates', item.path)), item.newName.toLowerCase());
-                    }
+                    click: openTemplate
                 }
             );
         }
         return menu;
+    }
+
+    function openTemplate(item) {
+        newFromFile(parseTemplate(path.join('{assets}', 'templates', item.path)), (item.newName || item.label).toLowerCase());
     }
 
     function findEditor(file) {
@@ -8316,7 +8284,7 @@
                     p.editor = new AreaDesigner(data);
                 }
                 catch (err) {
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                         type: 'info',
                         title: 'Error opening file',
                         message: 'Could not open \'' + data.file + '\'.'
@@ -8420,7 +8388,7 @@
                     p.editor = new VirtualEditor(data);
                 }
                 catch (err) {
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                         type: 'info',
                         title: 'Error opening file',
                         message: 'Could not open \'' + data.file + '\'.'
@@ -8443,8 +8411,7 @@
                     f = path.join(path.dirname(p.editor.file), f);
                     if (existsSync(f))
                         openFile(f);
-                    else if (dialog.showMessageBox(
-                        remote.getCurrentWindow(),
+                    else if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                         {
                             type: 'question',
                             title: 'Create room?',
@@ -8792,7 +8759,7 @@
                     p.editor = new MonacoCodeEditor(data);
                 }
                 catch (err) {
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                         type: 'info',
                         title: 'Error opening file',
                         message: 'Could not open \'' + data.file + '\'.'
@@ -8801,9 +8768,9 @@
                         console.log(err);
                 }
                 if (options.nativeIcons)
-                    app.getFileIcon((path.extname(data.source ? data.remote : data.file).length !== 0 ? data.source ? data.remote : data.file : '.*'), { size: 'small' }, (err, icon) => {
-                        if (err || !icon) return;
-                        manager.setPanelIcon(icon.toDataURL(), p);
+                    ipcRenderer.invoke('get-app', 'getFileIconDataUrl', (path.extname(data.source ? data.remote : data.file).length !== 0 ? data.source ? data.remote : data.file : '.*'), { size: 'small' }).then(icon => {
+                        if (!icon) return;
+                        manager.setPanelIcon(icon, p);
                     });
                 p.editor.options = options.modelOptions;
             }
@@ -8817,8 +8784,7 @@
             */
             p.editor.on('debug', file => {
                 if (!connected) {
-                    dialog.showMessageBox(
-                        remote.getCurrentWindow(),
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox',
                         {
                             type: 'error',
                             title: 'Must be logged into the mud',
@@ -8882,8 +8848,7 @@
             p.editor.on('reload', (type, file) => {
                 var choice;
                 if (type === 'unlink') {
-                    choice = dialog.showMessageBox(
-                        remote.getCurrentWindow(),
+                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                         {
                             type: 'question',
                             title: 'File deleted',
@@ -8898,8 +8863,7 @@
                         p.editor.deleted(choice === 0, file);
                 }
                 else {
-                    choice = dialog.showMessageBox(
-                        remote.getCurrentWindow(),
+                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                         {
                             type: 'question',
                             title: 'File changed',
@@ -8939,7 +8903,7 @@
                 for (let f = 0; f < fl; f++) {
                     if (files[f].local)
                         _ied.uploadTo(files[f].local, files[f].remote, false, 'editor-upload:' + (manager.active ? manager.active.id : 0) + ':' + f);
-                    else if (files[f].hasOwnProperty('value')) {
+                    else if (Object.prototype.hasOwnProperty.call(files[f], 'value')) {
                         var t2 = tmp.tmpNameSync(tmpOptions);
                         p.editor.write(files[f].value || '', t2);
                         _ied.uploadTo(t2.name, files[f].remote, false, 'editor-upload:' + (manager.active ? manager.active.id : 0) + ':' + f);
@@ -9137,7 +9101,7 @@
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting started');
                 else if (type === 'designer')
-                    ipcRenderer.send('progress-show', 'Generating area&hellip;');
+                    ipcRenderer.send('progress-show', { title: 'Generating area&hellip;', percent: 0 });
             });
             p.editor.on('progress-canceled', (type) => {
                 if (type === 'designer')

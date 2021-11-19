@@ -157,10 +157,32 @@ export class Status extends EventEmitter {
                     else
                         limb.classList.remove('hasmembers');
                     break;
+                case 'omud.skill':
+                    if (obj.skill && obj.skill.length) {
+                        if (!this.info['skills'][obj.skill]) this.info['skills'][obj.skill] = {amount: 0, bonus: 0, percent: 0};
+                        if (obj.hasOwnProperty('percent'))
+                            this.info['skills'][obj.skill].percent = obj.percent || 0;
+                        if (obj.hasOwnProperty('amount')) {
+                            this.info['skills'][obj.skill].amount = obj.amount;
+                            this.info['skills'][obj.skill].bonus = obj.bonus || 0;
+                            this.info['skills'][obj.skill].category = obj.category;
+                        }
+                        this.emit('skill updated', obj.skill, this.info['skills'][obj.skill]);
+                    }
+                    break;
             }
         });
         this.updateInterface();
         this.init();
+    }
+
+    get skills() {
+        return this.info['skills'];
+    }
+
+    public getSkill(skill: string) {
+        if(!skill) return 0;
+        return this.info['skills'][skill] || 0;
     }
 
     get ac(): boolean {
@@ -448,6 +470,7 @@ export class Status extends EventEmitter {
         this.info['EXPERIENCE_NEED_RAW'] = 0;
         this.info['EXPERIENCE_EARNED'] = 0;
         this.info['EXPERIENCE_BANKED'] = 0;
+        this.info['skills'] = {};
 
         this.infoAC = [];
         this.infoAC['head'] = 0;
@@ -473,6 +496,7 @@ export class Status extends EventEmitter {
         this.infoLimb['righthand'] = 0;
         this.infoLimb['rightleg'] = 0;
         this.infoLimb['torso'] = 0;
+
         document.getElementById('leftwing').style.display = 'none';
         document.getElementById('rightwing').style.display = 'none';
         document.getElementById('tail').style.display = 'none';
@@ -489,6 +513,7 @@ export class Status extends EventEmitter {
         document.getElementById('earn-value').classList.remove('hasmembers');
         this.updateOverall();
         this.updateStatus();
+        this.emit('skill init');
     }
 
     public updateBar(id: string, value: number, max?: number, text?: string) {
@@ -514,7 +539,7 @@ export class Status extends EventEmitter {
         if (!bar) {
             if (!icon)
                 icon = label.replace(/\d+$/, '').trim().replace(' ', '-');
-            bar = '<div class="combat-bar" id="' + id + '" data-value="' + ((100 - p) / 20 * 20) + '" data-order="' + order + '">';
+            bar = '<div title="' + label + '" class="combat-bar" id="' + id + '" data-value="' + ((100 - p) / 20 * 20) + '" data-order="' + order + '">';
             bar += '<div class="combat-icon ' + icon + '"></div>';
             bar += '<div class="combat-name"> ' + label + '</div>';
             bar += '<div class="progressbar"><div class="progressbar-text">' + p + '%</div>';

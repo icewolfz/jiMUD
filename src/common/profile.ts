@@ -577,20 +577,27 @@ export class Profile {
         return m;
     }
 
-    public static load(file: string) {
-        if (!isFileSync(file))
-            return null;
+    public static load(file) {
         let profile;
-        let data = fs.readFileSync(file, 'utf-8');
-        if (data.length === 0)
-            return new Profile(path.basename(file, '.json'));
-        try {
-            data = JSON.parse(data);
+        let data;
+        if (typeof file === 'string') {
+            if (!isFileSync(file))
+                return null;
+            data = fs.readFileSync(file, 'utf-8');
+            if (data.length === 0)
+                return new Profile(path.basename(file, '.json'));
+            try {
+                data = JSON.parse(data);
+            }
+            catch (e) {
+                return new Profile(path.basename(file, '.json'));
+            }
         }
-        catch (e) {
-            return new Profile(path.basename(file, '.json'));
-        }
-        profile = new Profile();
+        else if (typeof file === 'object')
+            data = file;
+        else
+            return new Profile();
+        profile = new Profile(false);
         let prop;
         for (prop in data) {
             if (!data.hasOwnProperty(prop)) {

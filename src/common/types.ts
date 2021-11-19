@@ -43,7 +43,8 @@ export enum BackupSelection {
   Map = 2,
   Profiles = 4,
   Settings = 8,
-  All = 14
+  Windows = 16,
+  All = 30
 }
 
 export enum NewLineType {
@@ -77,6 +78,10 @@ export enum FormatType {
 
 export enum OnDisconnect {
   Nothing = 0, Reconnect = 1, ReconnectDialog = 2, LoadManager = 4, Close = 8
+}
+
+export enum ProfileSortOrder {
+  None = 0, Alpha = 2, Priority = 4, Index = 8
 }
 
 /**
@@ -152,6 +157,7 @@ export interface ParserOptions {
   enableBell?: boolean;
   display?: any;
   enableLinks?: boolean;
+  showInvalidMXPTags?: boolean;
 }
 
 export class Size {
@@ -221,7 +227,7 @@ export enum IEDError {
   CMD_FILE = 38,
   UL_DENIED = 39,
   UL_FILE = 40,
-  USER_DENIED = 42
+  USER_DENIED = 41
 }
 
 export enum IEDCmdStatus {

@@ -10,6 +10,10 @@ If you are getting garbled or missing text try disabling MCCP, MXP, or UTF-8 in 
 
 This means there is an error, most of the time the error is from a broken profile item with bad or invalid javascript.
 
+## A window is not shown?
+
+This means there is a chance the window is being opened off screen due to change in desktop resolution, using backups from a different computer with different screen sizes, or similar issues, if this happens you can clear all window states in the preferences byu clicking the 'Reset Windows' to clear all window states when the settings are saved. If you have used backup system from the mud there is also an [advanced setting](preferences.md#Advanced) to ignore saving window states. Lastly you can manually edit the settings file window state data to adjust the window data, this has to be down when jiMUD is not loaded or it will just override the data with new state data, settings.json file is found in app data folder/jiMUD or appdata/jiMUD/characters/NAME.settings file if using character manager
+
 ## If your question is not listed
 
 Open an issue about it or log on to [ShadowMUD](http://www,shadowmud.com) using the jiMUD or the [ShadowMUD web client](http://www,shadowmud.com/mud.php)
@@ -177,7 +181,7 @@ display.splitLive                 | boolean | true
 display.roundedOverlays           | boolean | true
 backupLoad                        | integer | 14
 backupSave                        | integer | 14
-backupAllProfiles                 | boolean | false
+backupAllProfiles                 | boolean | true
 scrollLocked                      | boolean | false
 showStatus                        | boolean | true
 showCharacterManager              | boolean | false
@@ -216,6 +220,7 @@ display.hideTrailingEmptyLine     | boolean | true
 display.enableColors              | boolean | true
 display.enableBackgroundColors    | boolean | true
 enableSound                       | boolean | true
+allowHalfOpen                     | boolean | true
 
 ### trayClick and trayDblClick values
 
@@ -266,6 +271,7 @@ Value | Results
 2     | Map data
 4     | Profiles
 8     | Settings
+16    | Windows
 
 To pick more then 1 type simple add them 2 values together, eg
 2 + 4 = 6 to backup map and profiles only, 14 will load or save all

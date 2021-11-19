@@ -4,13 +4,14 @@
 //spell-checker:ignore togglecl raiseevent raisedelayed raisede diceavg dicemin dicemax zdicedev dicedev zmud
 import EventEmitter = require('events');
 import { MacroModifiers } from './profile';
-import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync } from './library';
+import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType } from './profile';
 import { NewLineType } from './types';
 import { SettingList } from './settings';
-const mathjs = require('mathjs-expression-parser');
+import { create, all } from 'mathjs';
+const mathjs = create(all, {});
 const buzz = require('buzz');
 const path = require('path');
 const moment = require('moment');
@@ -59,6 +60,7 @@ export class Input extends EventEmitter {
     private _tests: Tests;
     private _TriggerCache: Trigger[] = null;
     private _TriggerFunctionCache = {};
+    private _TriggerRegExCache = {};
     private _scrollLock: boolean = false;
     private _gag: number = 0;
     private _gagID: NodeJS.Timer = null;
@@ -68,8 +70,11 @@ export class Input extends EventEmitter {
     private _controllersCount = 0;
     private _gamepadCaches = null;
     private _lastSuspend = -1;
+    private _MacroCache = {};
 
     public client: Client = null;
+    public enableParsing: boolean = true;
+    public enableTriggers: boolean = true;
 
     get stack() {
         if (this._stack.length === 0)
@@ -124,7 +129,7 @@ export class Input extends EventEmitter {
                 c = parseInt(res[1]);
                 sides = res[2];
                 if (res.length > 3 && args[2])
-                    mod = mathjs.eval(res[3]);
+                    mod = mathjs.evaluate(res[3]);
             }
             else if (args.length > 1) {
                 c = parseInt(args[0].toString());
@@ -148,7 +153,7 @@ export class Input extends EventEmitter {
             if (sides === '%')
                 sum /= 100;
             if (mod)
-                return mathjs.eval(sum + mod);
+                return mathjs.evaluate(sum + mod);
             return sum;
         };
 
@@ -156,7 +161,7 @@ export class Input extends EventEmitter {
 
         mathjs.import({
             dice: dice
-        });
+        }, {});
 
         this._tests = new Tests(client);
         this._commandHistory = [];
@@ -212,13 +217,12 @@ export class Input extends EventEmitter {
                     if (this._commandHistory.length < 0) {
                         this._historyIdx = -1;
                         this.client.commandInput.val('');
-                        this.client.commandInput.select();
                     }
                     else {
                         if (this._commandHistory.length > 0 && this._historyIdx < this._commandHistory.length && this._historyIdx >= 0)
                             this.client.commandInput.val(this._commandHistory[this._historyIdx]);
-                        this.client.commandInput.select();
                     }
+                    setTimeout(() => this.client.commandInput.select(), 0);
                     break;
                 case 40: //down
                     if (this._historyIdx === this._commandHistory.length && this.client.commandInput.val().length > 0)
@@ -227,13 +231,12 @@ export class Input extends EventEmitter {
                     if (this._historyIdx >= this._commandHistory.length || this._commandHistory.length < 1) {
                         this._historyIdx = this._commandHistory.length;
                         this.client.commandInput.val('');
-                        this.client.commandInput.select();
                     }
                     else {
                         if (this._commandHistory.length > 0 && this._historyIdx < this._commandHistory.length && this._historyIdx >= 0)
                             this.client.commandInput.val(this._commandHistory[this._historyIdx]);
-                        this.client.commandInput.select();
                     }
+                    setTimeout(() => this.client.commandInput.select(), 0);
                     break;
                 case 13: // return
                     switch (this.client.options.newlineShortcut) {
@@ -578,6 +581,9 @@ export class Input extends EventEmitter {
         let p;
         let reload;
         let trigger;
+        let avg;
+        let max;
+        let min;        
         switch (fun.toLowerCase()) {
             case 'testfile':
                 args = this.parseOutgoing(args.join(' '), false);
@@ -604,9 +610,9 @@ export class Input extends EventEmitter {
                 tmp = fs.readFileSync(args, 'utf-8');
                 n = this.client.options.enableCommands;
                 this.client.options.enableCommands = true;
-                let avg = 0;
-                let max = 0;
-                let min = 0;
+                avg = 0;
+                max = 0;
+                min = 0;
                 for (i = 0; i < 10; i++) {
                     const start = new Date().getTime();
                     this.client.sendCommand(tmp);
@@ -623,6 +629,33 @@ export class Input extends EventEmitter {
                 items.push(`Max - ${max}`);
                 this.client.print(items.join('\n') + '\n', true);
                 this.client.options.enableCommands = n;
+                return null;
+            case 'testspeedfiler':
+                args = this.parseOutgoing(args.join(' '), false);
+                items = [];
+                if (!args || args.length === 0)
+                    throw new Error('Invalid syntax use #testspeedfile file');
+                if (!isFileSync(args))
+                    throw new Error('Invalid file "' + args + '"');
+                tmp = fs.readFileSync(args, 'utf-8');
+                avg = 0;
+                max = 0;
+                min = 0;
+                for (i = 0; i < 10; i++) {
+                    const start = new Date().getTime();
+                    this.client.telnet.receivedData(Buffer.from(tmp), true);
+                    const end = new Date().getTime();
+                    p = end - start;
+                    avg += p;
+                    if (p > max) max = p;
+                    if (!min || p < min) min = p;
+                    items.push(`${i} - ${p}`);
+                }
+                items.push(`Total - ${avg}`);
+                items.push(`Average - ${avg / 10}`);
+                items.push(`Min - ${min}`);
+                items.push(`Max - ${max}`);
+                this.client.print(items.join('\n') + '\n', true);
                 return null;
             //spell-checker:ignore chatprompt chatp
             case 'chatprompt':
@@ -1867,7 +1900,7 @@ export class Input extends EventEmitter {
                 this.client.MSP.MusicState.close();
                 this.client.MSP.SoundState.close();
                 return null;
-            case 'showprompt':
+            case 'showprompt': f
             case 'showp':
                 args = this.parseOutgoing(args.join(' '), false);
                 this.client.telnet.receivedData(Buffer.from(args), true);
@@ -2192,14 +2225,19 @@ export class Input extends EventEmitter {
                 }
                 return null;
             case 'profilelist':
-                i = 0;
-                al = this.client.profiles.length;
                 this.client.echo('\x1b[4mProfiles:\x1b[0m', -7, -8, true, true);
-                for (; i < al; i++) {
-                    if (this.client.profiles.items[this.client.profiles.items[i]].enabled)
-                        this.client.echo('   ' + this.client.profiles.items[i] + ' is enabled', -7, -8, true, true);
-                    else
-                        this.client.echo('   ' + this.client.profiles.items[i] + ' is disabled', -7, -8, true, true);
+                p = path.join(parseTemplate('{data}'), 'profiles');
+                if (isDirSync(p)) {
+                    const files = fs.readdirSync(p);
+                    al = files.length;
+                    for (i = 0; i < al; i++) {
+                        if (path.extname(files[i]) === '.json') {
+                            if (this.client.profiles.items[path.basename(files[i], '.json')] && this.client.profiles.items[path.basename(files[i], '.json')].enabled)
+                                this.client.echo('   ' + this.client.profiles.keys[i] + ' is enabled', -7, -8, true, true);
+                            else
+                                this.client.echo('   ' + path.basename(files[i], '.json') + ' is disabled', -7, -8, true, true);
+                        }
+                    }
                 }
                 return null;
             case 'profile':
@@ -2208,22 +2246,23 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
                 else if (args.length === 1) {
                     args[0] = this.parseOutgoing(args[0], false);
-                    if (!this.client.profiles.toggle(args[0])) {
-                        if (!this.client.profiles.contains(args[0]))
-                            throw new Error('Profile not found');
-                        else
-                            throw new Error(args[0] + ' can not be disabled as it is the only one enabled');
-                    }
-                    this.client.saveProfile(args[0]);
-                    if (this.client.profiles[args[0]].enabled)
+                    this.client.toggleProfile(args[0]);
+                    if (!this.client.profiles.contains(args[0]))
+                        throw new Error('Profile not found');
+                    else if (this.client.profiles.length === 1)
+                        throw new Error(args[0] + ' can not be disabled as it is the only one enabled');
+                    if (this.client.enabledProfiles.indexOf(args[0].toLowerCase()) !== -1)
                         args = args[0] + ' is enabled';
                     else
                         args = args[0] + ' is disabled';
                 }
                 else {
-                    args[0] = this.parseOutgoing(args[0], false);
-                    if (!this.client.profiles[args[0]])
-                        throw new Error('Profile not found');
+                    args[0] = this.parseOutgoing(args[0], false).toLowerCase();
+                    if (!this.client.profiles.contains(args[0])) {
+                        this.client.profiles.load(args[0], path.join(parseTemplate('{data}'), 'profiles'));
+                        if (!this.client.profiles.contains(args[0]))
+                            throw new Error('Profile not found');
+                    }
                     if (!args[1])
                         throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
                     args[1] = this.parseOutgoing(args[1], false);
@@ -2231,32 +2270,25 @@ export class Input extends EventEmitter {
                         case 'enable':
                         case 'on':
                         case 'yes':
-                            if (this.client.profiles[args[0]].enabled)
+                            if (this.client.enabledProfiles.indexOf(args[0].toLowerCase()) !== -1)
                                 args = args[0] + ' is already enabled';
                             else {
-                                if (!this.client.profiles.toggle(args[0])) {
-                                    if (!this.client.profiles.contains(args[0]))
-                                        throw new Error('Profile not found');
-                                    args = args[0] + ' remains disabled';
-                                }
-                                else
+                                this.client.toggleProfile(args[0]);
+                                if (this.client.enabledProfiles.indexOf(args[0].toLowerCase()) !== -1)
                                     args = args[0] + ' is enabled';
-                                this.client.saveProfile(args[0]);
+                                else
+                                    args = args[0] + ' remains disabled';
                             }
                             break;
                         case 'disable':
                         case 'off':
                         case 'no':
-                            if (!this.client.profiles[args[0]].enabled)
+                            if (this.client.enabledProfiles.indexOf(args[0].toLowerCase()) === -1)
                                 args = args[0] + ' is already disabled';
                             else {
-                                if (!this.client.profiles.toggle(args[0])) {
-                                    if (!this.client.profiles.contains(args[0]))
-                                        throw new Error('Profile not found');
-                                    else
-                                        throw new Error(args[0] + ' can not be disabled as it is the only one enabled');
-                                }
-                                this.client.saveProfile(args[0]);
+                                if (this.client.profiles.length === 1)
+                                    throw new Error(args[0] + ' can not be disabled as it is the only one enabled');
+                                this.client.toggleProfile(args[0]);
                                 args = args[0] + ' is disabled';
                             }
                             break;
@@ -2301,7 +2333,7 @@ export class Input extends EventEmitter {
 
     public parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean) {
         const tl = text.length;
-        if (text == null || tl === 0)
+        if (!this.enableParsing || text == null || tl === 0)
             return text;
         let str: string = '';
         let alias: string = '';
@@ -2587,9 +2619,9 @@ export class Input extends EventEmitter {
                                     tmp2 = tmp;
                                 else if (this.client.options.allowEval) {
                                     if (this.stack.named)
-                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 }, this.stack.named));
+                                        tmp2 = '' + mathjs.evaluate(this.parseOutgoing(arg), Object.assign({ i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 }, this.stack.named));
                                     else
-                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
+                                        tmp2 = '' + mathjs.evaluate(this.parseOutgoing(arg), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
                                 }
                                 else {
                                     tmp2 += '%';
@@ -2714,9 +2746,9 @@ export class Input extends EventEmitter {
                                     tmp2 = c;
                                 else if (this.client.options.allowEval) {
                                     if (this.stack.named)
-                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), Object.assign({ i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 }, this.stack.named));
+                                        tmp2 = '' + mathjs.evaluate(this.parseOutgoing(arg), Object.assign({ i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 }, this.stack.named));
                                     else
-                                        tmp2 = '' + mathjs.eval(this.parseOutgoing(arg), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
+                                        tmp2 = '' + mathjs.evaluate(this.parseOutgoing(arg), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
                                 }
                                 else {
                                     tmp2 = '$';
@@ -3126,7 +3158,7 @@ export class Input extends EventEmitter {
             case 'proper':
                 return ProperCase(this.parseOutgoing(res[2]));
             case 'eval':
-                return '' + mathjs.eval(this.parseOutgoing(res[2]), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
+                return '' + mathjs.evaluate(this.parseOutgoing(res[2]), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
             case 'dice':
                 args = this.parseOutgoing(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid dice');
@@ -3166,7 +3198,7 @@ export class Input extends EventEmitter {
                 if (sides === '%')
                     sum /= 100;
                 if (mod)
-                    return mathjs.eval(sum + mod);
+                    return mathjs.evaluate(sum + mod);
                 return '' + sum;
             case 'diceavg':
                 //The average of any XdY is X*(Y+1)/2.
@@ -3202,7 +3234,7 @@ export class Input extends EventEmitter {
                     max = parseInt(sides);
 
                 if (mod)
-                    return mathjs.eval(((min + max) / 2 * c) + mod);
+                    return mathjs.evaluate(((min + max) / 2 * c) + mod);
                 return '' + ((min + max) / 2 * c);
             case 'dicemin':
                 args = this.parseOutgoing(res[2]).split(',');
@@ -3232,7 +3264,7 @@ export class Input extends EventEmitter {
                     sides = parseInt(sides);
 
                 if (mod)
-                    return mathjs.eval((min * c) + mod);
+                    return mathjs.evaluate((min * c) + mod);
                 return '' + (min * c);
             case 'dicemax':
                 args = this.parseOutgoing(res[2]).split(',');
@@ -3261,7 +3293,7 @@ export class Input extends EventEmitter {
                 else
                     max = parseInt(sides);
                 if (mod)
-                    return mathjs.eval((max * c) + mod);
+                    return mathjs.evaluate((max * c) + mod);
                 return '' + (max * c);
             case 'zdicedev':
             case 'dicedev':
@@ -3296,7 +3328,7 @@ export class Input extends EventEmitter {
                 if (fun === 'zdicedev')
                     max--;
                 if (mod)
-                    return mathjs.eval(Math.sqrt((max * max - 1) / 12 * c) + mod);
+                    return mathjs.evaluate(Math.sqrt((max * max - 1) / 12 * c) + mod);
                 return '' + Math.sqrt((max * max - 1) / 12 * c);
         }
         return null;
@@ -3345,7 +3377,7 @@ export class Input extends EventEmitter {
                 break;
             case 2:
                 /*jslint evil: true */
-                const f = new Function('try { ' + alias.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                const f = new Function('try { ' + alias.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                 ret = f.apply(this.client, this.GetNamedArguments(alias.params, args, alias.append));
                 if (typeof ret === 'string')
                     ret = this.parseOutgoing(ret);
@@ -3369,16 +3401,24 @@ export class Input extends EventEmitter {
     }
 
     public ProcessMacros(keycode, alt, ctrl, shift, meta) {
+        if (!keycode || (keycode > 9 && keycode < 19)) return false;
         //if(!this.client.options.enableMacros) return false;
-        const macros = FilterArrayByKeyValue(this.client.macros, 'key', keycode);
+        //Possible cache by modifier but  not sure if it it matters as there is a limit of 1 macro per key combo so at most there probably wont be more then 5 to maybe 20 macros per key
+        //const macros = this._MacroCache[`${keycode}_${mod}`] || (this._MacroCache[`${keycode}_${mod}`] = FilterArrayByKeyValue(FilterArrayByKeyValue(this.client.macros, 'key', keycode), 'modifiers', mod));
+        const macros = this._MacroCache[keycode] || (this._MacroCache[keycode] = FilterArrayByKeyValue(this.client.macros, 'key', keycode));
         let m = 0;
         const ml = macros.length;
+        let mod = MacroModifiers.None;
+        if (alt)
+            mod |= MacroModifiers.Alt;
+        if (ctrl)
+            mod |= MacroModifiers.Ctrl;
+        if (shift)
+            mod |= MacroModifiers.Shift;
+        if (meta)
+            mod |= MacroModifiers.Meta;
         for (; m < ml; m++) {
-            if (!macros[m].enabled) continue;
-            if (alt === ((macros[m].modifiers & MacroModifiers.Alt) !== MacroModifiers.Alt)) continue;
-            if (ctrl === ((macros[m].modifiers & MacroModifiers.Ctrl) !== MacroModifiers.Ctrl)) continue;
-            if (shift === ((macros[m].modifiers & MacroModifiers.Shift) !== MacroModifiers.Shift)) continue;
-            if (meta === ((macros[m].modifiers & MacroModifiers.Meta) !== MacroModifiers.Meta)) continue;
+            if (!macros[m].enabled || mod !== macros[m].modifiers) continue;
             if (this.ExecuteMacro(macros[m]))
                 return true;
         }
@@ -3394,7 +3434,7 @@ export class Input extends EventEmitter {
                 break;
             case 2:
                 /*jslint evil: true */
-                const f = new Function('try { ' + macro.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                const f = new Function('try { ' + macro.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                 ret = f.apply(this.client);
                 break;
             default:
@@ -3512,7 +3552,7 @@ export class Input extends EventEmitter {
     }
 
     public ExecuteTriggers(type: TriggerType, raw?, frag?: boolean, ret?: boolean) {
-        if (raw == null) return raw;
+        if (!this.enableTriggers || raw == null) return raw;
         if (ret == null) ret = false;
         if (frag == null) frag = false;
         this.buildTriggerCache();
@@ -3537,9 +3577,11 @@ export class Input extends EventEmitter {
                 try {
                     let re;
                     if (trigger.caseSensitive)
-                        re = new RegExp(trigger.pattern, 'g');
+                        re = this._TriggerRegExCache['g' + trigger.pattern] || (this._TriggerRegExCache['g' + trigger.pattern] = new RegExp(trigger.pattern, 'g'));
+                    //re = new RegExp(trigger.pattern, 'g');
                     else
-                        re = new RegExp(trigger.pattern, 'gi');
+                        re = this._TriggerRegExCache['gi' + trigger.pattern] || (this._TriggerRegExCache['gi' + trigger.pattern] = new RegExp(trigger.pattern, 'gi'));
+                    //re = new RegExp(trigger.pattern, 'gi');
                     const res = re.exec(raw);
                     if (!res || !res.length) continue;
                     if (ret)
@@ -3573,13 +3615,13 @@ export class Input extends EventEmitter {
             case 2:
                 //do not cache temp triggers
                 if (trigger.temp) {
-                    ret = new Function('try { ' + trigger.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    ret = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                     ret = ret.apply(this.client, args);
                 }
                 else {
                     if (!this._TriggerFunctionCache[idx])
                         /*jslint evil: true */
-                        this._TriggerFunctionCache[idx] = new Function('try { ' + trigger.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        this._TriggerFunctionCache[idx] = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                     ret = this._TriggerFunctionCache[idx].apply(this.client, args);
                 }
                 if (typeof ret === 'string')
@@ -3613,7 +3655,7 @@ export class Input extends EventEmitter {
         }
     }
 
-    public clearTriggerCache() { this._TriggerCache = null; this._TriggerFunctionCache = {}; }
+    public clearTriggerCache() { this._TriggerCache = null; this._TriggerFunctionCache = {}; this._TriggerRegExCache = {}; }
 
     public buildTriggerCache() {
         if (this._TriggerCache == null) {
@@ -3628,9 +3670,11 @@ export class Input extends EventEmitter {
         this._TriggerFunctionCache = {};
         this._gamepadCaches = null;
         this._lastSuspend = -1;
+        this._MacroCache = {};
     }
 
     public triggerEvent(event: string, args?) {
+        if (!this.enableTriggers) return;
         this.buildTriggerCache();
         let t = 0;
         if (!args)

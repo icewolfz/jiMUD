@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Skills</title>
+    <link rel="shortcut icon" href="../assets/icons/png/skills.png" />
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript">
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
+    <script src="../lib/bootstrap-select.min.js"></script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
+        const { ipcRenderer } = require('electron');
+        const { Settings } = require('./js/settings');
+        const { capitalize } = require('./js/library');
+        var options;
+        var _skills = {};
+        var _cats = [];
+
+        function loadOptions() {
+            options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+        }
+
+        $(document).ready(function () {
+            loadOptions();
+            ipcRenderer.send('get-skills', 'skills');
+            resetSkills();
+            $('#filter-skills').change(() => {
+                if ($('#filter-skills').find(':selected').text() === 'All')
+                    $('.category').css('display', '');
+                else {
+                    $('.category').css('display', 'none');
+                    $('#' + $('#filter-skills').find(':selected').text().toLowerCase()).css('display', '');
+                }
+            });
+            document.getElementById('body').addEventListener('contextmenu', e => {
+                e.preventDefault();
+                const sel = getSelection();
+                let inputMenu;
+                if (!sel.isCollapsed && sel.type === 'Range' && document.getElementById('body').contains(sel.anchorNode)) {
+                    inputMenu = [
+                        { role: 'copy' },
+                        { type: 'separator' },
+                        { role: 'selectAll' }
+                    ];
+                }
+                else
+                    inputMenu = [
+                        { role: 'selectAll' }
+                    ];
+                ipcRenderer.invoke('show-context', inputMenu);
+            });
+        });
+
+        ipcRenderer.on('skills', (event, skills) => {
+            _skills = skills;
+            var cats = {};
+            var cnt = 0;
+            var keys;
+            keys = Object.keys(_skills).sort();
+            for (key in keys) {
+                skill = keys[key];
+                if (!Object.prototype.hasOwnProperty.call(_skills, skill))
+                    continue;
+                if (!cats[_skills[skill].category || 'default'])
+                    cats[_skills[skill].category || 'default'] = createLabel(skill);
+                else
+                    cats[_skills[skill].category || 'default'] += createLabel(skill);
+                cnt++;;
+            }
+            var body = '';
+            if (cnt > 0) {
+                _cats = Object.keys(cats).sort();
+                for (key in _cats) {
+                    cat = _cats[key];
+                    $('#filter-skills').append($('<option></option>').val(capitalize(cat)).html(capitalize(cat)));
+                    if (cats[cat].length === 0 || !Object.prototype.hasOwnProperty.call(cats, cat))
+                        continue;
+                    body += '<div class="category" id="' + cat.toLowerCase() + '">';
+                    if (cnt > 1 || cat != 'default')
+                        body += '<div class="category-title">' + capitalize(cat) + '</div>';
+                    body += '<div class="category-body" id="' + cat + 'Body">' + cats[cat] + '</div></div>';
+                }
+            }
+            else {
+                _cats = [];
+                body = body += '<div class="category" id="default">No skills</div>';
+            }
+            document.getElementById('body').innerHTML = body;
+        });
+
+        ipcRenderer.on('skill-updated', (event, skill, data) => {
+            _skills[skill] = data;
+            _el = $('#' + sanitizeID(skill));
+            if (_el.length === 0) {
+                _el = $('#' + (data.category || 'default') + 'Body');
+                var found = 0;
+                var nodes;
+                if (_el.length === 0) {
+                    var cat = capitalize(data.category || 'default');
+                    _cats.push(cat.toLowerCase());
+                    body = '<div class="category" id="' + cat.toLowerCase() + '">';
+                    body += '<div class="category-title">' + cat + '</div>';
+                    body += '<div class="category-body" id="' + (data.category || 'default') + 'Body">' + createLabel(skill) + '</div></div>';
+                    nodes = document.getElementsByClassName("category");
+                    for (var n = 0, nl = nodes.length; n < nl; n++) {
+                        if (nodes[n].children[0].textContent < cat)
+                            continue;
+                        $(body).insertBefore(nodes[n]);
+                        found = 1;
+                        break;
+                    }
+                    if (!found)
+                        $('#body').append(body);
+                    updateFilter();
+                }
+                else {
+                    nodes = document.getElementById((data.category || 'default') + 'Body').children;
+                    found = 0;
+                    for (var n = 0, nl = nodes.length; n < nl; n++) {
+                        if (nodes[n].getAttribute("title") < skill)
+                            continue;
+                        $(createLabel(skill)).insertBefore(nodes[n]);
+                        found = 1;
+                        break;
+                    }
+                    if (!found)
+                        _el.append(createLabel(skill));
+                }
+            }
+            else {
+                $('#' + sanitizeID(skill) + 'Amount').text(data.amount);
+                if (data.bonus > 0)
+                    $('#' + sanitizeID(skill) + 'Bonus').text('+' + data.bonus);
+                else if (data.bonus < 0)
+                    $('#' + sanitizeID(skill) + 'Bonus').html('<span class="neg">-' + data.bonus + '</span>');
+                else
+                    $('#' + sanitizeID(skill) + 'Bonus').text(data.bonus);
+                if (data.percent === 100)
+                    $('#' + sanitizeID(skill) + 'Percent').html('<span class="maxed">MAX!</span>');
+                else
+                    $('#' + sanitizeID(skill) + 'Percent').text(data.percent + '%');
+            }
+        });
+
+        function updateFilter() {
+            var val = $('#filter-skills').val();
+            $('#filter-skills option').remove();
+            $('#filter-skills').append($('<option></option>').val('All').html('All'));
+            _cats.sort();
+            for (key in _cats)
+                $('#filter-skills').append($('<option></option>').val(capitalize(_cats[key])).html(capitalize(_cats[key])));
+            $('#filter-skills').val(val);
+        }
+
+        ipcRenderer.on('skills-reset', (event, skill, data) => {
+            resetSkills();
+        });
+
+        function resetSkills() {
+            document.getElementById('body').innerHTML = '';
+            $('#filter-skills option').remove();
+            $('#filter-skills').append($('<option></option>').val('All').html('All'));
+            $('#filter-skills').val('All');
+            _cats = [];
+        }
+
+        function createLabel(skill) {
+            var label = '<div title="' + skill + '" class="label" id="' + sanitizeID(skill) + '">';
+            label += '<div class="skill" id="' + sanitizeID(skill) + 'Label">' + capitalize(skill) + '</div>';
+            label += '<div class="amount" id="' + sanitizeID(skill) + 'Amount">' + _skills[skill].amount + '</div>';
+            if (_skills[skill].bonus > 0)
+                label += '<div class="bonus" id="' + sanitizeID(skill) + 'Bonus">+' + _skills[skill].bonus + '</div>';
+            else if (_skills[skill].bonus < 0)
+                label += '<div class="bonus" id="' + sanitizeID(skill) + 'Bonus"><span class="neg">-' + _skills[skill].bonus + '</span></div>';
+            else
+                label += '<div class="bonus" id="' + sanitizeID(skill) + 'Bonus">' + _skills[skill].bonus + '</div>';
+            if (_skills[skill].percent === 100)
+                label += '<div class="percent" id="' + sanitizeID(skill) + 'Percent"><span class="maxed">MAX!</span></div>';
+            else
+                label += '<div class="percent" id="' + sanitizeID(skill) + 'Percent">' + _skills[skill].percent + '%</div>';
+            label += '</div>';
+            return label;
+        }
+
+        function sanitizeID(id) {
+            id = id.replace(/\s/gi, '-');
+            return id.replace(/[^a-zA-Z0-9_-]/gi, '');
+        }
+
+    </script>
+    <style>
+        #body {
+            overflow: auto;
+            background-color: black;
+            font-family: Consolas, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
+            font-size: 16px;
+            color: rgb(187, 187, 187);
+            user-select: auto;
+            top: 26px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            position: absolute;
+        }
+
+        .label {
+            display: inline-block;
+            width: 285px;
+            text-align: left;
+            margin-right: 15px;
+            color: rgb(187, 187, 187);
+            font-weight: normal;
+            font-size: 100%;
+        }
+
+        .skill {
+            display: inline-block;
+            text-align: left;
+            width: 145px;
+            margin-right: 5px;
+        }
+
+        .amount {
+            display: inline-block;
+            width: 30px;
+            text-align: right;
+            margin-right: 5px;
+        }
+
+        .bonus {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+            color: white;
+            margin-right: 5px;
+        }
+
+        .bonus::before {
+            content: '(';
+            color: rgb(187, 187, 187);
+            float: left;
+        }
+
+        .bonus::after {
+            content: ')';
+            color: rgb(187, 187, 187);
+        }
+
+
+        .percent {
+            display: inline-block;
+            width: 30px;
+            text-align: right;
+            margin-right: 5px;
+        }
+
+        .percent::before {
+            content: '(';
+            color: rgb(0, 128, 128);
+            float: left;
+        }
+
+        .percent::after {
+            content: ')';
+            color: rgb(0, 128, 128);
+        }
+
+        .category {
+            width: 100%;
+        }
+
+        .category-title {
+            width: 100%;
+            border-bottom: 1px solid;
+            color: white;
+            text-align: center;
+        }
+
+        .maxed {
+            color: rgb(128, 0, 0);
+        }
+
+        .neg {
+            color: rgb(255, 0, 0);
+        }
+
+        #toolbar {
+            background-color: menu;
+            margin-left: 2px;
+            margin-right: 2px;
+            padding-top: 2px;
+            padding-bottom: 2px;
+            text-align: center;
+            user-select: none;
+        }
+
+        #toolbar .btn {
+            outline: none !important;
+        }
+
+        #toolbar button {
+            min-width: 26px;
+        }
+
+        #toolbar input {
+            padding: 0px 2px;
+            margin: 0px;
+            width: 60px;
+            float: left;
+            height: 22px;
+            margin-left: 5px;
+        }
+
+        #toolbar .fa-circle {
+            color: red;
+        }
+
+        #toolbar select {
+            float: left;
+            min-width: 100px;
+            width: auto;
+            padding: 0px 2px;
+            margin: 0px;
+            height: 22px;
+            margin-left: 5px;
+        }
+
+        #toolbar label {
+            margin-bottom: 0 !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="toolbar" class="btn-toolbar" role="toolbar">
+        <div class="btn-group" style="float: none;">
+            <label for="filter-skills" style="float: left">Display:</label>
+            <select id="filter-skills" class="form-control" title="Filter Skills"></select>
+        </div>
+    </div>
+    <div id="body"></div>
+</body>
+
+</html>

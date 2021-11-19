@@ -2,8 +2,7 @@
 import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
 import { DataGrid } from './datagrid';
-const { remote } = require('electron');
-const { dialog } = remote;
+const { ipcRenderer } = require('electron');
 
 export enum EditorType {
     default,
@@ -308,6 +307,7 @@ export class TextValueEditor extends ValueEditor {
                     if (notes.open)
                         notes.close();
                     notes.remove();
+                    this.$editor.focus();
                 });
                 notes.showModal();
                 return;
@@ -1345,8 +1345,7 @@ export class CollectionValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
                         title: 'Delete',

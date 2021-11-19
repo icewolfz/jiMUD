@@ -341,7 +341,7 @@ export class Display extends EventEmitter {
                     h = (h / this._innerHeight * 100);
                     this.split.style.height = h + '%';
                     this.split._innerHeight = this.split.clientHeight;
-                    this.doUpdate(UpdateType.scrollView | UpdateType.view);
+                    this.doUpdate(UpdateType.scrollView | UpdateType.view | UpdateType.scroll);
                 }
                 this.emit('split-move', h);
             };
@@ -1015,6 +1015,13 @@ export class Display extends EventEmitter {
     }
     get enableMXP(): boolean {
         return this._parser.enableMXP;
+    }
+
+    set showInvalidMXPTags(value: boolean) {
+        this._parser.showInvalidMXPTags = value;
+    }
+    get showInvalidMXPTags(): boolean {
+        return this._parser.showInvalidMXPTags;
     }
 
     set enableBell(value: boolean) {
@@ -1762,11 +1769,15 @@ export class Display extends EventEmitter {
         return idx;
     }
 
-    private textWidth(txt, font?) {
+    private textWidth(txt, font?, style?) {
         if (!txt || txt.length === 0) return 0;
         font = font || this._contextFont;
         const canvas = this._canvas || (this._canvas = document.createElement('canvas'));
         const context = this._context || (this._context = canvas.getContext('2d', { alpha: false }));
+        if ((style & FontStyle.Bold) === FontStyle.Bold)
+            font = "bold " + font;
+        if ((style & FontStyle.Italic) === FontStyle.Italic)
+            font = "italic " + font;
         context.font = font;
         const metrics = context.measureText(txt);
         return metrics.width;
@@ -1827,7 +1838,7 @@ export class Display extends EventEmitter {
                 end = len;
             //if unicode or non standard font calculate width
             if (formats[f].unicode || font)
-                width += this.textWidth(text.substring(start, end), font);
+                width += this.textWidth(text.substring(start, end), font, formats[f].style);
             else
                 width += text.substring(start, end).length * this._charWidth;
             //len is in block so quit
@@ -1873,38 +1884,38 @@ export class Display extends EventEmitter {
                 font = 0;
                 if (format.font || format.size) {
                     height = (Math.max(height, format.height = format.height || this.textHeight(eText, format.font, format.size)));
-                    format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
+                    format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`, format.style);
                 }
                 else if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
+                    format.width = format.width || this.textWidth(eText, 0, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.Link && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
+                    format.width = format.width || this.textWidth(eText, font, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.MXPLink && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
+                    format.width = format.width || this.textWidth(eText, font, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.MXPSend && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
+                    format.width = format.width || this.textWidth(eText, font, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
+                    format.width = format.width || this.textWidth(eText, font, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
@@ -1935,8 +1946,8 @@ export class Display extends EventEmitter {
                     this._el.appendChild(img);
                     img.onload = () => {
                         const lIdx = this.lineIDs.indexOf(+img.dataset.id);
-                        this._lines[lIdx].images--;
                         if (lIdx === -1 || lIdx >= this.lines.length) return;
+                        this._lines[lIdx].images--;
                         const fIdx = +img.dataset.f;
                         const fmt = this.lineFormats[lIdx][fIdx];
                         if (fmt.w.length > 0 && fmt.h.length > 0) {
@@ -3688,6 +3699,7 @@ export class ScrollBar extends EventEmitter {
     set type(value: ScrollType) {
         if (this._type !== value) {
             this._type = value;
+            this.trackOffsetSize = { width: 0, height: 0 };
             this.track.className = 'scroll-track scroll-' + (this._type === ScrollType.horizontal ? 'horizontal' : 'vertical');
             this.updateLocation();
             this.resize();
@@ -3828,7 +3840,7 @@ export class ScrollBar extends EventEmitter {
         });
         this._parent.addEventListener('wheel', (event) => {
             this.scrollBy(this._type === ScrollType.horizontal ? event.deltaX : event.deltaY);
-        });
+        }, { passive: true });
         this._wMove = (e) => {
             this._lastMouse = e;
             if (this.state.dragging) {

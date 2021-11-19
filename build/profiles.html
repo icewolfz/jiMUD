@@ -552,7 +552,13 @@
         <button style="float: right" type="button" class="btn btn-default" onclick="if(profileUI.saveProfiles(true)) window.close();">Save</button>
         <button style="float: right" type="button" class="btn btn-default" onclick="profileUI.saveProfiles()">Apply</button>
     </div>
-    <script>
+    <dialog id="progress-dialog" style="z-index:1000;text-align:center">
+        <div id="progress-dialog-title">Saving&hellip;</div>
+        <div>
+            <progress max="100" id="progress-dialog-progressbar"></progress>
+        </div>
+    </dialog>    
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
@@ -561,12 +567,14 @@
     <script src="../lib/bootstrap-treeview.min.js"></script>
     <script src="../lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="../lib/ace/ext-statusbar.js" type="text/javascript"></script>
+    <script src="../lib/ace/ext-spellcheck.js" type="text/javascript"></script>
     <script src="../lib/ace/ext-language_tools.js" type="text/javascript"></script>
     <script src="../lib/ace/ext-settings_menu.js" type="text/javascript"></script>
     <script src="../lib/ace/ext-themelist.js" type="text/javascript"></script>
     <script src="../lib/ace/ext-modelist.js" type="text/javascript"></script>
 
-    <script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
         const profileUI = require('./js/profile.ui');
         // eslint-disable-next-line no-unused-vars
         const MacroDisplay = profileUI.MacroDisplay;

@@ -107,33 +107,27 @@ export class IED extends EventEmitter {
                         ipcRenderer.send('send-gmcp', 'IED.download.more ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, compress: this.active.compress ? 1 : 0 }));
                     }
                     else {
-                        this.active.state = ItemState.done;
-                        try {
-                            this.active.moveFinal();
-                            this.active.info = IED.getFileInfo(this.active.local);
-                            this.emit('download-finished', this.active);
-                            this.emit('message', 'Download complete: ' + this.active.local);
+                        if (this.active) {
+                            this.active.state = ItemState.done;
+                            try {
+                                this.active.moveFinal();
+                                this.active.info = IED.getFileInfo(this.active.local);
+                                this.emit('download-finished', this.active);
+                                this.emit('message', 'Download complete: ' + this.active.local);
+                            }
+                            catch (err) {
+                                this.emit('error', err);
+                            }
                         }
-                        catch (err) {
-                            this.emit('error', err);
-                        }
+                        else
+                            this.emit('error', 'Invalid item');
                         this.removeActive();
                     }
                     break;
                 case 'encoded':
                     ipcRenderer.send('send-gmcp', 'IED.upload.chunk ' + JSON.stringify({ path: path.dirname(this.active.remote), file: path.basename(this.active.remote), tag: this.active.ID, data: e.data.data, last: e.data.last ? 1 : 0, compressed: e.data.compressed ? 1 : 0 }));
-                    if (e.data.last) {
-                        this.active.state = ItemState.done;
-                        this.emit('upload-finished', this.active);
-                        if (this.active)
-                            this.emit('message', 'Upload complete: ' + this.active.remote);
-                        else
-                            this.emit('message', 'Upload complete');
-                        this.removeActive();
-                    }
-                    else {
+                    if (!e.data.last)
                         this.emit('update', this.active);
-                    }
                     break;
             }
         };
@@ -414,6 +408,21 @@ export class IED extends EventEmitter {
                                 return;
                             }
                             this.uploadChunk(obj);
+                            break;
+                        case 'success':
+                            if (this.active) {
+                                if (!obj.tag.startsWith(this.prefix + 'upload')) {
+                                    this.nextGMCP();
+                                    return;
+                                }
+                                this.active.state = ItemState.done;
+                                this.emit('upload-finished', this.active);
+                                if (this.active)
+                                    this.emit('message', 'Upload complete: ' + this.active.remote);
+                                else
+                                    this.emit('message', 'Upload complete');
+                            }
+                            this.removeActive();
                             break;
                     }
                     break;
@@ -1035,15 +1044,6 @@ export enum ItemState {
     done = 2,
     working = 3,
     error = 4
-}
-
-export interface FileInfo {
-    date?: Date;
-    hidden?: boolean;
-    path: string;
-    name: string;
-    type: string;
-    size: number;
 }
 
 export class Item {

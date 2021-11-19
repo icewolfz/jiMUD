@@ -69,7 +69,7 @@
             padding-left: 0px;
         }
     </style>
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
@@ -77,24 +77,17 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script src="../lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="../lib/ace/ext-themelist.js" type="text/javascript"></script>
-    <script>
+    <script type="text/javascript">
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
         const { parseTemplate, isDirSync } = require('./js/library.js');
-        const { remote, ipcRenderer, shell } = require('electron');
-        const { dialog, Menu, MenuItem } = remote;
+        const { ipcRenderer, shell } = require('electron');
         const path = require('path');
         const fs = require('fs-extra');
         const EditorSettings = require('./js/editor/code.editor.settings').EditorSettings;
-        var fontManager;
-        try {
-            fontManager = require('font-manager');
-        }
-        catch (ex) {
-            ipcRenderer.send('error', ex);
-        }
+        const fontList = require('font-list');
 
         var _settings;
-        if (window.module) module.module;
+        if (window.module) module = window.module;
         $(window).keydown((event) => {
             if (event.which === 27)
                 window.close();
@@ -105,21 +98,14 @@
                 $('.win32').css('display', 'block');
             else
                 $('.win32').css('display', 'none');
-
-            if (fontManager) {
-                fontManager.getAvailableFonts((fonts) => {
+            fontList.getFonts()
+                .then(fonts => {
                     var fl = fonts.length;
                     var f = 0;
-                    var sFont = {};
                     var ops = [];
-                    fonts.sort((a,b) => a.family.localeCompare(b.family));
+                    //fonts.sort((a, b) => a.localeCompare(b));
                     for (f = 0; f < fl; f++) {
-                        if (sFont[fonts[f].family]) continue;
-                        if (fonts[f].monospace)
-                            ops.push(`<option style="font-family: '${fonts[f].family}', monospace" value="'${fonts[f].family}', monospace">'${fonts[f].family}', monospace</option>`);
-                        else
-                            ops.push(`<option style="font-family: '${fonts[f].family}'" value="'${fonts[f].family}'">'${fonts[f].family}'</option>`);
-                        sFont[fonts[f].family] = true;
+                        ops.push(`<option style="font-family: ${fonts[f].replace(/"/g, '\'')}" value="${fonts[f].replace(/"/g, '\'')}">${fonts[f].replace(/"/g, '')}</option>`);
                     }
                     ops = ops.join('');
                     $('#font-system').append(ops);
@@ -129,8 +115,11 @@
                     $('#virtualOptions-rawFontFamily').selectpicker('refresh');
                     $('#virtualOptions-previewFontFamily').selectpicker('refresh');
                     $('#designOptions-previewFontFamily').selectpicker('refresh');
+                })
+                .catch(err => {
+                    ipcRenderer.send('error', err);
                 });
-            }
+
             $('#editorOptions-fontFamily').change(() => {
                 $('#editorOptions-font-sample').css('font-family', $('#editorOptions-fontFamily').val());
                 $('#editorOptions-font-sample').css('font-size', $('#editorOptions-fontSize').val() + 'px');
@@ -252,27 +241,12 @@
                 const pos = $(this).offset();
                 const x = Math.floor(pos.left);
                 const y = Math.floor(pos.top + $(this).outerHeight() + 2);
-                const addMenu = new Menu();
-                addMenu.append(new MenuItem({
-                    label: 'All', click() {
-                        clearButton('#btn-clear-dropdown');
-                        clearCache();
-                    }
-                }));
-                addMenu.append(new MenuItem({ type: 'separator' }));
-                addMenu.append(new MenuItem({
-                    label: 'Remote', click() {
-                        clearButton('#btn-clear-dropdown');
-                        clearCache(1);
-                    }
-                }));
-                addMenu.append(new MenuItem({
-                    label: 'State', click() {
-                        clearButton('#btn-clear-dropdown');
-                        clearCache(2);
-                    }
-                }));
-                addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
+                const addMenu = [];
+                addMenu.push({ label: 'All', click: "clearButton('#btn-clear-dropdown');clearCache();" });
+                addMenu.push({ type: 'separator' });
+                addMenu.push({ label: 'Remote', click: "clearButton('#btn-clear-dropdown');clearCache(1);" });
+                addMenu.push({ label: 'State', click: "clearButton('#btn-clear-dropdown');clearCache(2);" });
+                ipcRenderer.invoke('show-context', addMenu, { x: x, y: y });
             });
 
         });
@@ -296,7 +270,7 @@
         function setSettings(obj, root) {
             let option;
             for (option in obj) {
-                if (!obj.hasOwnProperty(option))
+                if (!Object.prototype.hasOwnProperty.call(obj, option))
                     continue;
                 if (typeof (obj[option]) === 'object') {
                     setSettings(obj[option], root + option + '-');
@@ -314,6 +288,7 @@
             $('#reopen').prop('checked', _settings.reopen);
             $('#maxRecent').val(_settings.maxRecent);
             setSettings(_settings, '');
+            $('#theme').selectpicker('render');
 
             $('#editorOptions-fontFamily').val(_settings.editorOptions.fontFamily);
             $('#editorOptions-fontFamily').selectpicker('render');
@@ -406,8 +381,7 @@
             var files;
             var i;
             if (type === 1) {
-                choice = dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
                         title: 'Delete',
@@ -424,14 +398,13 @@
                         files = fs.readdirSync(p);
                         for (i = 0; i < files.length; i++) {
                             if (path.extname(files[i]) === '.state') continue;
-                            shell.moveItemToTrash(path.join(p, files[i]));
+                            ipcRenderer.send('trash-item', path.join(p, files[i]));
                         }
                     }
                 }
             }
             else if (type === 2) {
-                choice = dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
                         title: 'Delete',
@@ -448,14 +421,13 @@
                         files = fs.readdirSync(p);
                         for (i = 0; i < files.length; i++) {
                             if (path.extname(files[i]) !== '.state') continue;
-                            shell.moveItemToTrash(path.join(p, files[i]));
+                            ipcRenderer.send('trash-item', path.join(p, files[i]));
                         }
                     }
                 }
             }
             else {
-                choice = dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
                         title: 'Delete',
@@ -471,7 +443,7 @@
                     else {
                         files = fs.readdirSync(p);
                         for (i = 0; i < files.length; i++) {
-                            shell.moveItemToTrash(path.join(p, files[i]));
+                            ipcRenderer.send('trash-item', path.join(p, files[i]));
                         }
                     }
                 }
@@ -540,6 +512,7 @@
                         <input type="checkbox" id="debug" /> Enable debug
                     </label>
                 </div>
+
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="editor">
                 <div class="col-sm-6 form-group">
@@ -575,6 +548,11 @@
                         <input type="checkbox" id="editorOptions-matchBrackets" /> Enable highlighting of matching brackets
                     </label>
                 </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="modelOptions-bracketColorization" /> Enable bracket colorization
+                    </label>
+                </div>                
                 <div class="col-sm-6 form-group">
                     <label class="control-label">
                         <input type="checkbox" id="editorOptions-selectOnLineNumbers" /> Select line when line number clicked
@@ -618,6 +596,15 @@
                         <input type="number" id="modelOptions-tabSize" class="input-sm form-control" min="1" />
                     </label>
                 </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">Theme
+                        <br>
+                        <select id="theme" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <option value="0">Light</option>
+                            <option value="1">Dark</option>
+                        </select>
+                    </label>
+                </div>                
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="editorFont">
                 <div class="col-sm-6 form-group">
@@ -1018,6 +1005,11 @@
                 <div class="col-sm-6 form-group">
                     <label class="control-label">
                         <input type="checkbox" id="modelOptions-insertSpaces" /> Insert spaces
+                    </label>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">
+                        <input type="checkbox" id="enableBackgroundThrottling" /> Enable Background Throttling
                     </label>
                 </div>
             </div>

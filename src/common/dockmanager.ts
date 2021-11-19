@@ -955,7 +955,7 @@ export class DockPane extends EventEmitter {
             else if (this._scroll > this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth)
                 this._scroll = this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth;
             this.doUpdate(UpdateType.scroll);
-        });
+        }, { passive: true });
         this.$scrollLeft = document.createElement('a');
         this.$scrollLeft.innerHTML = '<i class="fa fa-chevron-left"></i>';
         this.$scrollLeft.id = 'cm-scroll-left';
@@ -1465,6 +1465,8 @@ export class DockPane extends EventEmitter {
         const tl = this.panels.length;
         let t;
         if (typeof idx !== 'number') {
+            if (!idx)
+                return null;
             if (idx.isPanel)
                 return idx;
             for (t = 0; t < tl; t++) {

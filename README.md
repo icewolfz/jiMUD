@@ -17,12 +17,31 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
 1. npm install - install all the node modules
 1. npm run release:linux - build tar, deb, appImage, and rpm packages
 
-### OSX
+### Mac
 
 1. npm install - install node modules
-1. npm run release:osx - build OSX packages
+1. npm run release:mac - build Mac packages
 
 Build and package files are all saved to dist folder
+
+## Run
+
+1. npm install - install node modules
+1. npm run compile - compile typescript into javascript files
+1. npm run start - start jiMUD
+
+This will allow you to run jiMUD directly from this folder with out the need to
+package into a self contained folder or building an installer.
+
+## Standalone application
+
+1. npm install - install node modules
+1. npm run build:debug-compile
+
+This will compile typescript into javascript, rebuild native node modules and create
+a runnable package that can be ran from dist/ARCH-unpacked folder. This can be used
+for debugging or running it as full app with out the need to install, just run
+the jiMUD executable in dist/ARCH-unpacked folder.
 
 ## FAQ
 
@@ -55,12 +74,17 @@ Basic questions answered about jiMUD
 - [Customizing](docs/customizing.md)
 - [Assets](docs/assets.md)
 - [Mapper](docs/mapper.md)
+- [Character manager](docs/character.manager.md)
 - [Immortal Tools](docs/immortal.md)
 - [Code editor](docs/codeeditor.md)
   - [Area designer](docs/codeeditor.designer.md)
 
 ## Known Issues
 
+- Linux:
+  - The minimize event does not correctly fire, thus `Hide when minimized` may not work
+  - Tray icon: When app indicator is used on Linux, the click event is ignored, see [Electron docs for more limits](https://www.electronjs.org/docs/api/tray)
+  - Auto updating is only supported by Appimage
 - Display:
   - Unicode RTL text selection display is not correct
   - MXP Image height is limited to line height
@@ -76,7 +100,7 @@ Basic questions answered about jiMUD
   - Paste may lose some colors/background colors on pasted, this is a bug in TinyMCE editor
   - When apply styles to all text some styles may get stuck
   - Some styles will not flash when flashing is enabled depending on order of styles applied
-  - Reverse style has wierd results with heavy nesting of reverse tags and colors, suggest to just use normal background colors.
+  - Reverse style has weird results with heavy nesting of reverse tags and colors, suggest to just use normal background colors.
   - Correction from context menu may remove applied styles depending on if they are just that word
 - General slow performance, do not use --disable-gpu it can impact overall performance
 - [Mapper](docs/mapper.md#know-issues)

@@ -11,27 +11,29 @@
     <link href="css/immortal.css" rel="stylesheet" type="text/css" />
     <link href="css/form.css" rel="stylesheet" type="text/css" />
     <link href="../lib/datatables.min.css" rel="stylesheet" type="text/css" />
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js" type="text/javascript"></script>
     <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
     <script src="../lib/datatables.min.js" type="text/javascript"></script>
     <script src="../lib/datatables.scrollresize.min.js" type="text/javascript"></script>
-    <script>
-        //spell-checker:ignore hellip datatable, datatables, scrollresize, drivelist, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
+    <script type="text/javascript">
+        if (window.module) module = window.module;
+        //spell-checker:ignore hellip datatable, datatables, scrollresize, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
         //spell-checker:ignore keypress, haspopup, labelledby, tabindex, tablist, tabpanel
         const { IED, ItemState } = require('./js/ied');
         const { TempType, IEDCmdStatus, IEDError } = require('./js/types');
-        const { remote, ipcRenderer, shell, clipboard } = require('electron');
-        const { app, dialog, Menu, MenuItem } = remote;
+        const { ipcRenderer, shell, clipboard } = require('electron');
+        const remote = require('@electron/remote');
+        const { Menu, MenuItem } = remote;
         const { parseTemplate, existsSync, formatSize, walk } = require('./js/library');
         const { Settings } = require('./js/settings');
         const { Menubar } = require('./js/menubar');
         const fs = require('fs-extra');
         const child_process = require('child_process');
         const path = require('path');
-        const drivelist = require('drivelist');
+        const nodeDiskInfo = require('node-disk-info');
         const moment = require('moment');
 
         var chokidar = require('chokidar');
@@ -370,30 +372,27 @@
                         label: 'E&xternal editor',
                         accelerator: 'CmdOrCtrl+Alt+E',
                         click: () => {
-                            shell.openItem(options.editor);
+                            shell.openPath(options.editor);
                         }
                     },
                     { type: 'separator' },
                     {
                         label: '&Toggle Developer Tools',
                         click: () => {
-                            if (remote.getCurrentWindow().isDevToolsOpened())
-                                remote.getCurrentWindow().closeDevTools();
-                            else
-                                remote.getCurrentWindow().openDevTools();
+                            ipcRenderer.invoke('window', 'toggleDevTools');
                         }
                     },
                     {
                         type: 'separator'
                     },
                     {
-                        role: 'resetzoom'
+                        role: 'resetZoom'
                     },
                     {
-                        role: 'zoomin'
+                        role: 'zoomIn'
                     },
                     {
-                        role: 'zoomout'
+                        role: 'zoomOut'
                     },
                 ]
             },
@@ -565,7 +564,7 @@
 
         function loadOptions(data) {
             if (!data) {
-                var set = Settings.load(remote.getGlobal('settingsFile'));
+                var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 options = set.extensions['immortal'];
             }
             else
@@ -594,11 +593,11 @@
                 };
                 saveOptions();
             }
-            if (!options.hasOwnProperty('compress'))
+            if (!Object.prototype.hasOwnProperty.call(options, 'compress'))
                 options.compress = true;
-            if (!options.hasOwnProperty('focusOnFinished'))
+            if (!Object.prototype.hasOwnProperty.call(options, 'focusOnFinished'))
                 options.focusOnFinished = true;
-            if (!options.hasOwnProperty('selectOnFinished'))
+            if (!Object.prototype.hasOwnProperty.call(options, 'selectOnFinished'))
                 options.selectOnFinished = true;
             if (options.localSize < 202)
                 options.localSize = 202;
@@ -649,9 +648,9 @@
 
         function updateLocal(p) {
             if (!p || p.length === 0)
-                p = options.local || app.getPath('downloads');
+                p = options.local || ipcRenderer.sendSync('get-app-sync', 'getPath', 'downloads');
             else if (!existsSync(p))
-                p = app.getPath('downloads');
+                p = ipcRenderer.sendSync('get-app-sync', 'getPath', 'downloads');
             options.local = p;
             createWatcher();
             saveOptions();
@@ -682,36 +681,29 @@
             info.localFiles = all.length - dirs.length;
             $('#local-path').val(p);
             $('#local-navigate').empty();
-            drivelist.list((error, drives) => {
-                if (error) {
-                    logMessage(error);
-                    return;
-                }
+            nodeDiskInfo.getDiskInfo().then((drives) => {
                 var paths = [];
                 var found = false;
                 var c = '', pt, d, dl, pl, cl;
                 if (drives.length > 0) {
                     for (d = 0, dl = drives.length; d < dl; d++) {
-                        if (drives[d].mountpoints.length === 0)
+                        if (drives[d].mounted.length === 0)
                             continue;
-                        for (var m = 0, ml = drives[d].mountpoints.length; m < ml; m++) {
-                            if (!drives[d].mountpoints[m].path) continue;
-                            var sd = drives[d].mountpoints[m].path.split(path.sep);
-                            c = '';
-                            for (pt = 0, pl = sd.length; pt < pl; pt++) {
-                                c = path.join(c, sd[pt], path.sep);
-                                if (c.toLowerCase() === parts[0].toLowerCase() + path.sep) {
-                                    found = true;
-                                    if (pt === 0)
-                                        paths.push({ drive: true, path: c, name: sd[pt], count: pt, open: parts.length === 1 });
-                                    else if (sd[pt].length > 0)
-                                        paths.push({ path: c, name: sd[pt], count: pt, open: parts.length === 1 });
-                                }
-                                else if (pt === 0)
-                                    paths.push({ drive: true, path: c, name: sd[pt], count: pt });
+                        var sd = drives[d].mounted.split(path.sep);
+                        c = '';
+                        for (pt = 0, pl = sd.length; pt < pl; pt++) {
+                            c = path.join(c, sd[pt], path.sep);
+                            if (c.toLowerCase() === parts[0].toLowerCase() + path.sep) {
+                                found = true;
+                                if (pt === 0)
+                                    paths.push({ drive: true, path: c, name: sd[pt], count: pt, open: parts.length === 1 });
                                 else if (sd[pt].length > 0)
-                                    paths.push({ path: c, name: sd[pt], count: pt });
+                                    paths.push({ path: c, name: sd[pt], count: pt, open: parts.length === 1 });
                             }
+                            else if (pt === 0)
+                                paths.push({ drive: true, path: c, name: sd[pt], count: pt });
+                            else if (sd[pt].length > 0)
+                                paths.push({ path: c, name: sd[pt], count: pt });
                         }
                     }
                 }
@@ -745,6 +737,9 @@
                     else
                         $('#local-navigate').append(`<li><a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a></li>`);
                 }
+            }).catch((error) => {
+                if (error)
+                    logMessage(error);
             });
             localTable.clear().rows.add(all);
             $('#btn-local-up').prop('disabled', path.dirname(p) === p || path.dirname === path.join(p, path.sep));
@@ -1267,21 +1262,21 @@
                 if (error && error.code) {
                     switch (error.code) {
                         case IEDError.USER_DENIED:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Permission denied',
                                 message: 'Permission denied'
                             });
                             break;
                         case IEDError.RESET:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Reset',
                                 message: 'Server reset: ' + error.msg
                             });
                             break;
                         case IEDError.USERRESET:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Reset',
                                 message: error.msg
@@ -1290,13 +1285,13 @@
                         case IEDError.CMD_EXIST:
                             if (error && !error.tag.startsWith(_ied.prefix + 'mkdirIgnore') && !error.tag.startsWith(_ied.prefix + 'mkdirPIgnore')) {
                                 if (error.path && error.file)
-                                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                         type: 'error',
                                         title: 'Already exist',
                                         message: `File or directory already exist: '${error.path}/${error.file}`
                                     });
                                 else
-                                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                         type: 'error',
                                         title: 'Already exist',
                                         message: error.msg
@@ -1304,28 +1299,28 @@
                             }
                             break;
                         case IEDError.CMD_DIRECTORY:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Is a directory',
                                 message: `File is a directory: '${error.path}/${error.file}`
                             });
                             break;
                         case IEDError.CMD_NOEXIST:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Does not exist',
                                 message: `File or directory does not exist: '${error.path}/${error.file}`
                             });
                             break;
                         case IEDError.CMD_FILE:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Not a directory',
                                 message: `File not a directory: '${error.path}/${error.file}`
                             });
                             break;
                         case IEDError.DIR_CANTREAD:
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'error',
                                 title: 'Can not read',
                                 message: 'Can not read or permission denied'
@@ -1508,7 +1503,7 @@
                     _qUpdate = [];
                     _qUpdateTracker = {};
                 }
-                if (_qUpdateTracker.hasOwnProperty(item.ID))
+                if (Object.prototype.hasOwnProperty.call(_qUpdateTracker, item.ID))
                     _qUpdate[_qUpdateTracker[item.ID]] = item;
                 else {
                     _qUpdateTracker[item.ID] = _qUpdate.length;
@@ -1540,7 +1535,7 @@
                     }
                     else {
                         logMessage(`Failed to delete: ${obj.path}/${obj.file}`);
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Could not delete',
                             message: 'Could not delete: ' + obj.path + '/' + obj.file,
@@ -1576,7 +1571,7 @@
                     }
                     else {
                         logMessage(`Failed to rename: ${obj.path}/${obj.file}`);
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Could not rename',
                             message: 'Could not rename: ' + obj.file,
@@ -1615,7 +1610,7 @@
                     }
                     else {
                         logMessage(`Failed to create directory: ${obj.path}`);
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Could not create directory',
                             message: 'Could not create: ' + path.basename(obj.path),
@@ -1642,7 +1637,7 @@
                     }
                     else {
                         logMessage(`Failed to remove directory: ${obj.path}`);
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Could not remove directory',
                             message: 'Could not remove: ' + path.basename(obj.path),
@@ -2030,6 +2025,18 @@
             });
 
             $(document).keydown((event) => {
+                if ($('#newFolder')[0].open) {
+                    if (event.which === 27)
+                        $('#newFolder')[0].close();
+                    else if (event.which === 13)
+                        newFolderOk()
+                    return;
+                }
+                if ($('#Progress')[0].open) {
+                    if (event.which === 27)
+                        progressCancel()
+                    return;
+                }
 
                 //event.altKey, event.ctrlKey, event.shiftKey, event.metaKey
 
@@ -2415,12 +2422,7 @@
                         if (event.dataTransfer.files[f].path.startsWith('/jiMUD:')) continue;
                         if (event.dataTransfer.files[f].path.startsWith('/jiMUDPath:')) continue;
                         if (event.dataTransfer.files[f].size < 1) {
-                            try {
-                                var stat = fs.statSync(event.dataTransfer.files[f].path);
-                            }
-                            catch (error) {
-                                throw error;
-                            }
+                            var stat = fs.statSync(event.dataTransfer.files[f].path);
                             if (stat.isDirectory())
                                 uploadPath(event.dataTransfer.files[f].path);
                             else
@@ -2565,12 +2567,7 @@
                                 _ied.download(p);
                         }
                         else if (event.dataTransfer.files[f].size < 1) {
-                            try {
-                                var stat = fs.statSync(event.dataTransfer.files[f].path);
-                            }
-                            catch (error) {
-                                throw error;
-                            }
+                            var stat = fs.statSync(event.dataTransfer.files[f].path);
                             if (stat.isDirectory())
                                 uploadPath(event.dataTransfer.files[f].path);
                             else
@@ -2610,13 +2607,11 @@
             }));
             if (selected.length) {
                 c.append(new MenuItem({ type: 'separator' }));
-                if (!dirs) {
-                    c.append(new MenuItem({
-                        label: 'Upload',
-                        click: upload
-                    }));
-                    c.append(new MenuItem({ type: 'separator' }));
-                }
+                c.append(new MenuItem({
+                    label: 'Upload',
+                    click: upload
+                }));
+                c.append(new MenuItem({ type: 'separator' }));
                 c.append(new MenuItem({
                     label: 'Copy full path',
                     click: () => {
@@ -2696,13 +2691,11 @@
             }));
             if (selected.length > 0) {
                 c.append(new MenuItem({ type: 'separator' }));
-                if (!dirs) {
-                    c.append(new MenuItem({
-                        label: 'Download',
-                        click: download
-                    }));
-                    c.append(new MenuItem({ type: 'separator' }));
-                }
+                c.append(new MenuItem({
+                    label: 'Download',
+                    click: download
+                }));
+                c.append(new MenuItem({ type: 'separator' }));
                 c.append(new MenuItem({
                     label: 'Goto',
                     accelerator: 'CmdOrCtrl+G',
@@ -2902,7 +2895,7 @@
 
         function openItem(path) {
             if (!path || path.length === 0) return;
-            shell.openItem(path);
+            shell.openPath(path);
         }
 
         function download() {
@@ -3031,7 +3024,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function closeHidden() {
-            remote.getCurrentWindow().hide();
+            ipcRenderer.invoke('window', 'hide');
         }
 
         function clearWatcher() {
@@ -3199,19 +3192,21 @@
         function deleteLocal() {
             var data = localTable.rows({ selected: true }).data().pluck('path');
             for (var d = 0, dl = data.length; d < dl; d++)
-                shell.moveItemToTrash(data[d]);
+                ipcRenderer.send('trash-item', data[d]);
+            //shell.moveItemToTrash(data[d]);
+            //shell.trashItem(data[d]).catch(err=>console.log(err));
         }
 
         function deleteRemote() {
             var data = remoteTable.rows({ selected: true }).data();
-            dialog.showMessageBox(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                 type: 'warning',
                 title: 'Delete?',
                 message: data.length > 1 ? 'Delete remote?' : 'Delete remote: ' + data[0].name + '?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
-            }, (response) => {
-                if (response === 0) {
+            }).then((result) => {
+                if (result.response === 0) {
 
                     for (var d = 0, dl = data.length; d < dl; d++) {
                         if (data[d].size === -2)
@@ -3258,7 +3253,7 @@
         function newFolderOk() {
             var n = $('#newFolder-name').val();
             if (!n || n.length === 0) {
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'Name required',
                     message: 'You must supply a valid name!'
@@ -3266,7 +3261,7 @@
                 return;
             }
             if (IED.invalidFile(n)) {
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'Invalid folder name',
                     message: 'The name you supplied contains invalid characters!'
@@ -3276,7 +3271,7 @@
             if ($('#newFolder').data('type') === 'local') {
                 if (_local[n]) {
                     n = getNewName(n, _local);
-                    if (dialog.showMessageBox(remote.getCurrentWindow(), {
+                    if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File or folder exist?',
                         message: `Do you want to rename to "${n}"?`,
@@ -3293,7 +3288,7 @@
             else if ($('#newFolder').data('type') === 'remote') {
                 if (_remote[n]) {
                     n = getNewName(n, _remote);
-                    if (dialog.showMessageBox(remote.getCurrentWindow(), {
+                    if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File or folder exist?',
                         message: `Do you want to rename to "${n}"?`,
@@ -3337,7 +3332,7 @@
                 }
                 else if (editor.val() != editor.original) {
                     var n = getNewName(editor.val(), list);
-                    if (dialog.showMessageBox(remote.getCurrentWindow(), {
+                    if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'Rename file?',
                         message: `Do you want to rename "${editor.original}" to "${n}"?`,
@@ -3494,6 +3489,8 @@
                     focusRow(row);
                     localTable.rows().deselect();
                     row.select();
+                    var row = localTable.rows({ selected: true });
+                    if (!row || row.length === 0) return;
                     rename(row, _local, (o, n) => {
                         fs.renameSync(o, path.join(path.dirname(o), n));
                     });

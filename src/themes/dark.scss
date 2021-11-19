@@ -39,7 +39,7 @@ body {
 
 #commandbox {
     left: 2px;
-    right: 60px;
+    right: 96px;
     height: 18px;
     bottom: 2px;
 }
@@ -394,11 +394,11 @@ body {
     background-image: url("#{$images}/status/weatherhailhard.png");
 }
 
-.weather-rain #environmentweather {
+.weather-rain #environmentweather, .weather-zombie_rain #environmentweather {
     background-image: url("#{$images}/status/weatherrain.png");
 }
 
-.weather-rain.intensity-hard #environmentweather {
+.weather-rain.intensity-hard #environmentweather,.weather-zombie_rain.intensity-hard #environmentweather {
     background-image: url("#{$images}/status/weatherrainhard.png");
 }
 
@@ -416,6 +416,14 @@ body {
 
 .weather-sleet.intensity-hard #environmentweather {
     background-image: url("#{$images}/status/weathersleethard.png");
+}
+
+.weather-blood_rain #environmentweather {
+    background-image: url("#{$images}/status/weatherblood_rain.png");
+}
+
+.weather-blood_rain.intensity-hard #environmentweather{
+    background-image: url("#{$images}/status/weatherblood_rainhard.png");
 }
 
 #environment {
@@ -549,7 +557,6 @@ body {
 .combat-name {
     right: 1px;
     left: 38px;
-    font-size: 0.75em;
 }
 
 .combat-name:first-letter {
@@ -707,10 +714,9 @@ body {
 }
 
 .progressbar {
-    height: 13px;
-    font-size: 0.75em;
+    height: 14px;
+    font-size: 1em;
     border: 1px solid #{$borderColor};
-    height: 13px;
     width: 118px;
     -webkit-border-radius: 6px;
     border-radius: 6px;
@@ -723,6 +729,11 @@ body {
 #hp-status {
     text-align: left;
     color: #{$color};
+}
+
+#hp-status span {
+    overflow: hidden;
+    display: inline-block;
 }
 
 .progressbar .progressbar-text {
@@ -743,6 +754,7 @@ body {
     bottom: 3px;
     right: 3px;
     left: 3px;
+    font-size: 0.75em;
 }
 
 #lagMeter.progressbar .progressbar-text {
@@ -775,6 +787,44 @@ body {
 
 #history-dropup:active {
     background-color: #2a2d2e;
+}
+
+.command-history {
+    right: 58px;
+    top: 3px;
+}
+
+#btnTriggers {
+    right: 22px;
+}
+ 
+#btnParsing {
+    right: 40px;
+}
+
+#btnTriggers, #btnParsing {
+    top: 3px;
+    text-align: center;
+    border-radius: 4px;
+    border: 0px;
+    height: 16px;
+    width: 16px;
+    background-color: transparent;
+}
+
+#btnTriggers.on, #btnParsing.on {
+    background-color: #3f3f46;
+    color: white;
+}
+
+#btnTriggers:hover, #btnParsing:hover, #btnTriggers.on:active, #btnParsing.on:active {
+    background-color: #3f3f46;
+    color: white;
+}
+
+#btnTriggers:active, #btnParsing:active, #btnTriggers.on:hover, #btnParsing.on:hover {
+    background-color: #2a2d2e;
+    color: white;
 }
 
 #advedit {
@@ -821,6 +871,11 @@ body {
     border: 1px solid #{$borderColor};
     background-color: #5a5d5e;
     color: #fff;
+}
+
+.button:hover .overlay {
+    background-color: rgba(255,255,255, 0.40);
+    border: 1px solid #{$borderColor};
 }
 
 .button:hover svg, .button.on:hover svg {

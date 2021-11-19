@@ -1,6 +1,6 @@
 //spell-checker:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //spell-checker:ignore emoteto, emotetos askonchildren YYYYMMDD Hmmss
-import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -35,6 +35,7 @@ export class Mapper {
             zone: 0
         };
     public persistent: boolean = true;
+    public showInTaskBar: boolean = false;
 }
 
 /**
@@ -54,6 +55,9 @@ export class Profiles {
     public enabled: string[] = [];
     public codeEditor: boolean = true;
     public watchFiles: boolean = true;
+    public sortOrder: ProfileSortOrder = ProfileSortOrder.Priority | ProfileSortOrder.Index;
+    public sortDirection: number = 1;
+    public showInTaskBar: boolean = false;
 }
 
 /**
@@ -74,7 +78,7 @@ export class Chat {
     public captureTalk: boolean = false;
     //list of lines to capture
     public lines: string[] = [];
-    //dont capture when window hidden
+    //don't capture when window hidden
     public CaptureOnlyOpen: boolean = false;
     public alwaysOnTop: boolean = false;
     public alwaysOnTopClient: boolean = true;
@@ -92,6 +96,7 @@ export class Chat {
     public showSplitButton: boolean = true;
     public bufferSize: number = 5000;
     public flashing: boolean = false;
+    public showInTaskBar: boolean = false;
 }
 
 /*
@@ -299,7 +304,7 @@ export let SettingList: any[] = [
     ['display.roundedOverlays', 0, 1, true],
     ['backupLoad', 0, 2, BackupSelection.All],
     ['backupSave', 0, 2, BackupSelection.All],
-    ['backupAllProfiles', 0, 1, false],
+    ['backupAllProfiles', 0, 1, true],
     ['scrollLocked', 0, 1, false],
     ['showStatus', 0, 1, true],
     ['showCharacterManager', 0, 1, false],
@@ -337,7 +342,8 @@ export let SettingList: any[] = [
     ['display.hideTrailingEmptyLine', 0, 1, true],
     ['display.enableColors', 0, 1, true],
     ['display.enableBackgroundColors', 0, 1, true],
-    ['enableSound', 0, 1, true]
+    ['enableSound', 0, 1, true],
+    ['allowHalfOpen', 0, 1, true]
 ];
 
 /**
@@ -352,6 +358,7 @@ export class Settings {
     public AutoCopySelectedToClipboard: boolean = false;
     public autoCreateCharacter: boolean = false;
     public askonclose: boolean = true;
+    public askonloadCharacter: boolean = true;
     public askonchildren: boolean = true;
     public dev: boolean = false;
     public mapper: Mapper = new Mapper();
@@ -375,12 +382,18 @@ export class Settings {
     public autoConnect: boolean = true;
     public autoConnectDelay: number = 600;
     public autoLogin: boolean = true;
+    public autoTakeoverLogin: boolean = false;
     public onDisconnect: OnDisconnect = OnDisconnect.ReconnectDialog;
     public commandEcho: boolean = true;
     public enableSound: boolean = true;
+    public fixHiddenWindows: boolean = true;
+    public maxReconnectDelay: number = 3600;
+    public enableBackgroundThrottling: boolean = true;
+    public showInTaskBar: boolean = true;
 
     public enableKeepAlive: boolean = false;
     public keepAliveDelay: number = 0;
+    public allowHalfOpen: boolean = true;
 
     public newlineShortcut: NewLineType = NewLineType.Ctrl;
 
@@ -425,6 +438,9 @@ export class Settings {
     public commandDelay: number = 500;
     public commandDelayCount: number = 5;
 
+    public enableParsing: boolean = true;
+    public enableTriggers: boolean = true;
+
     public colors: string[] = [];
 
     public soundPath = path.join('{data}', 'sounds');
@@ -468,7 +484,8 @@ export class Settings {
         showSplitButton: true,
         hideTrailingEmptyLine: true,
         enableColors: true,
-        enableBackgroundColors: true
+        enableBackgroundColors: true,
+        showInvalidMXPTags: false
     };
 
     public extensions = {
@@ -477,7 +494,7 @@ export class Settings {
 
     public backupLoad: BackupSelection = BackupSelection.All;
     public backupSave: BackupSelection = BackupSelection.All;
-    public backupAllProfiles = false;
+    public backupAllProfiles = true;
 
     public scrollLocked: boolean = false;
     public showStatus: boolean = true;
@@ -498,6 +515,7 @@ export class Settings {
     public hideOnMinimize: boolean = false;
     public showTrayIcon: boolean = false;
     public statusExperienceNeededProgressbar: boolean = false;
+    public showEditorInTaskBar: boolean = true;
 
     public trayClick: TrayClick = TrayClick.show;
     public trayDblClick: TrayClick = TrayClick.none;
@@ -549,6 +567,9 @@ export class Settings {
     }
 
     public save(file) {
-        fs.writeFileSync(file, JSON.stringify(this));
+        const data = JSON.stringify(this);
+        if (!data || data.length === 0)
+            throw new Error('Could not serialize settings');
+        fs.writeFileSync(file, data);
     }
 }

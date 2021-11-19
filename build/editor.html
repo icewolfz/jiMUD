@@ -10,7 +10,7 @@
     <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/editor.css" rel="stylesheet" type="text/css" />
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
@@ -18,21 +18,22 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script src="../lib/tinymce/tinymce.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/smtextcolor.tinymce.js" type="text/javascript" charset="utf-8"></script>
-    <script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
         //spell-checker:words tinymce
         //spell-checker:ignore smtextcolor, rgbcolor, noflash, dblunderline, shadowfore, shadowback, textcolor, cmdfont, editorcontent
         //spell-checker:ignore hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime
         /* global tinymce */
-        const { remote, ipcRenderer, webFrame, clipboard } = require('electron');
-        const { nativeImage, dialog, Menu, MenuItem } = remote;
+        const { nativeImage, ipcRenderer, webFrame, clipboard } = require('electron');
+        const remote = require('@electron/remote');
+        const { Menu, MenuItem } = remote;
         const { stripHTML, htmlEncode, invert, getColors } = require('./js/library');
         const { Settings } = require('./js/settings');
         const rgbcolor = require('rgbcolor');
         const fs = require('fs');
         const path = require('path');
 
-        var spellchecker;
-        var editorOnly = remote.getGlobal('editorOnly');
+        var editorOnly = ipcRenderer.sendSync('get-global', 'editorOnly');
 
         var _colors, _ColorTable, options, _colorCodes;
         var colorNames = {
@@ -159,22 +160,21 @@
         }
 
         function appendFile() {
-            dialog.showOpenDialog(remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
                 {
                     filters: [
                         { name: 'Text files (*.txt)', extensions: ['txt'] },
                         { name: 'LPC files (*.c, *.h, *.o)', extensions: ['c', 'h', 'o'] },
                         { name: 'All files (*.*)', extensions: ['*'] },
                     ]
-                },
-                function (fileNames) {
-                    if (fileNames === undefined) {
+                }).then(result => {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
                         return;
                     }
-                    for (var f = 0, fl = fileNames.length; f < fl; f++)
-                        fs.readFile(fileNames[f], 'utf8', (err, data) => {
+                    for (var f = 0, fl = result.filePaths.length; f < fl; f++)
+                        fs.readFile(result.filePaths[f], 'utf8', (err, data) => {
                             if (err) {
-                                dialog.showMessageBox(remote.getCurrentWindow(), {
+                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                     type: 'error',
                                     title: 'Error importing file',
                                     message: err
@@ -308,15 +308,6 @@
             tinymce.activeEditor.execCommand('insertHTML', false, stack.join(''));
 
         }
-
-        webFrame.setSpellCheckProvider('en-US', true, {
-            spellCheck: function (text) {
-                if (!spellchecker || !options.spellchecking)
-                    return true;
-                return !(spellchecker.isMisspelled(text));
-            }
-        });
-        //https://www.npmjs.com/package/electron-spell-check-provider
 
         function buildHTMLStack(els) {
             var tag, $el, t, tl;
@@ -716,7 +707,7 @@
                     }));
                     cMenu.append(new MenuItem({ role: 'delete', icon: path.join(__dirname, '../assets/icons/png/delete.png') }));
                     cMenu.append(new MenuItem({ type: 'separator' }));
-                    cMenu.append(new MenuItem({ role: 'selectall' }));
+                    cMenu.append(new MenuItem({ role: 'selectAll' }));
                     cMenu.append(new MenuItem({ type: 'separator' }));
 
                     cMenu.append(new MenuItem({
@@ -1035,69 +1026,30 @@
                 }
             });
 
-            tinymce.activeEditor.on('contextmenu', function (e) {
-                e.preventDefault();
-                var cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu();
-
-                /*
-                                    sel = tinymce.activeEditor.selection.getSel();
-                                    if (!sel.isCollapsed) {
-
-                                        // Detect if selection is backwards
-                                        var range = document.createRange();
-                                        range.setStart(sel.anchorNode, sel.anchorOffset);
-                                        range.setEnd(sel.focusNode, sel.focusOffset);
-                                        var backwards = range.collapsed;
-                                        range.detach();
-
-                                        // modify() works on the focus of the selection
-                                        var endNode = sel.focusNode, endOffset = sel.focusOffset;
-                                        sel.collapse(sel.anchorNode, sel.anchorOffset);
-
-                                        var direction = [];
-                                        if (backwards) {
-                                            direction = ['backward', 'forward'];
-                                        } else {
-                                            direction = ['forward', 'backward'];
-                                        }
-
-                                        sel.modify("move", direction[0], "character");
-                                        sel.modify("move", direction[1], "word");
-                                        sel.extend(endNode, endOffset);
-                                        sel.modify("extend", direction[1], "character");
-                                        sel.modify("extend", direction[0], "word");
-                                    }
-                                    */
-                var selRng = tinymce.activeEditor.selection.getRng();
-                selRng.expand('word'); //expands the DOM range to the current word
-                //tinymce.activeEditor.selection.setRng(selRng);
-                var word = stripHTML(tinymce.activeEditor.selection.getContent());
-                var ol = word.length;
-                word = word.trimRight();
-                var l = ol - word.length;
-                ol = word.length;
-                if (l > 0)
-                    selRng.setEnd(selRng.endContainer, selRng.endOffset - l);
-                word = word.trimLeft();
-                l = ol - word.length;
-                if (l > 0)
-                    selRng.setStart(selRng.startContainer, selRng.startOffset - l);
-
-                if (options.spellchecking && spellchecker && spellchecker.isMisspelled(word)) {
-                    var words = spellchecker.getCorrectionsForMisspelling(word);
-                    if (words.length > 0)
+            remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
+                const { selectionText, isEditable } = params;
+                if (isEditable) {
+                    var cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu();
+                    if (options.spellchecking && params.dictionarySuggestions.length) {
                         cMenu.insert(0, new MenuItem({ type: 'separator' }));
-                    for (var w = words.length - 1; w >= 0; w--)
-                        cMenu.insert(0, new MenuItem({
-                            label: words[w],
-                            click: function (item) {
-                                tinymce.activeEditor.undoManager.transact(function () {
-                                    tinymce.activeEditor.selection.setContent(item.label);
-                                });
-                            }
-                        }));
+                        for (var w = params.dictionarySuggestions.length - 1; w >= 0; w--)
+                            cMenu.insert(0, new MenuItem({
+                                label: params.dictionarySuggestions[w],
+                                click: function (item) {
+                                    tinymce.activeEditor.undoManager.transact(function () {
+                                        tinymce.activeEditor.selection.setContent(item.label);
+                                    });
+                                }
+                            }));
+                    }
+                    cMenu.popup({ window: remote.getCurrentWindow() });
+                } else if (selectionText && selectionText.trim() !== '') {
+                    Menu.buildFromTemplate([
+                        { role: 'copy' },
+                        { type: 'separator' },
+                        { role: 'selectAll' },
+                    ]).popup({ window: remote.getCurrentWindow() });
                 }
-                cMenu.popup({ window: remote.getCurrentWindow() });
             });
             loadOptions();
         });
@@ -1227,17 +1179,7 @@
         }
 
         function loadOptions() {
-            options = Settings.load(remote.getGlobal('settingsFile'));
-
-            try {
-                if (!spellchecker && options.spellchecking)
-                    spellchecker = require('spellchecker');
-            }
-            catch (ex) {
-                ipcRenderer.send('error', ex);
-            }
-
-
+            options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', options.cmdfontSize);
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-family', options.cmdfont + ', monospace');
             if (tinymce.activeEditor.formatter)

@@ -7,6 +7,7 @@ const path = require('path');
 
 import IRichLanguageConfiguration = monaco.languages.LanguageConfiguration;
 import ILanguage = monaco.languages.IMonarchLanguage;
+import IWordAtPosition = monaco.editor.IWordAtPosition;
 //import { DebugTimer } from './editor.base';
 
 //https://github.com/Microsoft/vscode/blob/master/extensions/typescript-language-features/src/features/languageConfiguration.ts
@@ -23,8 +24,8 @@ export const conf: IRichLanguageConfiguration = {
         ['(', ')']
     ],
     autoClosingPairs: [
-        { open: '([', close: '])' },
-        { open: '({', close: '})' },
+        { open: '([', close: ']' },
+        { open: '({', close: '}' },
         { open: '[', close: ']' },
         { open: '{', close: '}' },
         { open: '(', close: ')' },
@@ -794,7 +795,7 @@ export const language = <ILanguage>{
 //spellchecker:enable
 
 export function loadCompletion(): monaco.languages.CompletionItem[] {
-    let list: monaco.languages.CompletionItem[] = [
+    let list: any[] = [
         {
             label: 'void create',
             kind: monaco.languages.CompletionItemKind.Snippet,
@@ -1471,6 +1472,7 @@ interface FormatToken {
 export class LPCFormatter extends EventEmitter {
     private $src = '';
     private $position = 0;
+    private $inComment = 0;
     //private tokens = [];
     private block = [];
     private b = [];
@@ -1551,9 +1553,12 @@ export class LPCFormatter extends EventEmitter {
                             case 'while':
                             //case 'catch':
                             case 'try':
-                            case 'throw':
                             case 'using':
                                 if (!op.rtrim().endsWith('\n'))
+                                    op += '\n' + leading + '   ';
+                                break;
+                            case 'throw':
+                                if (!op.rtrim().endsWith('\n') && !op.endsWith('->'))
                                     op += '\n' + leading + '   ';
                                 break;
                             case 'if':
@@ -1839,11 +1844,13 @@ export class LPCFormatter extends EventEmitter {
                                         if (t2 >= tll)
                                             break;
                                     }
-                                    if (t2 < tll && tokenLine[t2].value !== 'if' && tokenLine[t2].type !== FormatTokenType.parenLBrace) {
+                                    if (t2 < tll && tokenLine[t2].type === FormatTokenType.commentInline)
+                                        op += ' ';
+                                    else if (t2 < tll && tokenLine[t2].value !== 'if' && tokenLine[t2].type !== FormatTokenType.parenLBrace && tokenLine[t2].type !== FormatTokenType.newline) {
                                         op.rtrim();
                                         op += '\n';
                                     }
-                                    else
+                                    else if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline)
                                         op += ' ';
                                     break;
                                 case 'if':
@@ -1863,7 +1870,7 @@ export class LPCFormatter extends EventEmitter {
                         p--;
                         if (p === 0) {
                             t2 = t + 1;
-                            if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t].type !== FormatTokenType.parenLBrace && tokenLine[t].type !== FormatTokenType.keyword) {
+                            if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t].type !== FormatTokenType.parenLBrace && tokenLine[t].type !== FormatTokenType.keyword && tokenLine[t].type === FormatTokenType.commentInline) {
                                 while (tokenLine[t2].type === FormatTokenType.whitespace) {
                                     t++;
                                     e++;
@@ -1871,7 +1878,7 @@ export class LPCFormatter extends EventEmitter {
                                     if (t2 >= tll)
                                         break;
                                 }
-                                if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t2].type !== FormatTokenType.parenLBrace && tokenLine[t2].type !== FormatTokenType.keyword) {
+                                if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t2].type !== FormatTokenType.parenLBrace && tokenLine[t2].type !== FormatTokenType.keyword && tokenLine[t2].type !== FormatTokenType.commentInline) {
                                     op = op.rtrim();
                                     op += '\n' + leading;
                                 }
@@ -2039,7 +2046,12 @@ export class LPCFormatter extends EventEmitter {
                             return { value: ']', type: FormatTokenType.parenRBracket };
                     }
                 case 4:
-                    if (c === '\\') {
+                    if (this.$inComment && c === '\n') {
+                        this.$position = idx;
+                        state = 0;
+                        return { value: val, type: FormatTokenType.string };
+                    }
+                    else if (c === '\\') {
                         val += c;
                         state = 5;
                     }
@@ -2088,7 +2100,7 @@ export class LPCFormatter extends EventEmitter {
                 case 8:
                     switch (c) {
                         case '/':
-                            state = 0;
+                            this.$inComment = 1;
                             this.$position = idx + 1;
                             return { value: '//', type: FormatTokenType.commentInline };
                         case '*':
@@ -2301,6 +2313,7 @@ export class LPCFormatter extends EventEmitter {
                             break;
                         case '\n':
                             if (val.length > 0) return this.tokenType(val);
+                            this.$inComment = 0;
                             this.$position = idx + 1;
                             return { value: '\n', type: FormatTokenType.newline };
                         case ' ':

@@ -1,4 +1,4 @@
-// spell-checker:words TELOP, TERMINALTYPE, NEWENVIRON, Achaea, Webdings, ENDOFRECORD, USERVAR keepalive
+// spell-checker:words TELOP, TERMINALTYPE, NEWENVIRON, Achaea, Webdings, ENDOFRECORD, USERVAR keepalive, DONT
 import EventEmitter = require('events');
 import net = require('net');
 
@@ -125,6 +125,7 @@ export class Telnet extends EventEmitter {
     private _zlib: boolean = false;
     private _keepAlive: boolean = false;
     private _keepAliveDelay: number = 0;
+    private _allowHalfOpen: boolean = true;
 
     public options: TelnetOptions = { MCCP: true, MXP: true, NAWS: true, MSDP: true, GMCP: true, MSSP: false, ECHO: true, TTYPE: true, EOR: true, NEWENVIRON: false, ZMP: false, ATCP: false, CHARSET: true };
     public host: string = '';
@@ -198,6 +199,21 @@ export class Telnet extends EventEmitter {
         this._keepAlive = value;
         if (this.connected)
             this.socket.setKeepAlive(this._keepAlive, this._keepAliveDelay * 1000);
+    }
+
+    /**
+     * @name allowHalfOpen
+     * @desc set if socket will stay half open
+     * @returns {boolean} is allowHalfOpen enabled
+     * @memberOf Telnet
+     */
+
+    get allowHalfOpen(): boolean {
+        return this._allowHalfOpen;
+    }
+
+    set allowHalfOpen(value: boolean) {
+        this._allowHalfOpen = value;
     }
 
     /**
@@ -1428,7 +1444,7 @@ export class Telnet extends EventEmitter {
                             }
                             tmp = this._fireReceiveOption(option, 250, Buffer.from(_sb.slice(1, _sb.length - 4)).toString('ascii'));
                             this.emit('receive-NEWENVIRON', msdp_val);
-                            //custom handled so dont do defaults
+                            //custom handled so don't do defaults
                             if (!tmp) {
                                 if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><SB><NEWENVIRON><IS><IAC><SE>');
                                 this.sendData([255, 250, option, 0, 255, 40], true);
@@ -1568,7 +1584,7 @@ export class Telnet extends EventEmitter {
         processed = Buffer.from(processed);
         //force UTF8 or if charset is enabled and type is UTF8 process data as UTF8 data
         if (this.UTF8 || (this.options.CHARSET && this.server.CHARSET))
-            return processed.toString('UTF8');
+            return processed.toString('utf8');
         return processed;
     }
 
@@ -1741,7 +1757,7 @@ export class Telnet extends EventEmitter {
     private _createSocket() {
         let _socket;
         try {
-            _socket = new Socket({ allowHalfOpen: true });
+            _socket = new Socket({ allowHalfOpen: this._allowHalfOpen });
             //_socket.setEncoding('binary');
             _socket.on('close', err => {
                 if (err)

@@ -86,6 +86,7 @@ export class Mapper extends EventEmitter {
     private _updating: UpdateType = UpdateType.none;
     private $drawCache;
     private $focused = false;
+    private _worker;
 
     public current: Room;
     public active: Room;
@@ -238,7 +239,7 @@ export class Mapper extends EventEmitter {
         this.ready = false;
         try {
             if (this._memory) {
-                this._db = new sqlite3(':memory:', { memory: true });
+                this._db = new sqlite3(':memory:');
                 this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
             }
             else
@@ -944,7 +945,7 @@ export class Mapper extends EventEmitter {
         const row = this._db.prepare('SELECT DISTINCT Zone FROM Rooms ORDER BY Zone DESC LIMIT 1').get();
         if (!row)
             return zone;
-        return row.zone + 1;
+        return row.Zone + 1;
     }
 
     public roomExists(x, y, z, zone) {
@@ -2387,6 +2388,7 @@ export class Mapper extends EventEmitter {
 
     public exportArea(file: string) {
         let rows;
+        this._cancelImport = false;
         try {
             rows = this._db.prepare('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Area = $area').all({
                 area: this.active.area || ''
@@ -2395,6 +2397,38 @@ export class Mapper extends EventEmitter {
         catch (err) {
             this.emit('error', err);
         }
+        this._worker = new Worker('./js/mapper.background.js');
+        this._worker.onmessage = (e) => {
+            switch (e.data.event) {
+                case 'progress':
+                    this.emit('import-progress', e.data.percent);
+                    break;
+                case 'canceled':
+                    this._worker.terminate();
+                    this._worker = null;
+                    this.emit('import-complete');
+                    break;
+                case 'complete':
+                    this._worker.terminate();
+                    this._worker = null;
+                    this.exportRooms(file, e.data.rooms).then(() => {
+                        this.emit('import-complete');
+                    });
+                    break;
+            }
+
+        };
+        this._worker.onerror = (e) => {
+            this.emit('import-complete');
+        };
+        if (rows)
+            this._worker.postMessage({ action: 'export', rows: rows });
+        else {
+            this._worker.terminate();
+            this._worker = null;
+            this.emit('import-complete');
+        }
+        /*
         const rooms = {};
         if (rows) {
             this._cancelImport = false;
@@ -2423,6 +2457,10 @@ export class Mapper extends EventEmitter {
                         if (!rows[r].hasOwnProperty(prop)) {
                             continue;
                         }
+                        if (this._cancelImport) {
+                            this.emit('import-complete');
+                            return;
+                        }
                         rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
                     }
                     rooms[rows[r].ID].exits = {};
@@ -2439,16 +2477,50 @@ export class Mapper extends EventEmitter {
         }
         this._cancelImport = false;
         this.emit('import-complete');
+        */
     }
 
-    public exportAll(file: string) {
+    public async exportAll(file: string) {
         let rows;
+        this._cancelImport = false;
         try {
             rows = this._db.prepare('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID').all();
         }
         catch (err) {
             this.emit('error', err);
         }
+        this._worker = new Worker('./js/mapper.background.js');
+        this._worker.onmessage = (e) => {
+            switch (e.data.event) {
+                case 'progress':
+                    this.emit('import-progress', e.data.percent);
+                    break;
+                case 'canceled':
+                    this._worker.terminate();
+                    this._worker = null;
+                    this.emit('import-complete');
+                    break;
+                case 'complete':
+                    this._worker.terminate();
+                    this._worker = null;
+                    this.exportRooms(file, e.data.rooms).then(() => {
+                        this.emit('import-complete');
+                    });
+                    break;
+            }
+
+        };
+        this._worker.onerror = (e) => {
+            this.emit('import-complete');
+        };
+        if (rows)
+            this._worker.postMessage({ action: 'export', rows: rows });
+        else {
+            this._worker.terminate();
+            this._worker = null;
+            this.emit('import-complete');
+        }
+        /*
         const rooms = {};
         this._cancelImport = false;
         if (rows) {
@@ -2477,6 +2549,10 @@ export class Mapper extends EventEmitter {
                         if (!rows[r].hasOwnProperty(prop)) {
                             continue;
                         }
+                        if (this._cancelImport) {
+                            this.emit('import-complete');
+                            return;
+                        }
                         rooms[rows[r].ID][prop.toLowerCase()] = rows[r][prop];
                     }
                     rooms[rows[r].ID].exits = {};
@@ -2489,13 +2565,15 @@ export class Mapper extends EventEmitter {
                 }
                 this.emit('import-progress', Math.floor(r / rl * 100));
             }
-            this.exportRooms(file, rooms);
+            this.exportRooms(file, rooms).then(() => {
+                this._cancelImport = false;
+                this.emit('import-complete');
+            });
         }
-        this._cancelImport = false;
-        this.emit('import-complete');
+        */
     }
 
-    public exportRooms(file: string, rooms) {
+    public async exportRooms(file: string, rooms) {
         if (!rooms) {
             this.emit('import-progress', 100);
             return;
@@ -2508,7 +2586,16 @@ export class Mapper extends EventEmitter {
         if (this._cancelImport)
             return;
         this._cancelImport = true;
-        this.emit('import-progress', 101);
+        this.emit('import-progress', -1);
+    }
+
+    public cancelExport() {
+        if (this._worker) {
+            this._worker.postMessage({ action: 'cancel' });
+            this._worker.terminate();
+            this._worker = null;
+            this.emit('import-complete');
+        }
     }
 
     public compact() {

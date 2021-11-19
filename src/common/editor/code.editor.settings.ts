@@ -17,6 +17,8 @@ export class EditorSettings {
     public spellchecking: true;
     public remote = '.';
     public uploadAs;
+    public enableBackgroundThrottling: boolean = true;
+    public theme: number = 0;
 
     public window = {
         persistent: false,
@@ -28,7 +30,8 @@ export class EditorSettings {
     public modelOptions = {
         tabSize: 3,
         insertSpaces: true,
-        trimAutoWhitespace: true
+        trimAutoWhitespace: true,
+        bracketColorization: true
     };
 
     public editorOptions = {
@@ -39,7 +42,7 @@ export class EditorSettings {
         cursorStyle: 'line',
         emptySelectionClipboard: true,
         find: {
-            seedSearchStringFromSelection: true
+            seedSearchStringFromSelection: 'selection'
         },
         folding: true,
         fontSize: 14,
@@ -63,6 +66,14 @@ export class EditorSettings {
             renderCharacters: true,
             showSlider: 'mouseover',
             side: 'right'
+        },
+        bracketPairColorization: {
+            enabled: true
+        },
+        guides: {
+            bracketPairs: true,
+            highlightActiveIndentation: true,
+            indentation: true
         }
     };
 
@@ -140,6 +151,10 @@ export class EditorSettings {
             else
                 settings[prop] = data[prop];
         }
+        if (settings.editorOptions.find.seedSearchStringFromSelection !== 'selection' &&
+            settings.editorOptions.find.seedSearchStringFromSelection !== 'never' &&
+            settings.editorOptions.find.seedSearchStringFromSelection !== 'always')
+            settings.editorOptions.find.seedSearchStringFromSelection = settings.editorOptions.find.seedSearchStringFromSelection ? 'selection' : 'never';
         return settings;
     }
     public save(file) {

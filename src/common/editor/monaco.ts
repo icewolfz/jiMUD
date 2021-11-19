@@ -58,18 +58,24 @@ export function SetupEditor() {
                 monaco.languages.setLanguageConfiguration('lpc', conf);
                 monaco.languages.registerCompletionItemProvider('lpc', {
                     provideCompletionItems: (model, position, item, token) => {
-                        /*
-                        let word: any = model.getWordAtPosition(position);
+                        const word: any = model.getWordAtPosition(position);
                         if (!word) return { suggestions: [] };
-                        word = word.word;
-                        */
                         if (!$lpcCompletionCache)
                             $lpcCompletionCache = loadCompletion();
-                        return {
+                        const s = {
                             suggestions: copy($lpcCompletionCache)
                         };
+                        s.suggestions.forEach(c => {
+                            c.range = {
+                                startLineNumber: position.lineNumber,
+                                startColumn: word.startColumn,
+                                endLineNumber: position.lineNumber,
+                                endColumn: word.endColumn
+                            };
+                        });
+                        return s;
                     },
-                    resolveCompletionItem(model, position, item, token) {
+                    resolveCompletionItem(item, token) {
                         return item;
                     }
                 });
@@ -173,7 +179,7 @@ export function SetupEditor() {
             //https://github.com/Microsoft/monaco-editor/issues/852
             //https://github.com/Microsoft/monaco-editor/issues/935
             monaco.languages.registerDefinitionProvider('lpc', {
-                async provideDefinition(model: monaco.editor.ITextModel, position: monaco.Position, token: monaco.CancellationToken): Promise<monaco.languages.DefinitionLink[] | monaco.languages.Definition | undefined> {
+                async provideDefinition(model: monaco.editor.ITextModel, position: monaco.Position, token: monaco.CancellationToken): Promise<monaco.languages.LocationLink[] | monaco.languages.Location | undefined> {
                     if (!model) return undefined;
                     if (!$lpcDefineCache) $lpcDefineCache = {};
                     const defines = [];
@@ -659,7 +665,8 @@ export class MonacoCodeEditor extends EditorBase {
     private $options = {
         tabSize: 3,
         insertSpaces: true,
-        trimAutoWhitespace: true
+        trimAutoWhitespace: true,
+        bracketColorization: true
     };
 
     public decorations;
@@ -678,7 +685,8 @@ export class MonacoCodeEditor extends EditorBase {
             this.options = {
                 tabSize: 3,
                 insertSpaces: true,
-                trimAutoWhitespace: true
+                trimAutoWhitespace: true,
+                bracketColorization: true
             };
     }
 
@@ -699,14 +707,16 @@ export class MonacoCodeEditor extends EditorBase {
         if (this.$options)
             this.$model.updateOptions({
                 tabSize: this.$options.hasOwnProperty('tabSize') ? this.$options.tabSize : 3,
-                insertSpaces: this.$options.hasOwnProperty('tabSize') ? this.$options.insertSpaces : true,
-                trimAutoWhitespace: this.$options.hasOwnProperty('tabSize') ? this.$options.trimAutoWhitespace : true
+                insertSpaces: this.$options.hasOwnProperty('insertSpaces') ? this.$options.insertSpaces : true,
+                trimAutoWhitespace: this.$options.hasOwnProperty('trimAutoWhitespace') ? this.$options.trimAutoWhitespace : true,
+                bracketColorizationOptions: { enabled: this.$options.hasOwnProperty('bracketColorization') ? this.$options.bracketColorization : true }
             });
         else
             this.$model.updateOptions({
                 tabSize: 3,
                 insertSpaces: true,
-                trimAutoWhitespace: true
+                trimAutoWhitespace: true,
+                bracketColorizationOptions: { enabled: true }
             });
         if (this.rawDecorations && this.rawDecorations.length !== 0) {
             this.$model.deltaDecorations([], this.rawDecorations);
@@ -981,8 +991,9 @@ export class MonacoCodeEditor extends EditorBase {
         this.$options = value;
         this.$model.updateOptions({
             tabSize: value.hasOwnProperty('tabSize') ? value.tabSize : 3,
-            insertSpaces: value.hasOwnProperty('tabSize') ? value.insertSpaces : true,
-            trimAutoWhitespace: value.hasOwnProperty('tabSize') ? value.trimAutoWhitespace : true
+            insertSpaces: value.hasOwnProperty('insertSpaces') ? value.insertSpaces : true,
+            trimAutoWhitespace: value.hasOwnProperty('trimAutoWhitespace') ? value.trimAutoWhitespace : true,
+            bracketColorizationOptions: { enabled: value.hasOwnProperty('bracketColorization') ? value.bracketColorization : true }
         });
     }
     public get options() { return this.$options; }
@@ -1267,7 +1278,7 @@ export class MonacoCodeEditor extends EditorBase {
                     label: 'Toggle &Word Wrap',
                     accelerator: 'Alt+Z',
                     click: () => {
-                        this.$editor.updateOptions({ wordWrap: (this.$editor.getConfiguration().wrappingInfo.isViewportWrapping ? 'off' : 'on') });
+                        this.$editor.updateOptions({ wordWrap: (this.$editor.getRawOptions().wordWrap ? 'off' : 'on') });
                     }
                 },
                 { type: 'separator' },

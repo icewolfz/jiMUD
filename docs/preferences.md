@@ -8,8 +8,9 @@ Reset - Resetting will revert all settings back to default values
 - `Auto connect delay` This determines the delay before an auto connect happens
 - `Auto create character` When connecting to mud and if it returns a character name, create/load character
 - `Auto login` Attempt to auto login using character and supplied password from character manager
+- `Auto takeover login` Automatically issue yes to takeover character after login
 - `Show character manager onload` open the character manager when the client first loads.
-- `Enable spellchecking` support spellchecking in command line and advanced editor
+- `Enable spellchecking` support spellchecking in command line and advanced editor **Requires restart**
 - `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
 - `Theme` the theme for the main client window
 - `On disconnect do` What to do when disconnected from the mud
@@ -18,6 +19,7 @@ Reset - Resetting will revert all settings back to default values
   - `Reconnect dialog` show the reconnect dialog with options and delayed reconnect timer
   - `Character manager` show character manager
   - `Close` close the client
+- `Max reconnect delay` set the maximum time in seconds, for reconnecting when using reconnect dialog, setting to 0 will revert to classic unlimited behavior.
 - `Check for updates on load` check for new version every time you load the client
 - `Enable sound` disable or enable sound globally
 
@@ -36,6 +38,7 @@ Reset - Resetting will revert all settings back to default values
 - `Hide trailing line`  Hide trailing empty line, **note** if more then one it will only hide the final line
 - `Enable colors` disable or enable all colors
 - `Enable background colors` disable or enable just background colors
+- `Show invalid MXP tags` display any MXP tags as normal text if they are not standard or custom elements
 
 ## Display > Fonts
 
@@ -113,6 +116,7 @@ Settings to control how to handle telnet options and emulation
 - `Persistent` causes the mapper window to remain in memory to help speed up load times on future uses, note this setting only has effect if mapper is not enabled
 - `Always on top of the main window` Force mapper window to always be above main client window, when ever client window is focused it will bring the mapper along with it. _When disabled requires mapper to be closed to fully exits client_ **Requires restart on windows**
 - `Always on top of all windows` Force mapper to always be on top of all windows
+- `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**
 
 ## Chat
 
@@ -136,7 +140,7 @@ Controls what is captured into the chat window
 - `Enable flashing text` Enable ansi flashing/blinking text, when disabled flashing text appears as underlined text **note** this can cause a performance hit when enabled.
 - `Enable rounded overlays` disable or enable rounded corner effect for selection and find highlighting
 - `Split scroll` Enable split screen scroll, this will allow you to scroll while displaying the most recent lines at the bottom, has known issues with text selection and find system scroll to view
-- `Split scroll live update` determines how the split screen updates as resize bar is adjusted, if on it will update once resize bar released, if slow resizing enable this as it should reduce cpu load during drag
+- `Split scroll live update` determines how the split screen updates as resize bar is adjusted, if on it will update as resize bar is moved, if slow resizing disable this as it should reduce cpu load during drag
 - `Show split button` Show or hide split toggle button in split scroll to allow for quick toggling
 - `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
 
@@ -145,6 +149,7 @@ Controls what is captured into the chat window
 - `Always on top of the main window` Force chat window to always be above main client window, when ever client window is focused it will bring the chat window along with it. _When disabled requires chat to be closed to fully exits client_ **Requires restart on windows**
 - `Always on top of all windows` Force chat window to always be on top of all windows
 - `Persistent` causes the chat window to remain in memory to help speed up load times on future uses, note this setting only has effect if capture settings are off
+- `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**
 
 ## Status
 
@@ -179,26 +184,47 @@ Controls what is captured into the chat window
 
 ## Advanced
 
-- `Connect to development` Connect to the development mud.
 - `Enable gamepads` Enable gamepad support to allow creating macros using gamepad axes or buttons. **Experimental**
 - `Enable GMCP Ping for lag meter` When text received from mud send back a GMCP ping if enabled to get a better time for the lag meter.
 - `Enable debug` Will display debug data to the dev tool console
 - `Log errors` Log errors to {data}/jimud.error.log [FAQ - Predefined path variables](faq.md#what-predefined-variables-can-be-use-for-paths)
 - `Show extended error messages` Display extended stack information for errors
-- `Enable Keep alive` Enable socket keep alive
-- `Keep alive delay` The number of seconds for initial keep alive delay
+- `Fix hidden windows` Move windows that have been hidden off screen to on onscreen
 - `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
+- `Hide when minimized` will hide the main window and any window set as a child **note** due to bugs in linux this feature may not work
+- `Show in taskbar` will show or hide the main window from the system's taskbar
+- `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden
+- `Enable warning dialog when connected and closing client` disable or enable warning check when closing mud and connected
+- `Enable warning dialog when closing client and child windows are open` disable or enable warning dialog when closing and child windows are open
+- `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character
+
+## Advanced > Backup
+
 - `Backup save` what to save when using remote backup systems
 - `Backup load` what to load when using remote backup systems
 - `Backup all profiles` backup all profiles or just enabled profiles
-- `Hide when minimized` will hide the main window and any window set as a child
+
+## Advanced > Connection
+
+- `Connect to development` Connect to the development mud.
+- `Enable Keep alive` Enable socket keep alive
+- `Keep alive delay` The number of seconds for initial keep alive delay
+- `Enable allow Half Open sockets` Indicates whether half-opened TCP connections are allowed
+
+## Advanced > Profile manager
+
 - `Enable profile manager code editor` disable or enable the code editor for the profile manager
 - `Enable profile manager file watcher` disable or enable watching for profile file changes to warn when saving overrides
+- `Profile manager sort order` determine how items are sorted in the profile manager display tree, priority is first, then alpha, finally index, you cna have one or all three options enabled **note** Changing this setting while profile manager is open will not resort the displayed items
+  - `Alpha` sort by alpha numeric
+  - `Index` sort by index
+  - `Priority` sort by item priority
+- `Profile manager sort direction` select to display items in ascending or descending order  **note** Changing this setting while profile manager is open will not resort the displayed items
 
 ## Advanced > Tray
 
 - `Show tray icon` display an icon in the system tray/notification area
-- `Tray icon single click` set what happens when the tray icon is clicked
+- `Tray icon single click` set what happens when the tray icon is clicked  **note** see known issues with linux
   - `None` - do nothing when clicked
   - `Show` - show or focus on client window
   - `Hide` - hide or minimize client window based on `Hide when minimized` setting

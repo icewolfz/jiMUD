@@ -1,8 +1,9 @@
 //spell-checker:ignore dropdown, selectall, treeview, displaytype, uncheck, selectpicker, Profiledefault, askoncancel, triggernewline, triggerprompt, exportmenu
 //spell-checker:ignore gamepadconnected gamepaddisconnected
-import { shell, remote, ipcRenderer } from 'electron';
-const { dialog, Menu, MenuItem, nativeImage } = remote;
-import { FilterArrayByKeyValue, parseTemplate, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode } from './library';
+import { ipcRenderer, nativeImage } from 'electron';
+const remote = require('@electron/remote');
+const { Menu, MenuItem } = remote;
+import { FilterArrayByKeyValue, parseTemplate, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode, walkSync } from './library';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroModifiers, ItemStyle } from './profile';
 export { MacroDisplay } from './profile';
 import { Settings } from './settings';
@@ -27,10 +28,16 @@ let _enabled = [];
 let _never = true;
 let _gamepads = false;
 let _watch = true;
+let _sort = 6;
+let _sortDir = 1;
 let _close;
 let _loading = 0;
 let _ide = true;
 let _macro = false;
+let archiver;
+let unarchiver;
+let archive;
+let _spellchecker = true;
 
 const _controllers = {};
 let _controllersCount = 0;
@@ -191,6 +198,7 @@ const menubar: Menubar = new Menubar([
             { type: 'separator' },
             { label: 'E&xport current...', click: exportCurrent },
             { label: 'Export &all...', click: exportAll },
+            { label: 'Export all as &zip...', click: exportAllZip },
             { type: 'separator' },
             { label: '&Import...', click: importProfiles },
             { type: 'separator' },
@@ -213,10 +221,18 @@ const menubar: Menubar = new Menubar([
     }
 ]);
 
+interface MenuItemConstructorOptionsCustom extends Electron.MenuItemConstructorOptions {
+    x?: number;
+    y?: number;
+    sel?: number;
+    idx?: number;
+    word?: string;
+}
+
 function addInputContext() {
-    window.addEventListener('contextmenu', (e) => {
+    remote.getCurrentWindow().webContents.on('context-menu', (e, props) => {
         e.preventDefault();
-        const inputMenu = Menu.buildFromTemplate([
+        const inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
             {
                 label: 'Undo',
                 click: () => { doUndo(); },
@@ -232,10 +248,46 @@ function addInputContext() {
             { role: 'copy' },
             { role: 'paste' },
             { type: 'separator' },
-            { role: 'selectall' }
+            { role: 'selectAll' }
         ]);
+        if (ipcRenderer.sendSync('get-global', 'debug')) {
+            inputMenu.append(new MenuItem({ type: 'separator' }));
+            inputMenu.append(new MenuItem(<MenuItemConstructorOptionsCustom>{
+                label: 'Inspect',
+                x: props.x,
+                y: props.y,
+                click: (item: any) => {
+                    remote.getCurrentWindow().webContents.inspectElement(item.x, item.y);
+                }
+            }));
+        }
+        if (_spellchecker && props.dictionarySuggestions.length) {
+            inputMenu.insert(0, new MenuItem({ type: 'separator' }));
+            for (let w = props.dictionarySuggestions.length - 1; w >= 0; w--) {
+                inputMenu.insert(0, new MenuItem(<MenuItemConstructorOptionsCustom>{
+                    label: props.dictionarySuggestions[w],
+                    x: props.x,
+                    y: props.y,
+                    sel: props.selectionText.length - props.misspelledWord.length,
+                    idx: props.selectionText.indexOf(props.misspelledWord),
+                    word: props.misspelledWord,
+                    click: (item: any) => {
+                        const el = $(document.elementFromPoint(item.x, item.y));
+                        let value: string = (<string>el.val());
+                        const start = (<HTMLInputElement>el[0]).selectionStart;
+                        const wStart = start + item.idx;
+                        value = value.substring(0, wStart) + item.label + value.substring(wStart + item.word.length);
+                        el.val(value);
+                        (<HTMLInputElement>el[0]).selectionStart = start;
+                        (<HTMLInputElement>el[0]).selectionEnd = start + item.label.length + item.sel;
+                        el.blur();
+                        el.focus();
+                    }
+                }));
+            }
+        }
         inputMenu.popup({ window: remote.getCurrentWindow() });
-    }, false);
+    });
 }
 
 function profileID(name) {
@@ -450,22 +502,20 @@ export function UpdateContextSample() {
 
 export function openImage(field?, callback?) {
     if (!field) field = '#button-icon';
-    dialog.showOpenDialog(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
         defaultPath: path.dirname($(field).val()),
         filters: [
-
             { name: 'Images (*.jpg, *.png, *.gif)', extensions: ['jpg', 'png', 'gif'] },
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
-    },
-        (fileNames) => {
-            if (fileNames === undefined) {
-                return;
-            }
-            $(field).keyup().val(fileNames[0]).keydown();
-            UpdateButtonSample();
-            if (callback) callback();
-        });
+    }).then(result => {
+        if (result.filePaths === undefined || result.filePaths.length === 0) {
+            return;
+        }
+        $(field).trigger('keyup').val(result.filePaths[0]).trigger('keydown');
+        UpdateButtonSample();
+        if (callback) callback();
+    });
 }
 
 function MacroKeys(item) {
@@ -692,7 +742,7 @@ function UpdateItemNode(item, updateNode?, old?) {
     }
     if (updateNode.id === currentNode.id)
         $('#editor-title').text(updateNode.dataAttr.type + ': ' + updateNode.text);
-    sortNodeChildren('Profile' + newNode.dataAttr.profile + key);
+    sortNodeChildren('Profile' + profileID(newNode.dataAttr.profile) + key);
 }
 
 function getEditorValue(editor, style: ItemStyle) {
@@ -917,14 +967,22 @@ function UpdateProfileNode(profile?) {
 }
 
 function sortNodes(a, b) {
-    if (a.dataAttr.priority > b.dataAttr.priority)
-        return -1;
-    if (a.dataAttr.priority < b.dataAttr.priority)
-        return 1;
-    if (a.dataAttr.index < b.dataAttr.index)
-        return -1;
-    if (a.dataAttr.index > b.dataAttr.index)
-        return 1;
+    if ((_sort & 4) === 4) {
+        if (a.dataAttr.priority > b.dataAttr.priority)
+            return -1 * _sortDir;
+        if (a.dataAttr.priority < b.dataAttr.priority)
+            return 1 * _sortDir;
+    }
+    if ((_sort & 2) === 2) {
+        const r = a.text.localeCompare(b.text);
+        if (r !== 0) return r * _sortDir;
+    }
+    if ((_sort & 8) === 8) {
+        if (a.dataAttr.index < b.dataAttr.index)
+            return -1 * _sortDir;
+        if (a.dataAttr.index > b.dataAttr.index)
+            return 1 * _sortDir;
+    }
     return 0;
 }
 
@@ -1118,7 +1176,7 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
         data.name = val;
         changed++;
         if (profiles.contains(val)) {
-            dialog.showMessageBox(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                 type: 'error',
                 title: 'Profile name already used',
                 message: 'The name is already in use, pick a different one'
@@ -1141,7 +1199,7 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
 
         let node = $('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id'])[0];
         $('#profile-tree').treeview('updateNode', [node, newProfileNode()]);
-        node = $('#profile-tree').treeview('findNodes', ['^Profile' + val + '$', 'id'])[0];
+        node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
         if (selected) {
             $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
             currentNode = node;
@@ -2108,7 +2166,7 @@ function updateCurrent(): UpdateState {
 }
 
 function buildTreeview(data, skipInit?) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         currentNode = 0;
         $('#profile-tree').treeview({
             showBorder: false,
@@ -2262,12 +2320,15 @@ function getProfileData() {
 }
 
 function loadOptions() {
-    const options = Settings.load(remote.getGlobal('settingsFile'));
+    const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
     _never = options.profiles.askoncancel;
     _enabled = options.profiles.enabled;
     _ide = options.profiles.codeEditor;
     _gamepads = options.gamepads;
     _watch = options.profiles.watchFiles;
+    _sort = options.profiles.sortOrder;
+    _sortDir = options.profiles.sortDirection || 1;
+    _spellchecker = options.spellchecking || true;
     updatePads();
 
     let theme = parseTemplate(options.theme) + '.css';
@@ -2414,18 +2475,18 @@ export function init() {
         addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
     });
 
-    $('#macro-key').keydown((e) => {
+    $('#macro-key').on('keydown', e => {
         e.preventDefault();
         e.stopPropagation();
         return false;
     });
 
-    $('#macro-key').keypress((e) => {
+    $('#macro-key').on('keypress', e => {
         e.preventDefault();
         e.stopPropagation();
         return false;
     });
-    $('#macro-key').keyup((e) => {
+    $('#macro-key').on('keyup', e => {
         e.preventDefault();
         e.stopPropagation();
         const c = [];
@@ -2463,15 +2524,15 @@ export function init() {
         return false;
     });
 
-    $('#macro-key').focus(() => {
+    $('#macro-key').on('focus', () => {
         _macro = true;
         updatePads();
     });
-    $('#macro-key').blur(() => {
+    $('#macro-key').on('blur', () => {
         _macro = false;
     });
 
-    $('.btn-adv').click(function () {
+    $('.btn-adv').on('click', function () {
         const editor = $(this).closest('.panel-body').attr('id');
         let state = $(this).data('open') || false;
         state = !state;
@@ -2520,8 +2581,7 @@ export function init() {
             return;
         evt.returnValue = false;
         setTimeout(() => {
-            const choice = dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            const choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Profiles changed',
@@ -2533,7 +2593,7 @@ export function init() {
                 ipcRenderer.send('setting-changed', { type: 'profiles', name: 'askoncancel', value: false });
             if (choice === 0 || choice === 2) {
                 _close = true;
-                remote.getCurrentWindow().close();
+                ipcRenderer.invoke('window', 'close');
                 return;
             }
             evt.returnValue = false;
@@ -2547,7 +2607,7 @@ export function init() {
     $('select').on('focus', function () {
         // Store the current value on focus and on change
         $(this).data('previous-value', (<HTMLInputElement>this).value);
-    }).change(function () {
+    }).on('change', function () {
         updateCurrent();
         $(this).data('previous-value', (<HTMLInputElement>this).value);
     });
@@ -2562,7 +2622,7 @@ export function init() {
     $('input[type=\'number\']').on('focus', function () {
         // Store the current value on focus and on change
         $(this).data('previous-value', (<HTMLInputElement>this).value);
-    }).change(function () {
+    }).on('change', function () {
         updateCurrent();
         $(this).data('previous-value', (<HTMLInputElement>this).value);
     });
@@ -2583,7 +2643,7 @@ export function init() {
             $('#export .dropdown-menu').removeClass('dropdown-menu-right');
     });
 
-    $('#export').click(function () {
+    $('#export').on('click', function () {
         $(this).addClass('open');
         const pos = $(this).offset();
         const x = Math.floor(pos.left);
@@ -2591,6 +2651,7 @@ export function init() {
         const exportmenu = new Menu();
         exportmenu.append(new MenuItem({ label: 'Export current...', click: exportCurrent }));
         exportmenu.append(new MenuItem({ label: 'Export all...', click: exportAll }));
+        exportmenu.append(new MenuItem({ label: 'Export all as zip...', click: exportAllZip }));
         exportmenu.append(new MenuItem({ type: 'separator' }));
         exportmenu.append(new MenuItem({ label: 'Import...', click: importProfiles }));
         exportmenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
@@ -2965,20 +3026,41 @@ function sortFiles(a, b, p) {
     return a.localeCompare(b);
 }
 
-function sortTree() {
+export function sortTree(s?: boolean) {
     const data = [];
     let profile;
     let n;
+    let c;
+    let cl;
 
     for (profile in profiles.items) {
         if (!profiles.items.hasOwnProperty(profile) || profile === 'default') continue;
         n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + '$', 'id']);
-        data.push(cleanNode(n[0]));
+        n = cleanNode(n[0]);
+        if (s) {
+            cl = n.nodes.length;
+            for (c = 0; c < cl; c++) {
+                if (!n.nodes[c].nodes || n.nodes[c].nodes.length === 0)
+                    continue;
+                n.nodes[c].nodes = n.nodes[c].nodes.sort(sortNodes);
+            }
+        }
+        data.push(n);
     }
     data.sort((a, b) => { return a.text.localeCompare(b.text); });
     n = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
-    if (n.length > 0)
-        data.unshift(cleanNode(n[0]));
+    if (n.length > 0) {
+        n = cleanNode(n[0]);
+        if (s) {
+            cl = n.nodes.length;
+            for (c = 0; c < cl; c++) {
+                if (!n.nodes[c].nodes || n.nodes[c].nodes.length === 0)
+                    continue;
+                n.nodes[c].nodes = n.nodes[c].nodes.sort(sortNodes);
+            }
+        }
+        data.unshift(n);
+    }
     return buildTreeview(data, true);
 }
 
@@ -2998,21 +3080,21 @@ function loadActions(p, root) {
 
 export function setIcon(icon, field?, callback?) {
     if (!field) field = 'button';
-    $('#' + field + '-icon').keydown().val(path.join('{assets}', 'actions', icon)).keyup();
+    $('#' + field + '-icon').trigger('keydown').val(path.join('{assets}', 'actions', icon)).trigger('keyup');
     UpdateButtonSample();
     if (callback) callback();
 }
 
 export function doRefresh() {
     if (_undo.length > 0)
-        dialog.showMessageBox(remote.getCurrentWindow(), {
+        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
             type: 'warning',
             title: 'Refresh profiles',
             message: 'All unsaved or applied changes will be lost, refresh?',
             buttons: ['Yes', 'No'],
             defaultId: 1
-        }, (response) => {
-            if (response === 0) {
+        }).then(result => {
+            if (result.response === 0) {
                 filesChanged = false;
                 resetUndo();
                 profiles = new ProfileCollection();
@@ -3027,7 +3109,7 @@ export function doRefresh() {
                         profiles.add(Profile.Default);
                     startWatcher(p);
                 }
-                const options = Settings.load(remote.getGlobal('settingsFile'));
+                const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 _enabled = options.profiles.enabled;
                 buildTreeview(getProfileData());
             }
@@ -3047,7 +3129,7 @@ export function doRefresh() {
                 profiles.add(Profile.Default);
             startWatcher(p);
         }
-        const options = Settings.load(remote.getGlobal('settingsFile'));
+        const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
         _enabled = options.profiles.enabled;
         buildTreeview(getProfileData());
     }
@@ -3067,25 +3149,129 @@ function profileCopyName(name) {
 }
 
 function importProfiles() {
-    dialog.showOpenDialog({
+    ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
         title: 'Import profiles',
         filters: [
+            { name: 'Supported files (*.txt, *.zip)', extensions: ['txt', 'zip'] },
             { name: 'Text files (*.txt)', extensions: ['txt'] },
+            { name: 'Zip files (*.zip)', extensions: ['zip'] },
             { name: 'All files (*.*)', extensions: ['*'] }
         ],
         properties: ['multiSelections']
-    },
-        (fileNames) => {
-            if (fileNames === undefined || fileNames.length === 0) {
-                return;
-            }
-            const fl = fileNames.length;
-            for (let f = 0; f < fl; f++)
-                fs.readFile(fileNames[f], (err, data) => {
+    }).then(result => {
+        if (result.filePaths === undefined || result.filePaths.length === 0) {
+            return;
+        }
+        const names = [];
+        const _replace = [];
+        const fl = result.filePaths.length;
+        let all = 0;
+        let n;
+        for (let f = 0; f < fl; f++) {
+            if (path.extname(result.filePaths[f]) === '.zip') {
+                unarchiver = unarchiver || require('yauzl');
+                unarchiver.open(result.filePaths[f], { lazyEntries: true }, (err, zipFile) => {
                     if (err) throw err;
+                    zipFile.readEntry();
+                    zipFile.on('error', (err2) => {
+                        throw err2;
+                    });
+                    zipFile.on('entry', entry => {
+                        if (!/^profiles\/.*\.json$/.test(entry.fileName)) {
+                            zipFile.readEntry();
+                            return;
+                        }
+                        zipFile.openReadStream(entry, (err2, readStream) => {
+                            if (err2)
+                                throw err2;
+                            let data: any = [];
+                            readStream.on('data', (chunk) => {
+                                data.push(chunk);
+                            });
+                            readStream.on('end', () => {
+                                zipFile.readEntry();
+                                data = Buffer.concat(data).toString('utf8');
+                                data = JSON.parse(data);
+                                const p = Profile.load(data);
+                                if (profiles.contains(p)) {
+                                    if (all === 3) {
+                                        _replace.push(profiles.items[p.name.toLowerCase()].clone());
+                                        profiles.add(p);
+                                        _enabled = _enabled.filter((a) => { return a !== p.name.toLowerCase(); });
+                                        if (p.enabled)
+                                            _enabled.push(p.name.toLowerCase());
+                                        names.push(p.clone());
+                                        const nodes = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(p.name) + '$', 'id']);
+                                        $('#profile-tree').treeview('removeNode', [nodes, { silent: true }]);
+                                        $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                    }
+                                    else if (all === 5) {
+                                        n = profileCopyName(p.name);
+                                        p.name = n;
+                                        p.file = n.toLowerCase();
+                                        if (p.enabled)
+                                            _enabled.push(p.name.toLowerCase());
+                                        profiles.add(p);
+                                        names.push(p.clone());
+                                        $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                    }
+                                    else if (all !== 4) {
+                                        const response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                                            type: 'question',
+                                            title: 'Profiles already exists',
+                                            message: 'Profile named \'' + p.name + '\' exist, replace?',
+                                            buttons: ['Yes', 'No', 'Copy', 'Replace All', 'No All', 'Copy All'],
+                                            defaultId: 1
+                                        });
+                                        if (response === 0) {
+                                            _replace.push(profiles.items[p.name.toLowerCase()].clone());
+                                            profiles.add(p);
+                                            _enabled = _enabled.filter((a) => { return a !== p.name.toLowerCase(); });
+                                            if (p.enabled)
+                                                _enabled.push(p.name.toLowerCase());
+
+                                            names.push(p.clone());
+                                            const nodes = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(p.name) + '$', 'id']);
+                                            $('#profile-tree').treeview('removeNode', [nodes, { silent: true }]);
+                                            $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                        }
+                                        else if (response === 2) {
+                                            n = profileCopyName(p.name);
+                                            p.name = n;
+                                            p.file = n.toLowerCase();
+                                            profiles.add(p);
+                                            if (p.enabled)
+                                                _enabled.push(p.name.toLowerCase());
+                                            names.push(p.clone());
+                                            $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                        }
+                                        else if (response > 2)
+                                            all = response;
+                                    }
+                                }
+                                else {
+                                    names.push(p.clone());
+                                    profiles.add(p);
+                                    $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
+                                }
+                            });
+                        });
+                    })
+                        .once('error', (err2) => {
+                            throw err2;
+                        })
+                        .once('close', () => {
+
+                        });
+                });
+            }
+            else
+                fs.readFile(result.filePaths[f], (err, data) => {
+                    if (err) throw err;
+
                     data = JSON.parse(data);
                     if (!data || data.version !== 2) {
-                        dialog.showMessageBox(remote.getCurrentWindow(), {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                             type: 'error',
                             title: 'Invalid Profile',
                             message: 'Invalid profile unable to process.'
@@ -3093,17 +3279,13 @@ function importProfiles() {
                         return;
                     }
                     ipcRenderer.send('set-progress', { value: 0.5, options: { mode: 'indeterminate' } });
-                    let all = 0;
                     if (data.profiles) {
-                        const names = [];
-                        const _replace = [];
                         const keys = Object.keys(data.profiles);
-                        let n;
                         let k = 0;
                         const kl = keys.length;
                         let item: (Alias | Button | Macro | Trigger | Context);
                         for (; k < kl; k++) {
-                            const p = new Profile(keys[k]);
+                            const p = new Profile(keys[k], false);
                             p.priority = data.profiles[keys[k]].priority;
                             //p.enabled = data.profiles[keys[k]].enabled;
                             p.enableMacros = data.profiles[keys[k]].enableMacros;
@@ -3191,7 +3373,7 @@ function importProfiles() {
                                     $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                 }
                                 else if (all !== 4) {
-                                    const response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                                    const response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                                         type: 'question',
                                         title: 'Profiles already exists',
                                         message: 'Profile named \'' + p.name + '\' exist, replace?',
@@ -3230,21 +3412,22 @@ function importProfiles() {
                                 $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                             }
                         }
-                        if (names.length > 0) {
-                            sortTree();
-                            pushUndo({ action: 'add', type: 'profile', item: names, replaced: _replace });
-                        }
                     }
                     ipcRenderer.send('set-progress', { value: -1, options: { mode: 'normal' } });
                 });
-        });
+        }
+        if (names.length > 0) {
+            sortTree();
+            pushUndo({ action: 'add', type: 'profile', item: names, replaced: _replace });
+        }
+    });
 }
 
 function trashProfiles(p) {
     if (_remove.length > 0) {
         const rl = _remove.length;
         for (let r = 0; r < rl; r++) {
-            shell.moveItemToTrash(path.join(p, _remove[r].file.toLowerCase() + '.json'));
+            ipcRenderer.send('trash-item', path.join(p, _remove[r].file.toLowerCase() + '.json'));
         }
     }
 }
@@ -3253,22 +3436,22 @@ export function saveProfiles(clearNow?: boolean) {
     if (updateCurrent() !== UpdateState.NoChange)
         return false;
     if (filesChanged)
-        dialog.showMessageBox(remote.getCurrentWindow(), {
+        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
             type: 'question',
             title: 'Profiles updated',
             message: 'Profiles have been updated outside of manager, save anyways?',
             buttons: ['Yes', 'No'],
             defaultId: 1
-        }, (response) => {
-            if (response === 0) {
+        }).then(result => {
+            if (result.response === 0) {
                 const p = path.join(parseTemplate('{data}'), 'profiles');
                 if (!existsSync(p))
                     fs.mkdirSync(p);
                 profiles.save(p);
                 trashProfiles(p);
-                const options = Settings.load(remote.getGlobal('settingsFile'));
+                const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 options.profiles.enabled = _enabled;
-                options.save(remote.getGlobal('settingsFile'));
+                options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
                 ipcRenderer.send('reload-profiles');
                 if (clearNow)
@@ -3284,9 +3467,9 @@ export function saveProfiles(clearNow?: boolean) {
         profiles.save(p);
         trashProfiles(p);
 
-        const options = Settings.load(remote.getGlobal('settingsFile'));
+        const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
         options.profiles.enabled = _enabled;
-        options.save(remote.getGlobal('settingsFile'));
+        options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
         ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
         ipcRenderer.send('reload-profiles');
         if (clearNow)
@@ -3312,6 +3495,7 @@ function initEditor(id) {
     const textarea = $('#' + id).hide();
     $('#' + id + '-editor').css('display', 'block');
     ace.require('ace/ext/language_tools');
+    ace.require('ace/ext/spellcheck');
     editors[id] = ace.edit(id + '-editor');
     const session = editors[id].getSession();
     editors[id].$blockScrolling = Infinity;
@@ -3439,14 +3623,14 @@ function updateUndoState() {
 }
 
 function DeleteProfileConfirm(profile) {
-    dialog.showMessageBox(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
         type: 'question',
         title: 'Delete profile?',
         message: 'Delete ' + profile.name + '?',
         buttons: ['Yes', 'No'],
         defaultId: 1
-    }, (response) => {
-        if (response === 0) DeleteProfile(profile);
+    }).then(result => {
+        if (result.response === 0) DeleteProfile(profile);
     });
 }
 
@@ -3474,14 +3658,14 @@ function DeleteProfile(profile, customUndo?: boolean) {
 }
 
 function DeleteItems(type, key, profile) {
-    dialog.showMessageBox(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
         type: 'question',
         title: 'Delete ' + type + '?',
         message: 'Are you sure you want to delete all ' + key + '?',
         buttons: ['Yes', 'No'],
         defaultId: 1
-    }, (response) => {
-        if (response === 0) {
+    }).then(result => {
+        if (result.response === 0) {
             const _u = { action: 'group', add: [], delete: [] };
             const n = $('#profile-tree').treeview('findNodes', ['Profile' + profileID(profile.name) + key, 'id']);
             $('#profile-tree').treeview('expandNode', [n, { levels: 1, silent: true }]);
@@ -3495,14 +3679,14 @@ function DeleteItems(type, key, profile) {
 }
 
 function DeleteItemConfirm(type, key, idx, profile) {
-    dialog.showMessageBox(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
         type: 'question',
         title: 'Delete ' + type + '?',
         message: 'Are you sure you want to delete this ' + type + '?',
         buttons: ['Yes', 'No'],
         defaultId: 1
-    }, (response) => {
-        if (response === 0) {
+    }).then(result => {
+        if (result.response === 0) {
             DeleteItem(type.toLowerCase(), key, idx, profile);
         }
     });
@@ -3553,16 +3737,16 @@ export function doClose() {
         window.close();
     }
     else {
-        dialog.showMessageBox(remote.getCurrentWindow(), {
+        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
             type: 'warning',
             title: 'Profiles changed',
             message: 'All unsaved changes will be lost, close?',
             buttons: ['Yes', 'No', 'Never ask again'],
             defaultId: 1
-        }, (response) => {
-            if (response === 0)
+        }).then(result => {
+            if (result.response === 0)
                 window.close();
-            else if (response === 2) {
+            else if (result.response === 2) {
                 _never = false;
                 _close = true;
                 window.close();
@@ -3594,14 +3778,14 @@ export function doReset(node) {
         if (!node) return;
     }
     const profile = profiles.items[node.dataAttr.profile];
-    dialog.showMessageBox(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
         type: 'warning',
         title: 'Reset ' + profile.name,
         message: 'Resetting will loose all profile data, reset?',
         buttons: ['Yes', 'No'],
         defaultId: 1
-    }, (response) => {
-        if (response === 0) {
+    }).then(result => {
+        if (result.response === 0) {
             pushUndo({ action: 'reset', type: 'profile', profile: profile.clone() });
             let o;
             let n = $('#profile-tree').treeview('findNodes', ['Profile' + profileID(profile.name) + 'macros[0-9]+', 'id']);
@@ -3835,11 +4019,19 @@ ipcRenderer.on('profile-edit-item', (event, profile, type, index) => {
 });
 
 ipcRenderer.on('reload-options', (event) => {
+    const so = _sort;
+    const sd = _sortDir;
     loadOptions();
+    if (so !== _sort || sd !== _sortDir)
+        sortTree(true);
 });
 
 ipcRenderer.on('change-options', (event, file) => {
+    const so = _sort;
+    const sd = _sortDir;
     loadOptions();
+    if (so !== _sort || sd !== _sortDir)
+        sortTree(true);
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
 });
@@ -3878,47 +4070,123 @@ ipcRenderer.on('profile-toggled', (event, profile, enabled) => {
 
 function exportAll() {
     clearButton('#export');
-    dialog.showSaveDialog(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
         title: 'Export all profiles',
         defaultPath: 'jiMUD.profiles.txt',
         filters: [
             { name: 'Text files (*.txt)', extensions: ['txt'] },
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
-    },
-        (fileName) => {
-            if (fileName === undefined) {
-                return;
-            }
-            const data = {
-                version: 2,
-                profiles: profiles.clone(2)
-            };
-            fs.writeFileSync(fileName, JSON.stringify(data));
-        });
+    }).then((result) => {
+        if (result.filePath === undefined || result.filePath.length === 0) {
+            return;
+        }
+        const data = {
+            version: 2,
+            profiles: profiles.clone(2)
+        };
+        fs.writeFileSync(result.filePath, JSON.stringify(data));
+    });
 
+}
+
+$(window).keydown((event) => {
+    if ((<HTMLDialogElement>document.getElementById('progress-dialog')).open) {
+        event.preventDefault();
+        return false;
+    }
+});
+
+// eslint-disable-next-line no-unused-vars
+function exportAllZip() {
+    const file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
+        title: 'Save as...',
+        defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-profiles.zip'),
+        filters: [
+            { name: 'Zip files (*.zip)', extensions: ['zip'] },
+            { name: 'All files (*.*)', extensions: ['*'] }
+        ]
+    });
+    if (file === undefined || file.length === 0)
+        return;
+
+    showProgressDialog();
+    archiver = archiver || require('yazl');
+    const data = parseTemplate('{data}');
+    archive = new archiver.ZipFile();
+
+    let files;
+    if (isDirSync(path.join(data, 'profiles'))) {
+        files = walkSync(path.join(data, 'profiles'));
+        if (files.length === 0) {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox',
+                {
+                    type: 'error',
+                    title: 'No logs found',
+                    message: 'No logs to backup',
+                    defaultId: 1
+                });
+            return;
+        }
+        files.files.forEach(f => {
+            archive.addFile(f, f.substring(data.length + 1).replace(/\\/g, '/'));
+        });
+    }
+
+    archive.outputStream.pipe(fs.createWriteStream(file)).on('close', closeProgressDialog);
+    archive.end(closeProgressDialog);
+}
+
+function showProgressDialog() {
+    const progress: HTMLDialogElement = <HTMLDialogElement>document.getElementById('progress-dialog');
+    if (progress.open) return;
+    setProgressDialogValue(0);
+    menubar.enabled = false;
+    progress.showModal();
+}
+
+function setProgressDialogValue(value) {
+    ipcRenderer.send('set-progress', { value: value });
+    ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+    (<any>document.getElementById('progress-dialog-progressbar')).value = value * 100;
+}
+
+function closeProgressDialog() {
+    const progress: HTMLDialogElement = <HTMLDialogElement>document.getElementById('progress-dialog');
+    if (progress.open)
+        progress.close();
+    setProgressDialogValue(-1);
+    document.getElementById('progress-dialog-progressbar').removeAttribute('value');
+    archive = null;
+    menubar.enabled = true;
+}
+
+// eslint-disable-next-line no-unused-vars
+function cancelProgress() {
+    if (archive)
+        archive.abort();
+    closeProgressDialog();
 }
 
 function exportCurrent() {
     clearButton('#export');
-    dialog.showSaveDialog(remote.getCurrentWindow(), {
+    ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
         title: 'Export profile',
         defaultPath: 'jiMUD.' + profileID(currentProfile.name) + '.txt',
         filters: [
             { name: 'Text files (*.txt)', extensions: ['txt'] },
             { name: 'All files (*.*)', extensions: ['*'] }
         ]
-    },
-        (fileName) => {
-            if (fileName === undefined) {
-                return;
-            }
-            const data = {
-                version: 2,
-                profiles: {}
-            };
-            data.profiles[currentProfile.name] = currentProfile.clone(2);
-            fs.writeFileSync(fileName, JSON.stringify(data));
-        });
+    }).then((result) => {
+        if (result.filePath === undefined || result.filePath.length === 0) {
+            return;
+        }
+        const data = {
+            version: 2,
+            profiles: {}
+        };
+        data.profiles[currentProfile.name] = currentProfile.clone(2);
+        fs.writeFileSync(result.filePath, JSON.stringify(data));
+    });
 
 }

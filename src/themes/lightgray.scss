@@ -40,7 +40,7 @@ body {
 #commandbox {
     left: 0px;
     top: 0px;
-    right: 60px;
+    right: 112px;
     bottom: 0px;
     background-color: white;
 }
@@ -72,6 +72,19 @@ body {
     padding: 1px;
 }
 
+#bb-scroll-up {
+    left: 1px;
+    top: 0px;
+    width: 31px;
+    margin-top: 0;
+}
+
+#bb-scroll-down {
+    left: 1px;
+    bottom: 0px;
+    width: 31px;
+    margin-bottom: 0;
+}
 
 /* Let's get this party started */
 .scroll-track {
@@ -107,14 +120,14 @@ body {
     border-right: 1px solid ButtonShadow;
     border-bottom: 1px solid ButtonShadow;
     z-index: 2000;
-    cursor: default;    
+    cursor: default;
 }
 
 .scroll-split-button:active, .scroll-split-button:focus {
     background-color: #e0e0e0;
     border-color: #dbdbdb;
     background-image: none;
-    box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
 }
 
 .scroll-split-button.active {
@@ -151,7 +164,7 @@ body {
     border-top: 1px solid ButtonHighlight;
     border-left: 1px solid ButtonHighlight;
     border-right: 1px solid ButtonShadow;
-    border-bottom: 1px solid ButtonShadow;    
+    border-bottom: 1px solid ButtonShadow;
 }
 
 .scroll-horizontal {
@@ -173,14 +186,12 @@ body {
     height: 12px;
 }
 
-
 /* Track */
 
 #display::-webkit-scrollbar-track,
 #bars::-webkit-scrollbar-track {
     background-color: #{$panelBackground};
 }
-
 
 /* Handle */
 
@@ -200,7 +211,6 @@ body {
     background: #848282;
 }
 
-
 #display::-webkit-scrollbar-thumb:window-inactive,
 #bars::-webkit-scrollbar-thumb:window-inactive {
     background: #888;
@@ -209,8 +219,8 @@ body {
 #display::-webkit-scrollbar-corner,
 #bars::-webkit-scrollbar-corner {
     background-color: #{$panelBackground};
-    border-top:1px solid #{$borderColor};
-    border-left:1px solid #{$borderColor};
+    border-top: 1px solid #{$borderColor};
+    border-left: 1px solid #{$borderColor};
 }
 
 .find {
@@ -326,7 +336,6 @@ body {
     background: rgb(116, 192, 114);
 }
 
-
 /* begin status */
 
 #status {
@@ -421,11 +430,11 @@ body {
     background-image: url("#{$images}/status/weatherhailhard.png");
 }
 
-.weather-rain #environmentweather {
+.weather-rain #environmentweather, .weather-zombie_rain #environmentweather {
     background-image: url("#{$images}/status/weatherrain.png");
 }
 
-.weather-rain.intensity-hard #environmentweather {
+.weather-rain.intensity-hard #environmentweather, .weather-zombie_rain.intensity-hard #environmentweather {
     background-image: url("#{$images}/status/weatherrainhard.png");
 }
 
@@ -443,6 +452,14 @@ body {
 
 .weather-sleet.intensity-hard #environmentweather {
     background-image: url("#{$images}/status/weathersleethard.png");
+}
+
+.weather-blood_rain #environmentweather {
+    background-image: url("#{$images}/status/weatherblood_rain.png");
+}
+
+.weather-blood_rain.intensity-hard #environmentweather {
+    background-image: url("#{$images}/status/weatherblood_rainhard.png");
 }
 
 #environment {
@@ -576,7 +593,6 @@ body {
 .combat-name {
     right: 1px;
     left: 38px;
-    font-size: 0.75em;
 }
 
 .combat-name:first-letter {
@@ -740,13 +756,13 @@ body {
 }
 
 .progressbar {
-    height: 13px;
-    font-size: 0.75em;
+    height: 14px;
+    font-size: 1em;
     border: 1px solid #{$borderColor};
-    height: 13px;
     width: 118px;
     -webkit-border-radius: 6px;
     border-radius: 6px;
+
     /* future proofing */
     background: -webkit-linear-gradient(left, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
     background: linear-gradient(to right, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
@@ -755,6 +771,11 @@ body {
 #hp-status {
     text-align: left;
     color: #{$color};
+}
+
+#hp-status span {
+    overflow: hidden;
+    display: inline-block;
 }
 
 .progressbar .progressbar-text {
@@ -775,6 +796,7 @@ body {
     bottom: 3px;
     right: 3px;
     left: 3px;
+    font-size: 0.75em;
 }
 
 #lagMeter.progressbar .progressbar-text {
@@ -790,9 +812,7 @@ body {
     filter: drop-shadow(0px 0px 0px black);
 }
 
-
 /** end stats **/
-
 
 /** button stats */
 
@@ -803,13 +823,35 @@ body {
 }
 
 .command-history {
-    right:25px;
-    top:0;
+    right: 25px;
+    top: 0;
 }
 
 #history-dropup .fa {
     margin-top: 3px;
     font-size: 18px;
+}
+
+.command-history {
+    right: 78px;
+    top: 0px;
+}
+
+#btnTriggers {
+    right: 26px;
+}
+
+#btnParsing {
+    right: 52px;
+}
+
+#btnTriggers, #btnParsing {
+    top: 0px;
+    text-align: center;
+    height: 24px;
+    width: 24px;
+    font-size: 22px;
+    line-height: 22px;
 }
 
 #advedit {
@@ -821,7 +863,7 @@ body {
     line-height: 22px;
 }
 
-#advedit .fa {
+#advedit .fa, #btnTriggers .fa, #btnParsing .fa {
     margin-top: 3px;
     font-size: 18px;
 }
@@ -837,6 +879,7 @@ body {
     font-weight: 400;
     white-space: nowrap;
     border: 1px solid #ccc;
+    width: 31px;
 }
 
 .button img,
@@ -854,7 +897,7 @@ body {
     background-color: #e0e0e0;
     border-color: #dbdbdb;
     background-image: none;
-    box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
 }
 
 .button.on {
@@ -893,6 +936,10 @@ body {
     color: #333;
     border-color: #adadad;
     text-decoration: none;
+}
+
+.button:hover .overlay, .button.on:hover {
+    background-color: rgba(255,255,255, 0.40);
 }
 
 #connect img {
@@ -942,6 +989,5 @@ body {
     background: url(#{$images}/icons/png/map.black.png) no-repeat;
     background-position: 5px -1px;
 }
-
 
 /** button end */

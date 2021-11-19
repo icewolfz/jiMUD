@@ -203,16 +203,65 @@ body {
     z-index: 5;
     width: 32px;
     position: absolute;
+    overflow: hidden;
+}
+
+#buttonbar.scroll {
+    /*
+    padding-top: 18px;
+    padding-bottom: 18px;
+    */
+}
+
+#bb-scroll-up, #bb-scroll-down {
+    left: 2px;
+    position: absolute;
+    text-align: center;
+    width: 32px;
+    z-index: 100000;
+    height: 16px;
+    margin-top: 0;
+}
+
+#bb-scroll-up:focus, #bb-scroll-down:focus {
+    /*
+    color: inherit !important;
+    background-color: inherit !important;
+    */
+}
+
+#bb-scroll-up .fa, #bb-scroll-down .fa {
+    margin-top: 0;
+    font-size: 16px;
+}
+
+#bb-scroll-up {
+    top: 2px;
+}
+
+#bb-scroll-down {
+    bottom: 2px;
 }
 
 .command-history {
     position: absolute !important;
-    top: 3px;
-    right:23px;
+    top: 2px;
+    right: 64px;
 }
 
-#advedit {
+#btnParsing {
+    top: 2px;
+    right: 42px;
+}
+
+#btnTriggers {
+    top: 2px;
+    right: 22px;
+}
+
+#advedit, #btnTriggers, #btnParsing {
     position: absolute;
+    border-radius: 4px;
 }
 
 .find {
@@ -364,6 +413,7 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    font-size: 1em;
 }
 
 .combat-bar .progressbar {
@@ -510,4 +560,10 @@ dialog {
 
 .command-history ul {
     overflow: auto;
+}
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

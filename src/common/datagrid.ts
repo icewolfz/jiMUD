@@ -3,7 +3,8 @@ import EventEmitter = require('events');
 import { capitalize, clone } from './library';
 import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, SelectValueEditor, CollectionValueEditor, ButtonValueEditor } from './value.editors';
 export { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, SelectValueEditor, CollectionValueEditor, ButtonValueEditor } from './value.editors';
-const { clipboard, remote } = require('electron');
+const { clipboard } = require('electron');
+const remote = require('@electron/remote');
 const { Menu } = remote;
 
 export interface DataGridOptions {
@@ -482,14 +483,14 @@ export class DataGrid extends EventEmitter {
             this.emit('contextmenu', e);
             if (e.defaultPrevented) return;
             if (e.srcElement && this.$editor) {
-                let row = e.srcElement.closest('tr.datagrid-row');
+                let row = (<HTMLElement>e.srcElement).closest('tr.datagrid-row');
                 if (!row) {
-                    if (e.srcElement.classList.contains('grid-editor-dropdown'))
+                    if ((<HTMLElement>e.srcElement).classList.contains('grid-editor-dropdown'))
                         return;
-                    row = e.srcElement.closest('.property-grid-editor-flag-dropdown');
+                    row = (<HTMLElement>e.srcElement).closest('.property-grid-editor-flag-dropdown');
                     if (row) return;
                 }
-                else if (row === this.$editor.el && !e.srcElement.classList.contains('datagrid-cell'))
+                else if (row === this.$editor.el && !(<HTMLElement>e.srcElement).classList.contains('datagrid-cell'))
                     return;
             }
             const temp = [];
@@ -2053,7 +2054,7 @@ export class DataGrid extends EventEmitter {
     }
 
     public expandRows(rows) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             if ((this._updating & UpdateType.rows) === UpdateType.rows || (this._updating & UpdateType.buildRows) === UpdateType.buildRows) {
                 setTimeout(() => {
                     this.expandRows(rows).then(resolve);
@@ -2082,7 +2083,7 @@ export class DataGrid extends EventEmitter {
     }
 
     public collapseRows(rows) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             if ((this._updating & UpdateType.rows) === UpdateType.rows || (this._updating & UpdateType.buildRows) === UpdateType.buildRows) {
                 setTimeout(() => {
                     this.collapseRows(rows).then(resolve);

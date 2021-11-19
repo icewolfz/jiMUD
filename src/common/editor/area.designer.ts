@@ -1,6 +1,6 @@
 //spell-checker:ignore MONTYPE ROOMTYPE datagrid propertygrid dropdown polyfill MODROOM, SUBCLASSER LOCKPICK selectall waterbreathing
 //spell-checker:ignore consolas lucida bitstream tabbable varargs crafter mgive blacksmithing glasssmithing stonemasonry doublewielding warhammer flamberge nodachi
-//spell-checker:ignore bandedmail splintmail chainmail ringmail scalemail overclothing polearm tekagi shuko tekko bardiche katana wakizashi pilum warstaff
+//spell-checker:ignore nonetrackable bandedmail splintmail chainmail ringmail scalemail overclothing polearm tekagi shuko tekko bardiche katana wakizashi pilum warstaff
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { createFunction, formatFunctionPointer, formatArgumentList, formatMapping } from './lpc';
 import { Splitter, Orientation } from '../splitter';
@@ -8,8 +8,7 @@ import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, stripQuotes } from '../library';
-const { clipboard, remote } = require('electron');
-const { Menu, dialog } = remote;
+const { clipboard, ipcRenderer } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
 import { Wizard, WizardPage, WizardDataGridPage } from '../wizard';
@@ -604,7 +603,7 @@ class Monster {
 }
 
 export enum StdObjectType {
-    object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink, fishing_pole, backpack, bag_of_holding
+    object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink, fishing_pole, backpack, bag_of_holding, armor_of_holding
 }
 
 interface Property {
@@ -1488,17 +1487,17 @@ export class AreaDesigner extends EditorBase {
             const sel = getSelection();
             let inputMenu;
             if (!sel.isCollapsed && sel.type === 'Range' && this.$roomPreview.container.contains(sel.anchorNode)) {
-                inputMenu = Menu.buildFromTemplate([
+                inputMenu = [
                     { role: 'copy' },
                     { type: 'separator' },
-                    { role: 'selectall' }
-                ]);
+                    { role: 'selectAll' }
+                ];
             }
             else
-                inputMenu = Menu.buildFromTemplate([
-                    { role: 'selectall' }
-                ]);
-            inputMenu.popup({ window: remote.getCurrentWindow() });
+                inputMenu = [
+                    { role: 'selectAll' }
+                ];
+            ipcRenderer.invoke('show-context', inputMenu);
         });
         this.$roomPreview.short = document.createElement('div');
         this.$roomPreview.short.classList.add('room-short');
@@ -3180,7 +3179,7 @@ export class AreaDesigner extends EditorBase {
                 }
                 this.pushUndo(undoAction.edit, undoType.room, { property: prop, values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
             }
-            setTimeout(() => this.UpdateEditor(this.$selectedRooms));
+            //setTimeout(() => this.UpdateEditor(this.$selectedRooms));
             this.UpdatePreview(this.selectedFocusedRoom);
         });
         this.$roomEditor.setPropertyOptions([
@@ -4797,8 +4796,7 @@ export class AreaDesigner extends EditorBase {
             this.changed = true;
         });
         this.$propertiesEditor.monsterGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -5332,8 +5330,7 @@ export class AreaDesigner extends EditorBase {
             this.changed = true;
         });
         this.$propertiesEditor.roomGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -5737,8 +5734,7 @@ export class AreaDesigner extends EditorBase {
             }
         ];
         this.$monsterGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -6482,7 +6478,7 @@ export class AreaDesigner extends EditorBase {
                                                     <button id="btn-obj-material" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-material-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-material" data-container="body">
+                                                    <ul id="obj-material-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-material" data-container="body">
                                                     </ul>
                                                 </span>
                                             </div>
@@ -6749,7 +6745,7 @@ export class AreaDesigner extends EditorBase {
                             });
                             const qualities = `<div class="col-sm-12 form-group">
                             <label class="control-label" style="width: 100%;">Quality
-                                <select id="obj-quality" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                <select id="obj-quality" class="form-control selectpicker" data-size="8" data-style="btn-default btn-sm" data-width="100%">
                                     <option value='inferior'>Inferior</option>
                                     <option value='poor'>Poor</option>
                                     <option value='rough'>Rough</option>
@@ -6789,16 +6785,16 @@ export class AreaDesigner extends EditorBase {
                                                         <button id="btn-obj-limbs" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                             <span class="caret" style="margin-left: -1px;"></span>
                                                         </button>
-                                                        <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-limbs" data-container="body">
+                                                        <ul id="obj-limbs-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-limbs" data-container="body">
                                                             <li><a href="#">All limbs</a></li><li><a href="#">Overall</a></li><li><a href="#">Limb only</a></li><li><a href="#">Torso</a></li><li><a href="#">Head</a></li><li><a href="#">Left arm</a></li><li><a href="#">Right arm</a></li><li><a href="#">Left hand</a></li><li><a href="#">Right hand</a></li><li><a href="#">Left leg</a></li><li><a href="#">Right leg</a></li><li><a href="#">Left foot</a></li><li><a href="#">Right foot</a></li><li><a href="#">Right wing</a></li><li><a href="#">Left wing</a></li><li><a href="#">Left hoof</a></li><li><a href="#">Right hoof</a></li><li><a href="#">Tail</a></li><li><a href="#">Arms</a></li><li><a href="#">Legs</a></li><li><a href="#">Hands</a></li><li><a href="#">Feet</a></li><li><a href="#">Wings</a></li><li><a href="#">Hooves</a></li><li><a href="#">Lower body</a></li><li><a href="#">Core body</a></li><li><a href="#">Upper core</a></li><li><a href="#">Upper body</a></li><li><a href="#">Winged core</a></li><li><a href="#">Winged upper</a></li><li><a href="#">Upper trunk</a></li><li><a href="#">Lower trunk</a></li><li><a href="#">Trunk</a></li><li><a href="#">Winged trunk</a></li><li><a href="#">Full body</a></li><li><a href="#">Total body</a></li><li><a href="#">Winged body</a></li>
                                                         </ul>
                                                     </span>
                                                 </div>
                                             </label>
-                                        </div>${qualities.replace('col-sm-12', 'col-sm-6')}
+                                        </div>${qualities.replace('col-sm-12', 'col-sm-6').replace('data-size="8"', 'data-size="6"')}
                                         <div class="col-sm-6 form-group">
                                                 <label class="control-label" style="width: 100%;">Weapon type
-                                                    <select id="obj-wType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                                    <select id="obj-wType" class="form-control selectpicker" data-size="6" data-style="btn-default btn-sm" data-width="100%">
                                                     <optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="arrow">Arrow</option><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
                                                     </select>
                                                 </label>
@@ -6952,6 +6948,7 @@ export class AreaDesigner extends EditorBase {
                                     }), wizSkills, wizBonuses]);
                                     break;
                                 case StdObjectType.armor:
+                                case StdObjectType.armor_of_holding:
                                     wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];
                                     wiz.defaults['obj-damaged'] = ed.value.damaged || [];
                                     wiz.defaults['obj-skills'] = ed.value.skills || [];
@@ -6976,13 +6973,13 @@ export class AreaDesigner extends EditorBase {
                                                     <button id="btn-obj-limbs" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-limbs" data-container="body">
+                                                    <ul id="obj-limbs-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-limbs" data-container="body">
                                                         <li><a href="#">All limbs</a></li><li><a href="#">Overall</a></li><li><a href="#">Limb only</a></li><li><a href="#">Torso</a></li><li><a href="#">Head</a></li><li><a href="#">Left arm</a></li><li><a href="#">Right arm</a></li><li><a href="#">Left hand</a></li><li><a href="#">Right hand</a></li><li><a href="#">Left leg</a></li><li><a href="#">Right leg</a></li><li><a href="#">Left foot</a></li><li><a href="#">Right foot</a></li><li><a href="#">Right wing</a></li><li><a href="#">Left wing</a></li><li><a href="#">Left hoof</a></li><li><a href="#">Right hoof</a></li><li><a href="#">Tail</a></li><li><a href="#">Arms</a></li><li><a href="#">Legs</a></li><li><a href="#">Hands</a></li><li><a href="#">Feet</a></li><li><a href="#">Wings</a></li><li><a href="#">Hooves</a></li><li><a href="#">Lower body</a></li><li><a href="#">Core body</a></li><li><a href="#">Upper core</a></li><li><a href="#">Upper body</a></li><li><a href="#">Winged core</a></li><li><a href="#">Winged upper</a></li><li><a href="#">Upper trunk</a></li><li><a href="#">Lower trunk</a></li><li><a href="#">Trunk</a></li><li><a href="#">Winged trunk</a></li><li><a href="#">Full body</a></li><li><a href="#">Total body</a></li><li><a href="#">Winged body</a></li>
                                                     </ul>
                                                 </span>
                                             </div>
                                         </label>
-                                    </div>${qualities}
+                                    </div>${qualities.replace('data-size="8"', 'data-size="6"')}
                                     <div class="form-group col-sm-6">
                                         <label class="control-label">
                                             Enchantment
@@ -7124,6 +7121,35 @@ export class AreaDesigner extends EditorBase {
                                         enterMoveNext: this.$enterMoveNext,
                                         enterMoveNew: this.$enterMoveNew
                                     }), wizSkills, wizBonuses]);
+                                    if (StdObjectType.armor_of_holding == ty) {
+                                        wiz.insertPages(8, new WizardPage({
+                                            id: 'obj-bag',
+                                            title: 'Armor of holding properties',
+                                            body: ` <div class="col-sm-6 form-group">
+                                            <label class="control-label">
+                                                Max encumbrance
+                                                <input type="number" id="obj-encumbrance" class="input-sm form-control" min="0" value="100000000" />
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 form-group">
+                                            <label class="control-label">
+                                                Min encumbrance
+                                                <input type="number" id="obj-minencumbrance" class="input-sm form-control" min="0" value="100" />
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 form-group">
+                                            <label class="control-label">
+                                                Max items
+                                                <input type="number" id="obj-maxitems" class="input-sm form-control" min="0" value="100" />
+                                            </label>
+                                        </div>`,
+                                            reset: (e) => {
+                                                e.page.querySelector('#obj-encumbrance').value = ed.value.encumbrance || '40000';
+                                                e.page.querySelector('#obj-minencumbrance').value = ed.value.minencumbranc || '500';
+                                                e.page.querySelector('#obj-maxitems').value = ed.value.maxitems || '0';
+                                            }
+                                        }));
+                                    }
                                     break;
                                 case StdObjectType.chest:
                                     wiz.defaults['obj-contents'] = ed.value.contents || [];
@@ -7300,7 +7326,7 @@ export class AreaDesigner extends EditorBase {
                                                     <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-size-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                    <ul id="obj-size-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                         <li><a href="#">Small</a></li>
                                                         <li><a href="#">Medium</a></li>
                                                         <li><a href="#">Large</a></li>
@@ -7341,7 +7367,7 @@ export class AreaDesigner extends EditorBase {
                                                     <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-size-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                    <ul id="obj-size-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                         <li><a href="#">Small</a></li>
                                                         <li><a href="#">Medium</a></li>
                                                         <li><a href="#">Large</a></li>
@@ -7384,11 +7410,11 @@ export class AreaDesigner extends EditorBase {
                                     </div>
                                     <div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%;">Weapon type
-                                            <select id="obj-wType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                            <select id="obj-wType" class="form-control selectpicker" data-size="8" data-style="btn-default btn-sm" data-width="100%">
                                             <option value="">Default</option><optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
                                             </select>
                                         </label>
-                                    </div>${qualities}
+                                    </div>${qualities.replace('data-size="8"', 'data-size="6"')}
                                     <div class="form-group col-sm-12">
                                         <label class="control-label">
                                             Enchantment
@@ -7482,7 +7508,7 @@ export class AreaDesigner extends EditorBase {
                                                     <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-size-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                    <ul id="obj-size-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                         <li><a href="#">Small</a></li>
                                                         <li><a href="#">Medium</a></li>
                                                         <li><a href="#">Large</a></li>
@@ -7536,7 +7562,7 @@ export class AreaDesigner extends EditorBase {
                                                 <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                     <span class="caret" style="margin-left: -1px;"></span>
                                                 </button>
-                                                <ul id="obj-preserved-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                <ul id="obj-preserved-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                     <li><a href="#">Cooked</a></li>
                                                     <li><a href="#">Smoked</a></li>
                                                     <li><a href="#">Salted</a></li>
@@ -7753,16 +7779,30 @@ export class AreaDesigner extends EditorBase {
                                     wiz.title = 'Edit bag of holding...';
                                     //quality, enchantment
                                     wiz.addPages(new WizardPage({
-                                        id: 'obj-weapon',
+                                        id: 'obj-bag',
                                         title: 'Bag of holding properties',
                                         body: ` <div class="col-sm-6 form-group">
                                         <label class="control-label">
                                             Max encumbrance
                                             <input type="number" id="obj-encumbrance" class="input-sm form-control" min="0" value="100000000" />
                                         </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Min encumbrance
+                                            <input type="number" id="obj-minencumbrance" class="input-sm form-control" min="0" value="100" />
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Max items
+                                            <input type="number" id="obj-maxitems" class="input-sm form-control" min="0" value="100" />
+                                        </label>
                                     </div>`,
                                         reset: (e) => {
                                             e.page.querySelector('#obj-encumbrance').value = ed.value.encumbrance || '40000';
+                                            e.page.querySelector('#obj-minencumbrance').value = ed.value.minencumbranc || '500';
+                                            e.page.querySelector('#obj-maxitems').value = ed.value.maxitems || '0';
                                         }
                                     }));
                                     break;
@@ -7810,8 +7850,7 @@ export class AreaDesigner extends EditorBase {
             }
         ];
         this.$objectGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -10199,7 +10238,10 @@ export class AreaDesigner extends EditorBase {
         let r;
         let xl;
         let yl;
-        if (!this.$mapContext) return;
+        if (!this.$mapContext) {
+            this.doUpdate(UpdateType.drawMap);
+            return;
+        }
         this.$mapContext.save();
         this.$mapContext.fillStyle = 'white';
         this.$mapContext.fillRect(0, 0, this.$area.size.right, this.$area.size.bottom);
@@ -10343,10 +10385,6 @@ export class AreaDesigner extends EditorBase {
         if (this._updating === UpdateType.none)
             return;
         window.requestAnimationFrame(() => {
-            if ((this._updating & UpdateType.drawMap) === UpdateType.drawMap) {
-                this.DrawMap();
-                this._updating &= ~UpdateType.drawMap;
-            }
             if ((this._updating & UpdateType.buildMap) === UpdateType.buildMap) {
                 this.BuildMap();
                 this._updating &= ~UpdateType.buildMap;
@@ -10358,6 +10396,10 @@ export class AreaDesigner extends EditorBase {
             if ((this._updating & UpdateType.status) === UpdateType.status) {
                 this.updateStatus();
                 this._updating &= ~UpdateType.status;
+            }
+            if ((this._updating & UpdateType.drawMap) === UpdateType.drawMap) {
+                this._updating &= ~UpdateType.drawMap;
+                this.DrawMap();
             }
             this.doUpdate(this._updating);
         });
@@ -10552,8 +10594,10 @@ export class AreaDesigner extends EditorBase {
 
             if (items.length > 0) {
                 items = items.sort((a, b) => { return b.item.length - a.item.length; });
-                for (c = 0, cl = items.length; c < cl; c++)
+                for (c = 0, cl = items.length; c < cl; c++) {
+                    if (items[c].item.length === 0) continue;
                     str = str.replace(new RegExp('\\b(?!room-preview)(' + items[c].item + ')\\b', 'gi'), m => '<span data-id="' + this.parent.id + '-room-preview' + c + '">' + m + '</span>');
+                }
             }
             else
                 items = null;
@@ -10764,7 +10808,6 @@ export class AreaDesigner extends EditorBase {
                 this.DrawMap();
             }, 500);
         }
-        this.DrawMap();
         this.doUpdate(UpdateType.drawMap);
         if (this.$area.size.depth < 2) {
             this.$depth = 0;
@@ -12772,11 +12815,15 @@ export class AreaDesigner extends EditorBase {
         data.help.push('mattypes');
         const limbs = ['ALLLIMBS', 'OVERALL', 'LIMBONLY', 'TORSO', 'HEAD', 'LEFTARM', 'RIGHTARM', 'LEFTHAND', 'RIGHTHAND', 'LEFTLEG', 'RIGHTLEG', 'LEFTFOOT', 'RIGHTFOOT', 'RIGHTWING', 'LEFTWING', 'LEFTHOOF', 'RIGHTHOOF', 'TAIL', 'ARMS', 'LEGS', 'HANDS', 'FEET', 'WINGS', 'HOOVES', 'LOWERBODY', 'COREBODY', 'UPPERCORE', 'UPPERBODY', 'WINGEDCORE', 'WINGEDUPPER', 'UPPERTRUNK', 'LOWERTRUNK', 'TRUNK', 'WINGEDTRUNK', 'FULLBODY', 'TOTALBODY', 'WINGEDBODY'];
         switch (obj.type) {
+            case StdObjectType.armor_of_holding:
             case StdObjectType.armor:
                 //#region Armor
                 bonuses = true;
                 skills = true;
-                data.inherit = 'OBJ_ARMOUR';
+                if (obj.type === StdObjectType.armor_of_holding)
+                    data.inherit = 'OBJ_ARMOR_OF_HOLDING';
+                else
+                    data.inherit = 'OBJ_ARMOUR';
                 data['doc'].push('/doc/build/armours/tutorial');
                 data.help.push('atypes');
                 data.includes += '\n#include <limbs.h>';
@@ -12803,6 +12850,33 @@ export class AreaDesigner extends EditorBase {
                     data['create arguments'] += `, ${obj.enchantment}`;
                     data['create arguments comment'] += ', Natural enchantment';
                 }
+                if (obj.type === StdObjectType.armor_of_holding) {
+                    if (obj.enchantment === 0) {
+                        data['create arguments'] += `, 0`;
+                        data['create arguments comment'] += ', Natural enchantment';
+                    }
+                    if (obj.encumbrance !== 40000) {
+                        data['create arguments'] += `, ${obj.encumbrance}`;
+                        data['create arguments comment'] += ', Max encumbrance'
+                    }
+                    else if (obj.maxitems !== 0 || obj.minencumbrance !== 500) {
+                        data['create arguments'] += ', 40000';
+                        data['create arguments comment'] += ', Max encumbrance'
+                    }
+                    if (obj.maxitems !== 0) {
+                        data['create arguments'] += `, ${obj.maxitems}`;
+                        data['create arguments comment'] += ', Max items'
+                    }
+                    else if (obj.minencumbrance !== 500) {
+                        data['create arguments'] += `, 0`;
+                        data['create arguments comment'] += ', Max items'
+                    }
+                    if (obj.minencumbrance !== 500) {
+                        data['create arguments'] += `, ${obj.minencumbrance}`;
+                        data['create arguments comment'] += ', Min encumbrance'
+                    }
+                }
+
                 if (obj.maxWearable !== 0)
                     tempProps['max_wearable'] = `"${obj.maxWearable}"`;
                 if (obj.limbsOptional)
@@ -13340,8 +13414,27 @@ export class AreaDesigner extends EditorBase {
             case StdObjectType.bag_of_holding:
                 //#region bag_of_holding
                 data.inherit = 'OBJ_BAGOFHOLDING';
-                if (obj.encumbrance !== 40000)
-                    data['create body'] += `   set_max_encumbrance(${obj.encumbrance});\n`;
+                data['create arguments comment'] = '';
+                if (obj.encumbrance !== 40000) {
+                    data['create arguments'] = `${obj.encumbrance}`;
+                    data['create arguments comment'] = '// Max encumbrance'
+                }
+                else if (obj.maxitems !== 0 || obj.minencumbrance !== 500) {
+                    data['create arguments'] = '40000';
+                    data['create arguments comment'] = '// Max encumbrance'
+                }
+                if (obj.maxitems !== 0) {
+                    data['create arguments'] += `, ${obj.maxitems}`;
+                    data['create arguments comment'] += ', Max items'
+                }
+                else if (obj.minencumbrance !== 500) {
+                    data['create arguments'] += `, 0`;
+                    data['create arguments comment'] += ', Max items'
+                }
+                if (obj.minencumbrance !== 500) {
+                    data['create arguments'] += `, ${obj.minencumbrance}`;
+                    data['create arguments comment'] += ', Min encumbrance'
+                }
                 //#endregion
                 break;
             default:

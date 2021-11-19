@@ -7,16 +7,557 @@
     - Add MXP image height and better width support
     - Add MXP font size and family support
 
-## v0.7.1
+## v0.17.0
+
+- **Fixed:**
+ - Fix scripting predefined variables $selectedword, $selectedline, $selectedurl, $selword, $selline, $selurl so they are correctly set for use in javascript
+ - Display: partial fix to unicode width when italic font style, selection and search is still off but basic ansi is now correct
+- **Changed:**
+  - Update electron 13.5.1 to 16.0.1
+  - Update fswin 2.21.929 to 2.21.1015
+  - Update monaco-editor 0.28.1 to 0.30.1
+  - Update mathjs 9.5.0 to 10.0.0
+  - Update better-sqlite3 7.4.3 to 7.4.4
+  - Update font-list 1.4.0 to 1.4.2
+  - Update yargs-parser 20.2.9 to 21.0.0
+
+## v0.16.5 2021-10-03
+
+- **New:**
+  - Code editor:
+    - Add bracket colorization matching
+    - Add dark theme support for editors
+- **Fixed:**
+  - Auto update: when error happens correctly re-enable menu item
+  - Code editor: fix Enable Background Throttling preference not being set
+- **Changed:**
+  - Update electron 13.3.0 to 13.5.1
+  - Update fswin 2.21.905 to 2.21.929
+  - Update monaco-editor 0.27.0 to 0.28.1
+  - Update mathjs 9.4.4 to 9.5.0
+  - Update font-list 1.3.1 to 1.4.0
+
+## v0.16.4 2021-09-06
+
+- **New:**
+  - Add skills window
+  - Added [#testspeedfiler](docs/commands.md) to load a file and run timed test as if it was sent from a mud
+- **Fixed:**
+  - Fixed error with linux on hide minimize hack when first loading
+- **Changed:**
+  - Replace more remote context menus
+  - Replace all remote module dialogs
+  - Update electron 13.2.2 to 13.3.0
+  - Update fswin 3.21.107 to 2.21.905
+
+## v0.16.3 2021-08-25
+
+- **New:**
+  - Preferences:
+    - Add showInTaskBar option for main window
+    - Add help blocks for tray click events when using linux
+  - Tray icon: Add known issues when using linux to readme
+- **Fixed:**
+  - Code editor:
+    - Fix issue using old promises
+    - Fix issue with recent open list not being updated fast enough
+  - Add hack for linux not firing minimize event
+  - Auto update: Add message box for linux non Appimage installs as they are not supported
+  - Use setIcon for linux to try and change icon based on connected, active, or disconnected state
+  - Backup: refocus on main client window after backup has completed
+- **Changed:**
+  - Update monaco-editor 0.25.1 to 0.27.0
+  - Update electron 13.1.2 to 13.2.2
+  - Update yargs-parser 20.2.7 to 20.2.9
+  - Update markdown-it 12.0.6 to 12.2.0
+  - Update mathjs 9.4.3 to 9.4.4
+  - Update better-sqlite3 7.4.1 to 7.4.3
+
+## v0.16.2 2021-06-16
+
+- **New:**
+  - Character manager: Added `Disconnect on load` for each character allowing you to force the current connection to disconnect and using the new characters auto connect settings
+  - Code Editor: add armour of holding support to area designer and code template
+- **Fixed:**
+  - Code Editor:
+    - Select drop downs cutoff or causing scrolling when used in dialogs
+    - Fix native tab icons when opening multiple files at once
+- **Changed:**
+  - Update electron 13.1.1 to 13.1.2
+  - Update font-list 1.2.14 to 1.3.1
+  - Update monaco-editor 0.24.0 to 0.25.1
+  - Update chokidar 3.5.1 to 3.5.2
+
+## v0.16.1 2021-06-07
+
+- **Fixed:**
+  - Fixed debug inspect content menu item
+- **Changed:**
+  - Update electron 13.0.1 to 13.1.1
+  - Update better-sqlite3 7.4.0 to 7.4.1
+  - Update mathjs 9.4.1 to 9.4.2
+
+## v0.16.0 2021-05-26
+
+- **Fixed:**
+  - Fix opening child windows
+- **Changed:**
+  - Update electron 12.0.9 to 13.0.1
+
+## v0.15.2 2021-05-26
+
+- **New:**
+  - Preferences:
+    - Add `Max reconnect delay` to set the maximum time before reconnecting when using reconnect dialog.
+    - Add `Enable Background Throttling` to allow disabling of throttling when a window is in the background or hidden
+- **Fixed:**
+  - Filled in some missing docs for preference settings
+- **Changed:**
+  - Separated backups, connection, and profile manager preferences into sub advanced pages to make advanced page easier to read
+  - Update electron 12.0.7 to 12.0.9
+  - Update mathjs 9.4.0 to 9.4.1
+  - Re-code window.open systems as old systems have been deprecated and replaced
+
+## v0.15.1 2021-05-16
+
+- **Fixed:**
+  - Files not correctly moved to trash
+  - Code Editor:
+    - Fix undo, redo, cut, copy, and paste did not work from menus/context after upgrading to 0.21.x monaco-editor
+    - Fix custom actions when using diff system
+    - Fix issue with advanced editor in editor only mode
+    - Only clear the menu recent documents, not the os recent documents
+    - Fix native icon support
+  - Log viewer:
+    - Only clear the menu recent documents, not the os recent documents
+  - Advanced editor: Fix due to typo added by mistake
+- **Changed:**
+  - Recode internal path parser to remove remote reliance and simplify code base by having only one function
+  - Moved all app calls to main process using IPC
+  - Moved all window operations into main process using IPC
+  - Update better-sqlite3 7.1.2 to 7.4.0
+  - Update electron 12.0.1 to 12.0.7
+  - Update node-disk-info 1.1.0 to 1.3.0
+  - Update markdown-it 12.0.4 to 12.0.6
+  - Update fs-extra 9.1.0 to 10.0.0
+  - Update font-list 1.2.13 to 1.2.14
+  - Update monaco-editor 0.21.3 to 0.24.0
+  - Replace mathjs-expression-parser with mathjs 9.4.0 due to mathjs-expression-parser not being updated
+  - Update electron-updater 4.3.5 to 4.3.9
+  
+
+## v0.15.0 2021-03-15
+
+- **New**
+  - Enable allow Half Open sockets - Indicates whether half-opened TCP connections are allowed
+- **Changed:**
+  - Update electron 11.3.0 to 12.0.1
+  - Updated crash logging to newer more detailed version
+  - Update font-list 1.2.12 to 1.2.13
+  - Update yargs-parser 20.2.6 to 20.2.7
+
+## v0.14.1 2021-02-24
+
+- **Fixed:**
+  - Code Editor:
+    - Fix remote diff/editing systems, broken in v0.11.3 due to tmp changing how temp directories worked
+    - Fix new area dialog title and default name being [Object object]
+    - Fix ([]) and ({}) from adding an extra )
+- **Changed:**
+  - Update electron 11.0.3 to 11.3.0
+  - Update markdown-it 12.0.2 to 12.0.4
+  - Update better-sqlite3 7.1.1 to 7.1.2
+  - Update chokidar 3.4.3 to 3.5.1
+  - Update fswin 3.19.908 to 3.21.107
+  - Update monaco-editor 0.21.2 to 0.21.3
+  - Update fs-extra 9.0.1 to 9.1.0
+  - Update yargs-parser 20.2.4 to 20.2.6
+  - Update font-list 1.2.11 to 1.2.12
+
+## v0.14.0 2020-12-05
+
+- **Fixed:**
+  - Chat capture: fixed issue introduced in v0.13.2
+- **Changed:**
+  - Update electron 10.1.5 to 11.0.3
+
+## v0.13.2 2020-11-16
+
+- **New:**
+  - Preferences: Add `Auto takeover login` to automatically issue yes to takeover character after login
+- **Fixed:**
+  - Chat Capture:
+    - Cache regex objects to improve performance
+    - Optimize `Capture only when open` preference when not enabled
+    - Fixed issue when reloading settings and chat window open
+  - Auto login:
+    - Improve performance checks
+    - Use login name not character manager name when auto logging in
+    - Cache login name to improve performance checks
+  - Display: Fixed Split scroll live update when enabled
+  - Code Editor:
+    - Add better error logging when editor breaks
+    - Fix random hang issue
+- **Changed:**
+  - Update yargs-parser 20.2.3 to 20.2.4
+
+## v0.13.1 2020-10-26
+
+- **New:**
+  - Preferences: Add Show invalid MXP tags to display any MXP tags as normal text if they are not standard or custom elements
+- **Fixed:**
+  - Parser:
+    - MXP:
+      - Fixed issue with fragmented line parsing and disappearing text
+      - Fixed issue when malformed tag processed
+      - Fixed issue with malformed entities
+      - Fixed bug when applying formats and not found entities
+      - Fixed issue with custom tags and elements causing double display
+  - Hopefully fix issue where menu bar is default menu instead of proper menu
+  - Fix command history window list delay update on first command
+  - Code Editor:
+    - Fixed issue where editor would randomly hang
+    - Fixed issue where virtual/area designer maps would not be drawn on first load
+    - Fixed issue when virtual/area designer property editor would fail to create an editor on click
+- **Changed:**
+  - Update electron 10.1.2 to 10.1.5
+  - Update electron-updater 4.3.4 to 4.3.5
+  - Update yargs-parser 20.0.0 to 20.2.3
+  - Update moment 2.28.0 to 2.29.1
+  - Update monaco-editor 0.20.0 to 0.21.2
+  - Update chokidar 3.4.2 to 3.4.3
+  - Update markdown-it 11.0.1 to 12.0.2
+
+## v0.13.0 2020-09-15
+
+- **New:**
+  - Add GMCP Client.Media support
+  - Preferences:
+    - Fix hidden windows, move any hidden windows to main screen when they are opened
+    - Add show in taskbar option for chat and mapper windows
+- **Fixed:**
+  - Color picker: Fixed tooltip color names
+  - MXP: Remove version style attribute if not set when replying to mud
+  - Fixed script type aliases, triggers, macros, buttons, context menus would error when last line was a //comment
+- **Changed:**
+  - Update electron 9.1.0 to 10.1.2
+  - Update chokidar 3.4.0 to 3.4.2
+  - Update yargs-parser 18.1.3 to 20.0.0
+  - Update better-sqlite3 7.1.0 to 7.1.1
+  - Update markdown-it 11.0.0 to 11.0.1
+  - Update moment 2.27.0 to 2.28.0
+
+## v0.12.2 2020-07-10
+
+- **Fixed:**
+  - Mapper:
+    - Fixed export image/data dialogs
+    - Fixed export data cancel system, prevents crash and works
+  - Fixed file save dialogs not correctly canceling
+- **Changed:**
+  - Update electron 9.0.5 to 9.1.0
+
+## v0.12.1 2020-07-02
+
+- **Fixed:**
+  - Fixed #profilelist not working
+  - Fixed #profile not working
+- **Changed:**
+  - Update electron 9.0.4 to 9.0.5
+  - Update moment 2.26.0 to 2.27.0
+
+## v0.12.0 2020-06-15
+
+- **Fixed:**
+  - Set the theme sooner to have a smoother loading feel
+  - Resize interface before showing window to remove status bar resize flickering
+  - Buttons with image icons now have a colored overlay to better show they are the button to be clicked
+  - Fix open file dialogs not correctly canceling
+  - Immortal tools: fix remote delete
+- **Changed:**
+  - Update electron 8.3.0 to 9.0.4
+  - Update markdown-it 10.0.0 to 11.0.0
+  - Replace drivelist 8.0.10 with node-disk-info 1.1.0
+  - Replace fontmanager-redux 0.4.0 with font-list 1.2.11
+  - Update bootstrap select 1.12.4 to 1.13.2
+  - Update moment 2.25.3 to 2.26.0
+  - Update fs-extra 9.0.0 to 9.0.1
+
+## v0.11.3 2020-05-18
+
+- **New:**
+  - Add button to reset window locations in preference dialog
+  - New backup/restore option to save/ignore window states
+- **Fixed:**
+  - Preference reset would not correctly reset window states for open windows
+  - Fix rare chance of phantom window objects being created
+- **Changed:**
+  - Update electron 8.2.0 to 8.3.0
+  - Update yargs-parser 18.1.2 to 18.1.3
+  - Update tmp 0.1.0 to 0.2.1
+  - Update better-sqlite3 6.0.1 to 7.0.1
+  - Update chokidar 3.3.1 to 3.4.0
+  - Update electron-updater 4.2.5 to 4.3.1
+  - Update moment 2.24.0 to 2.25.3
+
+## v0.11.2 2020-03-31
+
+- **Changed:**
+  - Update electron 8.1.1 to 8.2.0
+  - Update yargs-parser 18.1.1 to 18.1.2
+
+## v0.11.1 2020-03-23
+
+- **New:**
+  - Triggers: Cache regular expression objects so they are only created first time a trigger is ran
+  - Use native built in spellchecker systems, add support for most editable fields
+- **Fixed:**
+  - Fix command input lost when canceling open link confirm box
+- **Changed:**
+  - Update monaco-editor 0.19.3 to 0.20.0
+  - Update electron 8.0.1 to 8.1.1
+  - Update drivelist 8.0.9 to 8.0.10
+  - Update electron-updater 4.2.0 to 4.2.5
+  - Update better-sqlite3 5.4.3 to 6.0.1
+  - Update yargs-parser 17.0.0 to 18.1.1
+  - Update fs-extra from 8.1.0 to 9.0.0
+  - Remove spellchecker 3.7.0
+
+## v0.11.0 2020-02-10
+
+- **New:**
+  - Add button bar overflow support to allow scrolling of buttons
+- **Fixed:**
+  - Profile manager: Fix issue when using capital letters and renaming a profile
+- **Changed:**
+  - Update electron 7.1.10 to 8.0.0
+  - Update yargs-parser 16.1.0 to 17.0.0
+  - Make wheel mouse events passive to allow better optimizing of scrolling for mapper and main display
+  - Code editor: revert a quick hack to menu issues
+
+## v0.10.2 2020-01-27
+
+- **New:**
+  - Optimize macro execution
+- **Changed:**
+  - Update monaco-editor 0.19.2 to 0.19.3
+  - Update electron 7.1.9 to 7.1.10
+
+## v0.10.1 2020-01-13
+
+- **New:**
+  - Profile manager:
+    - Preference to change how items are sorted: Alpha, index, or priority
+    - Preference to change sort direction from ascending or descending
+- **Changed:**
+  - Update electron 7.1.1 to 7.1.9
+  - Update chokidar 3.3.0 to 3.3.1
+  - Update monaco-editor 0.18.1 to 0.19.2
+
+## v0.10.0 2019-11-11
+
+- **Fixed:**
+  - Immortal tools: fix upload fail not being correctly registered
+  - Code editor: Ignore formatting for inline comments
+  - About: update process memory info display using new built in api's
+  - Character manager: Add close button if mac
+- **Changed:**
+  - Refactor hasOwnProperty checks to use proper calls for more security when running dynamic scripts
+  - Update electron 6.0.9 to 7.1.1
+  - Update monaco-editor 0.18.0 to 0.18.1
+  - Update chokidar 3.1.0 to 3.3.0
+  - Update drivelist 8.0.6 to 8.0.9
+  - Update yargs-parser 13.1.1 to 16.1.0
+  - Replace font-manager 0.3.0 with fontmanager-redux 0.4.0
+  - Update electron-updater 4.1.2 to 4.2.0
+
+## v0.9.4 2019-09-16
+
+- **Fixed:**
+  - Auto updater: fix now/later being reversed function
+  - Immortal tools: Add upload/download to folder context menus
+  - Remove some menu hacks as electron 6.0.8 seems to have fixed menu issues
+- **Changed:**
+  - Update electron 6.0.7 to 6.0.9
+  - Update better-sqlite3 5.4.2 to 5.4.3
+  - Update monaco-editor 0.17.1 to 0.18.0
+  - Update yargs-parser 13.1.1 to 14.0.0
+  - Update fswin 3.18.918 to 3.19.908
+  - Update markdown-it 9.1.0 to 10.0.0
+  - Update chokidar 3.0.2 to 3.1.0
+
+## v0.9.3 2019-09-02
+
+- **New:**
+  - About: re-add memory display using 3rd party module until electron 7 is released
+- **Changed:**
+  - Update electron 6.0.4 to 6.0.7
+  - Convert all open file dialogs to use newer syntaxes
+- **Fixed:**
+  - Fixed save dialogs not working due to electron 6 dialog changes
+
+## v0.9.2 2019-08-26
+
+- **New:**
+  - Auto updater: Option to install update later next time the client is started
+- **Changed:**
+  - About:
+    - Update copyright date
+    - No longer a modal dialog and movable
+  - Auto updater: Force close even if connected or sub windows open
+  - Update electron 6.0.3 to 6.0.4
+- **Fixed:**
+  - Fixed progress dialog titles not being correctly set in places
+  - Display: Fixed incorrect vertical scrollbar height
+  - Fixed dialogs boxes broken in electron 6 update
+  - Code editor: do not add a newline if throw is a function for a object
+
+## v0.9.1 2019-08-21
+
+- **Fixed:**
+  - Help: Fixed character manager help topic not being listed
+  - Code editor: a quick fix to crash due to menu issues in electron 6
+  - Profile manager: Fix issue when trying to update a profile that contained a non Alpha numeric character, :, ., or -
+- **Changed:**
+  - Update electron 6.0.2 to 6.0.3
+
+## v0.9.0 2019-08-19
+
+- **New:**
+  - Added character manager doc
+- **Fixed:**
+  - Fixed check for updates open website dialog button
+  - Fixed issues when reloading preferences and closing child windows
+  - Themes: tweaks to health bars to better handle zooming
+- **Changed:**
+  - Update electron 5.0.8 to 6.0.2
+  - Update better-sqlite3 5.4.1 to 5.4.2
+  - Update markdown-it 9.0.1 to 9.1.0
+
+## v0.8.4 2019-07-29
+
+- **New:**
+  - Character manager: Add Never ask again when warning on loading default or character
+  - Preferences: Allow toggling never ask again check when closing client option
+- **Fixed:**
+  - Main menu hacks in an attempt to fix some menu issues.
+  - Mapper: Fixed fill walls, split area, and show legend not correctly restoring on load
+  - Display: MXP Image caching was not correctly handled when old lines where trimmed at buffer max
+- **Changed:**
+  - Update electron 5.0.7 to 5.0.8
+  - Update spellchecker 3.6.1 to 3.7.0
+
+## v0.8.3 2019-07-22
+
+- **New:**
+  - Status: add tooltip to combat/party bars with full names
+- **Fixed:**
+  - Command history: Fixed selection of commands while browsing
+  - Paste special: losing text when clicking ok or return key
+  - Preferences: Fixed dialog height to prevent theme drop down not correctly showing
+- **Changed:**
+  - Themes:
+    - Bump combat/party names to be larger and easier to read
+    - Increase all progressbar heights a little and increase fonts for easier reading
+  - Update chokidar 3.0.1 to 3.0.2
+  - Update markdown-it 8.4.2 to 9.0.1
+  - Update better-sqlite3 5.4.0 to 5.4.1
+  - Update electron 5.0.6 to 5.0.7
+  - Update electron-updater 4.0.14 to 4.1.2
+  - Preferences: Backup all profiles is now default true to mimic web client behavior
+
+## v0.8.2 2019-07-01
+
+- **Fixed:**
+  - Mapper: Fixed get new zone system
+  - Immortal tools: Fix drive dropdown explorer
+- **Changed:**
+  - Update electron 5.0.3 to 5.0.6
+  - Update fs-extra from 8.0.1 to 8.1.0
+  - Update spellchecker 3.6.0 to 3.6.1
+  - Update monaco-editor 0.17.0 to 0.17.1
+
+## v0.8.1 2019-06-10
+
+- **Fixed:**
+  - Fixed spell checker, electron 5.0 changed api
+  - Fixed issue not resetting telnet prompt flag when doing local text display
+  - Fixed URL detection and valid unicode characters
+  - Fixed Copy and open url to properly URL encode characters
+- **Changed:**
+  - Update fs-extra from 7.0.1 to 8.0.1
+  - Update electron 5.0.1 to 5.0.3
+  - Update chokidar 3.0.0 to 3.0.1
+  - Update spellchecker 3.5.3 to 3.6.0
+  - Update yargs-parser 13.1.0 to 13.1.1
+
+## v0.8.0 2019-05-06
+
+- **Changed:**
+  - Update electron 4.1.3 to 5.0.1
+  - Update spellchecker 3.5.2 to 3.5.3
+  - Update chokidar 2.1.5 to 3.0.0
+  - Update monaco-editor 0.16.2 to 0.17.0
+
+## v0.7.5 2019-04-01
+
+- **Changed:**
+  - Update electron 4.0.5 to 4.1.3
+  - Update drivelist 7.0.3 to 8.0.6
+  - Update monaco-editor 0.15.6 to 0.16.2
+  - Update chokidar from 2.1.2 to 2.1.5
+  - Update tmp from 0.0.33 to 0.1.0
+
+## v0.7.4 2019-02-25
+
+- **Fixed:**
+  - Command history: Add text ... overflow systems for long commands to prevent drop up display from being hidden off screen
+  - Code editor:
+    - Virtual/area editor: Fix issue with room preview and item formatting when item text is empty
+- **Changed:**
+  - Update drivelist 7.0.0 to 7.0.3
+  - Update electron 4.0.2 to 4.0.5
+  - Update yargs-parser 11.1.1 to 13.0.0
+  - Update chokidar 2.0.4 to 2.1.2
+
+## v0.7.3 2019-01-28
+
+- **Fixed:**
+  - Fixed #gets/#sets commands
+
+## v0.7.2 2019-01-28
+
+- **New:**
+  - Global enable parsing toggle system to allow disabling of command paring with a simple on / off button or menu click
+  - Global enable trigger toggle system to allow disabling of trigger with a simple on / off button or menu click
+- **Changed:**
+  - Update moment 2.23.0 to 2.24.0
+  - Update electron 4.0.1 to 4.0.2
+  - Update better-sqlite3 5.3.0 to 5.4.0
+  - Update spellchecker 3.5.0 to 3.5.1
+  - Update drivelist 6.4.3 to 7.0.0
+- **Fixed:**
+  - ANSI Parser: Line feeds (\r) are now ignored when parsing text to fix MXP state management
+  - Fixed copy/paste short cut display in command input context menu
+
+## v0.7.1 2019-01-14
 
 - **New:**
   - Add command history window
+  - Character manager: Backup to zip with all related files as a zip file
+  - Preferences: Backup up all settings and related files as a zip file
+  - Logs: Backup up all logs as a zip file
+  - Profile manager: Add export and import as zip file
 - **Changed:**
   - Remove memory info from about, no longer supported in electron 4
   - Update electron 4.0.0 to 4.0.1
+  - Update better-sqlite3 5.2.1 to 5.3.0
+  - Update drivelist 6.4.3 to 6.4.6
 - **Fixed:**
   - Advanced editor: Fixed unable to add new lines
-  - Code editor: Fixed formatting of else single line to newline/indent like single line if
+  - Code editor:
+    - Fixed formatting of else single line to newline/indent like single line if
+    - Fixed formatting of an inline comment following if/else
 
 ## v0.7.0 2018-12-31
 
@@ -1233,7 +1774,7 @@
     - When profile toggled from menu and profile manager is open update the enabled state
     - Enabled check state was not correctly set when profile is selected, causing the profile to be set based on previous selected item
   - Mapper: fix minor issue when trying to process data before the mapper window is ready
-  - Dont attempt to show disconnect dialog if already open
+  - Don't attempt to show disconnect dialog if already open
 
 ## v0.4.34 2017-12-14
 

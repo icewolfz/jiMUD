@@ -11,15 +11,16 @@
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/help.css" rel="stylesheet" type="text/css" />
     <link href="css/form.css" rel="stylesheet" type="text/css" />
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js" type="text/javascript"></script>
     <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
     <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
-    <script>
-        const { remote } = require('electron');
-        const { Menu } = remote;
+    <script type="text/javascript">
+        if (window.module) module = window.module;
+        //spellchecker:ignore codeeditor
+        const { ipcRenderer } = require('electron');
         const { Search } = require('./js/search');
         const path = require('path');
         const fs = require('fs');
@@ -128,6 +129,23 @@
                 oDoc.body.appendChild(container);
                 container = $(container);
                 loadUrl('README');
+                container[0].addEventListener('contextmenu', e => {
+                    e.preventDefault();
+                    const sel = oDoc.getSelection();
+                    let inputMenu;
+                    if (!sel.isCollapsed && sel.type === 'Range' && container[0].contains(sel.anchorNode)) {
+                        inputMenu = [
+                            { role: 'copy' },
+                            { type: 'separator' },
+                            { role: 'selectAll' }
+                        ];
+                    }
+                    else
+                        inputMenu = [
+                            { role: 'selectAll' }
+                        ];
+                    ipcRenderer.invoke('show-context', inputMenu);
+                });
             };
             contents = $('#contents');
             $search = new Search(document.body);
@@ -138,24 +156,6 @@
                 _history.push(contents.val());
                 _current = _history.length - 1;
                 updateButtons();
-            });
-
-            container[0].addEventListener('contextmenu', e => {
-                e.preventDefault();
-                const sel = getSelection();
-                let inputMenu;
-                if (!sel.isCollapsed && sel.type === 'Range' && container[0].contains(sel.anchorNode)) {
-                    inputMenu = Menu.buildFromTemplate([
-                        { role: 'copy' },
-                        { type: 'separator' },
-                        { role: 'selectall' }
-                    ]);
-                }
-                else
-                    inputMenu = Menu.buildFromTemplate([
-                        { role: 'selectall' }
-                    ]);
-                inputMenu.popup({ window: remote.getCurrentWindow() });
             });
 
             $('#btn-history-dropdown').click(function () {
@@ -171,18 +171,18 @@
                         index: i,
                         type: i === _current ? 'radio' : 'normal',
                         checked: i === _current,
-                        click: (item) => {
-                            _current = i;
-                            contents.val(item.url).selectpicker('render');
-                            loadContents(item.url);
-                            updateButtons();
-                        }
                     });
                 });
-                Menu.buildFromTemplate(addMenu).popup({ window: remote.getCurrentWindow(), x: x, y: y });
+                ipcRenderer.invoke('show-context', addMenu, { x: x, y: y });
             });
-
         });
+
+        function executeContextItem(idx, id, label, role) {
+            _current = idx;
+            contents.val(_history[idx]).selectpicker('render');
+            loadContents(_history[idx]);
+            updateButtons();
+        }
     </script>
 </head>
 
@@ -216,6 +216,7 @@
                     <option value="customizing">Customizing</option>
                     <option value="assets">Assets</option>
                     <option value="mapper">Mapper</option>
+                    <option value="character.manager">Character manager</option>
                     <option value="immortal">Immortal Tools</option>
                     <option value="codeeditor">Code editor</option>
                     <option value="codeeditor.designer" style="padding-left: 40px">Area designer</option>

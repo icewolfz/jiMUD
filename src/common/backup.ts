@@ -223,8 +223,17 @@ export class Backup extends EventEmitter {
             delete data.profiles;
             this.client.debug('Setting for no profiles enabled.');
         }
+        if ((this.saveSelection & BackupSelection.Windows) !== BackupSelection.Windows) {
+            delete data.settings['windows'];
+            this.client.debug('Setting for no window data enabled.');
+        }
         if ((this.saveSelection & BackupSelection.Settings) !== BackupSelection.Settings) {
+            let windows;
+            if ((this.saveSelection & BackupSelection.Windows) === BackupSelection.Windows)
+                windows = data.settings['windows'];
             delete data.settings;
+            if ((this.saveSelection & BackupSelection.Windows) === BackupSelection.Windows)
+                data.settings = <any>{ windows: windows };
             this.client.debug('Setting for no settings data enabled.');
         }
         let jData = JSON.stringify(data);
@@ -531,7 +540,11 @@ export class Backup extends EventEmitter {
                     if (!this.client.options.hasOwnProperty(prop) || !data.settings.hasOwnProperty(prop)) {
                         continue;
                     }
-                    if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
+                    if (prop === 'windows') {
+                        if ((this.loadSelection & BackupSelection.Windows) === BackupSelection.Windows)
+                            this.client.options[prop] = data.settings[prop];
+                    }
+                    else if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
                         for (prop2 in this.client.options[prop]) {
                             if (!this.client.options[prop].hasOwnProperty(prop2)) {
                                 continue;
@@ -566,6 +579,8 @@ export class Backup extends EventEmitter {
                 this.client.loadOptions();
                 this.emit('imported-settings');
             }
+            else if (data.settings && data.settings['windows'] && (this.loadSelection & BackupSelection.Windows) === BackupSelection.Windows)
+                this.client.options['windows'] = data.settings['windows'];
         }
         this.emit('finish-load');
         this.close();

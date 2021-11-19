@@ -26,15 +26,16 @@
                 overflow: hidden;
             }
         </style>
-        <script>
+        <script type="text/javascript">
             if (typeof module === 'object') { window.module = module; module = undefined; }
         </script>
         <script src="../lib/jquery.min.js"></script>
         <script src="../lib/bootstrap.min.js"></script>
         <script src="../lib/bootstrap-select.min.js"></script>
-        <script>
+        <script type="text/javascript">
+            if (window.module) module = window.module;
             //spell-checker:ignore tinymce, rgbcolor, forecolor, colorbtn, colorbutton
-            const { remote, ipcRenderer } = require('electron');
+            const { ipcRenderer } = require('electron');
             const { Settings } = require('./js/settings');
             const { getColors } = require('./js/library');
             const rgbcolor = require('rgbcolor');
@@ -46,20 +47,22 @@
             var options;
 
             var colorNames = {
+                'No color': 'Default',
                 'BLACK': 'Black',
                 'RED': 'Maroon',
                 'GREEN': 'Green',
                 'ORANGE': 'Olive',
-                'BLUE': 'Blue',
+                'BLUE': 'Navy',
                 'MAGENTA': 'Purple',
                 'WHITE': 'Silver',
-                'BOLD BLACK': 'Dark Silver',
+                'CYAN': 'Teal',
+                'BOLD BLACK': 'Grey',
                 'BOLD RED': 'Red',
                 'BOLD GREEN': 'Lime',
                 'YELLOW': 'Yellow',
                 'BOLD BLUE': 'Blue',
-                'BOLD MAGENTA': 'Magenta',
-                'BOLD CYAN': 'Cyan',
+                'BOLD MAGENTA': 'Fuchsia',
+                'BOLD CYAN': 'Aqua',
                 'BOLD': 'White',
                 'BOLD WHITE': 'White',
                 'RGB000': 'Black',
@@ -317,11 +320,11 @@
             });
 
             $(document).ready(() => {
-                options = Settings.load(remote.getGlobal('settingsFile'));
+                options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 loadColors();
             });
             ipcRenderer.on('reload-options', () => {
-                options = Settings.load(remote.getGlobal('settingsFile'));
+                options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 loadColors();
             });
 

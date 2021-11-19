@@ -99,6 +99,23 @@ export class Client extends EventEmitter {
         return this.options.profiles.enabled;
     }
 
+    set enableParsing(value) {
+        this.options.enableParsing = value;
+        this._input.enableParsing = value;
+        this.saveOptions();
+    }
+
+    get enableParsing() { return this.options.enableParsing; }
+
+    set enableTriggers(value) {
+        this.options.enableTriggers = value;
+        this._input.enableTriggers = value;
+        this.startAlarms();
+        this.saveOptions();
+    }
+
+    get enableTriggers() { return this.options.enableTriggers; }
+
     set settingsFile(val: string) {
         if (this._settingsFile !== val) {
             this._settingsFile = val;
@@ -366,6 +383,10 @@ export class Client extends EventEmitter {
     }
 
     public saveProfile(profile: string) {
+        profile = profile.toLowerCase();
+        //is not loaded so no reason to even save it
+        if (!this.profiles.contains(profile))
+            return;
         const p = path.join(parseTemplate('{data}'), 'profiles');
         if (!existsSync(p))
             fs.mkdirSync(p);
@@ -385,7 +406,7 @@ export class Client extends EventEmitter {
                 this.profiles.load(profile, path.join(parseTemplate('{data}'), 'profiles'));
         }
         else {
-            //remove profile, dont bother unloading as they may turn it back on so just leave it loaded
+            //remove profile, don't bother unloading as they may turn it back on so just leave it loaded
             p = p.filter((a) => { return a !== profile; });
             //cant disable if only profile
             if (p.length === 0)
@@ -400,7 +421,7 @@ export class Client extends EventEmitter {
 
     public startAlarms() {
         const al = this.alarms.length;
-        if (al === 0 && this._alarm) {
+        if ((al === 0 || !this.options.enableTriggers) && this._alarm) {
             clearInterval(this._alarm);
             this._alarm = null;
         }
@@ -444,6 +465,8 @@ export class Client extends EventEmitter {
     }
 
     private process_alarms() {
+        if (!this.options.enableTriggers)
+            return;
         let a = 0;
         const al = this.alarms.length;
         if (al === 0 && this._alarm) {
@@ -684,6 +707,7 @@ export class Client extends EventEmitter {
                 return;
             }
             this.emit('received-GMCP', mod, obj);
+            this.MSP.processGMCP(mod, obj);
         });
 
         this.telnet.on('windowSize', () => { this.UpdateWindow(); });
@@ -706,8 +730,14 @@ export class Client extends EventEmitter {
                 return;
             switch (tag) {
                 case 'VERSION':
-                    this.debug(`MXP Tag REPLY: <VERSION MXP=1.0 STYLE=${this.display.MXPStyleVersion} CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>`);
-                    this.send(`\x1b[1z<VERSION MXP=1.0 STYLE=${this.display.MXPStyleVersion} CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>\r\n`);
+                    if (this.display.MXPStyleVersion && this.display.MXPStyleVersion.length) {
+                        this.debug(`MXP Tag REPLY: <VERSION MXP=1.0 STYLE=${this.display.MXPStyleVersion} CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>`);
+                        this.send(`\x1b[1z<VERSION MXP=1.0 STYLE=${this.display.MXPStyleVersion} CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>\r\n`);
+                    }
+                    else {
+                        this.debug(`MXP Tag REPLY: <VERSION MXP=1.0 CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>`);
+                        this.send(`\x1b[1z<VERSION MXP=1.0 CLIENT=jiMUD VERSION=${this.version} REGISTERED=no>\r\n`);
+                    }
                     break;
                 case 'SUPPORT':
                     this.debug(`MXP Tag REPLY: <SUPPORTS ${args.join(' ')}>`);
@@ -780,6 +810,7 @@ export class Client extends EventEmitter {
         this.display.maxLines = this.options.bufferSize;
         this.display.enableFlashing = this.options.flashing;
         this.display.enableMXP = this.options.enableMXP;
+        this.display.showInvalidMXPTags = this.options.display.showInvalidMXPTags;
         this.display.enableURLDetection = this.options.enableURLDetection;
         this.display.enableMSP = this.options.enableMSP;
         this.display.enableColors = this.options.display.enableColors;
@@ -803,12 +834,15 @@ export class Client extends EventEmitter {
         this.telnet.enablePing = this.options.enablePing;
         this.telnet.keepAlive = this.options.enableKeepAlive;
         this.telnet.keepAliveDelay = this.options.keepAliveDelay;
+        this.telnet.allowHalfOpen = this.options.allowHalfOpen;
 
         this.MSP.enabled = this.options.enableMSP;
         this.MSP.enableSound = this.options.enableSound;
         this.MSP.savePath = parseTemplate(this.options.soundPath);
 
         this._input.scrollLock = this.options.scrollLocked;
+        this._input.enableParsing = this.options.enableParsing;
+        this._input.enableTriggers = this.options.enableTriggers;
         this.display.scrollLock = this.options.scrollLocked;
         this.display.enableSplit = this.options.display.split;
         this.display.hideTrailingEmptyLine = this.options.display.hideTrailingEmptyLine;
@@ -832,8 +866,8 @@ export class Client extends EventEmitter {
             return;
         let opt = this.options;
         let o;
-        const ol = name.length - 1;
         name = name.split('.');
+        const ol = name.length - 1;
         for (o = 0; o < ol; o++)
             opt = opt[name[o]];
         opt[name[name.length - 1]] = value;
@@ -845,8 +879,8 @@ export class Client extends EventEmitter {
             return null;
         let opt = this.options;
         let o;
-        const ol = name.length;
         name = name.split('.');
+        const ol = name.length;
         for (o = 0; o < ol; o++)
             opt = opt[name[o]];
         return opt;
@@ -912,8 +946,10 @@ export class Client extends EventEmitter {
         const codes = '\x1b[0,' + this.display.CurrentAnsiCode() + '\n';
         if (str.endsWith('\n'))
             str = str.substr(0, str.length - 1);
-        if (this.telnet.prompt && forceLine)
+        if (this.telnet.prompt && forceLine) {
             this.print('\n\x1b[' + fore + ';' + back + 'm' + str + codes, newline);
+            this.telnet.prompt = false;
+        }
         else
             this.print('\x1b[' + fore + ';' + back + 'm' + str + codes, newline);
     }
