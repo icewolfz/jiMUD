@@ -5,56 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Client",
-            "type": "node",
-            "request": "launch",
-            "cwd": "${workspaceRoot}",
-            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
-            "windows": {
-                "runtimeExecutable": "${workspaceRoot}\\node_modules\\.bin\\electron.cmd"
-            },
-            "args": [
-                ".",
-                "-d"
-            ],
-            "program": "${workspaceRoot}/build/main.js",
-            "protocol": "inspector",
-            "address": "localhost",
-            "outputCapture": "std",
-            "sourceMaps": false,
-            "port": 5858,
-            "runtimeArgs": [
-                ".",
-                "--inspect-brk=5858"
-            ]
-        },
-        {
-            "name": "Debug Editor",
-            "type": "node",
-            "request": "launch",
-            "cwd": "${workspaceRoot}",
-            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
-            "windows": {
-                "runtimeExecutable": "${workspaceRoot}\\node_modules\\.bin\\electron.cmd"
-            },
-            "args": [
-                ".",
-                "-d",
-                "-eo"
-            ],
-            "program": "${workspaceRoot}/build/main.js",
-            "protocol": "inspector",
-            "address": "localhost",
-            "outputCapture": "std",
-            "sourceMaps": false,
-            "port": 5858,
-            "runtimeArgs": [
-                ".",
-                "--inspect=5858",
-            ]
-        },
-        {
-            "name": "Debug Client Custom Data Dir",
+            "name": "Debug Client Local Data Dir",
             "type": "node",
             "request": "launch",
             "cwd": "${workspaceRoot}",
@@ -79,7 +30,7 @@
             ]
         },
         {
-            "name": "Debug Editor Custom Data Dir",
+            "name": "Debug Editor Local Data Dir",
             "type": "node",
             "request": "launch",
             "cwd": "${workspaceRoot}",
@@ -103,7 +54,56 @@
                 ".",
                 "--inspect=5858",
             ]
-        },   
+        },         
+        {
+            "name": "Debug Client Default",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
+            "windows": {
+                "runtimeExecutable": "${workspaceRoot}\\node_modules\\.bin\\electron.cmd"
+            },
+            "args": [
+                ".",
+                "-d"
+            ],
+            "program": "${workspaceRoot}/build/main.js",
+            "protocol": "inspector",
+            "address": "localhost",
+            "outputCapture": "std",
+            "sourceMaps": false,
+            "port": 5858,
+            "runtimeArgs": [
+                ".",
+                "--inspect-brk=5858"
+            ]
+        },
+        {
+            "name": "Debug Editor Default",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
+            "windows": {
+                "runtimeExecutable": "${workspaceRoot}\\node_modules\\.bin\\electron.cmd"
+            },
+            "args": [
+                ".",
+                "-d",
+                "-eo"
+            ],
+            "program": "${workspaceRoot}/build/main.js",
+            "protocol": "inspector",
+            "address": "localhost",
+            "outputCapture": "std",
+            "sourceMaps": false,
+            "port": 5858,
+            "runtimeArgs": [
+                ".",
+                "--inspect=5858",
+            ]
+        }, 
         {
             "name": "Debug child process",
             "type": "node",
