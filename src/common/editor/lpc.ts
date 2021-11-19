@@ -17,8 +17,6 @@ export const conf: IRichLanguageConfiguration = {
         blockComment: ['/*', '*/']
     },
     brackets: [
-        ['({', '})'],
-        ['([', '])'],
         ['{', '}'],
         ['[', ']'],
         ['(', ')']

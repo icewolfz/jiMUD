@@ -5,6 +5,7 @@
 - **Fixed:**
  - Fix scripting predefined variables $selectedword, $selectedline, $selectedurl, $selword, $selline, $selurl so they are correctly set for use in javascript
  - Display: partial fix to unicode width when italic font style, selection and search is still off but basic ansi is now correct
+ - Code editor: change how ([ ]) and ({ }) are handled in bracket detection for better matching and coloring support
 - **Changed:**
   - Update electron 13.5.1 to 16.0.1
   - Update fswin 2.21.929 to 2.21.1015
