@@ -1669,11 +1669,15 @@ export class Display extends EventEmitter {
         };
     }
 
-    private textWidth(txt, font?) {
+    private textWidth(txt, font?, style?) {
         if (!txt || txt.length === 0) return 0;
         font = font || this._contextFont;
         const canvas = this._canvas || (this._canvas = document.createElement('canvas'));
         const context = this._context || (this._context = canvas.getContext('2d', { alpha: false }));
+        if ((style & FontStyle.Bold) === FontStyle.Bold)
+            font = "bold " + font;
+        if ((style & FontStyle.Italic) === FontStyle.Italic)
+            font = "italic " + font;
         context.font = font;
         const metrics = context.measureText(txt);
         return metrics.width;
@@ -1734,7 +1738,7 @@ export class Display extends EventEmitter {
                 end = len;
             //if unicode or non standard font calculate width
             if (formats[f].unicode || font)
-                width += this.textWidth(text.substring(start, end), font);
+                width += this.textWidth(text.substring(start, end), font, formats[f].style);
             else
                 width += text.substring(start, end).length * this._charWidth;
             //len is in block so quit
@@ -1785,35 +1789,35 @@ export class Display extends EventEmitter {
                 }
                 else */
                 if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
+                    format.width = format.width || this.textWidth(eText, 0, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.Link && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
+                    format.width = format.width || this.textWidth(eText, font, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.MXPLink && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
+                    format.width = format.width || this.textWidth(eText, font, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.MXPSend && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
+                    format.width = format.width || this.textWidth(eText, font, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
+                    format.width = format.width || this.textWidth(eText, font, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
@@ -3472,7 +3476,7 @@ export class ScrollBar extends EventEmitter {
         });
         this._parent.addEventListener('wheel', (event) => {
             this.scrollBy(this._type === ScrollType.horizontal ? event.deltaX : event.deltaY);
-        }, {passive: true});
+        }, { passive: true });
         this._wMove = (e) => {
             this._lastMouse = e;
             if (this.state.dragging) {
