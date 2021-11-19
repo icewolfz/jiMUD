@@ -1630,13 +1630,13 @@ export class Display extends EventEmitter {
                     font = `${formats[f].size || this._character.style.fontSize} ${formats[f].font || this._character.style.fontFamily}`;
                 let w;
                 if (font || u)
-                    w = left + Math.ceil(this.textWidth(text.substring(offset, x + 1), font));
+                    w = left + Math.ceil(this.textWidth(text.substring(offset, x + 1), font, formats[f].style));
                 else
                     w = left + text.substring(offset, x + 1).length * this._charWidth;
                 while (w < xPos && x < end) {
                     x++;
                     if (font || u)
-                        w = left + Math.ceil(this.textWidth(text.substring(offset, x + 1), font));
+                        w = left + Math.ceil(this.textWidth(text.substring(offset, x + 1), font, formats[f].style));
                     else
                         w = left + text.substring(offset, x + 1).length * this._charWidth;
                 }
@@ -2760,9 +2760,9 @@ private calculateWrapLines(idx?: number, mv?: number) {
                 eText = text.substring(offset, end);
                 font = 0;
                 if (format.font || format.size)
-                    format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
+                    format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`, format.style);
                 else if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
+                    format.width = format.width || this.textWidth(eText, 0, format.style);
                 else
                     format.width = format.width || eText.length * cw;
                 if (left + format.width > mv) {
@@ -2798,9 +2798,9 @@ private calculateWrapLines(idx?: number, mv?: number) {
                                         nLine = { offset: eOffset, formats: [nFormat], indent: true };
                                         wText = text.substring(cLine.formats[fP].offset, bOffset);
                                         if (cLine.formats[fP].font || cLine.formats[fP].size)
-                                            cLine.formats[fP].width = this.textWidth(wText, `${cLine.formats[fP].size || this._character.style.fontSize} ${cLine.formats[fP].font || this._character.style.fontFamily}`);
+                                            cLine.formats[fP].width = this.textWidth(wText, `${cLine.formats[fP].size || this._character.style.fontSize} ${cLine.formats[fP].font || this._character.style.fontFamily}`, cLine.formats[fP].style);
                                         else if (format.unicode)
-                                            cLine.formats[fP].width = this.textWidth(wText);
+                                            cLine.formats[fP].width = this.textWidth(wText, 0, cLine.formats[fP].style);
                                         else
                                             cLine.formats[fP].width = wText.length * cw;
                                         cLine.formats.splice(f, cLine.formats.length - f + 1);
@@ -2828,9 +2828,9 @@ private calculateWrapLines(idx?: number, mv?: number) {
                             eOffset++;
                             wText = text.substring(sOffset, eOffset);
                             if (font)
-                                fP = this.textWidth(wText, font);
+                                fP = this.textWidth(wText, font, nFormat.style);
                             else if (format.unicode)
-                                fP = this.textWidth(wText);
+                                fP = this.textWidth(wText, 0, nFormat.style);
                             else
                                 fP = wText.length * cw;
                         }
@@ -2855,9 +2855,9 @@ private calculateWrapLines(idx?: number, mv?: number) {
                             nFormat.offset = sOffset;
                             cLine.formats.push(nFormat);
                             if (font)
-                                nFormat.width = this.textWidth(wText, font);
+                                nFormat.width = this.textWidth(wText, font, nFormat.style);
                             else if (format.unicode)
-                                nFormat.width = this.textWidth(wText);
+                                nFormat.width = this.textWidth(wText, 0, nFormat.style);
                             else
                                 nFormat.width = wText.length * cw;
                             left = indent + nFormat.width;
@@ -2867,18 +2867,18 @@ private calculateWrapLines(idx?: number, mv?: number) {
                             cLine.formats.push(copy(nFormat));
                             fP = cLine.formats.length - 1;
                             if (font)
-                                cLine.formats[fP].width = this.textWidth(wText, font);
+                                cLine.formats[fP].width = this.textWidth(wText, font, nFormat.style);
                             else if (format.unicode)
-                                cLine.formats[fP].width = this.textWidth(wText);
+                                cLine.formats[fP].width = this.textWidth(wText, 0, nFormat.style);
                             else
                                 cLine.formats[fP].width = wText.length * cw;
                             nFormat.offset = eOffset;
                             wText = text.substring(eOffset, end);
                             nLine = { offset: eOffset, formats: [], indent: true };
                             if (font)
-                                nFormat.width = this.textWidth(wText, font);
+                                nFormat.width = this.textWidth(wText, font, nFormat.style);
                             else if (format.unicode)
-                                nFormat.width = this.textWidth(wText);
+                                nFormat.width = this.textWidth(wText, 0, nFormat.style);
                             else
                                 nFormat.width = wText.length * cw;
                             left = indent;
@@ -2903,7 +2903,7 @@ private calculateWrapLines(idx?: number, mv?: number) {
             else if ((format.formatType === FormatType.MXPExpired || format.formatType === FormatType.MXPLink || format.formatType === FormatType.Link || format.formatType === FormatType.MXPSend) && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
+                    format.width = format.width || this.textWidth(eText, font, format.style);
                 else
                     format.width = format.width || eText.length * cw;
                 left += format.width;
