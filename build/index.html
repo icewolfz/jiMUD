@@ -804,7 +804,7 @@
                 _context.forEach((item) => {
                     c.append(item);
                 });
-
+                var iUrl = 0;
                 if (client.defaultContext) {
                     if (c.items.length > 0)
                         c.append(new MenuItem({ type: 'separator' }));
@@ -815,6 +815,7 @@
                         if (parent.text() !== parent.attr('title'))
                             c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
                         c.append(new MenuItem({ type: 'separator' }));
+                        iUrl = 1;
                     }
                     else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0) {
                         c.append(new MenuItem({ label: 'Open url', click: () => { parent.trigger('click'); } }));
@@ -822,11 +823,13 @@
                         if (parent.text() !== parent.attr('href'))
                             c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
                         c.append(new MenuItem({ type: 'separator' }));
+                        iUrl = 1;
                     }
                     else if (parent && parent.hasClass('MXPLink')) {
                         c.append(new MenuItem({ label: 'Open mxp url', click: () => { parent.trigger('click'); } }));
                         c.append(new MenuItem({ label: 'Copy mxp url text', click: () => { window.writeClipboard(parent.text()); } }));
                         c.append(new MenuItem({ type: 'separator' }));
+                        iUrl = 2;
                     }
 
                     if (client.display.hasSelection) {
@@ -853,8 +856,18 @@
                         }));
                     }
                 }
+                else if (parent && (parent.hasClass('URLLink') || (parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)))
+                    iUrl = 1;
+                else if (parent && parent.hasClass('MXPLink')) 
+                    iUrl = 2;
+                
                 if (c.items.length > 0)
-                    c.popup({ window: remote.getCurrentWindow() });
+                {
+                    client.raise('context-opened', [iUrl]);
+                    c.popup({ window: remote.getCurrentWindow(), callback: () => {
+                        client.raise('context-closed', [iUrl]);
+                    } });
+                }
             });
 
             ['cut', 'copy'].forEach(function (event) {

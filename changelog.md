@@ -2,6 +2,8 @@
 
 ## v0.17.0
 
+- **New:**
+  - Add context-open and context-closed trigger events for when the context menu is open or closed
 - **Fixed:**
  - Fix scripting predefined variables $selectedword, $selectedline, $selectedurl, $selword, $selline, $selurl so they are correctly set for use in javascript
  - Display: partial fix to unicode width when italic font style, selection and search is still off but basic ansi is now correct

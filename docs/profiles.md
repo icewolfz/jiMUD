@@ -71,7 +71,7 @@
     - `opened` fired when client has finished opening
     - `closed` fired when client is closing
     - `connected` fired when client has been connected
-    - `disconnected` fired when client has bene disconnected
+    - `disconnected` fired when client has been disconnected
     - `error` fired when an error happens, first first argument is error message
     - `focus` fired when window focused
     - `blur` fired when window loses focus
@@ -79,6 +79,8 @@
     - `notify-closed` fired when notification is closed, argument 1 is title, argument 2 is message
     - `backup-loaded` fired when backup has finished loading
     - `backup-saved` fired whe backup has finished saving
+    - `context-opened` fired when the context menu is opened, argument 1 is 0 if not a url, is 1 if url, 2 if mxp url
+    - `context-closed` fired when the context menu is closed, argument 1 is 0 if not a url, is 1 if url, 2 if mxp url
   - `Alarm` create repeating tick timers
     ```
     When using alarm type pattern is in the format of hours:minutes:seconds, where hours and minutes are optional. A asterisk (*) is a wildcard to match any value for that place, if minutes or hours are missing a * is assumed. If pattern is preceded with a minus (-) the connection time is used instead of current time.
