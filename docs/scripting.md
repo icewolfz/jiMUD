@@ -14,12 +14,13 @@ To use scripting you just have to select script as the type from the type dropdo
 - `$selword` same as $selectedword
 - `$selline` sane as $selline
 - `$selurl` same as $selected url
+- `$contextMenu` access to the context menu item array, manipulating this will effect the displayed context menu, **WARNING** this could break the context menu, if broken you can refresh by causing a profile to be re-saved
 
 ## Basic function list
 
 - `client.beep()` play system beep sound
 - `client.readClipboard()` read text from clipboard, can also access from window.readClipboard()
-- `client.writeClipboard(text, html)` write text to clipboard, can also access from window.writeClipboard(text), html argument is optional, allows formated html markup of text for applications that support pasting html
+- `client.writeClipboard(text, html)` write text to clipboard, can also access from window.writeClipboard(text), html argument is optional, allows formatted html markup of text for applications that support pasting html
 - `client.readClipboardHTML()` read HTML from clipboard, can also access from window.readClipboardHTML()
 - `client.send(text, echo?)` send text directly to the mud, telnet code IAC is escaped, note you should always try and append a new line as most muds require it to process any text.
   - `text` the text to send

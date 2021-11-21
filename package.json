@@ -57,8 +57,8 @@
     "@types/node": "^16.11.9",
     "babel-minify": "^0.5.1",
     "electron": "^16.0.1",
-    "electron-builder": "^22.13.1",
-    "eslint": "^8.2.0",
+    "electron-builder": "^22.14.5",
+    "eslint": "^8.3.0",
     "eslint-plugin-html": "^6.2.0",
     "sass": "^1.43.4"
   },
@@ -137,10 +137,10 @@
   },
   "dependencies": {
     "@electron/remote": "^2.0.1",
-    "better-sqlite3": "^7.4.4",
+    "better-sqlite3": "^7.4.5",
     "buzz": "^1.2.1",
     "chokidar": "^3.5.2",
-    "electron-updater": "^4.3.9",
+    "electron-updater": "^4.6.1",
     "font-list": "^1.4.2",
     "fs-extra": "^10.0.0",
     "fswin": "^3.21.1015",

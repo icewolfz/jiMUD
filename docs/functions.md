@@ -29,7 +29,7 @@ Escaping allows you to prevent special characters from being parsed and allow th
 - `selectedurl` url under mouse when right clicked
 - `selword` same as $selectedword
 - `selline` same as $selline
-- `selurl` same as $selected url
+- `selurl` same as $selectedurl
 - `copied` return clipboard text
 - `selected`, `selectedword`, `selectedline`, `selectedurl`, `selword`, `selline`, `selurl`, or `copied` allow the following post fixes:
   - `.lower` force to all lower case by appending .lower

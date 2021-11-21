@@ -229,6 +229,7 @@
         var _noCaptureStore = 0;
         var _cLoading = false;
         var _context;
+        var $contextMenu;
         var _selword = '';
         var _selurl = '';
         var _selline = '';
@@ -565,6 +566,7 @@
         */
         function buildContextMenu() {
             _context = [];
+            $contextMenu= _context;
             var context = client.contexts;
             if (context.length > 0) {
                 var xl = context.length;
@@ -801,6 +803,12 @@
                 var c = new Menu();
                 if (!_context)
                     buildContextMenu();
+                var iUrl = 0;
+                if (parent && (parent.hasClass('URLLink') || (parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)))
+                    iUrl = 1;
+                else if (parent && parent.hasClass('MXPLink'))
+                    iUrl = 2;
+                client.raise('context-pre-build', [iUrl]);
                 _context.forEach((item) => {
                     c.append(item);
                 });
@@ -815,6 +823,7 @@
                         if (parent.text() !== parent.attr('title'))
                             c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
                         c.append(new MenuItem({ type: 'separator' }));
+                        iUrl = 1;
                     }
                     else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0) {
                         c.append(new MenuItem({ label: 'Open url', click: () => { parent.trigger('click'); } }));
@@ -822,11 +831,13 @@
                         if (parent.text() !== parent.attr('href'))
                             c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
                         c.append(new MenuItem({ type: 'separator' }));
+                        iUrl = 1;
                     }
                     else if (parent && parent.hasClass('MXPLink')) {
                         c.append(new MenuItem({ label: 'Open mxp url', click: () => { parent.trigger('click'); } }));
                         c.append(new MenuItem({ label: 'Copy mxp url text', click: () => { window.writeClipboard(parent.text()); } }));
                         c.append(new MenuItem({ type: 'separator' }));
+                        iUrl = 2;
                     }
 
                     if (client.display.hasSelection) {
@@ -853,8 +864,14 @@
                         }));
                     }
                 }
-                if (c.items.length > 0)
-                    c.popup({ window: remote.getCurrentWindow() });
+                if (c.items.length > 0) {
+                    client.raise('context-opened', [iUrl]);
+                    c.popup({
+                        window: remote.getCurrentWindow(), callback: () => {
+                            client.raise('context-closed', [iUrl]);
+                        }
+                    });
+                }
             });
 
             ['cut', 'copy'].forEach(function (event) {
