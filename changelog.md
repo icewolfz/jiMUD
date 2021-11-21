@@ -14,9 +14,10 @@
   - Update fswin 2.21.929 to 2.21.1015
   - Update monaco-editor 0.28.1 to 0.30.1
   - Update mathjs 9.5.0 to 10.0.0
-  - Update better-sqlite3 7.4.3 to 7.4.4
+  - Update better-sqlite3 7.4.3 to 7.4.5
   - Update font-list 1.4.0 to 1.4.2
   - Update yargs-parser 20.2.9 to 21.0.0
+  - Update electron-updater 4.3.9 to 4.6.1
 
 ## v0.16.5 2021-10-03
 
