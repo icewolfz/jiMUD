@@ -229,6 +229,7 @@
         var _noCaptureStore = 0;
         var _cLoading = false;
         var _context;
+        var $contextMenu;
         var _selword = '';
         var _selurl = '';
         var _selline = '';
@@ -565,6 +566,7 @@
         */
         function buildContextMenu() {
             _context = [];
+            $contextMenu= _context;
             var context = client.contexts;
             if (context.length > 0) {
                 var xl = context.length;
@@ -801,10 +803,16 @@
                 var c = new Menu();
                 if (!_context)
                     buildContextMenu();
+                var iUrl = 0;
+                if (parent && (parent.hasClass('URLLink') || (parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)))
+                    iUrl = 1;
+                else if (parent && parent.hasClass('MXPLink'))
+                    iUrl = 2;
+                client.raise('context-pre-build', [iUrl]);
                 _context.forEach((item) => {
                     c.append(item);
                 });
-                var iUrl = 0;
+
                 if (client.defaultContext) {
                     if (c.items.length > 0)
                         c.append(new MenuItem({ type: 'separator' }));
@@ -856,17 +864,13 @@
                         }));
                     }
                 }
-                else if (parent && (parent.hasClass('URLLink') || (parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)))
-                    iUrl = 1;
-                else if (parent && parent.hasClass('MXPLink')) 
-                    iUrl = 2;
-                
-                if (c.items.length > 0)
-                {
+                if (c.items.length > 0) {
                     client.raise('context-opened', [iUrl]);
-                    c.popup({ window: remote.getCurrentWindow(), callback: () => {
-                        client.raise('context-closed', [iUrl]);
-                    } });
+                    c.popup({
+                        window: remote.getCurrentWindow(), callback: () => {
+                            client.raise('context-closed', [iUrl]);
+                        }
+                    });
                 }
             });
 
