@@ -73,7 +73,7 @@ interface Line {
  * @todo Add MXP font size - requires variable line height, selection requires using format block to get correct size
  * @todo fix RTL unicode selection display
  * @todo Add MXP image height - requires variable line height support
- * @todo Add/fox MXP image selection highlighting
+ * @todo Add/fix MXP image selection highlighting
  */
 export class Display extends EventEmitter {
     private _lineID = 0;
