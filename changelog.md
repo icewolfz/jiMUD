@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.17.0
+## v0.17.0 2021-11-23
 
 - **New:**
   - Add context-pre-build, context-open, context-closed trigger events for when the context menu is open or closed
