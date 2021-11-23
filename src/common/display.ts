@@ -1639,6 +1639,12 @@ export class Display extends EventEmitter {
                     w = left + text.substring(offset, x + 1).length * this._charWidth;
                 while (w < xPos && x < end) {
                     x++;
+                    //unicode surrogate check
+                    if (text.charCodeAt(x) >= 0xD800 && text.charCodeAt(x) <= 0xDBFF && text.length > x + 1) {
+                        let second = text.charCodeAt(x + 1);
+                        if (second >= 0xDC00 && second <= 0xDFFF)
+                            x++;
+                    }
                     if (font || u)
                         w = left + Math.ceil(this.textWidth(text.substring(offset, x + 1), font, formats[f].style));
                     else
@@ -3318,7 +3324,7 @@ export class Display extends EventEmitter {
                 if (format.w.length > 0)
                     parts.push('width:', formatUnit(format.w), ';');
                 if (format.h.length > 0)
-                    parts.push('height:', formatUnit(format.h, this._charHeight), ';line-height:', formatUnit(format.h - 4, this._charHeight),';');
+                    parts.push('height:', formatUnit(format.h, this._charHeight), ';line-height:', formatUnit(format.h - 4, this._charHeight), ';');
                 switch (format.align.toLowerCase()) {
                     case 'left':
                         parts.push('float:left;');
