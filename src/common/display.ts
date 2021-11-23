@@ -1579,27 +1579,27 @@ export class Display extends EventEmitter {
                 while (w > xPos && x > 0) {
                     x--;
                     //unicode surrogate pair check
-                    if (text.length > x + 1 && text.charCodeAt(x) >= 0xD800 && text.charCodeAt(x) <= 0xDBFF)
+                    if (x > 0 && text.charCodeAt(x) >= 0xD800 && text.charCodeAt(x) <= 0xDBFF)
                         x--;
                     w = Math.ceil(this.textWidth(text.substr(0, x)));
                 }
                 x++;
                 //unicode surrogate/variant pair check
-                if ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F))
+                if (tl > x + 1 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
                     x++;
             }
             else if (w > 0 && w < xPos) {
                 while (w < xPos && x < tl) {
                     x++;
                     //unicode surrogate/variant pair check
-                    if ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F))
+                    if (tl > x + 1 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
                         x++;
                     w = Math.ceil(this.textWidth(text.substr(0, x)));
                 }
                 if (w > xPos) {
                     x--;
                     //unicode surrogate/variant pair check
-                    if ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F))
+                    if (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
                         x--;
                 }
             }
@@ -1607,13 +1607,13 @@ export class Display extends EventEmitter {
                 while (w <= 0 && x < tl) {
                     x++;
                     //unicode surrogate/variant pair check
-                    if ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F))
+                    if (tl > x + 1 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
                         x++;
                     w = Math.ceil(this.textWidth(text.substr(0, x)));
                 }
             }
             //unicode surrogate pair check
-            else if (text.length > x + 1 && text.charCodeAt(x) >= 0xD800 && text.charCodeAt(x) <= 0xDBFF)
+            else if (tl > x + 1 && text.charCodeAt(x) >= 0xD800 && text.charCodeAt(x) <= 0xDBFF)
                 x++;
             //unicode surrogate/variant pair check
             else if (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
