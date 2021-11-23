@@ -9,7 +9,7 @@
  - Fix scripting predefined variables $selectedword, $selectedline, $selectedurl, $selword, $selline, $selurl so they are correctly set for use in javascript
  - Display:
    - partial fix to unicode width when italic font style, selection and search is still off but basic ansi is now correct
-   - partial fix to unicode surrogate pair selection
+   - partial fix to unicode surrogate//variant pair selection
  - Code editor: change how ([ ]) and ({ }) are handled in bracket detection for better matching and coloring support
  - Preferences: Fixed color scheme selection not working
 - **Changed:**
