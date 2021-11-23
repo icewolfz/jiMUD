@@ -11,6 +11,7 @@
    - partial fix to unicode width when italic font style, selection and search is still off but basic ansi is now correct
    - partial fix to unicode surrogate pair selection
  - Code editor: change how ([ ]) and ({ }) are handled in bracket detection for better matching and coloring support
+ - Preferences: Fixed color scheme selection not working
 - **Changed:**
   - Update electron 13.5.1 to 16.0.1
   - Update fswin 2.21.929 to 2.21.1015
