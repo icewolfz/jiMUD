@@ -1549,6 +1549,7 @@ export class Display extends EventEmitter {
         }
     }
 
+    //TODO add font support, as different blocks of text could have different font formats, need to not just measure with but measure based on format block data
     public getLineOffset(pageX, pageY) {
         if (this.lines.length === 0)
             return { x: 0, y: 0 };
@@ -1574,7 +1575,6 @@ export class Display extends EventEmitter {
                 text = this.lines[this.lines.length - 1].replace(/ /g, '\u00A0');
             const tl = text.length;
             let w = Math.ceil(this.textWidth(text.substr(0, x)));
-            //(text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)
             if (w > xPos && xPos > 0) {
                 while (w > xPos && x > 0) {
                     x--;
@@ -1585,8 +1585,8 @@ export class Display extends EventEmitter {
                 }
                 x++;
                 //unicode surrogate/variant pair check
-                if (tl > x + 1 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
-                    x++;
+                if (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
+                    x--;
             }
             else if (w > 0 && w < xPos) {
                 while (w < xPos && x < tl) {
@@ -1612,9 +1612,6 @@ export class Display extends EventEmitter {
                     w = Math.ceil(this.textWidth(text.substr(0, x)));
                 }
             }
-            //unicode surrogate pair check
-            else if (tl > x + 1 && text.charCodeAt(x) >= 0xD800 && text.charCodeAt(x) <= 0xDBFF)
-                x++;
             //unicode surrogate/variant pair check
             else if (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
                 x--;
