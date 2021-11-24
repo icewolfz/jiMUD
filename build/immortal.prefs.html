@@ -77,8 +77,16 @@
     <script type="text/javascript">
         if (window.module) module = window.module;
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        const { TempType } = require('./js/types');
-        const Settings = require('./js/settings').Settings;
+        let Settings, TempType;
+        try {
+            Settings = require('./js/settings').Settings;            
+            TempType = require('./js/types').TempType;     
+        }
+        catch {
+            Settings = require('./build/js/settings').Settings;
+            TempType = require('./build/js/types').TempType;     
+        }
+
         const { ipcRenderer } = require('electron');
         const path = require('path');
 
