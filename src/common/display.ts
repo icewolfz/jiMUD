@@ -1646,6 +1646,9 @@ export class Display extends EventEmitter {
                         if (second >= 0xDC00 && second <= 0xDFFF)
                             x++;
                     }
+                    //unicode variant
+                    else if(text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)
+                        x++;
                     if (font || u)
                         w = left + Math.ceil(this.textWidth(text.substring(offset, x + 1), font, formats[f].style));
                     else
