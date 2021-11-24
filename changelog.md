@@ -1,10 +1,10 @@
 # Changelog
 
-## v0.17.1
+## v0.17.1 2021-11-23
 
 - **Fixed:**
  - Fixed issue with electron and child windows open using window.open and invalid module paths
- 
+
 ## v0.17.0 2021-11-23
 
 - **New:**
