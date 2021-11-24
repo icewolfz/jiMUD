@@ -78,16 +78,10 @@
     <script src="../lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
     <script src="../lib/ace/ext-themelist.js" type="text/javascript"></script>
     <script type="text/javascript">
-        //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        let EditorSettings, library = './js/library';
-        try {
-            EditorSettings = require('./js/editor/code.editor.settings').EditorSettings;
-        }
-        catch {
-            library = './build/js/library';
-            EditorSettings = require('./build/js/editor/code.editor.settings').EditorSettings;
-        }
-        const { parseTemplate, isDirSync } = require(library);
+        //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ       
+        const { parseTemplate, isDirSync } = require('./js/library.js');
+        const EditorSettings = require('./js/editor/code.editor.settings').EditorSettings;
+
         const { ipcRenderer, shell } = require('electron');
         const path = require('path');
         const fs = require('fs-extra');        
