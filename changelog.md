@@ -2,6 +2,10 @@
 
 ## v0.17.2
 
+- **New:**
+  - Added [#testunicodeemoji](docs/commands.md) to display unicode emoji symbols
+- **Fixed:**
+  - Display: Fix unicode selection width when font style is italic
 ## v0.17.1 2021-11-23
 
 - **Fixed:**
