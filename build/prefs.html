@@ -535,6 +535,7 @@
             $('.selectpicker').change(function () {
                 switch ($(this).attr('id')) {
                     case 'colorScheme':
+                        updateScheme(parseInt($(this).val()));
                         break;
                     case 'chat-font':
                         _settings.chat.font = $(this).val();

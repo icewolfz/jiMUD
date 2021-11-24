@@ -1317,6 +1317,7 @@ function createWindow() {
             loadWindowScripts(w, frameName);
             addInputContext(w, set && set.spellchecking);
             w.show();
+            w.reload();
         });
         w.webContents.on('render-process-gone', (event, details) => {
             logError(`${url} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
@@ -3888,6 +3889,7 @@ function createNewWindow(name, options) {
             if (!options.noInput)
                 addInputContext(w, global.editorOnly ? (edSet && edSet.spellchecking) : (set && set.spellchecking));
             w.show();
+            w.reload();
         });
         w.webContents.on('render-process-gone', (event, details) => {
             logError(`${url} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
@@ -4335,6 +4337,7 @@ function createCodeEditor(show, loading, loaded) {
             loadWindowScripts(w, frameName);
             addInputContext(w, edSet && edSet.spellchecking);
             w.show();
+            w.reload();
         });
         w.webContents.on('render-process-gone', (event, details) => {
             logError(`${url} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
