@@ -6,6 +6,9 @@
   - Added [#testunicodeemoji](docs/commands.md) to display unicode emoji symbols
 - **Fixed:**
   - Display: Fix unicode selection width when font style is italic
+- **Changed:**
+  - Update electron 16.0.1 to 16.0.2
+
 ## v0.17.1 2021-11-23
 
 - **Fixed:**

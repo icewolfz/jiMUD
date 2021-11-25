@@ -53,14 +53,14 @@
   },
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
-    "@types/jquery": "^3.5.8",
-    "@types/node": "^16.11.9",
+    "@types/jquery": "^3.5.9",
+    "@types/node": "^16.11.10",
     "babel-minify": "^0.5.1",
-    "electron": "^16.0.1",
+    "electron": "^16.0.2",
     "electron-builder": "^22.14.5",
     "eslint": "^8.3.0",
     "eslint-plugin-html": "^6.2.0",
-    "sass": "^1.43.4"
+    "sass": "^1.43.5"
   },
   "build": {
     "appId": "jiMUD",
