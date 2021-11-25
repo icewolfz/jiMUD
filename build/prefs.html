@@ -211,28 +211,34 @@
                     var fl = fonts.length;
                     var f = 0;
                     var ops = [];
+                    var el;
                     //fonts.sort((a, b) => a.localeCompare(b));
                     for (f = 0; f < fl; f++) {
-                        ops.push(`<option style="font-family: ${fonts[f].replace(/"/g, '\'')}" value="${fonts[f].replace(/"/g, '\'')}">${fonts[f].replace(/"/g, '')}</option>`);
+                        el = fonts[f].replace(/"/g, '\'');
+                        ops.push('<option style="font-family: ', el, '" value="' , el, '">', el, '</option>');
                     }
                     ops = ops.join('');
-                    $('#font-system').append(ops);
-                    $('#cmdfont-system').append(ops);
+                    $('#font-system').append(ops);                    
+                    $('#cmdfont-system').append(ops);                    
                     $('#chat-font-system').append(ops);
 
-                    $('#font').selectpicker('refresh');
-                    $('#cmdfont').selectpicker('refresh');
-                    $('#chat-font').selectpicker('refresh');
-                    $('#font').val(_settings.font);
-                    $('#font').selectpicker('render');
-                    $('#font').change();
-                    $('#cmdfont').val(_settings.cmdfont);
-                    $('#cmdfont').selectpicker('render');
-                    $('#cmdfont').change();
+                    el = $('#font');
+                    el.selectpicker('refresh');
+                    el.val(_settings.font);
+                    el.selectpicker('render');
+                    el.change();
+                    
+                    el = $('#cmdfont');
+                    el.selectpicker('refresh');
+                    el.val(_settings.cmdfont);
+                    el.selectpicker('render');
+                    el.change();
 
-                    $('#chat-font').val(_settings.chat.font);
-                    $('#chat-font').selectpicker('render');
-                    $('#chat-font').change();
+                    el = $('#chat-font');
+                    el.selectpicker('refresh');
+                    el.val(_settings.chat.font);
+                    el.selectpicker('render');
+                    el.change();
                 })
                 .catch(err => {
                     ipcRenderer.send('error', err);
