@@ -5,7 +5,10 @@
 - **New:**
   - Added [#testunicodeemoji](docs/commands.md) to display unicode emoji symbols
 - **Fixed:**
-  - Display: Fix unicode selection width when font style is italic
+  - Display:
+    - Fixed unicode selection width when font style is italic
+    - Fixed mouse cursor to use standard text cursor
+    - Fixed more unicode surrogate/variant pair selection issues
 - **Changed:**
   - Update electron 16.0.1 to 16.0.2
 

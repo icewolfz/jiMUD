@@ -1583,42 +1583,46 @@ export class Display extends EventEmitter {
                 while (w > xPos && x > 0) {
                     x--;
                     //unicode surrogate pair check
-                    if (x > 0 && text.charCodeAt(x) >= 0xD800 && text.charCodeAt(x) <= 0xDBFF)
+                    while (x > 0 && text.charCodeAt(x) >= 0xD800 && text.charCodeAt(x) <= 0xDBFF)
                         x--;
                     w = Math.ceil(this.lineWidth(line, 0, x));
                 }
                 x++;
                 //unicode surrogate/variant pair check
-                if (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
+                while (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
                     x--;
             }
             else if (w > 0 && w < xPos) {
                 while (w < xPos && x < tl) {
                     x++;
                     //unicode surrogate/variant pair check
-                    if (tl > x + 1 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
+                    while (tl > x + 1 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
                         x++;
-                    w = Math.ceil(this.lineWidth(line,0, x));
+                    w = Math.ceil(this.lineWidth(line, 0, x));
                 }
                 if (w > xPos) {
                     x--;
                     //unicode surrogate/variant pair check
-                    if (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
+                    while (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
                         x--;
                 }
+                else if (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
+                    x--;
             }
             else if (w === 0 && x > 0 && xPos >= 0) {
                 while (w <= 0 && x < tl) {
                     x++;
                     //unicode surrogate/variant pair check
-                    if (tl > x + 1 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
+                    while (tl > x + 1 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
                         x++;
                     w = Math.ceil(this.lineWidth(line, 0, x));
                 }
             }
             //unicode surrogate/variant pair check
-            else if (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
-                x--;
+            else {
+                while (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
+                    x--;
+            }
         }
         return { x: x, y: y };
     }
@@ -1738,7 +1742,7 @@ export class Display extends EventEmitter {
             if (!formats[f].width || formats[f].formatType === FormatType.LinkEnd || formats[f].formatType === FormatType.MXPLinkEnd || formats[f].formatType === FormatType.MXPSendEnd)
                 continue;
             //TODO not supported in width calculations at the moment
-            if(formats[f].align === 'right')
+            if (formats[f].align === 'right')
                 continue;
             //find end
             if (f < fLen - 1)
@@ -2340,10 +2344,10 @@ export class Display extends EventEmitter {
                 w = mw;
             else if (sL === line)
                 w = this.lineWidth(line, s) + this._charWidth;
-                //w = this.textWidth(this.lines[sL].substr(s).replace(/ /g, '\u00A0')) + this._charWidth;
+            //w = this.textWidth(this.lines[sL].substr(s).replace(/ /g, '\u00A0')) + this._charWidth;
             else if (eL === line)
                 w = this.lineWidth(line, 0, e);
-                //w = this.textWidth(tLine.substring(0, e));
+            //w = this.textWidth(tLine.substring(0, e));
             else
                 w = this._lines[line].width + this._charWidth;
             cl = this.lineWidth(line, 0, cl);
@@ -2355,18 +2359,18 @@ export class Display extends EventEmitter {
                     cr = mw;
                 else
                     cr = fl(eL === line ? this.lineWidth(line, 0, e) : (this._lines[line].width + this._charWidth));
-                    //cr = fl(eL === line ? this.textWidth(tLine.substring(0, e)) : (this._lines[line].width + this._charWidth));
+                //cr = fl(eL === line ? this.textWidth(tLine.substring(0, e)) : (this._lines[line].width + this._charWidth));
                 if (line > sL) {
                     let pl = 0;
                     if (sL === line - 1) {
                         if (this.lineFormats[line - 1][0].hr)
                             pl = 0;
                         else if (fl(this.lineWidth(sL, 0, s)) >= fl(this._lines[line - 1].width + this._charWidth))
-                        //else if (fl(this.textWidth(this.lines[sL].substr(0, s).replace(/ /g, '\u00A0'))) >= fl(this._lines[line - 1].width + this._charWidth))
+                            //else if (fl(this.textWidth(this.lines[sL].substr(0, s).replace(/ /g, '\u00A0'))) >= fl(this._lines[line - 1].width + this._charWidth))
                             pl = fl(this._lines[line - 1].width) + this._charWidth;
                         else
                             pl = fl(this.lineWidth(sL, 0, s));
-                            //pl = fl(this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0')));
+                        //pl = fl(this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0')));
                     }
                     const pr = this.lineFormats[line - 1][0].hr ? mw : fl(this._lines[line - 1].width + this._charWidth);
 
@@ -2388,7 +2392,7 @@ export class Display extends EventEmitter {
                         nr = mw;
                     else
                         nr = fl(eL === line + 1 ? this.lineWidth(line + 1, 0, e) : (this._lines[line + 1].width + this._charWidth));
-                        //nr = fl(eL === line + 1 ? this.textWidth(this.lines[line + 1].substring(0, e).replace(/ /g, '\u00A0')) : (this._lines[line + 1].width + this._charWidth));
+                    //nr = fl(eL === line + 1 ? this.textWidth(this.lines[line + 1].substring(0, e).replace(/ /g, '\u00A0')) : (this._lines[line + 1].width + this._charWidth));
                     if (fl(cl) === 0)
                         startStyle.bottom = CornerType.Flat;
                     else if (0 < fl(cl) && fl(cl) < nr)
