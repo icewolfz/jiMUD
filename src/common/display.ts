@@ -1711,15 +1711,24 @@ export class Display extends EventEmitter {
         //Combining Half Marks
         if (code >= 0x20D0 && code <= 0x20FF)
             return true;
-        switch(code) {
-            //dakuten
+        //COMBINING CYRILLIC    
+        if (code >= 0x0484 && code <= 0x0489)
+            return true;
+        //Nko Combining        
+        if (code >= 0x07EB && code <= 0x07F3)
+            return true;
+        switch (code) {
+            //COMBINING KATAKANA-HIRAGANA
             case 0x3099:
-            //handakuten
             case 0x309A:
             //Devanagari 
             case 0x0901:
             case 0x0953:
             case 0x0953:
+            //Ethiopic Combining                
+            case 0x135D:
+            case 0x135E:
+            case 0x135F:
                 return true;
         }
         return false;
