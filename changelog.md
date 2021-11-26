@@ -4,6 +4,7 @@
 
 - **New:**
   - Added [#testunicodeemoji](docs/commands.md) to display unicode emoji symbols
+  - Added preference to open Who is on in child window
 - **Fixed:**
   - Display:
     - Fixed unicode selection width when font style is italic

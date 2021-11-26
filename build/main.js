@@ -16,7 +16,7 @@ require('@electron/remote/main').initialize()
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, winWho, winMap, winProfiles, winEditor, winChat, winCode, winProgress;
+let win, winMap, winProfiles, winEditor, winChat, winCode, winProgress;
 let _winProgressTimer = 0;
 let set, mapperMax = false, editorMax = false, chatMax = false, codeMax = false;
 let edSet;
@@ -353,13 +353,9 @@ var menuTemp = [
                 }
             },
             {
-                label: '&Who is on?',
+                label: '&Who is on?...',
                 click: () => {
-                    if (winWho) {
-                        winWho.show();
-                        return;
-                    }
-                    shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
+                    executeScript('showWho()', win, true);
                     win.webContents.focus();
                 }
             },
@@ -1004,13 +1000,9 @@ function createTray() {
         },
         { type: 'separator' },
         {
-            label: '&Who is on?',
+            label: '&Who is on?...',
             click: () => {
-                if (winWho) {
-                    winWho.show();
-                    return;
-                }
-                shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
+                executeScript('showWho()', win, true);
             }
         },
         { type: 'separator' },

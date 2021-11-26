@@ -197,6 +197,7 @@ Controls what is captured into the chat window
 - `Enable warning dialog when connected and closing client` disable or enable warning check when closing mud and connected
 - `Enable warning dialog when closing client and child windows are open` disable or enable warning dialog when closing and child windows are open
 - `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character
+- `Open 'Who is on' in web browser` Open the 'Who is on?' in a web browser, if disabled will open in a child window of jiMUD
 
 ## Advanced > Backup
 

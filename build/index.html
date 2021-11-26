@@ -566,7 +566,7 @@
         */
         function buildContextMenu() {
             _context = [];
-            $contextMenu= _context;
+            $contextMenu = _context;
             var context = client.contexts;
             if (context.length > 0) {
                 var xl = context.length;
@@ -2445,6 +2445,23 @@
             }
             else
                 ipcRenderer.send('show-window', 'help', { show: true, file: 'help.html', icon: 'help', alwaysOnTopClient: true });
+        }
+
+        function showWho() {
+            if (client.options.externalWho)
+                shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
+            else {
+                if (client.options.windows['who'] && client.options.windows['who'].options) {
+                    client.options.windows['who'].options.show = true;
+                    ipcRenderer.send('show-window', 'who', client.options.windows['who'].options);
+                }
+                else
+                    ipcRenderer.send('show-window', 'who', { show: true, file: 'who.html', icon: 'user', alwaysOnTopClient: true, width: 800, height: 600, x: window.screenTop + 100, y: window.screenLeft + 100 });
+            }
+            setTimeout(() => {
+                client.commandInput[0].blur();
+                client.commandInput[0].focus();
+            }, 0);
         }
 
         // eslint-disable-next-line no-unused-vars

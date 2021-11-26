@@ -450,6 +450,7 @@ export class Settings {
     public gamepads: boolean = false;
 
     public allowEval: boolean = true;
+    public externalWho: boolean = true;
 
     public windows = {};
     public buttons = {
