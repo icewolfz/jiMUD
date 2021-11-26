@@ -10,7 +10,10 @@
     - Fixed unicode selection width when font style is italic
     - Fixed mouse cursor to use standard text cursor
     - Fixed more unicode surrogate/variant pair selection issues
+    - Fixed bug in MXP expire not clearing send/link end tag
+  - Ansi Parser: Fixed bug in MXP expire tag not correctly expiring links on same line that come before the tag
 - **Changed:**
+  - Expand [#testmxpexpire](docs/commands.md) to test same line expiring
   - Update electron 16.0.1 to 16.0.2
 
 ## v0.17.1 2021-11-23

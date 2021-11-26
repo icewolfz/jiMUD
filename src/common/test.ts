@@ -298,7 +298,7 @@ export class Tests extends EventEmitter {
         };
         //spell-checker:enable
         this.TestFunctions['testmxpexpire'] = function () {
-            this.Client.print('\t\x1B[6z<SEND "sample" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND "sample" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt>\x1B[0z\n', true);
+            this.Client.print('\t\x1B[6z<SEND "sample" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND "sample" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt> <SEND "sample" PROMPT EXPIRE=prompt>Expire sample3</SEND>\x1B[0z\n', true);
         };
 
         this.TestFunctions['testmxpcolors'] = function () {

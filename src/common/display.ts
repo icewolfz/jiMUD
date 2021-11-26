@@ -3190,7 +3190,7 @@ export class Display extends EventEmitter {
             for (; f < fl; f++) {
                 if (this.lineFormats[idx][f] === eType) {
                     if (n === 0) {
-                        format.formatType = FormatType.MXPSkip;
+                        this.lineFormats[idx][f].formatType = FormatType.MXPSkip;
                         break;
                     }
                     else
