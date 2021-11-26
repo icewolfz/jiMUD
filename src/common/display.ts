@@ -1588,39 +1588,39 @@ export class Display extends EventEmitter {
                     w = Math.ceil(this.lineWidth(line, 0, x));
                 }
                 x++;
-                //unicode surrogate/variant pair check
-                while (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
+                //unicode modifier check
+                while (x > 0 && this.isUnicodeModifierCode(text.charCodeAt(x)))
                     x--;
             }
             else if (w > 0 && w < xPos) {
                 while (w < xPos && x < tl) {
                     x++;
-                    //unicode surrogate/variant pair check
-                    while (tl > x + 1 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
+                    //unicode modifier check
+                    while (tl > x + 1 && this.isUnicodeModifierCode(text.charCodeAt(x)))
                         x++;
                     w = Math.ceil(this.lineWidth(line, 0, x));
                 }
                 if (w > xPos) {
                     x--;
-                    //unicode surrogate/variant pair check
-                    while (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
+                    //unicode modifier check
+                    while (x > 0 && this.isUnicodeModifierCode(text.charCodeAt(x)))
                         x--;
                 }
-                else if (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
+                else if (x > 0 && this.isUnicodeModifierCode(text.charCodeAt(x)))
                     x--;
             }
             else if (w === 0 && x > 0 && xPos >= 0) {
                 while (w <= 0 && x < tl) {
                     x++;
-                    //unicode surrogate/variant pair check
-                    while (tl > x + 1 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
+                    //unicode modifier check
+                    while (tl > x + 1 && this.isUnicodeModifierCode(text.charCodeAt(x)))
                         x++;
                     w = Math.ceil(this.lineWidth(line, 0, x));
                 }
             }
-            //unicode surrogate/variant pair check
+            //unicode modifier check
             else {
-                while (x > 0 && ((text.charCodeAt(x) >= 0xDC00 && text.charCodeAt(x) <= 0xDFFF) || (text.charCodeAt(x) >= 0xFE00 && text.charCodeAt(x) <= 0xFE0F)))
+                while (x > 0 && this.isUnicodeModifierCode(text.charCodeAt(x)))
                     x--;
             }
         }
@@ -1686,6 +1686,43 @@ export class Display extends EventEmitter {
             }
         }
         return '';
+    }
+
+    private isUnicodeModifierCode(code: number) {
+        //test if surrogate
+        if (code >= 0xDC00 && code <= 0xDFFF)
+            return true;
+        //test if variant
+        if (code >= 0xFE00 && code <= 0xFE0F)
+            return true;
+        //https://en.wikipedia.org/wiki/Combining_character
+        //Combining Diacritical Marks
+        if (code >= 0x0300 && code <= 0x036F)
+            return true;
+        //Combining Diacritical Marks Extended
+        if (code >= 0x1AB0 && code <= 0x1AFF)
+            return true;
+        //Combining Diacritical Marks Supplement
+        if (code >= 0x1DC0 && code <= 0x1DFF)
+            return true;
+        //Combining Diacritical Marks for Symbols
+        if (code >= 0xFE20 && code <= 0xFE2F)
+            return true;
+        //Combining Half Marks
+        if (code >= 0x20D0 && code <= 0x20FF)
+            return true;
+        switch(code) {
+            //dakuten
+            case 0x3099:
+            //handakuten
+            case 0x309A:
+            //Devanagari 
+            case 0x0901:
+            case 0x0953:
+            case 0x0953:
+                return true;
+        }
+        return false;
     }
 
     private offset(elt) {

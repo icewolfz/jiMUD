@@ -7,6 +7,7 @@
   - Added preference to open Who is on in child window
 - **Fixed:**
   - Display:
+    - Fixed unicode combining character selection issues
     - Fixed unicode selection width when font style is italic
     - Fixed mouse cursor to use standard text cursor
     - Fixed more unicode surrogate/variant pair selection issues
