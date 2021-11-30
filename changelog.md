@@ -6,6 +6,7 @@
   - Added [#testunicodeemoji](docs/commands.md) to display unicode emoji symbols
   - Added preference to open Who is on in child window
 - **Fixed:**
+  = Mac: Attemp to fix window menu item on main bar
   - Display:
     - Fixed unicode combining character selection issues
     - Fixed unicode selection width when font style is italic

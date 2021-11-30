@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, shell, screen } = require('electron');
+const { app, BrowserWindow, shell, screen } = buirequire('electron');
 const { Tray, dialog, Menu, MenuItem } = require('electron');
 const ipcMain = require('electron').ipcMain;
 const path = require('path');
@@ -741,7 +741,7 @@ var menuTemp = [
     }
 ];
 
-if (process.platform === 'darwin') {
+if (true || process.platform === 'darwin') {
     menuTemp.unshift({
         label: app.getName(),
         submenu: [
@@ -794,7 +794,7 @@ if (process.platform === 'darwin') {
         }
     );
     // Window menu.
-    menuTemp[5].submenu.push = [
+    menuTemp[5].submenu.push(
         {
             label: 'Close',
             accelerator: 'CmdOrCtrl+W',
@@ -816,7 +816,7 @@ if (process.platform === 'darwin') {
             label: 'Bring All to Front',
             role: 'front'
         }
-    ];
+    );
 }
 else {
     menuTemp[4].submenu.push(
