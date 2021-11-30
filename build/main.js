@@ -741,7 +741,7 @@ var menuTemp = [
     }
 ];
 
-if (true || process.platform === 'darwin') {
+if (process.platform === 'darwin') {
     menuTemp.unshift({
         label: app.getName(),
         submenu: [
