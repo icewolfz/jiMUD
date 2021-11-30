@@ -697,13 +697,7 @@ var menuTemp = [
               //accelerator: 'CmdOrCtrl+M'
             },
             */
-            { type: 'separator' },
-            {
-                role: 'minimize'
-            },
-            {
-                role: 'close'
-            }
+            { type: 'separator' }
         ]
     },
     //Help
@@ -781,6 +775,7 @@ if (process.platform === 'darwin') {
             }
         ]
     });
+    menuTemp.push()
     // Edit menu.
     menuTemp[2].submenu.push(
         {
@@ -799,7 +794,7 @@ if (process.platform === 'darwin') {
         }
     );
     // Window menu.
-    menuTemp[5].submenu = [
+    menuTemp[5].submenu.push = [
         {
             label: 'Close',
             accelerator: 'CmdOrCtrl+W',
@@ -822,6 +817,16 @@ if (process.platform === 'darwin') {
             role: 'front'
         }
     ];
+}
+else {
+    menuTemp[4].submenu.push(
+        {
+            role: 'minimize'
+        },
+        {
+            role: 'close'
+        }
+    )
 }
 
 let menubar;
