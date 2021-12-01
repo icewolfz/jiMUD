@@ -46,9 +46,10 @@
 |#trigger|#tr| name options<sup>2</sup> *profile*|Update options<sup>2</sup> for a trigger
 |#event|#ev|name {commands} *options<sup>2</sup> profile*|create or update event
 |#unevent|#une|name *profile*|Delete an event
-|#button|#bu|name\|index|Cause a button to react as if it was clicked, if index it is the poiston from top down starting at 0
+|#button|#bu|name\|index|Cause a button to react as if it was clicked, if index it is the position from top down starting at 0
 |#button|#bu|*name caption* {commands} *{icon} options<sup>2</sup> profile*|Update or create a button
-|#unbutton|#unb|name\|index\|caption| remove a button, if index it is the postion in order of buttons in profile manager
+|#unbutton|#unb|name\|index\|caption| remove a button, if index it is the position in order of buttons in profile manager
+|#window|#win|name||Open or show named window, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
 
 **Note:** All italic arguments are optional and can be left out
 

@@ -583,7 +583,7 @@ export class Input extends EventEmitter {
         let trigger;
         let avg;
         let max;
-        let min;        
+        let min;
         switch (fun.toLowerCase()) {
             case 'testfile':
                 args = this.parseOutgoing(args.join(' '), false);
@@ -1780,6 +1780,27 @@ export class Input extends EventEmitter {
                     this.client.raise(args[0]);
                 else
                     this.client.raise(args[0], args.slice(1));
+                return null;
+            case 'window':
+            case 'win':
+                if (this.client.options.parseDoubleQuotes)
+                    args.forEach((a) => {
+                        return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
+                            return e.replace(/\\\"/g, '"');
+                        });
+                    });
+                if (this.client.options.parseSingleQuotes)
+                    args.forEach((a) => {
+                        return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
+                            return e.replace(/\\\'/g, '\'');
+                        });
+                    });                
+                if (args.length === 0 || args.length > 2)
+                    throw new Error('Invalid syntax use #\x1b[4mwin\x1b[0;-11;-12mdow name');
+                else if (args.length === 1)
+                    this.client.emit('window', this.stripQuotes(this.parseOutgoing(args[0], false)));
+                else
+                    this.client.emit('window', this.stripQuotes(this.parseOutgoing(args[0], false)), this.stripQuotes(this.parseOutgoing(args.slice(1).join(' '), false)));
                 return null;
             case 'raisedelayed':
             case 'raisede':

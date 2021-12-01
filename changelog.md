@@ -3,6 +3,7 @@
 ## v0.17.2
 
 - **New:**
+  - Added [#window](docs/commands.md) to open/show supported windows
   - Added [#testunicodeemoji](docs/commands.md) to display unicode emoji symbols
   - Added preference to open Who is on in child window
 - **Fixed:**

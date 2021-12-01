@@ -1392,6 +1392,51 @@
                 ipcRenderer.send('options-changed');
             });
 
+            client.on('window', (window, args) => {
+                switch (window) {
+                    case 'mapper':
+                    case 'editor':
+                    case 'profiles':
+                    case 'chat':
+                    case 'about':
+                    case 'code-editor':
+                        ipcRenderer.send('show-window', window);
+                        break;
+                    case 'profiles-manager':
+                    case 'profile-manager':
+                    case 'manager':
+                        ipcRenderer.send('show-window', 'profiles');
+                        break;
+                    case 'prefs':
+                    case 'options':
+                    case 'preferences':
+                        ipcRenderer.send('show-window', 'prefs');
+                        break;
+                    case 'help':
+                        showHelp();
+                        break;
+                    case 'immortals':
+                        showImmortalTools();
+                        break;
+                    case 'history':
+                    case 'command-history':
+                        showCommandHistory()
+                        break;
+                    case 'log-viewer':
+                    case 'logs':
+                        showLogViewer();
+                        break;
+                    case 'skills':
+                        showSkills();
+                        break;
+                    case 'who':
+                        showWho();
+                        break;
+                    default:
+                        throw new Error('Invalid window name must be: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills');
+                }
+            });
+
             _backup = new Backup(client, ipcRenderer.sendSync('get-global', 'mapFile'));
             _backup.loadSelection = client.options.backupLoad;
             _backup.saveSelection = client.options.backupSave;
