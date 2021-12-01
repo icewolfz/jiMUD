@@ -1453,7 +1453,13 @@ export class Display extends EventEmitter {
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
 
-    public colorLine(idx: number, fore, back?, start?: number, end?: number) {
+    //color like javascript.substr using 0 index and length
+    public colorSubStrByLine(idx: number, fore, back?, start?: number, len?: number) {
+        this.colorSubStringByLine(idx, fore, back, start, start + len);
+    }
+
+    //color like javascript.substring using 0 index for start and end
+    public colorSubStringByLine(idx: number, fore, back?, start?: number, end?: number) {
         //invalid line bail
         if (idx < 0 || idx >= this.lines.length) return;
         const lineLength = this.lines[idx].length;
@@ -1592,6 +1598,8 @@ export class Display extends EventEmitter {
             let end;
             if (f < l - 1) {
                 const nFormat = formats[f + 1];
+                //old links that have expired so no longer needed clean
+                //if (format.formatType === FormatType.MXPSkip) continue;
                 //skip format until find one that has different offset
                 if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
                     continue;
