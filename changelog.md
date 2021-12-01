@@ -17,7 +17,7 @@
   - Ansi Parser: Fixed bug in MXP expire tag not correctly expiring links on same line that come before the tag
 - **Changed:**
   - Expand [#testmxpexpire](docs/commands.md) to test same line expiring
-  - Update electron 16.0.1 to 16.0.2
+  - Update electron 16.0.1 to 16.0.3
 
 ## v0.17.1 2021-11-23
 
