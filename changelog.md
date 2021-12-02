@@ -10,7 +10,7 @@
   - Add [%{color(fore,back,bold)}](docs/functions.md) function to return color codes
   - Add [%{zcolor(fore,back,effect)}](docs/functions.md) function to convert zmud/cmud style color codes into supported jiMUD codes
 - **Fixed:**
-  = Mac: Attempt to fix window menu item on main bar
+  - Mac: Attempt to fix window menu item on main bar
   - Display:
     - Fixed unicode combining character selection issues
     - Fixed unicode selection width when font style is italic
