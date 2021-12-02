@@ -20,6 +20,7 @@
     - Fixed bug in MXP expire not clearing send/link end tag
   - Ansi Parser: Fixed bug in MXP expire tag not correctly expiring links on same line that come before the tag
   - Fixed bug with [#gag](docs/commands.md) not working from command line
+  - Fixed bug with [#gag](docs/commands.md) and number argument not correctly working
   - Fixed bug with regex trigger caching
   - Fixed bug when client was maximized then minized and not correctly sending the new size to the mud
 - **Changed:**
