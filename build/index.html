@@ -505,8 +505,8 @@
             client.display.updateScrollbars();
             client.UpdateWindow();
             setTimeout(() => {
-                _status.updateInterface();    
-            }, 1);            
+                _status.updateInterface();
+            }, 1);
             updateMenu();
         }
 
@@ -667,10 +667,17 @@
             remote.getCurrentWindow().on('restore', () => {
                 client.display.updateScrollbars();
                 client.display.updateView();
+                client.UpdateWindow();
             });
             remote.getCurrentWindow().on('maximize', () => {
                 client.display.updateScrollbars();
                 client.display.updateView();
+                client.UpdateWindow();
+            });
+            remote.getCurrentWindow().on('unmaximize', () => {
+                client.display.updateScrollbars();
+                client.display.updateView();
+                client.UpdateWindow();
             });
 
             ipcRenderer.send('set-overlay', 0);
@@ -1538,8 +1545,13 @@
                 }
             });
             _status.on('split-moved', value => {
-                if(value === client.options.statusWidth) return;
+                if (value === client.options.statusWidth) return;
                 client.options.statusWidth = value;
+                setTimeout(() => {
+                    client.display.updateScrollbars();
+                    client.display.updateView();
+                    client.UpdateWindow();
+                }, 1);
                 doUpdate(32);
             });
             _status.on('leave combat', () => {

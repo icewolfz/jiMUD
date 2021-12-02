@@ -806,6 +806,7 @@ export class Status extends EventEmitter {
         }
         if (!noSpliter)
             this.updateSplitter();
+        this.emit('updated-interface');
     }
 
     private doUpdate(type?: UpdateType) {
