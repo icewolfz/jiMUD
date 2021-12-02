@@ -338,7 +338,7 @@ body {
     background-color: transparent;
     height: 3px;
     width: 100%;
-    cursor: row-resize;
+    cursor: ns-resize;
     position: absolute;
     top: 0px;
     left: 0px;
@@ -351,7 +351,7 @@ body {
     background-color: #000;
     opacity: 0.5;
     position: absolute;
-    cursor: row-resize;
+    cursor: ns-resize;
     z-index: 999;
 }
 

@@ -25,6 +25,7 @@
   - Fixed bug when client was maximized then minized and not correctly sending the new size to the mud
 - **Changed:**
   - Expand [#testmxpexpire](docs/commands.md) to test same line expiring
+  - Use resize cursors instead of column resize cursors for resizable areas
   - Update electron 16.0.1 to 16.0.3
 
 ## v0.17.1 2021-11-23
