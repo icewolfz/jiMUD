@@ -1710,13 +1710,15 @@ export class Input extends EventEmitter {
                     this._gags.pop();
                 }
                 this._gag = 0;
-                //this._gagID = null;
                 return null;
             case 'gag':
             case 'ga':
                 if (args.length === 0) {
-                    //if (this._gagID.length)
-                    //clearTimeout(this._gagID.pop());
+                    if (this._gags.length) {
+                        this._gags[this._gags.length - 1] == this.client.display.lines.length;
+                        this._gag = 0;
+                        return null;
+                    }
                     this._gags.push(this.client.display.lines.length);
                     this._gagID.push(setTimeout(() => {
                         n = this.adjustLastLine(this._gags.pop());
@@ -1729,7 +1731,6 @@ export class Input extends EventEmitter {
                             }
                         }
                         this.client.display.removeLine(n);
-                        //this._gagID = null;
                     }, 0));
                     this._gag = 0;
                     return null;
@@ -1739,10 +1740,14 @@ export class Input extends EventEmitter {
                 i = parseInt(args[0], 10);
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\'');
+                //if one exist for this line remove it and replace it with new one
+                if (this._gags.length) {
+                    this._gags[this._gags.length - 1] == this.client.display.lines.length;
+                    this._gag = 0;
+                    this._gags.pop();
+                }
                 this._gags.push(this.client.display.lines.length);
                 if (i >= 0) {
-                    //if (this._gagID)
-                    //clearTimeout(this._gagID);
                     this._gagID.push(setTimeout(() => {
                         n = this.adjustLastLine(this._gags.pop());
                         if (this._gags.length) {
@@ -1755,20 +1760,16 @@ export class Input extends EventEmitter {
                         }
                         this.client.display.removeLine(n);
                         this._gag = i;
-                        //this._gagID = null;
                     }, 0));
                     this._gag = 0;
                 }
                 else {
-                    //if (this._gagID)
-                    //clearTimeout(this._gagID);
                     this._gagID.push(setTimeout(() => {
                         n = this.adjustLastLine(this._gags.pop());
                         i *= -1;
                         if (i > this.client.display.lines.length)
                             i = this.client.display.lines.length;
                         this.client.display.removeLines(n - i, i);
-                        //this._gagID = null;
                         this._gag = 0;
                     }, 0));
                     this._gag = 0;
@@ -2365,8 +2366,6 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color\x1b[0;-11;-12m');
                 args[0] = this.parseOutgoing(this.stripQuotes(args[0]), false);
                 n = this.client.display.lines.length;
-                //if (this.client.display.lines[n - 1].length === 0)
-                //n--;
                 if (args[0].trim().match(/^-?\d+$/g)) {
                     setTimeout(() => {
                         n = this.adjustLastLine(n);
