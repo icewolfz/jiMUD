@@ -64,7 +64,7 @@ export class Input extends EventEmitter {
     private _TriggerRegExCache = {};
     private _scrollLock: boolean = false;
     private _gag: number = 0;
-    private _gagID: NodeJS.Timer = null;
+    private _gagID: NodeJS.Timer[] = [];
     private _stack = [];
     private _vStack = [];
     private _controllers = {};
@@ -390,6 +390,17 @@ export class Input extends EventEmitter {
         }
         if (this._controllersCount > 0 || controllers.length > 0)
             requestAnimationFrame(() => { this.updatePads(); });
+    }
+
+    private adjustLastLine(n) {
+        if (n === this.client.display.lines.length) {
+            n--;
+            if (this.client.display.lines[n].length === 0)
+                n--;
+        }
+        else if (n === this.client.display.lines.length - 1 && this.client.display.lines[n].length === 0)
+            n--;
+        return n;
     }
 
     get isLocked(): boolean {
@@ -1693,23 +1704,23 @@ export class Input extends EventEmitter {
             case 'ung':
                 if (args.length > 0)
                     throw new Error('Invalid syntax use \x1b[4m#ung\x1b[0;-11;-12mag number or \x1b[4m#ung\x1b[0;-11;-12mag');
-                if (this._gagID)
-                    clearTimeout(this._gagID);
+                if (this._gagID.length)
+                    clearTimeout(this._gagID.pop());
                 this._gag = 0;
-                this._gagID = null;
+                //this._gagID = null;
                 return null;
             case 'gag':
             case 'ga':
                 if (args.length === 0) {
-                    if (this._gagID)
-                        clearTimeout(this._gagID);
-                    this._gagID = setTimeout(() => {
-                        n = this.client.display.lines.length - 1;
-                        if (this.client.display.lines[n].length === 0)
-                            n--;
+                    //if (this._gagID.length)
+                    //clearTimeout(this._gagID.pop());
+                    n = this.client.display.lines.length;
+                    this._gagID.push(setTimeout(() => {
+                        n = this.adjustLastLine(n);
                         this.client.display.removeLine(n);
-                        this._gagID = null;
-                    }, 0);
+
+                        //this._gagID = null;
+                    }, 0));
                     this._gag = 0;
                     return null;
                 }
@@ -1718,30 +1729,31 @@ export class Input extends EventEmitter {
                 i = parseInt(args[0], 10);
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\'');
+                n = this.client.display.lines.length;
+                if (this.client.display.lines[n - 1].length === 0)
+                    n--;
                 if (i >= 0) {
-                    if (this._gagID)
-                        clearTimeout(this._gagID);
-                    this._gagID = setTimeout(() => {
-                        n = this.client.display.lines.length - 1;
-                        if (this.client.display.lines[n].length === 0)
-                            n--;
+                    //if (this._gagID)
+                    //clearTimeout(this._gagID);
+                    this._gagID.push(setTimeout(() => {
+                        n = this.adjustLastLine(n);
                         this.client.display.removeLine(n);
                         this._gag = i - 1;
-                        this._gagID = null;
-                    }, 0);
+                        //this._gagID = null;
+                    }, 0));
                     this._gag = 0;
                 }
                 else {
-                    if (this._gagID)
-                        clearTimeout(this._gagID);
-                    this._gagID = setTimeout(() => {
+                    //if (this._gagID)
+                    //clearTimeout(this._gagID);
+                    this._gagID.push(setTimeout(() => {
                         i *= -1;
                         if (i > this.client.display.lines.length)
                             i = this.client.display.lines.length;
                         this.client.display.removeLines(this.client.display.lines.length - i, i);
-                        this._gagID = null;
+                        //this._gagID = null;
                         this._gag = 0;
-                    }, 0);
+                    }, 0));
                     this._gag = 0;
                 }
                 return null;
@@ -2335,11 +2347,12 @@ export class Input extends EventEmitter {
                 if (args.length !== 1)
                     throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color\x1b[0;-11;-12m');
                 args[0] = this.parseOutgoing(this.stripQuotes(args[0]), false);
+                n = this.client.display.lines.length;
+                if (this.client.display.lines[n - 1].length === 0)
+                    n--;
                 if (args[0].trim().match(/^-?\d+$/g)) {
                     setTimeout(() => {
-                        n = this.client.display.lines.length - 1;
-                        if (this.client.display.lines[n].length === 0)
-                            n--;
+                        n = this.adjustLastLine(n);
                         this.client.display.colorSubStrByLine(n, parseInt(args[0], 10));
                     }, 0);
                 }
@@ -2347,9 +2360,7 @@ export class Input extends EventEmitter {
                 else if (args[0].trim().match(/^-?\d+,-?\d+$/g)) {
                     args[0] = args[0].split(',');
                     setTimeout(() => {
-                        n = this.client.display.lines.length - 1;
-                        if (this.client.display.lines[n].length === 0)
-                            n--;
+                        n = this.adjustLastLine(n);
                         this.client.display.colorSubStrByLine(n, parseInt(args[0][0], 10), parseInt(args[0][1], 10));
                     }, 0);
                 }
@@ -2366,9 +2377,7 @@ export class Input extends EventEmitter {
                                 throw new Error('Invalid fore color');
                         }
                         setTimeout(() => {
-                            n = this.client.display.lines.length - 1;
-                            if (this.client.display.lines[n].length === 0)
-                                n--;
+                            n = this.adjustLastLine(n);
                             this.client.display.colorSubStrByLine(n, i);
                         }, 0);
                     }
@@ -2386,9 +2395,7 @@ export class Input extends EventEmitter {
                         }
                         if (args[1] === 'bold') {
                             setTimeout(() => {
-                                n = this.client.display.lines.length - 1;
-                                if (this.client.display.lines[n].length === 0)
-                                    n--;
+                                n = this.adjustLastLine(n);
                                 if (i === 370)
                                     this.client.display.colorSubStrByLine(n, i);
                                 else
@@ -2405,9 +2412,7 @@ export class Input extends EventEmitter {
                                     throw new Error('Invalid back color');
                             }
                             setTimeout(() => {
-                                n = this.client.display.lines.length - 1;
-                                if (this.client.display.lines[n].length === 0)
-                                    n--;
+                                n = this.adjustLastLine(n);
                                 this.client.display.colorSubStrByLine(n, p, i);
                             }, 0);
                         }
@@ -2428,9 +2433,7 @@ export class Input extends EventEmitter {
                         if (i === -1)
                             throw new Error('Invalid back color');
                         setTimeout(() => {
-                            n = this.client.display.lines.length - 1;
-                            if (this.client.display.lines[n].length === 0)
-                                n--;
+                            n = this.adjustLastLine(n);
                             this.client.display.colorSubStrByLine(n, p, i);
                         }, 0);
                     }
