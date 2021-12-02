@@ -430,7 +430,6 @@ body {
     height: 50px;
     top: 3px;
     left: 3px;
-    right: 3px;
     background-color: black;
     border: 1px solid #{$borderColor};
 }
@@ -911,3 +910,11 @@ body {
 }
 
 /** button end */
+
+#ghost-bar {
+    background-color: #d4d4d4;
+}
+
+#drag-bar {
+    left: -2px;    
+}

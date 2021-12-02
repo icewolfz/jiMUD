@@ -20,6 +20,8 @@ export class Status extends EventEmitter {
     private _ac: boolean = false;
     private lagMeter: HTMLElement;
     private _updating: UpdateType;
+    private dragging = false;
+    private _spitterDistance;
 
     public client: Client;
 
@@ -159,7 +161,7 @@ export class Status extends EventEmitter {
                     break;
                 case 'omud.skill':
                     if (obj.skill && obj.skill.length) {
-                        if (!this.info['skills'][obj.skill]) this.info['skills'][obj.skill] = {amount: 0, bonus: 0, percent: 0};
+                        if (!this.info['skills'][obj.skill]) this.info['skills'][obj.skill] = { amount: 0, bonus: 0, percent: 0 };
                         if (obj.hasOwnProperty('percent'))
                             this.info['skills'][obj.skill].percent = obj.percent || 0;
                         if (obj.hasOwnProperty('amount')) {
@@ -172,8 +174,100 @@ export class Status extends EventEmitter {
                     break;
             }
         });
+        $('#drag-bar').mousedown((e) => {
+            if (e.buttons !== 1) return;
+            e.preventDefault();
+
+            this.dragging = true;
+            const main = $('#drag-bar');
+            const ghostBar = $('<div>',
+                {
+                    id: 'ghost-bar',
+                    css: {
+                        height: main.outerHeight(),
+                        top: main.offset().top,
+                        left: main.offset().left
+                    }
+                }).appendTo('body');
+            const w1 = $('#status-border').css('width');
+            $('#status-border').css('width', '');
+            const w2 = $('#status').css('width');
+            $('#status').css('width', '');
+            const minWidth = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10);
+            $('#status-border').css('width', w1);
+            $('#status').css('width', w2);
+            $(document).mousemove((event) => {
+                if (event.pageX < 399)
+                    ghostBar.css('left', 399);
+                else if (event.pageX > document.body.clientWidth - minWidth)
+                    ghostBar.css('left', document.body.clientWidth - minWidth);
+                else
+                    ghostBar.css('left', event.pageX);
+            });
+        });
+
+        $(window).on('resize', () => this.resize());
+
+        $(document).mouseup((e) => {
+            if (this.dragging) {
+                $('#status-border').css('width', '');
+                $('#status').css('width', '');
+                const b = Math.abs(parseInt($('#drag-bar').css('left'), 10)) + $('#drag-bar').outerWidth();
+                const minWidth = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
+                if (e.pageX < 400)
+                    this.spitterDistance = document.body.clientWidth - 400;
+                else if (e.pageX > document.body.clientWidth - minWidth)
+                    this.spitterDistance = minWidth + b;
+                else
+                    this.spitterDistance = document.body.clientWidth - e.pageX + b;
+                $('#ghost-bar').remove();
+                $(document).unbind('mousemove');
+                this.dragging = false;
+                this.updateInterface();
+            }
+        });
+
         this.updateInterface();
         this.init();
+    }
+
+    get spitterDistance(): number { return this._spitterDistance; }
+    set spitterDistance(value: number) {
+        if (value === this._spitterDistance) return;
+        this._spitterDistance = value;
+        this.updateSplitter();
+    }
+
+    private updateSplitter() {
+        const p = parseInt($('#status').css('right'), 10) * 2;
+        if (!this._spitterDistance || this._spitterDistance < 1) {
+            const b = Math.abs(parseInt($('#drag-bar').css('left'), 10)) + $('#drag-bar').outerWidth();
+            this._spitterDistance = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
+        }
+        $('#display').css('right', this._spitterDistance);
+        $('#status').css('width', this._spitterDistance - p);
+        $('#status-border').css('width', this._spitterDistance);
+        $('#display-border').css('right', this._spitterDistance);
+        $('#command').css('right', this._spitterDistance);
+        this.emit('split-moved', this._spitterDistance);
+    }
+
+    public resize() {
+        const w1 = $('#status-border').css('width');
+        $('#status-border').css('width', '');
+        const w2 = $('#status').css('width');
+        $('#status').css('width', '');
+        const b = Math.abs(parseInt($('#drag-bar').css('left'), 10)) + $('#drag-bar').outerWidth();
+        const minWidth = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
+        const p = parseInt($('#status').css('right'), 10) * 2;
+        $('#status-border').css('width', w1);
+        $('#status').css('width', w2);
+        if ($('#display').outerWidth() < 400) {
+            this.spitterDistance = document.body.clientWidth - 400;
+        }
+        if ($('#status').outerWidth() < minWidth) {
+            this.spitterDistance = minWidth + b;
+        }
     }
 
     get skills() {
@@ -181,7 +275,7 @@ export class Status extends EventEmitter {
     }
 
     public getSkill(skill: string) {
-        if(!skill) return 0;
+        if (!skill) return 0;
         return this.info['skills'][skill] || 0;
     }
 
@@ -588,7 +682,7 @@ export class Status extends EventEmitter {
         this.lagMeter.firstElementChild.textContent = (lag / 1000) + 's';
     }
 
-    public updateInterface() {
+    public updateInterface(noSpliter?) {
         const display = $('#display');
         const displayBorder = $('#display-border');
         const command = $('#command');
@@ -654,6 +748,7 @@ export class Status extends EventEmitter {
         if (this.client.options.showStatusWeather) {
             $('#environment').css('display', '');
             top += $('#environment').outerHeight() + (parseInt($('#environment').css('top'), 10) || 0);
+            $('#environment').css('left', status.innerWidth() / 2 - $('#environment').outerWidth() / 2);
         }
         else
             $('#environment').css('display', 'none');
@@ -709,6 +804,8 @@ export class Status extends EventEmitter {
                 this.lagMeter.style.display = 'none';
             }
         }
+        if (!noSpliter)
+            this.updateSplitter();
     }
 
     private doUpdate(type?: UpdateType) {

@@ -500,11 +500,13 @@
                 $('#btnTriggers').addClass('on');
             else
                 $('#btnTriggers').removeClass('on');
-            _status.updateInterface();
             buildButtons();
             client.display.update();
             client.display.updateScrollbars();
             client.UpdateWindow();
+            setTimeout(() => {
+                _status.updateInterface();    
+            }, 1);            
             updateMenu();
         }
 
@@ -1158,6 +1160,7 @@
             client.on('options-loaded', () => {
                 _backup.loadSelection = client.options.backupLoad;
                 _backup.saveSelection = client.options.backupSave;
+                _status.spitterDistance = client.options.statusWidth;
                 doUpdate(3);
                 client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
                 if (_logger)
@@ -1517,6 +1520,7 @@
             });
 
             _status = new Status(client);
+            _status.spitterDistance = client.options.statusWidth;
             _status.on('display-changed', () => {
                 if (_status.ac) {
                     $('#health').removeClass('on');
@@ -1532,6 +1536,11 @@
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !client.options.showArmor });
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: client.options.showArmor });
                 }
+            });
+            _status.on('split-moved', value => {
+                if(value === client.options.statusWidth) return;
+                client.options.statusWidth = value;
+                doUpdate(32);
             });
             _status.on('leave combat', () => {
                 if (_nextClear <= Date.now()) {
@@ -2834,6 +2843,7 @@
     </div>
     <div id="status-border"></div>
     <div id="status">
+        <div id="drag-bar"></div>
         <div id="environment" class="day">
             <div id="environmentleft"></div>
             <div id="environmentcenter"></div>
@@ -2902,8 +2912,8 @@
             <div>
                 <span>Needed:</span>
                 <span id="need-value">0</span>
-                <div class="progressbar" id="need-percent" style="display:none;width:100px;background: rgb(252, 238, 42);">
-                    <div class="progressbar-text" style="text-align:right;right: 5px;color:black;">0</div>
+                <div class="progressbar" id="need-percent">
+                    <div class="progressbar-text" style="text-align:right;right: 2px;color:black;">0</div>
                     <div class="progressbar-value"></div>
                 </div>
             </div>

@@ -444,6 +444,28 @@ body {
     display: none;
 }
 
+#hp-status > div {
+    position: relative;
+}
+
+#hp-status > div > .progressbar, #need-percent {
+    width: initial;
+    position: absolute;
+    left: 30px;
+    right: 0;
+    top: 0;
+}
+
+#need-percent {
+    left: 50px;
+    display:none;
+    background: rgb(252, 238, 42);
+}
+
+#experience > div {
+    position: relative;
+}
+
 .progressbar {
     float: right;
     overflow: hidden;
@@ -566,4 +588,22 @@ dialog {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+#drag-bar {
+    background-color: transparent;
+    height: 100%;
+    width: 3px;
+    cursor: col-resize;
+    position: absolute;
+    left: -3px;    
+}
+
+#ghost-bar {
+    width: 3px;
+    background-color: #000;
+    opacity: 0.5;
+    position: absolute;
+    cursor: col-resize;
+    z-index: 999
 }

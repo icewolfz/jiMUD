@@ -516,6 +516,7 @@ export class Settings {
     public hideOnMinimize: boolean = false;
     public showTrayIcon: boolean = false;
     public statusExperienceNeededProgressbar: boolean = false;
+    public statusWidth: number = -1;
     public showEditorInTaskBar: boolean = true;
 
     public trayClick: TrayClick = TrayClick.show;

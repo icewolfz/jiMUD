@@ -433,7 +433,6 @@ body {
     height: 50px;
     top: 3px;
     left: 3px;
-    right: 3px;
     background-color: black;
     border: 1px solid #{$borderColor};
 }
@@ -903,3 +902,14 @@ body {
 
 
 /** button end */
+
+#drag-bar {
+    left: -3px;
+    top: -7px;
+    height: initial;
+    bottom: -14px;    
+}
+
+#ghost-bar {
+    background-color: #d70000;
+}

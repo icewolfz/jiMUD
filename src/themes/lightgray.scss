@@ -466,7 +466,6 @@ body {
     height: 50px;
     top: 3px;
     left: 3px;
-    right: 3px;
     background-color: #{$panelInsetBackground};
     border: 1px solid #{$borderColor};
 }
@@ -991,3 +990,11 @@ body {
 }
 
 /** button end */
+
+#ghost-bar {
+    background-color: #666;;
+}
+
+#drag-bar {
+    left: 0px;    
+}

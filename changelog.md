@@ -9,6 +9,7 @@
   - Add preference to open Who is on in child window
   - Add [%{color(fore,back,bold)}](docs/functions.md) function to return color codes
   - Add [%{zcolor(fore,back,effect)}](docs/functions.md) function to convert zmud/cmud style color codes into supported jiMUD codes
+  - Add ability to resize right status display bar
 - **Fixed:**
   - Mac: Attempt to fix window menu item on main bar
   - Display:
