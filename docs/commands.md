@@ -50,6 +50,7 @@
 |#button|#bu|*name caption* {commands} *{icon} options<sup>2</sup> profile*|Update or create a button
 |#unbutton|#unb|name\|index\|caption| remove a button, if index it is the position in order of buttons in profile manager
 |#window|#win|name||Open or show named window, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
+|#color|#co|fore,back,bold||Color last added line, comma delimited colors
 
 **Note:** All italic arguments are optional and can be left out
 

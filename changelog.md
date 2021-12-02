@@ -3,9 +3,12 @@
 ## v0.17.2
 
 - **New:**
-  - Added [#window](docs/commands.md) to open/show supported windows
-  - Added [#testunicodeemoji](docs/commands.md) to display unicode emoji symbols
-  - Added preference to open Who is on in child window
+  - Add [#color](docs/commansds.md) color last added line
+  - Add [#window](docs/commands.md) to open/show supported windows
+  - Add [#testunicodeemoji](docs/commands.md) to display unicode emoji symbols
+  - Add preference to open Who is on in child window
+  - Add [%{color(fore,back,bold)}](docs/functions.md) function to return color codes
+  - Add [%{zcolor(fore,back,effect)}](docs/functions.md) function to convert zmud/cmud style color codes into supported jiMUD codes
 - **Fixed:**
   = Mac: Attempt to fix window menu item on main bar
   - Display:
@@ -15,6 +18,8 @@
     - Fixed more unicode surrogate/variant pair selection issues
     - Fixed bug in MXP expire not clearing send/link end tag
   - Ansi Parser: Fixed bug in MXP expire tag not correctly expiring links on same line that come before the tag
+  - Fixed bug with [#gag](docs/commands.md) not working from command line
+  - Fixed bug with regex trigger caching
 - **Changed:**
   - Expand [#testmxpexpire](docs/commands.md) to test same line expiring
   - Update electron 16.0.1 to 16.0.3

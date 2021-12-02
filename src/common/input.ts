@@ -10,6 +10,7 @@ import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType } from './profile';
 import { NewLineType } from './types';
 import { SettingList } from './settings';
+import { getAnsiColorCode, getColorCode } from './ansi';
 import { create, all } from 'mathjs';
 const mathjs = create(all, {});
 const buzz = require('buzz');
@@ -1703,7 +1704,10 @@ export class Input extends EventEmitter {
                     if (this._gagID)
                         clearTimeout(this._gagID);
                     this._gagID = setTimeout(() => {
-                        this.client.display.removeLine(this.client.display.lines.length - 1);
+                        n = this.client.display.lines.length - 1;
+                        if (this.client.display.lines[n].length === 0)
+                            n--;
+                        this.client.display.removeLine(n);
                         this._gagID = null;
                     }, 0);
                     this._gag = 0;
@@ -1718,7 +1722,10 @@ export class Input extends EventEmitter {
                     if (this._gagID)
                         clearTimeout(this._gagID);
                     this._gagID = setTimeout(() => {
-                        this.client.display.removeLine(this.client.display.lines.length - 1);
+                        n = this.client.display.lines.length - 1;
+                        if (this.client.display.lines[n].length === 0)
+                            n--;
+                        this.client.display.removeLine(n);
                         this._gag = i - 1;
                         this._gagID = null;
                     }, 0);
@@ -1794,7 +1801,7 @@ export class Input extends EventEmitter {
                         return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
                             return e.replace(/\\\'/g, '\'');
                         });
-                    });                
+                    });
                 if (args.length === 0 || args.length > 2)
                     throw new Error('Invalid syntax use #\x1b[4mwin\x1b[0;-11;-12mdow name');
                 else if (args.length === 1)
@@ -2322,6 +2329,112 @@ export class Input extends EventEmitter {
                 else
                     this.client.print('\x1b[-7;-8m' + args + '\x1b[0m\n', false);
                 this.client.telnet.prompt = false;
+                return null;
+            case 'color':
+            case 'co':
+                if (args.length !== 1)
+                    throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color\x1b[0;-11;-12m');
+                args[0] = this.parseOutgoing(this.stripQuotes(args[0]), false);
+                if (args[0].trim().match(/^-?\d+$/g)) {
+                    setTimeout(() => {
+                        n = this.client.display.lines.length - 1;
+                        if (this.client.display.lines[n].length === 0)
+                            n--;
+                        this.client.display.colorSubStrByLine(n, parseInt(args[0], 10));
+                    }, 0);
+                }
+                //back,fore from color function
+                else if (args[0].trim().match(/^-?\d+,-?\d+$/g)) {
+                    args[0] = args[0].split(',');
+                    setTimeout(() => {
+                        n = this.client.display.lines.length - 1;
+                        if (this.client.display.lines[n].length === 0)
+                            n--;
+                        this.client.display.colorSubStrByLine(n, parseInt(args[0][0], 10), parseInt(args[0][1], 10));
+                    }, 0);
+                }
+                else {
+                    args = args[0].toLowerCase().split(',');
+                    if (args.length === 1) {
+                        if (args[0] === 'bold')
+                            i = 370;
+                        if (args[0].trim().match(/^-?\d+$/g))
+                            i = parseInt(args[0].trim(), 10);
+                        else {
+                            i = getAnsiColorCode(args[0]);
+                            if (i === -1)
+                                throw new Error('Invalid fore color');
+                        }
+                        setTimeout(() => {
+                            n = this.client.display.lines.length - 1;
+                            if (this.client.display.lines[n].length === 0)
+                                n--;
+                            this.client.display.colorSubStrByLine(n, i);
+                        }, 0);
+                    }
+                    else if (args.length === 2) {
+                        if (args[0] === 'bold' && args[1] === 'bold')
+                            throw new Error('Invalid fore color');
+                        if (args[0] === 'bold')
+                            i = 370;
+                        else if (args[0].trim().match(/^-?\d+$/g))
+                            i = parseInt(args[0].trim(), 10);
+                        else {
+                            i = getAnsiColorCode(args[0]);
+                            if (i === -1)
+                                throw new Error('Invalid fore color');
+                        }
+                        if (args[1] === 'bold') {
+                            setTimeout(() => {
+                                n = this.client.display.lines.length - 1;
+                                if (this.client.display.lines[n].length === 0)
+                                    n--;
+                                if (i === 370)
+                                    this.client.display.colorSubStrByLine(n, i);
+                                else
+                                    this.client.display.colorSubStrByLine(n, i * 10);
+                            }, 0);
+                        }
+                        else {
+                            p = i;
+                            if (args[0].trim().match(/^-?\d+$/g))
+                                i = parseInt(args[1].trim(), 10);
+                            else {
+                                i = getAnsiColorCode(args[1], true);
+                                if (i === -1)
+                                    throw new Error('Invalid back color');
+                            }
+                            setTimeout(() => {
+                                n = this.client.display.lines.length - 1;
+                                if (this.client.display.lines[n].length === 0)
+                                    n--;
+                                this.client.display.colorSubStrByLine(n, p, i);
+                            }, 0);
+                        }
+                    }
+                    else if (args.length === 3) {
+                        if (args[0] === 'bold') {
+                            args.shift();
+                            args.push('bold');
+                        }
+                        i = getAnsiColorCode(args[0]);
+                        if (i === -1)
+                            throw new Error('Invalid fore color');
+                        if (args[2] !== 'bold')
+                            throw new Error('Only bold is supported as third argument');
+                        else
+                            p = i * 10;
+                        i = getAnsiColorCode(args[1], true);
+                        if (i === -1)
+                            throw new Error('Invalid back color');
+                        setTimeout(() => {
+                            n = this.client.display.lines.length - 1;
+                            if (this.client.display.lines[n].length === 0)
+                                n--;
+                            this.client.display.colorSubStrByLine(n, p, i);
+                        }, 0);
+                    }
+                }
                 return null;
         }
         i = parseInt(fun, 10);
@@ -3351,9 +3464,62 @@ export class Input extends EventEmitter {
                 if (mod)
                     return mathjs.evaluate(Math.sqrt((max * max - 1) / 12 * c) + mod);
                 return '' + Math.sqrt((max * max - 1) / 12 * c);
+            case 'color':
+                args = this.parseOutgoing(res[2]).split(',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length === 1) {
+                    if (args[0] === 'bold')
+                        return '370';
+                    c = getAnsiColorCode(args[0]);
+                    if (c === -1)
+                        throw new Error('Invalid fore color');
+                    return c.toString();
+                }
+                else if (args.length === 2) {
+                    if (args[0] === 'bold')
+                        c = 370;
+                    else {
+                        c = getAnsiColorCode(args[0]);
+                        if (c === -1)
+                            throw new Error('Invalid fore color');
+                        if (args[1] === 'bold')
+                            return (c * 10).toString();
+                    }
+                    sides = c.toString();
+                    c = getAnsiColorCode(args[1], true);
+                    if (c === -1)
+                        throw new Error('Invalid back color');
+                    return sides + ',' + c.toString();
+                }
+                else if (args.length === 3) {
+                    if (args[0] === 'bold') {
+                        args.shift();
+                        args.push('bold');
+                    }
+                    if (args[2] !== 'bold')
+                        throw new Error('Only bold is supported as third argument');
+                    c = getAnsiColorCode(args[0]);
+                    if (c === -1)
+                        throw new Error('Invalid fore color');
+                    sides = (c * 10).toString();
+                    c = getAnsiColorCode(args[1], true);
+                    if (c === -1)
+                        throw new Error('Invalid back color');
+                    return sides + ',' + c.toString();
+                }
+                throw new Error('Too many arguments');
+            case 'zcolor':
+                args = this.parseOutgoing(res[2]).split(',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments');
+                return getColorCode(parseInt(args[0], 10));
         }
         return null;
     }
+
 
     public GetNamedArguments(str: string, args, append?: boolean) {
         if (str === '*')
@@ -3602,6 +3768,7 @@ export class Input extends EventEmitter {
                     //re = new RegExp(trigger.pattern, 'g');
                     else
                         re = this._TriggerRegExCache['gi' + trigger.pattern] || (this._TriggerRegExCache['gi' + trigger.pattern] = new RegExp(trigger.pattern, 'gi'));
+                    re.lastIndex = 0;
                     //re = new RegExp(trigger.pattern, 'gi');
                     const res = re.exec(raw);
                     if (!res || !res.length) continue;

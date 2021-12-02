@@ -150,3 +150,101 @@ export enum AnsiColorCode {
     /** @desc Set background color to White */
     XWhiteBackground = 107
 }
+
+export function getAnsiColorCode(color: string, back?: boolean) {
+    switch (color.toLowerCase()) {
+        case 'black':
+            return back ? 40 : 30;
+        case 'red':
+            return back ? 41 : 31;
+        case 'green':
+            return back ? 42 : 32;
+        case 'yellow':
+            return back ? 43 : 33;
+        case 'blue':
+            return back ? 44 : 34;
+        case 'magenta':
+            return back ? 45 : 35;
+        case 'cyan':
+            return back ? 46 : 36;
+        case 'white':
+            return back ? 47 : 37;
+        case 'default':
+            return back ? 49 : 39;
+    }
+    return -1;
+}
+
+export function getColorCode(code) {
+    let f = -1;
+    let b = -1;
+    let bold = false;
+    if (code - 128 >= 0) {
+        code -= 128;
+    }
+    if (code - 112 >= 0) {
+        code -= 112
+        b = 47;
+    }
+    if (code - 96 >= 0) {
+        code -= 96;
+        b = 43;
+    }
+    if (code - 80 >= 0) {
+        code -= 80;
+        b = 45;
+    }
+    if (code - 64 >= 0) {
+        code -= 64;
+        b = 41;
+    }
+    if (code - 48 >= 0) {
+        code -= 48;
+        b = 46
+    }
+    if (code - 32 >= 0) {
+        code -= 32;
+        b = 42;
+    }
+    if (code - 16 >= 0) {
+        code -= 16;
+        b = 44;
+    }
+    if (code >= 8) {
+        code -= 8;
+        bold = true;
+    }
+    switch (code) {
+        case 0:
+            f = 30;
+            break;
+        case 1:
+            f = 34;
+            break;
+        case 2:
+            f = 32;
+            break;
+        case 3:
+            f = 36;
+            break;
+        case 4:
+            f = 31;
+            break;
+        case 5:
+            f = 35;
+            break;
+        case 6:
+            f = 33;
+            break;
+        case 7:
+            f = 37;
+            break;
+    }
+    if (bold && f === -1) f = 370;
+    else if (bold) f *= 10;
+    if (f === -1)
+        return `,${b}`;
+    if (b === -1)
+        return f.toString();
+    return `${f},${b}`
+}

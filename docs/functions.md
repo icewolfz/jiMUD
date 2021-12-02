@@ -67,3 +67,10 @@ Escaping allows you to prevent special characters from being parsed and allow th
 - `dicemax(xdy+n)` the maximum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
 - `dicedev(xdy+n)` return standard deviation of dice `sqrt((y^2 - 1) / 12 * x)`, x is the # of dice, y is the # of sides, with optional +, -, *, / modifier
 - `zdicedev(xdy+n)` return zMUD/cMUD standard deviation of dice `sqrt(((y - 1)^2 - 1) / 12 * x)`, x is the # of dice, y is the # of sides, with optional +, -, *, / modifier
+- `color(fore,back,bold)` returns color code in string format of fore,back or just fore
+  - `fore` the foreground color or bold, if bold it returns bold white
+  - `back` the background color, if bold returns bold fore
+  - `bold` ansi bold color, if bold returns bold fore
+  - Colors: red, blue, orange, yellow, green, black, white, cyan, magenta, gray
+- `zcolor(code)` converts a zmud/cmud color code into a code supported by jiMUD
+  - Example: ${zcolor(1)} would return 370 for bold white
