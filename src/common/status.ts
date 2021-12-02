@@ -210,10 +210,14 @@ export class Status extends EventEmitter {
 
         $(document).mouseup((e) => {
             if (this.dragging) {
+                const w1 = $('#status-border').css('width');
                 $('#status-border').css('width', '');
+                const w2 = $('#status').css('width');
                 $('#status').css('width', '');
                 const b = Math.abs(parseInt($('#drag-bar').css('left'), 10)) + $('#drag-bar').outerWidth();
                 const minWidth = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
+                $('#status-border').css('width', w1);
+                $('#status').css('width', w2);                
                 if (e.pageX < 400)
                     this.spitterDistance = document.body.clientWidth - 400;
                 else if (e.pageX > document.body.clientWidth - minWidth)
