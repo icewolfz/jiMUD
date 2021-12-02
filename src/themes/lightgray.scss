@@ -992,9 +992,15 @@ body {
 /** button end */
 
 #ghost-bar {
-    background-color: #666;;
+    background-color: #666;
 }
 
 #drag-bar {
-    left: 0px;    
+    left: 0px;
+    transition: 0s background-color;
+}
+
+#drag-bar:hover{
+    background-color: #666;    
+    transition-delay: 1s;
 }

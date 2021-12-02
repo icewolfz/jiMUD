@@ -932,9 +932,15 @@ body {
     left: -3px;
     top: -7px;
     height: initial;
-    bottom: -14px;    
+    bottom: -14px;
+    transition: 0s background-color;
 }
 
 #ghost-bar {
     background-color: #d70000;
+}
+
+#drag-bar:hover{
+    background-color: #d70000;    
+    transition-delay: 1s;
 }

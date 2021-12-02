@@ -945,3 +945,17 @@ body {
     background-color: #{$panelBack};
     border: 1px solid #{$panelInsetBorder};
 }
+
+#drag-bar {
+    left: -3px;
+    top: -7px;
+    height: initial;
+    bottom: -14px;      
+    transition: 0s background-color, 0s border;
+}
+
+#drag-bar:hover{
+    background-color: #{$panelBack};
+    border: 1px solid #{$panelInsetBorder};  
+    transition-delay:1s;
+}
