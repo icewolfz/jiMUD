@@ -11,7 +11,7 @@
   - Add [%{zcolor(fore,back,effect)}](docs/functions.md) function to convert zmud/cmud style color codes into supported jiMUD codes
   - Add ability to resize right status display bar
 - **Fixed:**
-  - Mac: Attempt to fix window menu item on main bar
+  - Mac: Fix window menu item on main bar
   - Display:
     - Fixed unicode combining character selection issues
     - Fixed unicode selection width when font style is italic
