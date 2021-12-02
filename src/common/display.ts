@@ -696,7 +696,9 @@ export class Display extends EventEmitter {
                     else if (y >= this._innerHeight && this._VScroll.position < this._VScroll.scrollSize) {
                         y = this._charHeight;
                         this._currentSelection.end.y++;
-                        if (this._currentSelection.end.y >= this.lines.length)
+                        if (this.lines.length === 0)
+                            this._currentSelection.end.x = 0;
+                        else if (this._currentSelection.end.y >= this.lines.length)
                             this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
                     }
                     else
@@ -712,7 +714,10 @@ export class Display extends EventEmitter {
                     }
                     else if (x > 0 && this._currentSelection.end.y >= this.lines.length) {
                         x = 0;
-                        this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
+                        if (this.lines.length === 0)
+                            this._currentSelection.end.x = 0;
+                        else
+                            this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
                     }
                     else {
                         x = 0;
