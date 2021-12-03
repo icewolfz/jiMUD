@@ -1641,6 +1641,7 @@
                             client.options.askonclose = false;
                             client.saveOptions();
                             closeWindow = true;
+                            ipcRenderer.invoke('window', 'closeWindows');
                             ipcRenderer.invoke('window', 'close');
                             return;
                         }
@@ -1651,6 +1652,7 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
+                        ipcRenderer.invoke('window', 'closeWindows');
                         ipcRenderer.invoke('window', 'close');
                     });
                     return;
@@ -1679,6 +1681,7 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
+                        ipcRenderer.invoke('window', 'closeWindows');
                         ipcRenderer.invoke('window', 'close');
                     });
                     return;
@@ -1695,12 +1698,14 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
+                        ipcRenderer.invoke('window', 'closeWindows');
                         ipcRenderer.invoke('window', 'close');
                     });
                 }
                 client.raise('closed');
                 _logger.postMessage({ action: 'flush' });
                 closeWindow = true;
+                ipcRenderer.invoke('window', 'closeWindows');
                 ipcRenderer.invoke('window', 'close');
                 return;
             };

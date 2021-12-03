@@ -1462,7 +1462,6 @@ function createWindow() {
         if (winMap && !winMap.isDestroyed() && !winMap.isVisible())
             executeScript('closeHidden()', winMap);
         set.save(global.settingsFile);
-        win.destroy();
     });
 }
 
@@ -2828,6 +2827,8 @@ ipcMain.handle('window', (event, action, ...args) => {
         current.reload();
     else if (action === 'setIcon')
         current.setIcon(...args);
+    else if (action === 'closeWindows')
+        closeWindows(true, false);
 });
 
 ipcMain.handle('attach-context-event', event => {
@@ -2881,6 +2882,46 @@ ipcMain.on('window-info', (event, info, ...args) => {
             if (wins[w] === current || !wins[w].isVisible())
                 continue;
             if (args.length && !wins[w].getTitle().startsWith(args[0])) {
+                //make sure proper close systems called
+                for (let name in windows) {
+                    if (!Object.prototype.hasOwnProperty.call(windows, name) || windows[name].window != wins[w])
+                        continue;
+                    executeScript('if(closing) closing();', windows[name].window);
+                    executeScript('if(closed) closed();', windows[name].window);
+                    set.windows[name] = getWindowState(name, windows[name].window);
+                    set.windows[name].options = copyWindowOptions(name);
+                    windows[name].window = null;
+                    delete windows[name];
+                }
+                if (winMap == wins[w]) {
+                    set.windows.mapper = getWindowState('mapper', winMap);
+                    win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
+                    executeScript('closeWindow()', winMap);
+                    winMap = null;
+                }
+                if (winEditor == wins[w]) {
+                    set.windows.editor = getWindowState('editor', winEditor);
+                    win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
+                    winEditor = null;
+                }
+                if (winChat == wins[w]) {
+                    set.windows.chat = getWindowState('chat', winChat);
+                    win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
+                    winChat = null;
+                }
+                if (winCode == wins[w] && winCode.getParentWindow() == win) {
+                    if (!edSet)
+                        edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+                    if (global.editorOnly)
+                        edSet.stateOnly = getWindowState('code-editor', winCode);
+                    else {
+                        edSet.state = getWindowState('code-editor', winCode);
+                        edSet.window.show = true;
+                    }
+                    edSet.save(parseTemplate(path.join('{data}', 'editor.json')));
+                    executeScript('closeWindow()', winCode);
+                    winCode = null;
+                }
                 wins[w].close();
                 continue;
             }
