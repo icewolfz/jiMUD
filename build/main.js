@@ -1342,6 +1342,7 @@ function createWindow() {
         w.on('closed', () => {
             if (win && !win.isDestroyed() && win.webContents) {
                 executeScript(`childClosed('${url}', '${frameName}');`, win, true);
+                win.focus();
             }
         });
     });
