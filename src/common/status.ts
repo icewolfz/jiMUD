@@ -193,14 +193,17 @@ export class Status extends EventEmitter {
             $('#status-border').css('width', '');
             const w2 = $('#status').css('width');
             $('#status').css('width', '');
-            const minWidth = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10);
+            //const minWidth = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10);
+            const l = main.offset().left;
             $('#status-border').css('width', w1);
             $('#status').css('width', w2);
+            const maxWidth = Math.floor(document.body.clientWidth / 2);
+            //const b = Math.abs(parseInt($('#drag-bar').css('left'), 10)) + $('#drag-bar').width();
             $(document).mousemove((event) => {
-                if (event.pageX < 399)
-                    ghostBar.css('left', 399);
-                else if (event.pageX > document.body.clientWidth - minWidth)
-                    ghostBar.css('left', document.body.clientWidth - minWidth);
+                if (event.pageX < maxWidth)
+                    ghostBar.css('left', maxWidth);
+                else if (event.pageX > l)
+                    ghostBar.css('left', l);
                 else
                     ghostBar.css('left', event.pageX);
             });
@@ -216,14 +219,16 @@ export class Status extends EventEmitter {
                 $('#status').css('width', '');
                 const b = Math.abs(parseInt($('#drag-bar').css('left'), 10)) + $('#drag-bar').outerWidth();
                 const minWidth = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
+                const maxWidth = Math.floor(document.body.clientWidth / 2);
+                const l = $('#drag-bar').offset().left;
                 $('#status-border').css('width', w1);
-                $('#status').css('width', w2);                
-                if (e.pageX < 400)
-                    this.spitterDistance = document.body.clientWidth - 400;
-                else if (e.pageX > document.body.clientWidth - minWidth)
-                    this.spitterDistance = minWidth + b;
+                $('#status').css('width', w2);
+                if (e.pageX < maxWidth)
+                    this.spitterDistance = maxWidth - parseInt($('#drag-bar').css('left'), 10);
+                else if (e.pageX > l)
+                    this.spitterDistance = minWidth;
                 else
-                    this.spitterDistance = document.body.clientWidth - e.pageX + b;
+                    this.spitterDistance = document.body.clientWidth - e.pageX + Math.abs(parseInt($('#drag-bar').css('left'), 10));
                 $('#ghost-bar').remove();
                 $(document).unbind('mousemove');
                 this.dragging = false;
@@ -263,14 +268,15 @@ export class Status extends EventEmitter {
         $('#status').css('width', '');
         const b = Math.abs(parseInt($('#drag-bar').css('left'), 10)) + $('#drag-bar').outerWidth();
         const minWidth = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
+        const maxWidth = Math.floor(document.body.clientWidth / 2);
         const p = parseInt($('#status').css('right'), 10) * 2;
         $('#status-border').css('width', w1);
         $('#status').css('width', w2);
-        if ($('#display').outerWidth() < 400) {
-            this.spitterDistance = document.body.clientWidth - 400;
-        }
         if ($('#status').outerWidth() < minWidth) {
             this.spitterDistance = minWidth + b;
+        }
+        else if ($('#status').outerWidth() > maxWidth) {
+            this.spitterDistance = maxWidth;
         }
     }
 
