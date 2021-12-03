@@ -2402,6 +2402,8 @@ export class Input extends EventEmitter {
                             throw new Error('Invalid fore color');
                         if (args[0] === 'bold')
                             i = 370;
+                        else if (args[0] === 'current')
+                            i = null;
                         else if (args[0].trim().match(/^-?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
@@ -2438,7 +2440,9 @@ export class Input extends EventEmitter {
                             args.shift();
                             args.push('bold');
                         }
-                        if (args[0].trim().match(/^-?\d+$/g))
+                        if (args[0].trim() === 'current')
+                            i = null;
+                        else if (args[0].trim().match(/^-?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
@@ -2447,6 +2451,8 @@ export class Input extends EventEmitter {
                         }
                         if (args[2] !== 'bold')
                             throw new Error('Only bold is supported as third argument');
+                        else if (!i)
+                            i = 370;
                         else
                             p = i * 10;
                         if (args[1].trim().match(/^-?\d+$/g))
