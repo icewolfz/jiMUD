@@ -2385,7 +2385,9 @@ export class Input extends EventEmitter {
                     if (args.length === 1) {
                         if (args[0] === 'bold')
                             i = 370;
-                        if (args[0].trim().match(/^-?\d+$/g))
+                        if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                            i = args[0].trim();
+                        else if (args[0].trim().match(/^-?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
@@ -2408,6 +2410,8 @@ export class Input extends EventEmitter {
                             i = 370;
                         else if (args[0] === 'current')
                             i = null;
+                        else if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                            i = args[0].trim();
                         else if (args[0].trim().match(/^-?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
@@ -2430,7 +2434,9 @@ export class Input extends EventEmitter {
                         }
                         else {
                             p = i;
-                            if (args[1].trim().match(/^-?\d+$/g))
+                            if (args[1].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                                i = args[1].trim();
+                            else if (args[1].trim().match(/^-?\d+$/g))
                                 i = parseInt(args[1].trim(), 10);
                             else {
                                 i = getAnsiColorCode(args[1], true);
@@ -2454,6 +2460,8 @@ export class Input extends EventEmitter {
                         }
                         if (args[0].trim() === 'current')
                             i = null;
+                        else if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                            i = args[0].trim();
                         else if (args[0].trim().match(/^-?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
@@ -2471,7 +2479,9 @@ export class Input extends EventEmitter {
                             i = 370;
                         else
                             p = i * 10;
-                        if (args[1].trim().match(/^-?\d+$/g))
+                        if (args[1].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                            i = args[1].trim();
+                        else if (args[1].trim().match(/^-?\d+$/g))
                             i = parseInt(args[1].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[1], true);
