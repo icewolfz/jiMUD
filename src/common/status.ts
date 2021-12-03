@@ -269,14 +269,14 @@ export class Status extends EventEmitter {
         const b = Math.abs(parseInt($('#drag-bar').css('left'), 10)) + $('#drag-bar').outerWidth();
         const minWidth = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
         const maxWidth = Math.floor(document.body.clientWidth / 2);
-        const p = parseInt($('#status').css('right'), 10) * 2;
+        const l = $('#drag-bar').offset().left;
         $('#status-border').css('width', w1);
         $('#status').css('width', w2);
-        if ($('#status').outerWidth() < minWidth) {
-            this.spitterDistance = minWidth + b;
+        if ($('#status').outerWidth() < l) {
+            this.spitterDistance = minWidth;
         }
         else if ($('#status').outerWidth() > maxWidth) {
-            this.spitterDistance = maxWidth;
+            this.spitterDistance = maxWidth - parseInt($('#drag-bar').css('left'), 10);
         }
     }
 
