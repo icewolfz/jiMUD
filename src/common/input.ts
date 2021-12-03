@@ -2420,7 +2420,7 @@ export class Input extends EventEmitter {
                         }
                         else {
                             p = i;
-                            if (args[0].trim().match(/^-?\d+$/g))
+                            if (args[1].trim().match(/^-?\d+$/g))
                                 i = parseInt(args[1].trim(), 10);
                             else {
                                 i = getAnsiColorCode(args[1], true);
@@ -2438,16 +2438,24 @@ export class Input extends EventEmitter {
                             args.shift();
                             args.push('bold');
                         }
-                        i = getAnsiColorCode(args[0]);
-                        if (i === -1)
-                            throw new Error('Invalid fore color');
+                        if (args[0].trim().match(/^-?\d+$/g))
+                            i = parseInt(args[0].trim(), 10);
+                        else {
+                            i = getAnsiColorCode(args[0]);
+                            if (i === -1)
+                                throw new Error('Invalid fore color');
+                        }
                         if (args[2] !== 'bold')
                             throw new Error('Only bold is supported as third argument');
                         else
                             p = i * 10;
-                        i = getAnsiColorCode(args[1], true);
-                        if (i === -1)
-                            throw new Error('Invalid back color');
+                        if (args[1].trim().match(/^-?\d+$/g))
+                            i = parseInt(args[1].trim(), 10);
+                        else {
+                            i = getAnsiColorCode(args[1], true);
+                            if (i === -1)
+                                throw new Error('Invalid back color');
+                        }
                         setTimeout(() => {
                             n = this.adjustLastLine(n);
                             this.client.display.colorSubStrByLine(n, p, i);
