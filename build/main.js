@@ -3326,7 +3326,8 @@ function createMapper(show, loading, loaded) {
             win.webContents.send('setting-changed', { type: 'normal', name: 'showMapper', value: false, noSave: true });
         }
         set.windows.mapper = getWindowState('mapper', e.sender);
-        win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
+        if (win && !win.isDestroyed() && win.webContents)
+            win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
         set.save(global.settingsFile);
         if (winMap === e.sender && winMap && (set.mapper.enabled || set.mapper.persistent)) {
             e.preventDefault();
@@ -3443,7 +3444,8 @@ function showProfiles() {
     winProfiles.on('close', () => {
         set = settings.Settings.load(global.settingsFile);
         set.windows.profiles = getWindowState('profiles', winProfiles);
-        win.webContents.send('setting-changed', { type: 'window', name: 'profiles', value: set.windows.profiles, noSave: true });
+        if (win && !win.isDestroyed() && win.webContents)
+            win.webContents.send('setting-changed', { type: 'window', name: 'profiles', value: set.windows.profiles, noSave: true });
         set.save(global.settingsFile);
         win.focus();
     });
@@ -3736,10 +3738,12 @@ function createChat(show, loading) {
         set = settings.Settings.load(global.settingsFile);
         if (winChat === e.sender) {
             set.showChat = false;
-            win.webContents.send('setting-changed', { type: 'normal', name: 'showChat', value: false, noSave: true });
+            if (win && !win.isDestroyed() && win.webContents)
+                win.webContents.send('setting-changed', { type: 'normal', name: 'showChat', value: false, noSave: true });
         }
         set.windows.chat = getWindowState('chat', e.sender);
-        win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
+        if (win && !win.isDestroyed() && win.webContents)
+            win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
         set.save(global.settingsFile);
         if (winChat === e.sender && winChat && (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)) {
             e.preventDefault();
@@ -4144,13 +4148,13 @@ function closeWindows(save, clear) {
     for (name in windows) {
         if (!Object.prototype.hasOwnProperty.call(windows, name))
             continue;
-        if(windows[name].window) {
+        if (windows[name].window) {
             executeScript('if(closing) closing();', windows[name].window);
             executeScript('if(closed) closed();', windows[name].window);
             set.windows[name] = getWindowState(name, windows[name].window);
         }
         set.windows[name].options = copyWindowOptions(name);
-        if(windows[name].window) {
+        if (windows[name].window) {
             cWin = windows[name].window;
             windows[name].window = null;
             cWin.close();
