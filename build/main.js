@@ -3841,6 +3841,8 @@ function createNewWindow(name, options) {
         if (!windows || !windows[name] || e.sender !== windows[name].window) return;
         windows[name].window = null;
         windows[name].ready = false;
+        if (windows[name].alwaysOnTopClient)
+            getParentWindow().focus();
     });
 
     windows[name].window.on('resize', () => {
@@ -3918,6 +3920,7 @@ function createNewWindow(name, options) {
         w.on('close', () => {
             if (w && w.getParentWindow()) {
                 executeScript(`childClosed('${url}', '${frameName}');`, w.getParentWindow());
+                w.focus();
             }
         });
     });
@@ -4366,6 +4369,7 @@ function createCodeEditor(show, loading, loaded) {
         w.on('close', () => {
             if (w && w.getParentWindow()) {
                 executeScript(`if(childClosed) childClosed('${url}', '${frameName}');`, w.getParentWindow());
+                w.getParentWindow().focus();
             }
         });
     });
