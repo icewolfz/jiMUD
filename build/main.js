@@ -3443,6 +3443,7 @@ function showProfiles() {
         set.windows.profiles = getWindowState('profiles', winProfiles);
         win.webContents.send('setting-changed', { type: 'window', name: 'profiles', value: set.windows.profiles, noSave: true });
         set.save(global.settingsFile);
+        win.focus();
     });
 
     winProfiles.on('resize', () => {
@@ -3585,6 +3586,7 @@ function createEditor(show, loading) {
         if (win) {
             win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
             win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: false, noSave: true });
+            win.focus();
         }
         set.save(global.settingsFile);
         executeScript('tinymce.activeEditor.setContent(\'\');', e.sender);

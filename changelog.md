@@ -23,6 +23,7 @@
   - Fixed bug with [#gag](docs/commands.md) and number argument not correctly working
   - Fixed bug with regex trigger caching
   - Fixed bug when client was maximized then minized and not correctly sending the new size to the mud
+  - Focus on main window when profile manager or advanced editor windows closed
 - **Changed:**
   - Expand [#testmxpexpire](docs/commands.md) to test same line expiring
   - Use resize cursors instead of column resize cursors for resizable areas
