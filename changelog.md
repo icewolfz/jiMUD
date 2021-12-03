@@ -29,7 +29,7 @@
 - **Changed:**
   - Expand [#testmxpexpire](docs/commands.md) to test same line expiring
   - Use resize cursors instead of column resize cursors for resizable areas
-  - Update electron 16.0.1 to 16.0.3
+  - Update electron 16.0.1 to 16.0.4
 
 ## v0.17.1 2021-11-23
 
