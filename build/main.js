@@ -1351,19 +1351,19 @@ function createWindow() {
     win.on('closed', () => {
         if (winMap) {
             set.windows.mapper = getWindowState('mapper', winMap);
-            win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
+            //win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
             executeScript('closeWindow()', winMap);
             winMap = null;
         }
         if (winEditor) {
             set.windows.editor = getWindowState('editor', winEditor);
-            win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
+            //win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
             winEditor.close();
             winEditor = null;
         }
         if (winChat) {
             set.windows.chat = getWindowState('chat', winChat);
-            win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
+            //win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
             winChat.close();
             winChat = null;
         }
@@ -1462,6 +1462,7 @@ function createWindow() {
         if (winMap && !winMap.isDestroyed() && !winMap.isVisible())
             executeScript('closeHidden()', winMap);
         set.save(global.settingsFile);
+        win.destroy();
     });
 }
 
@@ -2843,13 +2844,13 @@ ipcMain.handle('attach-context-event-prevent', event => {
 
 ipcMain.on('window-info', (event, info, ...args) => {
     if (info === "child-count") {
-        var windows = BrowserWindow.getAllWindows();
+        var wins = BrowserWindow.getAllWindows();
         var current = BrowserWindow.fromWebContents(event.sender);
         var count = 0;
-        for (var w = 0, wl = windows.length; w < wl; w++) {
-            if (windows[w] === current || !windows[w].isVisible())
+        for (var w = 0, wl = wins.length; w < wl; w++) {
+            if (wins[w] === current || !wins[w].isVisible())
                 continue;
-            if (windows[w].getParentWindow() !== current)
+            if (wins[w].getParentWindow() !== current)
                 continue;
             count++;
         }
@@ -2860,12 +2861,12 @@ ipcMain.on('window-info', (event, info, ...args) => {
             event.returnValue = 0;
             return
         }
-        var windows = BrowserWindow.getAllWindows();
+        var wins = BrowserWindow.getAllWindows();
         var current = BrowserWindow.fromWebContents(event.sender);
-        for (var w = 0, wl = windows.length; w < wl; w++) {
-            if (windows[w] === current || !windows[w].isVisible())
+        for (var w = 0, wl = wins.length; w < wl; w++) {
+            if (wins[w] === current || !wins[w].isVisible())
                 continue;
-            if (windows[w].getTitle().startsWith(args[0]) && windows[w].getParentWindow() === current) {
+            if (v[w].getTitle().startsWith(args[0]) && v[w].getParentWindow() === current) {
                 event.returnValue = 1;
                 return;
             }
@@ -2873,17 +2874,17 @@ ipcMain.on('window-info', (event, info, ...args) => {
         event.returnValue = 0;
     }
     else if (info === 'child-close') {
-        var windows = BrowserWindow.getAllWindows();
+        var wins = BrowserWindow.getAllWindows();
         var current = BrowserWindow.fromWebContents(event.sender);
         var count = 0;
-        for (var w = 0, wl = windows.length; w < wl; w++) {
-            if (windows[w] === current || !windows[w].isVisible())
+        for (var w = 0, wl = wins.length; w < wl; w++) {
+            if (wins[w] === current || !wins[w].isVisible())
                 continue;
-            if (args.length && !windows[w].getTitle().startsWith(args[0])) {
-                windows[w].close();
+            if (args.length && !wins[w].getTitle().startsWith(args[0])) {
+                wins[w].close();
                 continue;
             }
-            if (windows[w].getParentWindow() !== current)
+            if (wins[w].getParentWindow() !== current)
                 continue;
             count++;
         }
@@ -3593,7 +3594,7 @@ function createEditor(show, loading) {
         executeScript('tinymce.activeEditor.setContent(\'\');', e.sender);
         if (winEditor === e.sender && winEditor && (set.editorPersistent && !global.editorOnly)) {
             e.preventDefault();
-            executeScript('closeHidden()', winEditor);
+            executeScript('if(closeHidden) closeHidden()', winEditor);
             winEditor.hide();
         }
     });
@@ -3919,7 +3920,7 @@ function createNewWindow(name, options) {
 
         w.on('close', () => {
             if (w && w.getParentWindow()) {
-                executeScript(`childClosed('${url}', '${frameName}');`, w.getParentWindow());
+                executeScript(`if(childClosed) childClosed('${url}', '${frameName}');`, w.getParentWindow());
                 w.focus();
             }
         });
@@ -4141,15 +4142,19 @@ function closeWindows(save, clear) {
     var name;
     var cWin;
     for (name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(windows, name))
             continue;
-        executeScript('if(closing) closing();', windows[name].window);
-        executeScript('if(closed) closed();', windows[name].window);
-        set.windows[name] = getWindowState(name, windows[name].window);
+        if(windows[name].window) {
+            executeScript('if(closing) closing();', windows[name].window);
+            executeScript('if(closed) closed();', windows[name].window);
+            set.windows[name] = getWindowState(name, windows[name].window);
+        }
         set.windows[name].options = copyWindowOptions(name);
-        cWin = windows[name].window;
-        windows[name].window = null;
-        cWin.close();
+        if(windows[name].window) {
+            cWin = windows[name].window;
+            windows[name].window = null;
+            cWin.close();
+        }
     }
     if (clear)
         windows = {};

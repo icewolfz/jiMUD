@@ -24,6 +24,8 @@
   - Fixed bug with regex trigger caching
   - Fixed bug when client was maximized then minized and not correctly sending the new size to the mud
   - Focus on main window when profile manager, advanced editor, or child windows closed
+  - Fixed bug that would not correctly clean up when window closed by close button
+  - Fixed bug where window would not correctly save open state when main window closed
 - **Changed:**
   - Expand [#testmxpexpire](docs/commands.md) to test same line expiring
   - Use resize cursors instead of column resize cursors for resizable areas
