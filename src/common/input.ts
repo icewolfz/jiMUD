@@ -10,7 +10,7 @@ import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType } from './profile';
 import { NewLineType } from './types';
 import { SettingList } from './settings';
-import { getAnsiColorCode, getColorCode } from './ansi';
+import { getAnsiColorCode, getColorCode, isMXPColor } from './ansi';
 import { create, all } from 'mathjs';
 const mathjs = create(all, {});
 const buzz = require('buzz');
@@ -2389,8 +2389,12 @@ export class Input extends EventEmitter {
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
-                            if (i === -1)
-                                throw new Error('Invalid fore color');
+                            if (i === -1) {
+                                if (isMXPColor(args[0]))
+                                    i = args[0];
+                                else
+                                    throw new Error('Invalid fore color');
+                            }
                         }
                         setTimeout(() => {
                             n = this.adjustLastLine(n);
@@ -2408,8 +2412,12 @@ export class Input extends EventEmitter {
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
-                            if (i === -1)
-                                throw new Error('Invalid fore color');
+                            if (i === -1) {
+                                if (isMXPColor(args[0]))
+                                    i = args[0];
+                                else
+                                    throw new Error('Invalid fore color');
+                            }
                         }
                         if (args[1] === 'bold') {
                             setTimeout(() => {
@@ -2426,8 +2434,12 @@ export class Input extends EventEmitter {
                                 i = parseInt(args[1].trim(), 10);
                             else {
                                 i = getAnsiColorCode(args[1], true);
-                                if (i === -1)
-                                    throw new Error('Invalid back color');
+                                if (i === -1) {
+                                    if (isMXPColor(args[1]))
+                                        i = args[1];
+                                    else
+                                        throw new Error('Invalid back color');
+                                }
                             }
                             setTimeout(() => {
                                 n = this.adjustLastLine(n);
@@ -2446,8 +2458,12 @@ export class Input extends EventEmitter {
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
-                            if (i === -1)
-                                throw new Error('Invalid fore color');
+                            if (i === -1) {
+                                if (isMXPColor(args[0]))
+                                    i = args[0];
+                                else
+                                    throw new Error('Invalid fore color');
+                            }
                         }
                         if (args[2] !== 'bold')
                             throw new Error('Only bold is supported as third argument');
@@ -2459,8 +2475,12 @@ export class Input extends EventEmitter {
                             i = parseInt(args[1].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[1], true);
-                            if (i === -1)
-                                throw new Error('Invalid back color');
+                            if (i === -1) {
+                                if (isMXPColor(args[1]))
+                                    i = args[0];
+                                else
+                                    throw new Error('Invalid back color');
+                            }
                         }
                         setTimeout(() => {
                             n = this.adjustLastLine(n);
