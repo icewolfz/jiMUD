@@ -9,7 +9,7 @@
   - Add preference to open Who is on in child window
   - Add [%{color(fore,back,bold)}](docs/functions.md) function to return color codes
   - Add [%{zcolor(fore,back,effect)}](docs/functions.md) function to convert zmud/cmud style color codes into supported jiMUD codes
-  - Add ability to resize right status display bar
+  - Status Display: Add ability to resize
 - **Fixed:**
   - Mac: Fix window menu item on main bar
   - Display:
@@ -28,6 +28,7 @@
   - Fixed bug that would not correctly clean up when window closed by close button
   - Fixed bug where window would not correctly save open state when main window closed
   - Advanced Editor: Fixed bug with context menu and colorizing selected text
+  - Status Display: Fixed some monster icon positions
 - **Changed:**
   - Expand [#testmxpexpire](docs/commands.md) to test same line expiring
   - Use resize cursors instead of column resize cursors for resizable areas
