@@ -12,7 +12,7 @@ Reset - Resetting will revert all settings back to default values
 - `Show character manager onload` open the character manager when the client first loads.
 - `Enable spellchecking` support spellchecking in command line and advanced editor **Requires restart**
 - `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
-- `Theme` the theme for the main client window
+- `Theme` the theme for the main client window, the theme list is built from built in themes and themes located in {data}\themes folder and {documents}\jiMUD\themes, see [customizing](customizing.md#themes) doc for more themes information
 - `On disconnect do` What to do when disconnected from the mud
   - `Nothing` do nothing
   - `Reconnect` reconnect using auto connect options

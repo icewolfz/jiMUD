@@ -6,6 +6,18 @@ When loading the client will look for and load files in jiMUD's data directory:
 - `$XDG_CONFIG_HOME/jiMUD` or `~/.config/jiMUD` on Linux
 - `~/Library/Application Support/jiMUD` on macOS
 
+## Themes
+
+jiMUd comes with a list of built in themes to pick from, but also allows you to create you own them and customize the interface.
+A theme file is simply a css named as themename.css and stored in one of the two theme
+folders: {data}\themes or {documents}\jiMUD\themes, see [faq](faq.md#what-predefined-variables-can-be-use-for-paths) for variables for paths.
+The theme files are just css rules using custom class names, ids, and other selectors
+allowed by css to create the interface, when position the main window elements (button bar, display, command box, status display) you should use
+position based off the edges of left,right,top,and bottoms so they will resize correctly with the window.
+There is no official list of supported classes, ids or rules, you can use the current
+themes from the git repo as a base, they come in sass formats that can be compiled into final
+css.
+
 ## user.css
 
 Allows for custom css to adjust or change the client interface, you may need to use !important rule modifier but all css should be loaded after main client css. Supports [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths),
