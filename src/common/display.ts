@@ -307,7 +307,6 @@ export class Display extends EventEmitter {
                 this.split.ghostBar.style.top = (this.offset(this.split).top - this.split.bar.offsetHeight) + 'px';
                 this.split.ghostBar.style.display = this.splitLive ? 'none' : 'block';
                 this._el.appendChild(this.split.ghostBar);
-
                 this._el.addEventListener('mousemove', this.split.mouseMove);
                 this._el.addEventListener('mouseup', this.split.moveDone);
                 this._el.addEventListener('mouseleave', this.split.moveDone);
@@ -318,18 +317,18 @@ export class Display extends EventEmitter {
                 e.cancelBubble = true;
                 if (e.pageY < 20)
                     this.split.ghostBar.style.top = '20px';
-                else if (e.pageY > this._innerHeight - 150 - this._HScroll.size)
-                    this.split.ghostBar.style.top = (this._innerHeight - 150 - this.split.bar.offsetHeight - this._HScroll.size) + 'px';
+                else if (e.pageY > this._innerHeight - 150)
+                    this.split.ghostBar.style.top = (this._innerHeight - 150 - this.split.bar.offsetHeight) + 'px';
                 else
                     this.split.ghostBar.style.top = (e.pageY - this.split.bar.offsetHeight) + 'px';
                 let h;
                 if (this.splitLive) {
                     if (e.pageY < 20)
-                        h = this._innerHeight - 20 + this.split.bar.offsetHeight;
+                        h = this._innerHeight - 20 + this.split.bar.offsetHeight - this._HScroll.size;
                     else if (e.pageY > this._innerHeight - 150)
                         h = 150;
                     else
-                        h = this._innerHeight - e.pageY + this.split.bar.offsetHeight;
+                        h = this._innerHeight - e.pageY + this.split.bar.offsetHeight - this._HScroll.size;
 
                     h = (h / this._innerHeight * 100);
                     this.split.style.height = h + '%';
@@ -344,10 +343,10 @@ export class Display extends EventEmitter {
                     let h;
                     if (e.pageY < 20)
                         h = this._innerHeight - 20 + this.split.bar.offsetHeight - this._HScroll.size;
-                    else if (e.pageY > this._innerHeight - 150 - this._HScroll.size)
+                    else if (e.pageY > this._innerHeight - 150)
                         h = 150;
                     else
-                        h = this._innerHeight - e.pageY + this.split.bar.offsetHeight;
+                        h = this._innerHeight - e.pageY + this.split.bar.offsetHeight - this._HScroll.size;
                     h = (h / this._innerHeight * 100);
                     this.split.style.height = h + '%';
                     this.split._innerHeight = this.split.clientHeight;

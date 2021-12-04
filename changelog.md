@@ -18,6 +18,7 @@
     - Fixed mouse cursor to use standard text cursor
     - Fixed more unicode surrogate/variant pair selection issues
     - Fixed bug in MXP expire not clearing send/link end tag
+    - Fixed split view resize when horizontal scroll bar visible
   - Ansi Parser: Fixed bug in MXP expire tag not correctly expiring links on same line that come before the tag
   - Fixed bug with [#gag](docs/commands.md) not working from command line
   - Fixed bug with [#gag](docs/commands.md) and number argument not correctly working
