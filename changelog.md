@@ -3,13 +3,16 @@
 ## v0.17.2
 
 - **New:**
-  - Add [#color](docs/commansds.md) color last added line
+  - Add [#color](docs/commands.md) color last added line
   - Add [#window](docs/commands.md) to open/show supported windows
   - Add [#testunicodeemoji](docs/commands.md) to display unicode emoji symbols
   - Add preference to open Who is on in child window
   - Add [%{color(fore,back,bold)}](docs/functions.md) function to return color codes
   - Add [%{zcolor(fore,back,effect)}](docs/functions.md) function to convert zmud/cmud style color codes into supported jiMUD codes
   - Status Display: Add ability to resize
+  - Themes: Add two new themes
+    - Clean-large: scaled version of clean theme, 150% larger
+    - Clean-extra-large: scaled version of clean theme, 200% larger
 - **Fixed:**
   - Mac: Fix window menu item on main bar
   - Display:
@@ -23,7 +26,7 @@
   - Fixed bug with [#gag](docs/commands.md) not working from command line
   - Fixed bug with [#gag](docs/commands.md) and number argument not correctly working
   - Fixed bug with regex trigger caching
-  - Fixed bug when client was maximized then minized and not correctly sending the new size to the mud
+  - Fixed bug when client was maximized then minimized and not correctly sending the new size to the mud
   - Focus on main window when profile manager, advanced editor, or child windows closed
   - Fixed bug that would not correctly clean up when window closed by close button
   - Fixed bug where window would not correctly save open state when main window closed
