@@ -756,7 +756,7 @@ export class Status extends EventEmitter {
         if (this.client.options.showStatusWeather) {
             $('#environment').css('display', '');
             top += $('#environment').outerHeight() + (parseInt($('#environment').css('top'), 10) || 0);
-            $('#environment').css('left', status.innerWidth() / 2 - $('#environment').outerWidth() / 2);
+            //$('#environment').css('left', status.innerWidth() / 2 - $('#environment').outerWidth() / 2);
         }
         else
             $('#environment').css('display', 'none');
