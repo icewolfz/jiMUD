@@ -343,7 +343,7 @@ $monsters: "./../../assets/monsters";
 .monster-dragon {
     background-image: url(#{$monsters}/32x32-6.png);
     background-position: -808px -184px;
-    animation: dragon-sprite 0.8s steps(2) infinite;
+    animation: monster-dragon-sprite 0.8s steps(2) infinite;
 }
 
 @keyframes monster-dragon-sprite {
