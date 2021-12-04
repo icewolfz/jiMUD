@@ -193,12 +193,11 @@ export class Status extends EventEmitter {
             $('#status-border').css('width', '');
             const w2 = $('#status').css('width');
             $('#status').css('width', '');
-            //const minWidth = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10);
-            const l = main.offset().left;
+            const minWidth = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10);
+            const l = main.offset().left + parseInt($('#status').css('right'), 10) * 2 + Math.abs(parseInt($('#drag-bar').css('left'), 10)) + $('#drag-bar').outerWidth();
             $('#status-border').css('width', w1);
             $('#status').css('width', w2);
             const maxWidth = Math.floor(document.body.clientWidth / 2);
-            //const b = Math.abs(parseInt($('#drag-bar').css('left'), 10)) + $('#drag-bar').width();
             $(document).mousemove((event) => {
                 if (event.pageX < maxWidth)
                     ghostBar.css('left', maxWidth);
