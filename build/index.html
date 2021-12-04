@@ -430,12 +430,12 @@
             }
         }
 
-        function loadTheme(theme) {
+        function loadTheme(theme, force) {
             theme = parseTemplate(theme) + '.css';
             if (!isFileSync(theme))
                 theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
             var el = document.getElementById('theme');
-            if (el.getAttribute('href') !== theme)
+            if (el.getAttribute('href') !== theme || force)
                 el.setAttribute('href', theme);
             if (client && client.display)
                 client.display.updateLayout();
@@ -505,6 +505,7 @@
             client.display.updateScrollbars();
             client.UpdateWindow();
             setTimeout(() => {
+                _status.resize();
                 _status.updateInterface();
             }, 1);
             updateMenu();
@@ -700,9 +701,9 @@
             });
             document.getElementById('buttonbar').addEventListener('wheel', (e) => {
                 if (e.deltaY >= 0)
-                    document.getElementById('buttonbar').scrollTop += 32;
+                    document.getElementById('buttonbar').scrollTop += document.getElementById('buttonbar').clientWidth;
                 else
-                    document.getElementById('buttonbar').scrollTop -= 32;
+                    document.getElementById('buttonbar').scrollTop -= document.getElementById('buttonbar').clientWidth;
                 doUpdate(128);
             }, { passive: true });
 
@@ -710,7 +711,7 @@
                 if (e.button !== 0)
                     return;
                 if (document.getElementById('buttonbar').scrollTop > 0)
-                    scrollButtonBar(-32);
+                    scrollButtonBar(-document.getElementById('buttonbar').clientWidth);
                 e.preventDefault();
                 e.cancelBubble = true;
             };
@@ -2788,7 +2789,7 @@
             <textarea type="text" id="commandinput" aria-live="polite" spellcheck="true" wrap="off" cols="20" rows="20"></textarea>
         </div>
         <div class="dropdown dropup command-history">
-            <a id="history-dropup" style="width:32px" title="Show command history" class="button button-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" area-expanded="true">
+            <a id="history-dropup" title="Show command history" class="button button-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" area-expanded="true">
                 <i class="fa fa-history"></i><span class="caret" style="margin: 0"></span>
             </a>
             <ul class="dropdown-menu pull-right dropdown-menu-right" data-container="body" aria-labelledby="history-dropdown"></ul>
