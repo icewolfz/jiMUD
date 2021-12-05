@@ -3859,8 +3859,10 @@ export class Input extends EventEmitter {
             catch (e) {
                 if (this.client.options.disableTriggerOnError) {
                     trigger.enabled = false;
-                    this.client.saveProfile(trigger.profile.name);
-                    this.emit('item-updated', 'trigger', trigger.profile, trigger.profile.triggers.indexOf(trigger), trigger);
+                    setTimeout(() => {
+                        this.client.saveProfile(trigger.profile.name);
+                        this.emit('item-updated', 'trigger', trigger.profile, trigger.profile.triggers.indexOf(trigger), trigger);
+                    });
                 }
                 if (this.client.options.showScriptErrors)
                     this.client.error(e);
