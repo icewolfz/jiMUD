@@ -330,6 +330,7 @@ export class Trigger extends Item {
     public type: TriggerType = TriggerType.Regular;
     public temp: boolean = false;
     public caseSensitive: boolean = false;
+    public raw: boolean = false;
 
     constructor(data?, profile?) {
         super(data);
@@ -715,6 +716,7 @@ export class Profile {
                         triggernewline: this.triggers[i].triggerNewline,
                         caseSensitive: this.triggers[i].caseSensitive,
                         triggerprompt: this.triggers[i].triggerPrompt,
+                        raw: this.triggers[i].raw,
                         type: this.triggers[i].type,
                         notes: this.triggers[i].notes || ''
                     });

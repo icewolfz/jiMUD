@@ -10,6 +10,7 @@
   - Add [%{color(fore,back,bold)}](docs/functions.md) function to return color codes
   - Add [%{zcolor(fore,back,effect)}](docs/functions.md) function to convert zmud/cmud style color codes into supported jiMUD codes
   - Status Display: Add ability to resize
+  - Triggers: Add [Trigger on raw](docs/profiles.md) option to match on raw line including any ansi escape codes
   - Themes: Add two new themes, updated [preference](docs/preferences.md) docs to mention custom theme folders and [customizing](docs/customizing.md) docs to explain themes
     - Clean-large: scaled version of clean theme, 150% larger
     - Clean-extra-large: scaled version of clean theme, 200% larger

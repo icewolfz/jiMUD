@@ -183,7 +183,7 @@ export class Input extends EventEmitter {
         });
 
         this.client.on('add-line', (data) => {
-            this.ExecuteTriggers(TriggerType.Regular, data.line, data.fragment, false);
+            this.ExecuteTriggers(TriggerType.Regular, data.line, data.raw, data.fragment, false);
             if (this._gag > 0 && !data.fragment) {
                 data.gagged = true;
                 this._gag--;
@@ -993,6 +993,8 @@ export class Input extends EventEmitter {
                     trigger.triggerNewline = false;
                 if (item.options.case)
                     trigger.caseSensitive = true;
+                if (item.options.raw)
+                    trigger.raw = true;
 
                 if (item.options.verbatim)
                     trigger.verbatim = true;
@@ -1171,6 +1173,8 @@ export class Input extends EventEmitter {
                     trigger.triggerNewline = false;
                 if (item.options.case)
                     trigger.caseSensitive = true;
+                if (item.options.raw)
+                    trigger.raw = true;
 
                 if (item.options.verbatim)
                     trigger.verbatim = true;
@@ -3089,7 +3093,7 @@ export class Input extends EventEmitter {
                             }
                             else //else not an alias so normal space
                             {
-                                str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true);
+                                str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, alias, false, true);
                                 if (typeof str === 'number') {
                                     this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                                     if (out.length === 0) return null;
@@ -3102,7 +3106,7 @@ export class Input extends EventEmitter {
                             //no longer look for an alias
                         }
                         else {
-                            str = this.ExecuteTriggers(TriggerType.CommandInputRegular, str, false, true);
+                            str = this.ExecuteTriggers(TriggerType.CommandInputRegular, str, str, false, true);
                             if (typeof str === 'number') {
                                 this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                                 if (out.length === 0) return null;
@@ -3239,7 +3243,7 @@ export class Input extends EventEmitter {
             }
             else //else not an alias so normal space
             {
-                str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true);
+                str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, alias, false, true);
                 if (typeof str === 'number') {
                     this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                     if (out.length === 0) return null;
@@ -3253,7 +3257,7 @@ export class Input extends EventEmitter {
         else if (alias.length > 0) {
             if (str.length > 0)
                 alias += str;
-            str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, false, true);
+            str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, alias, false, true);
             if (typeof str === 'number') {
                 this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                 if (out.length === 0) return null;
@@ -3263,7 +3267,7 @@ export class Input extends EventEmitter {
             else if (out.length === 0) return null;
         }
         else if (str.length > 0) {
-            str = this.ExecuteTriggers(TriggerType.CommandInputRegular, str, false, true);
+            str = this.ExecuteTriggers(TriggerType.CommandInputRegular, str, str, false, true);
             if (typeof str === 'number') {
                 this.executeWait(text.substr(idx + 1), str, eAlias, stacking);
                 if (out.length === 0) return null;
@@ -3638,7 +3642,7 @@ export class Input extends EventEmitter {
         }
         if (ret == null || ret === undefined)
             return null;
-        ret = this.ExecuteTriggers(TriggerType.CommandInputRegular, ret, false, true);
+        ret = this.ExecuteTriggers(TriggerType.CommandInputRegular, ret, ret, false, true);
         if (ret == null || ret === undefined)
             return null;
         //Convert to string
@@ -3801,10 +3805,12 @@ export class Input extends EventEmitter {
         this.scrollLock = !this.scrollLock;
     }
 
-    public ExecuteTriggers(type: TriggerType, raw?, frag?: boolean, ret?: boolean) {
-        if (!this.enableTriggers || raw == null) return raw;
+    public ExecuteTriggers(type: TriggerType, line?, raw?, frag?: boolean, ret?: boolean) {
+        if (!this.enableTriggers || line == null) return line;
         if (ret == null) ret = false;
         if (frag == null) frag = false;
+        //make sure raw is set
+        raw = raw || line;
         this.buildTriggerCache();
         let t = 0;
         //scope to get performance
@@ -3817,11 +3823,11 @@ export class Input extends EventEmitter {
             if (!frag && !trigger.triggerNewline && (trigger.triggerNewline !== undefined))
                 continue;
             if (trigger.verbatim) {
-                if (!trigger.caseSensitive && raw.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
-                else if (trigger.caseSensitive && raw !== trigger.pattern) continue;
+                if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) continue;
+                else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) continue;
                 if (ret)
-                    return this.ExecuteTrigger(trigger, [raw], true, t);
-                this.ExecuteTrigger(trigger, [raw], false, t);
+                    return this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], true, t);
+                this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t);
             }
             else {
                 try {
@@ -3833,13 +3839,13 @@ export class Input extends EventEmitter {
                         re = this._TriggerRegExCache['gi' + trigger.pattern] || (this._TriggerRegExCache['gi' + trigger.pattern] = new RegExp(trigger.pattern, 'gi'));
                     re.lastIndex = 0;
                     //re = new RegExp(trigger.pattern, 'gi');
-                    const res = re.exec(raw);
+                    const res = re.exec(trigger.raw ? raw : line);
                     if (!res || !res.length) continue;
                     let args;
-                    if(raw === res[0])
+                    if ((trigger.raw ? raw : line) === res[0])
                         args = res;
                     else
-                        args = [raw, ...res];
+                        args = [(trigger.raw ? raw : line), ...res];
                     if (ret)
                         return this.ExecuteTrigger(trigger, args, true, t);
                     this.ExecuteTrigger(trigger, args, false, t);
@@ -3852,7 +3858,7 @@ export class Input extends EventEmitter {
                 }
             }
         }
-        return raw;
+        return line;
     }
 
     public ExecuteTrigger(trigger, args, r: boolean, idx) {

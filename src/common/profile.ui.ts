@@ -3329,6 +3329,7 @@ function importProfiles() {
                                     item.priority = data.profiles[keys[k]].triggers[m].priority;
                                     item.triggerNewline = data.profiles[keys[k]].triggers[m].triggernewline;
                                     item.triggerPrompt = data.profiles[keys[k]].triggers[m].triggerprompt;
+                                    item.raw = data.profiles[keys[k]].triggers[m].raw;
                                     item.caseSensitive = data.profiles[keys[k]].triggers[m].caseSensitive;
                                     item.temp = data.profiles[keys[k]].triggers[m].temp;
                                     item.type = data.profiles[keys[k]].triggers[m].type;
