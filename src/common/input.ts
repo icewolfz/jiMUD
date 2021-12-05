@@ -11,7 +11,7 @@ import { Alias, Trigger, Button, Profile, TriggerType } from './profile';
 import { NewLineType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor } from './ansi';
-import { create, all } from 'mathjs';
+import { create, all, ConditionalNodeDependencies } from 'mathjs';
 const mathjs = create(all, {});
 const buzz = require('buzz');
 const path = require('path');
@@ -869,6 +869,7 @@ export class Input extends EventEmitter {
                                     case 'enable':
                                     case 'cmd':
                                     case 'temporary':
+                                    case 'raw':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -903,6 +904,7 @@ export class Input extends EventEmitter {
                                     case 'enable':
                                     case 'cmd':
                                     case 'temporary':
+                                    case 'raw':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -3818,19 +3820,22 @@ export class Input extends EventEmitter {
         const tl = triggers.length;
         for (; t < tl; t++) {
             const trigger = triggers[t];
+            //extra check in case error disabled it and do not want to keep triggering the error
+            if (!trigger.enabled) continue;
             if (trigger.type !== undefined && trigger.type !== type) continue;
             if (frag && !trigger.triggerPrompt) continue;
             if (!frag && !trigger.triggerNewline && (trigger.triggerNewline !== undefined))
                 continue;
-            if (trigger.verbatim) {
-                if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) continue;
-                else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) continue;
-                if (ret)
-                    return this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], true, t);
-                this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t);
-            }
-            else {
-                try {
+            try {
+                if (trigger.verbatim) {
+                    if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) continue;
+                    else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) continue;
+                    if (ret)
+                        return this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], true, t);
+                    this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t);
+                }
+                else {
+
                     let re;
                     if (trigger.caseSensitive)
                         re = this._TriggerRegExCache['g' + trigger.pattern] || (this._TriggerRegExCache['g' + trigger.pattern] = new RegExp(trigger.pattern, 'g'));
@@ -3850,12 +3855,17 @@ export class Input extends EventEmitter {
                         return this.ExecuteTrigger(trigger, args, true, t);
                     this.ExecuteTrigger(trigger, args, false, t);
                 }
-                catch (e) {
-                    if (this.client.options.showScriptErrors)
-                        this.client.error(e);
-                    else
-                        this.client.debug(e);
+            }
+            catch (e) {
+                if (this.client.options.disableTriggerOnError) {
+                    trigger.enabled = false;
+                    this.client.saveProfile(trigger.profile.name);
+                    this.emit('item-updated', 'trigger', trigger.profile, trigger.profile.triggers.indexOf(trigger), trigger);
                 }
+                if (this.client.options.showScriptErrors)
+                    this.client.error(e);
+                else
+                    this.client.debug(e);
             }
         }
         return line;

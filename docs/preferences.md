@@ -162,6 +162,7 @@ Controls what is captured into the chat window
 - `Show Script Errors` Disable any errors that triggers, aliases, or macros produces when script type.
 - `Parse single quotes as strings` Treat single quotes as string encasing, meaning all text found inside single quotes are treated as is and not parsed.
 - `Parse double quotes as strings` Treat double quotes as string encasing, meaning all text found inside double quotes are treated as is and not parsed.
+- `Disable trigger on error` Disable a trigger if an error happens when executing a trigger
 
 ## Scripting > Special characters
 

@@ -408,6 +408,7 @@ export class Settings {
 
     public logErrors: boolean = true;
     public showErrorsExtended: boolean = false;
+    public disableTriggerOnError: boolean = true;
     public reportCrashes: boolean = false;
 
     public parseDoubleQuotes: boolean = true;

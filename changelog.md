@@ -6,7 +6,9 @@
   - Add [#color](docs/commands.md) color last added line
   - Add [#window](docs/commands.md) to open/show supported windows
   - Add [#testunicodeemoji](docs/commands.md) to display unicode emoji symbols
-  - Add [preference](docs/preferences.md) to open `Who is on?` in child window
+  - [Preferences](docs/preferences.md)
+    - Add `Who is on?` tp open who in child window
+    - Add `Disable trigger on error` to disable a trigger if an error happens, either from pattern or scripting, enabled by default to prevent spamming of broken trigger
   - Add [%{color(fore,back,bold)}](docs/functions.md) function to return color codes
   - Add [%{zcolor(fore,back,effect)}](docs/functions.md) function to convert zmud/cmud style color codes into supported jiMUD codes
   - Status Display: Add ability to resize
@@ -29,6 +31,7 @@
   - Triggers:
     - Fixed bug with regex trigger caching
     - Fixed bug with %0, ${0}, $0 not always return full raw line of text **Warning:** this may break some triggers
+    - Fixed bug with verbatim not error catching
   - Fixed bug when client was maximized then minimized and not correctly sending the new size to the mud
   - Focus on main window when profile manager, advanced editor, or child windows closed
   - Fixed bug that would not correctly clean up when window closed by close button
