@@ -25,7 +25,9 @@
   - Ansi Parser: Fixed bug in MXP expire tag not correctly expiring links on same line that come before the tag
   - Fixed bug with [#gag](docs/commands.md) not working from command line
   - Fixed bug with [#gag](docs/commands.md) and number argument not correctly working
-  - Fixed bug with regex trigger caching
+  - Triggers:
+    - Fixed bug with regex trigger caching
+    - Fixed bug with %0, ${0}, $0 not always returning full raw line of text
   - Fixed bug when client was maximized then minimized and not correctly sending the new size to the mud
   - Focus on main window when profile manager, advanced editor, or child windows closed
   - Fixed bug that would not correctly clean up when window closed by close button

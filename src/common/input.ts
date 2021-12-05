@@ -3835,9 +3835,14 @@ export class Input extends EventEmitter {
                     //re = new RegExp(trigger.pattern, 'gi');
                     const res = re.exec(raw);
                     if (!res || !res.length) continue;
+                    let args;
+                    if(raw === res[0])
+                        args = res;
+                    else
+                        args = [raw, ...res];
                     if (ret)
-                        return this.ExecuteTrigger(trigger, res, true, t);
-                    this.ExecuteTrigger(trigger, res, false, t);
+                        return this.ExecuteTrigger(trigger, args, true, t);
+                    this.ExecuteTrigger(trigger, args, false, t);
                 }
                 catch (e) {
                     if (this.client.options.showScriptErrors)
