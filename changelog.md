@@ -27,7 +27,7 @@
   - Fixed bug with [#gag](docs/commands.md) and number argument not correctly working
   - Triggers:
     - Fixed bug with regex trigger caching
-    - Fixed bug with %0, ${0}, $0 not always returning full raw line of text
+    - Fixed bug with %0, ${0}, $0 not always return full raw line of text **Warning:** this may break some triggers
   - Fixed bug when client was maximized then minimized and not correctly sending the new size to the mud
   - Focus on main window when profile manager, advanced editor, or child windows closed
   - Fixed bug that would not correctly clean up when window closed by close button
