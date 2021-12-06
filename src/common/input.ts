@@ -3847,7 +3847,7 @@ export class Input extends EventEmitter {
                     const res = re.exec(trigger.raw ? raw : line);
                     if (!res || !res.length) continue;
                     let args;
-                    if ((trigger.raw ? raw : line) === res[0])
+                    if ((trigger.raw ? raw : line) === res[0] || !this.client.options.prependTriggeredLine)
                         args = res;
                     else
                         args = [(trigger.raw ? raw : line), ...res];
