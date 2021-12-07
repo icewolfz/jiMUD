@@ -1623,8 +1623,16 @@ app.on('activate', () => {
     }
 });
 
-app.on('before-quit', () => {
-
+app.on('before-quit', (e) => {
+    if (winProfiles) {
+        e.preventDefault();
+        dialog.showMessageBox(winProfiles, {
+            type: 'warning',
+            title: 'Close profile manager',
+            message: 'You must close the profile manager before you can exit.'
+        });
+        set.save(global.settingsFile);
+    }
 });
 
 ipcMain.on('check-for-updates', checkForUpdatesManual);

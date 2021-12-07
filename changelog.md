@@ -11,6 +11,7 @@
   - Fixed bug in [#trigger](docs/commands.md)  command and adding to profile not correctly finding if one exist already
   - Fixed bug in [#event](docs/commands.md)  command and adding to profile not correctly finding if one exist already
   - Profile Manager: trigger tester did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
+  - Fixed bug with File > exit when profile manager open and should not close
 
 ## v0.17.2 2021-12-06
 
