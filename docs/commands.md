@@ -12,9 +12,9 @@
 |#say||text|same as echo
 |#sayprompt|#sayp|text|same as echoprompt
 |#wait|#wa|amount|pause current block for number of milliseconds
-|#alias|#al|<nobr>name {commands} *profile*</nobr>|create or alter and alias
-|#alias|#al|<nobr>index {commands} *profile*</nobr>|create or alter and alias
-|#unalias|#una|name *profile*|delete and alias
+|#alias|#al|<nobr>name {commands} *profile*</nobr>|create or alter an alias
+|#alias|#al|<nobr>index {commands} *profile*</nobr>|create or alter an alias
+|#unalias|#una|name *profile*|delete an alias
 |#setsetting|#sets|name value|alter a setting value see: [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
 |#getsetting|#gets|name|display a setting value, [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
 |#profile|#pro|name *enable\|disable*|enable or disable a profile
