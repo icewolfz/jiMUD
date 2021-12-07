@@ -2,6 +2,8 @@
 
 ## v0.17.3
 
+- **New:**
+  - Add [#cw](docs/commands.md) colors all words matching current trigger pattern
 - **Fixed:**
   - Fixed window size being sent to the mud when status display is hidden/shown
 

@@ -90,6 +90,18 @@ export class Input extends EventEmitter {
         return this.stack.repeatnum;
     }
 
+    get regex() {
+        let sl = this._stack.length;
+        if (sl === 0)
+            return null;
+        while (sl >= 0) {
+            sl--;
+            if (this._stack[sl].hasOwnProperty('regex'))
+                return this._stack[sl].regex;
+        }
+        return null;
+    }
+
     get vStack() {
         if (this._vStack.length === 0)
             return {};
@@ -2505,6 +2517,200 @@ export class Input extends EventEmitter {
                     }
                 }
                 return null;
+            case 'cw':
+                trigger = this.stack.regex;
+                //no regex so
+                if (!trigger) return null;
+                if (args.length !== 1)
+                    throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color\x1b[0;-11;-12m');
+                args[0] = this.parseOutgoing(this.stripQuotes(args[0]), false);
+                n = this.client.display.lines.length;
+                if (args[0].trim().match(/^-?\d+$/g)) {
+                    setTimeout(() => {
+                        n = this.adjustLastLine(n);
+                        //verbatim so color whole line
+                        if (trigger.length === 1)
+                            this.client.display.colorSubStrByLine(n, parseInt(args[0], 10));
+                        else {
+                            trigger[1].lastIndex = 0;
+                            tmp = trigger[0].matchAll(trigger[1]);
+                            for (const match of tmp) {
+                                this.client.display.colorSubStrByLine(n, parseInt(args[0], 10), null, match.index, match[0].length);
+                            }
+                        }
+                    }, 0);
+                }
+                //back,fore from color function
+                else if (args[0].trim().match(/^-?\d+,-?\d+$/g)) {
+                    args[0] = args[0].split(',');
+                    setTimeout(() => {
+                        n = this.adjustLastLine(n);
+                        //verbatim so color whole line
+                        if (trigger.length === 1)
+                            this.client.display.colorSubStrByLine(n, parseInt(args[0][0], 10), parseInt(args[0][1], 10));
+                        else {
+                            trigger[1].lastIndex = 0;
+                            tmp = trigger[0].matchAll(trigger[1]);
+                            for (const match of tmp) {
+                                this.client.display.colorSubStrByLine(n, parseInt(args[0], 10), parseInt(args[0][1], 10), match.index, match[0].length);
+                            }
+                        }
+                    }, 0);
+                }
+                else {
+                    args = args[0].toLowerCase().split(',');
+                    if (args.length === 1) {
+                        if (args[0] === 'bold')
+                            i = 370;
+                        if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                            i = args[0].trim();
+                        else if (args[0].trim().match(/^-?\d+$/g))
+                            i = parseInt(args[0].trim(), 10);
+                        else {
+                            i = getAnsiColorCode(args[0]);
+                            if (i === -1) {
+                                if (isMXPColor(args[0]))
+                                    i = args[0];
+                                else
+                                    throw new Error('Invalid fore color');
+                            }
+                        }
+                        setTimeout(() => {
+                            n = this.adjustLastLine(n);
+                            //verbatim so color whole line
+                            if (trigger.length === 1)
+                                this.client.display.colorSubStrByLine(n, i);
+                            else {
+                                trigger[1].lastIndex = 0;
+                                tmp = trigger[0].matchAll(trigger[1]);
+                                for (const match of tmp) {
+                                    this.client.display.colorSubStrByLine(n, i, null, match.index, match[0].length);
+                                }
+                            }
+                        }, 0);
+                    }
+                    else if (args.length === 2) {
+                        if (args[0] === 'bold' && args[1] === 'bold')
+                            throw new Error('Invalid fore color');
+                        if (args[0] === 'bold')
+                            i = 370;
+                        else if (args[0] === 'current')
+                            i = null;
+                        else if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                            i = args[0].trim();
+                        else if (args[0].trim().match(/^-?\d+$/g))
+                            i = parseInt(args[0].trim(), 10);
+                        else {
+                            i = getAnsiColorCode(args[0]);
+                            if (i === -1) {
+                                if (isMXPColor(args[0]))
+                                    i = args[0];
+                                else
+                                    throw new Error('Invalid fore color');
+                            }
+                        }
+                        if (args[1] === 'bold') {
+                            setTimeout(() => {
+                                n = this.adjustLastLine(n);
+                                if (i !== 370)
+                                    i *= 10;
+                                //verbatim so color whole line
+                                if (trigger.length === 1)
+                                    this.client.display.colorSubStrByLine(n, i);
+                                else {
+                                    trigger[1].lastIndex = 0;
+                                    tmp = trigger[0].matchAll(trigger[1]);
+                                    for (const match of tmp) {
+                                        this.client.display.colorSubStrByLine(n, i, null, match.index, match[0].length);
+                                    }
+                                }
+                            }, 0);
+                        }
+                        else {
+                            p = i;
+                            if (args[1].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                                i = args[1].trim();
+                            else if (args[1].trim().match(/^-?\d+$/g))
+                                i = parseInt(args[1].trim(), 10);
+                            else {
+                                i = getAnsiColorCode(args[1], true);
+                                if (i === -1) {
+                                    if (isMXPColor(args[1]))
+                                        i = args[1];
+                                    else
+                                        throw new Error('Invalid back color');
+                                }
+                            }
+                            setTimeout(() => {
+                                n = this.adjustLastLine(n);
+                                //verbatim so color whole line
+                                if (trigger.length === 1)
+                                    this.client.display.colorSubStrByLine(n, p, i);
+                                else {
+                                    trigger[1].lastIndex = 0;
+                                    tmp = trigger[0].matchAll(trigger[1]);
+                                    for (const match of tmp) {
+                                        this.client.display.colorSubStrByLine(n, p, i, match.index, match[0].length);
+                                    }
+                                }
+                            }, 0);
+                        }
+                    }
+                    else if (args.length === 3) {
+                        if (args[0] === 'bold') {
+                            args.shift();
+                            args.push('bold');
+                        }
+                        if (args[0].trim() === 'current')
+                            i = null;
+                        else if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                            i = args[0].trim();
+                        else if (args[0].trim().match(/^-?\d+$/g))
+                            i = parseInt(args[0].trim(), 10);
+                        else {
+                            i = getAnsiColorCode(args[0]);
+                            if (i === -1) {
+                                if (isMXPColor(args[0]))
+                                    i = args[0];
+                                else
+                                    throw new Error('Invalid fore color');
+                            }
+                        }
+                        if (args[2] !== 'bold')
+                            throw new Error('Only bold is supported as third argument');
+                        else if (!i)
+                            i = 370;
+                        else
+                            p = i * 10;
+                        if (args[1].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                            i = args[1].trim();
+                        else if (args[1].trim().match(/^-?\d+$/g))
+                            i = parseInt(args[1].trim(), 10);
+                        else {
+                            i = getAnsiColorCode(args[1], true);
+                            if (i === -1) {
+                                if (isMXPColor(args[1]))
+                                    i = args[0];
+                                else
+                                    throw new Error('Invalid back color');
+                            }
+                        }
+                        setTimeout(() => {
+                            n = this.adjustLastLine(n);
+                            //verbatim so color whole line
+                            if (trigger.length === 1)
+                                this.client.display.colorSubStrByLine(n, p, i);
+                            else {
+                                trigger[1].lastIndex = 0;
+                                tmp = trigger[0].matchAll(trigger[1]);
+                                for (const match of tmp) {
+                                    this.client.display.colorSubStrByLine(n, p, i, match.index, match[0].length);
+                                }
+                            }
+                        }, 0);
+                    }
+                }
+                return null;
         }
         i = parseInt(fun, 10);
         if (!isNaN(i)) {
@@ -3831,19 +4037,18 @@ export class Input extends EventEmitter {
                     if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) continue;
                     else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) continue;
                     if (ret)
-                        return this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], true, t);
-                    this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t);
+                        return this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], true, t, [(trigger.raw ? raw : line)]);
+                    this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t, [(trigger.raw ? raw : line)]);
                 }
                 else {
 
                     let re;
                     if (trigger.caseSensitive)
                         re = this._TriggerRegExCache['g' + trigger.pattern] || (this._TriggerRegExCache['g' + trigger.pattern] = new RegExp(trigger.pattern, 'g'));
-                    //re = new RegExp(trigger.pattern, 'g');
                     else
                         re = this._TriggerRegExCache['gi' + trigger.pattern] || (this._TriggerRegExCache['gi' + trigger.pattern] = new RegExp(trigger.pattern, 'gi'));
+                    //reset from last use always
                     re.lastIndex = 0;
-                    //re = new RegExp(trigger.pattern, 'gi');
                     const res = re.exec(trigger.raw ? raw : line);
                     if (!res || !res.length) continue;
                     let args;
@@ -3852,8 +4057,8 @@ export class Input extends EventEmitter {
                     else
                         args = [(trigger.raw ? raw : line), ...res];
                     if (ret)
-                        return this.ExecuteTrigger(trigger, args, true, t);
-                    this.ExecuteTrigger(trigger, args, false, t);
+                        return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re]);
+                    this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re]);
                 }
             }
             catch (e) {
@@ -3873,16 +4078,16 @@ export class Input extends EventEmitter {
         return line;
     }
 
-    public ExecuteTrigger(trigger, args, r: boolean, idx) {
+    public ExecuteTrigger(trigger, args, r: boolean, idx, regex?) {
         if (r == null) r = false;
         if (!trigger.enabled) return '';
         let ret; // = '';
         switch (trigger.style) {
             case 1:
                 if (this.stack.hasOwnProperty('repeatNumber'))
-                    this._stack.push({ repeatnum: window.repeatnum, args: args, named: [], used: 0 });
+                    this._stack.push({ repeatnum: window.repeatnum, args: args, named: [], used: 0, regex: regex });
                 else
-                    this._stack.push({ args: args, named: [], used: 0 });
+                    this._stack.push({ args: args, named: [], used: 0, regex: regex });
                 ret = this.parseOutgoing(trigger.value);
                 this._stack.pop();
                 break;

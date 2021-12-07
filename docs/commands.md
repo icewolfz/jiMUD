@@ -51,6 +51,7 @@
 |#unbutton|#unb|name\|index\|caption| remove a button, if index it is the position in order of buttons in profile manager
 |#window|#win|name||Open or show named window, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
 |#color|#co|fore,back,bold||Color last added line, comma delimited colors, supports raw jiMUD color codes, ansi word values, any valid HTML color name, of ##RRGGBB html format
+|#cw||fore,back,bold||Color all strings matching current trigger pattern, see #color for arguments
 
 **Note:** All italic arguments are optional and can be left out
 
