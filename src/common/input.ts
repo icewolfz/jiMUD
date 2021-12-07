@@ -12,6 +12,7 @@ import { NewLineType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor } from './ansi';
 import { create, all, ConditionalNodeDependencies } from 'mathjs';
+import { parse } from 'path/posix';
 const mathjs = create(all, {});
 const buzz = require('buzz');
 const path = require('path');
@@ -2300,7 +2301,6 @@ export class Input extends EventEmitter {
                 return null;
             case 'color':
             case 'co':
-                trigger = this.stack.regex;
                 if (args.length > 1 && args.length < 4) {
                     item = {
                         profile: null,
@@ -2311,7 +2311,7 @@ export class Input extends EventEmitter {
                     if (item.pattern.match(/^\{.*\}$/g))
                         item.pattern = this.parseOutgoing(item.pattern.substr(1, item.pattern.length - 2), false);
                     else
-                        item.pattern = this.parseOutgoing(this.stripQuotes(item.pattern), false);                        
+                        item.pattern = this.parseOutgoing(this.stripQuotes(item.pattern), false);
                     if (args.length === 2) {
                         item.commands = '#COLOR ' + this.parseOutgoing(args[0], false);
                         item.profile = this.stripQuotes(args[1]);
@@ -2324,7 +2324,7 @@ export class Input extends EventEmitter {
                     return null;
                 }
                 else if (args.length !== 1)
-                    throw new Error('Invalid syntax use #cw color or #cw {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color or \x1b[4m#co\x1b[0;-11;-12mlor {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
                 if (args.length !== 1)
                     throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color or \x1b[4m#co\x1b[0;-11;-12mlor {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
                 args[0] = this.parseOutgoing(this.stripQuotes(args[0]), false);
@@ -2674,6 +2674,155 @@ export class Input extends EventEmitter {
                                     this.client.display.colorSubStrByLine(n, p, i, match.index, match[0].length);
                                 }
                             }
+                        }, 0);
+                    }
+                }
+                return null;
+            case 'pcol':
+                if (args.length < 1 || args.length > 5)
+                    throw new Error('Invalid syntax use #pcol color \x1b[3mXStart, XEnd, YStart, YEnd\x1b[0;-11;-12m');
+                if (args.length > 1) {
+                    tmp = [].concat(...args.slice(1).map(s => this.parseOutgoing(this.stripQuotes(s), false).split(' ')));
+                    if (tmp.length > 4)
+                        throw new Error('Too many arguments use #pcol color \x1b[3mXStart, XEnd, YStart, YEnd\x1b[0;-11;-12m');
+                    item = { xStart: 0 };
+                    if (tmp.length > 0)
+                        item.xStart = parseInt(tmp[0], 10);
+                    if (tmp.length > 1)
+                        item.xEnd = parseInt(tmp[1], 10);
+                    if (tmp.length > 2)
+                        item.yStart = parseInt(tmp[2], 10);
+                    if (tmp.length > 3)
+                        item.yEnd = parseInt(tmp[3], 10);
+                    if (item.hasOwnProperty('yEnd') && item.yEnd > item.yStart)
+                        throw new Error('yEnd must be smaller or equal to yStart');
+                    if (item.hasOwnProperty('xEnd') && item.xEnd < item.xStart)
+                        throw new Error('xEnd must be larger or equal to xStart');
+                }
+                else
+                    item = { xStart: 0 };
+                args[0] = this.parseOutgoing(this.stripQuotes(args[0]), false);
+                n = this.adjustLastLine(this.client.display.lines.length);
+                if (args[0].trim().match(/^-?\d+$/g)) {
+                    setTimeout(() => {
+                        this.colorPosition(n, parseInt(args[0], 10), null, item);
+                    }, 0);
+                }
+                //back,fore from color function
+                else if (args[0].trim().match(/^-?\d+,-?\d+$/g)) {
+                    args[0] = args[0].split(',');
+                    setTimeout(() => {
+                        this.colorPosition(n, parseInt(args[0][0], 10), parseInt(args[0][1], 10), item);
+                    }, 0);
+                }
+                else {
+                    args = args[0].toLowerCase().split(',');
+                    if (args.length === 1) {
+                        if (args[0] === 'bold')
+                            i = 370;
+                        if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                            i = args[0].trim();
+                        else if (args[0].trim().match(/^-?\d+$/g))
+                            i = parseInt(args[0].trim(), 10);
+                        else {
+                            i = getAnsiColorCode(args[0]);
+                            if (i === -1) {
+                                if (isMXPColor(args[0]))
+                                    i = args[0];
+                                else
+                                    throw new Error('Invalid fore color');
+                            }
+                        }
+                        setTimeout(() => {
+                            this.colorPosition(n, i, null, item);
+                        }, 0);
+                    }
+                    else if (args.length === 2) {
+                        if (args[0] === 'bold' && args[1] === 'bold')
+                            throw new Error('Invalid fore color');
+                        if (args[0] === 'bold')
+                            i = 370;
+                        else if (args[0] === 'current')
+                            i = null;
+                        else if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                            i = args[0].trim();
+                        else if (args[0].trim().match(/^-?\d+$/g))
+                            i = parseInt(args[0].trim(), 10);
+                        else {
+                            i = getAnsiColorCode(args[0]);
+                            if (i === -1) {
+                                if (isMXPColor(args[0]))
+                                    i = args[0];
+                                else
+                                    throw new Error('Invalid fore color');
+                            }
+                        }
+                        if (args[1] === 'bold') {
+                            setTimeout(() => {
+                                this.colorPosition(n, i === 370 ? i : i * 10, null, item);
+                            }, 0);
+                        }
+                        else {
+                            p = i;
+                            if (args[1].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                                i = args[1].trim();
+                            else if (args[1].trim().match(/^-?\d+$/g))
+                                i = parseInt(args[1].trim(), 10);
+                            else {
+                                i = getAnsiColorCode(args[1], true);
+                                if (i === -1) {
+                                    if (isMXPColor(args[1]))
+                                        i = args[1];
+                                    else
+                                        throw new Error('Invalid back color');
+                                }
+                            }
+                            setTimeout(() => {
+                                this.colorPosition(n, p, i, item);
+                            }, 0);
+                        }
+                    }
+                    else if (args.length === 3) {
+                        if (args[0] === 'bold') {
+                            args.shift();
+                            args.push('bold');
+                        }
+                        if (args[0].trim() === 'current')
+                            i = null;
+                        else if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                            i = args[0].trim();
+                        else if (args[0].trim().match(/^-?\d+$/g))
+                            i = parseInt(args[0].trim(), 10);
+                        else {
+                            i = getAnsiColorCode(args[0]);
+                            if (i === -1) {
+                                if (isMXPColor(args[0]))
+                                    i = args[0];
+                                else
+                                    throw new Error('Invalid fore color');
+                            }
+                        }
+                        if (args[2] !== 'bold')
+                            throw new Error('Only bold is supported as third argument');
+                        else if (!i)
+                            i = 370;
+                        else
+                            p = i * 10;
+                        if (args[1].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
+                            i = args[1].trim();
+                        else if (args[1].trim().match(/^-?\d+$/g))
+                            i = parseInt(args[1].trim(), 10);
+                        else {
+                            i = getAnsiColorCode(args[1], true);
+                            if (i === -1) {
+                                if (isMXPColor(args[1]))
+                                    i = args[0];
+                                else
+                                    throw new Error('Invalid back color');
+                            }
+                        }
+                        setTimeout(() => {
+                            this.colorPosition(n, p, i, item);
                         }, 0);
                     }
                 }
@@ -4312,5 +4461,23 @@ export class Input extends EventEmitter {
         else
             this.emit('item-updated', 'trigger', (<Profile>profile).name, (<Profile>profile).triggers.indexOf(trigger), trigger);
         profile = null;
+    }
+
+    private colorPosition(n: number, fore, back, item) {
+        n = this.adjustLastLine(n);
+        if (!item.hasOwnProperty('yStart'))
+            this.client.display.colorSubStrByLine(n, fore, back, item.xStart, item.hasOwnProperty('xEnd') && item.xEnd >= 0 ? item.xEnd : null);
+        else {
+            const xEnd = item.hasOwnProperty('xEnd') && item.xEnd >= 0 ? item.xEnd : null;
+            const xStart = item.xStart;
+            let line = n - item.yStart;
+            let end = n;
+            if (item.hasOwnProperty('yEnd'))
+                end = n - item.yEnd;
+            while (line <= end) {
+                this.client.display.colorSubStrByLine(line, fore, back, xStart, xEnd);
+                line++;
+            }
+        }
     }
 }

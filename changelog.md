@@ -4,6 +4,7 @@
 
 - **New:**
   - Add [#cw](docs/commands.md) colors all words matching current trigger pattern
+  - Add [#pcol](docs/commands.md) colors all words matching current trigger pattern
   - Add [#color {pattern} fore,back,bold profile](docs/commands.md) pattern and profile arguments to allow for quick trigger creation 
 - **Fixed:**
   - Fixed window size being sent to the mud when status display is hidden/shown
