@@ -450,7 +450,7 @@ export function RunTester() {
             else {
                 let r = '';
                 let m = 0;
-                if (res[0] !== $('#trigger-test-text').val() || !_prependTrigger) {
+                if (res[0] !== $('#trigger-test-text').val() || _prependTrigger) {
                     r += '%0 : ' + $('#trigger-test-text').val() + '\n';
                     m = 1;
                 }
