@@ -47,6 +47,7 @@ enum ParseState {
     paramsP = 8,
     paramsPBlock = 9,
     paramsPEscape = 10,
+    paramsPNamed = 17,
     paramsD = 11,
     paramsDBlock = 12,
     paramsDEscape = 13,
@@ -3139,20 +3140,45 @@ export class Input extends EventEmitter {
                                 idx--;
                             }
                             else {
-                                if (eAlias && findAlias)
+                                if (eAlias && findAlias) {
                                     alias += '%';
-                                else
+                                    if (_neg)
+                                        alias += '-';
+                                    if (_pos)
+                                        alias += 'x';
+                                }
+                                else {
                                     str += '%';
-                                if (_neg)
-                                    str += '-';
-                                if (_pos)
-                                    str += 'x';
+                                    if (_neg)
+                                        str += '-';
+                                    if (_pos)
+                                        str += 'x';
+                                }
                                 idx = idx - arg.length - 1;
                             }
                             state = ParseState.none;
                             arg = '';
                             break;
                     }
+                    break;
+                case ParseState.paramsPNamed:
+                    if (c.match(/[^a-zA-Z0-9_]/g)) {
+                        if (this.stack.named.hasOwnProperty(arg)) {
+                            if (eAlias && findAlias)
+                                alias += this.stack.named[arg];
+                            else
+                                str += this.stack.named[arg];
+                        }
+                        else if (eAlias && findAlias)
+                            alias += '%' + arg;
+                        else
+                            str += '%' + arg;
+                        idx--;
+                        state = ParseState.none;
+                        arg = '';
+                    }
+                    else
+                        arg += c;
                     break;
                 case ParseState.paramsPBlock:
                     if (c === '}' && nest === 0) {

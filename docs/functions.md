@@ -9,7 +9,7 @@ There is a special format for argument variables for aliases and triggers.
 - `%#`, `%{#}`, or `${#}` allows you to access arguments for alias and triggers, where # is the argument you want, while 0 is the full text
 - `%x#`, `%{x#}`, or `${x#}` allows you to access arguments' start and end indexes for triggers, where # is the argument indexes you want, while 0 is the full text indexs in format of START END
 - `%*`, `%{*}`, or `${*}` returns the full text minus alias name or matched text for triggers
-- `$name`, `%name`, `${name}`, or `%{name}` is for aliased [parameters](profiles.md#aliases), this allow yous to name arguments for easier understanding, where name is from the alias parameter list
+- `$name`, `${name}`, or `%{name}` is for aliased [parameters](profiles.md#aliases), this allow yous to name arguments for easier understanding, where name is from the alias parameter list
 - `%%` allows you to escape a %
 
 [Repeat command `#nnn`](commands.md) special format to get loop iteration
