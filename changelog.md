@@ -2,6 +2,9 @@
 
 ## v0.17.3
 
+- **Fixed:**
+  - Fixed window size being sent to the mud when status display is hidden/shown
+
 ## v0.17.2 2021-12-06
 
 - **New:**

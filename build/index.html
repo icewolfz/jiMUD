@@ -501,12 +501,17 @@
             else
                 $('#btnTriggers').removeClass('on');
             buildButtons();
+            /*
             client.display.update();
             client.display.updateScrollbars();
             client.UpdateWindow();
+            */
             setTimeout(() => {
                 _status.resize();
                 _status.updateInterface();
+                client.display.update();
+                client.display.updateScrollbars();                
+                client.UpdateWindow();
             }, 1);
             updateMenu();
         }
