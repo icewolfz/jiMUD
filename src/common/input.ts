@@ -855,8 +855,7 @@ export class Input extends EventEmitter {
                         throw new Error('Invalid trigger name');
                     if (args[0].match(/^\{.*\}$/g)) {
                         item.pattern = args.shift();
-                        item.pattern = item.pattern.substr(1, item.pattern.length - 2);
-                        item.pattern = this.parseOutgoing(item.pattern, false);
+                        item.pattern = this.parseOutgoing(item.pattern.substr(1, item.pattern.length - 2), false);
                     }
                 }
                 if (args.length !== 0) {
@@ -2301,8 +2300,33 @@ export class Input extends EventEmitter {
                 return null;
             case 'color':
             case 'co':
+                trigger = this.stack.regex;
+                if (args.length > 1 && args.length < 4) {
+                    item = {
+                        profile: null,
+                        pattern: null,
+                        commands: null
+                    };
+                    item.pattern = args.shift();
+                    if (item.pattern.match(/^\{.*\}$/g))
+                        item.pattern = this.parseOutgoing(item.pattern.substr(1, item.pattern.length - 2), false);
+                    else
+                        item.pattern = this.parseOutgoing(this.stripQuotes(item.pattern), false);                        
+                    if (args.length === 2) {
+                        item.commands = '#COLOR ' + this.parseOutgoing(args[0], false);
+                        item.profile = this.stripQuotes(args[1]);
+                        if (item.profile.length !== 0)
+                            tmp = this.parseOutgoing(item.profile, false);
+                    }
+                    else
+                        item.commands = '#COLOR ' + this.parseOutgoing(args[0], false);
+                    this.createTrigger(item.pattern, item.commands, item.profile);
+                    return null;
+                }
+                else if (args.length !== 1)
+                    throw new Error('Invalid syntax use #cw color or #cw {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
                 if (args.length !== 1)
-                    throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color or \x1b[4m#co\x1b[0;-11;-12mlor {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
                 args[0] = this.parseOutgoing(this.stripQuotes(args[0]), false);
                 n = this.client.display.lines.length;
                 if (args[0].trim().match(/^-?\d+$/g)) {
@@ -2440,10 +2464,32 @@ export class Input extends EventEmitter {
                 return null;
             case 'cw':
                 trigger = this.stack.regex;
+                if (args.length > 1 && args.length < 4) {
+                    item = {
+                        profile: null,
+                        pattern: null,
+                        commands: null
+                    };
+                    item.pattern = args.shift();
+                    if (item.pattern.match(/^\{.*\}$/g))
+                        item.pattern = this.parseOutgoing(item.pattern.substr(1, item.pattern.length - 2), false);
+                    else
+                        item.pattern = this.parseOutgoing(this.stripQuotes(item.pattern), false);
+                    if (args.length === 2) {
+                        item.commands = '#CW ' + this.parseOutgoing(args[0], false);
+                        item.profile = this.stripQuotes(args[1]);
+                        if (item.profile.length !== 0)
+                            tmp = this.parseOutgoing(item.profile, false);
+                    }
+                    else
+                        item.commands = '#CW ' + this.parseOutgoing(args[0], false);
+                    this.createTrigger(item.pattern, item.commands, item.profile);
+                    return null;
+                }
+                else if (args.length !== 1)
+                    throw new Error('Invalid syntax use #cw color or #cw {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
                 //no regex so
                 if (!trigger) return null;
-                if (args.length !== 1)
-                    throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color\x1b[0;-11;-12m');
                 args[0] = this.parseOutgoing(this.stripQuotes(args[0]), false);
                 n = this.client.display.lines.length;
                 if (args[0].trim().match(/^-?\d+$/g)) {
@@ -4256,6 +4302,8 @@ export class Input extends EventEmitter {
                 trigger.temp = true;
             trigger.priority = options.priority;
         }
+        else
+            trigger.priority = 0;
         (<Profile>profile).save(p);
         if (reload)
             this.client.clearCache();

@@ -1476,7 +1476,7 @@ export class Display extends EventEmitter {
         if (this._viewCache[idx])
             delete this._viewCache[idx];
         const formats = this.lineFormats[idx];
-        const len = formats.length;
+        let len = formats.length;
         let found: boolean = false;
         //whole line so just do everything
         if (start === 0 && end >= lineLength) {
@@ -1558,6 +1558,7 @@ export class Display extends EventEmitter {
                         style: format.style,
                         unicode: format.unicode
                     });
+                    len++;
                 }
                 if (start != format.offset) {
                     //clean old width
@@ -1573,6 +1574,7 @@ export class Display extends EventEmitter {
                         style: format.style,
                         unicode: format.unicode
                     });
+                    len++;
                 }
                 else {
                     format.color = fore || format.color;
