@@ -941,91 +941,7 @@ export class Input extends EventEmitter {
                             tmp = this.parseOutgoing(item.profile, false);
                     }
                 }
-                if (!item.profile || item.profile.length === 0) {
-                    const keys = this.client.profiles.keys;
-                    let k = 0;
-                    const kl = keys.length;
-                    if (kl === 0)
-                        return;
-                    if (kl === 1) {
-                        if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
-                            throw Error('No enabled profiles found!');
-                        profile = this.client.profiles.items[keys[0]];
-                        if (item.name !== null)
-                            trigger = this.client.profiles.items[keys[k]].find('triggers', 'name', item.name);
-                        else
-                            trigger = this.client.profiles.items[keys[k]].find('triggers', 'pattern', item.pattern);
-                    }
-                    else {
-                        for (; k < kl; k++) {
-                            if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
-                                continue;
-                            if (item.name !== null)
-                                trigger = this.client.profiles.items[keys[k]].find('triggers', 'name', item.name);
-                            else
-                                trigger = this.client.profiles.items[keys[k]].find('triggers', 'pattern', item.pattern);
-                            if (trigger) {
-                                profile = this.client.profiles.items[keys[k]];
-                                break;
-                            }
-                        }
-                        if (!profile)
-                            profile = this.client.activeProfile;
-                    }
-                }
-                else {
-                    if (this.client.profiles.contains(item.profile))
-                        profile = this.client.profiles.items[item.profile];
-                    else {
-                        reload = false;
-                        profile = Profile.load(path.join(p, item.profile + '.json'));
-                        if (!profile)
-                            throw new Error('Profile not found: ' + item.profile);
-                    }
-                }
-                if (!trigger) {
-                    if (!item.pattern)
-                        throw new Error(`Trigger '${item.name || ''}' not found`);
-                    trigger = new Trigger();
-                    trigger.name = item.name || '';
-                    trigger.pattern = item.pattern;
-                    profile.triggers.push(trigger);
-                    this.client.echo('Trigger \'' + (trigger.name || trigger.pattern) + '\' added.', -7, -8, true, true);
-                    item.new = true;
-                }
-                else
-                    this.client.echo('Trigger \'' + (trigger.name || trigger.pattern) + '\' updated.', -7, -8, true, true);
-                if (item.pattern !== null)
-                    trigger.pattern = item.pattern;
-                if (item.commands !== null)
-                    trigger.value = item.commands;
-                if (item.options.cmd)
-                    trigger.type = TriggerType.CommandInputRegular;
-                if (item.options.prompt)
-                    trigger.triggerPrompt = true;
-                if (item.options.nocr)
-                    trigger.triggerNewline = false;
-                if (item.options.case)
-                    trigger.caseSensitive = true;
-                if (item.options.raw)
-                    trigger.raw = true;
-
-                if (item.options.verbatim)
-                    trigger.verbatim = true;
-                if (item.options.disable)
-                    trigger.enabled = false;
-                else if (item.options.enable)
-                    trigger.enabled = true;
-                if (item.options.temporary)
-                    trigger.temp = true;
-                trigger.priority = item.options.priority;
-                profile.save(p);
-                if (reload)
-                    this.client.clearCache();
-                if (item.new)
-                    this.emit('item-added', 'trigger', profile.name, trigger);
-                else
-                    this.emit('item-updated', 'trigger', profile.name, profile.triggers.indexOf(trigger), trigger);
+                this.createTrigger(item.pattern, item.commands, item.profile, item.options, item.name);
                 profile = null;
                 //#endregion
                 return null;
@@ -1167,6 +1083,9 @@ export class Input extends EventEmitter {
                         if (!profile)
                             throw new Error('Profile not found: ' + item.profile);
                     }
+                    trigger = tmp.find(t => {
+                        return t.name === item.name || t.pattern === item.name;
+                    });
                 }
                 if (!trigger) {
                     trigger = new Trigger();
@@ -1444,6 +1363,10 @@ export class Input extends EventEmitter {
                         if (!profile)
                             throw new Error('Profile not found: ' + item.profile);
                     }
+                    if (item.name !== null)
+                        trigger = profile.find('buttons', 'name', item.name);
+                    else
+                        trigger = profile.find('buttons', 'caption', item.caption);
                 }
                 if (!trigger) {
                     trigger = new Button();
@@ -4243,5 +4166,105 @@ export class Input extends EventEmitter {
                 return e.replace(/\\\'/g, '\'');
             });
         return str;
+    }
+
+    public createTrigger(pattern: string, commands: string, profile?: string | Profile, options?, name?: string) {
+        let trigger;
+        let reload = true;
+        let isNew = false;
+        const p = path.join(parseTemplate('{data}'), 'profiles');
+        if (!pattern)
+            throw new Error(`Trigger '${name || ''}' not found`);
+        if (!profile) {
+            const keys = this.client.profiles.keys;
+            let k = 0;
+            const kl = keys.length;
+            if (kl === 0)
+                return;
+            if (kl === 1) {
+                if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                    throw Error('No enabled profiles found!');
+                profile = this.client.profiles.items[keys[0]];
+                if (name !== null)
+                    trigger = this.client.profiles.items[keys[k]].find('triggers', 'name', name);
+                else
+                    trigger = this.client.profiles.items[keys[k]].find('triggers', 'pattern', pattern);
+            }
+            else {
+                for (; k < kl; k++) {
+                    if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                        continue;
+                    if (name !== null)
+                        trigger = this.client.profiles.items[keys[k]].find('triggers', 'name', name);
+                    else
+                        trigger = this.client.profiles.items[keys[k]].find('triggers', 'pattern', pattern);
+                    if (trigger) {
+                        profile = this.client.profiles.items[keys[k]];
+                        break;
+                    }
+                }
+                if (!profile)
+                    profile = this.client.activeProfile;
+            }
+        }
+        else if (typeof profile === 'string') {
+            if (this.client.profiles.contains(profile))
+                profile = this.client.profiles.items[profile];
+            else {
+                reload = false;
+                profile = Profile.load(path.join(p, profile + '.json'));
+                if (!profile)
+                    throw new Error('Profile not found: ' + profile);
+            }
+            if (name !== null)
+                trigger = (<Profile>profile).find('triggers', 'name', name);
+            else
+                trigger = (<Profile>profile).find('triggers', 'pattern', pattern);
+        }
+        if (!trigger) {
+            if (!pattern)
+                throw new Error(`Trigger '${name || ''}' not found`);
+            trigger = new Trigger();
+            trigger.name = name || '';
+            trigger.pattern = pattern;
+            (<Profile>profile).triggers.push(trigger);
+            this.client.echo('Trigger \'' + (trigger.name || trigger.pattern) + '\' added.', -7, -8, true, true);
+            isNew = true;
+        }
+        else
+            this.client.echo('Trigger \'' + (trigger.name || trigger.pattern) + '\' updated.', -7, -8, true, true);
+        if (pattern !== null)
+            trigger.pattern = pattern;
+        if (commands !== null)
+            trigger.value = commands;
+        if (options) {
+            if (options.cmd)
+                trigger.type = TriggerType.CommandInputRegular;
+            if (options.prompt)
+                trigger.triggerPrompt = true;
+            if (options.nocr)
+                trigger.triggerNewline = false;
+            if (options.case)
+                trigger.caseSensitive = true;
+            if (options.raw)
+                trigger.raw = true;
+            if (options.verbatim)
+                trigger.verbatim = true;
+            if (options.disable)
+                trigger.enabled = false;
+            else if (options.enable)
+                trigger.enabled = true;
+            if (options.temporary)
+                trigger.temp = true;
+            trigger.priority = options.priority;
+        }
+        (<Profile>profile).save(p);
+        if (reload)
+            this.client.clearCache();
+        if (isNew)
+            this.emit('item-added', 'trigger', (<Profile>profile).name, trigger);
+        else
+            this.emit('item-updated', 'trigger', (<Profile>profile).name, (<Profile>profile).triggers.indexOf(trigger), trigger);
+        profile = null;
     }
 }

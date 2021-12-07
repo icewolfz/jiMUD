@@ -6,6 +6,8 @@
   - Add [#cw](docs/commands.md) colors all words matching current trigger pattern
 - **Fixed:**
   - Fixed window size being sent to the mud when status display is hidden/shown
+  - Fixed bug in [#trigger](docs/commands.md)  command and adding to profile not correctly finding if one exist already
+  - Fixed bug in [#event](docs/commands.md)  command and adding to profile not correctly finding if one exist already
 
 ## v0.17.2 2021-12-06
 
