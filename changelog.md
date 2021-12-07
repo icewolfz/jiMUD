@@ -10,6 +10,7 @@
   - Fixed window size being sent to the mud when status display is hidden/shown
   - Fixed bug in [#trigger](docs/commands.md)  command and adding to profile not correctly finding if one exist already
   - Fixed bug in [#event](docs/commands.md)  command and adding to profile not correctly finding if one exist already
+  - Profile Manager: trigger tester did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
 
 ## v0.17.2 2021-12-06
 

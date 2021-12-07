@@ -38,6 +38,7 @@ let archiver;
 let unarchiver;
 let archive;
 let _spellchecker = true;
+let _prependTrigger = true;
 
 const _controllers = {};
 let _controllersCount = 0;
@@ -449,7 +450,7 @@ export function RunTester() {
             else {
                 let r = '';
                 let m = 0;
-                if (res[0] !== $('#trigger-test-text').val()) {
+                if (res[0] !== $('#trigger-test-text').val() || !_prependTrigger) {
                     r += '%0 : ' + $('#trigger-test-text').val() + '\n';
                     m = 1;
                 }
@@ -2334,6 +2335,7 @@ function loadOptions() {
     _sort = options.profiles.sortOrder;
     _sortDir = options.profiles.sortDirection || 1;
     _spellchecker = options.spellchecking || true;
+    _prependTrigger = options.prependTriggeredLine;
     updatePads();
 
     let theme = parseTemplate(options.theme) + '.css';
