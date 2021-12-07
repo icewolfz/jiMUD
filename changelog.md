@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.17.2
+## v0.17.2 2021-12-06
 
 - **New:**
   - Add [#color](docs/commands.md) color last added line
