@@ -831,7 +831,6 @@ export class Input extends EventEmitter {
             case 'trigger':
             case 'tr':
                 //#region trigger
-                profile = null;
                 reload = true;
                 item = {
                     profile: null,
@@ -942,7 +941,6 @@ export class Input extends EventEmitter {
                     }
                 }
                 this.createTrigger(item.pattern, item.commands, item.profile, item.options, item.name);
-                profile = null;
                 //#endregion
                 return null;
             case 'event':
