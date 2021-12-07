@@ -6,12 +6,19 @@
   - Add [#cw](docs/commands.md) colors all words matching current trigger pattern
   - Add [#pcol](docs/commands.md) colors all words matching current trigger pattern
   - Add [#color {pattern} fore,back,bold profile](docs/commands.md) pattern and profile arguments to allow for quick trigger creation 
+  - Add [%x1..%99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes
 - **Fixed:**
   - Fixed window size being sent to the mud when status display is hidden/shown
-  - Fixed bug in [#trigger](docs/commands.md)  command and adding to profile not correctly finding if one exist already
-  - Fixed bug in [#event](docs/commands.md)  command and adding to profile not correctly finding if one exist already
+  - Fixed bug in [#trigger](docs/commands.md) command and adding to profile not correctly finding if one exist already
+  - Fixed bug in [#event](docs/commands.md) command and adding to profile not correctly finding if one exist already
   - Profile Manager: trigger tester did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
   - Fixed bug with File > exit when profile manager open and should not close
+  - Input parser:
+    - Fixed - being lost after %
+    - Fixed # being lose if %# had a -, * or % following it
+    - Fixed corrupted stack after trigger errors
+    - Fixed issue with $named argument format
+    - Fixed named arguments not working
 
 ## v0.17.2 2021-12-06
 

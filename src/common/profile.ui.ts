@@ -441,9 +441,9 @@ export function RunTester() {
         else {
             let re;
             if ($('#trigger-caseSensitive').prop('checked'))
-                re = new RegExp((<string>$('#trigger-pattern').val()), 'g');
+                re = new RegExp((<string>$('#trigger-pattern').val()), 'gd');
             else
-                re = new RegExp((<string>$('#trigger-pattern').val()), 'gi');
+                re = new RegExp((<string>$('#trigger-pattern').val()), 'gid');
             const res = re.exec($('#trigger-test-text').val());
             if (res == null || res.length === 0)
                 $('#trigger-test-results').val('Pattern doesn\'t Match!');
@@ -452,10 +452,12 @@ export function RunTester() {
                 let m = 0;
                 if (res[0] !== $('#trigger-test-text').val() || _prependTrigger) {
                     r += '%0 : ' + $('#trigger-test-text').val() + '\n';
+                    r += '%x0 : 0 ' + (<string>$('#trigger-test-text').val()).length + '\n';
                     m = 1;
                 }
                 for (let i = 0; i < res.length; i++) {
                     r += '%' + (i + m) + ' : ' + res[i] + '\n';
+                    r += `%x${i+m} : ${res.indices[i][0]} ${res.indices[i][1]}\n`;
                 }
                 $('#trigger-test-results').val(r);
             }

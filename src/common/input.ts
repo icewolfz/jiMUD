@@ -2887,6 +2887,8 @@ export class Input extends EventEmitter {
         let tmp2;
         let start: boolean = true;
         let _neg: boolean = false;
+        let _pos: boolean = false;
+        let _fall: boolean = false;
         let nest: number = 0;
         const pd: boolean = this.client.options.parseDoubleQuotes;
         const ps: boolean = this.client.options.parseSingleQuotes;
@@ -3049,29 +3051,41 @@ export class Input extends EventEmitter {
                     }
                     switch (c) {
                         case '%':
-                            if (eAlias && findAlias)
-                                alias += '%%';
-                            else
-                                str += '%%';
-                            state = ParseState.none;
+                            if (arg.length === 0) {
+                                if (eAlias && findAlias)
+                                    alias += '%%';
+                                else
+                                    str += '%%';
+                                state = ParseState.none;
+                            }
                             break;
                         case '*':
-                            if (this.stack.args) {
-                                if (eAlias && findAlias)
-                                    alias += this.stack.args.slice(1).join(' ');
+                            if (arg.length === 0) {
+                                if (this.stack.args) {
+                                    if (eAlias && findAlias)
+                                        alias += this.stack.args.slice(1).join(' ');
+                                    else
+                                        str += this.stack.args.slice(1).join(' ');
+                                    this.stack.used = this.stack.args.length;
+                                }
+                                else if (eAlias && findAlias)
+                                    alias += '%*';
                                 else
-                                    str += this.stack.args.slice(1).join(' ');
-                                this.stack.used = this.stack.args.length;
+                                    str += '%*';
+                                state = ParseState.none;
+                                break;
                             }
-                            else if (eAlias && findAlias)
-                                alias += '%*';
-                            else
-                                str += '%*';
-                            state = ParseState.none;
-                            break;
                         case '-':
-                            _neg = true;
-                            break;
+                            if (arg.length === 0) {
+                                _neg = true;
+                                break;
+                            }
+                            else if (_pos && arg.length == 1) {
+                                _neg = true;
+                                break;
+                            }
+                            else
+                                _fall = true;
                         case '0':
                         case '1':
                         case '2':
@@ -3082,19 +3096,42 @@ export class Input extends EventEmitter {
                         case '7':
                         case '8':
                         case '9':
-                            arg += c;
-                            break;
+                            if (!_fall) {
+                                arg += c;
+                                break;
+                            }
+                        case 'x':
+                            if (!_fall && arg.length === 0) {
+                                _pos = true;
+                                break;
+                            }
                         default:
                             if (this.stack.args && arg.length > 0) {
                                 tmp = parseInt(arg, 10);
-                                if (_neg && tmp < this.stack.args.length)
-                                    tmp = this.stack.args.slice(arg).join(' ');
-                                else if (tmp < this.stack.args.length)
-                                    tmp = this.stack.args[tmp];
-                                if (_neg)
-                                    this.stack.used = this.stack.args.length;
-                                else if (arg > this.stack.used)
-                                    this.stack.used = arg;
+                                if (_pos) {
+                                    if (_neg && this.stack.args.indices && tmp < this.stack.args.length)
+                                        tmp = this.stack.indices.slice(tmp).map(v => v[0] + ' ' + v[1]).join(' ');
+                                    else if (this.stack.args.indices && tmp < this.stack.args.length)
+                                        tmp = this.stack.args.indices[tmp][0] + ' ' + this.stack.args.indices[tmp][1];
+                                    else if (_neg)
+                                        tmp = '%x-' + tmp;
+                                    else
+                                        tmp = '%x' + tmp;
+                                }
+                                else {
+                                    if (_neg && tmp < this.stack.args.length)
+                                        tmp = this.stack.args.slice(arg).join(' ');
+                                    else if (tmp < this.stack.args.length)
+                                        tmp = this.stack.args[tmp];
+                                    else if (_neg)
+                                        tmp = '%-' + tmp;
+                                    else
+                                        tmp = '%' + tmp;
+                                    if (_neg)
+                                        this.stack.used = this.stack.args.length;
+                                    else if (arg > this.stack.used)
+                                        this.stack.used = arg;
+                                }
                                 if (eAlias && findAlias)
                                     alias += tmp;
                                 else
@@ -3106,6 +3143,10 @@ export class Input extends EventEmitter {
                                     alias += '%';
                                 else
                                     str += '%';
+                                if (_neg)
+                                    str += '-';
+                                if (_pos)
+                                    str += 'x';
                                 idx = idx - arg.length - 1;
                             }
                             state = ParseState.none;
@@ -3127,15 +3168,48 @@ export class Input extends EventEmitter {
                             tmp2 = this.stack.named[arg];
                         else {
                             if (this.stack.args && !isNaN(arg)) {
-                                arg = parseInt(arg, 10);
-                                if (arg < 0) {
-                                    tmp2 = this.stack.args.slice(arg).join(' ');
-                                    this.stack.used = this.stack.args.length;
+                                tmp = parseInt(arg, 10);
+                                if (tmp < 0) {
+                                    if (-tmp >= this.stack.args.length) {
+                                        if (this.client.options.allowEval)
+                                            tmp2 = tmp;
+                                        else {
+                                            tmp2 = '%';
+                                            idx = idx - tmp.length - 2;
+                                        }
+                                    }
+                                    else {
+                                        tmp2 = this.stack.args.slice(tmp).join(' ');
+                                        this.stack.used = this.stack.args.length;
+                                    }
                                 }
-                                else {
-                                    tmp2 = this.stack.args[arg];
+                                else if (tmp < this.stack.args.length) {
+                                    tmp2 = this.stack.args[tmp];
                                     if (arg > this.stack.used)
-                                        this.stack.used = arg;
+                                        this.stack.used = tmp;
+                                }
+                                else if (this.client.options.allowEval)
+                                    tmp2 = tmp;
+                                else {
+                                    tmp2 = '%';
+                                    idx = idx - arg.length - 2;
+                                }
+                            }
+                            else if (this.stack.args && this.stack.args.indices && arg.match(/^x=?\d+$/)) {
+                                tmp = parseInt(arg.substring(1), 10);
+                                if (tmp < 0) {
+                                    if (-tmp >= this.stack.args.length) {
+                                        tmp2 = '%';
+                                        idx = idx - tmp.length - 2;
+                                    }
+                                    else
+                                        tmp2 = this.stack.indices.slice(tmp).map(v => v[0] + ' ' + v[1]).join(' ');
+                                }
+                                else if (tmp < this.stack.args.length)
+                                    tmp2 = this.stack.args.indices[tmp][0] + ' ' + this.stack.args.indices[tmp][1];
+                                else {
+                                    tmp2 = '%';
+                                    idx = idx - arg.length - 2;
                                 }
                             }
                             else {
@@ -3253,16 +3327,49 @@ export class Input extends EventEmitter {
                         else if (this.stack.named && this.stack.named.hasOwnProperty(arg))
                             tmp2 = this.stack.named[arg];
                         else {
-                            if (args && !isNaN(arg)) {
-                                arg = parseInt(arg, 10);
-                                if (arg < 0) {
-                                    tmp2 = this.stack.args.slice(arg).join(' ');
-                                    this.stack.used = this.stack.args.length;
+                            if (this.stack.args && !isNaN(arg)) {
+                                tmp = parseInt(arg, 10);
+                                if (tmp < 0) {
+                                    if (-tmp >= this.stack.args.length) {
+                                        if (this.client.options.allowEval)
+                                            tmp2 = tmp;
+                                        else {
+                                            tmp2 = '$';
+                                            idx = idx - arg.length - 2;
+                                        }
+                                    }
+                                    else {
+                                        tmp2 = this.stack.args.slice(tmp).join(' ');
+                                        this.stack.used = this.stack.args.length;
+                                    }
                                 }
-                                else {
+                                else if (tmp < this.stack.args.length) {
                                     tmp2 = this.stack.args[arg];
-                                    if (arg > this.stack.used)
-                                        this.stack.used = arg;
+                                    if (tmp > this.stack.used)
+                                        this.stack.used = tmp;
+                                }
+                                else if (this.client.options.allowEval)
+                                    tmp2 = tmp;
+                                else {
+                                    tmp2 = '$';
+                                    idx = idx - arg.length - 2;
+                                }
+                            }
+                            else if (this.stack.args && this.stack.args.indices && arg.match(/^x=?\d+$/)) {
+                                tmp = parseInt(arg.substring(1), 10);
+                                if (tmp < 0) {
+                                    if (-tmp >= this.stack.args.length) {
+                                        tmp2 = '$';
+                                        idx = idx - arg.length - 2;
+                                    }
+                                    else
+                                        tmp2 = this.stack.indices.slice(tmp).map(v => v[0] + ' ' + v[1]).join(' ');
+                                }
+                                else if (tmp < this.stack.args.length)
+                                    tmp2 = this.stack.args.indices[tmp][0] + ' ' + this.stack.args.indices[tmp][1];
+                                else {
+                                    tmp2 = '$';
+                                    idx = idx - arg.length - 2;
                                 }
                             }
                             else {
@@ -3333,12 +3440,16 @@ export class Input extends EventEmitter {
                     else if (c === '%') {
                         state = ParseState.paramsP;
                         _neg = false;
+                        _pos = false;
+                        _fall = false;
                         arg = '';
                         start = false;
                     }
                     else if (c === '$') {
                         state = ParseState.paramsD;
                         _neg = false;
+                        _pos = false;
+                        _fall = false;
                         arg = '';
                         start = false;
                     }
@@ -3469,18 +3580,26 @@ export class Input extends EventEmitter {
         else if (state === ParseState.paramsP && arg.length > 0) {
             if (this.stack.args) {
                 arg = parseInt(arg, 10);
-                if (_neg && arg < this.stack.args.length)
-                    str += this.stack.args.slice(arg).join(' ');
-                else if (arg < this.stack.args.length)
-                    str += this.stack.args[arg];
-                if (_neg)
-                    this.stack.used = this.stack.args.length;
-                else if (arg > this.stack.used)
-                    this.stack.used = arg;
+                if (_pos && this.stack.args.indices && arg < this.stack.args.length)
+                    str += this.stack.args.indices[arg][0] + ' ' + this.stack.args.indices[arg][1];
+                else {
+                    if (_neg && arg < this.stack.args.length)
+                        str += this.stack.args.slice(arg).join(' ');
+                    else if (arg < this.stack.args.length)
+                        str += this.stack.args[arg];
+                    if (_neg)
+                        this.stack.used = this.stack.args.length;
+                    else if (arg > this.stack.used)
+                        this.stack.used = arg;
+                }
             }
             else {
                 arg = this.parseOutgoing(arg);
                 str += '%';
+                if (_neg)
+                    str += '-';
+                if (_pos)
+                    str += 'x';
                 if (arg != null) str += arg;
             }
         }
@@ -3490,16 +3609,15 @@ export class Input extends EventEmitter {
             if (arg != null) str += arg;
         }
         else if (state === ParseState.paramsD && arg.length > 0) {
-            if (this.stack.args) {
-                arg = parseInt(arg, 10);
-                if (_neg && arg < this.stack.args.length)
-                    str += this.stack.args.slice(arg).join(' ');
-                else if (arg < this.stack.args.length)
-                    str += this.stack.args[arg];
-                if (_neg)
-                    this.stack.used = this.stack.args.length;
-                else if (arg > this.stack.used)
-                    this.stack.used = arg;
+            if (this.stack.named) {
+                if (this.stack.named.hasOwnProperty(arg)) {
+                    str += this.stack.named[arg];
+                }
+                else {
+                    arg = this.parseOutgoing(arg);
+                    str += '$';
+                    if (arg != null) str += arg;
+                }
             }
             else {
                 arg = this.parseOutgoing(arg);
@@ -3933,8 +4051,8 @@ export class Input extends EventEmitter {
         for (let s = 0; s < nl; s++) {
             n[s] = $.trim(n[s]);
             if (n[s].length < 1) continue;
-            if (!n[s].match(/[^a-zA-Z0-9_]/g)) continue;
             if (n[s].startsWith('$')) n[s] = n[s].substring(1);
+            if (!n[s].match(/^[a-zA-Z0-9_][a-zA-Z0-9_]+$/g)) continue;
             if (named[n[s]]) continue;
             named[n[s]] = (s + 1 < al) ? args[s + 1] : '';
         }
@@ -4160,9 +4278,9 @@ export class Input extends EventEmitter {
 
                     let re;
                     if (trigger.caseSensitive)
-                        re = this._TriggerRegExCache['g' + trigger.pattern] || (this._TriggerRegExCache['g' + trigger.pattern] = new RegExp(trigger.pattern, 'g'));
+                        re = this._TriggerRegExCache['g' + trigger.pattern] || (this._TriggerRegExCache['g' + trigger.pattern] = new RegExp(trigger.pattern, 'gd'));
                     else
-                        re = this._TriggerRegExCache['gi' + trigger.pattern] || (this._TriggerRegExCache['gi' + trigger.pattern] = new RegExp(trigger.pattern, 'gi'));
+                        re = this._TriggerRegExCache['gi' + trigger.pattern] || (this._TriggerRegExCache['gi' + trigger.pattern] = new RegExp(trigger.pattern, 'gid'));
                     //reset from last use always
                     re.lastIndex = 0;
                     const res = re.exec(trigger.raw ? raw : line);
@@ -4170,8 +4288,10 @@ export class Input extends EventEmitter {
                     let args;
                     if ((trigger.raw ? raw : line) === res[0] || !this.client.options.prependTriggeredLine)
                         args = res;
-                    else
+                    else {
                         args = [(trigger.raw ? raw : line), ...res];
+                        args.indices = [[0, args[0].length], ...res.indices];
+                    }
                     if (ret)
                         return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re]);
                     this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re]);
@@ -4204,8 +4324,15 @@ export class Input extends EventEmitter {
                     this._stack.push({ repeatnum: window.repeatnum, args: args, named: [], used: 0, regex: regex });
                 else
                     this._stack.push({ args: args, named: [], used: 0, regex: regex });
-                ret = this.parseOutgoing(trigger.value);
-                this._stack.pop();
+                try {
+                    ret = this.parseOutgoing(trigger.value);
+                }
+                catch (e) {
+                    throw e;
+                }
+                finally {
+                    this._stack.pop();
+                }
                 break;
             case 2:
                 //do not cache temp triggers
