@@ -376,6 +376,18 @@ export class Client extends EventEmitter {
         this.emit('profiles-loaded');
     }
 
+    public loadProfile(profile) {
+        if(!profile) return;
+        const p = path.join(parseTemplate('{data}'), 'profiles');
+        if (!existsSync(p)) 
+            return;
+        this.profiles.remove(profile);
+        this.profiles.load(profile, p);
+        this.clearCache();
+        this.startAlarms();
+        this.emit('profile-loaded', profile);   
+    }
+
     public saveProfiles() {
         const p = path.join(parseTemplate('{data}'), 'profiles');
         if (!existsSync(p))

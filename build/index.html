@@ -238,6 +238,7 @@
         var _disconnectCounter = 0;
         var _charName = 0;
         var _skipDisconnect = 0;
+        var _watcher = null;
 
         window.onerror = function (msg, url, line, col, error) {
             if (client) {
@@ -510,7 +511,7 @@
                 _status.resize();
                 _status.updateInterface();
                 client.display.update();
-                client.display.updateScrollbars();                
+                client.display.updateScrollbars();
                 client.UpdateWindow();
             }, 1);
             updateMenu();
@@ -951,6 +952,11 @@
             client.on('profiles-updated', () => {
                 doUpdate(76);
             });
+
+            client.on('profile-loaded', profile => {
+                doUpdate(76);
+            });
+
             client.on('command-history-changed', history => ipcRenderer.send('command-history', history));
             client.on('add-line', (data) => {
                 var res, c, cl;
@@ -1176,6 +1182,7 @@
                 _status.spitterDistance = client.options.statusWidth;
                 doUpdate(3);
                 client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
+                createWatcher();
                 if (_logger)
                     _logger.postMessage({
                         action: 'options', args: {
@@ -1647,6 +1654,7 @@
                             client.options.askonclose = false;
                             client.saveOptions();
                             closeWindow = true;
+                            clearWatcher();
                             ipcRenderer.invoke('window', 'closeWindows');
                             ipcRenderer.invoke('window', 'close');
                             return;
@@ -1658,6 +1666,7 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
+                        clearWatcher();
                         ipcRenderer.invoke('window', 'closeWindows');
                         ipcRenderer.invoke('window', 'close');
                     });
@@ -1704,6 +1713,7 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
+                        clearWatcher();
                         ipcRenderer.invoke('window', 'closeWindows');
                         ipcRenderer.invoke('window', 'close');
                     });
@@ -1711,6 +1721,7 @@
                 client.raise('closed');
                 _logger.postMessage({ action: 'flush' });
                 closeWindow = true;
+                clearWatcher();
                 ipcRenderer.invoke('window', 'closeWindows');
                 ipcRenderer.invoke('window', 'close');
                 return;
@@ -2069,6 +2080,7 @@
                 client.display.showFind();
             if (client.options.showCharacterManager)
                 showCharacters();
+            createWatcher();
             autoConnect();
             doUpdate(64);
             client.raise('opened');
@@ -2779,6 +2791,72 @@
                     $updating &= ~128;
                 }
                 this.doUpdate($updating);
+            });
+        }
+
+        function clearWatcher() {
+            if (_watcher)
+                _watcher.close();
+            _watcher = null;
+        }
+
+        function createWatcher() {
+            clearWatcher();
+            if (!client.options.watchForProfilesChanges)
+                return;
+            _watcher = require('chokidar').watch(path.join(parseTemplate('{data}'), 'profiles'), {
+                persistent: true,
+                depth: 0,
+                ignoreInitial: true
+            });
+            _watcher.on('change', file => {
+                if (path.extname(file) !== '.json')
+                    return;
+                const profile = path.basename(file, '.json');
+                switch (client.options.onProfileChange) {
+                    case 1: //reload
+                        client.loadProfile(profile);
+                        break;
+                    case 2: //ask
+                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                            {
+                                type: 'question',
+                                title: `Profile '${profile}' changed`,
+                                message: `Profile '${profile}' changed, what do you want to do?`,
+                                buttons: ['Nothing', 'Reload'],
+                                defaultId: 1
+                            });
+                        if (choice === 1)
+                            client.loadProfile(profile);
+                        break;
+                    case 4: //warn
+                        client.echo(`Profile '${profile}' changed`, -7, -8, true, true);
+                        break;
+                }
+            }).on('add', file => {
+                if (path.extname(file) !== '.json')
+                    return;
+                const profile = path.basename(file, '.json');
+                switch (client.options.onProfileChange) {
+                    case 1: //reload
+                        client.loadProfile(profile);
+                        break;
+                    case 2: //ask
+                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                            {
+                                type: 'question',
+                                title: `Profile '${profile}' added`,
+                                message: `Profile '${profile}' added, what do you want to do?`,
+                                buttons: ['Nothing', 'Load'],
+                                defaultId: 1
+                            });
+                        if (choice === 1)
+                            client.loadProfile(profile);
+                        break;
+                    case 4: //warn
+                        client.echo(`Profile '${profile}' added`, -7, -8, true, true);
+                        break;
+                }
             });
         }
     </script>

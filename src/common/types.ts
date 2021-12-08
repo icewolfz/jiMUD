@@ -80,6 +80,10 @@ export enum OnDisconnect {
   Nothing = 0, Reconnect = 1, ReconnectDialog = 2, LoadManager = 4, Close = 8
 }
 
+export enum OnProfileChange {
+  Nothing = 0, Reload = 1, Ask = 2, Warn = 4
+}
+
 export enum ProfileSortOrder {
   None = 0, Alpha = 2, Priority = 4, Index = 8
 }

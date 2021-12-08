@@ -215,11 +215,11 @@
                     //fonts.sort((a, b) => a.localeCompare(b));
                     for (f = 0; f < fl; f++) {
                         el = fonts[f].replace(/"/g, '\'');
-                        ops.push('<option style="font-family: ', el, '" value="' , el, '">', el, '</option>');
+                        ops.push('<option style="font-family: ', el, '" value="', el, '">', el, '</option>');
                     }
                     ops = ops.join('');
-                    $('#font-system').append(ops);                    
-                    $('#cmdfont-system').append(ops);                    
+                    $('#font-system').append(ops);
+                    $('#cmdfont-system').append(ops);
                     $('#chat-font-system').append(ops);
 
                     el = $('#font');
@@ -227,7 +227,7 @@
                     el.val(_settings.font);
                     el.selectpicker('render');
                     el.change();
-                    
+
                     el = $('#cmdfont');
                     el.selectpicker('refresh');
                     el.val(_settings.cmdfont);
@@ -470,7 +470,22 @@
                         if (this.checked)
                             _settings.onDisconnect = 8;
                         break;
-
+                    case 'onProfileChange-0':
+                        if (this.checked)
+                            _settings.onProfileChange = 0;
+                        break;
+                    case 'onProfileChange-1':
+                        if (this.checked)
+                            _settings.onProfileChange = 1;
+                        break;
+                    case 'onProfileChange-2':
+                        if (this.checked)
+                            _settings.onProfileChange = 2;
+                        break;
+                    case 'onProfileChange-4':
+                        if (this.checked)
+                            _settings.onProfileChange = 4;
+                        break;
                     case 'trayClick-none':
                         if (this.checked)
                             _settings.trayClick = TrayClick.none;
@@ -725,6 +740,11 @@
             $('#onDisconnect-2').prop('checked', _settings.onDisconnect === 2);
             $('#onDisconnect-4').prop('checked', _settings.onDisconnect === 4);
             $('#onDisconnect-8').prop('checked', _settings.onDisconnect === 8);
+
+            $('#onProfileChange-0').prop('checked', _settings.onProfileChange === 0);
+            $('#onProfileChange-1').prop('checked', _settings.onProfileChange === 1);
+            $('#onProfileChange-2').prop('checked', _settings.onProfileChange === 2);
+            $('#onProfileChange-4').prop('checked', _settings.onProfileChange === 4);
 
             $('#trayClick-none').prop('checked', _settings.trayClick === TrayClick.none);
             $('#trayClick-show').prop('checked', _settings.trayClick === TrayClick.show);
@@ -2145,7 +2165,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="prependTriggeredLine" /> Prepend triggered line
                         </label>
-                    </div>                     
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="advanced">
                     <div class="col-sm-6 form-group">
@@ -2208,7 +2228,29 @@
                         <label class="control-label">
                             <input type="checkbox" id="externalWho" /> Open 'Who is on' in web browser
                         </label>
-                    </div>                    
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="watchForProfilesChanges" /> Watch for profile changes
+                        </label>
+                    </div>
+                    <div class="col-sm-12 form-group">
+                        <label class="control-label">On profile change do:</label>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="onProfileChange" id="onProfileChange-0"> Nothing
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="onProfileChange" id="onProfileChange-1"> Reload
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="onProfileChange" id="onProfileChange-2"> Ask
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="onProfileChange" id="onProfileChange-4"> Warn
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="backup">
                     <div class="col-sm-12 form-group" style="padding: 0px;">

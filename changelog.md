@@ -7,6 +7,9 @@
   - Add [#pcol](docs/commands.md) colors all words matching current trigger pattern
   - Add [#color {pattern} fore,back,bold profile](docs/commands.md) pattern and profile arguments to allow for quick trigger creation 
   - Add [%x1..%99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
+  - [Preferences](docs/preferences.md)
+    - Add `Watch for profile changes` when enabled will watch for profile changes
+    - Add `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
 - **Fixed:**
   - Fixed window size being sent to the mud when status display is hidden/shown
   - Fixed bug in [#trigger](docs/commands.md) command and adding to profile not correctly finding if one exist already
