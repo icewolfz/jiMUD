@@ -104,6 +104,18 @@ export class Input extends EventEmitter {
         return null;
     }
 
+    get indices() {
+        let sl = this._stack.length;
+        if (sl === 0)
+            return [];
+        while (sl >= 0) {
+            sl--;
+            if (this._stack[sl].hasOwnProperty('indices'))
+                return this._stack[sl].indices;
+        }
+        return [];
+    }
+
     get vStack() {
         if (this._vStack.length === 0)
             return {};
@@ -4370,7 +4382,19 @@ export class Input extends EventEmitter {
                     if (!this._TriggerFunctionCache[idx])
                         /*jslint evil: true */
                         this._TriggerFunctionCache[idx] = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    ret = this._TriggerFunctionCache[idx].apply(this.client, args);
+                    if (this.stack.hasOwnProperty('repeatNumber'))
+                        this._stack.push({ repeatnum: window.repeatnum, args: args, named: [], used: 0, regex: regex, indices: args.indices });
+                    else
+                        this._stack.push({ args: args, named: [], used: 0, regex: regex, indices: args.indices });
+                    try {
+                        ret = this._TriggerFunctionCache[idx].apply(this.client, args);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        this._stack.pop();
+                    }
                 }
                 if (typeof ret === 'string')
                     ret = this.parseOutgoing(ret);

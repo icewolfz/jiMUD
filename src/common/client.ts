@@ -329,6 +329,10 @@ export class Client extends EventEmitter {
     public get commandHistory() {
         return this._input.commandHistory;
     }
+    
+    public get indices() {
+        return this._input.indices;
+    }
 
     public setHistoryIndex(index) {
         this._input.setHistoryIndex(index);
