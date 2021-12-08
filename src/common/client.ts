@@ -388,6 +388,14 @@ export class Client extends EventEmitter {
         this.emit('profile-loaded', profile);   
     }
 
+    public removeProfile(profile) {
+        if(!profile) return;
+        this.profiles.remove(profile);
+        this.clearCache();
+        this.startAlarms();
+        this.emit('profile-removed', profile);   
+    }    
+
     public saveProfiles() {
         const p = path.join(parseTemplate('{data}'), 'profiles');
         if (!existsSync(p))

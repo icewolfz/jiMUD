@@ -957,6 +957,10 @@
                 doUpdate(76);
             });
 
+            client.on('profile-removed', profile => {
+                doUpdate(76);
+            });
+
             client.on('command-history-changed', history => ipcRenderer.send('command-history', history));
             client.on('add-line', (data) => {
                 var res, c, cl;
@@ -2833,7 +2837,8 @@
                         client.echo(`Profile '${profile}' changed`, -7, -8, true, true);
                         break;
                 }
-            }).on('add', file => {
+            })
+            .on('add', file => {
                 if (path.extname(file) !== '.json')
                     return;
                 const profile = path.basename(file, '.json');
@@ -2855,6 +2860,29 @@
                         break;
                     case 4: //warn
                         client.echo(`Profile '${profile}' added`, -7, -8, true, true);
+                        break;
+                }
+            })
+            .on('unlink', p => {
+                if (path.extname(file) !== '.json')
+                    return;
+                const profile = path.basename(file, '.json');
+                switch (client.options.onProfileChange) {
+                    case 2: //ask
+                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                            {
+                                type: 'question',
+                                title: `Profile '${profile}' deleted`,
+                                message: `Profile '${profile}' deleted, what do you want to do?`,
+                                buttons: ['Nothing', 'Remove'],
+                                defaultId: 1
+                            });
+                        if (choice === 1)
+                            client.removeProfile(profile);
+                        break;
+                    case 1: //reload, treated as warning as removing a deleted profile by force could cause issues
+                    case 4: //warn
+                        client.echo(`Profile '${profile}' deleted`, -7, -8, true, true);
                         break;
                 }
             });
