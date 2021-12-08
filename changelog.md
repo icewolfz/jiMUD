@@ -4,7 +4,7 @@
 
 - **New:**
   - Add [#cw](docs/commands.md) colors all words matching current trigger pattern
-  - Add [#pcol](docs/commands.md) colors all words matching current trigger pattern
+  - Add [#pcol](docs/commands.md) color text based on start and end positions
   - Add [#color {pattern} fore,back,bold profile](docs/commands.md) pattern and profile arguments to allow for quick trigger creation 
   - Add [%x1..%99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
   - [Preferences](docs/preferences.md)
