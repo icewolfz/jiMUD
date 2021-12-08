@@ -2867,7 +2867,10 @@
                 if (path.extname(file) !== '.json')
                     return;
                 const profile = path.basename(file, '.json');
-                switch (client.options.onProfileChange) {
+                switch (client.options.onProfileDeleted) {
+                    case 1:
+                        client.removeProfile(profile);
+                        break;
                     case 2: //ask
                         choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                             {
@@ -2880,7 +2883,6 @@
                         if (choice === 1)
                             client.removeProfile(profile);
                         break;
-                    case 1: //reload, treated as warning as removing a deleted profile by force could cause issues
                     case 4: //warn
                         client.echo(`Profile '${profile}' deleted`, -7, -8, true, true);
                         break;

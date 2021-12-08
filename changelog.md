@@ -10,6 +10,7 @@
   - [Preferences](docs/preferences.md)
     - Add `Watch for profile changes` when enabled will watch for profile changes
     - Add `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
+    - Add `On profile deleted do` what to do when a profile is deleted when `Watch for profile changes` enabled
 - **Fixed:**
   - Fixed window size being sent to the mud when status display is hidden/shown
   - Fixed bug in [#trigger](docs/commands.md) command and adding to profile not correctly finding if one exist already

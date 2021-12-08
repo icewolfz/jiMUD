@@ -1,6 +1,6 @@
 //spell-checker:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //spell-checker:ignore emoteto, emotetos askonchildren YYYYMMDD Hmmss
-import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -455,6 +455,7 @@ export class Settings {
     public externalWho: boolean = true;
     public watchForProfilesChanges = false;
     public onProfileChange: OnProfileChange = OnProfileChange.Nothing;
+    public onProfileDeleted: OnProfileDeleted = OnProfileDeleted.Nothing;
 
     public windows = {};
     public buttons = {

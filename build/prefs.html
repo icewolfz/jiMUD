@@ -486,6 +486,22 @@
                         if (this.checked)
                             _settings.onProfileChange = 4;
                         break;
+                    case 'onProfileDeleted-0':
+                        if (this.checked)
+                            _settings.onProfileDeleted = 0;
+                        break;
+                    case 'onProfileDeleted-1':
+                        if (this.checked)
+                            _settings.onProfileDeleted = 1;
+                        break;
+                    case 'onProfileDeleted-2':
+                        if (this.checked)
+                            _settings.onProfileDeleted = 2;
+                        break;
+                    case 'onProfileDeleted-4':
+                        if (this.checked)
+                            _settings.onProfileDeleted = 4;
+                        break;
                     case 'trayClick-none':
                         if (this.checked)
                             _settings.trayClick = TrayClick.none;
@@ -745,6 +761,11 @@
             $('#onProfileChange-1').prop('checked', _settings.onProfileChange === 1);
             $('#onProfileChange-2').prop('checked', _settings.onProfileChange === 2);
             $('#onProfileChange-4').prop('checked', _settings.onProfileChange === 4);
+
+            $('#onProfileDeleted-0').prop('checked', _settings.onProfileDeleted === 0);
+            $('#onProfileDeleted-1').prop('checked', _settings.onProfileDeleted === 1);
+            $('#onProfileDeleted-2').prop('checked', _settings.onProfileDeleted === 2);
+            $('#onProfileDeleted-4').prop('checked', _settings.onProfileDeleted === 4);
 
             $('#trayClick-none').prop('checked', _settings.trayClick === TrayClick.none);
             $('#trayClick-show').prop('checked', _settings.trayClick === TrayClick.show);
@@ -2235,22 +2256,41 @@
                         </label>
                     </div>
                     <div class="col-sm-12 form-group">
-                        <label class="control-label">On profile change do:</label>
-                        <div class="btn-group" data-toggle="buttons">
-                            <label class="btn btn-default btn-xs">
-                                <input type="radio" name="onProfileChange" id="onProfileChange-0"> Nothing
-                            </label>
-                            <label class="btn btn-default btn-xs">
-                                <input type="radio" name="onProfileChange" id="onProfileChange-1"> Reload
-                            </label>
-                            <label class="btn btn-default btn-xs">
-                                <input type="radio" name="onProfileChange" id="onProfileChange-2"> Ask
-                            </label>
-                            <label class="btn btn-default btn-xs">
-                                <input type="radio" name="onProfileChange" id="onProfileChange-4"> Warn
-                            </label>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">On profile change do:</label>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-0"> Nothing
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-1"> Reload
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-2"> Ask
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-4"> Warn
+                                </label>
+                            </div>
                         </div>
-                    </div>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">On profile deleted do:</label>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-0"> Nothing
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-1"> Remove
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-2"> Ask
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-4"> Warn
+                                </label>
+                            </div>
+                        </div>          
+                    </div>          
                 </div>
                 <div role="tabpanel" class="pref-pane" id="backup">
                     <div class="col-sm-12 form-group" style="padding: 0px;">

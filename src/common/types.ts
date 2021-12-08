@@ -84,6 +84,10 @@ export enum OnProfileChange {
   Nothing = 0, Reload = 1, Ask = 2, Warn = 4
 }
 
+export enum OnProfileDeleted {
+  Nothing = 0, Remove = 1, Ask = 2, Warn = 4
+}
+
 export enum ProfileSortOrder {
   None = 0, Alpha = 2, Priority = 4, Index = 8
 }

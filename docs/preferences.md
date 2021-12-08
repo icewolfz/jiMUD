@@ -206,6 +206,11 @@ Controls what is captured into the chat window
   - `Reload` Force reload of profiles, this may cause profile changes to be lost
   - `Ask` Ask you if you want to reload or do nothing
   - `Warn` Display a warning to the mud window
+- `On profile deleted do` what to do when a profile is deleted when `Watch for profile changes` enabled
+  - `Nothing` Do nothing
+  - `Remove` Force remove of profiles, this may cause profile changes to be lost
+  - `Ask` Ask you if you want to remove or do nothing
+  - `Warn` Display a warning to the mud window  
 
 ## Advanced > Backup
 
