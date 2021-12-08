@@ -50,6 +50,8 @@
 
         // eslint-disable-next-line no-unused-vars
         function openLink(url) {
+            if(url.startsWith('docs/'))
+                url = url.substr(5);            
             url = url.split('#');
             contents.val(url[0].substr(0, url[0].length - 3)).selectpicker('render');
             contents.change();

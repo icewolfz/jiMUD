@@ -19,8 +19,9 @@
     - Fixed corrupted stack after trigger errors
     - Fixed issue with $named argument format
     - Fixed named arguments not working
-  - **Changed:**
-   - Remove %named argument support from docs as it never was supported and easier to just remove it
+  - Fixed changelog help page links not working
+- **Changed:**
+  - Remove %named argument support from docs as it never was supported and easier to just remove it
 
 ## v0.17.2 2021-12-06
 
