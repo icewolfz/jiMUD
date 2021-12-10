@@ -67,6 +67,8 @@ export class Client extends EventEmitter {
     public lastSendTime: number = 0;
     public defaultTitle = 'jiMUD';
 
+    public variables = {};
+
     set enabledProfiles(value: string[]) {
         const a = [];
         let v;

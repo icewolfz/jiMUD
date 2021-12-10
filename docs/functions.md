@@ -44,6 +44,12 @@ Escaping allows you to prevent special characters from being parsed and allow th
 - `crlf` replace with carriage return and linefeed
 - `expression` evaluate the math expression and return the results when [allow evaluate is enabled](preferences.md#scripting)
 
+## User variables
+
+You can create custom variables using the expression system and the assignment operator (=) to assign or update the value.  These variables can be accessed in scripting using client.variables.NAME, client.variables['NAME'], this.variables.NAME, this.variables['NAME'] as needed, any changes there will be reflected in the expression system. The variables i and repeatNumber should never be used as they are dynamic and replaced as needed by the scope level for looping and repeating systems in the command parser.
+
+**Warning** Named arguments will replace variables of the same name in current scope level, meaning any values set to them will be lost once finished as named variables are alias scope and will override global variables of the same name.
+
 ## Functions
 
 - `time(format)` display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]

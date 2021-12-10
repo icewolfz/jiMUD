@@ -115,6 +115,36 @@ export class Input extends EventEmitter {
     public enableParsing: boolean = true;
     public enableTriggers: boolean = true;
 
+    public getScope(named?) {
+        let scope: any = {};
+        Object.assign(scope, this.client.variables);
+        if(named)
+            Object.assign(scope, named);
+        scope.i = this.repeatNumber || 0;
+        scope.repeatNumber = this.repeatNumber || 0;
+        return scope;
+    }
+
+    public setScope(scope, named?) {
+        for (const name in scope) {
+            //not a propery, i or repeatNumber
+            if (!Object.prototype.hasOwnProperty.call(scope, name) || name === 'i' || name === 'repeatNumber')
+                continue;
+            //part of the named arguments so skip
+            if(named && Object.prototype.hasOwnProperty.call(named, name))
+                continue;
+            //update/add new variables
+            this.client.variables[name] = scope[name];
+        }
+    }
+
+    public evaluate(expression, named?) {
+        let scope = this.getScope(named);
+        let results = mathjs.evaluate(expression, scope);
+        this.setScope(scope, named);
+        return results;
+    }
+
     get stack() {
         if (this._stack.length === 0)
             this._stack.push({ args: 0, named: 0, used: 0, append: false });
@@ -192,7 +222,7 @@ export class Input extends EventEmitter {
                 c = parseInt(res[1]);
                 sides = res[2];
                 if (res.length > 3 && args[2])
-                    mod = mathjs.evaluate(res[3]);
+                    mod = this.evaluate(res[3]);
             }
             else if (args.length > 1) {
                 c = parseInt(args[0].toString());
@@ -216,7 +246,7 @@ export class Input extends EventEmitter {
             if (sides === '%')
                 sum /= 100;
             if (mod)
-                return mathjs.evaluate(sum + mod);
+                return this.evaluate(sum + mod);
             return sum;
         };
 
@@ -3316,10 +3346,7 @@ export class Input extends EventEmitter {
                                 if (tmp != null)
                                     tmp2 = tmp;
                                 else if (this.client.options.allowEval) {
-                                    if (this.stack.named)
-                                        tmp2 = '' + mathjs.evaluate(this.parseOutgoing(arg), Object.assign({ i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 }, this.stack.named));
-                                    else
-                                        tmp2 = '' + mathjs.evaluate(this.parseOutgoing(arg), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
+                                    tmp2 = '' + this.evaluate(this.parseOutgoing(arg), this.stack.named);
                                 }
                                 else {
                                     tmp2 += '%';
@@ -3475,12 +3502,8 @@ export class Input extends EventEmitter {
                                 c = this.parseVariable(arg);
                                 if (c != null)
                                     tmp2 = c;
-                                else if (this.client.options.allowEval) {
-                                    if (this.stack.named)
-                                        tmp2 = '' + mathjs.evaluate(this.parseOutgoing(arg), Object.assign({ i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 }, this.stack.named));
-                                    else
-                                        tmp2 = '' + mathjs.evaluate(this.parseOutgoing(arg), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
-                                }
+                                else if (this.client.options.allowEval)
+                                    tmp2 = '' + this.evaluate(this.parseOutgoing(arg), this.stack.named);
                                 else {
                                     tmp2 = '$';
                                     idx = idx - arg.length - 2;
@@ -3900,7 +3923,7 @@ export class Input extends EventEmitter {
             case 'proper':
                 return ProperCase(this.parseOutgoing(res[2]));
             case 'eval':
-                return '' + mathjs.evaluate(this.parseOutgoing(res[2]), { i: this.repeatNumber || 0, repeatnum: this.repeatNumber || 0 });
+                return '' + this.evaluate(this.parseOutgoing(res[2]));
             case 'dice':
                 args = this.parseOutgoing(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid dice');
@@ -3940,7 +3963,7 @@ export class Input extends EventEmitter {
                 if (sides === '%')
                     sum /= 100;
                 if (mod)
-                    return mathjs.evaluate(sum + mod);
+                    return this.evaluate(sum + mod);
                 return '' + sum;
             case 'diceavg':
                 //The average of any XdY is X*(Y+1)/2.
@@ -3976,7 +3999,7 @@ export class Input extends EventEmitter {
                     max = parseInt(sides);
 
                 if (mod)
-                    return mathjs.evaluate(((min + max) / 2 * c) + mod);
+                    return this.evaluate(((min + max) / 2 * c) + mod);
                 return '' + ((min + max) / 2 * c);
             case 'dicemin':
                 args = this.parseOutgoing(res[2]).split(',');
@@ -4006,7 +4029,7 @@ export class Input extends EventEmitter {
                     sides = parseInt(sides);
 
                 if (mod)
-                    return mathjs.evaluate((min * c) + mod);
+                    return this.evaluate((min * c) + mod);
                 return '' + (min * c);
             case 'dicemax':
                 args = this.parseOutgoing(res[2]).split(',');
@@ -4035,7 +4058,7 @@ export class Input extends EventEmitter {
                 else
                     max = parseInt(sides);
                 if (mod)
-                    return mathjs.evaluate((max * c) + mod);
+                    return this.evaluate((max * c) + mod);
                 return '' + (max * c);
             case 'zdicedev':
             case 'dicedev':
@@ -4070,7 +4093,7 @@ export class Input extends EventEmitter {
                 if (fun === 'zdicedev')
                     max--;
                 if (mod)
-                    return mathjs.evaluate(Math.sqrt((max * max - 1) / 12 * c) + mod);
+                    return this.evaluate(Math.sqrt((max * max - 1) / 12 * c) + mod);
                 return '' + Math.sqrt((max * max - 1) / 12 * c);
             case 'color':
                 args = this.parseOutgoing(res[2]).split(',');

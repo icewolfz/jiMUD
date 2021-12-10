@@ -16,6 +16,20 @@ To use scripting you just have to select script as the type from the type dropdo
 - `$selurl` same as $selected url
 - `$contextMenu` access to the context menu item array, manipulating this will effect the displayed context menu, **WARNING** this could break the context menu, if broken you can refresh by causing a profile to be re-saved
 
+## User variables
+
+You can access them scripting using client.variables['NAME'], client.variables.NAME, this.variables['NAME'], or this.variables.NAME. Some variables will be replaced or lost, i and repeatNumber is updated as needed and should never be used as they are set in the looping systems.
+
+Example:
+```javascript
+this.variables.test = 5;
+this.variables['test'] = 5;
+client.variables.test = 5;
+client.variables['test'] = 5;
+```
+
+Set or created variables can be access in the expression system by name eg ${test + 5} would be 10 based from example
+
 ## Basic function list
 
 - `client.beep()` play system beep sound
