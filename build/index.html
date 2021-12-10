@@ -2085,20 +2085,38 @@
             });
             switch (item.style) {
                 case 1:
-                    ret = client.parseOutgoing(item.value);
+                    try {
+                        ret = client.parseOutgoing(item.value);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        client._input._stack.pop();
+                        client._input.vStackPop();
+                    }
                     break;
                 case 2:
                     /*jslint evil: true */
                     var f = new Function('try { ' + item.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    ret = f.apply(client);
+                    try {
+                        ret = f.apply(client);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        client._input._stack.pop();
+                        client._input.vStackPop();
+                    }
                     if (ret)
                         ret = client.parseOutgoing(ret);
                     break;
                 default:
                     ret = item.value;
+                    client._input.vStackPop();
                     break;
             }
-            client._input.vStackPop();
             if (ret == null)
                 return true;
             if (item.send) {
@@ -2125,12 +2143,30 @@
             var ret;// = '';
             switch (button.style) {
                 case 1:
-                    ret = client.parseOutgoing(button.value);
+                    client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                    try {
+                        ret = client.parseOutgoing(button.value);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        client._input._stack.pop();
+                    }
                     break;
                 case 2:
                     /*jslint evil: true */
                     var f = new Function('try { ' + button.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    ret = f.apply(client);
+                    client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                    try {
+                        ret = f.apply(client);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        client._input._stack.pop();
+                    }
                     if (typeof ret === 'string')
                         ret = client.parseOutgoing(ret);
                     break;
@@ -2818,56 +2854,56 @@
                         break;
                 }
             })
-            .on('add', file => {
-                if (path.extname(file) !== '.json')
-                    return;
-                const profile = path.basename(file, '.json');
-                switch (client.options.onProfileChange) {
-                    case 1: //reload
-                        client.loadProfile(profile);
-                        break;
-                    case 2: //ask
-                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                            {
-                                type: 'question',
-                                title: `Profile '${profile}' added`,
-                                message: `Profile '${profile}' added, what do you want to do?`,
-                                buttons: ['Nothing', 'Load'],
-                                defaultId: 1
-                            });
-                        if (choice === 1)
+                .on('add', file => {
+                    if (path.extname(file) !== '.json')
+                        return;
+                    const profile = path.basename(file, '.json');
+                    switch (client.options.onProfileChange) {
+                        case 1: //reload
                             client.loadProfile(profile);
-                        break;
-                    case 4: //warn
-                        client.echo(`Profile '${profile}' added`, -7, -8, true, true);
-                        break;
-                }
-            })
-            .on('unlink', p => {
-                if (path.extname(file) !== '.json')
-                    return;
-                const profile = path.basename(file, '.json');
-                switch (client.options.onProfileDeleted) {
-                    case 1:
-                        client.removeProfile(profile);
-                        break;
-                    case 2: //ask
-                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                            {
-                                type: 'question',
-                                title: `Profile '${profile}' deleted`,
-                                message: `Profile '${profile}' deleted, what do you want to do?`,
-                                buttons: ['Nothing', 'Remove'],
-                                defaultId: 1
-                            });
-                        if (choice === 1)
+                            break;
+                        case 2: //ask
+                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                                {
+                                    type: 'question',
+                                    title: `Profile '${profile}' added`,
+                                    message: `Profile '${profile}' added, what do you want to do?`,
+                                    buttons: ['Nothing', 'Load'],
+                                    defaultId: 1
+                                });
+                            if (choice === 1)
+                                client.loadProfile(profile);
+                            break;
+                        case 4: //warn
+                            client.echo(`Profile '${profile}' added`, -7, -8, true, true);
+                            break;
+                    }
+                })
+                .on('unlink', p => {
+                    if (path.extname(file) !== '.json')
+                        return;
+                    const profile = path.basename(file, '.json');
+                    switch (client.options.onProfileDeleted) {
+                        case 1:
                             client.removeProfile(profile);
-                        break;
-                    case 4: //warn
-                        client.echo(`Profile '${profile}' deleted`, -7, -8, true, true);
-                        break;
-                }
-            });
+                            break;
+                        case 2: //ask
+                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                                {
+                                    type: 'question',
+                                    title: `Profile '${profile}' deleted`,
+                                    message: `Profile '${profile}' deleted, what do you want to do?`,
+                                    buttons: ['Nothing', 'Remove'],
+                                    defaultId: 1
+                                });
+                            if (choice === 1)
+                                client.removeProfile(profile);
+                            break;
+                        case 4: //warn
+                            client.echo(`Profile '${profile}' deleted`, -7, -8, true, true);
+                            break;
+                    }
+                });
         }
     </script>
 </head>

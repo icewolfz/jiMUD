@@ -10,16 +10,20 @@
   - Add [%x1..%99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
   - Add [%ansi(style,fore,back)](docs/functions.md) function to return ansi formatted string
   - Add [%i](docs/functions.md) predefined variable
+  - Add [%j..%z] predefined variables for nested looping support
   - Input parser:
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function
     - Add user variable support to expression system, can access in scripting using client.variables['NAME'] or client.variables.NAME
+    - Add proper loop nesting using %i..%z variables for #nnn nested loops
   - [Preferences](docs/preferences.md)
     - Add `Watch for profile changes` when enabled will watch for profile changes
     - Add `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
     - Add `On profile deleted do` what to do when a profile is deleted when `Watch for profile changes` enabled
 - **Fixed:**
-  - Fixed [#nnn](docs/commands.md) being double parsed
+  - [#nnn](docs/commands.md)
+    - Fixed being double parsed
+    - Fixed missing trailing newline
   - Fixed window size being sent to the mud when status display is hidden/shown
   - Fixed bug in [#trigger](docs/commands.md) command and adding to profile not correctly finding if one exist already
   - Fixed bug in [#event](docs/commands.md) command and adding to profile not correctly finding if one exist already
@@ -34,6 +38,8 @@
     - Fixed named arguments not working
     - Fixed bugs in repeatnum not having correct name in all places
   - Fixed changelog help page links not working
+  - Fixed execution of buttons and context items with broken parsing stacks
+  - Fixed buttons and context not having error trapping code that broke cleanup
 - **Changed:**
   - Remove %named argument support from docs as it never was supported and easier to just remove it
   - Update markdown-it 12.2.0 to 12.3.0

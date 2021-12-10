@@ -111,6 +111,7 @@ export class Input extends EventEmitter {
     private _gamepadCaches = null;
     private _lastSuspend = -1;
     private _MacroCache = {};
+    private _loops: number[] = [];
 
     public client: Client = null;
     public enableParsing: boolean = true;
@@ -120,18 +121,22 @@ export class Input extends EventEmitter {
         //if no stack use direct for some performance
         if (this._stack.length === 0)
             return this.client.variables;
-        //if no named arguments or repeatnum use direct for some performance
-        if (!this.stack.named && !this.stack.hasOwnProperty('repeatnum'))
-            return this.client.variables;
-        //no named and same repeat use direct access for speed
-        if (!this.stack.named && this.client.variables.repeatnum == this.stack.repeatnum)
+        if(!this.stack.named && !this.loops.length)
             return this.client.variables;
         let scope: any = {};
         Object.assign(scope, this.client.variables);
         if (this.stack.named)
             Object.assign(scope, this.stack.named);
-        scope.i = this.repeatnum;
-        scope.repeatnum = this.repeatnum;
+        if(this.loops.length)
+        {
+            scope.repeatnum = this.repeatnum;
+            let ll = this.loops.length;
+            //i to z only
+            for(let l = 0; l < ll && l < 18; l++)
+                scope[String.fromCharCode(105 + l)] = this.loops[l];
+        }
+        //scope.i = this.repeatnum;
+        //scope.repeatnum = this.repeatnum;
         return scope;
     }
 
@@ -164,16 +169,15 @@ export class Input extends EventEmitter {
     }
 
     get repeatnum() {
-        if (this._stack.length === 0 || !this.stack.hasOwnProperty('repeatnum'))
+        if(this.loops.length === 0)
             return 0;
-        return this.stack.repeatnum || 0;
+        return this.loops[this.loops.length - 1];
     }
 
-    set repeatnum(value: number) {
-        //no stack so invalid
-        if (this._stack.length === 0)
-            return;
-        this.stack.repeatnum = value;
+    get loops() {
+        if (this._stack.length === 0 || !this.stack.hasOwnProperty('loops'))
+            return this._loops;
+        return this.stack.loops;
     }
 
     get regex() {
@@ -2960,14 +2964,21 @@ export class Input extends EventEmitter {
             args = args.join(' ');
             tmp = [];
             for (let r = 0; r < i; r++) {
-                this.repeatnum = r;
-                n = this.parseOutgoing(args);
-                if (n != null && n.length > 0)
-                    tmp.push(n);
+                this.loops.push(r);
+                try {
+                    n = this.parseOutgoing(args);
+                    if (n != null && n.length > 0)
+                        tmp.push(n);
+                }
+                catch (e) {
+                    throw e;
+                }
+                finally {
+                    this.loops.pop();
+                }
             }
-            delete this.stack.repeatnum;
             if (tmp.length > 0)
-                return tmp.join('\n');
+                return tmp.join('\n') + '\n';
             return null;
         }
         const data = { name: fun, args: args, raw: raw, handled: false, return: null };
@@ -3199,15 +3210,6 @@ export class Input extends EventEmitter {
                                 state = ParseState.none;
                                 break;
                             }
-                        case 'i':
-                            if (arg.length === 0) {
-                                if (eAlias && findAlias)
-                                    alias += this.repeatnum;
-                                else
-                                    str += this.repeatnum;
-                                state = ParseState.none;
-                            }
-                            break;
                         case '-':
                             if (arg.length === 0) {
                                 _neg = true;
@@ -3272,6 +3274,17 @@ export class Input extends EventEmitter {
                                 idx--;
                             }
                             else {
+                                if (arg.length === 0 && this.loops.length > 0) {
+                                    tmp = c.charCodeAt(0) - 105;
+                                    if (tmp >= 0 && tmp < 18 && tmp < this.loops.length) {
+                                        if (eAlias && findAlias)
+                                            alias += this.loops[tmp];
+                                        else
+                                            str += this.loops[tmp];
+                                        state = ParseState.none;
+                                        break;
+                                    }
+                                }
                                 if (eAlias && findAlias) {
                                     alias += '%';
                                     if (_neg)
@@ -3315,7 +3328,7 @@ export class Input extends EventEmitter {
                 case ParseState.paramsPBlock:
                     if (c === '}' && nest === 0) {
                         if (arg === 'i')
-                            tmp2 = this.repeatnum;
+                            tmp2 = this.loops[0];
                         else if (arg === 'repeatnum')
                             tmp2 = this.repeatnum;
                         else if (this.stack.args && arg === '*') {
@@ -3472,7 +3485,7 @@ export class Input extends EventEmitter {
                     if (c === '}' && nest === 0) {
                         tmp2 = null;
                         if (arg === 'i')
-                            tmp2 = this.repeatnum;
+                            tmp2 = this.loops[0];
                         else if (arg === 'repeatnum')
                             tmp2 = this.repeatnum;
                         else if (this.stack.args && arg === '*') {
@@ -3896,6 +3909,7 @@ export class Input extends EventEmitter {
             case 'copied.proper':
                 return ProperCase(window.$copied);
             case 'i':
+                return this.loops[0];
             case 'repeatnum':
                 return this.vStack['$repeatnum'] || this.repeatnum;
             case 'selected':
@@ -3930,6 +3944,11 @@ export class Input extends EventEmitter {
             case 'selline.proper':
             case 'selword.proper':
                 return ProperCase(this.vStack['$' + text.substr(0, text.length - 7)] || window['$' + text.substr(0, text.length - 7)]);
+        }
+        if (this.loops.length && text.length === 1) {
+            let i = text.charCodeAt(0) - 105;
+            if (i >= 0 && i < 18 && i < this.loops.length)
+                return this.loops[i];
         }
         const re = new RegExp('^([a-zA-Z]+)\\((.*)\\)$', 'g');
         let res = re.exec(text);
@@ -4261,10 +4280,7 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (alias.style) {
             case 1:
-                if (this.stack.hasOwnProperty('repeatnum'))
-                    this._stack.push({ repeatnum: this.repeatnum, args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
-                else
-                    this._stack.push({ args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
+                this._stack.push({ loops: [], args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
                 ret = this.parseOutgoing(alias.value);
                 this._stack.pop();
                 break;
@@ -4323,12 +4339,30 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (macro.style) {
             case 1:
-                ret = this.parseOutgoing(macro.value);
+                this._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                try {
+                    ret = this.parseOutgoing(macro.value);
+                }
+                catch (e) {
+                    throw e;
+                }
+                finally {
+                    this._stack.pop();
+                }
                 break;
             case 2:
                 /*jslint evil: true */
                 const f = new Function('try { ' + macro.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                ret = f.apply(this.client);
+                this._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                try {
+                    ret = f.apply(this.client);
+                }
+                catch (e) {
+                    throw e;
+                }
+                finally {
+                    this._stack.pop();
+                }
                 break;
             default:
                 ret = macro.value;
@@ -4517,10 +4551,7 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (trigger.style) {
             case 1:
-                if (this.stack.hasOwnProperty('repeatnum'))
-                    this._stack.push({ repeatnum: window.repeatnum, args: args, named: [], used: 0, regex: regex });
-                else
-                    this._stack.push({ args: args, named: [], used: 0, regex: regex });
+                this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex });
                 try {
                     ret = this.parseOutgoing(trigger.value);
                 }
@@ -4541,10 +4572,7 @@ export class Input extends EventEmitter {
                     if (!this._TriggerFunctionCache[idx])
                         /*jslint evil: true */
                         this._TriggerFunctionCache[idx] = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    if (this.stack.hasOwnProperty('repeatnum'))
-                        this._stack.push({ repeatnum: this.repeatnum, args: args, named: [], used: 0, regex: regex, indices: args.indices });
-                    else
-                        this._stack.push({ args: args, named: [], used: 0, regex: regex, indices: args.indices });
+                    this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex, indices: args.indices });
                     try {
                         ret = this._TriggerFunctionCache[idx].apply(this.client, args);
                     }
@@ -4626,8 +4654,8 @@ export class Input extends EventEmitter {
     public executeWait(text, delay: number, eAlias?: boolean, stacking?: boolean) {
         if (!text || text.length === 0) return;
         const s = { args: 0, named: 0, used: this.stack.used, append: this.stack.append };
-        if (this.stack.hasOwnProperty('repeatnum'))
-            (<any>s).repeatnum = this.repeatnum;
+        if (this.stack.hasOwnProperty('loops'))
+            (<any>s).loops = this.loops.splice(0);
         if (this.stack.args)
             s.args = this.stack.args.slice();
         if (this.stack.named)

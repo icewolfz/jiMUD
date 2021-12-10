@@ -14,7 +14,8 @@ There is a special format for argument variables for aliases and triggers.
 
 [Repeat command `#nnn`](commands.md) special format to get loop iteration
 
-- `%i`  return current loop iteration, supports %i,#{i},${i} 
+- `%i..%z`  return loop iteration and nested loop, supports %i,#{i},${i}, each nested loop gets its own %letter
+  - Example: #5 #10 %i %j would display 0 0..0 9, 1 0..1 9, ... 4 0..4 9
 - `%repeatnum` return current loop iteration, supports #{repeatnum}/${repeatnum} only
 
 Expressions, [when enabled](preferences.md#scripting) or using eval(), are basic math or supported math functions supported by [Mathjs](http://mathjs.org/) which include all the standard javascript Math functions, the i and repeatnum variables You may also embed ${} variables and functions as well for example: ${5+5} will return 10 or ${5 + i} will return 5 + what ever the current value of i is, ${5 + ${dice(2d10)}} will return 5 + a 2, 10 sided dice rolls noticed how it requires the ${} as dice is a jiMUD functions not a math function.
