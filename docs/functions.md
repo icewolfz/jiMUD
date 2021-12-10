@@ -75,3 +75,15 @@ Escaping allows you to prevent special characters from being parsed and allow th
   - Colors: red, blue, orange, yellow, green, black, white, cyan, magenta, gray
 - `zcolor(code)` converts a zmud/cmud color code into a code supported by jiMUD
   - Example: ${zcolor(1)} would return 370 for bold white
+- `ansi(style,fore,back)` insert ansi control characters into string same as ${esc}[CODESm
+    - `style` the styles to apply, *optional*
+        - reset - reset all styles and colors
+        - bold,faint,italic,underline,blink,reverse,hidden,strikethrough,doubleunderline,boldoff,italicoff,blinkoff,blinkrapidoff,visible,strikethroughoff
+    - `fore` the ground color, if bold and a valid colored bold is considered the foreground color, may also be default
+    - `back` the background color, may be default *optional*
+    - jiMUD custom colors: localecho, infotext, infobackground, errortext
+    - Colors: red, blue, orange, yellow, green, black, white, cyan, magenta, gray
+      - prepend with x for aixterm bright colors
+      - append background to get background code directly
+      - eg redbackground to get red background, xred to get aixterm red or xredbackground to get aixterm red background
+

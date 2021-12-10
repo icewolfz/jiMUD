@@ -8,11 +8,11 @@ import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, par
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType } from './profile';
-import { FontStyle, NewLineType } from './types';
+import { NewLineType } from './types';
 import { SettingList } from './settings';
-import { getAnsiColorCode, getColorCode, isMXPColor } from './ansi';
-import { create, all, ConditionalNodeDependencies } from 'mathjs';
-import { parse } from 'path/posix';
+import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
+import { create, all } from 'mathjs';
+
 const mathjs = create(all, {});
 const buzz = require('buzz');
 const path = require('path');
@@ -4089,6 +4089,49 @@ export class Input extends EventEmitter {
                 else if (args.length > 1)
                     throw new Error('Too many arguments');
                 return getColorCode(parseInt(args[0], 10));
+            case 'ansi':
+                args = this.parseOutgoing(res[2]).split(',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                c = args.length;
+                mod = [];
+                min = {};
+                for (sides = 0; sides < c; sides++) {
+                    max = getAnsiCode(args[sides].trim());
+                    if (max === -1)
+                        throw new Error('Invalid color or style');
+                    //style
+                    if (max >= 0 && max < 30)
+                        min[max] = 1;
+                    //color
+                    else
+                        mod.push(args[sides]);
+                }
+                //bold,back
+                if (mod.length === 1 && min[1]) {
+                    mod[0] = getAnsiCode(mod[0], true);
+                }
+                //else fore,back
+                else {
+                    if (mod.length > 2)
+                        throw new Error('Too many colors');
+                    if (mod.length > 1) {
+                        if (mod[1] === 'current')
+                            mod = '';
+                        else
+                            mod[1] = getAnsiCode(mod[1], true);
+                    }
+                    if (mod.length > 0) {
+                        if (mod[1] === 'current')
+                            mod[0] = '';
+                        else
+                            mod[0] = getAnsiCode(mod[0]);
+                    }
+                }
+                min = [...Object.keys(min), ...mod].filter(f => f !== '');
+                if (!min.length)
+                    throw new Error('Invalid colors or styles');
+                return `\x1b[' + ${min.join(';')}m`;
         }
         return null;
     }

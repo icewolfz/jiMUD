@@ -8,6 +8,7 @@
   - Add [#highlight](docs/commands.md) make text bold or brighter color if already bold
   - Add [#color {pattern} fore,back,bold profile](docs/commands.md) pattern and profile arguments to allow for quick trigger creation 
   - Add [%x1..%99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
+  - Add [%ansi(style,fore,back)](docs/functions.md) function to return ansi formatted string
   - [Preferences](docs/preferences.md)
     - Add `Watch for profile changes` when enabled will watch for profile changes
     - Add `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
