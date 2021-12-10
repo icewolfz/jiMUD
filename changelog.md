@@ -29,6 +29,7 @@
   - Fixed changelog help page links not working
 - **Changed:**
   - Remove %named argument support from docs as it never was supported and easier to just remove it
+  - Update markdown-it 12.2.0 to 12.3.0
 
 ## v0.17.2 2021-12-06
 
