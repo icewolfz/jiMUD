@@ -4110,6 +4110,7 @@ export class Input extends EventEmitter {
                 //bold,back
                 if (mod.length === 1 && min[1]) {
                     mod[0] = getAnsiCode(mod[0], true);
+                    mod.unshift('37');
                 }
                 //else fore,back
                 else {
