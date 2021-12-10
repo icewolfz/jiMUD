@@ -4128,10 +4128,12 @@ export class Input extends EventEmitter {
                             mod[0] = getAnsiCode(mod[0]);
                     }
                 }
-                min = [...Object.keys(min), ...mod].filter(f => f !== '');
+                min = [...Object.keys(min), ...mod]
                 if (!min.length)
                     throw new Error('Invalid colors or styles');
-                return `\x1b[' + ${min.join(';')}m`;
+                //remove any current flags
+                min = min.filter(f => f !== '');
+                return `\x1b[${min.join(';')}m`;
         }
         return null;
     }
