@@ -412,6 +412,8 @@ export function getAnsiCode(str, back?: boolean) {
         case 'defaultbackground':
         case 'defaultback':
             return 49;
+        case 'overline':
+            return 53;
         /** @desc subscript */
         case 'subscript':
             return 74;
