@@ -2438,7 +2438,7 @@ export class Parser extends EventEmitter {
         return tmp;
     }
 
-    private DecreaseColor(clr, p) {
+    public DecreaseColor(clr, p) {
         const color = new RGBColor(clr);
         if (!color.ok) return clr;
         color.b -= Math.ceil(color.b * p);
@@ -2453,7 +2453,7 @@ export class Parser extends EventEmitter {
         return color.toRGB();
     }
 
-    private IncreaseColor(clr, p) {
+    public IncreaseColor(clr, p) {
         const color = new RGBColor(clr);
         if (!color.ok) return clr;
         color.b += Math.ceil(color.b * p);

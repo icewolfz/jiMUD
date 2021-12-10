@@ -53,6 +53,7 @@
 |#color|#co|*{pattern}* fore,back,bold *profile*||Color last added line, comma delimited colors, supports raw jiMUD color codes, ansi word values, any valid HTML color name, of ##RRGGBB html format
 |#cw||*{pattern}* fore,back,bold *profile*||Color all strings matching current trigger pattern, see #color for arguments
 |#pcol||fore,back,bold *XStart XEnd YStart YEnd*||Color position, will assume full line if position is not supplied, if XEnd omitted will assume end of line, if xEnd -1 it will assume end of line, if YEnd omitted will assume current line, YStart and YEnd are relative to the current line, 0 current, 1 previous, ...
+|#highlight|#hi|*pattern*|| make last line or lined with matching pattern bold or brighter color if already bold, or
 
 **Note:** All italic arguments are optional and can be left out
 

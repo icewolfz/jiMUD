@@ -5,6 +5,7 @@
 - **New:**
   - Add [#cw](docs/commands.md) colors all words matching current trigger pattern
   - Add [#pcol](docs/commands.md) color text based on start and end positions
+  - Add [#highlight](docs/commands.md) make text bold or brighter color if already bold
   - Add [#color {pattern} fore,back,bold profile](docs/commands.md) pattern and profile arguments to allow for quick trigger creation 
   - Add [%x1..%99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
   - [Preferences](docs/preferences.md)
@@ -17,6 +18,7 @@
   - Fixed bug in [#event](docs/commands.md) command and adding to profile not correctly finding if one exist already
   - Profile Manager: trigger tester did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
   - Fixed bug with File > exit when profile manager open and should not close
+  - Fixed bug in #color and #cw not correctly parsing profile argument
   - Input parser:
     - Fixed - being lost after %
     - Fixed # being lose if %# had a -, * or % following it

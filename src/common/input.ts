@@ -8,7 +8,7 @@ import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, par
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType } from './profile';
-import { NewLineType } from './types';
+import { FontStyle, NewLineType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor } from './ansi';
 import { create, all, ConditionalNodeDependencies } from 'mathjs';
@@ -2329,7 +2329,7 @@ export class Input extends EventEmitter {
                         item.commands = '#COLOR ' + this.parseOutgoing(args[0], false);
                         item.profile = this.stripQuotes(args[1]);
                         if (item.profile.length !== 0)
-                            tmp = this.parseOutgoing(item.profile, false);
+                            item.profile = this.parseOutgoing(item.profile, false);
                     }
                     else
                         item.commands = '#COLOR ' + this.parseOutgoing(args[0], false);
@@ -2492,7 +2492,7 @@ export class Input extends EventEmitter {
                         item.commands = '#CW ' + this.parseOutgoing(args[0], false);
                         item.profile = this.stripQuotes(args[1]);
                         if (item.profile.length !== 0)
-                            tmp = this.parseOutgoing(item.profile, false);
+                            item.profile = this.parseOutgoing(item.profile, false);
                     }
                     else
                         item.commands = '#CW ' + this.parseOutgoing(args[0], false);
@@ -2839,6 +2839,32 @@ export class Input extends EventEmitter {
                         }, 0);
                     }
                 }
+                return null;
+            case 'highlight':
+            case 'hi':
+                if (args.length > 0 && args.length < 2) {
+                    item = {
+                        profile: null,
+                        pattern: null,
+                        commands: '#HIGHLIGHT'
+                    };
+                    item.pattern = args.shift();
+                    if (item.pattern.match(/^\{.*\}$/g))
+                        item.pattern = this.parseOutgoing(item.pattern.substr(1, item.pattern.length - 2), false);
+                    else
+                        item.pattern = this.parseOutgoing(this.stripQuotes(item.pattern), false);
+                    if (args.length === 1)
+                        item.profile = this.parseOutgoing(this.stripQuotes(args[0]), false);
+                    this.createTrigger(item.pattern, item.commands, item.profile);
+                    return null;
+                }
+                else if (args.length)
+                    throw new Error('Too many arguments use #highlight \x1b[3mpattern profile\x1b[0;-11;-12m');
+                n = this.client.display.lines.length;
+                setTimeout(() => {
+                    n = this.adjustLastLine(n);
+                    this.client.display.highlightSubStrByLine(n);
+                }, 0);
                 return null;
         }
         i = parseInt(fun, 10);

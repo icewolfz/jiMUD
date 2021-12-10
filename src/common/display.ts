@@ -1458,12 +1458,12 @@ export class Display extends EventEmitter {
     }
 
     //color like javascript.substr using 0 index and length
-    public colorSubStrByLine(idx: number, fore, back?, start?: number, len?: number) {
-        this.colorSubStringByLine(idx, fore, back, start, start + len);
+    public colorSubStrByLine(idx: number, fore, back?, start?: number, len?: number, style?: FontStyle) {
+        this.colorSubStringByLine(idx, fore, back, start, start + len, style);
     }
 
     //color like javascript.substring using 0 index for start and end
-    public colorSubStringByLine(idx: number, fore, back?, start?: number, end?: number) {
+    public colorSubStringByLine(idx: number, fore, back?, start?: number, end?: number, style?: FontStyle) {
         //invalid line bail
         if (idx < 0 || idx >= this.lines.length) return;
         const lineLength = this.lines[idx].length;
@@ -1493,6 +1493,7 @@ export class Display extends EventEmitter {
                 }
                 format.color = fore || format.color;
                 format.background = back || format.background;
+                format.style |= style || FontStyle.None;
             }
             //found no text block must create one
             if (!found) {
@@ -1503,7 +1504,7 @@ export class Display extends EventEmitter {
                     background: back || 0,
                     size: 0,
                     font: 0,
-                    style: FontStyle.None,
+                    style: style || FontStyle.None,
                     unicode: false
                 });
             }
@@ -1571,7 +1572,7 @@ export class Display extends EventEmitter {
                         background: back || format.background,
                         size: format.size,
                         font: format.font,
-                        style: format.style,
+                        style: format.style | (style || FontStyle.None),
                         unicode: format.unicode
                     });
                     len++;
@@ -1579,7 +1580,298 @@ export class Display extends EventEmitter {
                 else {
                     format.color = fore || format.color;
                     format.background = back || format.background;
+                    format.style |= (style || FontStyle.None);
                 }
+                //not end so shift start to next block
+                if (end > formatEnd)
+                    start = formatEnd;
+            }
+            //clean out duplicates and other no longer needed blocks
+            this.lineFormats[idx] = this.pruneFormats(formats, this.textLength);
+            //rebuild widths for new blocks/old blocks as needed
+            this.calculateSize(idx);
+            //const t = this.calculateSize(idx);
+            //this._lines[idx].width = t.width;
+        }
+        this.doUpdate(UpdateType.view);
+    }
+
+    public removeStyleSubStrByLine(idx: number, style: FontStyle, start?: number, len?: number) {
+        this.removeStyleSubStringByLine(idx, style, start, start + len);
+    }
+
+    //color like javascript.substring using 0 index for start and end
+    public removeStyleSubStringByLine(idx: number, style: FontStyle, start?: number, end?: number) {
+        //invalid line bail
+        if (idx < 0 || idx >= this.lines.length) return;
+        const lineLength = this.lines[idx].length;
+        //passed line skip
+        if (start >= lineLength) return;
+        if (!start || start < 0) start = 0;
+        if (!end || end > lineLength)
+            end = lineLength;
+        //clear cache
+        if (this._viewCache[idx])
+            delete this._viewCache[idx];
+        const formats = this.lineFormats[idx];
+        let len = formats.length;
+        let found: boolean = false;
+        //whole line so just do everything
+        if (start === 0 && end >= lineLength) {
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                format.style &= ~(style || FontStyle.None);
+            }
+            //found no text block must create one
+            if (!found) {
+                formats.unshift({
+                    formatType: FormatType.Normal,
+                    offset: 0,
+                    color: 0,
+                    background: 0,
+                    size: 0,
+                    font: 0,
+                    style: FontStyle.None,
+                    unicode: false
+                });
+            }
+        }
+        else {
+            let nFormat;
+            let formatEnd;
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                //find the end of he format
+                if (f < len - 1) {
+                    let nF = f + 1;
+                    nFormat = formats[nF];
+                    //skip empty blocks
+                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                        continue;
+                    //find next block that is not same offset
+                    while (format.offset === nFormat.offset && nFormat.formatType === format.formatType && nF < len - 1)
+                        nFormat = formats[++nF];
+                    //last block same offset use total length
+                    if (nF === len && format.offset === nFormat.offset)
+                        formatEnd = lineLength;
+                    else
+                        formatEnd = nFormat.offset;
+                }
+                else
+                    formatEnd = lineLength;
+                if (start < format.offset) continue;
+                //passed end so try next block
+                if (start >= formatEnd) continue;
+                //after this block move on.
+                //not offset so need to insert a new block
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                //if end middle of block, add new block with old info to split
+                if (end < formatEnd) {
+                    format.width = 0;
+                    formats.splice(f + 1, 0, {
+                        formatType: format.formatType,
+                        offset: end,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style,
+                        unicode: format.unicode
+                    });
+                    len++;
+                }
+                if (start != format.offset) {
+                    //clean old width
+                    format.width = 0;
+                    //insert new block with new colors
+                    formats.splice(f + 1, 0, {
+                        formatType: format.formatType,
+                        offset: start,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style & ~(style || FontStyle.None),
+                        unicode: format.unicode
+                    });
+                    len++;
+                }
+                else {
+                    format.style &= ~(style || FontStyle.None);
+                }
+                //not end so shift start to next block
+                if (end > formatEnd)
+                    start = formatEnd;
+            }
+            //clean out duplicates and other no longer needed blocks
+            this.lineFormats[idx] = this.pruneFormats(formats, this.textLength);
+            //rebuild widths for new blocks/old blocks as needed
+            this.calculateSize(idx);
+            //const t = this.calculateSize(idx);
+            //this._lines[idx].width = t.width;
+        }
+        this.doUpdate(UpdateType.view);
+    }
+
+    public highlightSubStrByLine(idx: number, start?: number, len?: number) {
+        this.highlightStyleSubStringByLine(idx, start, start + len);
+    }
+
+    //color like javascript.substring using 0 index for start and end
+    public highlightStyleSubStringByLine(idx: number, start?: number, end?: number, color?: boolean) {
+        //invalid line bail
+        if (idx < 0 || idx >= this.lines.length) return;
+        const lineLength = this.lines[idx].length;
+        //passed line skip
+        if (start >= lineLength) return;
+        if (!start || start < 0) start = 0;
+        if (!end || end > lineLength)
+            end = lineLength;
+        //clear cache
+        if (this._viewCache[idx])
+            delete this._viewCache[idx];
+        const formats = this.lineFormats[idx];
+        let len = formats.length;
+        let found: boolean = false;
+        //whole line so just do everything
+        if (start === 0 && end >= lineLength) {
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
+                    if (typeof format.color === 'number')
+                        format.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
+                    else
+                        format.color = this._parser.IncreaseColor(format.color, 0.25);
+                }
+                else
+                    format.style |= FontStyle.Bold;
+            }
+            //found no text block must create one
+            if (!found) {
+                formats.unshift({
+                    formatType: FormatType.Normal,
+                    offset: 0,
+                    color: color ? 370 : 0,
+                    background: 0,
+                    size: 0,
+                    font: 0,
+                    style: color ? FontStyle.None : FontStyle.Bold,
+                    unicode: false
+                });
+            }
+        }
+        else {
+            let nFormat;
+            let formatEnd;
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                //find the end of he format
+                if (f < len - 1) {
+                    let nF = f + 1;
+                    nFormat = formats[nF];
+                    //skip empty blocks
+                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                        continue;
+                    //find next block that is not same offset
+                    while (format.offset === nFormat.offset && nFormat.formatType === format.formatType && nF < len - 1)
+                        nFormat = formats[++nF];
+                    //last block same offset use total length
+                    if (nF === len && format.offset === nFormat.offset)
+                        formatEnd = lineLength;
+                    else
+                        formatEnd = nFormat.offset;
+                }
+                else
+                    formatEnd = lineLength;
+                if (start < format.offset) continue;
+                //passed end so try next block
+                if (start >= formatEnd) continue;
+                //after this block move on.
+                //not offset so need to insert a new block
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                //if end middle of block, add new block with old info to split
+                if (end < formatEnd) {
+                    format.width = 0;
+                    formats.splice(f + 1, 0, {
+                        formatType: format.formatType,
+                        offset: end,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style,
+                        unicode: format.unicode
+                    });
+                    len++;
+                }
+                if (start != format.offset) {
+                    //clean old width
+                    format.width = 0;
+                    //insert new block with new colors
+                    nFormat = {
+                        formatType: format.formatType,
+                        offset: start,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style,
+                        unicode: format.unicode
+                    }
+                    if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
+                        if (typeof format.color === 'number')
+                            nFormat.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
+                        else
+                            nFormat.color = this._parser.IncreaseColor(format.color, 0.25);
+                    }
+                    else
+                        nFormat.style |= FontStyle.Bold;
+                    formats.splice(f + 1, 0, nFormat);
+                    len++;
+                }
+                else if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
+                    if (typeof format.color === 'number')
+                        format.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
+                    else
+                        format.color = this._parser.IncreaseColor(format.color, 0.25);
+                }
+                else
+                    format.style |= FontStyle.Bold;
+
                 //not end so shift start to next block
                 if (end > formatEnd)
                     start = formatEnd;
