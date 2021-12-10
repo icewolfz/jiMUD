@@ -15,38 +15,39 @@ import { create, all, factory } from 'mathjs';
 
 const allWithCustomFunctions = {
     ...all,
-  
-    createEqual: factory('equal', [], () => function equal (a, b) {
-      return a === b
+
+    createEqual: factory('equal', [], () => function equal(a, b) {
+        return a === b
     }),
-  
-    createUnequal: factory('unequal', [], () => function unequal (a, b) {
-      return a !== b
+
+    createUnequal: factory('unequal', [], () => function unequal(a, b) {
+        return a !== b
     }),
-  
-    createSmaller: factory('smaller', [], () => function smaller (a, b) {
-      return a < b
+
+    createSmaller: factory('smaller', [], () => function smaller(a, b) {
+        return a < b
     }),
-  
-    createSmallerEq: factory('smallerEq', [], () => function smallerEq (a, b) {
-      return a <= b
+
+    createSmallerEq: factory('smallerEq', [], () => function smallerEq(a, b) {
+        return a <= b
     }),
-  
-    createLarger: factory('larger', [], () => function larger (a, b) {
-      return a > b
+
+    createLarger: factory('larger', [], () => function larger(a, b) {
+        return a > b
     }),
-  
-    createLargerEq: factory('largerEq', [], () => function largerEq (a, b) {
-      return a >= b
+
+    createLargerEq: factory('largerEq', [], () => function largerEq(a, b) {
+        return a >= b
     }),
-  
-    createCompare: factory('compare', [], () => function compare (a, b) {
-      return a > b ? 1 : a < b ? -1 : 0
+
+    createCompare: factory('compare', [], () => function compare(a, b) {
+        return a > b ? 1 : a < b ? -1 : 0
     }),
-    createAdd: factory('add', [], () => function add (a, b) {
+
+    createAdd: factory('add', [], () => function add(a, b) {
         return a + b
     })
-  };
+};
 
 const mathjs = create(allWithCustomFunctions, {});
 const buzz = require('buzz');
@@ -115,33 +116,44 @@ export class Input extends EventEmitter {
     public enableParsing: boolean = true;
     public enableTriggers: boolean = true;
 
-    public getScope(named?) {
+    public getScope() {
+        //if no stack use direct for some performance
+        if (this._stack.length === 0)
+            return this.client.variables;
+        //if no named arguments or repeatnum use direct for some performance
+        if (!this.stack.named && !this.stack.hasOwnProperty('repeatnum'))
+            return this.client.variables;
+        //no named and same repeat use direct access for speed
+        if (!this.stack.named && this.client.variables.repeatnum == this.stack.repeatnum)
+            return this.client.variables;
         let scope: any = {};
         Object.assign(scope, this.client.variables);
-        if(named)
-            Object.assign(scope, named);
-        scope.i = this.repeatNumber || 0;
-        scope.repeatNumber = this.repeatNumber || 0;
+        if (this.stack.named)
+            Object.assign(scope, this.stack.named);
+        scope.i = this.repeatnum;
+        scope.repeatnum = this.repeatnum;
         return scope;
     }
 
-    public setScope(scope, named?) {
+    public setScope(scope) {
+        //if same object no need to update
+        if (scope === this.client.variables) return;
         for (const name in scope) {
-            //not a propery, i or repeatNumber
-            if (!Object.prototype.hasOwnProperty.call(scope, name) || name === 'i' || name === 'repeatNumber')
+            //not a property, i or repeatnum
+            if (!Object.prototype.hasOwnProperty.call(scope, name) || name === 'i' || name === 'repeatnum')
                 continue;
             //part of the named arguments so skip
-            if(named && Object.prototype.hasOwnProperty.call(named, name))
+            if (this.stack.named && Object.prototype.hasOwnProperty.call(this.stack.named, name))
                 continue;
             //update/add new variables
             this.client.variables[name] = scope[name];
         }
     }
 
-    public evaluate(expression, named?) {
-        let scope = this.getScope(named);
+    public evaluate(expression) {
+        let scope = this.getScope();
         let results = mathjs.evaluate(expression, scope);
-        this.setScope(scope, named);
+        this.setScope(scope);
         return results;
     }
 
@@ -151,10 +163,17 @@ export class Input extends EventEmitter {
         return this._stack[this._stack.length - 1];
     }
 
-    get repeatNumber() {
+    get repeatnum() {
         if (this._stack.length === 0 || !this.stack.hasOwnProperty('repeatnum'))
-            return window.repeatnum;
-        return this.stack.repeatnum;
+            return 0;
+        return this.stack.repeatnum || 0;
+    }
+
+    set repeatnum(value: number) {
+        //no stack so invalid
+        if (this._stack.length === 0)
+            return;
+        this.stack.repeatnum = value;
     }
 
     get regex() {
@@ -801,7 +820,7 @@ export class Input extends EventEmitter {
                     let k = 0;
                     const kl = keys.length;
                     if (kl === 0)
-                        return;
+                        return null;
                     if (kl === 1) {
                         if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
                             throw Error('No enabled profiles found!');
@@ -1123,7 +1142,7 @@ export class Input extends EventEmitter {
                     let k = 0;
                     const kl = keys.length;
                     if (kl === 0)
-                        return;
+                        return null;
                     if (kl === 1) {
                         if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
                             throw Error('No enabled profiles found!');
@@ -1403,7 +1422,7 @@ export class Input extends EventEmitter {
                     let k = 0;
                     const kl = keys.length;
                     if (kl === 0)
-                        return;
+                        return null;
                     if (kl === 1) {
                         if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
                             throw Error('No enabled profiles found!');
@@ -1636,7 +1655,7 @@ export class Input extends EventEmitter {
                     let k = 0;
                     const kl = keys.length;
                     if (kl === 0)
-                        return;
+                        return null;
                     if (kl === 1) {
                         if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
                             throw Error('No enabled profiles found!');
@@ -2941,14 +2960,12 @@ export class Input extends EventEmitter {
             args = args.join(' ');
             tmp = [];
             for (let r = 0; r < i; r++) {
-                this.stack.repeatnum = r;
-                window.repeatnum = r;
+                this.repeatnum = r;
                 n = this.parseOutgoing(args);
                 if (n != null && n.length > 0)
                     tmp.push(n);
             }
             delete this.stack.repeatnum;
-            window.repeatnum = undefined;
             if (tmp.length > 0)
                 return tmp.join('\n');
             return null;
@@ -3131,10 +3148,13 @@ export class Input extends EventEmitter {
                             return out;
                         }
                         if (str !== null) {
+                            out += str;
+                            /*
                             if (str.startsWith('#'))
                                 out += '#' + this.parseOutgoing(str.substr(1));
                             else
                                 out += this.parseOutgoing(str);
+                            */
                         }
                         str = '';
                         start = true;
@@ -3157,9 +3177,9 @@ export class Input extends EventEmitter {
                         case '%':
                             if (arg.length === 0) {
                                 if (eAlias && findAlias)
-                                    alias += '%%';
+                                    alias += '%';
                                 else
-                                    str += '%%';
+                                    str += '%';
                                 state = ParseState.none;
                             }
                             break;
@@ -3179,6 +3199,15 @@ export class Input extends EventEmitter {
                                 state = ParseState.none;
                                 break;
                             }
+                        case 'i':
+                            if (arg.length === 0) {
+                                if (eAlias && findAlias)
+                                    alias += this.repeatnum;
+                                else
+                                    str += this.repeatnum;
+                                state = ParseState.none;
+                            }
+                            break;
                         case '-':
                             if (arg.length === 0) {
                                 _neg = true;
@@ -3286,9 +3315,9 @@ export class Input extends EventEmitter {
                 case ParseState.paramsPBlock:
                     if (c === '}' && nest === 0) {
                         if (arg === 'i')
-                            tmp2 = this.repeatNumber;
+                            tmp2 = this.repeatnum;
                         else if (arg === 'repeatnum')
-                            tmp2 = this.repeatNumber;
+                            tmp2 = this.repeatnum;
                         else if (this.stack.args && arg === '*') {
                             tmp2 = this.stack.args.slice(1).join(' ');
                             this.stack.used = this.stack.args.length;
@@ -3346,7 +3375,7 @@ export class Input extends EventEmitter {
                                 if (tmp != null)
                                     tmp2 = tmp;
                                 else if (this.client.options.allowEval) {
-                                    tmp2 = '' + this.evaluate(this.parseOutgoing(arg), this.stack.named);
+                                    tmp2 = '' + this.evaluate(this.parseOutgoing(arg));
                                 }
                                 else {
                                     tmp2 += '%';
@@ -3443,9 +3472,9 @@ export class Input extends EventEmitter {
                     if (c === '}' && nest === 0) {
                         tmp2 = null;
                         if (arg === 'i')
-                            tmp2 = this.repeatNumber;
+                            tmp2 = this.repeatnum;
                         else if (arg === 'repeatnum')
-                            tmp2 = this.repeatNumber;
+                            tmp2 = this.repeatnum;
                         else if (this.stack.args && arg === '*') {
                             tmp2 = this.stack.args.slice(1).join(' ');
                             this.stack.used = this.stack.args.length;
@@ -3503,7 +3532,7 @@ export class Input extends EventEmitter {
                                 if (c != null)
                                     tmp2 = c;
                                 else if (this.client.options.allowEval)
-                                    tmp2 = '' + this.evaluate(this.parseOutgoing(arg), this.stack.named);
+                                    tmp2 = '' + this.evaluate(this.parseOutgoing(arg));
                                 else {
                                     tmp2 = '$';
                                     idx = idx - arg.length - 2;
@@ -3868,7 +3897,7 @@ export class Input extends EventEmitter {
                 return ProperCase(window.$copied);
             case 'i':
             case 'repeatnum':
-                return this.vStack['$repeatnum'] || this.repeatNumber;
+                return this.vStack['$repeatnum'] || this.repeatnum;
             case 'selected':
             case 'selectedurl':
             case 'selectedline':
@@ -4232,8 +4261,8 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (alias.style) {
             case 1:
-                if (this.stack.hasOwnProperty('repeatNumber'))
-                    this._stack.push({ repeatnum: this.repeatNumber, args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
+                if (this.stack.hasOwnProperty('repeatnum'))
+                    this._stack.push({ repeatnum: this.repeatnum, args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
                 else
                     this._stack.push({ args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
                 ret = this.parseOutgoing(alias.value);
@@ -4488,7 +4517,7 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (trigger.style) {
             case 1:
-                if (this.stack.hasOwnProperty('repeatNumber'))
+                if (this.stack.hasOwnProperty('repeatnum'))
                     this._stack.push({ repeatnum: window.repeatnum, args: args, named: [], used: 0, regex: regex });
                 else
                     this._stack.push({ args: args, named: [], used: 0, regex: regex });
@@ -4512,8 +4541,8 @@ export class Input extends EventEmitter {
                     if (!this._TriggerFunctionCache[idx])
                         /*jslint evil: true */
                         this._TriggerFunctionCache[idx] = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    if (this.stack.hasOwnProperty('repeatNumber'))
-                        this._stack.push({ repeatnum: window.repeatnum, args: args, named: [], used: 0, regex: regex, indices: args.indices });
+                    if (this.stack.hasOwnProperty('repeatnum'))
+                        this._stack.push({ repeatnum: this.repeatnum, args: args, named: [], used: 0, regex: regex, indices: args.indices });
                     else
                         this._stack.push({ args: args, named: [], used: 0, regex: regex, indices: args.indices });
                     try {
@@ -4597,8 +4626,8 @@ export class Input extends EventEmitter {
     public executeWait(text, delay: number, eAlias?: boolean, stacking?: boolean) {
         if (!text || text.length === 0) return;
         const s = { args: 0, named: 0, used: this.stack.used, append: this.stack.append };
-        if (this.stack.hasOwnProperty('repeatNumber'))
-            (<any>s).repeatnum = this.repeatNumber;
+        if (this.stack.hasOwnProperty('repeatnum'))
+            (<any>s).repeatnum = this.repeatnum;
         if (this.stack.args)
             s.args = this.stack.args.slice();
         if (this.stack.named)

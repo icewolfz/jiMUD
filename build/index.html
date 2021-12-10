@@ -22,17 +22,11 @@
         //spell-checker:ignore ismap hellip selectall lagmeter repeatnum buttonvisible statusvisible limbsmenu partyhealth combathealth limb armor limbhealth
         if (window.module) module = window.module;
 
-        ['repeatnum'].forEach((a) => {
+        ['repeatnum', 'i'].forEach((a) => {
             Object.defineProperty(window, a, {
                 get: function () {
-                    if (!client || !client.variables) return undefined;
-                    return client.variables[a] || 0;
-                },
-                set: function (val) {
-                    if (!client) return;
-                    if (!client.variables)
-                        client.variables = {};
-                    client.variables[a] = val || 0;
+                    if (!client) return undefined;
+                    return client.repeatnum;
                 },
                 configurable: true
             });
@@ -80,20 +74,6 @@
             get: function () {
                 if (!client) return '';
                 return client.display.selection;
-            },
-            configurable: true
-        });
-
-        Object.defineProperty(window, 'i', {
-            get: function () {
-                if (!client || !client.variables) return undefined;
-                return client.variables.repeatnum || 0;
-            },
-            set: function (val) {
-                if (!client) return;
-                if (!client.variables)
-                    client.variables = {};
-                client.variables.repeatnum = val || 0;
             },
             configurable: true
         });

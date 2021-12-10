@@ -9,6 +9,7 @@
   - Add [#color {pattern} fore,back,bold profile](docs/commands.md) pattern and profile arguments to allow for quick trigger creation 
   - Add [%x1..%99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
   - Add [%ansi(style,fore,back)](docs/functions.md) function to return ansi formatted string
+  - Add [%i](docs/functions.md) predefined variable
   - Input parser:
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function
@@ -18,6 +19,7 @@
     - Add `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
     - Add `On profile deleted do` what to do when a profile is deleted when `Watch for profile changes` enabled
 - **Fixed:**
+  - Fixed [#nnn](docs/commands.md) being double parsed
   - Fixed window size being sent to the mud when status display is hidden/shown
   - Fixed bug in [#trigger](docs/commands.md) command and adding to profile not correctly finding if one exist already
   - Fixed bug in [#event](docs/commands.md) command and adding to profile not correctly finding if one exist already
@@ -30,6 +32,7 @@
     - Fixed corrupted stack after trigger errors
     - Fixed issue with $named argument format
     - Fixed named arguments not working
+    - Fixed bugs in repeatnum not having correct name in all places
   - Fixed changelog help page links not working
 - **Changed:**
   - Remove %named argument support from docs as it never was supported and easier to just remove it

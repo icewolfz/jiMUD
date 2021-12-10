@@ -14,7 +14,8 @@ There is a special format for argument variables for aliases and triggers.
 
 [Repeat command `#nnn`](commands.md) special format to get loop iteration
 
-- `%i`, `%repeatnum` return current loop iteration, supports #{}/${} formats
+- `%i`  return current loop iteration, supports %i,#{i},${i} 
+- `%repeatnum` return current loop iteration, supports #{repeatnum}/${repeatnum} only
 
 Expressions, [when enabled](preferences.md#scripting) or using eval(), are basic math or supported math functions supported by [Mathjs](http://mathjs.org/) which include all the standard javascript Math functions, the i and repeatnum variables You may also embed ${} variables and functions as well for example: ${5+5} will return 10 or ${5 + i} will return 5 + what ever the current value of i is, ${5 + ${dice(2d10)}} will return 5 + a 2, 10 sided dice rolls noticed how it requires the ${} as dice is a jiMUD functions not a math function.
 
@@ -46,7 +47,7 @@ Escaping allows you to prevent special characters from being parsed and allow th
 
 ## User variables
 
-You can create custom variables using the expression system and the assignment operator (=) to assign or update the value.  These variables can be accessed in scripting using client.variables.NAME, client.variables['NAME'], this.variables.NAME, this.variables['NAME'] as needed, any changes there will be reflected in the expression system. The variables i and repeatNumber should never be used as they are dynamic and replaced as needed by the scope level for looping and repeating systems in the command parser.
+You can create custom variables using the expression system and the assignment operator (=) to assign or update the value.  These variables can be accessed in scripting using client.variables.NAME, client.variables['NAME'], this.variables.NAME, this.variables['NAME'] as needed, any changes there will be reflected in the expression system. The variables i and repeatnum should never be used as they are dynamic and replaced as needed by the scope level for looping and repeating systems in the command parser.
 
 **Warning** Named arguments will replace variables of the same name in current scope level, meaning any values set to them will be lost once finished as named variables are alias scope and will override global variables of the same name.
 

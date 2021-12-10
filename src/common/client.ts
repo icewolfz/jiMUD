@@ -67,7 +67,7 @@ export class Client extends EventEmitter {
     public lastSendTime: number = 0;
     public defaultTitle = 'jiMUD';
 
-    public variables = {};
+    public variables:any = {};
 
     set enabledProfiles(value: string[]) {
         const a = [];
@@ -334,6 +334,10 @@ export class Client extends EventEmitter {
     
     public get indices() {
         return this._input.indices;
+    }
+
+    public get repeatnum() {
+        return this._input.repeatnum;
     }
 
     public setHistoryIndex(index) {
