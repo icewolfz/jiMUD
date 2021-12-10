@@ -11,9 +11,44 @@ import { Alias, Trigger, Button, Profile, TriggerType } from './profile';
 import { NewLineType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
-import { create, all } from 'mathjs';
+import { create, all, factory } from 'mathjs';
 
-const mathjs = create(all, {});
+const allWithCustomFunctions = {
+    ...all,
+  
+    createEqual: factory('equal', [], () => function equal (a, b) {
+      return a === b
+    }),
+  
+    createUnequal: factory('unequal', [], () => function unequal (a, b) {
+      return a !== b
+    }),
+  
+    createSmaller: factory('smaller', [], () => function smaller (a, b) {
+      return a < b
+    }),
+  
+    createSmallerEq: factory('smallerEq', [], () => function smallerEq (a, b) {
+      return a <= b
+    }),
+  
+    createLarger: factory('larger', [], () => function larger (a, b) {
+      return a > b
+    }),
+  
+    createLargerEq: factory('largerEq', [], () => function largerEq (a, b) {
+      return a >= b
+    }),
+  
+    createCompare: factory('compare', [], () => function compare (a, b) {
+      return a > b ? 1 : a < b ? -1 : 0
+    }),
+    createAdd: factory('add', [], () => function add (a, b) {
+        return a + b
+    })
+  };
+
+const mathjs = create(allWithCustomFunctions, {});
 const buzz = require('buzz');
 const path = require('path');
 const moment = require('moment');
