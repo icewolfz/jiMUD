@@ -2956,7 +2956,7 @@ export class Input extends EventEmitter {
                     this.stack.break++;
                 else
                     this.stack.break = 1;
-                return null;
+                return -1;
             case 'continue':
             case 'cont':
                 if (args.length)
@@ -2964,7 +2964,7 @@ export class Input extends EventEmitter {
                 if (!this.loops.length)
                     throw new Error('\x1b[4m#cont\x1b[0;-11;-12minue\x1b[0;-11;-12m must be used in a loop.');
                 this.stack.continue = true;
-                return null;
+                return -2;
         }
         if (fun.match(/^-?\d+$/)) {
             i = parseInt(fun, 10);
@@ -2974,7 +2974,7 @@ export class Input extends EventEmitter {
             if (args.match(/^\{.*\}$/g))
                 args = args.substr(1, args.length - 2);
             if (i < 1)
-                return this.executeForLoop(-i, 0, args);    
+                return this.executeForLoop(-i, 0, args);
             return this.executeForLoop(0, i, args);
         }
         const data = { name: fun, args: args, raw: raw, handled: false, return: null };
@@ -2989,15 +2989,15 @@ export class Input extends EventEmitter {
         let r: number;
         if (start > end) {
             for (r = start - 1; r >= end; r--) {
-                if (this.stack.continue) {
-                    this.stack.continue = false;
-                    continue;
-                }
                 this.loops.push(r);
                 try {
                     let out = this.parseOutgoing(commands);
                     if (out != null && out.length > 0)
                         tmp.push(out);
+                    if (this.stack.continue) {
+                        this.stack.continue = false;
+                        continue;
+                    }
                     if (this.stack.break) {
                         this.stack.break--;
                         break;
@@ -3013,15 +3013,16 @@ export class Input extends EventEmitter {
         }
         else {
             for (r = start; r < end; r++) {
-                if (this.stack.continue) {
-                    this.stack.continue = false;
-                    continue;
-                }
+
                 this.loops.push(r);
                 try {
                     let out = this.parseOutgoing(commands);
                     if (out != null && out.length > 0)
                         tmp.push(out);
+                    if (this.stack.continue) {
+                        this.stack.continue = false;
+                        continue;
+                    }
                     if (this.stack.break) {
                         this.stack.break--;
                         break;
@@ -3141,7 +3142,8 @@ export class Input extends EventEmitter {
                         for (a = 0; a < al; a++) {
                             str = this.ExecuteAlias(AliasesCached[a], args);
                             if (typeof str === 'number') {
-                                this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                                if (str >= 0)
+                                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
                                 if (out.length === 0) return null;
                                 return out;
                             }
@@ -3210,7 +3212,8 @@ export class Input extends EventEmitter {
                         state = ParseState.none;
                         str = this.executeScript('#' + str);
                         if (typeof str === 'number') {
-                            this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                            if (str >= 0)
+                                this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
                             if (out.length === 0) return null;
                             return out;
                         }
@@ -3734,7 +3737,8 @@ export class Input extends EventEmitter {
                                 for (a = 0; a < al; a++) {
                                     str = this.ExecuteAlias(AliasesCached[a], args);
                                     if (typeof str === 'number') {
-                                        this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                                        if (str >= 0)
+                                            this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
                                         if (out.length === 0) return null;
                                         return out;
                                     }
@@ -3750,7 +3754,8 @@ export class Input extends EventEmitter {
                             {
                                 str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, alias, false, true);
                                 if (typeof str === 'number') {
-                                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                                    if (str >= 0)
+                                        this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
                                     if (out.length === 0) return null;
                                     return out;
                                 }
@@ -3763,7 +3768,8 @@ export class Input extends EventEmitter {
                         else {
                             str = this.ExecuteTriggers(TriggerType.CommandInputRegular, str, str, false, true);
                             if (typeof str === 'number') {
-                                this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                                if (str >= 0)
+                                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
                                 if (out.length === 0) return null;
                                 return out;
                             }
@@ -3858,7 +3864,8 @@ export class Input extends EventEmitter {
         if (!noFunctions && state === ParseState.function) {
             str = this.executeScript('#' + str);
             if (typeof str === 'number') {
-                this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                if (str >= 0)
+                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
                 if (out.length === 0) return null;
                 return out;
             }
@@ -3927,7 +3934,8 @@ export class Input extends EventEmitter {
                 for (a = 0; a < al; a++) {
                     str = this.ExecuteAlias(AliasesCached[a], args);
                     if (typeof str === 'number') {
-                        this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                        if (str >= 0)
+                            this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
                         if (out.length === 0) return null;
                         return out;
                     }
@@ -3940,7 +3948,8 @@ export class Input extends EventEmitter {
             {
                 str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, alias, false, true);
                 if (typeof str === 'number') {
-                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                    if (str >= 0)
+                        this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
                     if (out.length === 0) return null;
                     return out;
                 }
@@ -3954,7 +3963,8 @@ export class Input extends EventEmitter {
                 alias += str;
             str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, alias, false, true);
             if (typeof str === 'number') {
-                this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                if (str >= 0)
+                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
                 if (out.length === 0) return null;
                 return out;
             }
@@ -3981,7 +3991,8 @@ export class Input extends EventEmitter {
         else if (str.length > 0) {
             str = this.ExecuteTriggers(TriggerType.CommandInputRegular, str, str, false, true);
             if (typeof str === 'number') {
-                this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                if (str >= 0)
+                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
                 if (out.length === 0) return null;
                 return out;
             }
