@@ -37,6 +37,8 @@
     - Fixed issue with $named argument format
     - Fixed named arguments not working
     - Fixed bugs in repeatnum not having correct name in all places
+    - Fixed how alias arguments are appended
+    - Fixed alias arguments values not correctly parsing before being used
   - Fixed changelog help page links not working
   - Fixed execution of buttons and context items with broken parsing stacks
   - Fixed buttons and context not having error trapping code that broke cleanup

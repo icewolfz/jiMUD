@@ -3080,7 +3080,7 @@ export class Input extends EventEmitter {
                             arg += c;
                         //save any arg that was found
                         if (arg.length > 0)
-                            args.push(arg);
+                            args.push(this.parseOutgoing(arg));
                         al = AliasesCached.length;
                         for (a = 0; a < al; a++) {
                             str = this.ExecuteAlias(AliasesCached[a], args);
@@ -3100,7 +3100,7 @@ export class Input extends EventEmitter {
                     }
                     //space so new argument
                     else if (c === ' ') {
-                        args.push(arg);
+                        args.push(this.parseOutgoing(arg));
                         arg = '';
                         start = false;
                     }
@@ -3265,7 +3265,7 @@ export class Input extends EventEmitter {
                                     if (_neg)
                                         this.stack.used = this.stack.args.length;
                                     else if (arg > this.stack.used)
-                                        this.stack.used = arg;
+                                        this.stack.used = parseInt(arg, 10);
                                 }
                                 if (eAlias && findAlias)
                                     alias += tmp;
@@ -3512,7 +3512,7 @@ export class Input extends EventEmitter {
                                     }
                                 }
                                 else if (tmp < this.stack.args.length) {
-                                    tmp2 = this.stack.args[arg];
+                                    tmp2 = this.stack.args[tmp];
                                     if (tmp > this.stack.used)
                                         this.stack.used = tmp;
                                 }
@@ -3799,21 +3799,6 @@ export class Input extends EventEmitter {
             if (str !== null) out += str;
             str = '';
         }
-        if (eAlias && this.stack.args && this.stack.append && this.stack.args.length - 1 > 0 && this.stack.used + 1 < this.stack.args.length) {
-            let r = false;
-            if (str.endsWith('\n')) {
-                str = str.substring(0, str.length - 1);
-                r = true;
-            }
-            if (!str.endsWith(' '))
-                str += ' ';
-            if (this.stack.used < 1)
-                str += this.stack.args.slice(1).join(' ');
-            else
-                str += this.stack.args.slice(this.stack.used + 1).join(' ');
-            if (r) str += '\n';
-        }
-
         if (state === ParseState.function) {
             str = this.executeScript('#' + str);
             if (typeof str === 'number') {
@@ -3821,12 +3806,60 @@ export class Input extends EventEmitter {
                 if (out.length === 0) return null;
                 return out;
             }
-            if (str !== null) out += str;
+            if (str !== null) {
+                if (eAlias && this.stack.args && this.stack.append && this.stack.args.length - 1 > 0 && this.stack.used + 1 < this.stack.args.length) {
+                    let r = false;
+                    if (str.endsWith('\n')) {
+                        str = str.substring(0, str.length - 1);
+                        r = true;
+                    }
+                    if (!str.endsWith(' '))
+                        str += ' ';
+                    if (this.stack.used < 1)
+                        str += this.stack.args.slice(1).join(' ');
+                    else
+                        str += this.stack.args.slice(this.stack.used + 1).join(' ');
+                    this.stack.used = this.stack.args.length;
+                    if (r) str += '\n';
+                }                
+                out += str;
+            }
             else if (out.length === 0) return null;
         }
-        else if (state === ParseState.verbatim)
+        else if (state === ParseState.verbatim) {
+            if (eAlias && this.stack.args && this.stack.append && this.stack.args.length - 1 > 0 && this.stack.used + 1 < this.stack.args.length) {
+                let r = false;
+                if (str.endsWith('\n')) {
+                    str = str.substring(0, str.length - 1);
+                    r = true;
+                }
+                if (!str.endsWith(' '))
+                    str += ' ';
+                if (this.stack.used < 1)
+                    str += this.stack.args.slice(1).join(' ');
+                else
+                    str += this.stack.args.slice(this.stack.used + 1).join(' ');
+                this.stack.used = this.stack.args.length;
+                if (r) str += '\n';
+            }            
             out += str;
+        }
         else if (alias.length > 0 && eAlias && findAlias) {
+            if (eAlias && this.stack.args && this.stack.append && this.stack.args.length - 1 > 0 && this.stack.used + 1 < this.stack.args.length) {
+                let r = false;
+                if (str.endsWith('\n')) {
+                    str = str.substring(0, str.length - 1);
+                    r = true;
+                }
+                if (!str.endsWith(' '))
+                    str += ' ';
+                if (this.stack.used < 1)
+                    str += this.stack.args.slice(1).join(' ');
+                else
+                    str += this.stack.args.slice(this.stack.used + 1).join(' ');
+                this.stack.used = this.stack.args.length;
+                if (r) str += '\n';
+            }
             if (str.length > 0)
                 alias += str;
             AliasesCached = FilterArrayByKeyValue(aliases, 'pattern', alias);
@@ -3869,7 +3902,24 @@ export class Input extends EventEmitter {
                 if (out.length === 0) return null;
                 return out;
             }
-            if (str !== null) out += str;
+            if (str !== null) {
+                if (eAlias && this.stack.args && this.stack.append && this.stack.args.length - 1 > 0 && this.stack.used + 1 < this.stack.args.length) {
+                    let r = false;
+                    if (str.endsWith('\n')) {
+                        str = str.substring(0, str.length - 1);
+                        r = true;
+                    }
+                    if (!str.endsWith(' '))
+                        str += ' ';
+                    if (this.stack.used < 1)
+                        str += this.stack.args.slice(1).join(' ');
+                    else
+                        str += this.stack.args.slice(this.stack.used + 1).join(' ');
+                    this.stack.used = this.stack.args.length;
+                    if (r) str += '\n';
+                }                
+                out += str;
+            }
             else if (out.length === 0) return null;
         }
         else if (str.length > 0) {
@@ -3879,7 +3929,23 @@ export class Input extends EventEmitter {
                 if (out.length === 0) return null;
                 return out;
             }
-            if (str !== null) out += str;
+            if (str !== null) {
+                if (eAlias && this.stack.args && this.stack.append && this.stack.args.length - 1 > 0 && this.stack.used + 1 < this.stack.args.length) {
+                    let r = false;
+                    if (str.endsWith('\n')) {
+                        str = str.substring(0, str.length - 1);
+                        r = true;
+                    }
+                    if (!str.endsWith(' '))
+                        str += ' ';
+                    if (this.stack.used < 1)
+                        str += this.stack.args.slice(1).join(' ');
+                    else
+                        str += this.stack.args.slice(this.stack.used + 1).join(' ');
+                    if (r) str += '\n';
+                }                
+                out += str;
+            }
             else if (out.length === 0) return null;
         }
 
