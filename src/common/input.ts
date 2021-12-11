@@ -2989,15 +2989,15 @@ export class Input extends EventEmitter {
         let r: number;
         if (start > end) {
             for (r = start - 1; r >= end; r--) {
+                if (this.stack.continue) {
+                    this.stack.continue = false;
+                    continue;
+                }
                 this.loops.push(r);
                 try {
                     let out = this.parseOutgoing(commands);
                     if (out != null && out.length > 0)
                         tmp.push(out);
-                    if (this.stack.continue) {
-                        this.stack.continue = false;
-                        continue;
-                    }
                     if (this.stack.break) {
                         this.stack.break--;
                         break;
@@ -3013,15 +3013,15 @@ export class Input extends EventEmitter {
         }
         else {
             for (r = start; r < end; r++) {
+                if (this.stack.continue) {
+                    this.stack.continue = false;
+                    continue;
+                }
                 this.loops.push(r);
                 try {
                     let out = this.parseOutgoing(commands);
                     if (out != null && out.length > 0)
                         tmp.push(out);
-                    if (this.stack.continue) {
-                        this.stack.continue = false;
-                        continue;
-                    }
                     if (this.stack.break) {
                         this.stack.break--;
                         break;
