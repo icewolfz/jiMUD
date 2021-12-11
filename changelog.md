@@ -39,6 +39,7 @@
     - Fixed bugs in repeatnum not having correct name in all places
     - Fixed how alias arguments are appended
     - Fixed alias arguments values not correctly parsing before being used
+    - No longer parse #commands if in a command/function argument as it would break inline parsing in most cases
   - Fixed changelog help page links not working
   - Fixed execution of buttons and context items with broken parsing stacks
   - Fixed buttons and context not having error trapping code that broke cleanup
