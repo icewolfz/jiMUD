@@ -2,7 +2,8 @@
 
 |Command|Short|Arguments||Example|
 |---|---|---|---|---
-|#nnn||commands|repeat commands NNN number of times|
+|#nnn||commands|repeat commands NNN number of times|`#5 %i` will display the numbers 0 to 4
+|#-nnn||commands|repeat commands NNN number of times but with a reverse counter|`#5 %i` will display the numbers 4 to 0
 |#beep||| play standard system beep
 |#version|#ver||display version information
 |#show|#sh|text|process text as if it came from the mud and append a new line
@@ -49,11 +50,13 @@
 |#button|#bu|name\|index|Cause a button to react as if it was clicked, if index it is the position from top down starting at 0
 |#button|#bu|*name caption* {commands} *{icon} options<sup>2</sup> profile*|Update or create a button
 |#unbutton|#unb|name\|index\|caption| remove a button, if index it is the position in order of buttons in profile manager
-|#window|#win|name||Open or show named window, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
-|#color|#co|*{pattern}* fore,back,bold *profile*||Color last added line, comma delimited colors, supports raw jiMUD color codes, ansi word values, any valid HTML color name, of ##RRGGBB html format
-|#cw||*{pattern}* fore,back,bold *profile*||Color all strings matching current trigger pattern, see #color for arguments
-|#pcol||fore,back,bold *XStart XEnd YStart YEnd*||Color position, will assume full line if position is not supplied, if XEnd omitted will assume end of line, if xEnd -1 it will assume end of line, if YEnd omitted will assume current line, YStart and YEnd are relative to the current line, 0 current, 1 previous, ...
-|#highlight|#hi|*pattern*|| make last line or lined with matching pattern bold or brighter color if already bold, or
+|#window|#win|name|Open or show named window, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
+|#color|#co|*{pattern}* fore,back,bold *profile*|Color last added line, comma delimited colors, supports raw jiMUD color codes, ansi word values, any valid HTML color name, of ##RRGGBB html format
+|#cw||*{pattern}* fore,back,bold *profile*|Color all strings matching current trigger pattern, see #color for arguments
+|#pcol||fore,back,bold *XStart XEnd YStart YEnd*|Color position, will assume full line if position is not supplied, if XEnd omitted will assume end of line, if xEnd -1 it will assume end of line, if YEnd omitted will assume current line, YStart and YEnd are relative to the current line, 0 current, 1 previous, ...
+|#highlight|#hi|*pattern*| make last line or lined with matching pattern bold or brighter color if already bold, or
+|#break|#br|| breaks a loop
+|#continue|#con|| skips to the next loop iteration 
 
 **Note:** All italic arguments are optional and can be left out
 

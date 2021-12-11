@@ -2939,21 +2939,43 @@ export class Input extends EventEmitter {
                     return null;
                 }
                 else if (args.length)
-                    throw new Error('Too many arguments use #highlight \x1b[3mpattern profile\x1b[0;-11;-12m');
+                    throw new Error('Too many arguments use \x1b[4m#hi\x1b[0;-11;-12mghlight \x1b[3mpattern profile\x1b[0;-11;-12m');
                 n = this.client.display.lines.length;
                 setTimeout(() => {
                     n = this.adjustLastLine(n);
                     this.client.display.highlightSubStrByLine(n);
                 }, 0);
                 return null;
+            case 'break':
+            case 'br':
+                if (args.length)
+                    throw new Error('Invalid syntax use \x1b[4m#br\x1b[0;-11;-12meak\x1b[0;-11;-12m');
+                if (!this.loops.length)
+                    throw new Error('\x1b[4m#br\x1b[0;-11;-12meak\x1b[0;-11;-12m must be used in a loop.');
+                if (this.stack.break)
+                    this.stack.break++;
+                else
+                    this.stack.break = 1;
+                return null;
+            case 'continue':
+            case 'cont':
+                if (args.length)
+                    throw new Error('Invalid syntax use \x1b[4m#cont\x1b[0;-11;-12minue\x1b[0;-11;-12m');
+                if (!this.loops.length)
+                    throw new Error('\x1b[4m#cont\x1b[0;-11;-12minue\x1b[0;-11;-12m must be used in a loop.');
+                this.stack.continue = true;
+                return null;
         }
-        i = parseInt(fun, 10);
-        if (!isNaN(i)) {
-            if (i < 1)
-                throw new Error('Number must be greater then 0.');
+        if (fun.match(/^-?\d+$/)) {
+            i = parseInt(fun, 10);
             if (args.length === 0)
                 throw new Error('Invalid syntax use #nnn commands');
-            return this.executeForLoop(0, i, args.join(' '));
+            args = args.join(' ');
+            if (args.match(/^\{.*\}$/g))
+                args = args.substr(1, args.length - 2);
+            if (i < 1)
+                return this.executeForLoop(-i, 0, args);    
+            return this.executeForLoop(0, i, args);
         }
         const data = { name: fun, args: args, raw: raw, handled: false, return: null };
         this.client.emit('function', data);
@@ -2972,6 +2994,14 @@ export class Input extends EventEmitter {
                     let out = this.parseOutgoing(commands);
                     if (out != null && out.length > 0)
                         tmp.push(out);
+                    if (this.stack.continue) {
+                        this.stack.continue = false;
+                        continue;
+                    }
+                    if (this.stack.break) {
+                        this.stack.break--;
+                        break;
+                    }
                 }
                 catch (e) {
                     throw e;
@@ -2988,6 +3018,14 @@ export class Input extends EventEmitter {
                     let out = this.parseOutgoing(commands);
                     if (out != null && out.length > 0)
                         tmp.push(out);
+                    if (this.stack.continue) {
+                        this.stack.continue = false;
+                        continue;
+                    }
+                    if (this.stack.break) {
+                        this.stack.break--;
+                        break;
+                    }
                 }
                 catch (e) {
                     throw e;

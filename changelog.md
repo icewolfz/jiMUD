@@ -11,6 +11,10 @@
   - Add [%ansi(style,fore,back)](docs/functions.md) function to return ansi formatted string
   - Add [%i](docs/functions.md) predefined variable
   - Add [%j..%z] predefined variables for nested looping support
+  - Add [#break](docs/commands.md) break loop
+  - Add [#continue](docs/commands.md) skips to the next loop iteration
+  - Add {} grouping support to [#nnn](docs/commands.md) argument
+  - Add [#-nnn](docs/commands.md) repeat commands NNN number of times but with a reverse counter
   - Input parser:
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function
@@ -24,6 +28,7 @@
   - [#nnn](docs/commands.md)
     - Fixed being double parsed
     - Fixed issues with trailing newlines with nested loops
+    - Fixed format error checking to accept only numbers
   - Fixed window size being sent to the mud when status display is hidden/shown
   - Fixed bug in [#trigger](docs/commands.md) command and adding to profile not correctly finding if one exist already
   - Fixed bug in [#event](docs/commands.md) command and adding to profile not correctly finding if one exist already
