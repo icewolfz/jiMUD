@@ -713,7 +713,7 @@ export class Input extends EventEmitter {
         let min;
         switch (fun.toLowerCase()) {
             case 'testfile':
-                args = this.parseOutgoing(args.join(' '), false, null, true);
+                args = this.parseInline(args.join(' '));
                 if (!args || args.length === 0)
                     throw new Error('Invalid syntax use #testfile file');
                 if (!isFileSync(args))
@@ -728,7 +728,7 @@ export class Input extends EventEmitter {
                 this.client.print(`Time: ${p - i}\n`, true);
                 return null;
             case 'testspeedfile':
-                args = this.parseOutgoing(args.join(' '), false, null, true);
+                args = this.parseInline(args.join(' '));
                 items = [];
                 if (!args || args.length === 0)
                     throw new Error('Invalid syntax use #testspeedfile file');
@@ -758,7 +758,7 @@ export class Input extends EventEmitter {
                 this.client.options.enableCommands = n;
                 return null;
             case 'testspeedfiler':
-                args = this.parseOutgoing(args.join(' '), false, null, true);
+                args = this.parseInline(args.join(' '));
                 items = [];
                 if (!args || args.length === 0)
                     throw new Error('Invalid syntax use #testspeedfile file');
@@ -787,13 +787,13 @@ export class Input extends EventEmitter {
             //spell-checker:ignore chatprompt chatp
             case 'chatprompt':
             case 'chatp':
-                args = this.parseOutgoing(args.join(' '), false, null, true);
+                args = this.parseInline(args.join(' '));
                 if ((<any>this.client).sendChat)
                     (<any>this.client).sendChat(args);
                 return null;
             case 'chat':
             case 'ch':
-                args = this.parseOutgoing(args.join(' ') + '\n', false, null, true);
+                args = this.parseInline(args.join(' ') + '\n');
                 if ((<any>this.client).sendChat)
                     (<any>this.client).sendChat(args);
                 return null;
@@ -811,13 +811,13 @@ export class Input extends EventEmitter {
                 //{pattern} {commands} profile
                 if (args[0].match(/^\{.*\}$/g)) {
                     args[0] = args[0].substr(1, args[0].length - 2);
-                    args[0] = this.parseOutgoing(args[0], false, null, true);
+                    args[0] = this.parseInline(args[0]);
                 }
                 else if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
-                    args[0] = this.parseOutgoing(this.stripQuotes(args[0]), false, null, true);
+                    args[0] = this.parseInline(this.stripQuotes(args[0]));
                 if (args.length === 2) {
                     profile = this.stripQuotes(args[2]);
-                    profile = this.parseOutgoing(profile, false, null, true);
+                    profile = this.parseInline(profile);
                 }
                 if (!profile || profile.length === 0) {
                     const keys = this.client.profiles.keys;
@@ -848,7 +848,7 @@ export class Input extends EventEmitter {
                     return null;
                 }
                 else {
-                    profile = this.parseOutgoing(profile, false, null, true);
+                    profile = this.parseInline(profile);
                     if (this.client.profiles.contains(profile)) {
                         profile = this.client.profiles.items[profile];
                         item = profile.findAny('triggers', { name: args[0], pattern: args[0] });
@@ -888,8 +888,7 @@ export class Input extends EventEmitter {
                         }
                         return null;
                     case 1:
-                        items = this.stripQuotes(args[0]);
-                        items = this.parseOutgoing(items, false, null, true);
+                        items = this.parseInline(this.stripQuotes(args[0]));
                         tmp = this.client.alarms;
                         al = tmp.length;
                         for (let a = tmp.length - 1; a >= 0; a--) {
@@ -915,8 +914,7 @@ export class Input extends EventEmitter {
                         this._lastSuspend = -1;
                         return null;
                     case 1:
-                        items = this.stripQuotes(args[0]);
-                        items = this.parseOutgoing(items, false, null, true);
+                        items = this.parseInline(this.stripQuotes(args[0]));
                         tmp = this.client.alarms;
                         al = tmp.length;
                         for (let a = al - 1; a >= 0; a--) {
@@ -949,7 +947,7 @@ export class Input extends EventEmitter {
 
                 if (args[0].match(/^\{.*\}$/g)) {
                     item.pattern = args.shift();
-                    item.pattern = this.parseOutgoing(item.pattern.substr(1, item.pattern.length - 2), false, null, true);
+                    item.pattern = this.parseInline(item.pattern.substr(1, item.pattern.length - 2));
                 }
                 else {
                     item.name = this.stripQuotes(args.shift());
@@ -957,7 +955,7 @@ export class Input extends EventEmitter {
                         throw new Error('Invalid trigger name');
                     if (args[0].match(/^\{.*\}$/g)) {
                         item.pattern = args.shift();
-                        item.pattern = this.parseOutgoing(item.pattern.substr(1, item.pattern.length - 2), false, null, true);
+                        item.pattern = this.parseInline(item.pattern.substr(1, item.pattern.length - 2));
                     }
                 }
                 if (args.length !== 0) {
@@ -971,7 +969,7 @@ export class Input extends EventEmitter {
                         else
                             args[0] = this.stripQuotes(args[0]);
                         if (args[0].length !== 0) {
-                            this.parseOutgoing(args[0], false, null, true).split(',').forEach(o => {
+                            this.parseInline(args[0]).split(',').forEach(o => {
                                 switch (o.trim()) {
                                     case 'nocr':
                                     case 'prompt':
@@ -1006,7 +1004,7 @@ export class Input extends EventEmitter {
                         if (args[0].match(/^\{.*\}$/g))
                             args[0] = args[0].substr(1, args[0].length - 2);
                         if (args[0].length !== 0) {
-                            this.parseOutgoing(args[0], false, null, true).split(',').forEach(o => {
+                            this.parseInline(args[0]).split(',').forEach(o => {
                                 switch (o.trim()) {
                                     case 'nocr':
                                     case 'prompt':
@@ -1038,7 +1036,7 @@ export class Input extends EventEmitter {
                             throw new Error('Invalid trigger options');
                         item.profile = this.stripQuotes(args[1]);
                         if (item.profile.length !== 0)
-                            tmp = this.parseOutgoing(item.profile, false, null, true);
+                            tmp = this.parseInline(item.profile);
                     }
                 }
                 this.createTrigger(item.pattern, item.commands, item.profile, item.options, item.name);
@@ -1077,7 +1075,7 @@ export class Input extends EventEmitter {
                 if (args.length === 1) {
                     args[0] = args[0].substr(1, args[0].length - 2);
                     if (args[0].length !== 0) {
-                        this.parseOutgoing(args[0], false, null, true).split(',').forEach(o => {
+                        this.parseInline(args[0]).split(',').forEach(o => {
                             switch (o.trim()) {
                                 case 'nocr':
                                 case 'prompt':
@@ -1109,7 +1107,7 @@ export class Input extends EventEmitter {
                     if (args[0].match(/^\{.*\}$/g))
                         args[0] = args[0].substr(1, args[0].length - 2);
                     if (args[0].length !== 0) {
-                        this.parseOutgoing(args[0], false, null, true).split(',').forEach(o => {
+                        this.parseInline(args[0]).split(',').forEach(o => {
                             switch (o.trim()) {
                                 case 'nocr':
                                 case 'prompt':
@@ -1138,7 +1136,7 @@ export class Input extends EventEmitter {
                         throw new Error('Invalid event options');
                     item.profile = this.stripQuotes(args[1]);
                     if (item.profile.length !== 0)
-                        tmp = this.parseOutgoing(item.profile, false, null, true);
+                        tmp = this.parseInline(item.profile);
                 }
 
                 if (!item.profile || item.profile.length === 0) {
@@ -1239,8 +1237,7 @@ export class Input extends EventEmitter {
                         if (args.length > 2)
                             throw new Error('Invalid syntax use \x1b[4m#une\x1b[0;-11;-12mvent name or \x1b[4m#une\x1b[0;-11;-12mvent {name} \x1b[3mprofile\x1b[0;-11;-12m');
                         if (args.length === 2) {
-                            profile = this.stripQuotes(args[1]);
-                            profile = this.parseOutgoing(profile, false, null, true);
+                            profile = this.parseInline(this.stripQuotes(args[1]));
                             if (this.client.profiles.contains(profile))
                                 profile = this.client.profiles.items[profile];
                             else {
@@ -1254,12 +1251,12 @@ export class Input extends EventEmitter {
                         else
                             profile = this.client.activeProfile;
                         if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
-                            n = this.parseOutgoing(this.stripQuotes(args[0]), false, null, true);
+                            n = this.parseInline(this.stripQuotes(args[0]));
                         else
-                            n = this.parseOutgoing(args[0].substr(1, args[0].length - 2), false, null, true);
+                            n = this.parseInline(args[0].substr(1, args[0].length - 2));
                     }
                     else {
-                        n = this.parseOutgoing(args.join(' '), false, null, true);
+                        n = this.parseInline(args.join(' '));
                         profile = this.client.activeProfile;
                     }
                     items = SortItemArrayByPriority(profile.triggers.filter(t => t.type === TriggerType.Event));
@@ -1295,8 +1292,7 @@ export class Input extends EventEmitter {
                 //#button name|index
                 //Options: enable, disable, nosend, chain, append, stretch, priority=#
                 if (args.length === 1) {
-                    n = this.stripQuotes(args[0]);
-                    n = this.parseOutgoing(n, false, null, true);
+                    n = this.parseInline(this.stripQuotes(args[0]));
                     items = document.getElementById('user-buttons').children;
                     if (/^\d+$/.exec(n)) {
                         n = parseInt(n, 10);
@@ -1357,7 +1353,7 @@ export class Input extends EventEmitter {
                         else
                             args[0] = this.stripQuotes(args[0]);
                         if (args[0].length !== 0) {
-                            this.parseOutgoing(args[0], false, null, true).split(',').forEach(o => {
+                            this.parseInline(args[0]).split(',').forEach(o => {
                                 switch (o.trim()) {
                                     case 'nosend':
                                     case 'chain':
@@ -1389,7 +1385,7 @@ export class Input extends EventEmitter {
                         if (args[0].match(/^\{.*\}$/g))
                             args[0] = args[0].substr(1, args[0].length - 2);
                         if (args[0].length !== 0) {
-                            this.parseOutgoing(args[0], false, null, true).split(',').forEach(o => {
+                            this.parseInline(args[0]).split(',').forEach(o => {
                                 switch (o.trim()) {
                                     case 'nosend':
                                     case 'chain':
@@ -1418,7 +1414,7 @@ export class Input extends EventEmitter {
                             throw new Error('Invalid button options');
                         item.profile = this.stripQuotes(args[1]);
                         if (item.profile.length !== 0)
-                            tmp = this.parseOutgoing(item.profile, false, null, true);
+                            tmp = this.parseInline(item.profile);
                     }
                 }
                 if (!item.profile || item.profile.length === 0) {
@@ -1522,8 +1518,7 @@ export class Input extends EventEmitter {
                         if (args.length > 2)
                             throw new Error('Invalid syntax use \x1b[4m#unb\x1b[0;-11;-12mtton name or \x1b[4m#unb\x1b[0;-11;-12mtton {name} \x1b[3mprofile\x1b[0;-11;-12m');
                         if (args.length === 2) {
-                            profile = this.stripQuotes(args[1]);
-                            profile = this.parseOutgoing(profile, false, null, true);
+                            profile = this.parseInline(this.stripQuotes(args[1]));
                             if (this.client.profiles.contains(profile))
                                 profile = this.client.profiles.items[profile];
                             else {
@@ -1537,12 +1532,12 @@ export class Input extends EventEmitter {
                         else
                             profile = this.client.activeProfile;
                         if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
-                            n = this.parseOutgoing(this.stripQuotes(args[0]), false, null, true);
+                            n = this.parseInline(this.stripQuotes(args[0]));
                         else
-                            n = this.parseOutgoing(args[0].substr(1, args[0].length - 2), false, null, true);
+                            n = this.parseInline(args[0].substr(1, args[0].length - 2));
                     }
                     else {
-                        n = this.parseOutgoing(args.join(' '), false, null, true);
+                        n = this.parseInline(args.join(' '));
                         profile = this.client.activeProfile;
                     }
                     items = SortItemArrayByPriority(profile.buttons);
@@ -1597,12 +1592,12 @@ export class Input extends EventEmitter {
                     if (args.length > 3)
                         throw new Error('Invalid syntax use \x1b[4m#ala\x1b[0;-11;-12mrm {timepattern} {commands} profile');
                     args[0] = args[0].substr(1, args[0].length - 2);
-                    args[0] = this.parseOutgoing(args[0], false, null, true);
+                    args[0] = this.parseInline(args[0]);
                     if (args[1].match(/^\{.*\}$/g))
                         args[1] = args[1].substr(1, args[1].length - 2);
                     if (args.length === 3) {
                         profile = this.stripQuotes(args[2]);
-                        profile = this.parseOutgoing(profile, false, null, true);
+                        profile = this.parseInline(profile);
                     }
 
                     if (!profile || profile.length === 0)
@@ -1636,12 +1631,12 @@ export class Input extends EventEmitter {
                 name = this.stripQuotes(args[0]);
                 if (!name || name.length === 0)
                     throw new Error('Invalid alarm name');
-                name = this.parseOutgoing(name, false, null, true);
+                name = this.parseInline(name);
                 let pattern = args[1];
                 let commands = null;
                 if (pattern.match(/^\{.*\}$/g))
                     pattern = pattern.substr(1, pattern.length - 2);
-                pattern = this.parseOutgoing(pattern, false, null, true);
+                pattern = this.parseInline(pattern);
                 if (args.length === 3) {
                     if (args[2].match(/^\{.*\}$/g))
                         commands = args[2].substr(1, args[2].length - 2);
@@ -1703,7 +1698,7 @@ export class Input extends EventEmitter {
                     }
                 }
                 else {
-                    profile = this.parseOutgoing(profile, false, null, true);
+                    profile = this.parseInline(profile);
                     if (this.client.profiles.contains(profile))
                         profile = this.client.profiles.items[profile];
                     else {
@@ -1875,9 +1870,9 @@ export class Input extends EventEmitter {
                 if (args.length === 0 || args.length > 2)
                     throw new Error('Invalid syntax use #\x1b[4mwin\x1b[0;-11;-12mdow name');
                 else if (args.length === 1)
-                    this.client.emit('window', this.stripQuotes(this.parseOutgoing(args[0], false, null, true)));
+                    this.client.emit('window', this.stripQuotes(this.parseInline(args[0])));
                 else
-                    this.client.emit('window', this.stripQuotes(this.parseOutgoing(args[0], false, null, true)), this.stripQuotes(this.parseOutgoing(args.slice(1).join(' '), false, null, true)));
+                    this.client.emit('window', this.stripQuotes(this.parseInline(args[0])), this.stripQuotes(this.parseInline(args.slice(1).join(' '))));
                 return null;
             case 'raisedelayed':
             case 'raisede':
@@ -1915,14 +1910,14 @@ export class Input extends EventEmitter {
                     args[0] = this.stripQuotes(args[0]);
                     if (args[args.length - 1].match(/^\{.*\}$/g)) {
                         item = args.pop();
-                        n = { icon: parseTemplate(this.parseOutgoing(item.substr(1, item.length - 2), false, null, true)) };
+                        n = { icon: parseTemplate(this.parseInline(item.substr(1, item.length - 2))) };
                     }
                     if (args.length === 0)
                         throw new Error('Invalid syntax use \x1b[4m#not\x1b[0;-11;-12mify title \x1b[3mmessage icon\x1b[0;-11;-12m');
                     if (args.length === 1)
-                        this.client.notify(this.parseOutgoing(this.stripQuotes(args[0]), false, null, true), null, n);
+                        this.client.notify(this.parseInline(this.stripQuotes(args[0])), null, n);
                     else
-                        this.client.notify(this.parseOutgoing(this.stripQuotes(args[0]), false, null, true), this.parseOutgoing(args.slice(1).join(' '), false, null, true), n);
+                        this.client.notify(this.parseInline(this.stripQuotes(args[0])), this.parseInline(args.slice(1).join(' ')), n);
                 }
                 return null;
             case 'idle':
@@ -1961,7 +1956,7 @@ export class Input extends EventEmitter {
                 return null;
             case 'playmusic':
             case 'playm':
-                args = this.parseOutgoing(args.join(' '), false, null, true);
+                args = this.parseInline(args.join(' '));
                 tmp = { off: false, file: '', url: '', volume: 100, repeat: 1, priority: 50, type: '', continue: true };
                 i = args.lastIndexOf('/');
                 if (i === -1)
@@ -1974,7 +1969,7 @@ export class Input extends EventEmitter {
                 return null;
             case 'playsound':
             case 'plays':
-                args = this.parseOutgoing(args.join(' '), false, null, true);
+                args = this.parseInline(args.join(' '));
                 tmp = { off: false, file: '', url: '', volume: 100, repeat: 1, priority: 50, type: '', continue: true };
                 i = args.lastIndexOf('/');
                 if (i === -1)
@@ -2000,27 +1995,27 @@ export class Input extends EventEmitter {
                 return null;
             case 'showprompt': f
             case 'showp':
-                args = this.parseOutgoing(args.join(' '), false, null, true);
+                args = this.parseInline(args.join(' '));
                 this.client.telnet.receivedData(Buffer.from(args), true);
                 this.client.telnet.prompt = true;
                 return null;
             case 'show':
             case 'sh':
-                args = this.parseOutgoing(args.join(' ') + '\n', false, null, true);
+                args = this.parseInline(args.join(' ') + '\n');
                 this.client.telnet.receivedData(Buffer.from(args), true);
                 return null;
             case 'sayprompt':
             case 'sayp':
             case 'echoprompt':
             case 'echop':
-                args = this.parseOutgoing(args.join(' '), false, null, true);
+                args = this.parseInline(args.join(' '));
                 this.client.print('\x1b[-7;-8m' + args + '\x1b[0m', false);
                 return null;
             case 'say':
             case 'sa':
             case 'echo':
             case 'ec':
-                args = this.parseOutgoing(args.join(' '), false, null, true);
+                args = this.parseInline(args.join(' '));
                 if (this.client.telnet.prompt)
                     this.client.print('\n\x1b[-7;-8m' + args + '\x1b[0m\n', false);
                 else
@@ -2034,8 +2029,7 @@ export class Input extends EventEmitter {
                 else if (args.length === 1)
                     throw new Error('Must supply an alias value');
                 else {
-                    n = this.stripQuotes(args.shift());
-                    n = this.parseOutgoing(n, false, null, true);
+                    n = this.parseInline(this.stripQuotes(args.shift()));
                     reload = true;
                     profile = null;
                     p = path.join(parseTemplate('{data}'), 'profiles');
@@ -2043,8 +2037,7 @@ export class Input extends EventEmitter {
                         if (args.length > 2)
                             throw new Error('Invalid syntax use \x1b[4m#al\x1b[0;-11;-12mias name value or \x1b[4m#al\x1b[0;-11;-12mias name {value} \x1b[3mprofile\x1b[0;-11;-12m');
                         if (args.length === 2) {
-                            profile = this.stripQuotes(args[1]);
-                            profile = this.parseOutgoing(profile, false, null, true);
+                            profile = this.parseInline(this.stripQuotes(args[1]));
                             if (this.client.profiles.contains(profile))
                                 profile = this.client.profiles.items[profile];
                             else {
@@ -2058,9 +2051,9 @@ export class Input extends EventEmitter {
                         else
                             profile = this.client.activeProfile;
                         if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
-                            args = this.parseOutgoing(this.stripQuotes(args[0]), false, null, true);
+                            args = this.parseInline(this.stripQuotes(args[0]));
                         else
-                            args = this.parseOutgoing(args[0].substr(1, args[0].length - 2), false, null, true);
+                            args = this.parseInline(args[0].substr(1, args[0].length - 2));
                     }
                     else {
                         args = args.join(' ');
@@ -2114,7 +2107,7 @@ export class Input extends EventEmitter {
                             throw new Error('Invalid syntax use \x1b[4m#una\x1b[0;-11;-12mlias name or \x1b[4m#una\x1b[0;-11;-12mlias {name} \x1b[3mprofile\x1b[0;-11;-12m');
                         if (args.length === 2) {
                             profile = this.stripQuotes(args[1]);
-                            profile = this.parseOutgoing(profile, false, null, true);
+                            profile = this.parseInline(profile);
                             if (this.client.profiles.contains(profile))
                                 profile = this.client.profiles.items[profile];
                             else {
@@ -2128,12 +2121,12 @@ export class Input extends EventEmitter {
                         else
                             profile = this.client.activeProfile;
                         if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
-                            n = this.parseOutgoing(this.stripQuotes(args[0]), false, null, true);
+                            n = this.parseInline(this.stripQuotes(args[0]));
                         else
-                            n = this.parseOutgoing(args[0].substr(1, args[0].length - 2), false, null, true);
+                            n = this.parseInline(args[0].substr(1, args[0].length - 2));
                     }
                     else {
-                        n = this.parseOutgoing(args.join(' '), false, null, true);
+                        n = this.parseInline(args.join(' '));
                         profile = this.client.activeProfile;
                     }
                     items = profile.aliases;
@@ -2177,8 +2170,8 @@ export class Input extends EventEmitter {
                 else if (args.length === 1)
                     throw new Error('Must supply a setsetting value');
                 else {
-                    n = this.stripQuotes(this.parseOutgoing(args[0], false, null, true));
-                    args = this.stripQuotes(this.parseOutgoing(args.slice(1).join(' '), false, null, true));
+                    n = this.stripQuotes(this.parseInline(args[0]));
+                    args = this.stripQuotes(this.parseInline(args.slice(1).join(' ')));
                     if (/^\d+$/.exec(n)) {
                         tmp = n;
                         n = parseInt(n, 10);
@@ -2258,7 +2251,7 @@ export class Input extends EventEmitter {
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m#gets\x1b[0;-11;-12metting name');
                 else {
-                    n = this.stripQuotes(this.parseOutgoing(args.join(' '), false, null, true));
+                    n = this.stripQuotes(this.parseInline(args.join(' ')));
                     if (/^\d+$/.exec(n)) {
                         n = parseInt(n, 10);
                         if (n < 0 || n >= SettingList.length)
@@ -2343,7 +2336,7 @@ export class Input extends EventEmitter {
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
                 else if (args.length === 1) {
-                    args[0] = this.parseOutgoing(args[0], false, null, true);
+                    args[0] = this.parseInline(args[0]);
                     this.client.toggleProfile(args[0]);
                     if (!this.client.profiles.contains(args[0]))
                         throw new Error('Profile not found');
@@ -2355,7 +2348,7 @@ export class Input extends EventEmitter {
                         args = args[0] + ' is disabled';
                 }
                 else {
-                    args[0] = this.parseOutgoing(args[0], false, null, true).toLowerCase();
+                    args[0] = this.parseInline(args[0]).toLowerCase();
                     if (!this.client.profiles.contains(args[0])) {
                         this.client.profiles.load(args[0], path.join(parseTemplate('{data}'), 'profiles'));
                         if (!this.client.profiles.contains(args[0]))
@@ -2363,7 +2356,7 @@ export class Input extends EventEmitter {
                     }
                     if (!args[1])
                         throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
-                    args[1] = this.parseOutgoing(args[1], false, null, true);
+                    args[1] = this.parseInline(args[1]);
                     switch (args[1].toLowerCase()) {
                         case 'enable':
                         case 'on':
@@ -2410,17 +2403,17 @@ export class Input extends EventEmitter {
                     };
                     item.pattern = args.shift();
                     if (item.pattern.match(/^\{.*\}$/g))
-                        item.pattern = this.parseOutgoing(item.pattern.substr(1, item.pattern.length - 2), false, null, true);
+                        item.pattern = this.parseInline(item.pattern.substr(1, item.pattern.length - 2));
                     else
-                        item.pattern = this.parseOutgoing(this.stripQuotes(item.pattern), false, null, true);
+                        item.pattern = this.parseInline(this.stripQuotes(item.pattern));
                     if (args.length === 2) {
-                        item.commands = '#COLOR ' + this.parseOutgoing(args[0], false, null, true);
+                        item.commands = '#COLOR ' + this.parseInline(args[0]);
                         item.profile = this.stripQuotes(args[1]);
                         if (item.profile.length !== 0)
-                            item.profile = this.parseOutgoing(item.profile, false, null, true);
+                            item.profile = this.parseInline(item.profile);
                     }
                     else
-                        item.commands = '#COLOR ' + this.parseOutgoing(args[0], false, null, true);
+                        item.commands = '#COLOR ' + this.parseInline(args[0]);
                     this.createTrigger(item.pattern, item.commands, item.profile);
                     return null;
                 }
@@ -2428,7 +2421,7 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color or \x1b[4m#co\x1b[0;-11;-12mlor {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
                 if (args.length !== 1)
                     throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color or \x1b[4m#co\x1b[0;-11;-12mlor {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
-                args[0] = this.parseOutgoing(this.stripQuotes(args[0]), false, null, true);
+                args[0] = this.parseInline(this.stripQuotes(args[0]));
                 n = this.client.display.lines.length;
                 if (args[0].trim().match(/^-?\d+$/g)) {
                     setTimeout(() => {
@@ -2573,17 +2566,17 @@ export class Input extends EventEmitter {
                     };
                     item.pattern = args.shift();
                     if (item.pattern.match(/^\{.*\}$/g))
-                        item.pattern = this.parseOutgoing(item.pattern.substr(1, item.pattern.length - 2), false, null, true);
+                        item.pattern = this.parseInline(item.pattern.substr(1, item.pattern.length - 2));
                     else
-                        item.pattern = this.parseOutgoing(this.stripQuotes(item.pattern), false, null, true);
+                        item.pattern = this.parseInline(this.stripQuotes(item.pattern));
                     if (args.length === 2) {
-                        item.commands = '#CW ' + this.parseOutgoing(args[0], false, null, true);
+                        item.commands = '#CW ' + this.parseInline(args[0]);
                         item.profile = this.stripQuotes(args[1]);
                         if (item.profile.length !== 0)
-                            item.profile = this.parseOutgoing(item.profile, false, null, true);
+                            item.profile = this.parseInline(item.profile);
                     }
                     else
-                        item.commands = '#CW ' + this.parseOutgoing(args[0], false, null, true);
+                        item.commands = '#CW ' + this.parseInline(args[0]);
                     this.createTrigger(item.pattern, item.commands, item.profile);
                     return null;
                 }
@@ -2591,7 +2584,7 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid syntax use #cw color or #cw {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
                 //no regex so
                 if (!trigger) return null;
-                args[0] = this.parseOutgoing(this.stripQuotes(args[0]), false, null, true);
+                args[0] = this.parseInline(this.stripQuotes(args[0]));
                 n = this.client.display.lines.length;
                 if (args[0].trim().match(/^-?\d+$/g)) {
                     setTimeout(() => {
@@ -2783,7 +2776,7 @@ export class Input extends EventEmitter {
                 if (args.length < 1 || args.length > 5)
                     throw new Error('Invalid syntax use #pcol color \x1b[3mXStart, XEnd, YStart, YEnd\x1b[0;-11;-12m');
                 if (args.length > 1) {
-                    tmp = [].concat(...args.slice(1).map(s => this.parseOutgoing(this.stripQuotes(s), false, null, true).split(' ')));
+                    tmp = [].concat(...args.slice(1).map(s => this.parseInline(this.stripQuotes(s)).split(' ')));
                     if (tmp.length > 4)
                         throw new Error('Too many arguments use #pcol color \x1b[3mXStart, XEnd, YStart, YEnd\x1b[0;-11;-12m');
                     item = { xStart: 0 };
@@ -2802,7 +2795,7 @@ export class Input extends EventEmitter {
                 }
                 else
                     item = { xStart: 0 };
-                args[0] = this.parseOutgoing(this.stripQuotes(args[0]), false, null, true);
+                args[0] = this.parseInline(this.stripQuotes(args[0]));
                 n = this.adjustLastLine(this.client.display.lines.length);
                 if (args[0].trim().match(/^-?\d+$/g)) {
                     setTimeout(() => {
@@ -2938,11 +2931,11 @@ export class Input extends EventEmitter {
                     };
                     item.pattern = args.shift();
                     if (item.pattern.match(/^\{.*\}$/g))
-                        item.pattern = this.parseOutgoing(item.pattern.substr(1, item.pattern.length - 2), false, null, true);
+                        item.pattern = this.parseInline(item.pattern.substr(1, item.pattern.length - 2));
                     else
-                        item.pattern = this.parseOutgoing(this.stripQuotes(item.pattern), false, null, true);
+                        item.pattern = this.parseInline(this.stripQuotes(item.pattern));
                     if (args.length === 1)
-                        item.profile = this.parseOutgoing(this.stripQuotes(args[0]), false, null, true);
+                        item.profile = this.parseInline(this.stripQuotes(args[0]));
                     this.createTrigger(item.pattern, item.commands, item.profile);
                     return null;
                 }
@@ -2986,6 +2979,10 @@ export class Input extends EventEmitter {
         if (data.handled)
             return data.return;
         return data.raw + '\n';
+    }
+
+    public parseInline(text) {
+        return this.parseOutgoing(text, false, null, true);
     }
 
     public parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean, noFunctions?: boolean) {
@@ -3080,7 +3077,7 @@ export class Input extends EventEmitter {
                             arg += c;
                         //save any arg that was found
                         if (arg.length > 0)
-                            args.push(this.parseOutgoing(arg, null, null, true));
+                            args.push(this.parseInline(arg));
                         al = AliasesCached.length;
                         for (a = 0; a < al; a++) {
                             str = this.ExecuteAlias(AliasesCached[a], args);
@@ -3100,7 +3097,7 @@ export class Input extends EventEmitter {
                     }
                     //space so new argument
                     else if (c === ' ') {
-                        args.push(this.parseOutgoing(arg, null, null, true));
+                        args.push(this.parseInline(arg));
                         arg = '';
                         start = false;
                     }
@@ -3388,7 +3385,7 @@ export class Input extends EventEmitter {
                                 if (tmp != null)
                                     tmp2 = tmp;
                                 else if (this.client.options.allowEval) {
-                                    tmp2 = '' + this.evaluate(this.parseOutgoing(arg, null, null, true));
+                                    tmp2 = '' + this.evaluate(this.parseInline(arg));
                                 }
                                 else {
                                     tmp2 += '%';
@@ -3545,7 +3542,7 @@ export class Input extends EventEmitter {
                                 if (c != null)
                                     tmp2 = c;
                                 else if (this.client.options.allowEval)
-                                    tmp2 = '' + this.evaluate(this.parseOutgoing(arg, null, null, true));
+                                    tmp2 = '' + this.evaluate(this.parseInline(arg));
                                 else {
                                     tmp2 = '$';
                                     idx = idx - arg.length - 2;
@@ -3736,7 +3733,7 @@ export class Input extends EventEmitter {
             if (this.stack.named && this.stack.named[arg])
                 str += this.stack.named[arg];
             else {
-                arg = this.parseOutgoing(arg, null, null, true);
+                arg = this.parseInline(arg);
                 str += '$';
                 if (arg != null) str += arg;
             }
@@ -3758,7 +3755,7 @@ export class Input extends EventEmitter {
                 }
             }
             else {
-                arg = this.parseOutgoing(arg, null, null, true);
+                arg = this.parseInline(arg);
                 str += '%';
                 if (_neg)
                     str += '-';
@@ -3768,7 +3765,7 @@ export class Input extends EventEmitter {
             }
         }
         else if (state === ParseState.paramsPBlock) {
-            arg = this.parseOutgoing(arg, null, null, true);
+            arg = this.parseInline(arg);
             str += '%{';
             if (arg != null) str += arg;
         }
@@ -3778,19 +3775,19 @@ export class Input extends EventEmitter {
                     str += this.stack.named[arg];
                 }
                 else {
-                    arg = this.parseOutgoing(arg, null, null, true);
+                    arg = this.parseInline(arg);
                     str += '$';
                     if (arg != null) str += arg;
                 }
             }
             else {
-                arg = this.parseOutgoing(arg, null, null, true);
+                arg = this.parseInline(arg);
                 str += '$';
                 if (arg != null) str += arg;
             }
         }
         else if (state === ParseState.paramsDBlock) {
-            arg = this.parseOutgoing(arg, null, null, true);
+            arg = this.parseInline(arg);
             str += `\${`;
             if (arg != null) str += arg;
         }
@@ -4031,15 +4028,15 @@ export class Input extends EventEmitter {
                     return moment().format(res[2]);
                 return moment().format();
             case 'lower':
-                return this.parseOutgoing(res[2], null, null, true).toLowerCase();
+                return this.parseInline(res[2]).toLowerCase();
             case 'upper':
-                return this.parseOutgoing(res[2], null, null, true).toUpperCase();
+                return this.parseInline(res[2]).toUpperCase();
             case 'proper':
-                return ProperCase(this.parseOutgoing(res[2], null, null, true));
+                return ProperCase(this.parseInline(res[2]));
             case 'eval':
-                return '' + this.evaluate(this.parseOutgoing(res[2], null, null, true));
+                return '' + this.evaluate(this.parseInline(res[2]));
             case 'dice':
-                args = this.parseOutgoing(res[2], null, null, true).split(',');
+                args = this.parseInline(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid dice');
                 if (args.length === 1) {
                     res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
@@ -4082,7 +4079,7 @@ export class Input extends EventEmitter {
             case 'diceavg':
                 //The average of any XdY is X*(Y+1)/2.
                 //(min + max) / 2 * a + m
-                args = this.parseOutgoing(res[2], null, null, true).split(',');
+                args = this.parseInline(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid dice');
                 if (args.length === 1) {
                     res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
@@ -4116,7 +4113,7 @@ export class Input extends EventEmitter {
                     return this.evaluate(((min + max) / 2 * c) + mod);
                 return '' + ((min + max) / 2 * c);
             case 'dicemin':
-                args = this.parseOutgoing(res[2], null, null, true).split(',');
+                args = this.parseInline(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid dice');
                 if (args.length === 1) {
                     res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
@@ -4146,7 +4143,7 @@ export class Input extends EventEmitter {
                     return this.evaluate((min * c) + mod);
                 return '' + (min * c);
             case 'dicemax':
-                args = this.parseOutgoing(res[2], null, null, true).split(',');
+                args = this.parseInline(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid dice');
                 if (args.length === 1) {
                     res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
@@ -4177,7 +4174,7 @@ export class Input extends EventEmitter {
             case 'zdicedev':
             case 'dicedev':
                 const fun = res[1];
-                args = this.parseOutgoing(res[2], null, null, true).split(',');
+                args = this.parseInline(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid dice');
                 if (args.length === 1) {
                     res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
@@ -4210,7 +4207,7 @@ export class Input extends EventEmitter {
                     return this.evaluate(Math.sqrt((max * max - 1) / 12 * c) + mod);
                 return '' + Math.sqrt((max * max - 1) / 12 * c);
             case 'color':
-                args = this.parseOutgoing(res[2], null, null, true).split(',');
+                args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
                     throw new Error('Missing arguments');
                 else if (args.length === 1) {
@@ -4255,14 +4252,14 @@ export class Input extends EventEmitter {
                 }
                 throw new Error('Too many arguments');
             case 'zcolor':
-                args = this.parseOutgoing(res[2], null, null, true).split(',');
+                args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
                     throw new Error('Missing arguments');
                 else if (args.length > 1)
                     throw new Error('Too many arguments');
                 return getColorCode(parseInt(args[0], 10));
             case 'ansi':
-                args = this.parseOutgoing(res[2], null, null, true).split(',');
+                args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
                     throw new Error('Missing arguments');
                 c = args.length;

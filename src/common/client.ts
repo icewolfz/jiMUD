@@ -1117,8 +1117,12 @@ export class Client extends EventEmitter {
         this.emit('cleared');
     }
 
-    public parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean) {
-        return this._input.parseOutgoing(text, eAlias, stacking);
+    public parseInline(text: string) {
+        return this._input.parseInline(text);
+    }
+
+    public parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean, noFunction?: boolean) {
+        return this._input.parseOutgoing(text, eAlias, stacking, noFunction);
     }
 
     public clearCache() {
