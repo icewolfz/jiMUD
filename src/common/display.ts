@@ -1471,7 +1471,9 @@ export class Display extends EventEmitter {
         if (start >= lineLength) return;
         if (!start || start < 0) start = 0;
         if (!end || end > lineLength)
-            end = lineLength;
+            end = lineLength;        
+       if(start === end)
+            return;
         //clear cache
         if (this._viewCache[idx])
             delete this._viewCache[idx];
