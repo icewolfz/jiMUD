@@ -23,7 +23,7 @@
 - **Fixed:**
   - [#nnn](docs/commands.md)
     - Fixed being double parsed
-    - Fixed missing trailing newline
+    - Fixed issues with trailing newlines with nested loops
   - Fixed window size being sent to the mud when status display is hidden/shown
   - Fixed bug in [#trigger](docs/commands.md) command and adding to profile not correctly finding if one exist already
   - Fixed bug in [#event](docs/commands.md) command and adding to profile not correctly finding if one exist already

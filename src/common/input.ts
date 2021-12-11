@@ -2971,7 +2971,7 @@ export class Input extends EventEmitter {
                 }
             }
             if (tmp.length > 0)
-                return tmp.join('\n') + '\n';
+                return tmp.map(v=>v.trim()).join('\n');
             return null;
         }
         const data = { name: fun, args: args, raw: raw, handled: false, return: null };
