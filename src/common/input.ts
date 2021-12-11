@@ -121,18 +121,17 @@ export class Input extends EventEmitter {
         //if no stack use direct for some performance
         if (this._stack.length === 0)
             return this.client.variables;
-        if(!this.stack.named && !this.loops.length)
+        if (!this.stack.named && !this.loops.length)
             return this.client.variables;
         let scope: any = {};
         Object.assign(scope, this.client.variables);
         if (this.stack.named)
             Object.assign(scope, this.stack.named);
-        if(this.loops.length)
-        {
+        if (this.loops.length) {
             scope.repeatnum = this.repeatnum;
             let ll = this.loops.length;
             //i to z only
-            for(let l = 0; l < ll && l < 18; l++)
+            for (let l = 0; l < ll && l < 18; l++)
                 scope[String.fromCharCode(105 + l)] = this.loops[l];
         }
         //scope.i = this.repeatnum;
@@ -169,7 +168,7 @@ export class Input extends EventEmitter {
     }
 
     get repeatnum() {
-        if(this.loops.length === 0)
+        if (this.loops.length === 0)
             return 0;
         return this.loops[this.loops.length - 1];
     }
@@ -2954,14 +2953,25 @@ export class Input extends EventEmitter {
                 throw new Error('Number must be greater then 0.');
             if (args.length === 0)
                 throw new Error('Invalid syntax use #nnn commands');
-            args = args.join(' ');
-            tmp = [];
-            for (let r = 0; r < i; r++) {
+            return this.executeForLoop(0, i, args.join(' '));
+        }
+        const data = { name: fun, args: args, raw: raw, handled: false, return: null };
+        this.client.emit('function', data);
+        if (data.handled)
+            return data.return;
+        return data.raw + '\n';
+    }
+
+    private executeForLoop(start: number, end: number, commands: string) {
+        let tmp = [];
+        let r: number;
+        if (start > end) {
+            for (r = start - 1; r >= end; r--) {
                 this.loops.push(r);
                 try {
-                    n = this.parseOutgoing(args);
-                    if (n != null && n.length > 0)
-                        tmp.push(n);
+                    let out = this.parseOutgoing(commands);
+                    if (out != null && out.length > 0)
+                        tmp.push(out);
                 }
                 catch (e) {
                     throw e;
@@ -2970,15 +2980,26 @@ export class Input extends EventEmitter {
                     this.loops.pop();
                 }
             }
-            if (tmp.length > 0)
-                return tmp.map(v=>v.trim()).join('\n');
-            return null;
         }
-        const data = { name: fun, args: args, raw: raw, handled: false, return: null };
-        this.client.emit('function', data);
-        if (data.handled)
-            return data.return;
-        return data.raw + '\n';
+        else {
+            for (r = start; r < end; r++) {
+                this.loops.push(r);
+                try {
+                    let out = this.parseOutgoing(commands);
+                    if (out != null && out.length > 0)
+                        tmp.push(out);
+                }
+                catch (e) {
+                    throw e;
+                }
+                finally {
+                    this.loops.pop();
+                }
+            }
+        }
+        if (tmp.length > 0)
+            return tmp.map(v => v.trim()).join('\n');
+        return null;
     }
 
     public parseInline(text) {
@@ -3818,7 +3839,7 @@ export class Input extends EventEmitter {
                         str += this.stack.args.slice(this.stack.used + 1).join(' ');
                     this.stack.used = this.stack.args.length;
                     if (r) str += '\n';
-                }                
+                }
                 out += str;
             }
             else if (out.length === 0) return null;
@@ -3838,7 +3859,7 @@ export class Input extends EventEmitter {
                     str += this.stack.args.slice(this.stack.used + 1).join(' ');
                 this.stack.used = this.stack.args.length;
                 if (r) str += '\n';
-            }            
+            }
             out += str;
         }
         else if (alias.length > 0 && eAlias && findAlias) {
@@ -3914,7 +3935,7 @@ export class Input extends EventEmitter {
                         str += this.stack.args.slice(this.stack.used + 1).join(' ');
                     this.stack.used = this.stack.args.length;
                     if (r) str += '\n';
-                }                
+                }
                 out += str;
             }
             else if (out.length === 0) return null;
@@ -3940,7 +3961,7 @@ export class Input extends EventEmitter {
                     else
                         str += this.stack.args.slice(this.stack.used + 1).join(' ');
                     if (r) str += '\n';
-                }                
+                }
                 out += str;
             }
             else if (out.length === 0) return null;
@@ -4344,7 +4365,7 @@ export class Input extends EventEmitter {
         switch (alias.style) {
             case 1:
                 this._stack.push({ loops: [], args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
-                ret = this.parseOutgoing(alias.value,  null, null, true);
+                ret = this.parseOutgoing(alias.value, null, null, true);
                 this._stack.pop();
                 break;
             case 2:
@@ -4352,7 +4373,7 @@ export class Input extends EventEmitter {
                 const f = new Function('try { ' + alias.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                 ret = f.apply(this.client, this.GetNamedArguments(alias.params, args, alias.append));
                 if (typeof ret === 'string')
-                    ret = this.parseOutgoing(ret,  null, null, true);
+                    ret = this.parseOutgoing(ret, null, null, true);
                 break;
             default:
                 ret = alias.value;
