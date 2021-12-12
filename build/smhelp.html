@@ -51,9 +51,15 @@
                 body.removeChild(body.lastChild);
             }
             const xhttp = new XMLHttpRequest();
-            xhttp.onload = function () {
+            xhttp.addEventListener('load', function (e) {
                 $('#body').append(this.responseText.replace(/href=\"\?/g, 'href="#'));
-            }
+            });
+            xhttp.addEventListener('error', function(e) {
+                $('#body').textContent = $('#body').textContent + `${e.type}: ${e.loaded} bytes transferred\n`;
+            });
+            xhttp.addEventListener('abort', function(e) {
+                $('#body').textContent = $('#body').textContent + `${e.type}: ${e.loaded} bytes transferred\n`;
+            });
             xhttp.open("GET", "http://shadowmud.com:1130/help?" + _curr.substr(1));
             xhttp.send();
         }
