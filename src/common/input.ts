@@ -2999,8 +2999,36 @@ export class Input extends EventEmitter {
                         return tmp;
                 }
                 return null;
-            //case 'switch':
-            //case 'sw':
+            case 'switch':
+            case 'sw':
+                if (!args.length || args.length < 2)
+                    throw new Error('Invalid syntax use \x1b[4m#sw\x1b[0;-11;-12mitch\x1b[0;-11;-12m (expression) {command} \x1b[3m(expression) {command} ... {else_command}\x1b[0;-11;-12m');
+                if (args.length % 2 === 1)
+                    n = args.pop();
+                else
+                    n = null;
+                al = args.length;
+                //skip every other one as odd items are the commands to execute
+                for (i = 0; i < al; i += 2) {
+                    if (args[i].match(/^\{.*\}$/g))
+                        args[i] = args[i].substr(1, args[i].length - 2);
+                    if (this.evaluate(this.parseInline(args[i]))) {
+                        if (args[i + 1].match(/^\{.*\}$/g))
+                            args[i + 1] = args[i + 1].substr(1, args[i + 1].length - 2);
+                        tmp = this.parseOutgoing(args[i + 1]);
+                        if (tmp != null && tmp.length > 0)
+                            return tmp;
+                        return null;
+                    }
+                }
+                if (n) {
+                    if (n.match(/^\{.*\}$/g))
+                        n = n.substr(1, n.length - 2);
+                    tmp = this.parseOutgoing(n);
+                    if (tmp != null && tmp.length > 0)
+                        return tmp;
+                }
+                return null
             //case 'loop':
             //case 'loo':
             //case 'until':

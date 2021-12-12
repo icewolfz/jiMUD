@@ -57,8 +57,9 @@
 |#highlight|#hi|*pattern*| make last line or lined with matching pattern bold or brighter color if already bold, or
 |#break|#br|| breaks a loop
 |#continue|#con|| skips to the next loop iteration 
-|#if||{expression} {true-command} *{false-command}*| if expression is true execute true command, if false and false commands supplied execute them
+|#if||{expression} {true-command} *{false-command}*|if expression is true execute true command, if false and false commands supplied execute them
 |#case|#cs|index {command 1}*{command n}*|return command from list based on the value of index
+|#switch|#sw|(expression) {command} *(expression) {command} ... {else command}*|execute each expression until one returns true, if none are true and an else command supplied it is executed instead
 **Note:** All italic arguments are optional and can be left out
 
 ## Arguments

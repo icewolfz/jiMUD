@@ -18,6 +18,7 @@
   - Add [#-nnn](docs/commands.md) repeat commands NNN number of times but with a reverse counter
   - Add [#if](docs/commands.md) if expression is true execute true command, if false and false commands supplied execute them
   - Add [#case](docs/commands.md) return command from list based on the value of index
+  - Add [#switch](docs/commands.md) execute each expression until one returns true, if none are true and an else command supplied it is executed instead
   - Input parser:  
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function
