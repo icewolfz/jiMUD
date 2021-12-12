@@ -15,7 +15,8 @@
   - Add [#continue](docs/commands.md) skips to the next loop iteration
   - Add {} grouping support to [#nnn](docs/commands.md) argument
   - Add [#-nnn](docs/commands.md) repeat commands NNN number of times but with a reverse counter
-  - Input parser:
+  - Add [#if](docs/commands.md) if expression is true execute true command, if false and false commands supplied execute them
+  - Input parser:  
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function
     - Add user variable support to expression system, can access in scripting using client.variables['NAME'] or client.variables.NAME

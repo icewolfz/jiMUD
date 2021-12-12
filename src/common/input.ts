@@ -2965,6 +2965,25 @@ export class Input extends EventEmitter {
                     throw new Error('\x1b[4m#cont\x1b[0;-11;-12minue\x1b[0;-11;-12m must be used in a loop.');
                 this.stack.continue = true;
                 return -2;
+            case 'if':
+                if (!args.length || args.length > 3)
+                    throw new Error('Invalid syntax use #if {expression} {true-command} \x1b[3m{false-command}\x1b[0;-11;-12m');
+                if (args[0].match(/^\{.*\}$/g))
+                    args[0] = args[0].substr(1, args[0].length - 2);
+                tmp = null;
+                if (this.evaluate(this.parseInline(args[0]))) {
+                    if (args[1].match(/^\{.*\}$/g))
+                        args[1] = args[1].substr(1, args[1].length - 2);
+                    tmp = this.parseOutgoing(args[1]);
+                }
+                else if (args.length > 2) {
+                    if (args[2].match(/^\{.*\}$/g))
+                        args[2] = args[2].substr(1, args[2].length - 2);
+                    tmp = this.parseOutgoing(args[2]);
+                }
+                if (tmp != null && tmp.length > 0)
+                    return tmp;
+                return null;
         }
         if (fun.match(/^-?\d+$/)) {
             i = parseInt(fun, 10);
@@ -3150,6 +3169,10 @@ export class Input extends EventEmitter {
                             if (str !== null) out += str;
                             str = '';
                             if (!a.multi) break;
+                            if (this.stack.continue || this.stack.break) {
+                                if (out.length === 0) return null;
+                                return out;
+                            }                            
                         }
                         alias = '';
                         state = ParseState.none;
@@ -3186,6 +3209,10 @@ export class Input extends EventEmitter {
                         if (str !== null) out += str;
                         str = '';
                         start = true;
+                        if (this.stack.continue || this.stack.break) {
+                            if (out.length === 0) return null;
+                            return out;
+                        }
                     }
                     else if (idx === 1 && c === spChar) {
                         state = ParseState.none;
@@ -3225,6 +3252,10 @@ export class Input extends EventEmitter {
                             else
                                 out += this.parseOutgoing(str);
                             */
+                        }
+                        if (this.stack.continue || this.stack.break) {
+                            if (out.length === 0) return null;
+                            return out;
                         }
                         str = '';
                         start = true;
@@ -3744,6 +3775,10 @@ export class Input extends EventEmitter {
                                     }
                                     if (str !== null) out += str;
                                     if (!a.multi) break;
+                                    if (this.stack.continue || this.stack.break) {
+                                        if (out.length === 0) return null;
+                                        return out;
+                                    }                                    
                                 }
                                 str = '';
                                 //init args
@@ -3776,6 +3811,10 @@ export class Input extends EventEmitter {
                             if (str !== null) out += str + '\n';
                             str = '';
                         }
+                        if (this.stack.continue || this.stack.break) {
+                            if (out.length === 0) return null;
+                            return out;
+                        }                        
                         alias = '';
                         //new line so need to check for aliases again
                         findAlias = true;
@@ -3888,6 +3927,10 @@ export class Input extends EventEmitter {
                 out += str;
             }
             else if (out.length === 0) return null;
+            if (this.stack.continue || this.stack.break) {
+                if (out.length === 0) return null;
+                return out;
+            }
         }
         else if (state === ParseState.verbatim) {
             if (append && eAlias && this.stack.args && this.stack.append && this.stack.args.length - 1 > 0 && this.stack.used + 1 < this.stack.args.length) {
@@ -3941,6 +3984,9 @@ export class Input extends EventEmitter {
                     }
                     if (str !== null) out += str;
                     else if (out.length === 0) return null;
+                    if (this.stack.continue || this.stack.break) {
+                        return out;
+                    }                    
                     if (!a.multi) break;
                 }
             }
@@ -3955,6 +4001,9 @@ export class Input extends EventEmitter {
                 }
                 if (str !== null) out += str;
                 else if (out.length === 0) return null;
+                if (this.stack.continue || this.stack.break) {
+                    return out;
+                }                
             }
             AliasesCached = null;
         }
@@ -3987,6 +4036,10 @@ export class Input extends EventEmitter {
                 out += str;
             }
             else if (out.length === 0) return null;
+            if (this.stack.continue || this.stack.break) {
+                if (out.length === 0) return null;
+                return out;
+            }            
         }
         else if (str.length > 0) {
             str = this.ExecuteTriggers(TriggerType.CommandInputRegular, str, str, false, true);
@@ -4014,6 +4067,10 @@ export class Input extends EventEmitter {
                 out += str;
             }
             else if (out.length === 0) return null;
+            if (this.stack.continue || this.stack.break) {
+                if (out.length === 0) return null;
+                return out;
+            }
         }
 
         args.length = 0;

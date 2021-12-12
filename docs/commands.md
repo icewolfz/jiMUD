@@ -57,7 +57,7 @@
 |#highlight|#hi|*pattern*| make last line or lined with matching pattern bold or brighter color if already bold, or
 |#break|#br|| breaks a loop
 |#continue|#con|| skips to the next loop iteration 
-
+|#if||{expression} {true-command} *{false-command}*| if expression is true execute true command, if false and false commands supplied execute them
 **Note:** All italic arguments are optional and can be left out
 
 ## Arguments
