@@ -140,11 +140,44 @@ body {
     text-align: center;
 }
 
-#container {
-    padding: 0px;
+#main {
     top: 31px;
     bottom: 0px;
-    left: 0px;
+    left: 0;
+    right: 0px;
+    position: absolute;
+}
+
+#sidebar {
+    min-width: 200px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+}
+
+#tree {
+    padding: 0px;
+    margin: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 3px;
+    overflow: auto;
+}
+
+#tree .list-group {
+    margin: 0;
+    box-shadow: none;
+}
+
+
+#container {
+    padding: 0px;
+    top: 0;
+    bottom: 0px;
+    left: 202px;
     right: 0px;
     position: absolute;
     font-family: "Segoe WPC", "Segoe UI", "SFUIText-Light", "HelveticaNeue-Light", sans-serif, "Droid Sans Fallback";
@@ -265,6 +298,7 @@ body {
 	padding: 0 16px 0 10px;
 	border-left-width: 5px;
 	border-left-style: solid;
+    font-size: 1em;
 }
 
 #container-display code {
@@ -423,6 +457,22 @@ body {
     background: rgb(116, 192, 114);
 }
 
+#drag-bar {
+    background-color: transparent;
+    height: 100%;
+    float: right;
+    width: 3px;
+    cursor: ew-resize;
+}
+
+#ghost-bar {
+    width: 3px;
+    background-color: #000;
+    opacity: 0.5;
+    position: absolute;
+    cursor: ew-resize;
+    z-index: 999
+}
 
 
 /*https://github.com/Microsoft/vscode/blob/4e4e6f9b44dd9e6a53d1f08565c52b8ea9f61a5e/extensions/markdown-language-features/media/markdown.css*/

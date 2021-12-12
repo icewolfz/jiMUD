@@ -453,6 +453,7 @@ export class Settings {
 
     public allowEval: boolean = true;
     public externalWho: boolean = true;
+    public externalHelp: boolean = true;
     public watchForProfilesChanges = false;
     public onProfileChange: OnProfileChange = OnProfileChange.Nothing;
     public onProfileDeleted: OnProfileDeleted = OnProfileDeleted.Nothing;

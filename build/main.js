@@ -709,8 +709,7 @@ var menuTemp = [
             {
                 label: '&ShadowMUD...',
                 click: () => {
-                    shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
-                    win.webContents.focus();
+                    executeScript('showSMHelp()', win, true);
                 }
             },
             {
@@ -1018,7 +1017,7 @@ function createTray() {
                 {
                     label: '&ShadowMUD...',
                     click: () => {
-                        shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
+                        executeScript('showSMHelp()', win, true);
                     }
                 },
                 {

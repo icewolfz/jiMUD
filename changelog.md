@@ -31,6 +31,7 @@
     - Add `Watch for profile changes` when enabled will watch for profile changes
     - Add `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
     - Add `On profile deleted do` what to do when a profile is deleted when `Watch for profile changes` enabled
+    - Add [Open ShadowMUD help in web browser?](docs/preferences.md#advanced) tp open ShadowMUD in child window    
 - **Fixed:**
   - [#nnn](docs/commands.md)
     - Fixed being double parsed
@@ -70,7 +71,7 @@
   - Add [#window](docs/commands.md) to open/show supported windows
   - Add [#testunicodeemoji](docs/commands.md) to display unicode emoji symbols
   - [Preferences](docs/preferences.md)
-    - Add [Who is on?](docs/preferences.md#advanced) tp open who in child window
+    - Add [Who is on?](docs/preferences.md#advanced) to open who in child window
     - Add [Disable trigger on error](docs/preferences.md#scripting) to disable a trigger if an error happens, either from pattern or scripting, enabled by default to prevent spamming of broken trigger
     - Add [Prepend triggered line](docs/preferences.md#scripting) disable the fix to prepend the triggered line as %0,$0, or %{0} to return to previous usage
   - Add [%{color(fore,back,bold)}](docs/functions.md) function to return color codes

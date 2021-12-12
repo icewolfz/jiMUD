@@ -1422,6 +1422,9 @@
                     case 'help':
                         showHelp();
                         break;
+                    case 'smhelp':
+                        showSMHelp();
+                        break;
                     case 'immortals':
                         showImmortalTools();
                         break;
@@ -2554,6 +2557,24 @@
             }
             else
                 ipcRenderer.send('show-window', 'help', { show: true, file: 'help.html', icon: 'help', alwaysOnTopClient: true });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function showSMHelp() {
+            if (client.options.externalHelp)
+                shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
+            else {
+                if (client.options.windows['smhelp'] && client.options.windows['smhelp'].options) {
+                    client.options.windows['smhelp'].options.show = true;
+                    ipcRenderer.send('show-window', 'smhelp', client.options.windows['smhelp'].options);
+                }
+                else
+                    ipcRenderer.send('show-window', 'smhelp', { show: true, file: 'smhelp.html', icon: 'help', alwaysOnTopClient: true, width: 800, height: 600, x: window.screenTop + 100, y: window.screenLeft + 100 });
+            }
+            setTimeout(() => {
+                client.commandInput[0].blur();
+                client.commandInput[0].focus();
+            }, 0);
         }
 
         function showWho() {
