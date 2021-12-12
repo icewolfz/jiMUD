@@ -11,11 +11,13 @@
   - Add [%ansi(style,fore,back)](docs/functions.md) function to return ansi formatted string
   - Add [%i](docs/functions.md) predefined variable
   - Add [%j..%z] predefined variables for nested looping support
+  - Add [%random](docs/functions.md) predefined variable and function
   - Add [#break](docs/commands.md) break loop
   - Add [#continue](docs/commands.md) skips to the next loop iteration
   - Add {} grouping support to [#nnn](docs/commands.md) argument
   - Add [#-nnn](docs/commands.md) repeat commands NNN number of times but with a reverse counter
   - Add [#if](docs/commands.md) if expression is true execute true command, if false and false commands supplied execute them
+  - Add [#case](docs/commands.md) return command from list based on the value of index
   - Input parser:  
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function

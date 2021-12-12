@@ -2984,6 +2984,30 @@ export class Input extends EventEmitter {
                 if (tmp != null && tmp.length > 0)
                     return tmp;
                 return null;
+            case 'case':
+            case 'ca':
+                if (!args.length || args.length < 2)
+                    throw new Error('Invalid syntax use #if {expression} {true-command} \x1b[3m{false-command}\x1b[0;-11;-12m');
+                if (args[0].match(/^\{.*\}$/g))
+                    args[0] = args[0].substr(1, args[0].length - 2);
+                n = this.evaluate(this.parseInline(args[0]));
+                if (n > 0 && n < args.length) {
+                    if (args[n].match(/^\{.*\}$/g))
+                        args[n] = args[n].substr(1, args[n].length - 2);
+                    tmp = this.parseOutgoing(args[n]);
+                    if (tmp != null && tmp.length > 0)
+                        return tmp;
+                }
+                return null;
+            //case 'switch':
+            //case 'sw':
+            //case 'loop':
+            //case 'loo':
+            //case 'until':
+            //case 'repeat':
+            //case 'rep':
+            //case 'while':
+            //case 'wh':
         }
         if (fun.match(/^-?\d+$/)) {
             i = parseInt(fun, 10);
@@ -3172,7 +3196,7 @@ export class Input extends EventEmitter {
                             if (this.stack.continue || this.stack.break) {
                                 if (out.length === 0) return null;
                                 return out;
-                            }                            
+                            }
                         }
                         alias = '';
                         state = ParseState.none;
@@ -3778,7 +3802,7 @@ export class Input extends EventEmitter {
                                     if (this.stack.continue || this.stack.break) {
                                         if (out.length === 0) return null;
                                         return out;
-                                    }                                    
+                                    }
                                 }
                                 str = '';
                                 //init args
@@ -3814,7 +3838,7 @@ export class Input extends EventEmitter {
                         if (this.stack.continue || this.stack.break) {
                             if (out.length === 0) return null;
                             return out;
-                        }                        
+                        }
                         alias = '';
                         //new line so need to check for aliases again
                         findAlias = true;
@@ -3986,7 +4010,7 @@ export class Input extends EventEmitter {
                     else if (out.length === 0) return null;
                     if (this.stack.continue || this.stack.break) {
                         return out;
-                    }                    
+                    }
                     if (!a.multi) break;
                 }
             }
@@ -4003,7 +4027,7 @@ export class Input extends EventEmitter {
                 else if (out.length === 0) return null;
                 if (this.stack.continue || this.stack.break) {
                     return out;
-                }                
+                }
             }
             AliasesCached = null;
         }
@@ -4039,7 +4063,7 @@ export class Input extends EventEmitter {
             if (this.stack.continue || this.stack.break) {
                 if (out.length === 0) return null;
                 return out;
-            }            
+            }
         }
         else if (str.length > 0) {
             str = this.ExecuteTriggers(TriggerType.CommandInputRegular, str, str, false, true);
@@ -4134,6 +4158,8 @@ export class Input extends EventEmitter {
             case 'selline.proper':
             case 'selword.proper':
                 return ProperCase(this.vStack['$' + text.substr(0, text.length - 7)] || window['$' + text.substr(0, text.length - 7)]);
+            case 'random':
+                return mathjs.randomInt(0, 100);
         }
         if (this.loops.length && text.length === 1) {
             let i = text.charCodeAt(0) - 105;
@@ -4431,6 +4457,15 @@ export class Input extends EventEmitter {
                 //remove any current flags
                 min = min.filter(f => f !== '');
                 return `\x1b[${min.join(';')}m`;
+            case 'random':
+                args = this.parseInline(res[2]).split(',');
+                if (args.length === 0) throw new Error('Invalid random');
+                if (args.length === 1)
+                    return mathjs.randomInt(0, parseInt(args[0], 10) + 1);
+                else if (args.length === 2)
+                    return mathjs.randomInt(parseInt(args[0], 10), parseInt(args[1], 10) + 1);
+                else
+                    throw new Error('Too many arguments');
         }
         return null;
     }

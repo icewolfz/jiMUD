@@ -45,6 +45,7 @@ Escaping allows you to prevent special characters from being parsed and allow th
 - `lf` replace with line feed
 - `crlf` replace with carriage return and linefeed
 - `expression` evaluate the math expression and return the results when [allow evaluate is enabled](preferences.md#scripting)
+- `random` a random number between 0 and 99
 
 ## User variables
 
@@ -94,4 +95,5 @@ You can create custom variables using the expression system and the assignment o
       - prepend with x for aixterm bright colors
       - append background to get background code directly
       - eg redbackground to get red background, xred to get aixterm red or xredbackground to get aixterm red background
+- `random(i,j)` return a random number between i and j, if j omitted, i is then considered the maximum and will return a number between 0 and i
 
