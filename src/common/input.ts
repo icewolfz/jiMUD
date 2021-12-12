@@ -2987,7 +2987,7 @@ export class Input extends EventEmitter {
             case 'case':
             case 'ca':
                 if (!args.length || args.length < 2)
-                    throw new Error('Invalid syntax use #if {expression} {true-command} \x1b[3m{false-command}\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m#ca\x1b[0;-11;-12mse\x1b[0;-11;-12m index {command 1} \x1b[3m{command n}\x1b[0;-11;-12m');
                 if (args[0].match(/^\{.*\}$/g))
                     args[0] = args[0].substr(1, args[0].length - 2);
                 n = this.evaluate(this.parseInline(args[0]));
