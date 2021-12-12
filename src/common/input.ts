@@ -3089,7 +3089,7 @@ export class Input extends EventEmitter {
             if (args.match(/^\{.*\}$/g))
                 args = args.substr(1, args.length - 2);
             if (i < 1)
-                return this.executeForLoop((-i) + 1, args);
+                return this.executeForLoop((-i) + 1, 1, args);
             return this.executeForLoop(0, i, args);
         }
         const data = { name: fun, args: args, raw: raw, handled: false, return: null };
