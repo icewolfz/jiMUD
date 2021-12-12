@@ -1830,9 +1830,9 @@ export class Input extends EventEmitter {
             case 'wa':
                 if (args.length === 0 || args.length > 1)
                     throw new Error('Invalid syntax use \x1b[4m#wa\x1b[0;-11;-12mit number');
-                i = parseInt(args[0], 10);
+                i = parseInt(this.parseInline(args[0]), 10);
                 if (isNaN(i))
-                    throw new Error('Invalid number \'' + args[0] + '\'');
+                    throw new Error('Invalid number \'' + i + '\'');
                 if (i < 1)
                     throw new Error('Must be greater then zero');
                 return i;
@@ -1951,6 +1951,7 @@ export class Input extends EventEmitter {
                     this.client.echo('You have been connected: ' + getTimeSpan(Date.now() - this.client.connectTime), -7, -8, true, true);
                 return null;
             case 'beep':
+            case 'be':
                 this.client.beep();
                 return null;
             case 'version':

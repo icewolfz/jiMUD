@@ -21,6 +21,7 @@
   - Add [#switch](docs/commands.md) execute each expression until one returns true, if none are true and an else command supplied it is executed instead
   - Add [#loop](docs/commands.md) Execute the commands a number of times given by the range
   - Add [#repeat](docs/commands.md) repeat commands number of times returned by expression
+  - Add [#be](docs/commands.md) short verison of [#beep](docs/commands.md)
   - Input parser:  
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function
@@ -38,6 +39,7 @@
   - Fixed window size being sent to the mud when status display is hidden/shown
   - Fixed bug in [#trigger](docs/commands.md) command and adding to profile not correctly finding if one exist already
   - Fixed bug in [#event](docs/commands.md) command and adding to profile not correctly finding if one exist already
+  - Fixed bug in [#wait](docs/commands.md) to allow parsing of argument to allow for %i and expressions
   - Profile Manager: trigger tester did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
   - Fixed bug with File > exit when profile manager open and should not close
   - Fixed bug in #color and #cw not correctly parsing profile argument
