@@ -19,6 +19,8 @@
   - Add [#if](docs/commands.md) if expression is true execute true command, if false and false commands supplied execute them
   - Add [#case](docs/commands.md) return command from list based on the value of index
   - Add [#switch](docs/commands.md) execute each expression until one returns true, if none are true and an else command supplied it is executed instead
+  - Add [#loop](docs/commands.md) Execute the commands a number of times given by the range
+  - Add [#repeat](docs/commands.md) repeat commands number of times returned by expression
   - Input parser:  
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function
@@ -56,6 +58,8 @@
   - Remove %named argument support from docs as it never was supported and easier to just remove it
   - Update markdown-it 12.2.0 to 12.3.0
   - Update monaco-editor 0.30.1 to 0.31.0
+  - [#nnn](docs/commands.md) counter is now 1 based when using %i..%z instead of 0 based
+  - Allow group by ( and ) in command argument parsing
 
 ## v0.17.2 2021-12-06
 

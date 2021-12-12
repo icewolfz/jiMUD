@@ -596,6 +596,10 @@ export class Input extends EventEmitter {
                         state = 7;
                         arg += c;
                     }
+                    else if (c === '(') {
+                        state = 8;
+                        arg += c;
+                    }
                     else if (c === ' ') {
                         args.push(arg);
                         arg = '';
@@ -639,6 +643,19 @@ export class Input extends EventEmitter {
                             s--;
                     }
                     else if (c === '{')
+                        s++;
+                    raw += c;
+                    break;
+                case 8:
+                    arg += c;
+                    if (c === ')') {
+                        if (s === 0) {
+                            state = 2;
+                        }
+                        else
+                            s--;
+                    }
+                    else if (c === '(')
                         s++;
                     raw += c;
                     break;
@@ -3029,11 +3046,38 @@ export class Input extends EventEmitter {
                         return tmp;
                 }
                 return null
-            //case 'loop':
-            //case 'loo':
+            case 'loop':
+            case 'loo':
+                if (args.length < 2)
+                    throw new Error('Invalid syntax use \x1b[4m#loo\x1b[0;-11;-12mp\x1b[0;-11;-12m range {commands}');
+                n = this.parseInline(args.shift()).split(',');
+                args = args.join(' ');
+                if (args.match(/^\{.*\}$/g))
+                    args = args.substr(1, args.length - 2);
+                if (n.length === 1) {
+                    tmp = parseInt(n[0], 10);
+                    return this.executeForLoop(0, tmp, args);
+                }
+                tmp = parseInt(n[0], 10);
+                i = parseInt(n[1], 10);
+                if (tmp > i) tmp++;
+                else tmp--;
+                return this.executeForLoop(tmp, i, args);
+            case 'repeat':
+            case 'rep':
+                if (args.length < 2)
+                    throw new Error('Invalid syntax use \x1b[4m#rep\x1b[0;-11;-12meat\x1b[0;-11;-12m expression {commands}');
+                i = args.shift();
+                if (i.match(/^\{.*\}$/g))
+                    i = i.substr(1, i.length - 2);
+                i = this.evaluate(this.parseInline(i));
+                args = args.join(' ');
+                if (args.match(/^\{.*\}$/g))
+                    args = args.substr(1, args.length - 2);
+                if (i < 1)
+                    return this.executeForLoop((-i) + 1, 1, args);
+                return this.executeForLoop(0, i, args);
             //case 'until':
-            //case 'repeat':
-            //case 'rep':
             //case 'while':
             //case 'wh':
         }
@@ -3045,7 +3089,7 @@ export class Input extends EventEmitter {
             if (args.match(/^\{.*\}$/g))
                 args = args.substr(1, args.length - 2);
             if (i < 1)
-                return this.executeForLoop(-i, 0, args);
+                return this.executeForLoop((-i) + 1, args);
             return this.executeForLoop(0, i, args);
         }
         const data = { name: fun, args: args, raw: raw, handled: false, return: null };
@@ -3084,8 +3128,7 @@ export class Input extends EventEmitter {
         }
         else {
             for (r = start; r < end; r++) {
-
-                this.loops.push(r);
+                this.loops.push(r + 1);
                 try {
                     let out = this.parseOutgoing(commands);
                     if (out != null && out.length > 0)

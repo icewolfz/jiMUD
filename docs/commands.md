@@ -2,8 +2,8 @@
 
 |Command|Short|Arguments||Example|
 |---|---|---|---|---
-|#nnn||commands|repeat commands NNN number of times|`#5 %i` will display the numbers 0 to 4
-|#-nnn||commands|repeat commands NNN number of times but with a reverse counter|`#5 %i` will display the numbers 4 to 0
+|#nnn||commands|repeat commands NNN number of times|`#5 %i` will display the numbers 1 to 5
+|#-nnn||commands|repeat commands NNN number of times but with a reverse counter|`#5 %i` will display the numbers 5 to 1
 |#beep||| play standard system beep
 |#version|#ver||display version information
 |#show|#sh|text|process text as if it came from the mud and append a new line
@@ -60,6 +60,8 @@
 |#if||{expression} {true-command} *{false-command}*|if expression is true execute true command, if false and false commands supplied execute them
 |#case|#cs|index {command 1}*{command n}*|return command from list based on the value of index
 |#switch|#sw|(expression) {command} *(expression) {command} ... {else command}*|execute each expression until one returns true, if none are true and an else command supplied it is executed instead
+|#loop|#loo|range {commands}|Execute the commands a number of times given by the range. range is a min and max value separated by a comma, if max value is omitted it is assumed the single value is the max and 1 is the min value|`#loop 5 {#show %i}` will display numbers 1 to 5
+|#repeat|#rep|expression {commands}|repeat commands number of times returned by expression|`#repeat 5 %i` will display the numbers 1 to 5
 **Note:** All italic arguments are optional and can be left out
 
 ## Arguments
