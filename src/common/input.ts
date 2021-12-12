@@ -4950,9 +4950,7 @@ export class Input extends EventEmitter {
 
     public executeWait(text, delay: number, eAlias?: boolean, stacking?: boolean, append?: boolean, noFunctions?: boolean) {
         if (!text || text.length === 0) return;
-        const s = { args: 0, named: 0, used: this.stack.used, append: this.stack.append };
-        if (this.stack.hasOwnProperty('loops'))
-            (<any>s).loops = this.loops.splice(0);
+        const s = { loops: this.loops.splice(0), args: 0, named: 0, used: this.stack.used, append: this.stack.append };
         if (this.stack.args)
             s.args = this.stack.args.slice();
         if (this.stack.named)
