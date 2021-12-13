@@ -22,6 +22,10 @@
   - Add [#loop](docs/commands.md) Execute the commands a number of times given by the range
   - Add [#repeat](docs/commands.md) repeat commands number of times returned by expression
   - Add [#be](docs/commands.md) short verison of [#beep](docs/commands.md)
+  - Add [#add](docs/commands.md) Add value to variable named name, if current value is non numeric an error will be displayed
+  - Add [#variable](docs/commands.md) Set, get, or display all user set variables
+  - Add [#until](docs/commands.md) Execute commands until the expression evaluates to TRUE
+  - Add [#while](docs/commands.md) Execute commands as long as expression evaluates to TRUE
   - Input parser:  
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function

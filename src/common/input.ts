@@ -3078,9 +3078,100 @@ export class Input extends EventEmitter {
                 if (i < 1)
                     return this.executeForLoop((-i) + 1, 1, args);
                 return this.executeForLoop(0, i, args);
-            //case 'until':
-            //case 'while':
-            //case 'wh':
+            case 'until':
+                if (args.length != 2)
+                    throw new Error('Invalid syntax use #until expression {commands}');
+                i = args.shift();
+                if (i.match(/^\{.*\}$/g))
+                    i = i.substr(1, i.length - 2);
+                args = args.join(' ');
+                if (args.match(/^\{.*\}$/g))
+                    args = args.substr(1, args.length - 2);
+                tmp = [];
+                this.loops.push(0);
+                while (!this.evaluate(this.parseInline(i))) {
+                    let out = this.parseOutgoing(args);
+                    if (out != null && out.length > 0)
+                        tmp.push(out);
+                    if (this.stack.continue) {
+                        this.stack.continue = false;
+                        continue;
+                    }
+                    if (this.stack.break) {
+                        this.stack.break--;
+                        break;
+                    }
+                }
+                this.loops.pop();
+                if (tmp.length > 0)
+                    return tmp.map(v => v.trim()).join('\n');
+                return null;
+            case 'while':
+            case 'wh':
+                if (args.length != 2)
+                    throw new Error('Invalid syntax use \x1b[4m#wh\x1b[0;-11;-12mile expression {commands}');
+                i = args.shift();
+                if (i.match(/^\{.*\}$/g))
+                    i = i.substr(1, i.length - 2);
+                args = args.join(' ');
+                if (args.match(/^\{.*\}$/g))
+                    args = args.substr(1, args.length - 2);
+                tmp = [];
+                this.loops.push(0);
+                while (this.evaluate(this.parseInline(i))) {
+                    let out = this.parseOutgoing(args);
+                    if (out != null && out.length > 0)
+                        tmp.push(out);
+                    if (this.stack.continue) {
+                        this.stack.continue = false;
+                        continue;
+                    }
+                    if (this.stack.break) {
+                        this.stack.break--;
+                        break;
+                    }
+                }
+                this.loops.pop();
+                if (tmp.length > 0)
+                    return tmp.map(v => v.trim()).join('\n');
+                return null;
+            case 'variable':
+            case 'va':
+                if (args.length === 0) {
+                    i = Object.keys(this.client.variables);
+                    al = i.length;
+                    tmp = [];
+                    for (n = 0; n < al; n++)
+                        tmp.push(i[n] + ' = ' + this.client.variables[i[n]]);
+                    return tmp.join('\n');
+                }
+                i = args.shift();
+                if (i.match(/^\{.*\}$/g))
+                    i = i.substr(1, i.length - 2);
+                i = this.parseInline(i);
+                if (args.length === 0)
+                    return this.client.variables[i].toString();
+                args = args.join(' ');
+                if (args.match(/^\{.*\}$/g))
+                    args = args.substr(1, args.length - 2);
+                args = this.parseInline(args);
+                this.client.variables[i] = this.evaluate(this.parseInline(args));;
+                return null;
+            case 'add':
+            case 'ad':
+                if (args.length < 2)
+                    throw new Error('Invalid syntax use \x1b[4m#ad\x1b[0;-11;-12md name value');
+                i = args.shift();
+                if (i.match(/^\{.*\}$/g))
+                    i = i.substr(1, i.length - 2);
+                i = this.parseInline(i);
+                if (typeof this.client.variables[i] !== 'number')
+                    throw new Error(i + ' is not a number');
+                args = args.join(' ');
+                if (args.match(/^\{.*\}$/g))
+                    args = args.substr(1, args.length - 2);
+                this.client.variables[i] += this.evaluate(this.parseInline(args));
+                return null;
         }
         if (fun.match(/^-?\d+$/)) {
             i = parseInt(fun, 10);

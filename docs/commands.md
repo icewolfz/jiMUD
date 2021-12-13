@@ -68,6 +68,12 @@
 >repeat commands number of times returned by expression
 >>`#repeat 5 %i` will display the numbers 1 to 5
 
+#UNTIL expression {commands}
+>Execute commands until the expression evaluates to TRUE
+
+<u>#WH</u>ILE expression {commands}
+>Execute commands as long as expression evaluates to TRUE
+
 ## **Sounds**
 
 [<u>#BE</u>EP](commands/BEEP.md)
@@ -116,6 +122,9 @@
 
 <u>#UNB</u>UTTON name|index|caption
 >remove a button, if index it is the position in order of buttons in profile manager
+
+<u>#VA</u>RIABLE *name value*
+>Set, get, or display all user set variables
 
 ## **Triggers**
 
@@ -191,6 +200,9 @@ Update options<sup>2</sup> for a trigger
 
 <u>#WIN</u>DOW name
 >Open or show named window, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
+
+<u>#AD</u>D name value
+>Add value to variable named name, if current value is non numeric an error will be displayed
 
 ## **Test commands**
 
