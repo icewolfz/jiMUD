@@ -3150,7 +3150,7 @@ export class Input extends EventEmitter {
                     i = i.substr(1, i.length - 2);
                 i = this.parseInline(i);
                 if (args.length === 0)
-                    return this.client.variables[i].toString();
+                    return this.client.variables[i]?.toString();
                 args = args.join(' ');
                 if (args.match(/^\{.*\}$/g))
                     args = args.substr(1, args.length - 2);
