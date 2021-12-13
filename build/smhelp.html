@@ -54,10 +54,10 @@
             xhttp.addEventListener('load', function (e) {
                 $('#body').append(this.responseText.replace(/href=\"\?/g, 'href="#'));
             });
-            xhttp.addEventListener('error', function(e) {
+            xhttp.addEventListener('error', function (e) {
                 $('#body').textContent = $('#body').textContent + `${e.type}: ${e.loaded} bytes transferred\n`;
             });
-            xhttp.addEventListener('abort', function(e) {
+            xhttp.addEventListener('abort', function (e) {
                 $('#body').textContent = $('#body').textContent + `${e.type}: ${e.loaded} bytes transferred\n`;
             });
             xhttp.open("GET", "http://shadowmud.com:1130/help?" + _curr.substr(1));
@@ -65,7 +65,10 @@
         }
     </script>
     <style>
-        body { background-color: black;}
+        body {
+            background-color: black;
+        }
+
         #body {
             overflow: auto;
             background-color: black;
@@ -79,15 +82,12 @@
             right: 0;
             position: absolute;
             top: 50px;
-            bottom: 26px;            
+            bottom: 26px;
         }
 
         #toolbar {
             background-color: menu;
-            margin-left: 2px;
-            margin-right: 2px;
-            padding-top: 2px;
-            padding-bottom: 2px;
+            padding: 2px;
             text-align: center;
             user-select: none;
         }
@@ -273,13 +273,16 @@
         #body td {
             padding-top: 2px;
         }
+
         /*
         #tier td {margin-top:2px;position: fixed;background-color:black;}
         #tier + tr td {padding-top: 18px;}
         */
-        tbody>tr:first-of-type, tbody>tr:last-of-type {
-		    position: fixed;
-	    }
+        tbody>tr:first-of-type,
+        tbody>tr:last-of-type {
+            position: fixed;
+        }
+
         @-webkit-keyframes blinker {
             0% {
                 opacity: 1.0;
@@ -332,14 +335,10 @@
         </button>
         <button id="btn-forward" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="history.forward()">
             <i class="fa fa-arrow-right"></i>
-        </button>        
+        </button>
     </div>
     <div id="body">
     </div>
-    <!--
-    <iframe src="http://shadowmud.com:1130/who" frameborder="0"></iframe>
-    <iframe src="http://shadowmud.com:1130/finger" frameborder="0"></iframe>
--->
 </body>
 
 </html>
