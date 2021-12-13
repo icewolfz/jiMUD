@@ -204,6 +204,9 @@ Update options<sup>2</sup> for a trigger
 <u>#AD</u>D name value
 >Add value to variable named name, if current value is non numeric an error will be displayed
 
+<u>#MAT</u>H name value
+>Set value to variable named name
+
 ## **Test commands**
 
 Test commands allow you to debug or test features of the client

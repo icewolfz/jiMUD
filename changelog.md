@@ -3,29 +3,30 @@
 ## v0.17.3
 
 - **New:**
-  - Add [#cw](docs/commands.md) colors all words matching current trigger pattern
-  - Add [#pcol](docs/commands.md) color text based on start and end positions
-  - Add [#highlight](docs/commands.md) make text bold or brighter color if already bold
-  - Add [#color {pattern} fore,back,bold profile](docs/commands.md) pattern and profile arguments to allow for quick trigger creation 
+  - Add [#cw](docs/commands.md#display) colors all words matching current trigger pattern
+  - Add [#pcol](docs/commands.md#display) color text based on start and end positions
+  - Add [#highlight](docs/commands.md#display) make text bold or brighter color if already bold
+  - Add [#color {pattern} fore,back,bold profile](docs/commands.md#display) pattern and profile arguments to allow for quick trigger creation 
   - Add [%x1..%99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
   - Add [%ansi(style,fore,back)](docs/functions.md) function to return ansi formatted string
   - Add [%i](docs/functions.md) predefined variable
   - Add [%j..%z] predefined variables for nested looping support
   - Add [%random](docs/functions.md) predefined variable and function
-  - Add [#break](docs/commands.md) break loop
-  - Add [#continue](docs/commands.md) skips to the next loop iteration
-  - Add {} grouping support to [#nnn](docs/commands.md) argument
-  - Add [#-nnn](docs/commands.md) repeat commands NNN number of times but with a reverse counter
-  - Add [#if](docs/commands.md) if expression is true execute true command, if false and false commands supplied execute them
-  - Add [#case](docs/commands.md) return command from list based on the value of index
-  - Add [#switch](docs/commands.md) execute each expression until one returns true, if none are true and an else command supplied it is executed instead
-  - Add [#loop](docs/commands.md) Execute the commands a number of times given by the range
-  - Add [#repeat](docs/commands.md) repeat commands number of times returned by expression
-  - Add [#be](docs/commands.md) short verison of [#beep](docs/commands.md)
-  - Add [#add](docs/commands.md) Add value to variable named name, if current value is non numeric an error will be displayed
+  - Add [#break](docs/commands.md#repeating-and-Loops) break loop
+  - Add [#continue](docs/commands.md#repeating-and-Loops) skips to the next loop iteration
+  - Add {} grouping support to [#nnn](docs/commands.md#repeating-and-Loops) argument
+  - Add [#-nnn](docs/commands.md#repeating-and-Loops) repeat commands NNN number of times but with a reverse counter
+  - Add [#if](docs/commands.md#conditionals) if expression is true execute true command, if false and false commands supplied execute them
+  - Add [#case](docs/commands.md#conditionals) return command from list based on the value of index
+  - Add [#switch](docs/commands.md#conditionals) execute each expression until one returns true, if none are true and an else command supplied it is executed instead
+  - Add [#loop](docs/commands.md#repeating-and-Loops) Execute the commands a number of times given by the range
+  - Add [#repeat](docs/commands.md#repeating-and-Loops) repeat commands number of times returned by expression
+  - Add [#be](docs/commands.md#sounds) short verison of [#beep](docs/commands.md)
+  - Add [#add](docs/commands.md#miscellaneous) Add value to variable named name, if current value is non numeric an error will be displayed
+  - Add [#math](docs/commands.md#miscellaneous) Set value to variable named name
   - Add [#variable](docs/commands.md) Set, get, or display all user set variables
-  - Add [#until](docs/commands.md) Execute commands until the expression evaluates to TRUE
-  - Add [#while](docs/commands.md) Execute commands as long as expression evaluates to TRUE
+  - Add [#until](docs/commands.md#repeating-and-Loops) Execute commands until the expression evaluates to TRUE
+  - Add [#while](docs/commands.md#repeating-and-Loops) Execute commands as long as expression evaluates to TRUE
   - Input parser:  
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function
@@ -42,9 +43,9 @@
     - Fixed issues with trailing newlines with nested loops
     - Fixed format error checking to accept only numbers
   - Fixed window size being sent to the mud when status display is hidden/shown
-  - Fixed bug in [#trigger](docs/commands.md) command and adding to profile not correctly finding if one exist already
-  - Fixed bug in [#event](docs/commands.md) command and adding to profile not correctly finding if one exist already
-  - Fixed bug in [#wait](docs/commands.md) to allow parsing of argument to allow for %i and expressions
+  - Fixed bug in [#trigger](docs/commands.md#triggers) command and adding to profile not correctly finding if one exist already
+  - Fixed bug in [#event](docs/commands.md#triggers) command and adding to profile not correctly finding if one exist already
+  - Fixed bug in [#wait](docs/commands.md#miscellaneous) to allow parsing of argument to allow for %i and expressions
   - Profile Manager: trigger tester did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
   - Fixed bug with File > exit when profile manager open and should not close
   - Fixed bug in #color and #cw not correctly parsing profile argument
@@ -61,11 +62,12 @@
   - Fixed changelog help page links not working
   - Fixed execution of buttons and context items with broken parsing stacks
   - Fixed buttons and context not having error trapping code that broke cleanup
+  - Status Display: Fixed resize bar conflicking with profile manger resize bar due to theming
 - **Changed:**
   - Remove %named argument support from docs as it never was supported and easier to just remove it
   - Update markdown-it 12.2.0 to 12.3.0
   - Update monaco-editor 0.30.1 to 0.31.0
-  - [#nnn](docs/commands.md) counter is now 1 based when using %i..%z instead of 0 based
+  - [#nnn](docs/commands.md#repeating-and-Loops) counter is now 1 based when using %i..%z instead of 0 based
   - Allow group by ( and ) in command argument parsing
 
 ## v0.17.2 2021-12-06
@@ -106,9 +108,7 @@
   - Fixed bug that would not correctly clean up when window closed by close button
   - Fixed bug where window would not correctly save open state when main window closed
   - Advanced Editor: Fixed bug with context menu and colorizing selected text
-  - Status Display:
-    - Fixed some monster icon positions
-    - Fixed resize bar conflicking with profile manger resize bar due to theming
+  - Status Display: Fixed some monster icon positions
   - Backup: Fixed importing of [Show Script Errors](docs/preferences.md#scripting) setting
 - **Changed:**
   - Expand [#testmxpexpire](docs/commands.md) to test same line expiring

@@ -3172,6 +3172,19 @@ export class Input extends EventEmitter {
                     args = args.substr(1, args.length - 2);
                 this.client.variables[i] += this.evaluate(this.parseInline(args));
                 return null;
+            case 'math':
+            case 'mat':
+                if (args.length < 2)
+                    throw new Error('Invalid syntax use \x1b[4m#mat\x1b[0;-11;-12mh name value');
+                i = args.shift();
+                if (i.match(/^\{.*\}$/g))
+                    i = i.substr(1, i.length - 2);
+                i = this.parseInline(i);
+                args = args.join(' ');
+                if (args.match(/^\{.*\}$/g))
+                    args = args.substr(1, args.length - 2);
+                this.client.variables[i] = this.evaluate(this.parseInline(args));
+                return null;
         }
         if (fun.match(/^-?\d+$/)) {
             i = parseInt(fun, 10);
