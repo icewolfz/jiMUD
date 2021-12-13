@@ -12,21 +12,22 @@
   - Add [%i](docs/functions.md) predefined variable
   - Add [%j..%z] predefined variables for nested looping support
   - Add [%random](docs/functions.md) predefined variable and function
-  - Add [#break](docs/commands.md#repeating-and-Loops) break loop
-  - Add [#continue](docs/commands.md#repeating-and-Loops) skips to the next loop iteration
-  - Add {} grouping support to [#nnn](docs/commands.md#repeating-and-Loops) argument
-  - Add [#-nnn](docs/commands.md#repeating-and-Loops) repeat commands NNN number of times but with a reverse counter
+  - Add [#break](docs/commands.md#repeating-and-loops) break loop
+  - Add [#continue](docs/commands.md#repeating-and-loops) skips to the next loop iteration
+  - Add {} grouping support to [#nnn](docs/commands.md#repeating-and-loops) argument
+  - Add [#-nnn](docs/commands.md#repeating-and-loops) repeat commands NNN number of times but with a reverse counter
   - Add [#if](docs/commands.md#conditionals) if expression is true execute true command, if false and false commands supplied execute them
   - Add [#case](docs/commands.md#conditionals) return command from list based on the value of index
   - Add [#switch](docs/commands.md#conditionals) execute each expression until one returns true, if none are true and an else command supplied it is executed instead
-  - Add [#loop](docs/commands.md#repeating-and-Loops) Execute the commands a number of times given by the range
-  - Add [#repeat](docs/commands.md#repeating-and-Loops) repeat commands number of times returned by expression
+  - Add [#loop](docs/commands.md#repeating-and-loops) Execute the commands a number of times given by the range
+  - Add [#repeat](docs/commands.md#repeating-and-loops) repeat commands number of times returned by expression
   - Add [#be](docs/commands.md#sounds) short verison of [#beep](docs/commands.md)
   - Add [#add](docs/commands.md#miscellaneous) Add value to variable named name, if current value is non numeric an error will be displayed
   - Add [#math](docs/commands.md#miscellaneous) Set value to variable named name
   - Add [#variable](docs/commands.md) Set, get, or display all user set variables
-  - Add [#until](docs/commands.md#repeating-and-Loops) Execute commands until the expression evaluates to TRUE
-  - Add [#while](docs/commands.md#repeating-and-Loops) Execute commands as long as expression evaluates to TRUE
+  - Add [#until](docs/commands.md#repeating-and-loops) Execute commands until the expression evaluates to TRUE
+  - Add [#while](docs/commands.md#repeating-and-loops) Execute commands as long as expression evaluates to TRUE
+  - Add [#forall](docs/commands.md#repeating-and-loops loop stringlist, in the format of a | delimited string and set %i as each word)
   - Input parser:  
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function
@@ -67,7 +68,7 @@
   - Remove %named argument support from docs as it never was supported and easier to just remove it
   - Update markdown-it 12.2.0 to 12.3.0
   - Update monaco-editor 0.30.1 to 0.31.0
-  - [#nnn](docs/commands.md#repeating-and-Loops) counter is now 1 based when using %i..%z instead of 0 based
+  - [#nnn](docs/commands.md#repeating-and-loops) counter is now 1 based when using %i..%z instead of 0 based
   - Allow group by ( and ) in command argument parsing
 
 ## v0.17.2 2021-12-06

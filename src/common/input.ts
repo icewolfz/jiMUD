@@ -4,7 +4,7 @@
 //spell-checker:ignore togglecl raiseevent raisedelayed raisede diceavg dicemin dicemax zdicedev dicedev zmud
 import EventEmitter = require('events');
 import { MacroModifiers } from './profile';
-import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync } from './library';
+import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType } from './profile';
@@ -3079,7 +3079,7 @@ export class Input extends EventEmitter {
                     return this.executeForLoop((-i) + 1, 1, args);
                 return this.executeForLoop(0, i, args);
             case 'until':
-                if (args.length != 2)
+                if (args.length < 2)
                     throw new Error('Invalid syntax use #until expression {commands}');
                 i = args.shift();
                 if (i.match(/^\{.*\}$/g))
@@ -3108,7 +3108,7 @@ export class Input extends EventEmitter {
                 return null;
             case 'while':
             case 'wh':
-                if (args.length != 2)
+                if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m#wh\x1b[0;-11;-12mile expression {commands}');
                 i = args.shift();
                 if (i.match(/^\{.*\}$/g))
@@ -3132,6 +3132,37 @@ export class Input extends EventEmitter {
                     }
                 }
                 this.loops.pop();
+                if (tmp.length > 0)
+                    return tmp.map(v => v.trim()).join('\n');
+                return null;
+            case 'forall':
+            case 'fo':
+                if (args.length < 2)
+                    throw new Error('Invalid syntax use \x1b[4m#fo\x1b[0;-11;-12mrall stringlist {commands}');
+                i = args.shift();
+                if (i.match(/^\{.*\}$/g))
+                    i = i.substr(1, i.length - 2);
+                args = args.join(' ');
+                if (args.match(/^\{.*\}$/g))
+                    args = args.substr(1, args.length - 2);
+                tmp = [];
+                i = splitQuoted(this.stripQuotes(this.parseInline(i)), '|');
+                al = i.length;
+                for (n = 0; n < al; n++) {
+                    this.loops.push(i[n]);
+                    let out = this.parseOutgoing(args);
+                    if (out != null && out.length > 0)
+                        tmp.push(out);
+                    if (this.stack.continue) {
+                        this.stack.continue = false;
+                        continue;
+                    }
+                    if (this.stack.break) {
+                        this.stack.break--;
+                        break;
+                    }
+                    this.loops.pop();
+                }
                 if (tmp.length > 0)
                     return tmp.map(v => v.trim()).join('\n');
                 return null;

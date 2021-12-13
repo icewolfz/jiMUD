@@ -74,6 +74,10 @@
 <u>#WH</u>ILE expression {commands}
 >Execute commands as long as expression evaluates to TRUE
 
+<u>#FO</i>RALL stringlist {commands}
+>loop stringlist, in the format of a | delimited string and set %i as each word
+>>`#fo "first|second|third" {#sh %i}` would display the words first, second, third
+
 ## **Sounds**
 
 [<u>#BE</u>EP](commands/BEEP.md)
