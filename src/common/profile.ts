@@ -453,6 +453,20 @@ export class Variable extends Item {
     public clone() {
         return new Variable(this);
     }
+
+    public toString() {
+        switch (this.type) {
+            case VariableType.Record:
+                if (typeof this.value === 'string')
+                        return this.value;
+                return JSON.stringify(this.value);
+            case VariableType.StringList:
+                if (typeof this.value === 'string')
+                    return this.value;
+                return '"' + (<any[]>this.value).join('"|"') + '"';
+        }
+        return this.value?.toString();
+    }
 }
 
 export class Profile {
