@@ -912,16 +912,16 @@ body {
 
 /** button end */
 
-#ghost-bar {
+#status-ghost-bar {
     background-color: #d4d4d4;
 }
 
-#drag-bar {
+#status-drag-bar {
     left: -2px;
     transition: 0s background-color;
 }
 
-#drag-bar:hover{
+#status-drag-bar:hover{
     background-color: #d4d4d4;    
     transition-delay: 1s;
 }

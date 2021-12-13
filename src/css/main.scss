@@ -599,7 +599,7 @@ dialog {
     text-overflow: ellipsis;
 }
 
-#drag-bar {
+#status-drag-bar {
     background-color: transparent;
     height: 100%;
     width: 3px;
@@ -608,7 +608,7 @@ dialog {
     left: -3px;    
 }
 
-#ghost-bar {
+#status-ghost-bar {
     width: 3px;
     background-color: #000;
     opacity: 0.75;

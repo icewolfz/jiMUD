@@ -102,7 +102,9 @@
   - Fixed bug that would not correctly clean up when window closed by close button
   - Fixed bug where window would not correctly save open state when main window closed
   - Advanced Editor: Fixed bug with context menu and colorizing selected text
-  - Status Display: Fixed some monster icon positions
+  - Status Display:
+    - Fixed some monster icon positions
+    - Fixed resize bar conflicking with profile manger resize bar due to theming
   - Backup: Fixed importing of [Show Script Errors](docs/preferences.md#scripting) setting
 - **Changed:**
   - Expand [#testmxpexpire](docs/commands.md) to test same line expiring

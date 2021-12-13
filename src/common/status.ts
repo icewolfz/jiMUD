@@ -174,15 +174,15 @@ export class Status extends EventEmitter {
                     break;
             }
         });
-        $('#drag-bar').mousedown((e) => {
+        $('#status-drag-bar').mousedown((e) => {
             if (e.buttons !== 1) return;
             e.preventDefault();
 
             this.dragging = true;
-            const main = $('#drag-bar');
+            const main = $('#status-drag-bar');
             const ghostBar = $('<div>',
                 {
-                    id: 'ghost-bar',
+                    id: '#status-ghost-bar',
                     css: {
                         height: main.outerHeight(),
                         top: main.offset().top,
@@ -218,16 +218,16 @@ export class Status extends EventEmitter {
                 $('#status').css('width', '');
                 const minWidth = parseInt($('#status-border').css('width'), 10) || (parseInt($('#status').css('width'), 10) + parseInt($('#status').css('right'), 10) * 2);
                 const maxWidth = Math.floor(document.body.clientWidth / 2);
-                const l = $('#drag-bar').offset().left;
+                const l = $('#status-drag-bar').offset().left;
                 $('#status-border').css('width', w1);
                 $('#status').css('width', w2);
                 if (e.pageX < maxWidth)
-                    this.spitterDistance = maxWidth - parseInt($('#drag-bar').css('left'), 10);
+                    this.spitterDistance = maxWidth - parseInt($('#status-drag-bar').css('left'), 10);
                 else if (e.pageX > l)
                     this.spitterDistance = minWidth;
                 else
-                    this.spitterDistance = document.body.clientWidth - e.pageX + Math.abs(parseInt($('#drag-bar').css('left'), 10));
-                $('#ghost-bar').remove();
+                    this.spitterDistance = document.body.clientWidth - e.pageX + Math.abs(parseInt($('#status-drag-bar').css('left'), 10));
+                $('#status-ghost-bar').remove();
                 $(document).unbind('mousemove');
                 this.dragging = false;
                 this.updateInterface();
@@ -248,7 +248,7 @@ export class Status extends EventEmitter {
     private updateSplitter() {
         const p = parseInt($('#status').css('right'), 10) * 2;
         if (!this._spitterDistance || this._spitterDistance < 1) {
-            const b = Math.abs(parseInt($('#drag-bar').css('left'), 10)) + $('#drag-bar').outerWidth();
+            const b = Math.abs(parseInt($('#status-drag-bar').css('left'), 10)) + $('#status-drag-bar').outerWidth();
             this._spitterDistance = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
         }
         $('#display').css('right', this._spitterDistance);
@@ -267,14 +267,14 @@ export class Status extends EventEmitter {
         const minWidth = parseInt($('#status').css('width'), 10);
         const minWidth2 = parseInt($('#status-border').css('width'), 10) || (parseInt($('#status').css('width'), 10) + parseInt($('#status').css('right'), 10) * 2);
         const maxWidth = Math.floor(document.body.clientWidth / 2);
-        const l = $('#drag-bar').offset().left;
+        const l = $('#status-drag-bar').offset().left;
         $('#status-border').css('width', w1);
         $('#status').css('width', w2);
         if ($('#status').outerWidth() < minWidth) {
             this.spitterDistance = minWidth2;
         }
         else if ($('#status').outerWidth() > maxWidth) {
-            this.spitterDistance = maxWidth - parseInt($('#drag-bar').css('left'), 10);
+            this.spitterDistance = maxWidth - parseInt($('#status-drag-bar').css('left'), 10);
         }
     }
 

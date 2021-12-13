@@ -929,7 +929,7 @@ body {
 
 /** button end */
 
-#drag-bar {
+#status-drag-bar {
     left: -3px;
     top: -7px;
     height: initial;
@@ -937,11 +937,11 @@ body {
     transition: 0s background-color;
 }
 
-#ghost-bar {
+#status-ghost-bar {
     background-color: #d70000;
 }
 
-#drag-bar:hover{
+#status-drag-bar:hover{
     background-color: #d70000;    
     transition-delay: 1s;
 }
