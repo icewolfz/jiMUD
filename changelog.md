@@ -54,8 +54,8 @@
   - Fixed bug in [#event](docs/commands.md#triggers) command and adding to profile not correctly finding if one exist already
   - Fixed bug in [#wait](docs/commands.md#miscellaneous) to allow parsing of argument to allow for %i and expressions
   - Profile Manager: trigger tester did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
-  - Fixed bug with File > exit when profile manager open and should not close
-  - Fixed bug in #color and #cw not correctly parsing profile argument
+  - Fixed bug with File > Exit when profile manager open and should not close
+  - Fixed bug in [#color](docs/commands.md#display) and [#cw](docs/commands.md#display) not correctly parsing profile argument
   - Input parser:
     - Fixed - being lost after %
     - Fixed # being lose if %# had a -, * or % following it
@@ -69,7 +69,7 @@
   - Fixed changelog help page links not working
   - Fixed execution of buttons and context items with broken parsing stacks
   - Fixed buttons and context not having error trapping code that broke cleanup
-  - Status Display: Fixed resize bar conflicking with profile manger resize bar due to theming
+  - Status Display: Fixed resize bar conflicting with profile manger resize bar due to theming
 - **Changed:**
   - Remove %named argument support from docs as it never was supported and easier to just remove it
   - Update markdown-it 12.2.0 to 12.3.0
