@@ -26,7 +26,7 @@
   - Add [#switch](docs/commands.md#conditionals) execute each expression until one returns true, if none are true and an else command supplied it is executed instead
   - Add [#loop](docs/commands.md#repeating-and-loops) Execute the commands a number of times given by the range
   - Add [#repeat](docs/commands.md#repeating-and-loops) repeat commands number of times returned by expression
-  - Add [#be](docs/commands.md#sounds) short verison of [#beep](docs/commands.md)
+  - Add [#be](docs/commands.md#sounds) short version of [#beep](docs/commands.md)
   - Add [#add](docs/commands.md#miscellaneous) Add value to variable named name, if current value is non numeric an error will be displayed
   - Add [#math](docs/commands.md#miscellaneous) Set value to variable named name
   - Add [#variable](docs/commands.md) Set, get, or display all user set variables
@@ -62,15 +62,16 @@
     - Fixed corrupted stack after trigger errors
     - Fixed issue with $named argument format
     - Fixed named arguments not working
-    - Fixed bugs in repeatnum not having correct name in all places
+    - Fixed bugs in [repeatnum](functions.md) not having correct name in all places
     - Fixed how alias unused arguments are appended
     - Fixed alias arguments values not correctly parsing before being used
     - No longer parse #commands if in a command/function argument as it would break inline parsing in most cases
-  - Fixed changelog help page links not working
   - Fixed execution of buttons and context items with broken parsing stacks
   - Fixed buttons and context not having error trapping code that broke cleanup
   - Status Display: Fixed resize bar conflicting with profile manger resize bar due to theming
-  - Fixed crashing issue when opening external links from help pages
+  - Help:
+    - Fixed crashing issue when opening external links
+    - Fixed changelog links not working
 - **Changed:**
   - Remove %named argument support from docs as it never was supported and easier to just remove it
   - Update markdown-it 12.2.0 to 12.3.0
@@ -1219,7 +1220,7 @@
       - Add visible doors to up/down exits on map
   - Mapper: Can scroll with mouse wheel when hovering a scroll icon.
 - **Changed:**
-  - Mapper: switch image-rendering to crisp-edges instead of pixelated
+  - Mapper: switch image-rendering to crisp-edges instead of pixilated
 - **Fixed:**
   - Auto updater was updated to latest in attempt to fix auto update bugs.
   - Mapper:
@@ -2592,7 +2593,7 @@
     - Mapper: default import type, allows you to determine how map data will be imported when using default import systems
     - Backup load/save selections, determine what is saved or loaded when using the remote client backup system
 - **Changed:**
-  - Default button icons have been converted to font-awesome or svg icons for easy themeing and crisper look
+  - Default button icons have been converted to font-awesome or svg icons for easy theming and crisper look
   - Upgrade electron to 1.7.1, fixes a few crashers with --debug
   - New application icons, should be cleaner and support Linux, windows and mac
 - **Fixed:**
@@ -2726,7 +2727,7 @@
   - Can no longer close client until profile manager has been closed
   - Changed how deleted profiles where moved to trash, now uses framework instead of extra node module
   - Upgraded to electron 1.6.8
-  - All css/js files are ran into minifiers to gain some speed
+  - All css/js files are ran into minimizers to gain some speed
   - Help > jiMUD now opens up to the github docs
   - Changed how options are reloaded for main client, instead of a direct call, fire event
   - Rearranged the profile manager interface to simply and condense code
