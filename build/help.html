@@ -51,6 +51,7 @@
         var _history = [];
         var _current = 0;
         var $search;
+        var dragging = false;
         var lastSel = $("#contents option:selected");
         var _data = [
             {
@@ -348,6 +349,63 @@
                 });
                 ipcRenderer.invoke('show-context', addMenu, { x: x, y: y });
             });
+
+            $('#help-drag-bar').mousedown((e) => {
+                e.preventDefault();
+
+                dragging = true;
+                const main = $('#container');
+                const ghostBar = $('<div>',
+                    {
+                        id: 'help-ghost-bar',
+                        css: {
+                            height: main.outerHeight(),
+                            top: main.offset().top,
+                            left: main.offset().left - 3
+                        }
+                    }).appendTo('body');
+
+                $(document).mousemove((event) => {
+                    if (event.pageX < 199)
+                        ghostBar.css('left', 199);
+                    else if (event.pageX > document.body.clientWidth - 300)
+                        ghostBar.css('left', document.body.clientWidth - 300);
+                    else
+                        ghostBar.css('left', event.pageX);
+                });
+            });
+            
+            $(window).on('resize', () => {
+                if ($('#container').outerWidth() < 300 && $('#sidebar').outerWidth() > 202) {
+                    $('#sidebar').css('width', document.body.clientWidth - 300);
+                    $('#container').css('left', document.body.clientWidth - 300);
+                    ipcRenderer.send('setting-changed', { type: 'help', name: 'split', value: document.body.clientWidth - 300 });
+                }
+            });
+
+            $(document).mouseup((e) => {
+                if (dragging) {
+                    if (e.pageX < 200) {
+                        $('#sidebar').css('width', 202);
+                        $('#container').css('left', 202);
+                        ipcRenderer.send('setting-changed', { type: 'help', name: 'split', value: 202 });
+                    }
+                    else if (e.pageX > document.body.clientWidth - 200) {
+                        $('#sidebar').css('width', document.body.clientWidth - 300);
+                        $('#container').css('left', document.body.clientWidth - 300);
+                        ipcRenderer.send('setting-changed', { type: 'help', name: 'split', value: document.body.clientWidth - 300 });
+                    }
+                    else {
+                        $('#sidebar').css('width', e.pageX + 2);
+                        $('#container').css('left', e.pageX + 2);
+                        ipcRenderer.send('setting-changed', { type: 'help', name: 'split', value: e.pageX + 2 });
+                    }
+
+                    $('#help-ghost-bar').remove();
+                    $(document).unbind('mousemove');
+                    dragging = false;
+                }
+            });
         });
 
         function executeContextItem(idx, id, label, role) {
@@ -406,7 +464,7 @@
         <div id="main">
             <div id="sidebar">
                 <div id="tree" class="panel panel-default"></div>
-                <div id="drag-bar"></div>
+                <div id="help-drag-bar"></div>
             </div>
             <div id="container">
                 <iframe id="container-frame" class="panel-body" src="help.display.html"></iframe>
