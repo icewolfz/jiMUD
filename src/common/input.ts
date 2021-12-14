@@ -12,6 +12,7 @@ import { NewLineType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
 import { create, all, factory } from 'mathjs';
+import { cachedDataVersionTag } from 'v8';
 
 const allWithCustomFunctions = {
     ...all,
@@ -1243,6 +1244,7 @@ export class Input extends EventEmitter {
                 return null;
             case 'unevent':
             case 'une':
+                //#region unevent
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m#une\x1b[0;-11;-12mvent name or \x1b[4m#une\x1b[0;-11;-12mvent {name} \x1b[3mprofile\x1b[0;-11;-12m');
                 else {
@@ -1301,6 +1303,7 @@ export class Input extends EventEmitter {
                     }
                 }
                 return null;
+            //#endregion
             case 'button':
             case 'bu':
                 //#region button
@@ -1524,6 +1527,7 @@ export class Input extends EventEmitter {
                 return null;
             case 'unbutton':
             case 'unb':
+                //#region unbutton
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m#unb\x1b[0;-11;-12mtton name or \x1b[4m#unb\x1b[0;-11;-12mtton {name} \x1b[3mprofile\x1b[0;-11;-12m');
                 else {
@@ -1591,8 +1595,10 @@ export class Input extends EventEmitter {
                     }
                 }
                 return null;
+            //#endregion button
             case 'alarm':
             case 'ala':
+                //#region alarm
                 //spell-checker:ignore timepattern
                 profile = null;
                 name = null;
@@ -1752,6 +1758,7 @@ export class Input extends EventEmitter {
                     this.client.updateAlarms();
                 }
                 return null;
+            //#endregion alarm
             case 'ungag':
             case 'ung':
                 if (args.length > 0)
@@ -1764,6 +1771,7 @@ export class Input extends EventEmitter {
                 return null;
             case 'gag':
             case 'ga':
+                //#region gag
                 if (args.length === 0) {
                     if (this._gags.length) {
                         this._gags[this._gags.length - 1] == this.client.display.lines.length;
@@ -1826,6 +1834,7 @@ export class Input extends EventEmitter {
                     this._gag = 0;
                 }
                 return null;
+            //#endregion gag
             case 'wait':
             case 'wa':
                 if (args.length === 0 || args.length > 1)
@@ -3216,6 +3225,17 @@ export class Input extends EventEmitter {
                     args = args.substr(1, args.length - 2);
                 this.client.variables[i] = this.evaluate(this.parseInline(args));
                 return null;
+            case 'evaluate':
+            case 'eva':
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use \x1b[4m#eva\x1b[0;-11;-12mluate expression');
+                args = '' + this.evaluate(this.parseInline(args.join(' ')));
+                if (this.client.telnet.prompt)
+                    this.client.print('\n' + args + '\x1b[0m\n', false);
+                else
+                    this.client.print(args + '\x1b[0m\n', false);
+                this.client.telnet.prompt = false;
+                return null
         }
         if (fun.match(/^-?\d+$/)) {
             i = parseInt(fun, 10);
@@ -4673,6 +4693,54 @@ export class Input extends EventEmitter {
                     return mathjs.randomInt(parseInt(args[0], 10), parseInt(args[1], 10) + 1);
                 else
                     throw new Error('Too many arguments');
+            case 'case': //case(index,n1,n2...)
+                args = splitQuoted(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                c = this.evaluate(this.parseInline(args[0]));
+                if (c > 0 && c < args.length)
+                    return this.stripQuotes(args[c]);
+                return '';
+            case 'switch': //switch(exp,value...)
+                args = splitQuoted(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                if (args.length % 2 === 1)
+                    throw new Error('All expressions must have a value');
+                sides = args.length;
+                for (c = 0; c < sides; c += 2) {
+                    if (this.evaluate(args[c]))
+                        return this.stripQuotes(args[c + 1]);
+                }
+                return '';
+            case 'if': //if(exp,true,false)
+                args = splitQuoted(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                if (args.length !== 3)
+                    throw new Error('Too many arguments');
+                if (this.evaluate(args[0]))
+                    return this.stripQuotes(args[1].trim());
+                return this.stripQuotes(args[2].trim());
+            case 'ascii': //ascii(string)
+                args = this.parseInline(res[2]).split(',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments');
+                if (args[0].trim().length === 0)
+                    throw new Error('Invalid argument, empty string');
+                return args[0].trim().charCodeAt(0);
+            case 'char': //char(number)
+                args = this.parseInline(res[2]).split(',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments');
+                c = parseInt(args[0], 10);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                return String.fromCharCode(c);
         }
         return null;
     }

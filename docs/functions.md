@@ -96,4 +96,9 @@ You can create custom variables using the expression system and the assignment o
       - append background to get background code directly
       - eg redbackground to get red background, xred to get aixterm red or xredbackground to get aixterm red background
 - `random(i,j)` return a random number between i and j, if j omitted, i is then considered the maximum and will return a number between 0 and i
+- `char(i)` return ASCII character for i
+- `ascii(string)` return the ascii value for first letter in string
+- `case(n,value1,value2,value3...)` return the nth value of arguments, from 1 to last argument
+- `switch(expression1,value1,...expressionN,valueN)` return value of the first expression that evaluates to true
+- `if(expression,true-value,false-value)` evaluate expression and return true or false value
 

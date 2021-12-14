@@ -12,6 +12,11 @@
   - Add [%i](docs/functions.md) predefined variable
   - Add [%j..%z] predefined variables for nested looping support
   - Add [%random](docs/functions.md) predefined variable and function
+  - Add [%char(i)](docs/functions.md) return ASCII character for i
+  - Add [%ascii(string)](docs/functions.md) return the ascii value for first letter in string
+  - Add [%case(n,value1,value2,value3...)](docs/functions.md) return the nth value of arguments, from 1 to last argument
+  - Add [%switch(expression1,value1,...expressionN,valueN)](docs/functions.md) return value of the first expression that evaluates to true
+  - Add [%if(expression,true-value,false-value)](docs/functions.md) evaluate expression and return true or false value
   - Add [#break](docs/commands.md#repeating-and-loops) break loop
   - Add [#continue](docs/commands.md#repeating-and-loops) skips to the next loop iteration
   - Add {} grouping support to [#nnn](docs/commands.md#repeating-and-loops) argument
@@ -28,6 +33,7 @@
   - Add [#until](docs/commands.md#repeating-and-loops) Execute commands until the expression evaluates to TRUE
   - Add [#while](docs/commands.md#repeating-and-loops) Execute commands as long as expression evaluates to TRUE
   - Add [#forall](docs/commands.md#repeating-and-loops loop stringlist, in the format of a | delimited string and set %i as each word)
+  - Add [#evaluate](docs/commands.md#miscellaneous) Evaluate expression and display to screen like show
   - Input parser:  
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function

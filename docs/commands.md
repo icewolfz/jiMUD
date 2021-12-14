@@ -211,6 +211,9 @@ Update options<sup>2</sup> for a trigger
 <u>#MAT</u>H name value
 >Set value to variable named name
 
+<u>#EVA</u>LUATE expression
+>Evaluate expression and display to screen like show
+
 ## **Test commands**
 
 Test commands allow you to debug or test features of the client
