@@ -44,6 +44,7 @@
     - Add `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
     - Add `On profile deleted do` what to do when a profile is deleted when `Watch for profile changes` enabled
     - Add [Open ShadowMUD help in web browser?](docs/preferences.md#advanced) tp open ShadowMUD in child window    
+  - Help: Add left navigation tree to allow easier navigation besides the top navigation drop down, due to new command help pages to prevent large scroll when wanted
 - **Fixed:**
   - [#nnn](docs/commands.md)
     - Fixed being double parsed
@@ -82,6 +83,7 @@
   - Update bootstrap 3.3.7 to 3.4.1
   - Update datatables from 1.10.18 to 1.11.3
   - Update bootstrap select 1.13.17 to 1.13.18
+  - Help: Command help has been redesigned and commands will slowly have individual help pages
 
 ## v0.17.2 2021-12-06
 
@@ -127,7 +129,6 @@
   - Expand [#testmxpexpire](docs/commands.md) to test same line expiring
   - Use resize cursors instead of column resize cursors for resizable areas
   - Update electron 16.0.1 to 16.0.4
-  - Help: Command help has been redesigned and commands will slowly have individual help pages
 
 ## v0.17.1 2021-11-23
 
