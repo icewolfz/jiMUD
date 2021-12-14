@@ -4799,7 +4799,7 @@ function buildOptions(details, window, settings) {
         // open window as modal
         Object.assign(options, {
             modal: true,
-            parent: win,
+            parent: window,
             movable: false,
             minimizable: false,
             maximizable: false,

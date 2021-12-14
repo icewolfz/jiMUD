@@ -72,6 +72,7 @@
   - Help:
     - Fixed crashing issue when opening external links
     - Fixed changelog links not working
+  - Fixed issue with modal child windows not being set to correct parent window
 - **Changed:**
   - Remove %named argument support from docs as it never was supported and easier to just remove it
   - Update markdown-it 12.2.0 to 12.3.0
