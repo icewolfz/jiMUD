@@ -67,6 +67,8 @@ export class Client extends EventEmitter {
     public lastSendTime: number = 0;
     public defaultTitle = 'jiMUD';
 
+    public variables:any = {};
+
     set enabledProfiles(value: string[]) {
         const a = [];
         let v;
@@ -329,6 +331,14 @@ export class Client extends EventEmitter {
     public get commandHistory() {
         return this._input.commandHistory;
     }
+    
+    public get indices() {
+        return this._input.indices;
+    }
+
+    public get repeatnum() {
+        return this._input.repeatnum;
+    }
 
     public setHistoryIndex(index) {
         this._input.setHistoryIndex(index);
@@ -371,6 +381,26 @@ export class Client extends EventEmitter {
         this.startAlarms();
         this.emit('profiles-loaded');
     }
+
+    public loadProfile(profile) {
+        if(!profile) return;
+        const p = path.join(parseTemplate('{data}'), 'profiles');
+        if (!existsSync(p)) 
+            return;
+        this.profiles.remove(profile);
+        this.profiles.load(profile, p);
+        this.clearCache();
+        this.startAlarms();
+        this.emit('profile-loaded', profile);   
+    }
+
+    public removeProfile(profile) {
+        if(!profile) return;
+        this.profiles.remove(profile);
+        this.clearCache();
+        this.startAlarms();
+        this.emit('profile-removed', profile);   
+    }    
 
     public saveProfiles() {
         const p = path.join(parseTemplate('{data}'), 'profiles');
@@ -1087,8 +1117,12 @@ export class Client extends EventEmitter {
         this.emit('cleared');
     }
 
-    public parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean) {
-        return this._input.parseOutgoing(text, eAlias, stacking);
+    public parseInline(text: string) {
+        return this._input.parseInline(text);
+    }
+
+    public parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean, noFunction?: boolean) {
+        return this._input.parseOutgoing(text, eAlias, stacking, noFunction);
     }
 
     public clearCache() {

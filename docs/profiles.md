@@ -112,6 +112,7 @@
 - `Case sensitive` causes trigger to make sure letter cases are matched, eg A equal A and not a, off A equal a or A
 - `Trigger on Newline` this causes the trigger to execute if it is a full line of text
 - `Trigger on Prompt` this causes the trigger to execute if prompt/partial line of text.
+- `Trigger on raw` this causes the trigger to match the raw text of the line including any ansi escape codes, you can use \x1b or \u001b in pattern for escape code, eg \1x\[0m would match the ansi bold sequence
 
 ## Buttons
 

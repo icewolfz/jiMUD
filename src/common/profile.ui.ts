@@ -38,6 +38,7 @@ let archiver;
 let unarchiver;
 let archive;
 let _spellchecker = true;
+let _prependTrigger = true;
 
 const _controllers = {};
 let _controllersCount = 0;
@@ -440,16 +441,23 @@ export function RunTester() {
         else {
             let re;
             if ($('#trigger-caseSensitive').prop('checked'))
-                re = new RegExp((<string>$('#trigger-pattern').val()), 'g');
+                re = new RegExp((<string>$('#trigger-pattern').val()), 'gd');
             else
-                re = new RegExp((<string>$('#trigger-pattern').val()), 'gi');
+                re = new RegExp((<string>$('#trigger-pattern').val()), 'gid');
             const res = re.exec($('#trigger-test-text').val());
             if (res == null || res.length === 0)
                 $('#trigger-test-results').val('Pattern doesn\'t Match!');
             else {
                 let r = '';
+                let m = 0;
+                if (res[0] !== $('#trigger-test-text').val() || _prependTrigger) {
+                    r += '%0 : ' + $('#trigger-test-text').val() + '\n';
+                    r += '%x0 : 0 ' + (<string>$('#trigger-test-text').val()).length + '\n';
+                    m = 1;
+                }
                 for (let i = 0; i < res.length; i++) {
-                    r += '%' + i + ' : ' + res[i] + '\n';
+                    r += '%' + (i + m) + ' : ' + res[i] + '\n';
+                    r += `%x${i+m} : ${res.indices[i][0]} ${res.indices[i][1]}\n`;
                 }
                 $('#trigger-test-results').val(r);
             }
@@ -2329,6 +2337,7 @@ function loadOptions() {
     _sort = options.profiles.sortOrder;
     _sortDir = options.profiles.sortDirection || 1;
     _spellchecker = options.spellchecking || true;
+    _prependTrigger = options.prependTriggeredLine;
     updatePads();
 
     let theme = parseTemplate(options.theme) + '.css';
@@ -3324,6 +3333,7 @@ function importProfiles() {
                                     item.priority = data.profiles[keys[k]].triggers[m].priority;
                                     item.triggerNewline = data.profiles[keys[k]].triggers[m].triggernewline;
                                     item.triggerPrompt = data.profiles[keys[k]].triggers[m].triggerprompt;
+                                    item.raw = data.profiles[keys[k]].triggers[m].raw;
                                     item.caseSensitive = data.profiles[keys[k]].triggers[m].caseSensitive;
                                     item.temp = data.profiles[keys[k]].triggers[m].temp;
                                     item.type = data.profiles[keys[k]].triggers[m].type;

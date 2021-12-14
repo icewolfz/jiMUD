@@ -22,17 +22,11 @@
         //spell-checker:ignore ismap hellip selectall lagmeter repeatnum buttonvisible statusvisible limbsmenu partyhealth combathealth limb armor limbhealth
         if (window.module) module = window.module;
 
-        ['repeatnum'].forEach((a) => {
+        ['repeatnum', 'i'].forEach((a) => {
             Object.defineProperty(window, a, {
                 get: function () {
-                    if (!client || !client.variables) return undefined;
-                    return client.variables[a];
-                },
-                set: function (val) {
-                    if (!client) return;
-                    if (!client.variables)
-                        client.variables = {};
-                    client.variables[a] = val;
+                    if (!client) return undefined;
+                    return client.repeatnum;
                 },
                 configurable: true
             });
@@ -80,20 +74,6 @@
             get: function () {
                 if (!client) return '';
                 return client.display.selection;
-            },
-            configurable: true
-        });
-
-        Object.defineProperty(window, 'i', {
-            get: function () {
-                if (!client || !client.variables) return undefined;
-                return client.variables.repeatnum;
-            },
-            set: function (val) {
-                if (!client) return;
-                if (!client.variables)
-                    client.variables = {};
-                client.variables.repeatnum = val;
             },
             configurable: true
         });
@@ -238,6 +218,7 @@
         var _disconnectCounter = 0;
         var _charName = 0;
         var _skipDisconnect = 0;
+        var _watcher = null;
 
         window.onerror = function (msg, url, line, col, error) {
             if (client) {
@@ -430,12 +411,12 @@
             }
         }
 
-        function loadTheme(theme) {
+        function loadTheme(theme, force) {
             theme = parseTemplate(theme) + '.css';
             if (!isFileSync(theme))
                 theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
             var el = document.getElementById('theme');
-            if (el.getAttribute('href') !== theme)
+            if (el.getAttribute('href') !== theme || force)
                 el.setAttribute('href', theme);
             if (client && client.display)
                 client.display.updateLayout();
@@ -500,11 +481,19 @@
                 $('#btnTriggers').addClass('on');
             else
                 $('#btnTriggers').removeClass('on');
-            _status.updateInterface();
             buildButtons();
+            /*
             client.display.update();
             client.display.updateScrollbars();
             client.UpdateWindow();
+            */
+            setTimeout(() => {
+                _status.resize();
+                _status.updateInterface();
+                client.display.update();
+                client.display.updateScrollbars();
+                client.UpdateWindow();
+            }, 1);
             updateMenu();
         }
 
@@ -566,7 +555,7 @@
         */
         function buildContextMenu() {
             _context = [];
-            $contextMenu= _context;
+            $contextMenu = _context;
             var context = client.contexts;
             if (context.length > 0) {
                 var xl = context.length;
@@ -665,10 +654,17 @@
             remote.getCurrentWindow().on('restore', () => {
                 client.display.updateScrollbars();
                 client.display.updateView();
+                client.UpdateWindow();
             });
             remote.getCurrentWindow().on('maximize', () => {
                 client.display.updateScrollbars();
                 client.display.updateView();
+                client.UpdateWindow();
+            });
+            remote.getCurrentWindow().on('unmaximize', () => {
+                client.display.updateScrollbars();
+                client.display.updateView();
+                client.UpdateWindow();
             });
 
             ipcRenderer.send('set-overlay', 0);
@@ -691,9 +687,9 @@
             });
             document.getElementById('buttonbar').addEventListener('wheel', (e) => {
                 if (e.deltaY >= 0)
-                    document.getElementById('buttonbar').scrollTop += 32;
+                    document.getElementById('buttonbar').scrollTop += document.getElementById('buttonbar').clientWidth;
                 else
-                    document.getElementById('buttonbar').scrollTop -= 32;
+                    document.getElementById('buttonbar').scrollTop -= document.getElementById('buttonbar').clientWidth;
                 doUpdate(128);
             }, { passive: true });
 
@@ -701,7 +697,7 @@
                 if (e.button !== 0)
                     return;
                 if (document.getElementById('buttonbar').scrollTop > 0)
-                    scrollButtonBar(-32);
+                    scrollButtonBar(-document.getElementById('buttonbar').clientWidth);
                 e.preventDefault();
                 e.cancelBubble = true;
             };
@@ -936,6 +932,15 @@
             client.on('profiles-updated', () => {
                 doUpdate(76);
             });
+
+            client.on('profile-loaded', profile => {
+                doUpdate(76);
+            });
+
+            client.on('profile-removed', profile => {
+                doUpdate(76);
+            });
+
             client.on('command-history-changed', history => ipcRenderer.send('command-history', history));
             client.on('add-line', (data) => {
                 var res, c, cl;
@@ -1158,8 +1163,10 @@
             client.on('options-loaded', () => {
                 _backup.loadSelection = client.options.backupLoad;
                 _backup.saveSelection = client.options.backupSave;
+                _status.spitterDistance = client.options.statusWidth;
                 doUpdate(3);
                 client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
+                createWatcher();
                 if (_logger)
                     _logger.postMessage({
                         action: 'options', args: {
@@ -1392,6 +1399,54 @@
                 ipcRenderer.send('options-changed');
             });
 
+            client.on('window', (window, args) => {
+                switch (window) {
+                    case 'mapper':
+                    case 'editor':
+                    case 'profiles':
+                    case 'chat':
+                    case 'about':
+                    case 'code-editor':
+                        ipcRenderer.send('show-window', window);
+                        break;
+                    case 'profiles-manager':
+                    case 'profile-manager':
+                    case 'manager':
+                        ipcRenderer.send('show-window', 'profiles');
+                        break;
+                    case 'prefs':
+                    case 'options':
+                    case 'preferences':
+                        ipcRenderer.send('show-window', 'prefs');
+                        break;
+                    case 'help':
+                        showHelp();
+                        break;
+                    case 'smhelp':
+                        showSMHelp();
+                        break;
+                    case 'immortals':
+                        showImmortalTools();
+                        break;
+                    case 'history':
+                    case 'command-history':
+                        showCommandHistory()
+                        break;
+                    case 'log-viewer':
+                    case 'logs':
+                        showLogViewer();
+                        break;
+                    case 'skills':
+                        showSkills();
+                        break;
+                    case 'who':
+                        showWho();
+                        break;
+                    default:
+                        throw new Error('Invalid window name must be: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills');
+                }
+            });
+
             _backup = new Backup(client, ipcRenderer.sendSync('get-global', 'mapFile'));
             _backup.loadSelection = client.options.backupLoad;
             _backup.saveSelection = client.options.backupSave;
@@ -1472,6 +1527,7 @@
             });
 
             _status = new Status(client);
+            _status.spitterDistance = client.options.statusWidth;
             _status.on('display-changed', () => {
                 if (_status.ac) {
                     $('#health').removeClass('on');
@@ -1487,6 +1543,16 @@
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !client.options.showArmor });
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: client.options.showArmor });
                 }
+            });
+            _status.on('split-moved', value => {
+                if (value === client.options.statusWidth) return;
+                client.options.statusWidth = value;
+                setTimeout(() => {
+                    client.display.updateScrollbars();
+                    client.display.updateView();
+                    client.UpdateWindow();
+                }, 1);
+                doUpdate(32);
             });
             _status.on('leave combat', () => {
                 if (_nextClear <= Date.now()) {
@@ -1575,6 +1641,8 @@
                             client.options.askonclose = false;
                             client.saveOptions();
                             closeWindow = true;
+                            clearWatcher();
+                            ipcRenderer.invoke('window', 'closeWindows');
                             ipcRenderer.invoke('window', 'close');
                             return;
                         }
@@ -1585,6 +1653,8 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
+                        clearWatcher();
+                        ipcRenderer.invoke('window', 'closeWindows');
                         ipcRenderer.invoke('window', 'close');
                     });
                     return;
@@ -1613,6 +1683,7 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
+                        ipcRenderer.invoke('window', 'closeWindows');
                         ipcRenderer.invoke('window', 'close');
                     });
                     return;
@@ -1629,12 +1700,16 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
+                        clearWatcher();
+                        ipcRenderer.invoke('window', 'closeWindows');
                         ipcRenderer.invoke('window', 'close');
                     });
                 }
                 client.raise('closed');
                 _logger.postMessage({ action: 'flush' });
                 closeWindow = true;
+                clearWatcher();
+                ipcRenderer.invoke('window', 'closeWindows');
                 ipcRenderer.invoke('window', 'close');
                 return;
             };
@@ -1992,6 +2067,7 @@
                 client.display.showFind();
             if (client.options.showCharacterManager)
                 showCharacters();
+            createWatcher();
             autoConnect();
             doUpdate(64);
             client.raise('opened');
@@ -2012,20 +2088,38 @@
             });
             switch (item.style) {
                 case 1:
-                    ret = client.parseOutgoing(item.value);
+                    try {
+                        ret = client.parseOutgoing(item.value);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        client._input._stack.pop();
+                        client._input.vStackPop();
+                    }
                     break;
                 case 2:
                     /*jslint evil: true */
                     var f = new Function('try { ' + item.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    ret = f.apply(client);
+                    try {
+                        ret = f.apply(client);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        client._input._stack.pop();
+                        client._input.vStackPop();
+                    }
                     if (ret)
                         ret = client.parseOutgoing(ret);
                     break;
                 default:
                     ret = item.value;
+                    client._input.vStackPop();
                     break;
             }
-            client._input.vStackPop();
             if (ret == null)
                 return true;
             if (item.send) {
@@ -2052,12 +2146,30 @@
             var ret;// = '';
             switch (button.style) {
                 case 1:
-                    ret = client.parseOutgoing(button.value);
+                    client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                    try {
+                        ret = client.parseOutgoing(button.value);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        client._input._stack.pop();
+                    }
                     break;
                 case 2:
                     /*jslint evil: true */
                     var f = new Function('try { ' + button.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    ret = f.apply(client);
+                    client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                    try {
+                        ret = f.apply(client);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        client._input._stack.pop();
+                    }
                     if (typeof ret === 'string')
                         ret = client.parseOutgoing(ret);
                     break;
@@ -2448,6 +2560,41 @@
         }
 
         // eslint-disable-next-line no-unused-vars
+        function showSMHelp() {
+            if (client.options.externalHelp)
+                shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
+            else {
+                if (client.options.windows['smhelp'] && client.options.windows['smhelp'].options) {
+                    client.options.windows['smhelp'].options.show = true;
+                    ipcRenderer.send('show-window', 'smhelp', client.options.windows['smhelp'].options);
+                }
+                else
+                    ipcRenderer.send('show-window', 'smhelp', { show: true, file: 'smhelp.html', icon: 'help', alwaysOnTopClient: true, width: 800, height: 600, x: window.screenTop + 100, y: window.screenLeft + 100 });
+            }
+            setTimeout(() => {
+                client.commandInput[0].blur();
+                client.commandInput[0].focus();
+            }, 0);
+        }
+
+        function showWho() {
+            if (client.options.externalWho)
+                shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
+            else {
+                if (client.options.windows['who'] && client.options.windows['who'].options) {
+                    client.options.windows['who'].options.show = true;
+                    ipcRenderer.send('show-window', 'who', client.options.windows['who'].options);
+                }
+                else
+                    ipcRenderer.send('show-window', 'who', { show: true, file: 'who.html', icon: 'user', alwaysOnTopClient: true, width: 800, height: 600, x: window.screenTop + 100, y: window.screenLeft + 100 });
+            }
+            setTimeout(() => {
+                client.commandInput[0].blur();
+                client.commandInput[0].focus();
+            }, 0);
+        }
+
+        // eslint-disable-next-line no-unused-vars
         function showLogViewer() {
             if (client.options.windows['log-viewer'] && client.options.windows['log-viewer'].options) {
                 client.options.windows['log-viewer'].options.show = true;
@@ -2687,6 +2834,98 @@
                 this.doUpdate($updating);
             });
         }
+
+        function clearWatcher() {
+            if (_watcher)
+                _watcher.close();
+            _watcher = null;
+        }
+
+        function createWatcher() {
+            clearWatcher();
+            if (!client.options.watchForProfilesChanges)
+                return;
+            _watcher = require('chokidar').watch(path.join(parseTemplate('{data}'), 'profiles'), {
+                persistent: true,
+                depth: 0,
+                ignoreInitial: true
+            });
+            _watcher.on('change', file => {
+                if (path.extname(file) !== '.json')
+                    return;
+                const profile = path.basename(file, '.json');
+                switch (client.options.onProfileChange) {
+                    case 1: //reload
+                        client.loadProfile(profile);
+                        break;
+                    case 2: //ask
+                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                            {
+                                type: 'question',
+                                title: `Profile '${profile}' changed`,
+                                message: `Profile '${profile}' changed, what do you want to do?`,
+                                buttons: ['Nothing', 'Reload'],
+                                defaultId: 1
+                            });
+                        if (choice === 1)
+                            client.loadProfile(profile);
+                        break;
+                    case 4: //warn
+                        client.echo(`Profile '${profile}' changed`, -7, -8, true, true);
+                        break;
+                }
+            })
+                .on('add', file => {
+                    if (path.extname(file) !== '.json')
+                        return;
+                    const profile = path.basename(file, '.json');
+                    switch (client.options.onProfileChange) {
+                        case 1: //reload
+                            client.loadProfile(profile);
+                            break;
+                        case 2: //ask
+                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                                {
+                                    type: 'question',
+                                    title: `Profile '${profile}' added`,
+                                    message: `Profile '${profile}' added, what do you want to do?`,
+                                    buttons: ['Nothing', 'Load'],
+                                    defaultId: 1
+                                });
+                            if (choice === 1)
+                                client.loadProfile(profile);
+                            break;
+                        case 4: //warn
+                            client.echo(`Profile '${profile}' added`, -7, -8, true, true);
+                            break;
+                    }
+                })
+                .on('unlink', p => {
+                    if (path.extname(file) !== '.json')
+                        return;
+                    const profile = path.basename(file, '.json');
+                    switch (client.options.onProfileDeleted) {
+                        case 1:
+                            client.removeProfile(profile);
+                            break;
+                        case 2: //ask
+                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                                {
+                                    type: 'question',
+                                    title: `Profile '${profile}' deleted`,
+                                    message: `Profile '${profile}' deleted, what do you want to do?`,
+                                    buttons: ['Nothing', 'Remove'],
+                                    defaultId: 1
+                                });
+                            if (choice === 1)
+                                client.removeProfile(profile);
+                            break;
+                        case 4: //warn
+                            client.echo(`Profile '${profile}' deleted`, -7, -8, true, true);
+                            break;
+                    }
+                });
+        }
     </script>
 </head>
 
@@ -2700,7 +2939,7 @@
             <textarea type="text" id="commandinput" aria-live="polite" spellcheck="true" wrap="off" cols="20" rows="20"></textarea>
         </div>
         <div class="dropdown dropup command-history">
-            <a id="history-dropup" style="width:32px" title="Show command history" class="button button-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" area-expanded="true">
+            <a id="history-dropup" title="Show command history" class="button button-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" area-expanded="true">
                 <i class="fa fa-history"></i><span class="caret" style="margin: 0"></span>
             </a>
             <ul class="dropdown-menu pull-right dropdown-menu-right" data-container="body" aria-labelledby="history-dropdown"></ul>
@@ -2772,6 +3011,7 @@
     </div>
     <div id="status-border"></div>
     <div id="status">
+        <div id="status-drag-bar"></div>
         <div id="environment" class="day">
             <div id="environmentleft"></div>
             <div id="environmentcenter"></div>
@@ -2840,8 +3080,8 @@
             <div>
                 <span>Needed:</span>
                 <span id="need-value">0</span>
-                <div class="progressbar" id="need-percent" style="display:none;width:100px;background: rgb(252, 238, 42);">
-                    <div class="progressbar-text" style="text-align:right;right: 5px;color:black;">0</div>
+                <div class="progressbar" id="need-percent">
+                    <div class="progressbar-text" style="text-align:right;right: 2px;color:black;">0</div>
                     <div class="progressbar-value"></div>
                 </div>
             </div>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ShadowMUD Help</title>
+    <link rel="shortcut icon" href="../assets/icons/png/user.png" />
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript">
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
+    <script src="../lib/bootstrap-select.min.js"></script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
+        const { ipcRenderer } = require('electron');
+        var _curr;
+        $(document).ready(function () {
+            document.getElementById('body').addEventListener('contextmenu', e => {
+                e.preventDefault();
+                const sel = getSelection();
+                let inputMenu;
+                if (!sel.isCollapsed && sel.type === 'Range' && document.getElementById('body').contains(sel.anchorNode)) {
+                    inputMenu = [
+                        { role: 'copy' },
+                        { type: 'separator' },
+                        { role: 'selectAll' }
+                    ];
+                }
+                else
+                    inputMenu = [
+                        { role: 'selectAll' }
+                    ];
+                ipcRenderer.invoke('show-context', inputMenu);
+            });
+            window.addEventListener('hashchange', e => {
+                loadHelp(window.location.hash);
+            }, false);
+            loadHelp();
+        });
+
+        function loadHelp(url) {
+            _curr = url || '';
+            var body = document.getElementById('body');
+            var i = body.childNodes.length;
+            while (i--) {
+                body.removeChild(body.lastChild);
+            }
+            const xhttp = new XMLHttpRequest();
+            xhttp.addEventListener('load', function (e) {
+                $('#body').append(this.responseText.replace(/href=\"\?/g, 'href="#'));
+            });
+            xhttp.addEventListener('error', function (e) {
+                $('#body').textContent = $('#body').textContent + `${e.type}: ${e.loaded} bytes transferred\n`;
+            });
+            xhttp.addEventListener('abort', function (e) {
+                $('#body').textContent = $('#body').textContent + `${e.type}: ${e.loaded} bytes transferred\n`;
+            });
+            xhttp.open("GET", "http://shadowmud.com:1130/help?" + _curr.substr(1));
+            xhttp.send();
+        }
+    </script>
+    <style>
+        body {
+            background-color: black;
+        }
+
+        #body {
+            overflow: auto;
+            background-color: black;
+            font-family: Consolas, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
+            font-size: 16px;
+            color: rgb(187, 187, 187);
+            user-select: auto;
+            top: 26px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            position: absolute;
+            top: 50px;
+            bottom: 26px;
+        }
+
+        #toolbar {
+            background-color: menu;
+            padding: 2px;
+            text-align: center;
+            user-select: none;
+        }
+
+        #toolbar .btn {
+            outline: none !important;
+        }
+
+        #toolbar button {
+            min-width: 26px;
+        }
+
+        #toolbar input {
+            padding: 0px 2px;
+            margin: 0px;
+            width: 60px;
+            float: left;
+            height: 22px;
+            margin-left: 5px;
+        }
+
+        #toolbar .fa-circle {
+            color: red;
+        }
+
+        #toolbar select {
+            float: left;
+            min-width: 100px;
+            width: auto;
+            padding: 0px 2px;
+            margin: 0px;
+            height: 22px;
+            margin-left: 5px;
+        }
+
+        #toolbar label {
+            margin-bottom: 0 !important;
+        }
+
+        pre {
+            padding: 0;
+            border: 0;
+            background-color: inherit;
+            margin-left: auto;
+            margin-right: auto;
+            white-space: pre-wrap;
+            /* css-3 */
+            white-space: -moz-pre-wrap !important;
+            /* Mozilla, since 1999 */
+            white-space: -pre-wrap;
+            /* Opera 4-6 */
+            white-space: -o-pre-wrap;
+            /* Opera 7 */
+            word-wrap: break-word;
+            /* Internet Explorer 5.5+ */
+        }
+
+        a:link {
+            color: #EEE;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        a:visited {
+            color: #AA7;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        a:active {
+            color: #F33;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #C8C8C8;
+
+        }
+
+        .section {
+            width: 50%;
+            float: left;
+        }
+
+        .section div {
+            text-indent: 22px;
+        }
+
+        @media (max-width: 400px) {
+            .section {
+                float: none;
+                width: 100%;
+            }
+        }
+
+        .hangingindent {
+            padding-left: 22px;
+            text-indent: -22px;
+        }
+
+
+        .clearfix:after {
+            content: ".";
+            display: block;
+            height: 0;
+            clear: both;
+            visibility: hidden;
+        }
+
+        hr {
+            clear: both;
+            padding: 0;
+            margin: 0;
+        }
+
+        ul.column {
+            width: 75%;
+            margin: auto;
+        }
+
+        li.column {
+            width: 125px;
+            margin: 15px 0 0 0;
+            padding: 0 10px 0 0;
+            line-height: 15px;
+            float: left;
+        }
+
+        h3:last-of-type {
+            position: fixed;
+            bottom: 0px;
+            left: 0px;
+            background-color: black;
+            width: 100%;
+            margin: 0px;
+            height: 26px;
+            border-top: 1px solid rgb(238, 238, 238);
+            border-bottom: 0px solid rgb(238, 238, 238);
+        }
+
+        h3:first-of-type {
+            position: fixed;
+            top: 26px;
+            left: 0px;
+            background-color: black;
+            width: 100%;
+            margin: 0px;
+            height: 26px;
+            border-top: 0px solid rgb(238, 238, 238);
+            border-bottom: 1px solid rgb(238, 238, 238);
+        }
+
+        tbody>tr:last-of-type h3 {
+            position: fixed;
+            bottom: 0px;
+            left: 0px;
+            top: initial;
+            background-color: black;
+            width: 100%;
+            margin: 0px;
+            height: 26px;
+            border-top: 1px solid rgb(238, 238, 238);
+            border-bottom: 0px solid rgb(238, 238, 238);
+        }
+
+        p:empty {
+            display: none;
+            margin: 0px;
+            padding: 0px;
+        }
+
+        div pre {
+            padding-top: 2px;
+            padding-bottom: 2px;
+        }
+
+        div>ul {
+            padding-top: 2px;
+            padding-bottom: 2px;
+        }
+
+        #body td {
+            padding-top: 2px;
+        }
+
+        /*
+        #tier td {margin-top:2px;position: fixed;background-color:black;}
+        #tier + tr td {padding-top: 18px;}
+        */
+        tbody>tr:first-of-type,
+        tbody>tr:last-of-type {
+            position: fixed;
+        }
+
+        @-webkit-keyframes blinker {
+            0% {
+                opacity: 1.0;
+            }
+
+            50% {
+                opacity: 0.0;
+            }
+
+            100% {
+                opacity: 1.0;
+            }
+        }
+
+        @keyframes blinker {
+            0% {
+                opacity: 1.0;
+            }
+
+            50% {
+                opacity: 0.0;
+            }
+
+            100% {
+                opacity: 1.0;
+            }
+        }
+
+        .css3-blink {
+            text-decoration: blink;
+            animation-name: blinker;
+            animation-iteration-count: infinite;
+            animation-timing-function: cubic-bezier(1, 0, 0, 1);
+            animation-duration: 1s;
+            -webkit-animation-name: blinker;
+            -webkit-animation-iteration-count: infinite;
+            -webkit-animation-timing-function: cubic-bezier(1, 0, 0, 1);
+            -webkit-animation-duration: 1s;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="toolbar" class="btn-toolbar" role="toolbar">
+        <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="loadHelp(_curr)">
+            <i class="fa fa-refresh"></i>
+        </button>
+        <button id="btn-back" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="history.back()">
+            <i class="fa fa-arrow-left"></i>
+        </button>
+        <button id="btn-forward" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="history.forward()">
+            <i class="fa fa-arrow-right"></i>
+        </button>
+    </div>
+    <div id="body">
+    </div>
+</body>
+
+</html>

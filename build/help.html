@@ -8,6 +8,7 @@
     <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-treeview.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/help.css" rel="stylesheet" type="text/css" />
     <link href="css/form.css" rel="stylesheet" type="text/css" />
@@ -17,11 +18,13 @@
     <script src="../lib/jquery.min.js" type="text/javascript"></script>
     <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
     <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
+    <script src="../lib/bootstrap-treeview.min.js"></script>
     <script type="text/javascript">
         if (window.module) module = window.module;
         //spellchecker:ignore codeeditor
         const { ipcRenderer } = require('electron');
         const { Search } = require('./js/search');
+        const { isFileSync } = require('./js/library.js');
         const path = require('path');
         const fs = require('fs');
         const md = require('markdown-it')({ html: true, typographer: true });
@@ -44,12 +47,89 @@
 
         var container;
         var contents;
+        var tree;
         var _history = [];
         var _current = 0;
         var $search;
+        var lastSel = $("#contents option:selected");
+        var _data = [
+            {
+                text: 'Home',
+                id: 'README'
+            },
+            {
+                text: 'Changelog',
+                id: '../changelog'
+            },
+            {
+                text: 'Frequently asked questions',
+                id: 'faq'
+            },
+            {
+                text: 'Profiles',
+                id: 'profiles'
+            },
+            {
+                text: 'Speedpaths',
+                id: 'speedpaths'
+            },
+            {
+                text: 'Commands',
+                id: 'commands',
+                nodes: [{
+                    text: '#nnn',
+                    id: 'commands/nnn'
+                }]
+            },
+            {
+                text: 'Functions',
+                id: 'functions'
+            },
+            {
+                text: 'Preferences',
+                id: 'preferences'
+            },
+            {
+                text: 'Scripting',
+                id: 'scripting'
+            },
+            {
+                text: 'Customizing',
+                id: 'customizing'
+            },
+            {
+                text: 'Assets',
+                id: 'assets'
+            },
+            {
+                text: 'Mapper',
+                id: 'mapper'
+            },
+            {
+                text: 'Character manager',
+                id: 'character.manager'
+            },
+            {
+                text: 'Immortal Tools',
+                id: 'immortal'
+            },
+            {
+                text: 'Code editor',
+                id: 'codeeditor',
+                nodes: [
+                    {
+                        text: 'Area designer',
+                        id: 'codeeditor.designer'
+                    }
+                ]
+            }
+        ]
 
         // eslint-disable-next-line no-unused-vars
         function openLink(url) {
+            lastSel = $("#contents option:selected");
+            if (url.startsWith('docs/'))
+                url = url.substr(5);
             url = url.split('#');
             contents.val(url[0].substr(0, url[0].length - 3)).selectpicker('render');
             contents.change();
@@ -82,8 +162,25 @@
 
         function loadContents(url) {
             container[0].scrollTop = 0;
-            var data = fs.readFileSync(path.join(__dirname, '..', 'docs', url.replace('///g', path.sep) + '.md'), 'utf8');
-            container.html(md.render(data));
+            if (url) {
+                var file = path.join(__dirname, '..', 'docs', url.replace('///g', path.sep) + '.md');
+                if (isFileSync(file)) {
+                    var data = fs.readFileSync(file, 'utf8');
+                    container.html(md.render(data));
+                }
+                else
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        type: 'error',
+                        title: 'Help error',
+                        message: 'Help file not found'
+                    });
+            }
+            else
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    type: 'error',
+                    title: 'Help error',
+                    message: 'Help file not found'
+                });
             $search.find();
         }
 
@@ -113,6 +210,21 @@
             $search.show(sel);
         }
 
+        function isElementInView(element, fullyInView, container) {
+            if (!element) return true;
+            if (!container) container = window;
+            var pageTop = $(container).scrollTop();
+            var pageBottom = pageTop + $(container).height();
+            var elementTop = $(element).offset().top;
+            var elementBottom = elementTop + $(element).outerHeight();
+
+            if (fullyInView === true) {
+                return ((pageTop < elementTop) && (pageBottom > elementBottom));
+            } else {
+                return ((elementTop <= pageBottom) && (elementBottom >= pageTop));
+            }
+        }
+
         $(document).keydown((event) => {
             if (event.key === 'f' && !event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey) {
                 doFind();
@@ -121,6 +233,18 @@
         });
 
         $(document).ready(() => {
+            var p = path.join(__dirname, '..', 'docs', 'commands');
+            var files = fs.readdirSync(p);
+            for (var i = 0; i < files.length; i++) {
+                if (path.basename(files[i], '.md') === 'nnn') continue;
+                if (path.extname(files[i]) === '.md') {
+                    _data[5].nodes.push({
+                        text: '#' + path.basename(files[i], '.md'),
+                        id: 'commands/' + path.basename(files[i], '.md')
+                    });
+                }
+            }
+
             container = $('#container-frame');
             container[0].onload = () => {
                 var oDoc = (document.all) ? container[0].contentWindow.document : container[0].contentDocument;
@@ -149,15 +273,64 @@
             };
             contents = $('#contents');
             $search = new Search(document.body);
-            contents.on('change', () => {
+            contents.on('change', (e) => {
+                if (!contents.val()) {
+                    lastSel.prop("selected", true);
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        type: 'error',
+                        title: 'Help error',
+                        message: 'Help file not found'
+                    });
+                    return;
+                }
                 loadContents(contents.val());
                 if (_history.length !== 0)
                     _history.length = _current + 1;
                 _history.push(contents.val());
                 _current = _history.length - 1;
                 updateButtons();
-            });
+                if (contents.val().startsWith('commands/')) {
+                    n = tree.treeview('findNodes', ['^commands$', 'id']);
+                    tree.treeview('expandNode', [n, { levels: 1, silent: false }]);
+                }
+                else if (contents.val() === 'codeeditor.designer') {
+                    n = tree.treeview('findNodes', ['^codeeditor$', 'id']);
+                    tree.treeview('expandNode', [n, { levels: 1, silent: false }]);
+                }
+                n = tree.treeview('findNodes', ['^' + contents.val() + '$', 'id']);
+                tree.treeview('selectNode', [n, { silent: true }]);
+                if (!isElementInView(document.getElementById(contents.val()), true, tree[0]))
+                    document.getElementById(contents.val()).scrollIntoView();
 
+            });
+            tree = $('#tree');
+            tree.treeview({
+                showBorder: false,
+                showImage: true,
+                showTags: true,
+                showCheckbox: false,
+                preventUnselect: false,
+                levels: 1,
+                checkedIcon: 'fa fa-check-square-o',
+                uncheckedIcon: 'fa fa-square-o',
+                expandIcon: 'fa fa-chevron-right',
+                collapseIcon: 'fa fa-chevron-down',
+                onNodeRendered: (event, node) => {
+                    node.$el.prop('title', node.text);
+                },
+                onNodeSelected: (event, node) => {
+                    openLink(node.id + '.md');
+                },
+                data: _data
+            });
+            var ops = [];
+            for (var i = 0; i < _data.length; i++) {
+                ops.push('<option value="', _data[i].id, '">', _data[i].text, '</option>');
+                if (_data[i].nodes && _data[i].nodes.length)
+                    for (var c = 0; c < _data[i].nodes.length; c++)
+                        ops.push('<option value="', _data[i].nodes[c].id, '" style="padding-left: 40px">', _data[i].nodes[c].text, '</option>');
+            }
+            contents.append(ops.join(''));
             $('#btn-history-dropdown').click(function () {
                 $(this).addClass('open');
                 const pos = $(this).offset();
@@ -204,12 +377,15 @@
             </span>
             <span class="path-container">
                 <select id="contents" class="form-control selectpicker" data-container="body" data-style="btn-default btn-xs" data-width="100%">
+                    <!--
                     <option value="README">Home</option>
                     <option value="../changelog">Changelog</option>
                     <option value="faq">Frequently asked questions</option>
                     <option value="profiles">Profiles</option>
                     <option value="speedpaths">Speedpaths</option>
                     <option value="commands">Commands</option>
+                    <option value="commands/nnn" style="padding-left: 40px">#nnn</option>
+                    <option value="commands/beep" style="padding-left: 40px">#beep</option>
                     <option value="functions">Functions</option>
                     <option value="preferences">Preferences</option>
                     <option value="scripting">Scripting</option>
@@ -220,14 +396,21 @@
                     <option value="immortal">Immortal Tools</option>
                     <option value="codeeditor">Code editor</option>
                     <option value="codeeditor.designer" style="padding-left: 40px">Area designer</option>
+                    -->
                 </select>
             </span>
             <button id="btn-find" type="button" class="btn btn-default btn-xs" title="Find" onclick="doFind()" style="position: absolute;top: 4px;right: 4px;">
                 <i class="fa fa-search"></i>
             </button>
         </div>
-        <div id="container">
-            <iframe id="container-frame" class="panel-body" src="help.display.html"></iframe>
+        <div id="main">
+            <div id="sidebar">
+                <div id="tree" class="panel panel-default"></div>
+                <div id="drag-bar"></div>
+            </div>
+            <div id="container">
+                <iframe id="container-frame" class="panel-body" src="help.display.html"></iframe>
+            </div>
         </div>
     </div>
 </body>

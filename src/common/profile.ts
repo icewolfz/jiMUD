@@ -1,5 +1,5 @@
 //spell-checker:ignore displaytype, submenu, triggernewline, triggerprompt
-import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority } from './library';
+import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority, splitQuoted } from './library';
 const path = require('path');
 const fs = require('fs');
 
@@ -28,6 +28,16 @@ export enum TriggerType {
     CommandInputRegular = 1,
     Event = 2,
     Alarm = 3
+}
+
+export enum VariableType {
+    Auto = 1,
+    Integer = 2,
+    StringExpanded = 3,
+    StringLiteral = 4,
+    StringList = 5,
+    Record = 6,
+    Float = 7
 }
 
 export function MacroDisplay(item: Macro) {
@@ -330,6 +340,7 @@ export class Trigger extends Item {
     public type: TriggerType = TriggerType.Regular;
     public temp: boolean = false;
     public caseSensitive: boolean = false;
+    public raw: boolean = false;
 
     constructor(data?, profile?) {
         super(data);
@@ -384,6 +395,77 @@ export class Context extends Item {
 
     public clone() {
         return new Context(this);
+    }
+}
+
+export class Variable extends Item {
+    private _type: string = 'string';
+
+    public type: VariableType = VariableType.Auto;
+    public defaultValue: string = '';
+    public useDefault: boolean = false;
+    public params: string = '';
+
+    public set rawValue(value: any) {
+        super.value = value;
+        this._type = typeof value;
+    }
+    public get rawValue(): any {
+        switch (this.type) {
+            case VariableType.Auto:
+                if (typeof this.value !== this._type) {
+                    switch (this._type) {
+                        case 'number':
+                            return Number(this.value);
+                        case 'string':
+                            return this.value.toString();
+                        case 'boolean':
+                            return Boolean(this.value);
+                    }
+                }
+                return this.value;
+            case VariableType.Float:
+                return parseFloat(this.value);
+            case VariableType.Integer:
+                return parseInt(this.value, 10);
+            case VariableType.Record:
+                if (typeof this.value === 'string')
+                    try {
+                        return JSON.parse(this.value);
+                    }
+                    catch {
+                        return this.value;
+                    }
+                return this.value;
+            case VariableType.StringList:
+                if (typeof this.value === 'string')
+                    return splitQuoted(this.value, '|');
+                return this.value;
+        }
+        return this.value;
+    }
+
+    constructor(data?, profile?) {
+        super(data);
+        this.profile = profile;
+    }
+
+    public clone() {
+        return new Variable(this);
+    }
+
+    public toString() {
+        switch (this.type) {
+            case VariableType.Record:
+                if (typeof this.value === 'string')
+                        return this.value;
+                return JSON.stringify(this.value);
+            case VariableType.StringList:
+                if (typeof this.value === 'string')
+                    return this.value;
+                return '"' + (<any[]>this.value).join('"|"') + '"';
+        }
+        return this.value?.toString();
     }
 }
 
@@ -715,6 +797,7 @@ export class Profile {
                         triggernewline: this.triggers[i].triggerNewline,
                         caseSensitive: this.triggers[i].caseSensitive,
                         triggerprompt: this.triggers[i].triggerPrompt,
+                        raw: this.triggers[i].raw,
                         type: this.triggers[i].type,
                         notes: this.triggers[i].notes || ''
                     });

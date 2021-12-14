@@ -941,3 +941,22 @@ body {
 }
 
 /** button end */
+
+#status-ghost-bar {
+    background-color: #{$panelBack};
+    border: 1px solid #{$panelInsetBorder};
+}
+
+#status-drag-bar {
+    left: -2px;
+    top: -7px;
+    height: initial;
+    bottom: -14px;      
+    transition: 0s background-color, 0s border;
+}
+
+#status-drag-bar:hover{
+    background-color: #{$panelBack};
+    border: 1px solid #{$panelInsetBorder};  
+    transition-delay:1s;
+}

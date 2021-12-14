@@ -300,7 +300,7 @@ export class DockManager extends EventEmitter {
             this.$ghostBar.style.right = '';
             this.$ghostBar.style.height = '';
             this.$ghostBar.style.width = '4px';
-            this.$ghostBar.style.cursor = 'col-resize';
+            this.$ghostBar.style.cursor = 'ew-resize';
             (<any>this.$ghostBar).index = this.$bars.indexOf(el);
             (<any>this.$ghostBar).bounds = this.$el.getBoundingClientRect();
             (<any>this.$ghostBar).move = (ge) => {
@@ -335,7 +335,7 @@ export class DockManager extends EventEmitter {
         el.style.top = '0';
         el.style.bottom = '0';
         el.style.width = '4px';
-        el.style.cursor = 'col-resize';
+        el.style.cursor = 'ew-resize';
         this.$el.appendChild(el);
         return el;
     }

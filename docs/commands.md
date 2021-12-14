@@ -1,54 +1,285 @@
 # Commands
 
-|Command|Short|Arguments||Example|
-|---|---|---|---|---
-|#nnn||commands|repeat commands NNN number of times|
-|#beep||| play standard system beep
-|#version|#ver||display version information
-|#show|#sh|text|process text as if it came from the mud and append a new line
-|#showprompt|#showp|text|same as show but does not append new line
-|#echo|#ec|text|display text to the screen and append newline
-|#echoprompt|#echop|text|same as echo but does not append new line
-|#say||text|same as echo
-|#sayprompt|#sayp|text|same as echoprompt
-|#wait|#wa|amount|pause current block for number of milliseconds
-|#alias|#al|<nobr>name {commands} *profile*</nobr>|create or alter and alias
-|#alias|#al|<nobr>index {commands} *profile*</nobr>|create or alter and alias
-|#unalias|#una|name *profile*|delete and alias
-|#setsetting|#sets|name value|alter a setting value see: [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
-|#getsetting|#gets|name|display a setting value, [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
-|#profile|#pro|name *enable\|disable*|enable or disable a profile
-|#profilelist|||display a list of all profiles and current state
-|#stopsound|#stops||Stop the current sound effect
-|#stopmusic|#stopm||Stop the current background music
-|#stopallsound|#stopa||stop all sound effects and background music
-|#playsound|#plays|soundfile|Play a sound effect, to play local files use file://path/file.ext
-|#playmusic|#playm|soundfile|Play background music, to play local files use file://path/file.ext
-|#musiciinfo|||display currently playing background music, current position, and total length
-|#soundinfo|||display currently playing sound effect, current position, and total length
-|#idletime|#idle||Display time a command was last sent
-|#connecttime|#connect||display time since connected
-|#notify|#not|title message *{icon}*|display a notification popup with no sound, use [client.notify](scriptind.md#basic-function-list) to turn off silent option or #playsound
-|#raiseevent|#raise|name arguments|fire a custom event|`#raiseevent "test" 1 2 3 "4 5"` will fire an event named test with arguments 1, 2, 3, and 4 5
-|#raisedelayed|#raisede|amount name arguments|fire a custom event with a delay|`#raisedelayed 3000 "test" 1 2 3 "4 5"` will fire and event named test with arguments 1, 2, 3, and 4 5 after waiting 3 seconds
-|#showclient|#showcl||Show client window
-|#hideclient|#hidecl||Hide client window
-|#toggleclient|#togglecl||Toggle show and hide of client window
-|#gag|#ga|*number*|gag the current or multiple lines of incoming or previous lines, if no arguments gags current line
-|#ungag|#ung||clear previous #gag command settings
-|#alarm|#ala| <nobr>*name* {time pattern}<sup>1</sup> {commands} *profile*</nobr>|create an alarm trigger
-|#suspend|#sus|*name\|pattern*|disable an alarm, id arguments omitted will attempt to suspend last added alarm
-|#resume|#resu|*name\|pattern*|enable an alarm, id arguments omitted will attempt to suspend last suspended alarm
-|#untrigger|#unt|{name\|pattern} *profile*|remove a trigger
-|#chat|#ch|text|Send text to chat window and append a new line
-|#chatprompt|#chatp|text|same as #chat but does not append a new line
-|#trigger|#tr|*name* {pattern} *{commands} options<sup>2</sup> profile*|create or update trigger
-|#trigger|#tr| name options<sup>2</sup> *profile*|Update options<sup>2</sup> for a trigger
-|#event|#ev|name {commands} *options<sup>2</sup> profile*|create or update event
-|#unevent|#une|name *profile*|Delete an event
-|#button|#bu|name\|index|Cause a button to react as if it was clicked, if index it is the poiston from top down starting at 0
-|#button|#bu|*name caption* {commands} *{icon} options<sup>2</sup> profile*|Update or create a button
-|#unbutton|#unb|name\|index\|caption| remove a button, if index it is the postion in order of buttons in profile manager
+## **Display**
+
+[<u>#SH</u>OW](commands/SHOW.md) text
+>Process text as if it came from the MUD and append a new line
+
+[<u>#SHOWP</u>ROMPT](commands/SHOWPROMPT.md) text
+>Process text as if it came from the MUD
+
+[<u>#EC</u>HO](commands/ECHO.md) text
+>Display text to the screen and append newline
+
+[<u>#ECHOP</u>ROMPT](commands/ECHOPROMPT.md) text
+>Display text to the screen
+
+[<u>#SA</u>Y](commands/SAY.md) text
+>Display text to the screen and append newline
+
+[<u>#SAYP</u>ROMPT](commands/SAYPROMPT.md) text
+>Display text to the screen
+
+<u>#GA</u>G *number*
+>Gag the current or multiple lines of incoming or previous lines, if no arguments gags current line
+
+<u>#UNG</u>AG
+>clear previous #gag command settings
+
+<u>#CO</u>LOR *{pattern}* fore,back,bold *profile*
+>Color last added line, comma delimited colors, supports raw jiMUD color codes, ansi word values, any valid HTML color name, of ##RRGGBB html format
+
+#CW *{pattern}* fore,back,bold *profile*
+>Color all strings matching current trigger pattern, see #color for arguments
+
+#PCOL fore,back,bold *XStart XEnd YStart YEnd*
+>Color position, will assume full line if position is not supplied, if XEnd omitted will assume end of line, if xEnd -1 it will assume end of line, if YEnd omitted will assume current line, YStart and YEnd are relative to the current line, 0 current, 1 previous, ...
+
+<u>#HI</u>GHLIGHT *pattern*
+>make last line or lined with matching pattern bold or brighter color if already bold, or
+
+## **Conditionals**
+
+#IF {expression} {true-command} *{false-command}*
+>if expression is true execute true command, if false and false commands supplied execute them
+
+<u>#CA</u>SE index {command 1}*{command n}*
+>return command from list based on the value of index
+
+<u>#SW</u>ITCH (expression) {command} *(expression) {command} ... {else command}*
+>execute each expression until one returns true, if none are true and an else command supplied it is executed instead
+
+## **Repeating and Loops**
+
+[#nnn](commands/nnn.md)/[#-nnn](commands/nnn.md) commands
+>Repeat commands NNN number of times
+
+<u>#BR</u>EAK
+>breaks a loop
+
+<u>#CONT</u>INUE
+>skips to the next loop iteration 
+
+<u>#LOO</u>P range {commands}
+>Execute the commands a number of times given by the range. range is a min and max value separated by a comma, if max value is omitted it is assumed the single value is the max and 1 is the min value
+>>`#loop 5 {#show %i}` will display numbers 1 to 5
+
+<u>#REP</u>EAT expression {commands}
+>repeat commands number of times returned by expression
+>>`#repeat 5 %i` will display the numbers 1 to 5
+
+#UNTIL expression {commands}
+>Execute commands until the expression evaluates to TRUE
+
+<u>#WH</u>ILE expression {commands}
+>Execute commands as long as expression evaluates to TRUE
+
+<u>#FO</u>RALL stringlist {commands}
+>loop stringlist, in the format of a | delimited string and set %i as each word
+>>`#fo "first|second|third" {#sh %i}` would display the words first, second, third
+
+## **Sounds**
+
+[<u>#BE</u>EP](commands/BEEP.md)
+>Play standard System beep
+
+<u>#STOPS</u>OUND
+>Stop the current sound effect
+
+<u>#STOPM</u>USIC
+>Stop the current background music
+
+<u>#STOPA</u>LLSOUND
+>stop all sound effects and background music
+
+<u>#PLAYS</u>OUND soundfile
+>Play a sound effect, to play local files use file://path/file.ext
+
+<u>#PLAYM</u>USIC soundfile
+>Play background music, to play local files use file://path/file.ext
+
+#MUSICINFO
+>display currently playing background music, current position, and total length
+
+#SOUNDINFO
+>display currently playing sound effect, current position, and total length
+
+## **Create/Modify Profile or Items**
+
+[#<u>AL</u>IAS](commands/ALIAS.md) name|index {commands} *profile*
+>Create or alter an alias
+
+[#<u>UNA</u>LIAS](commands/UNALIAS.md) name *profile*
+>Delete an alias
+
+<u>#PRO</u>FILE name *enable\|disable*
+>enable or disable a profile
+
+#PROFILELIST
+>display a list of all profiles and current state
+
+<u>#BU</u>TTON name|index
+>Cause a button to react as if it was clicked, if index it is the position from top down starting at 0
+
+<u>#BU</u>TTON *name caption* {commands} *{icon} options<sup>2</sup> profile*
+>Update or create a button
+
+<u>#UNB</u>UTTON name|index|caption
+>remove a button, if index it is the position in order of buttons in profile manager
+
+<u>#VA</u>RIABLE *name value*
+>Set, get, or display all user set variables
+
+## **Triggers**
+
+<u>#RAISE</u>EVENT name arguments
+>fire a custom event
+>>`#raiseevent "test" 1 2 3 "4 5"` will fire an event named test with arguments 1, 2, 3, and 4 5
+
+<u>#RAISEDE</u>LAYED amount name arguments
+>fire a custom event with a delay
+>>`#raisedelayed 3000 "test" 1 2 3 "4 5"` will fire and event named test with arguments 1, 2, 3, and 4 5 after waiting 3 seconds
+
+[<u>#ALA</u>RM](commands/ALARM.md) *name* {time pattern} {commands} *profile*
+>Create or alter an alarm trigger
+
+<u>#SUS</u>PEND *name|pattern*
+>disable an alarm, id arguments omitted will attempt to suspend last added alarm
+
+<u>#RESU</u>ME *name|pattern*
+>enable an alarm, id arguments omitted will attempt to suspend last suspended alarm
+
+<u>#UNT</u>RIGGER {name\|pattern} *profile*
+>remove a trigger
+
+<u>#TR</u>IGGER *name* {pattern} *{commands} options<sup>2</sup> profile*
+>create or update trigger
+
+<u>#TR</u>IGGER name options<sup>2</sup> *profile*
+>Update options<sup>2</sup> for a trigger
+
+<u>#EV</u>ENT name {commands} *options<sup>2</sup> profile*
+>create or update event
+
+<u>#UNE</u>VENT name *profile*
+>Delete an event
+
+## **Miscellaneous**
+
+[<u>#WA</u>IT](commands/WAIT.md) amount
+> Pause current block for a number of milliseconds
+
+[<u>#VE</u>RSION](commands/VERSION.md)
+>Display current jiMUD version information
+
+<u>#SETS</u>ETTING name value
+>alter a setting value see: [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
+
+<u>#GETS</u>ETTING name
+>display a setting value, [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
+
+<u>#IDLE</u>TIME
+>Display time a command was last sent
+
+<u>#CONNECT</u>TIME
+>display time since connected
+
+<u>#NOT</u>IFY title message *{icon}*
+>display a notification popup with no sound, use [client.notify](scriptind.md#basic-function-list) to turn off silent option or #playsound
+
+<u>#SHOWCL</u>IENT
+>Show client window
+
+<u>#HIDECL</u>IENT
+>Hide client window
+
+<u>#TOGGLECL</u>IENT
+>Toggle show and hide of client window
+
+<u>#CH</u>AT text
+>Send text to chat window and append a new line
+
+<u>#CHATP</u>ROMPT text
+>same as #chat but does not append a new line
+
+<u>#WIN</u>DOW name
+>Open or show named window, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
+
+<u>#AD</u>D name value
+>Add value to variable named name, if current value is non numeric an error will be displayed
+
+<u>#MAT</u>H name value
+>Set value to variable named name
+
+<u>#EVA</u>LUATE expression
+>Evaluate expression and display to screen like show
+
+## **Test commands**
+
+Test commands allow you to debug or test features of the client
+
+#TESTLIST
+>List all test commands
+
+#TESTCOLORS
+>Display a basic ANSI color table
+
+#TESTCOLORSDETAILS
+>Display a more detailed ANSI color table
+
+#TESTXTERM
+>Display an XTerm test pattern
+
+#TESTMXP
+>Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) support by displaying several [MXP](https://www.gammon.com.au/mushclient/mxp.htm) tags
+
+#TESTMXP2
+>Test custom elements
+
+#TESTMXPEXPIRE
+>Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) link expiring
+
+#TESTMXPCOLORS
+>Display a full list of all supported [MXP](https://www.gammon.com.au/mushclient/mxp.htm) color names
+
+#TESTMXPELEMENTS
+>Test more [MXP](https://www.gammon.com.au/mushclient/mxp.htm) custom elements
+
+#TESTMXPLINES
+>Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) line tagging support
+
+#TESTMAPPER
+>Test mapper by generating a test area named `Doc Build Samples Area`, with 3 x 3 room square with different settings set for each room.
+
+#TESTFANSI
+>Test [FANSI](http://fansi.org/Index.aspx) support
+
+#TESTURLDETECT
+>Test auto url detection by displaying random urls and formats
+
+#TESTXTERMRGB
+>Display a more detailed XTerm color pattern
+
+#TESTSIZE
+>Test the current width and height of the client in characters by repeating `w` for # of columns as line 0 and displaying the numbers 1 to height - 1
+
+#TESTSPEED
+>Test the speed of the client by running the commands `#TestMXPColors`, `#TestMXP`, `#TestColors`, `#TestColorsDetails`, `#TestXTerm`, `#TestXTermRGB` 10 times taking the time it took to parse, then display. After all test have been ran it will display 0 to 9 and each time and an avg time. **Note** this will cause the client to become unresponsive or locked while running this test, either wait til done or close.
+
+#TESTSPEEDFILE file
+>Works exactly like #testspeed but will use file argument instead of built in test functions, **Note** file load time can cause test to run longer then total time returned
+
+#TESTSPEEDFILER file
+>Works exactly like #TestSpeedFile but will attempt to emulate as if sent from remote mud for processing
+
+#TESTFILE file
+>Loads a file, displays it and time to display **Note** this will cause the client to become unresponsive or locked while running this test, either wait til done or close.
+
+#TESTPERIOD
+>Toggle on/off a test that will alternate between #testcolors, #textxterm, #testlist every 2 seconds to simulate constant streaming of text
+
+#TESTUNICODEEMOJI
+>Display emoji unicode symbols
 
 **Note:** All italic arguments are optional and can be left out
 
@@ -73,24 +304,11 @@ Explain what each argument does and if it is optional
 |message|| the text to display as message
 |arguments|| Space delimited format grouped based on [scripting quote preference](preferences.md#scripting)
 |number|Yes| if >= 0 it will gag current line and that number of incoming lines, if negative it will gag the # of lines before current line
-|{time pattern}||A valid time pattern <sup>1</sup>
 |{pattern}|Sometimes| A valid trigger pattern
 |caption|the caption to display when mouse hovers over button
 |{icon}|Yes|a path to an image file, supports {assets} path
 
 **Note** All quoted arguments will be processed based on [scripting quote preference](preferences.md#scripting) when required
-
-1.Alarm time pattern
-```
-   When using alarm type pattern is in the format of hours:minutes:seconds, where hours and minutes are optional. A asterisk (*) is a wildcard to match any value for that place, if minutes or hours are missing a * is assumed. If pattern is preceded with a minus (-) the connection time is used instead of current time.
-
-    You can also define a temporary, one time alarm if pattern is preceded with a plus (+), the trigger alarm is executed then deleted.
-
-    Hours are defined in 24 hour format of 0 to 23, minutes and seconds are 0 to 59.
-    If seconds are > 59 and the only pattern it will be considered the same as adding a wildcard (*) in front of the number.
-
-    Hours, minutes, and seconds can use a special wildcard format of *value which will match when the time MOD is zero, eg: *10 matches 10, 20, ...
-```
 
 2.Trigger and event options
 
@@ -103,30 +321,4 @@ Explain what each argument does and if it is optional
 - `temporary` temporary trigger
 - `cmd` command input trigger, invalid for events
 - `priority=#` set the priority of trigger
-
-## Test commands
-
-Test commands allow you to debug or test features of the client
-
-|Command||
-|---|---|
-|#TestList|List all test commands
-|#TestColors|Display a basic ANSI color table
-|#TestColorsDetails|Display a more detailed ANSI color table
-|#TestXTerm|Display an XTerm test pattern
-|#TestMXP|Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) support by displaying several [MXP](https://www.gammon.com.au/mushclient/mxp.htm) tags
-|#TestMXP2|Test custom elements
-|#TestMXPExpire|Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) link expiring
-|#TestMXPColors|Display a full list of all supported [MXP](https://www.gammon.com.au/mushclient/mxp.htm) color names
-|#TestMXPElements|Test more [MXP](https://www.gammon.com.au/mushclient/mxp.htm) custom elements
-|#TestMXPLines|Test [MXP](https://www.gammon.com.au/mushclient/mxp.htm) line tagging support
-|#TestMapper|Test mapper by generating a test area named `Doc Build Samples Area`, with 3 x 3 room square with different settings set for each room.
-|#TestFANSI|Test [FANSI](http://fansi.org/Index.aspx) support
-|#TestURLDetect|Test auto url detection by displaying random urls and formats
-|#TestXTermRGB|Display a more detailed XTerm color pattern
-|#TestSize|Test the current width and height of the client in characters by repeating `w` for # of columns as line 0 and displaying the numbers 1 to height - 1
-|#TestSpeed|Test the speed of the client by running the commands `#TestMXPColors`, `#TestMXP`, `#TestColors`, `#TestColorsDetails`, `#TestXTerm`, `#TestXTermRGB` 10 times taking the time it took to parse, then display. After all test have been ran it will display 0 to 9 and each time and an avg time. **Note** this will cause the client to become unresponsive or locked while running this test, either wait til done or close.
-|#TestSpeedFile file|Works exactly like #testspeed but will use file argument instead of built in test functions, **Note** file load time can cause test to run longer then total time returned
-|#TestSpeedFiler file|Works exactly like #TestSpeedFile but will attempt to emulate as if sent from remote mud for processing
-|#TestFile file|Loads a file, displays it and time to display **Note** this will cause the client to become unresponsive or locked while running this test, either wait til done or close.
-|#TestPeriod|Toggle on/off a test that will alternate between #testcolors, #textxterm, #testlist every 2 seconds to simulate constant streaming of text
+- `raw` raw trigger, invalid for events

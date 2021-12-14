@@ -1,6 +1,6 @@
 //spell-checker:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //spell-checker:ignore emoteto, emotetos askonchildren YYYYMMDD Hmmss
-import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -408,6 +408,8 @@ export class Settings {
 
     public logErrors: boolean = true;
     public showErrorsExtended: boolean = false;
+    public disableTriggerOnError: boolean = true;
+    public prependTriggeredLine: boolean = true;
     public reportCrashes: boolean = false;
 
     public parseDoubleQuotes: boolean = true;
@@ -450,6 +452,11 @@ export class Settings {
     public gamepads: boolean = false;
 
     public allowEval: boolean = true;
+    public externalWho: boolean = true;
+    public externalHelp: boolean = true;
+    public watchForProfilesChanges = false;
+    public onProfileChange: OnProfileChange = OnProfileChange.Nothing;
+    public onProfileDeleted: OnProfileDeleted = OnProfileDeleted.Nothing;
 
     public windows = {};
     public buttons = {
@@ -515,6 +522,7 @@ export class Settings {
     public hideOnMinimize: boolean = false;
     public showTrayIcon: boolean = false;
     public statusExperienceNeededProgressbar: boolean = false;
+    public statusWidth: number = -1;
     public showEditorInTaskBar: boolean = true;
 
     public trayClick: TrayClick = TrayClick.show;

@@ -6,11 +6,133 @@
   - Display:
     - Add MXP image height and better width support
     - Add MXP font size and family support
+## v0.17.3
+
+- **New:**
+  - Add [#cw](docs/commands.md#display) colors all words matching current trigger pattern
+  - Add [#pcol](docs/commands.md#display) color text based on start and end positions
+  - Add [#highlight](docs/commands.md#display) make text bold or brighter color if already bold
+  - Add [#color {pattern} fore,back,bold profile](docs/commands.md#display) pattern and profile arguments to allow for quick trigger creation 
+  - Add [%x1..%99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
+  - Add [%ansi(style,fore,back)](docs/functions.md) function to return ansi formatted string
+  - Add [%i](docs/functions.md) predefined variable
+  - Add [%j..%z] predefined variables for nested looping support
+  - Add [%random](docs/functions.md) predefined variable and function
+  - Add [%char(i)](docs/functions.md) return ASCII character for i
+  - Add [%ascii(string)](docs/functions.md) return the ascii value for first letter in string
+  - Add [%case(n,value1,value2,value3...)](docs/functions.md) return the nth value of arguments, from 1 to last argument
+  - Add [%switch(expression1,value1,...expressionN,valueN)](docs/functions.md) return value of the first expression that evaluates to true
+  - Add [%if(expression,true-value,false-value)](docs/functions.md) evaluate expression and return true or false value
+  - Add [#break](docs/commands.md#repeating-and-loops) break loop
+  - Add [#continue](docs/commands.md#repeating-and-loops) skips to the next loop iteration
+  - Add {} grouping support to [#nnn](docs/commands.md#repeating-and-loops) argument
+  - Add [#-nnn](docs/commands.md#repeating-and-loops) repeat commands NNN number of times but with a reverse counter
+  - Add [#if](docs/commands.md#conditionals) if expression is true execute true command, if false and false commands supplied execute them
+  - Add [#case](docs/commands.md#conditionals) return command from list based on the value of index
+  - Add [#switch](docs/commands.md#conditionals) execute each expression until one returns true, if none are true and an else command supplied it is executed instead
+  - Add [#loop](docs/commands.md#repeating-and-loops) Execute the commands a number of times given by the range
+  - Add [#repeat](docs/commands.md#repeating-and-loops) repeat commands number of times returned by expression
+  - Add [#be](docs/commands.md#sounds) short verison of [#beep](docs/commands.md)
+  - Add [#add](docs/commands.md#miscellaneous) Add value to variable named name, if current value is non numeric an error will be displayed
+  - Add [#math](docs/commands.md#miscellaneous) Set value to variable named name
+  - Add [#variable](docs/commands.md) Set, get, or display all user set variables
+  - Add [#until](docs/commands.md#repeating-and-loops) Execute commands until the expression evaluates to TRUE
+  - Add [#while](docs/commands.md#repeating-and-loops) Execute commands as long as expression evaluates to TRUE
+  - Add [#forall](docs/commands.md#repeating-and-loops loop stringlist, in the format of a | delimited string and set %i as each word)
+  - Add [#evaluate](docs/commands.md#miscellaneous) Evaluate expression and display to screen like show
+  - Input parser:  
+    - Add support to expression system for string comparison
+    - Add support to expression system for string concat using + not just concat function
+    - Add user variable support to expression system, can access in scripting using client.variables['NAME'] or client.variables.NAME
+    - Add proper loop nesting using %i..%z variables for #nnn nested loops
+  - [Preferences](docs/preferences.md)
+    - Add `Watch for profile changes` when enabled will watch for profile changes
+    - Add `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
+    - Add `On profile deleted do` what to do when a profile is deleted when `Watch for profile changes` enabled
+    - Add [Open ShadowMUD help in web browser?](docs/preferences.md#advanced) tp open ShadowMUD in child window    
+- **Fixed:**
+  - [#nnn](docs/commands.md)
+    - Fixed being double parsed
+    - Fixed issues with trailing newlines with nested loops
+    - Fixed format error checking to accept only numbers
+  - Fixed window size being sent to the mud when status display is hidden/shown
+  - Fixed bug in [#trigger](docs/commands.md#triggers) command and adding to profile not correctly finding if one exist already
+  - Fixed bug in [#event](docs/commands.md#triggers) command and adding to profile not correctly finding if one exist already
+  - Fixed bug in [#wait](docs/commands.md#miscellaneous) to allow parsing of argument to allow for %i and expressions
+  - Profile Manager: trigger tester did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
+  - Fixed bug with File > Exit when profile manager open and should not close
+  - Fixed bug in [#color](docs/commands.md#display) and [#cw](docs/commands.md#display) not correctly parsing profile argument
+  - Input parser:
+    - Fixed - being lost after %
+    - Fixed # being lose if %# had a -, * or % following it
+    - Fixed corrupted stack after trigger errors
+    - Fixed issue with $named argument format
+    - Fixed named arguments not working
+    - Fixed bugs in repeatnum not having correct name in all places
+    - Fixed how alias unused arguments are appended
+    - Fixed alias arguments values not correctly parsing before being used
+    - No longer parse #commands if in a command/function argument as it would break inline parsing in most cases
+  - Fixed changelog help page links not working
+  - Fixed execution of buttons and context items with broken parsing stacks
+  - Fixed buttons and context not having error trapping code that broke cleanup
+  - Status Display: Fixed resize bar conflicting with profile manger resize bar due to theming
+- **Changed:**
+  - Remove %named argument support from docs as it never was supported and easier to just remove it
+  - Update markdown-it 12.2.0 to 12.3.0
+  - Update monaco-editor 0.30.1 to 0.31.0
+  - [#nnn](docs/commands.md#repeating-and-loops) counter is now 1 based when using %i..%z instead of 0 based
+  - Allow group by ( and ) in command argument parsing
+
+## v0.17.2 2021-12-06
+
+- **New:**
+  - Add [#color](docs/commands.md) color last added line
+  - Add [#window](docs/commands.md) to open/show supported windows
+  - Add [#testunicodeemoji](docs/commands.md) to display unicode emoji symbols
+  - [Preferences](docs/preferences.md)
+    - Add [Who is on?](docs/preferences.md#advanced) to open who in child window
+    - Add [Disable trigger on error](docs/preferences.md#scripting) to disable a trigger if an error happens, either from pattern or scripting, enabled by default to prevent spamming of broken trigger
+    - Add [Prepend triggered line](docs/preferences.md#scripting) disable the fix to prepend the triggered line as %0,$0, or %{0} to return to previous usage
+  - Add [%{color(fore,back,bold)}](docs/functions.md) function to return color codes
+  - Add [%{zcolor(fore,back,effect)}](docs/functions.md) function to convert zmud/cmud style color codes into supported jiMUD codes
+  - Status Display: Add ability to resize
+  - Triggers: Add [Trigger on raw](docs/profiles.md) option to match on raw line including any ansi escape codes
+  - Themes: Add two new themes, updated [preference](docs/preferences.md) docs to mention custom theme folders and [customizing](docs/customizing.md) docs to explain themes
+    - Clean-large: scaled version of clean theme, 150% larger
+    - Clean-extra-large: scaled version of clean theme, 200% larger
+- **Fixed:**
+  - Mac: Fix window menu item on main bar
+  - Display:
+    - Fixed unicode combining character selection issues
+    - Fixed unicode selection width when font style is italic
+    - Fixed mouse cursor to use standard text cursor
+    - Fixed more unicode surrogate/variant pair selection issues
+    - Fixed bug in MXP expire not clearing send/link end tag
+    - Fixed split view resize when horizontal scroll bar visible
+  - Ansi Parser: Fixed bug in MXP expire tag not correctly expiring links on same line that come before the tag
+  - Fixed bug with [#gag](docs/commands.md) not working from command line
+  - Fixed bug with [#gag](docs/commands.md) and number argument not correctly working
+  - Triggers:
+    - Fixed bug with regex trigger caching
+    - Fixed bug with %0, ${0}, $0 not always return full raw line of text **Warning:** this may break some triggers
+    - Fixed bug with verbatim not error catching
+  - Fixed bug when client was maximized then minimized and not correctly sending the new size to the mud
+  - Focus on main window when profile manager, advanced editor, or child windows closed
+  - Fixed bug that would not correctly clean up when window closed by close button
+  - Fixed bug where window would not correctly save open state when main window closed
+  - Advanced Editor: Fixed bug with context menu and colorizing selected text
+  - Status Display: Fixed some monster icon positions
+  - Backup: Fixed importing of [Show Script Errors](docs/preferences.md#scripting) setting
+- **Changed:**
+  - Expand [#testmxpexpire](docs/commands.md) to test same line expiring
+  - Use resize cursors instead of column resize cursors for resizable areas
+  - Update electron 16.0.1 to 16.0.4
+  - Help: Command help has been redesigned and commands will slowly have individual help pages
 
 ## v0.17.1 2021-11-23
 
 - **Fixed:**
- - Fixed issue with electron and child windows open using window.open and invalid module paths
+  - Fixed issue with electron and child windows open using window.open and invalid module paths
 
 ## v0.17.0 2021-11-23
 

@@ -52,6 +52,8 @@
             'BOLD MAGENTA': 'Magenta',
             'BOLD CYAN': 'Cyan',
             'BOLD WHITE': 'White',
+            'CYAN': 'Cyan',
+            'BOLD RED': 'Red'
         };
 
         function clearReverse(els, c) {
@@ -659,9 +661,9 @@
 
                 function buttonColorClick(evt) {
                     if (evt.color === 'transparent')
-                        this.removeFormat(evt.format);
+                        tinymce.activeEditor.plugins['shadowmud'].removeFormat(evt.format);
                     else
-                        this.applyFormat(evt.format, evt.color);
+                        tinymce.activeEditor.plugins['shadowmud'].applyFormat(evt.format, evt.color);
                 }
 
                 function buttonPostRender() {

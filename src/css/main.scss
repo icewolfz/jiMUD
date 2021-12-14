@@ -107,7 +107,7 @@ body {
 #display-split-bar {
     background-color: menu;
     height: 4px;
-    cursor: row-resize;
+    cursor: ns-resize;
     position: absolute;
     background-color: menu;
     z-index: 1000;
@@ -123,7 +123,7 @@ body {
     background-color: transparent;
     opacity: 0.5;
     position: absolute;
-    cursor: row-resize;
+    cursor: ns-resize;
     z-index: 9991;
     box-sizing: border-box;
 }
@@ -329,42 +329,51 @@ body {
     position: absolute;
     overflow: hidden;
     box-sizing: border-box;
+    background-repeat: no-repeat;
+    background-size: cover;    
 }
 
 #environmentleft {
-    position: relative;
+    position: absolute;
     top: 15px;
-    left: 0px;
+    left: calc(50% - 75px);
     float: left;
     width: 50px;
     height: 50px;
+    background-repeat: no-repeat;
+    background-size: cover;       
 }
 
 #environmentcenter {
-    position: relative;
+    position: absolute;
     top: 5px;
-    left: 0px;
-    float: left;
+    left: calc(50% - 25px);
     width: 50px;
     height: 50px;
+    background-repeat: no-repeat;
+    background-size: cover;       
 }
 
 #environmentright {
-    position: relative;
+    position: absolute;
     top: 15px;
-    left: 0px;
-    float: left;
+    right: calc(50% - 75px);
     width: 50px;
     height: 50px;
+    background-repeat: no-repeat;
+    background-size: cover;       
 }
 
 #environmentweather {
-    position: relative;
+    position: absolute;
     top: 0px;
     left: 0px;
-    width: 150px;
-    height: 50px;
+    right: 0px;
+    bottom: 0px;
     z-index: 100;
+    background-repeat: no-repeat;
+    background-size: cover;    
+    height: 100%;
 }
 
 #character-name {
@@ -442,6 +451,28 @@ body {
 #leftwing,
 #rightwing {
     display: none;
+}
+
+#hp-status > div {
+    position: relative;
+}
+
+#hp-status > div > .progressbar, #need-percent {
+    width: initial;
+    position: absolute;
+    left: 30px;
+    right: 0;
+    top: 0;
+}
+
+#need-percent {
+    left: 50px;
+    display:none;
+    background: rgb(252, 238, 42);
+}
+
+#experience > div {
+    position: relative;
 }
 
 .progressbar {
@@ -566,4 +597,22 @@ dialog {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+#status-drag-bar {
+    background-color: transparent;
+    height: 100%;
+    width: 3px;
+    cursor: ew-resize;
+    position: absolute;
+    left: -3px;    
+}
+
+#status-ghost-bar {
+    width: 3px;
+    background-color: #000;
+    opacity: 0.75;
+    position: absolute;
+    cursor: ew-resize;
+    z-index: 999
 }

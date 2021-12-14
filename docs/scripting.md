@@ -16,6 +16,20 @@ To use scripting you just have to select script as the type from the type dropdo
 - `$selurl` same as $selected url
 - `$contextMenu` access to the context menu item array, manipulating this will effect the displayed context menu, **WARNING** this could break the context menu, if broken you can refresh by causing a profile to be re-saved
 
+## User variables
+
+You can access them scripting using client.variables['NAME'], client.variables.NAME, this.variables['NAME'], or this.variables.NAME. Some variables may not be accessible to the parser: i and repeatnum are special variables and are used i loops and are not accessible in parse style, named arguments in parse style will be used instead of any user defined of the same name, **variables lost when client is closed**
+
+Example:
+```javascript
+this.variables.test = 5;
+this.variables['test'] = 5;
+client.variables.test = 5;
+client.variables['test'] = 5;
+```
+
+Set or created variables can be access in the expression system by name eg ${test + 5} would be 10 based from example
+
 ## Basic function list
 
 - `client.beep()` play system beep sound
@@ -53,6 +67,7 @@ To use scripting you just have to select script as the type from the type dropdo
 - `client.hide()` hide client
 - `client.toggle()` toggle hide and show
 - `client.sendChat(text)` send text to chat window
+- `client.indices` return the current indices for trigger or an empty array same as [%x1..$x99](functions.md)
 
 ### **WARNING**: you can effect the client if you access the wrong function, so any function used other then this list may caused unknown results and could cause the client to stop working
 

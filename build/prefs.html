@@ -211,28 +211,34 @@
                     var fl = fonts.length;
                     var f = 0;
                     var ops = [];
+                    var el;
                     //fonts.sort((a, b) => a.localeCompare(b));
                     for (f = 0; f < fl; f++) {
-                        ops.push(`<option style="font-family: ${fonts[f].replace(/"/g, '\'')}" value="${fonts[f].replace(/"/g, '\'')}">${fonts[f].replace(/"/g, '')}</option>`);
+                        el = fonts[f].replace(/"/g, '\'');
+                        ops.push('<option style="font-family: ', el, '" value="', el, '">', el, '</option>');
                     }
                     ops = ops.join('');
                     $('#font-system').append(ops);
                     $('#cmdfont-system').append(ops);
                     $('#chat-font-system').append(ops);
 
-                    $('#font').selectpicker('refresh');
-                    $('#cmdfont').selectpicker('refresh');
-                    $('#chat-font').selectpicker('refresh');
-                    $('#font').val(_settings.font);
-                    $('#font').selectpicker('render');
-                    $('#font').change();
-                    $('#cmdfont').val(_settings.cmdfont);
-                    $('#cmdfont').selectpicker('render');
-                    $('#cmdfont').change();
+                    el = $('#font');
+                    el.selectpicker('refresh');
+                    el.val(_settings.font);
+                    el.selectpicker('render');
+                    el.change();
 
-                    $('#chat-font').val(_settings.chat.font);
-                    $('#chat-font').selectpicker('render');
-                    $('#chat-font').change();
+                    el = $('#cmdfont');
+                    el.selectpicker('refresh');
+                    el.val(_settings.cmdfont);
+                    el.selectpicker('render');
+                    el.change();
+
+                    el = $('#chat-font');
+                    el.selectpicker('refresh');
+                    el.val(_settings.chat.font);
+                    el.selectpicker('render');
+                    el.change();
                 })
                 .catch(err => {
                     ipcRenderer.send('error', err);
@@ -464,7 +470,38 @@
                         if (this.checked)
                             _settings.onDisconnect = 8;
                         break;
-
+                    case 'onProfileChange-0':
+                        if (this.checked)
+                            _settings.onProfileChange = 0;
+                        break;
+                    case 'onProfileChange-1':
+                        if (this.checked)
+                            _settings.onProfileChange = 1;
+                        break;
+                    case 'onProfileChange-2':
+                        if (this.checked)
+                            _settings.onProfileChange = 2;
+                        break;
+                    case 'onProfileChange-4':
+                        if (this.checked)
+                            _settings.onProfileChange = 4;
+                        break;
+                    case 'onProfileDeleted-0':
+                        if (this.checked)
+                            _settings.onProfileDeleted = 0;
+                        break;
+                    case 'onProfileDeleted-1':
+                        if (this.checked)
+                            _settings.onProfileDeleted = 1;
+                        break;
+                    case 'onProfileDeleted-2':
+                        if (this.checked)
+                            _settings.onProfileDeleted = 2;
+                        break;
+                    case 'onProfileDeleted-4':
+                        if (this.checked)
+                            _settings.onProfileDeleted = 4;
+                        break;
                     case 'trayClick-none':
                         if (this.checked)
                             _settings.trayClick = TrayClick.none;
@@ -719,6 +756,16 @@
             $('#onDisconnect-2').prop('checked', _settings.onDisconnect === 2);
             $('#onDisconnect-4').prop('checked', _settings.onDisconnect === 4);
             $('#onDisconnect-8').prop('checked', _settings.onDisconnect === 8);
+
+            $('#onProfileChange-0').prop('checked', _settings.onProfileChange === 0);
+            $('#onProfileChange-1').prop('checked', _settings.onProfileChange === 1);
+            $('#onProfileChange-2').prop('checked', _settings.onProfileChange === 2);
+            $('#onProfileChange-4').prop('checked', _settings.onProfileChange === 4);
+
+            $('#onProfileDeleted-0').prop('checked', _settings.onProfileDeleted === 0);
+            $('#onProfileDeleted-1').prop('checked', _settings.onProfileDeleted === 1);
+            $('#onProfileDeleted-2').prop('checked', _settings.onProfileDeleted === 2);
+            $('#onProfileDeleted-4').prop('checked', _settings.onProfileDeleted === 4);
 
             $('#trayClick-none').prop('checked', _settings.trayClick === TrayClick.none);
             $('#trayClick-show').prop('checked', _settings.trayClick === TrayClick.show);
@@ -2130,6 +2177,16 @@
                             <input type="checkbox" id="parseDoubleQuotes" /> Parse double quotes as string
                         </label>
                     </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="disableTriggerOnError" /> Disable trigger on error
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="prependTriggeredLine" /> Prepend triggered line
+                        </label>
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="advanced">
                     <div class="col-sm-6 form-group">
@@ -2188,6 +2245,57 @@
                             <input type="checkbox" id="askonloadCharacter" /> Enable warning dialog when loading a character from manager
                         </label>
                     </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="externalWho" /> Open 'Who is on' in web browser
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="externalHelp" /> Open ShadowMUD help in web browser
+                        </label>
+                    </div>                    
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="watchForProfilesChanges" /> Watch for profile changes
+                        </label>
+                    </div>
+                    <div class="col-sm-12 form-group">
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">On profile change do:</label>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-0"> Nothing
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-1"> Reload
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-2"> Ask
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-4"> Warn
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">On profile deleted do:</label>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-0"> Nothing
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-1"> Remove
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-2"> Ask
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-4"> Warn
+                                </label>
+                            </div>
+                        </div>          
+                    </div>          
                 </div>
                 <div role="tabpanel" class="pref-pane" id="backup">
                     <div class="col-sm-12 form-group" style="padding: 0px;">

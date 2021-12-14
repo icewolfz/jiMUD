@@ -343,7 +343,7 @@ $monsters: "./../../assets/monsters";
 .monster-dragon {
     background-image: url(#{$monsters}/32x32-6.png);
     background-position: -808px -184px;
-    animation: dragon-sprite 0.8s steps(2) infinite;
+    animation: monster-dragon-sprite 0.8s steps(2) infinite;
 }
 
 @keyframes monster-dragon-sprite {
@@ -612,7 +612,6 @@ $monsters: "./../../assets/monsters";
 
 .monster-rodent {
     background-image: url(#{$monsters}/dc-mon/animals/rat.png);
-    background-position: -640px -32px;
 }
 
 /*
@@ -623,7 +622,6 @@ $monsters: "./../../assets/monsters";
 */
 .monster-scorpion {
     background-image: url(#{$monsters}/dc-mon/animals/giant_scorpion.png);
-    background-position: -640px -32px;
 }
 
 /*
@@ -697,7 +695,6 @@ $monsters: "./../../assets/monsters";
 
 .monster-turtle {
     background-image: url(#{$monsters}/dc-mon/animals/snapping_turtle.png);
-    background-position: -640px -32px;
 }
 
 .monster-unicorn {

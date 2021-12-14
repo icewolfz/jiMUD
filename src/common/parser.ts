@@ -1,4 +1,4 @@
-//spell-checker:ignore rgbcolor, Fraktur, aixterm, FNAME, ismap, ATTLIST, windowname, cmds, apos
+//spell-checker:ignore rgbcolor, Fraktur, aixterm, FNAME, ismap, ATTLIST, windowname, cmds, apos, doubleunderline, MXPO
 import EventEmitter = require('events');
 import RGBColor = require('rgbcolor');
 import { ParserLine, FormatType, ParserOptions, FontStyle, LineFormat, LinkFormat, ImageFormat, Size } from './types';
@@ -985,7 +985,7 @@ export class Parser extends EventEmitter {
         return formats;
     }
 
-    private getMXPBlock(tag: string, args, remote, oTag?): MXPBlock {
+    private getMXPBlock(tag: string, args, remote, oTag?, blocks?): MXPBlock {
         let tmp;
         let arg;
         let sArg;
@@ -1815,7 +1815,10 @@ export class Parser extends EventEmitter {
                     this.emit('sound', e);
                     break;
                 case 'EXPIRE':
-                    setTimeout(() => { this.emit('expire-links', args); }, 1);
+                    //emit expire event to handle old links
+                    this.emit('expire-links', args);
+                    //expire any links in the current line that match
+                    this.cleanMXPExpired(blocks, args?.[0] || '');
                     break;
                 case 'VERSION':
                     if (xl > 0)
@@ -2327,6 +2330,46 @@ export class Parser extends EventEmitter {
         return null;
     }
 
+    private cleanMXPExpired(blocks, args) {
+        if (!blocks || blocks.length === 0 || args === null)
+            return;
+        const bl = blocks.length;
+        for (let b = 0; b < bl; b++) {
+            let format = blocks[b];
+            //not a link move on
+            if (format.formatType !== FormatType.MXPSend && format.formatType !== FormatType.MXPLink)
+                continue;
+            //only clean if no argument or matching expire
+            if (args.length === 0 || format.expire === args) {
+                let eType, n = 0, f = 0;
+                //store current type for nest testing
+                let type = format.formatType;
+                //get end tag format type
+                if (format.formatType === FormatType.MXPLink)
+                    eType = FormatType.MXPLinkEnd;
+                else
+                    eType = FormatType.MXPSendEnd;
+                //set link to expired
+                format.formatType = FormatType.MXPExpired;
+                //loop remaining tags looking for send tag, ignoring any nested tags
+                for (; f < bl; f++) {
+                    if (blocks[f].formatType === eType) {
+                        //not nested so end tag, set to be skipped
+                        if (n === 0) {
+                            blocks[f].formatType = FormatType.MXPSkip;
+                            break;
+                        }
+                        else
+                            n--;
+                    }
+                    else if (blocks[f] === type)
+                        n++;
+                }
+                //if did not find end tag, malformed MXP continue on
+            }
+        }
+    }
+
     private GetCloseTags(tag) {
         if (typeof tag === 'undefined' || tag.length === 0)
             return '';
@@ -2392,7 +2435,7 @@ export class Parser extends EventEmitter {
         return tmp;
     }
 
-    private DecreaseColor(clr, p) {
+    public DecreaseColor(clr, p) {
         const color = new RGBColor(clr);
         if (!color.ok) return clr;
         color.b -= Math.ceil(color.b * p);
@@ -2407,7 +2450,7 @@ export class Parser extends EventEmitter {
         return color.toRGB();
     }
 
-    private IncreaseColor(clr, p) {
+    public IncreaseColor(clr, p) {
         const color = new RGBColor(clr);
         if (!color.ok) return clr;
         color.b += Math.ceil(color.b * p);
@@ -2918,7 +2961,7 @@ export class Parser extends EventEmitter {
                                 formatBuilder.push(format = this.getFormatBlock(lineLength));
                             }
                             else {
-                                _MXPTag = this.getMXPBlock(_MXPTag, [], remote, _MXPOTag);
+                                _MXPTag = this.getMXPBlock(_MXPTag, [], remote, _MXPOTag, formatBuilder);
                                 if (this.mxpState.expanded) {
                                     if (_MXPTag && _MXPTag.text !== null) text = text.splice(idx + 1, _MXPTag.text);
                                     tl = text.length;
@@ -3022,7 +3065,7 @@ export class Parser extends EventEmitter {
                                 formatBuilder.push(format = this.getFormatBlock(lineLength));
                             }
                             else {
-                                _MXPTag = this.getMXPBlock(_MXPTag, _MXPArgs, remote, _MXPTag);
+                                _MXPTag = this.getMXPBlock(_MXPTag, _MXPArgs, remote, _MXPTag, formatBuilder);
                                 if (this.mxpState.expanded) {
                                     if (_MXPTag !== null) text = text.splice(idx + 1, _MXPTag.text);
                                     tl = text.length;

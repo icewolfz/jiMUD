@@ -911,3 +911,17 @@ body {
 }
 
 /** button end */
+
+#status-ghost-bar {
+    background-color: #d4d4d4;
+}
+
+#status-drag-bar {
+    left: -2px;
+    transition: 0s background-color;
+}
+
+#status-drag-bar:hover{
+    background-color: #d4d4d4;    
+    transition-delay: 1s;
+}

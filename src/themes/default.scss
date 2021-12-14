@@ -928,3 +928,20 @@ body {
 }
 
 /** button end */
+
+#status-drag-bar {
+    left: -3px;
+    top: -7px;
+    height: initial;
+    bottom: -14px;
+    transition: 0s background-color;
+}
+
+#status-ghost-bar {
+    background-color: #d70000;
+}
+
+#status-drag-bar:hover{
+    background-color: #d70000;    
+    transition-delay: 1s;
+}

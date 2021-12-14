@@ -152,7 +152,7 @@ body {
     height: 100%;
     float: right;
     width: 3px;
-    cursor: col-resize;
+    cursor: ew-resize;
 }
 
 #ghost-bar {
@@ -160,7 +160,7 @@ body {
     background-color: #000;
     opacity: 0.5;
     position: absolute;
-    cursor: col-resize;
+    cursor: ew-resize;
     z-index: 999
 }
 

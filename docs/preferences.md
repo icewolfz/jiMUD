@@ -12,7 +12,7 @@ Reset - Resetting will revert all settings back to default values
 - `Show character manager onload` open the character manager when the client first loads.
 - `Enable spellchecking` support spellchecking in command line and advanced editor **Requires restart**
 - `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
-- `Theme` the theme for the main client window
+- `Theme` the theme for the main client window, the theme list is built from built in themes and themes located in {data}\themes folder and {documents}\jiMUD\themes, see [customizing](customizing.md#themes) doc for more themes information
 - `On disconnect do` What to do when disconnected from the mud
   - `Nothing` do nothing
   - `Reconnect` reconnect using auto connect options
@@ -162,6 +162,8 @@ Controls what is captured into the chat window
 - `Show Script Errors` Disable any errors that triggers, aliases, or macros produces when script type.
 - `Parse single quotes as strings` Treat single quotes as string encasing, meaning all text found inside single quotes are treated as is and not parsed.
 - `Parse double quotes as strings` Treat double quotes as string encasing, meaning all text found inside double quotes are treated as is and not parsed.
+- `Disable trigger on error` Disable a trigger if an error happens when executing a trigger
+- `Prepend triggered line` Disable the fix to prepend the triggered line as %0,$0, or %{0} to return to previous usage
 
 ## Scripting > Special characters
 
@@ -197,6 +199,18 @@ Controls what is captured into the chat window
 - `Enable warning dialog when connected and closing client` disable or enable warning check when closing mud and connected
 - `Enable warning dialog when closing client and child windows are open` disable or enable warning dialog when closing and child windows are open
 - `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character
+- `Open 'Who is on' in web browser` Open the 'Who is on?' in a web browser, if disabled will open in a child window of jiMUD
+- `Watch for profile changes` when enabled will watch for profile changes
+- `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
+  - `Nothing` Do nothing
+  - `Reload` Force reload of profiles, this may cause profile changes to be lost
+  - `Ask` Ask you if you want to reload or do nothing
+  - `Warn` Display a warning to the mud window
+- `On profile deleted do` what to do when a profile is deleted when `Watch for profile changes` enabled
+  - `Nothing` Do nothing
+  - `Remove` Force remove of profiles, this may cause profile changes to be lost
+  - `Ask` Ask you if you want to remove or do nothing
+  - `Warn` Display a warning to the mud window  
 
 ## Advanced > Backup
 

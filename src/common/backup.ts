@@ -432,6 +432,7 @@ export class Backup extends EventEmitter {
                             item.triggerNewline = data.profiles[keys[k]].triggers[m].triggernewline ? true : false;
                             item.caseSensitive = data.profiles[keys[k]].triggers[m].caseSensitive ? true : false;
                             item.triggerPrompt = data.profiles[keys[k]].triggers[m].triggerprompt ? true : false;
+                            item.raw = data.profiles[keys[k]].triggers[m].raw ? true : false;
                             item.temp = data.profiles[keys[k]].triggers[m].temp ? true : false;
                             item.type = data.profiles[keys[k]].triggers[m].type;
                             item.notes = data.profiles[keys[k]].triggers[m].notes || '';
@@ -531,7 +532,9 @@ export class Backup extends EventEmitter {
                 this.client.options.showMapper = data.settings.MapperOpen ? true : false;
                 this.client.options.showCharacterManager = data.settings.showCharacterManager ? true : false;
                 this.client.options.logErrors = data.settings.logErrors ? true : false;
-                this.client.options.showErrorsExtended = data.settings.showCharacterManager ? true : false;
+                this.client.options.showErrorsExtended = data.settings.showErrorsExtended ? true : false;
+                this.client.options.prependTriggeredLine = data.settings.prependTriggeredLine ? true : false;
+                this.client.options.disableTriggerOnError = data.settings.disableTriggerOnError ? true : false;
 
                 let prop;
                 let prop2;

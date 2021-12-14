@@ -1,18 +1,16 @@
 $images: "./../../assets";
-$borderColor: "rgb(204, 204, 204)";
-$color: "#333";
-$panelBackground: "rgb(240, 240, 240)";
-$panelInsetBackground: "rgb(240, 240, 240)";
+$borderColor: "#908271";
+$color: "wheat";
 
 body {
-    background-color: #{$panelBackground};
+    background-color:black;
 }
 
 #display {
-    left: 34px;
-    right: 165px;
+    left: 52px;
+    right: 170px;
     top: 2px;
-    bottom: 29px;
+    bottom: 42px;
     border: 1px solid #{$borderColor};
 }
 
@@ -23,26 +21,34 @@ body {
 
 #display-split-bar,
 #display-split-ghost-bar {
-    border-top: 1px solid #{$borderColor};
-    border-bottom: 1px solid #{$borderColor};
-    background-color: #{$panelBackground};
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: #33302b;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    border: 1px solid #{$borderColor};
+    height: 6px;
+}
+
+#display-split-frame
+{
+    right: 18px;
 }
 
 #command {
-    height: 24px;
+    height: 38px;
     bottom: 2px;
-    left: 34px;
-    right: 165px;
+    left: 52px;
+    right: 170px;
     background-color: transparent;
-    border: 0px;
+    border: 1px solid #{$borderColor};
 }
 
 #commandbox {
-    left: 0px;
-    top: 0px;
-    right: 112px;
-    bottom: 0px;
-    background-color: white;
+    left: 2px;
+    right: 148px;
+    height: 32px;
+    bottom: 2px;
 }
 
 #commandleft,
@@ -54,130 +60,114 @@ body {
     width: 100%;
     height: 100%;
     margin: 0px;
-    color: #{$color};
+    border: 0px;
+    background-color: transparent;
+    color: wheat;
     box-sizing: border-box;
-    border: 1px solid #{$borderColor};
-    padding: 2px;
-}
-
-#commandinput:focus {
-    border: 1px solid adadad;
+    padding: 0;
 }
 
 #buttonbar {
-    top: 0px;
-    left: 0px;
-    bottom: 0px;
-    background-color: #{$panelBackground};
-    padding: 1px;
+    top: 2px;
+    left: 2px;
+    bottom: 2px;
+    width: 48px;
 }
 
-#bb-scroll-up {
-    left: 1px;
-    top: 0px;
-    width: 31px;
-    margin-top: 0;
+#bb-scroll-down, #bb-scroll-up {
+    width: 48px;
 }
 
 #bb-scroll-down {
-    left: 1px;
-    bottom: 0px;
-    width: 31px;
-    margin-bottom: 0;
+    bottom: 0;
 }
 
-/* Let's get this party started */
 .scroll-track {
-    background-color: #{$panelBackground};
+    background-color: #191814;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    width: 18px;
+    height: 18px;
 }
 
 .scroll-thumb {
-    background: #aaa;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: #33302b;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
     border: 1px solid #{$borderColor};
 }
 
 .scroll-thumb:hover {
-    background: #e6e6e6;
+    background: #988f7f;
 }
 
 .scroll-thumb:active {
-    background-color: #848282;
+    background-color: #544f46;
 }
 
 .scroll-corner {
-    background-color: #{$panelBackground};
-    color: #fff;
+    background-color: black;
+    display:none;
+    width: 18px;
+    height: 18px;
 }
 
 .scroll-split-button {
-    font-size: 9px;
-    text-align: center;
-    background-color: ButtonFace !important;
-    color: ButtonText;
-    box-sizing: border-box;
-    border-top: 1px solid ButtonHighlight;
-    border-left: 1px solid ButtonHighlight;
-    border-right: 1px solid ButtonShadow;
-    border-bottom: 1px solid ButtonShadow;
-    z-index: 2000;
-    cursor: default;
-}
-
-.scroll-split-button:active, .scroll-split-button:focus {
-    background-color: #e0e0e0;
-    border-color: #dbdbdb;
-    background-image: none;
-    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    display: block !important;
+    color: wheat;
+    background-color: maroon !important;
+    border: 1px solid #{$borderColor} !important;    
+    font-size: 14px;
 }
 
 .scroll-split-button.active {
-    background-color: #666;
-    border-color: #ccc;
-    background-image: none;
-    text-shadow: 0 1px 0 #{$color};
-    color: #fff;
+    background-color: #d70000 !important;
+    color: wheat;
 }
 
-.scroll-split-button.active:active,
-.scroll-split-button.active:focus {
-    background-color: #666;
-    border-color: #fff;
-    background-image: none;
-    text-shadow: 0 1px 0 #{$color};
-    color: #fff;
-}
-
-.scroll-split-button:hover,
-.scroll-split-button:focus,
 .scroll-split-button.active:hover {
-    color: #{$color};
-    background-color: #e0e0e0;
-    background-position: 0 -15px;
-    color: #333;
-    border-color: #adadad;
-    text-decoration: none;
+    background-color: #790000 !important;
+    color: wheat;
+}
+
+.scroll-split-button.active:active {
+    background-color: maroon !important;
+    color: wheat;
+}
+
+.scroll-split-button:hover {
+    background-color: #d70000 !important;
+    color: wheat;
+}
+
+.scroll-split-button:active {
+    background-color: #790000 !important;
+    color: wheat;
+}
+
+.scroll-split-button:focus {
+    color: wheat;
 }
 
 .scroll-split-button.disabled, .scroll-split-button.disabled:hover, .scroll-split-button.disabled:active, .scroll-split-button.disabled:focus {
-    background-color: #{$panelBackground};
-    color: #a0a0a0;
-    border-top: 1px solid ButtonHighlight;
-    border-left: 1px solid ButtonHighlight;
-    border-right: 1px solid ButtonShadow;
-    border-bottom: 1px solid ButtonShadow;
+    background-color: maroon !important;
+    color: #A88749;
 }
 
 .scroll-horizontal {
-    border-top: 0px;
+    border-top: 1px solid #494238;
 }
 
 .scroll-vertical {
-    border-left: 0px;
+    border-left: 1px solid #494238;
 }
 
 .scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
-    background: #888;
+    background: rgba(51, 48, 43, 0.4);
     border: 0px;
+    color: #A88749;
 }
 
 #display::-webkit-scrollbar,
@@ -190,58 +180,64 @@ body {
 
 #display::-webkit-scrollbar-track,
 #bars::-webkit-scrollbar-track {
-    background-color: #{$panelBackground};
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background-color: #191814;
+    border: 1px solid #494238;
 }
 
 /* Handle */
 
 #display::-webkit-scrollbar-thumb,
 #bars::-webkit-scrollbar-thumb {
-    background: #aaa;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: #33302b;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
     border: 1px solid #{$borderColor};
 }
 
 #display::-webkit-scrollbar-thumb:hover,
 #bars::-webkit-scrollbar-thumb:hover {
-    background: #e6e6e6;
+    background: #988f7f;
 }
 
 #display::-webkit-scrollbar-thumb:active,
 #bars::-webkit-scrollbar-thumb:active {
-    background: #848282;
+    background: #544f46;
 }
 
 #display::-webkit-scrollbar-thumb:window-inactive,
 #bars::-webkit-scrollbar-thumb:window-inactive {
-    background: #888;
+    background: rgba(51, 48, 43, 0.4);
 }
 
 #display::-webkit-scrollbar-corner,
 #bars::-webkit-scrollbar-corner {
-    background-color: #{$panelBackground};
-    border-top: 1px solid #{$borderColor};
-    border-left: 1px solid #{$borderColor};
+    background-color: black;
 }
 
 .find {
     top: 5px;
     right: 20px;
+    color: #BBBBBB;
     padding: 2px;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 1em;
     border-radius: 4px;
     border: 1px solid #{$borderColor};
-    background-color: #{$panelBackground};
-    color: #{$color};
-    text-shadow: 0 1px 0 #fff;
+    background-color: rgb(40, 0, 0);
 }
 
 .find input,
 .find input:focus {
     border: 1px solid #{$borderColor};
     width: 100px;
-    background-color: white;
-    color: black;
+    background-color: inherit;
+    color: silver;
     padding: 2px 2px;
     height: 16px;
     top: -1px;
@@ -249,8 +245,9 @@ body {
 }
 
 .find input:focus {
-    border: 1px solid adadad;
-    color: #{$color};
+    border: 1px solid maroon;
+    color: wheat;
+    background: rgba(128, 0, 0, 0.5);
 }
 
 .find button .fa {
@@ -275,21 +272,9 @@ body {
 
 .find button:hover,
 .find button.active:hover {
-    color: #{$color};
-    background-color: #e0e0e0;
-    background-position: 0 -15px;
-    color: #333;
-    border-color: #adadad;
-    text-shadow: 0 1px 0 #fff;
-}
-
-.find button.active:hover {
-    color: #{$color};
-    background-color: #a0a0a0;
-    background-position: 0 -15px;
-    color: #fff;
-    border-color: #adadad;
-    text-shadow: 0 1px 0 #333;
+    border: 1px solid wheat;
+    background-color: #d70000;
+    color: wheat;
 }
 
 .find button:active {
@@ -298,19 +283,15 @@ body {
 
 .find button:disabled,
 .find button:disabled:hover {
-    background-color: inherit !important;
-    background-image: none;
-    box-shadow: none;
-    opacity: .25;
     border: 1px solid transparent;
-    color: #666;
+    color: #555;
+    background-color: inherit;
 }
 
 .find button.active {
-    background-color: #666;
-    border-color: #ccc;
-    text-shadow: 0 1px 0 #{$color};
-    color: #fff;
+    border: 1px solid maroon;
+    background: rgba(128, 0, 0, 0.5);
+    color: wheat;
 }
 
 .find-case {
@@ -336,20 +317,21 @@ body {
     background: rgb(116, 192, 114);
 }
 
+
 /* begin status */
 
 #status {
-    width: 164px;
+    width: 246px;
     text-align: center;
-    right: 0px;
-    top: 0px;
-    bottom: 0px;
-    background-color: #{$panelBackground};
+    right: 2px;
+    top: 2px;
+    bottom: 2px;
+    background-color: rgb(40, 0, 0);
+    border: 1px solid #{$borderColor};
     padding: 2px;
 }
 
 #status-border {
-    width: 168px;
     display: none;
 }
 
@@ -434,7 +416,7 @@ body {
     background-image: url("#{$images}/status/weatherrain.png");
 }
 
-.weather-rain.intensity-hard #environmentweather, .weather-zombie_rain.intensity-hard #environmentweather {
+.weather-rain.intensity-hard #environmentweather,.weather-zombie_rain.intensity-hard #environmentweather {
     background-image: url("#{$images}/status/weatherrainhard.png");
 }
 
@@ -458,23 +440,44 @@ body {
     background-image: url("#{$images}/status/weatherblood_rain.png");
 }
 
-.weather-blood_rain.intensity-hard #environmentweather {
+.weather-blood_rain.intensity-hard #environmentweather{
     background-image: url("#{$images}/status/weatherblood_rainhard.png");
 }
 
 #environment {
-    height: 50px;
+    height: 75px;
     top: 3px;
     left: 3px;
     right: 3px;
-    background-color: #{$panelInsetBackground};
+    background-color: black;
     border: 1px solid #{$borderColor};
 }
 
+#environmentleft {
+    top: 15px;
+    left: calc(50% - 112.5px);
+    width: 75px;
+    height: 75px;
+}
+
+#environmentcenter {
+    top: 5px;
+    left: calc(50% - 37.5px);
+    width: 75px;
+    height: 75px;
+}
+
+#environmentright {
+    top: 15px;
+    right: calc(50% - 112.5px);
+    width: 75px;
+    height: 75px;
+}
+
 #character-name {
-    color: #{$color};
-    padding: 0 22px;
-    font-size: 1.2em;
+    color: wheat;
+    padding: 0 33px;
+    font-size: 1.6em;
 }
 
 #character-name::first-letter {
@@ -542,32 +545,37 @@ body {
 }
 
 #lefthandweapon {
-    top: 85px;
-    background-color: #666;
+    top: 127px;
+    background-color: black;
     border: 1px solid #{$borderColor};
-    width: 32px;
-    height: 32px;
+    width: 48px;
+    height: 48px;
     left: 5px;
+    background-repeat: no-repeat;
+    background-size: cover;       
 }
 
 #righthandweapon {
-    top: 85px;
-    background-color: #666;
+    top: 127px;
+    background-color: black;
     border: 1px solid #{$borderColor};
-    width: 32px;
-    height: 32px;
+    width: 48px;
+    height: 48px;
     right: 5px;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 #experience {
     top: 3px;
     right: 3px;
     left: 3px;
-    background-color: #{$panelInsetBackground};
+    background-color: black;
     border: 1px solid #{$borderColor};
     padding: 2px;
-    color: #{$color};
+    color: wheat;
     text-align: left;
+    font-size: 18px;
 }
 
 #experience div span:nth-child(2) {
@@ -580,19 +588,20 @@ body {
     left: 3px;
     bottom: 3px;
     padding: 2px;
-    color: #{$color};
+    color: wheat;
     text-align: left;
 }
 
 .combat-bar {
-    height: 34px;
+    height: 51px;
     width: 100%;
     margin-bottom: 2px;
 }
 
 .combat-name {
     right: 1px;
-    left: 38px;
+    left: 54px;
+    font-size: 1.5em
 }
 
 .combat-name:first-letter {
@@ -605,12 +614,13 @@ body {
     float: left;
     background-color: black;
     border: 1px solid #{$borderColor};
+    zoom: 1.5;    
 }
 
 .combat-bar .progressbar {
     right: 1px;
-    left: 38px;
-    font-size: 0.75em;
+    left: 54px;
+    font-size: 1em;
     bottom: 2px;
 }
 
@@ -622,9 +632,15 @@ body {
     top: 3px;
     right: 3px;
     left: 3px;
-    background-color: #{$panelInsetBackground};
+    background-color: black;
     border: 1px solid #{$borderColor};
     padding: 2px;
+    font-size: 18px;
+}
+
+#fullbody {
+    width: 192px;
+    height: 300px;    
 }
 
 #health {
@@ -633,12 +649,6 @@ body {
 
 #armor {
     right: 2px;
-}
-
-#overall {
-    background: #aaa;
-    border-radius: 4px;
-    margin-bottom: 2px;
 }
 
 .health-100 {
@@ -756,21 +766,32 @@ body {
 }
 
 .progressbar {
-    height: 14px;
+    height: 21px;
     font-size: 1em;
     border: 1px solid #{$borderColor};
     width: 118px;
     -webkit-border-radius: 6px;
     border-radius: 6px;
-
     /* future proofing */
     background: -webkit-linear-gradient(left, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
     background: linear-gradient(to right, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
 }
 
+#hp-status>div {    
+    height: 22px;
+}
+
+#hp-status>div>.progressbar {
+    left: 35px;
+}
+
+#need-percent {
+    left: 72px;
+}
+
 #hp-status {
     text-align: left;
-    color: #{$color};
+    color: wheat;
 }
 
 #hp-status span {
@@ -789,14 +810,14 @@ body {
 .progressbar .progressbar-value {
     height: 100%;
     width: 0%;
-    background-color: white;
+    background-color: wheat;
 }
 
 #lagMeter {
     bottom: 3px;
     right: 3px;
     left: 3px;
-    font-size: 0.75em;
+    font-size: 1.18em;
 }
 
 #lagMeter.progressbar .progressbar-text {
@@ -808,200 +829,215 @@ body {
     padding-bottom: 4px;
 }
 
-#fullbody {
-    filter: drop-shadow(0px 0px 0px black);
-}
 
 /** end stats **/
+
 
 /** button stats */
 
 #history-dropup {
-    font-size: 22px;
-    line-height: 22px;
-    height: 24px;
-}
-
-.command-history {
-    right: 25px;
-    top: 0;
+    width: 48px;
+    text-align: center;
+    border-radius: 4px;
+    border: 0px;
+    background-color: transparent;  
 }
 
 #history-dropup .fa {
     margin-top: 3px;
-    font-size: 18px;
+}
+
+#history-dropup:hover {
+    background-color: #d70000;
+}
+
+#history-dropup:active {
+    background-color: #790000;
 }
 
 .command-history {
-    right: 78px;
-    top: 0px;
+    right: 99px;
+    top: 3px;
+}
+
+.command-history .caret {
+    border-bottom: 6px dashed;
+    border-right: 6px solid transparent;
+    border-left: 6px solid transparent;
+    margin: -7px 0 0 0 !important;
 }
 
 #btnTriggers {
-    right: 26px;
+    right: 35px;
 }
-
+ 
 #btnParsing {
-    right: 52px;
+    right: 67px;
 }
 
 #btnTriggers, #btnParsing {
-    top: 0px;
+    top: 3px;
     text-align: center;
-    height: 24px;
-    width: 24px;
-    font-size: 22px;
-    line-height: 22px;
+    border-radius: 4px;
+    border: 0px;
+    height: 30px;
+    width: 30px;
+    background-color: transparent;
+}
+
+#btnTriggers.on, #btnParsing.on {
+    background-color: #d70000;
+}
+
+#btnTriggers:hover, #btnParsing:hover, #btnTriggers.on:active, #btnParsing.on:active {
+    background-color: #d70000;
+}
+
+#btnTriggers:active, #btnParsing:active, #btnTriggers.on:hover, #btnParsing.on:hover {
+    background-color: #790000;
 }
 
 #advedit {
-    right: 0px;
-    top: 0px;
-    height: 24px;
-    width: 24px;
-    font-size: 22px;
-    line-height: 22px;
+    top: 3px;
+    right: 3px;
+    text-align: center;
+    border-radius: 4px;
+    border: 0px;
+    background-color: transparent;
+    height: 30px;
+    width: 30px;
 }
 
-#advedit .fa, #btnTriggers .fa, #btnParsing .fa {
-    margin-top: 3px;
-    font-size: 18px;
+#advedit .fa {
+    margin-top: 4px;
+    margin-left: 3px;
+}
+
+#advedit:hover {
+    background-color: #d70000;
+}
+
+#advedit:active {
+    background-color: #790000;
 }
 
 .button {
-    color: #{$color};
+    color: wheat;
+    background-color: maroon;
+    border: 1px solid #{$borderColor};
     margin-bottom: 2px;
-    text-shadow: 0 1px 0 #fff;
-    background-image: linear-gradient(to bottom, #fff 0, #e0e0e0 100%);
-    background-repeat: repeat-x;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 1px rgba(0, 0, 0, 0.075);
-    border-radius: 3px;
-    font-weight: 400;
-    white-space: nowrap;
-    border: 1px solid #ccc;
-    width: 31px;
-}
-
-.button img,
-.button-icon {
-    margin-top: 5px;
-    margin-left: 5px;
+    width: 48px;
+    height: 48px;
 }
 
 .button svg {
     fill: #{$color};
-    filter: drop-shadow(1px 1px 0px #fff);
+    width: 40px;
+    height: 40px;
+    top: 2px;
 }
 
-.button:active, .button:focus {
-    background-color: #e0e0e0;
-    border-color: #dbdbdb;
-    background-image: none;
-    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+.button img,
+.button-icon {
+    margin-top: 9px;
+    margin-left: 9px;
+    width: 30px;
+    height: 30px;
+    font-size: 30px;   
+}
+
+.button .fa, .button-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 30px;
+    margin-top: 8px;
+}
+
+.button .fa-stack {
+    width: 30px;
+    height: 30px;
+    font-size: 30px;
 }
 
 .button.on {
-    background-color: #666;
-    border-color: #ccc;
-    background-image: none;
-    text-shadow: 0 1px 0 #{$color};
-    color: #fff;
+    background-color: #d70000;
+    color: wheat;
 }
 
-.button.on svg {
-    fill: #fff;
-    filter: drop-shadow(1px 1px 0px #{$color});
-}
-
-.button.on:hover svg {
-    fill: #{$color};
-    filter: drop-shadow(1px 1px 0px #fff);
-}
-
-.button.on:active,
-.button.on:focus {
-    background-color: #666;
-    border-color: #fff;
-    background-image: none;
-    text-shadow: 0 1px 0 #{$color};
-    color: #fff;
-}
-
-.button:hover,
-.button:focus,
 .button.on:hover {
-    color: #{$color};
-    background-color: #e0e0e0;
-    background-position: 0 -15px;
-    color: #333;
-    border-color: #adadad;
-    text-decoration: none;
+    background-color: #790000;
+    color: wheat;
+}
+
+.button.on:active, .button.on:focus {
+    background-color: maroon;
+    color: wheat;
+}
+
+.button:hover {
+    background-color: #d70000;
+    color: wheat;
 }
 
 .button:hover .overlay, .button.on:hover {
-    background-color: rgba(255,255,255, 0.40);
+    background-color: rgba(215,0,0, 0.40);
 }
 
-#connect img {
-    background: url(#{$images}/icons/png/connect.black.png) no-repeat;
-    padding-left: 50px;
-    background-position: 5px -1px;
+.button:active {
+    background-color: #790000;
+    color: wheat;
 }
 
-#disconnect img {
-    padding-left: 50px;
-    background: url(#{$images}/icons/png/disconnect.black.png) no-repeat;
-    background-position: 3px -3px;
+.button:focus {
+    color: wheat;
 }
 
-#preferences img {
-    padding-left: 50px;
-    background: url(#{$images}/icons/png/preferences.black.png) no-repeat;
-    background-position: 5px -1px;
+.button-sm .fa,
+.button-sm.on .fa {
+    margin-top: 1px;
+    margin-left: 0;
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
 }
 
-#log img {
-    padding-left: 50px;
-    background: url(#{$images}/icons/png/log.black.png) no-repeat;
-    background-position: 5px -1px;
+.button-sm,
+.button-sm.on {
+    width: 30px;
+    height: 30px;
+    font-size: 30px;
 }
 
-#clear img {
-    padding-left: 50px;
-    background: url(#{$images}/icons/png/clear.black.png) no-repeat;
-    background-position: 5px -1px;
+.button-sm img,
+.button-sm.on img {
+    height: 24px;
+    width: 24px;
+    margin: 1px;
 }
 
-#lock[title="Unlock display"] img {
-    padding-left: 50px;
-    background: url(#{$images}/icons/png/unlock.black.png) no-repeat;
-    background-position: 5px -1px;
-}
-
-#lock[title="Lock display"] img {
-    padding-left: 50px;
-    background: url(#{$images}/icons/png/lock.black.png) no-repeat;
-    background-position: 5px -1px;
-}
-
-#map img {
-    padding-left: 50px;
-    background: url(#{$images}/icons/png/map.black.png) no-repeat;
-    background-position: 5px -1px;
+.button-sm svg,
+.button-sm.on svg {
+    top: 0px;
+    width: 30px;
+    height: 30px;    
+    position: relative;
 }
 
 /** button end */
 
-#status-ghost-bar {
-    background-color: #666;
-}
-
 #status-drag-bar {
-    left: 0px;
+    left: -2px;
+    top: -7px;
+    height: initial;
+    bottom: -14px;    
     transition: 0s background-color;
 }
 
 #status-drag-bar:hover{
-    background-color: #666;    
+    background-color: #d70000;    
     transition-delay: 1s;
+}
+
+#status-ghost-bar {
+    background-color: #d70000;
 }

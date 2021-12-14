@@ -16,7 +16,7 @@ require('@electron/remote/main').initialize()
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, winWho, winMap, winProfiles, winEditor, winChat, winCode, winProgress;
+let win, winMap, winProfiles, winEditor, winChat, winCode, winProgress;
 let _winProgressTimer = 0;
 let set, mapperMax = false, editorMax = false, chatMax = false, codeMax = false;
 let edSet;
@@ -353,13 +353,9 @@ var menuTemp = [
                 }
             },
             {
-                label: '&Who is on?',
+                label: '&Who is on?...',
                 click: () => {
-                    if (winWho) {
-                        winWho.show();
-                        return;
-                    }
-                    shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
+                    executeScript('showWho()', win, true);
                     win.webContents.focus();
                 }
             },
@@ -701,13 +697,7 @@ var menuTemp = [
               //accelerator: 'CmdOrCtrl+M'
             },
             */
-            { type: 'separator' },
-            {
-                role: 'minimize'
-            },
-            {
-                role: 'close'
-            }
+            { type: 'separator' }
         ]
     },
     //Help
@@ -719,8 +709,7 @@ var menuTemp = [
             {
                 label: '&ShadowMUD...',
                 click: () => {
-                    shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
-                    win.webContents.focus();
+                    executeScript('showSMHelp()', win, true);
                 }
             },
             {
@@ -785,6 +774,7 @@ if (process.platform === 'darwin') {
             }
         ]
     });
+    menuTemp.push()
     // Edit menu.
     menuTemp[2].submenu.push(
         {
@@ -803,7 +793,7 @@ if (process.platform === 'darwin') {
         }
     );
     // Window menu.
-    menuTemp[5].submenu = [
+    menuTemp[5].submenu.push(
         {
             label: 'Close',
             accelerator: 'CmdOrCtrl+W',
@@ -825,7 +815,17 @@ if (process.platform === 'darwin') {
             label: 'Bring All to Front',
             role: 'front'
         }
-    ];
+    );
+}
+else {
+    menuTemp[4].submenu.push(
+        {
+            role: 'minimize'
+        },
+        {
+            role: 'close'
+        }
+    )
 }
 
 let menubar;
@@ -1004,13 +1004,9 @@ function createTray() {
         },
         { type: 'separator' },
         {
-            label: '&Who is on?',
+            label: '&Who is on?...',
             click: () => {
-                if (winWho) {
-                    winWho.show();
-                    return;
-                }
-                shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
+                executeScript('showWho()', win, true);
             }
         },
         { type: 'separator' },
@@ -1021,7 +1017,7 @@ function createTray() {
                 {
                     label: '&ShadowMUD...',
                     click: () => {
-                        shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
+                        executeScript('showSMHelp()', win, true);
                     }
                 },
                 {
@@ -1345,6 +1341,7 @@ function createWindow() {
         w.on('closed', () => {
             if (win && !win.isDestroyed() && win.webContents) {
                 executeScript(`childClosed('${url}', '${frameName}');`, win, true);
+                win.focus();
             }
         });
     });
@@ -1353,19 +1350,19 @@ function createWindow() {
     win.on('closed', () => {
         if (winMap) {
             set.windows.mapper = getWindowState('mapper', winMap);
-            win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
+            //win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
             executeScript('closeWindow()', winMap);
             winMap = null;
         }
         if (winEditor) {
             set.windows.editor = getWindowState('editor', winEditor);
-            win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
+            //win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
             winEditor.close();
             winEditor = null;
         }
         if (winChat) {
             set.windows.chat = getWindowState('chat', winChat);
-            win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
+            //win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
             winChat.close();
             winChat = null;
         }
@@ -1625,8 +1622,16 @@ app.on('activate', () => {
     }
 });
 
-app.on('before-quit', () => {
-
+app.on('before-quit', (e) => {
+    if (winProfiles) {
+        e.preventDefault();
+        dialog.showMessageBox(winProfiles, {
+            type: 'warning',
+            title: 'Close profile manager',
+            message: 'You must close the profile manager before you can exit.'
+        });
+        set.save(global.settingsFile);
+    }
 });
 
 ipcMain.on('check-for-updates', checkForUpdatesManual);
@@ -2829,6 +2834,8 @@ ipcMain.handle('window', (event, action, ...args) => {
         current.reload();
     else if (action === 'setIcon')
         current.setIcon(...args);
+    else if (action === 'closeWindows')
+        closeWindows(true, false);
 });
 
 ipcMain.handle('attach-context-event', event => {
@@ -2845,13 +2852,13 @@ ipcMain.handle('attach-context-event-prevent', event => {
 
 ipcMain.on('window-info', (event, info, ...args) => {
     if (info === "child-count") {
-        var windows = BrowserWindow.getAllWindows();
+        var wins = BrowserWindow.getAllWindows();
         var current = BrowserWindow.fromWebContents(event.sender);
         var count = 0;
-        for (var w = 0, wl = windows.length; w < wl; w++) {
-            if (windows[w] === current || !windows[w].isVisible())
+        for (var w = 0, wl = wins.length; w < wl; w++) {
+            if (wins[w] === current || !wins[w].isVisible())
                 continue;
-            if (windows[w].getParentWindow() !== current)
+            if (wins[w].getParentWindow() !== current)
                 continue;
             count++;
         }
@@ -2862,12 +2869,12 @@ ipcMain.on('window-info', (event, info, ...args) => {
             event.returnValue = 0;
             return
         }
-        var windows = BrowserWindow.getAllWindows();
+        var wins = BrowserWindow.getAllWindows();
         var current = BrowserWindow.fromWebContents(event.sender);
-        for (var w = 0, wl = windows.length; w < wl; w++) {
-            if (windows[w] === current || !windows[w].isVisible())
+        for (var w = 0, wl = wins.length; w < wl; w++) {
+            if (wins[w] === current || !wins[w].isVisible())
                 continue;
-            if (windows[w].getTitle().startsWith(args[0]) && windows[w].getParentWindow() === current) {
+            if (v[w].getTitle().startsWith(args[0]) && v[w].getParentWindow() === current) {
                 event.returnValue = 1;
                 return;
             }
@@ -2875,17 +2882,57 @@ ipcMain.on('window-info', (event, info, ...args) => {
         event.returnValue = 0;
     }
     else if (info === 'child-close') {
-        var windows = BrowserWindow.getAllWindows();
+        var wins = BrowserWindow.getAllWindows();
         var current = BrowserWindow.fromWebContents(event.sender);
         var count = 0;
-        for (var w = 0, wl = windows.length; w < wl; w++) {
-            if (windows[w] === current || !windows[w].isVisible())
+        for (var w = 0, wl = wins.length; w < wl; w++) {
+            if (wins[w] === current || !wins[w].isVisible())
                 continue;
-            if (args.length && !windows[w].getTitle().startsWith(args[0])) {
-                windows[w].close();
+            if (args.length && !wins[w].getTitle().startsWith(args[0])) {
+                //make sure proper close systems called
+                for (let name in windows) {
+                    if (!Object.prototype.hasOwnProperty.call(windows, name) || windows[name].window != wins[w])
+                        continue;
+                    executeScript('if(closing) closing();', windows[name].window);
+                    executeScript('if(closed) closed();', windows[name].window);
+                    set.windows[name] = getWindowState(name, windows[name].window);
+                    set.windows[name].options = copyWindowOptions(name);
+                    windows[name].window = null;
+                    delete windows[name];
+                }
+                if (winMap == wins[w]) {
+                    set.windows.mapper = getWindowState('mapper', winMap);
+                    win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
+                    executeScript('closeWindow()', winMap);
+                    winMap = null;
+                }
+                if (winEditor == wins[w]) {
+                    set.windows.editor = getWindowState('editor', winEditor);
+                    win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
+                    winEditor = null;
+                }
+                if (winChat == wins[w]) {
+                    set.windows.chat = getWindowState('chat', winChat);
+                    win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
+                    winChat = null;
+                }
+                if (winCode == wins[w] && winCode.getParentWindow() == win) {
+                    if (!edSet)
+                        edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
+                    if (global.editorOnly)
+                        edSet.stateOnly = getWindowState('code-editor', winCode);
+                    else {
+                        edSet.state = getWindowState('code-editor', winCode);
+                        edSet.window.show = true;
+                    }
+                    edSet.save(parseTemplate(path.join('{data}', 'editor.json')));
+                    executeScript('closeWindow()', winCode);
+                    winCode = null;
+                }
+                wins[w].close();
                 continue;
             }
-            if (windows[w].getParentWindow() !== current)
+            if (wins[w].getParentWindow() !== current)
                 continue;
             count++;
         }
@@ -3327,7 +3374,8 @@ function createMapper(show, loading, loaded) {
             win.webContents.send('setting-changed', { type: 'normal', name: 'showMapper', value: false, noSave: true });
         }
         set.windows.mapper = getWindowState('mapper', e.sender);
-        win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
+        if (win && !win.isDestroyed() && win.webContents)
+            win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
         set.save(global.settingsFile);
         if (winMap === e.sender && winMap && (set.mapper.enabled || set.mapper.persistent)) {
             e.preventDefault();
@@ -3444,8 +3492,10 @@ function showProfiles() {
     winProfiles.on('close', () => {
         set = settings.Settings.load(global.settingsFile);
         set.windows.profiles = getWindowState('profiles', winProfiles);
-        win.webContents.send('setting-changed', { type: 'window', name: 'profiles', value: set.windows.profiles, noSave: true });
+        if (win && !win.isDestroyed() && win.webContents)
+            win.webContents.send('setting-changed', { type: 'window', name: 'profiles', value: set.windows.profiles, noSave: true });
         set.save(global.settingsFile);
+        win.focus();
     });
 
     winProfiles.on('resize', () => {
@@ -3588,12 +3638,13 @@ function createEditor(show, loading) {
         if (win) {
             win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
             win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: false, noSave: true });
+            win.focus();
         }
         set.save(global.settingsFile);
         executeScript('tinymce.activeEditor.setContent(\'\');', e.sender);
         if (winEditor === e.sender && winEditor && (set.editorPersistent && !global.editorOnly)) {
             e.preventDefault();
-            executeScript('closeHidden()', winEditor);
+            executeScript('if(closeHidden) closeHidden()', winEditor);
             winEditor.hide();
         }
     });
@@ -3735,10 +3786,12 @@ function createChat(show, loading) {
         set = settings.Settings.load(global.settingsFile);
         if (winChat === e.sender) {
             set.showChat = false;
-            win.webContents.send('setting-changed', { type: 'normal', name: 'showChat', value: false, noSave: true });
+            if (win && !win.isDestroyed() && win.webContents)
+                win.webContents.send('setting-changed', { type: 'normal', name: 'showChat', value: false, noSave: true });
         }
         set.windows.chat = getWindowState('chat', e.sender);
-        win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
+        if (win && !win.isDestroyed() && win.webContents)
+            win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
         set.save(global.settingsFile);
         if (winChat === e.sender && winChat && (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)) {
             e.preventDefault();
@@ -3841,6 +3894,8 @@ function createNewWindow(name, options) {
         if (!windows || !windows[name] || e.sender !== windows[name].window) return;
         windows[name].window = null;
         windows[name].ready = false;
+        if (windows[name].alwaysOnTopClient)
+            getParentWindow().focus();
     });
 
     windows[name].window.on('resize', () => {
@@ -3917,7 +3972,8 @@ function createNewWindow(name, options) {
 
         w.on('close', () => {
             if (w && w.getParentWindow()) {
-                executeScript(`childClosed('${url}', '${frameName}');`, w.getParentWindow());
+                executeScript(`if(childClosed) childClosed('${url}', '${frameName}');`, w.getParentWindow());
+                w.focus();
             }
         });
     });
@@ -4138,15 +4194,19 @@ function closeWindows(save, clear) {
     var name;
     var cWin;
     for (name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
+        if (!Object.prototype.hasOwnProperty.call(windows, name))
             continue;
-        executeScript('if(closing) closing();', windows[name].window);
-        executeScript('if(closed) closed();', windows[name].window);
-        set.windows[name] = getWindowState(name, windows[name].window);
+        if (windows[name].window) {
+            executeScript('if(closing) closing();', windows[name].window);
+            executeScript('if(closed) closed();', windows[name].window);
+            set.windows[name] = getWindowState(name, windows[name].window);
+        }
         set.windows[name].options = copyWindowOptions(name);
-        cWin = windows[name].window;
-        windows[name].window = null;
-        cWin.close();
+        if (windows[name].window) {
+            cWin = windows[name].window;
+            windows[name].window = null;
+            cWin.close();
+        }
     }
     if (clear)
         windows = {};
@@ -4366,6 +4426,7 @@ function createCodeEditor(show, loading, loaded) {
         w.on('close', () => {
             if (w && w.getParentWindow()) {
                 executeScript(`if(childClosed) childClosed('${url}', '${frameName}');`, w.getParentWindow());
+                w.getParentWindow().focus();
             }
         });
     });
