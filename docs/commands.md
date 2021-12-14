@@ -2,11 +2,14 @@
 
 ## **Display**
 
-[<u>#SH</u>OW](commands/SHOW.md) text
->Process text as if it came from the MUD and append a new line
+<u>#CO</u>LOR *{pattern}* fore,back,bold *profile*
+>Color last added line, comma delimited colors, supports raw jiMUD color codes, ansi word values, any valid HTML color name, of ##RRGGBB html format
 
-[<u>#SHOWP</u>ROMPT](commands/SHOWPROMPT.md) text
->Process text as if it came from the MUD
+#CW *{pattern}* fore,back,bold *profile*
+>Color all strings matching current trigger pattern, see #color for arguments
+
+<u>#GA</u>G *number*
+>Gag the current or multiple lines of incoming or previous lines, if no arguments gags current line
 
 [<u>#EC</u>HO](commands/ECHO.md) text
 >Display text to the screen and append newline
@@ -14,37 +17,34 @@
 [<u>#ECHOP</u>ROMPT](commands/ECHOPROMPT.md) text
 >Display text to the screen
 
+<u>#HI</u>GHLIGHT *pattern*
+>make last line or lined with matching pattern bold or brighter color if already bold, or
+
+#PCOL fore,back,bold *XStart XEnd YStart YEnd*
+>Color position, will assume full line if position is not supplied, if XEnd omitted will assume end of line, if xEnd -1 it will assume end of line, if YEnd omitted will assume current line, YStart and YEnd are relative to the current line, 0 current, 1 previous, ...
+
 [<u>#SA</u>Y](commands/SAY.md) text
 >Display text to the screen and append newline
 
 [<u>#SAYP</u>ROMPT](commands/SAYPROMPT.md) text
 >Display text to the screen
 
-<u>#GA</u>G *number*
->Gag the current or multiple lines of incoming or previous lines, if no arguments gags current line
+[<u>#SH</u>OW](commands/SHOW.md) text
+>Process text as if it came from the MUD and append a new line
+
+[<u>#SHOWP</u>ROMPT](commands/SHOWPROMPT.md) text
+>Process text as if it came from the MUD
 
 <u>#UNG</u>AG
 >clear previous #gag command settings
 
-<u>#CO</u>LOR *{pattern}* fore,back,bold *profile*
->Color last added line, comma delimited colors, supports raw jiMUD color codes, ansi word values, any valid HTML color name, of ##RRGGBB html format
-
-#CW *{pattern}* fore,back,bold *profile*
->Color all strings matching current trigger pattern, see #color for arguments
-
-#PCOL fore,back,bold *XStart XEnd YStart YEnd*
->Color position, will assume full line if position is not supplied, if XEnd omitted will assume end of line, if xEnd -1 it will assume end of line, if YEnd omitted will assume current line, YStart and YEnd are relative to the current line, 0 current, 1 previous, ...
-
-<u>#HI</u>GHLIGHT *pattern*
->make last line or lined with matching pattern bold or brighter color if already bold, or
-
 ## **Conditionals**
-
-#IF {expression} {true-command} *{false-command}*
->if expression is true execute true command, if false and false commands supplied execute them
 
 <u>#CA</u>SE index {command 1}*{command n}*
 >return command from list based on the value of index
+
+#IF {expression} {true-command} *{false-command}*
+>if expression is true execute true command, if false and false commands supplied execute them
 
 <u>#SW</u>ITCH (expression) {command} *(expression) {command} ... {else command}*
 >execute each expression until one returns true, if none are true and an else command supplied it is executed instead
@@ -60,6 +60,10 @@
 <u>#CONT</u>INUE
 >skips to the next loop iteration 
 
+<u>#FO</u>RALL stringlist {commands}
+>loop stringlist, in the format of a | delimited string and set %i as each word
+>>`#fo "first|second|third" {#sh %i}` would display the words first, second, third
+
 <u>#LOO</u>P range {commands}
 >Execute the commands a number of times given by the range. range is a min and max value separated by a comma, if max value is omitted it is assumed the single value is the max and 1 is the min value
 >>`#loop 5 {#show %i}` will display numbers 1 to 5
@@ -74,23 +78,10 @@
 <u>#WH</u>ILE expression {commands}
 >Execute commands as long as expression evaluates to TRUE
 
-<u>#FO</u>RALL stringlist {commands}
->loop stringlist, in the format of a | delimited string and set %i as each word
->>`#fo "first|second|third" {#sh %i}` would display the words first, second, third
-
 ## **Sounds**
 
 [<u>#BE</u>EP](commands/BEEP.md)
 >Play standard System beep
-
-<u>#STOPS</u>OUND
->Stop the current sound effect
-
-<u>#STOPM</u>USIC
->Stop the current background music
-
-<u>#STOPA</u>LLSOUND
->stop all sound effects and background music
 
 <u>#PLAYS</u>OUND soundfile
 >Play a sound effect, to play local files use file://path/file.ext
@@ -104,19 +95,19 @@
 #SOUNDINFO
 >display currently playing sound effect, current position, and total length
 
+<u>#STOPA</u>LLSOUND
+>stop all sound effects and background music
+
+<u>#STOPS</u>OUND
+>Stop the current sound effect
+
+<u>#STOPM</u>USIC
+>Stop the current background music
+
 ## **Create/Modify Profile or Items**
 
 [#<u>AL</u>IAS](commands/ALIAS.md) name|index {commands} *profile*
 >Create or alter an alias
-
-[#<u>UNA</u>LIAS](commands/UNALIAS.md) name *profile*
->Delete an alias
-
-<u>#PRO</u>FILE name *enable\|disable*
->enable or disable a profile
-
-#PROFILELIST
->display a list of all profiles and current state
 
 <u>#BU</u>TTON name|index
 >Cause a button to react as if it was clicked, if index it is the position from top down starting at 0
@@ -124,13 +115,28 @@
 <u>#BU</u>TTON *name caption* {commands} *{icon} options<sup>2</sup> profile*
 >Update or create a button
 
+<u>#PRO</u>FILE name *enable\|disable*
+>enable or disable a profile
+
+#PROFILELIST
+>display a list of all profiles and current state
+
 <u>#UNB</u>UTTON name|index|caption
 >remove a button, if index it is the position in order of buttons in profile manager
 
 <u>#VA</u>RIABLE *name value*
 >Set, get, or display all user set variables
 
+[#<u>UNA</u>LIAS](commands/UNALIAS.md) name *profile*
+>Delete an alias
+
 ## **Triggers**
+
+[<u>#ALA</u>RM](commands/ALARM.md) *name* {time pattern} {commands} *profile*
+>Create or alter an alarm trigger
+
+<u>#EV</u>ENT name {commands} *options<sup>1</sup> profile*
+>create or update event
 
 <u>#RAISE</u>EVENT name arguments
 >fire a custom event
@@ -140,61 +146,28 @@
 >fire a custom event with a delay
 >>`#raisedelayed 3000 "test" 1 2 3 "4 5"` will fire and event named test with arguments 1, 2, 3, and 4 5 after waiting 3 seconds
 
-[<u>#ALA</u>RM](commands/ALARM.md) *name* {time pattern} {commands} *profile*
->Create or alter an alarm trigger
+<u>#RESU</u>ME *name|pattern*
+>enable an alarm, id arguments omitted will attempt to suspend last suspended alarm
 
 <u>#SUS</u>PEND *name|pattern*
 >disable an alarm, id arguments omitted will attempt to suspend last added alarm
 
-<u>#RESU</u>ME *name|pattern*
->enable an alarm, id arguments omitted will attempt to suspend last suspended alarm
+<u>#TR</u>IGGER *name* {pattern} *{commands} options<sup>1</sup> profile*
+>create or update trigger
+
+<u>#TR</u>IGGER name options<sup>1</sup> *profile*
+>Update options<sup>1</sup> for a trigger
 
 <u>#UNT</u>RIGGER {name\|pattern} *profile*
 >remove a trigger
-
-<u>#TR</u>IGGER *name* {pattern} *{commands} options<sup>2</sup> profile*
->create or update trigger
-
-<u>#TR</u>IGGER name options<sup>2</sup> *profile*
->Update options<sup>2</sup> for a trigger
-
-<u>#EV</u>ENT name {commands} *options<sup>2</sup> profile*
->create or update event
 
 <u>#UNE</u>VENT name *profile*
 >Delete an event
 
 ## **Miscellaneous**
 
-[<u>#WA</u>IT](commands/WAIT.md) amount
-> Pause current block for a number of milliseconds
-
-[<u>#VE</u>RSION](commands/VERSION.md)
->Display current jiMUD version information
-
-<u>#SETS</u>ETTING name value
->alter a setting value see: [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
-
-<u>#GETS</u>ETTING name
->display a setting value, [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
-
-<u>#IDLE</u>TIME
->Display time a command was last sent
-
-<u>#CONNECT</u>TIME
->display time since connected
-
-<u>#NOT</u>IFY title message *{icon}*
->display a notification popup with no sound, use [client.notify](scriptind.md#basic-function-list) to turn off silent option or #playsound
-
-<u>#SHOWCL</u>IENT
->Show client window
-
-<u>#HIDECL</u>IENT
->Hide client window
-
-<u>#TOGGLECL</u>IENT
->Toggle show and hide of client window
+<u>#AD</u>D name value
+>Add value to variable named name, if current value is non numeric an error will be displayed
 
 <u>#CH</u>AT text
 >Send text to chat window and append a new line
@@ -202,17 +175,44 @@
 <u>#CHATP</u>ROMPT text
 >same as #chat but does not append a new line
 
-<u>#WIN</u>DOW name
->Open or show named window, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
+<u>#CONNECT</u>TIME
+>display time since connected
 
-<u>#AD</u>D name value
->Add value to variable named name, if current value is non numeric an error will be displayed
+<u>#EVA</u>LUATE expression
+>Evaluate expression and display to screen like show
+
+<u>#GETS</u>ETTING name
+>display a setting value, [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
+
+<u>#HIDECL</u>IENT
+>Hide client window
+
+<u>#IDLE</u>TIME
+>Display time a command was last sent
 
 <u>#MAT</u>H name value
 >Set value to variable named name
 
-<u>#EVA</u>LUATE expression
->Evaluate expression and display to screen like show
+<u>#NOT</u>IFY title message *{icon}*
+>display a notification popup with no sound, use [client.notify](scriptind.md#basic-function-list) to turn off silent option or #playsound
+
+<u>#SETS</u>ETTING name value
+>alter a setting value see: [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
+
+<u>#SHOWCL</u>IENT
+>Show client window
+
+<u>#TOGGLECL</u>IENT
+>Toggle show and hide of client window
+
+[<u>#WA</u>IT](commands/WAIT.md) amount
+> Pause current block for a number of milliseconds
+
+<u>#WIN</u>DOW name
+>Open or show named window, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
+
+[<u>#VE</u>RSION](commands/VERSION.md)
+>Display current jiMUD version information
 
 ## **Test commands**
 
@@ -283,6 +283,8 @@ Test commands allow you to debug or test features of the client
 
 **Note:** All italic arguments are optional and can be left out
 
+**Note:** All quoted arguments will be processed based on [scripting quote preference](preferences.md#scripting) when required
+
 ## Arguments
 
 Explain what each argument does and if it is optional
@@ -294,7 +296,7 @@ Explain what each argument does and if it is optional
 |name|Sometimes| The name for an item or [setting](faq.md#setting-keys-value-type-and-default-value)
 |index|| an index of an item from 0 to max items - 1
 |{commands}|| Commands to set for command, the {} are required and will be stripped when processed
-|options|Yes|comma delimited list of options to set<sup>2</sup>
+|options|Yes|comma delimited list of options to set<sup>1,2</sup>
 |profile|Yes| Which profile to search
 |value|| the value to set for a command, if toggle will and boolean type it will toggle between true and false
 |enable|Yes|send enable to command, if left off will toggle
@@ -308,9 +310,7 @@ Explain what each argument does and if it is optional
 |caption|the caption to display when mouse hovers over button
 |{icon}|Yes|a path to an image file, supports {assets} path
 
-**Note** All quoted arguments will be processed based on [scripting quote preference](preferences.md#scripting) when required
-
-2.Trigger and event options
+1.Trigger and event options
 
 - `nocr` disable trigger on newline
 - `prompt` enable trigger on prompt
@@ -322,3 +322,13 @@ Explain what each argument does and if it is optional
 - `cmd` command input trigger, invalid for events
 - `priority=#` set the priority of trigger
 - `raw` raw trigger, invalid for events
+
+2.Button options
+
+- `nosend` do not send to mud
+- `chain` chain to end of command if nosend disabled
+- `append` append command to end of command input if nosend is set
+- `stretch` stretch icon to fill button
+- `disable` disable button
+- `enable` enable button
+- `priority=#` set the priority of button
