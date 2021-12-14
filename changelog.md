@@ -62,7 +62,7 @@
     - Fixed corrupted stack after trigger errors
     - Fixed issue with $named argument format
     - Fixed named arguments not working
-    - Fixed bugs in [repeatnum](functions.md) not having correct name in all places
+    - Fixed bugs in [repeatnum](docs/functions.md) not having correct name in all places
     - Fixed how alias unused arguments are appended
     - Fixed alias arguments values not correctly parsing before being used
     - No longer parse #commands if in a command/function argument as it would break inline parsing in most cases
