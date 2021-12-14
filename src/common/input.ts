@@ -2048,6 +2048,25 @@ export class Input extends EventEmitter {
                     this.client.print('\x1b[-7;-8m' + args + '\x1b[0m\n', false);
                 this.client.telnet.prompt = false;
                 return null;
+            case 'print':
+                i = this.client.enableTriggers;
+                this.client.enableTriggers = false;
+                args = this.parseInline(args.join(' '));
+                if (this.client.telnet.prompt)
+                    this.client.print('\n\x1b[-7;-8m' + args + '\x1b[0m\n', false);
+                else
+                    this.client.print('\x1b[-7;-8m' + args + '\x1b[0m\n', false);
+                this.client.telnet.prompt = false;
+                this.client.enableTriggers = i;
+                return null;
+            case 'printprompt':
+            case 'printp':
+                i = this.client.enableTriggers;
+                this.client.enableTriggers = false;
+                args = this.parseInline(args.join(' '));
+                this.client.print('\x1b[-7;-8m' + args + '\x1b[0m', false);
+                this.client.enableTriggers = i;
+                return null;
             case 'alias':
             case 'al':
                 if (args.length === 0)

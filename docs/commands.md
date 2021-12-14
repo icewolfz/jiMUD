@@ -23,6 +23,10 @@
 #PCOL fore,back,bold *XStart XEnd YStart YEnd*
 >Color position, will assume full line if position is not supplied, if XEnd omitted will assume end of line, if xEnd -1 it will assume end of line, if YEnd omitted will assume current line, YStart and YEnd are relative to the current line, 0 current, 1 previous, ...
 
+#PRINT Display text to the screen and append newline, and the display text will not fire triggers
+
+<u>#PRINTP</u>ROMPT Display text to the screen, and the display text will not fire triggers
+
 [<u>#SA</u>Y](commands/SAY.md) text
 >Display text to the screen and append newline
 

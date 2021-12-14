@@ -34,6 +34,8 @@
   - Add [#while](docs/commands.md#repeating-and-loops) Execute commands as long as expression evaluates to TRUE
   - Add [#forall](docs/commands.md#repeating-and-loops loop stringlist, in the format of a | delimited string and set %i as each word)
   - Add [#evaluate](docs/commands.md#miscellaneous) Evaluate expression and display to screen like show
+  - Add [#print](docs/commands.md#display) Display text to the screen and append newline, and the display text will not fire triggers
+  - Add [#printprompt](docs/commands.md#display) Display text to the screen, and the display text will not fire triggers
   - Input parser:  
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function
