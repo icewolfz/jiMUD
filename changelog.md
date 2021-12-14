@@ -10,7 +10,7 @@
   - Add [%x1..%99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
   - Add [%ansi(style,fore,back)](docs/functions.md) function to return ansi formatted string
   - Add [%i](docs/functions.md) predefined variable
-  - Add [%j..%z] predefined variables for nested looping support
+  - Add [%j..%z](docs/functions.md) predefined variables for nested looping support
   - Add [%random](docs/functions.md) predefined variable and function
   - Add [%char(i)](docs/functions.md) return ASCII character for i
   - Add [%ascii(string)](docs/functions.md) return the ascii value for first letter in string
