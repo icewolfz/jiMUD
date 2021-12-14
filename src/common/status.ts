@@ -182,7 +182,7 @@ export class Status extends EventEmitter {
             const main = $('#status-drag-bar');
             const ghostBar = $('<div>',
                 {
-                    id: '#status-ghost-bar',
+                    id: 'status-ghost-bar',
                     css: {
                         height: main.outerHeight(),
                         top: main.offset().top,

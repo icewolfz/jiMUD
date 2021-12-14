@@ -354,7 +354,8 @@
                 e.preventDefault();
 
                 dragging = true;
-                const main = $('#container');
+                $("#container-frame").css('pointer-events', 'none');
+                const main = $('#help-drag-bar');
                 const ghostBar = $('<div>',
                     {
                         id: 'help-ghost-bar',
@@ -366,6 +367,8 @@
                     }).appendTo('body');
 
                 $(document).mousemove((event) => {
+                    console.log(event.pageX );
+                    console.log(document.body.clientWidth - 300);
                     if (event.pageX < 199)
                         ghostBar.css('left', 199);
                     else if (event.pageX > document.body.clientWidth - 300)
@@ -374,7 +377,7 @@
                         ghostBar.css('left', event.pageX);
                 });
             });
-            
+
             $(window).on('resize', () => {
                 if ($('#container').outerWidth() < 300 && $('#sidebar').outerWidth() > 202) {
                     $('#sidebar').css('width', document.body.clientWidth - 300);
@@ -385,6 +388,7 @@
 
             $(document).mouseup((e) => {
                 if (dragging) {
+                    $("#container-frame").css('pointer-events', '');
                     if (e.pageX < 200) {
                         $('#sidebar').css('width', 202);
                         $('#container').css('left', 202);
