@@ -3924,7 +3924,7 @@ function createNewWindow(name, options) {
     windows[name].window.webContents.setWindowOpenHandler((details) => {
         var u = new url.URL(details.url);
         if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
-            shell.openExternal(url);
+            shell.openExternal(details.url);
             return { action: 'deny' };
         }
         return {
@@ -4378,7 +4378,7 @@ function createCodeEditor(show, loading, loaded) {
     winCode.webContents.setWindowOpenHandler((details) => {
         var u = new url.URL(details.url);
         if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
-            shell.openExternal(url);
+            shell.openExternal(details.url);
             return { action: 'deny' };
         }
         return {

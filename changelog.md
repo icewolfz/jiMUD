@@ -70,6 +70,7 @@
   - Fixed execution of buttons and context items with broken parsing stacks
   - Fixed buttons and context not having error trapping code that broke cleanup
   - Status Display: Fixed resize bar conflicting with profile manger resize bar due to theming
+  - Fixed crashing issue when opening external links from help pages
 - **Changed:**
   - Remove %named argument support from docs as it never was supported and easier to just remove it
   - Update markdown-it 12.2.0 to 12.3.0
