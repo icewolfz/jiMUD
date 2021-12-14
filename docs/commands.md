@@ -140,8 +140,8 @@
 >fire a custom event with a delay
 >>`#raisedelayed 3000 "test" 1 2 3 "4 5"` will fire and event named test with arguments 1, 2, 3, and 4 5 after waiting 3 seconds
 
-<u>#ALA</u>RM *name* {time pattern}<sup>1</sup> {commands} *profile*
->create an alarm trigger
+[<u>#ALA</u>RM](commands/ALARM.md) *name* {time pattern} {commands} *profile*
+>Create or alter an alarm trigger
 
 <u>#SUS</u>PEND *name|pattern*
 >disable an alarm, id arguments omitted will attempt to suspend last added alarm
@@ -156,7 +156,7 @@
 >create or update trigger
 
 <u>#TR</u>IGGER name options<sup>2</sup> *profile*
-Update options<sup>2</sup> for a trigger
+>Update options<sup>2</sup> for a trigger
 
 <u>#EV</u>ENT name {commands} *options<sup>2</sup> profile*
 >create or update event
@@ -304,24 +304,11 @@ Explain what each argument does and if it is optional
 |message|| the text to display as message
 |arguments|| Space delimited format grouped based on [scripting quote preference](preferences.md#scripting)
 |number|Yes| if >= 0 it will gag current line and that number of incoming lines, if negative it will gag the # of lines before current line
-|{time pattern}||A valid time pattern <sup>1</sup>
 |{pattern}|Sometimes| A valid trigger pattern
 |caption|the caption to display when mouse hovers over button
 |{icon}|Yes|a path to an image file, supports {assets} path
 
 **Note** All quoted arguments will be processed based on [scripting quote preference](preferences.md#scripting) when required
-
-1.Alarm time pattern
-```
-   When using alarm type pattern is in the format of hours:minutes:seconds, where hours and minutes are optional. A asterisk (*) is a wildcard to match any value for that place, if minutes or hours are missing a * is assumed. If pattern is preceded with a minus (-) the connection time is used instead of current time.
-
-    You can also define a temporary, one time alarm if pattern is preceded with a plus (+), the trigger alarm is executed then deleted.
-
-    Hours are defined in 24 hour format of 0 to 23, minutes and seconds are 0 to 59.
-    If seconds are > 59 and the only pattern it will be considered the same as adding a wildcard (*) in front of the number.
-
-    Hours, minutes, and seconds can use a special wildcard format of *value which will match when the time MOD is zero, eg: *10 matches 10, 20, ...
-```
 
 2.Trigger and event options
 
