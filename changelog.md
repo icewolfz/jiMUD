@@ -148,12 +148,12 @@
   - Add context-pre-build, context-open, context-closed trigger events for when the context menu is open or closed
   - Add $contextMenu scripting variable to allow access to the context menu item array, **WARNING** changing this can break your context menu
 - **Fixed:**
- - Fix scripting predefined variables $selectedword, $selectedline, $selectedurl, $selword, $selline, $selurl so they are correctly set for use in javascript
- - Display:
-   - Fix to unicode width when italic font style
-   - Fix to unicode surrogate/variant pair selection
- - Code editor: change how ([ ]) and ({ }) are handled in bracket detection for better matching and coloring support
- - Preferences: Fixed color scheme selection not working
+  - Fix scripting predefined variables $selectedword, $selectedline, $selectedurl, $selword, $selline, $selurl so they are correctly set for use in javascript
+  - Display:
+    - Fix to unicode width when italic font style
+    - Fix to unicode surrogate/variant pair selection
+  - Code editor: change how ([ ]) and ({ }) are handled in bracket detection for better matching and coloring support
+  - Preferences: Fixed color scheme selection not working
 - **Changed:**
   - Update electron 13.5.1 to 16.0.1
   - Update fswin 2.21.929 to 2.21.1015
