@@ -2,6 +2,8 @@
 
 ## v0.17.4
 
+- **New:**
+  - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
 - **Fixed:**
   - Updated README to update build requirements
 - **Changed:**

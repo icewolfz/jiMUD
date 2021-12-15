@@ -67,7 +67,7 @@ export class Client extends EventEmitter {
     public lastSendTime: number = 0;
     public defaultTitle = 'jiMUD';
 
-    public variables:any = {};
+    public variables: any = {};
 
     set enabledProfiles(value: string[]) {
         const a = [];
@@ -331,7 +331,7 @@ export class Client extends EventEmitter {
     public get commandHistory() {
         return this._input.commandHistory;
     }
-    
+
     public get indices() {
         return this._input.indices;
     }
@@ -383,24 +383,24 @@ export class Client extends EventEmitter {
     }
 
     public loadProfile(profile) {
-        if(!profile) return;
+        if (!profile) return;
         const p = path.join(parseTemplate('{data}'), 'profiles');
-        if (!existsSync(p)) 
+        if (!existsSync(p))
             return;
         this.profiles.remove(profile);
         this.profiles.load(profile, p);
         this.clearCache();
         this.startAlarms();
-        this.emit('profile-loaded', profile);   
+        this.emit('profile-loaded', profile);
     }
 
     public removeProfile(profile) {
-        if(!profile) return;
+        if (!profile) return;
         this.profiles.remove(profile);
         this.clearCache();
         this.startAlarms();
-        this.emit('profile-removed', profile);   
-    }    
+        this.emit('profile-removed', profile);
+    }
 
     public saveProfiles() {
         const p = path.join(parseTemplate('{data}'), 'profiles');
@@ -1029,7 +1029,7 @@ export class Client extends EventEmitter {
         }
     }
 
-    public sendCommand(txt?: string) {
+    public sendCommand(txt?: string, noEcho?: boolean) {
         if (txt == null) {
             txt = this.commandInput.val();
             if (!this.telnet.echo)
@@ -1044,14 +1044,14 @@ export class Client extends EventEmitter {
         if (data == null || typeof data === 'undefined') return;
         if (data.handled || data.value == null || typeof data.value === 'undefined') return;
         if (data.value.length > 0)
-            this.send(data.value, true);
+            this.send(data.value, !noEcho);
         if (this.options.keepLastCommand)
             this.commandInput.select();
         else
             this.commandInput.val('');
     }
 
-    public sendBackground(txt: string) {
+    public sendBackground(txt: string, noEcho?: boolean) {
         if (txt == null) {
             txt = this.commandInput.val();
             if (!this.telnet.echo)
@@ -1066,7 +1066,7 @@ export class Client extends EventEmitter {
         if (data == null || typeof data === 'undefined') return;
         if (data.value == null || typeof data.value === 'undefined') return;
         if (!data.handled && data.value.length > 0)
-            this.send(data.value, true);
+            this.send(data.value, !noEcho);
     }
 
     get scrollLock(): boolean {
