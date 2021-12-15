@@ -40,7 +40,7 @@
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function
     - Add user variable support to expression system, can access in scripting using client.variables['NAME'] or client.variables.NAME
-    - Add proper loop nesting using %i..%z variables for #nnn nested loops
+    - Add proper loop nesting using %i..%z variables for nested loops
   - [Preferences](docs/preferences.md)
     - Add [Watch for profile changes](docs/preferences.md#advanced) when enabled will watch for profile changes
     - Add [On profile change do](docs/preferences.md#advanced) what to do when a profile is changed when `Watch for profile changes` enabled
