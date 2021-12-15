@@ -850,13 +850,13 @@
                             {
                                 text: 'Formatted as commands (No echo)',
                                 onclick: function () {
-                                    ipcRenderer.send('send-background', getFormatedText().replace(/(?:\r)/g, ''));
+                                    ipcRenderer.send('send-background', getFormatedText().replace(/(?:\r)/g, ''), true);
                                 }
                             },
                             {
                                 text: 'Text as commands (No echo)',
                                 onclick: function () {
-                                    ipcRenderer.send('send-background', getText().replace(/(?:\r)/g, ''));
+                                    ipcRenderer.send('send-background', getText().replace(/(?:\r)/g, ''), true);
                                 }
                             },
                             {

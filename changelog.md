@@ -6,6 +6,7 @@
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
 - **Fixed:**
   - Updated README to update build requirements
+  - Advanced editor: Fix `Formatted as commands (No echo)` and `Text as commands (No echo)` echoing to the display
 
 ## v0.17.3 2021-12-14
 
