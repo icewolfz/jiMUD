@@ -6,6 +6,7 @@
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
 - **Fixed:**
   - Updated README to update build requirements
+  - Advanced editor: Fix `Formatted as commands (No echo)` and `Text as commands (No echo)` echoing to the display
 - **Changed:**
   - Update tinymce 4.8.3 to 5.10.1
 

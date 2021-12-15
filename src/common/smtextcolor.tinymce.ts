@@ -289,8 +289,10 @@ tinymce.PluginManager.add('smtextcolor', function(editor, url) {
         }
     }
 
-    editor.addButton('forecolor', {
-        type: 'colorbutton',
+    //https://github.com/tinymce/tinymce/blob/f02988422c33deb9a1fe9c5d4968e5144813d657/modules/tinymce/src/themes/silver/main/ts/ui/core/color/ColorSwatch.ts
+    /*
+    editor.ui.registry.addSplitButton('smforecolor', {
+        type: 'ColorButton',
         tooltip: 'Text color',
         format: 'forecolor',
         panel: {
@@ -298,13 +300,13 @@ tinymce.PluginManager.add('smtextcolor', function(editor, url) {
             role: 'application',
             ariaRemember: true,
             html: renderColorPicker,
-            onclick: onPanelClick
+            onAction: onPanelClick
         },
-        onclick: onButtonClick
+        onAction: onButtonClick
     });
 
-    editor.addButton('backcolor', {
-        type: 'colorbutton',
+    editor.ui.registry.addSplitButton('smbackcolor', {
+        type: 'ColorButton',
         tooltip: 'Background color',
         format: 'hilitecolor',
         panel: {
@@ -312,8 +314,9 @@ tinymce.PluginManager.add('smtextcolor', function(editor, url) {
             role: 'application',
             ariaRemember: true,
             html: renderColorPicker,
-            onclick: onPanelClick
+            onAction: onPanelClick
         },
-        onclick: onButtonClick
+        onAction: onButtonClick
     });
+    */
 });

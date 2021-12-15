@@ -666,11 +666,10 @@
                         tinymce.activeEditor.plugins['shadowmud'].applyFormat(evt.format, evt.color);
                 }
 
-                function buttonPostRender() {
-                    var btn = this;
+                function buttonPostRender(buttonApi, format) {
                     editor.on('init', function () {
-                        editor.formatter.formatChanged(btn.settings.format, function (state) {
-                            btn.active(state);
+                        editor.formatter.formatChanged(format, function (state) {
+                            buttonApi.setActive(state);
                         });
                     });
                 }
@@ -817,112 +816,145 @@
                     cMenu.append(new MenuItem({ label: 'Background color', icon: path.join(__dirname, '../assets/icons/png/backcolor.png'), submenu: bmi }));
                     return cMenu;
                 };
+
+
+                editor.ui.registry.addIcon('sendraw', ' <i class="mce-i-fa-sendraw"></i>');
+                editor.ui.registry.addIcon('open', ' <i class="mce-i-fa-open"></i>');
+                editor.ui.registry.addIcon('overline', '<img src="../assets/icons/png/overline.png" />');
+                editor.ui.registry.addIcon('dblunderline', '<img src="../assets/icons/png/dblunderline.png" />');
+                editor.ui.registry.addIcon('flash', '<img src="../assets/icons/png/flash.png" />');
+                editor.ui.registry.addIcon('reverse', '<img src="../assets/icons/png/reverse.png" />');
+
+
                 if (editorOnly) {
-                    editor.addButton('send', {
-                        icon: 'fa-sendraw',
+                    editor.ui.registry.addButton('send', {
+                        icon: 'sendraw',
                         tooltip: 'Send to code editor',
-                        onclick: function () {
+                        onAction: function () {
                             ipcRenderer.send('send-editor', getFormatedText().replace(/(?:\r)/g, ''), 'code-editor', true);
                         }
                     });
                 }
                 else
-                    editor.addButton('send', {
-                        type: 'splitbutton',
-                        icon: 'fa-sendraw',
+                    editor.ui.registry.addSplitButton('send', {
+                        icon: 'sendraw',
                         tooltip: 'Send to mud',
-                        onclick: function () {
+                        onAction: function () {
                             ipcRenderer.send('send-command', getFormatedText().replace(/(?:\r)/g, ''));
                         },
-                        menu: [
-                            {
-                                text: 'Formatted as commands',
-                                onclick: function () {
+                        onItemAction: function (api, value) {
+                            switch (value) {
+                                case 'formatted':
                                     ipcRenderer.send('send-command', getFormatedText().replace(/(?:\r)/g, ''));
-                                }
-                            },
-                            {
-                                text: 'Text as commands',
-                                onclick: function () {
+                                    break;
+                                case 'text':
                                     ipcRenderer.send('send-command', getText().replace(/(?:\r)/g, ''));
-                                }
-                            },
-                            {
-                                text: 'Formatted as commands (No echo)',
-                                onclick: function () {
-                                    ipcRenderer.send('send-background', getFormatedText().replace(/(?:\r)/g, ''));
-                                }
-                            },
-                            {
-                                text: 'Text as commands (No echo)',
-                                onclick: function () {
-                                    ipcRenderer.send('send-background', getText().replace(/(?:\r)/g, ''));
-                                }
-                            },
-                            {
-                                text: 'Formatted verbatim (No echo)',
-                                onclick: function () {
+                                    break;
+                                case 'formattednoecho':
+                                    ipcRenderer.send('send-background', getFormatedText().replace(/(?:\r)/g, ''), true);
+                                    break;
+                                case 'textnoecho':
+                                    ipcRenderer.send('send-background', getText().replace(/(?:\r)/g, ''), true);
+                                    break;
+                                case 'formattedverbatim':
                                     ipcRenderer.send('send', getFormatedText().replace(/(?:\r)/g, ''));
-                                }
-                            },
-                            {
-                                text: 'Text verbatim (No echo)',
-                                onclick: function () {
+                                    break;
+                                case 'textverbatim':
                                     ipcRenderer.send('send', getText().replace(/(?:\r)/g, ''));
-                                }
-                            },
-                            {
-                                text: 'Raw formatted (No echo)',
-                                onclick: function () {
+                                    break;
+                                case 'rawformatted':
                                     ipcRenderer.send('send-raw', getFormatedText().replace(/(?:\r)/g, ''));
-                                }
-                            },
-                            {
-                                text: 'Raw text (No echo)',
-                                onclick: function () {
+                                    break;
+                                case 'rawtext':
                                     ipcRenderer.send('send-raw', getText().replace(/(?:\r)/g, ''));
-                                }
-                            },
-                            {
-                                text: 'To code editor',
-                                onclick: function () {
+                                    break;
+                                case 'codeeditor':
                                     ipcRenderer.send('send-editor', getFormatedText().replace(/(?:\r)/g, ''), 'code-editor', true);
+                                    break;
+                            }
+                        },
+                        fetch: callback => {
+                            callback([
+                                {
+                                    text: 'Formatted as commands',
+                                    value: 'formatted',
+                                    type: 'choiceitem'
+                                },
+                                {
+                                    text: 'Text as commands',
+                                    value: 'text',
+                                    type: 'choiceitem'
+                                },
+                                {
+                                    text: 'Formatted as commands (No echo)',
+                                    value: 'formattednoecho',
+                                    type: 'choiceitem'
+                                },
+                                {
+                                    text: 'Text as commands (No echo)',
+                                    value: 'textnoecho',
+                                    type: 'choiceitem'
+                                },
+                                {
+                                    text: 'Formatted verbatim (No echo)',
+                                    value: 'formattedverbatim',
+                                    type: 'choiceitem'
+                                },
+                                {
+                                    text: 'Text verbatim (No echo)',
+                                    value: 'textverbatim',
+                                    type: 'choiceitem'
+                                },
+                                {
+                                    text: 'Raw formatted (No echo)',
+                                    value: 'rawformatted',
+                                    type: 'choiceitem'
+                                },
+                                {
+                                    text: 'Raw text (No echo)',
+                                    value: 'rawtext',
+                                    type: 'choiceitem'
+                                },
+                                {
+                                    text: 'To code editor',
+                                    value: 'codeeditor',
+                                    type: 'choiceitem'
                                 }
-                            },
-                        ]
+                            ]);
+                        }
                     });
-                editor.addButton('append', {
-                    icon: 'fa-open',
+                editor.ui.registry.addButton('append', {
+                    icon: 'open',
                     tooltip: 'Append file...',
-                    onclick: appendFile
+                    onAction: appendFile
                 });
-                editor.addButton('overline', {
-                    image: '../assets/icons/png/overline.png',
+                editor.ui.registry.addToggleButton('overline', {
+                    icon: 'overline',
                     tooltip: 'Overline',
                     format: 'overline',
-                    onclick: toggleFormat,
-                    onpostrender: buttonPostRender
+                    onAction: buttonApi => toggleFormat('overline'),
+                    onSetup: buttonApi => buttonPostRender(buttonApi, 'overline')
                 });
-                editor.addButton('dblunderline', {
-                    image: '../assets/icons/png/dblunderline.png',
+                editor.ui.registry.addToggleButton('dblunderline', {
+                    icon: 'dblunderline',
                     tooltip: 'Double Underline',
                     format: 'dblunderline',
-                    onclick: toggleFormat,
-                    onpostrender: buttonPostRender
+                    onAction: buttonApi => toggleFormat('dblunderline'),
+                    onSetup: buttonApi => buttonPostRender(buttonApi, 'dblunderline')
                 });
-                editor.addButton('flash', {
+                editor.ui.registry.addToggleButton('flash', {
                     tooltip: 'Flash',
                     format: 'flash',
-                    image: '../assets/icons/png/flash.png',
-                    onclick: toggleFormat,
-                    onpostrender: buttonPostRender
+                    icon: 'flash',
+                    onAction: buttonApi => toggleFormat('flash'),
+                    onSetup: buttonApi => buttonPostRender(buttonApi, 'flash')
                 });
-                editor.addButton('reverse', {
-                    image: '../assets/icons/png/reverse.png',
+                editor.ui.registry.addToggleButton('reverse', {
+                    icon: 'reverse',
                     tooltip: 'Reverse',
                     format: 'reverse',
-                    onclick: toggleFormat,
-                    onpostrender: buttonPostRender
+                    onAction: buttonApi => toggleFormat('reverse'),
+                    onSetup: buttonApi => buttonPostRender(buttonApi, 'reverse')
                 });
 
                 editor.on('Change', function () {
@@ -1025,7 +1057,8 @@
                 valid_elements: 'strong/b,em/i,u,span[style],strike/s,br',
                 valid_styles: {
                     '*': 'color,background,background-color,text-decoration,font-weight'
-                }
+                },
+                color_map: _ColorTable,
             });
 
             remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
@@ -1052,6 +1085,10 @@
                         { role: 'selectAll' },
                     ]).popup({ window: remote.getCurrentWindow() });
                 }
+                else
+                    Menu.buildFromTemplate([
+                        { role: 'selectAll' },
+                    ]).popup({ window: remote.getCurrentWindow() });
             });
             loadOptions();
         });
@@ -1178,6 +1215,7 @@
                 _colors['B' + _bold[b]] = _colors[nearestHex('#' + _bold[b]).substr(1)].toUpperCase();
             }
             tinymce.activeEditor.settings.textcolor_map = _ColorTable;
+            tinymce.activeEditor.settings.color_map = _ColorTable;
         }
 
         function loadOptions() {
