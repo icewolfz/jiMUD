@@ -1981,14 +1981,14 @@ function openEditor(file, remote, remoteEdit) {
     }
 }
 
-ipcMain.on('send-background', (event, command) => {
+ipcMain.on('send-background', (event, command, noEcho) => {
     if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send-background', command);
+        win.webContents.send('send-background', command, noEcho);
 });
 
-ipcMain.on('send-command', (event, command) => {
+ipcMain.on('send-command', (event, command, noEcho) => {
     if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send-command', command);
+        win.webContents.send('send-command', command, noEcho);
 });
 
 ipcMain.on('send-gmcp', (event, data) => {

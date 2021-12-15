@@ -2439,12 +2439,12 @@
             }
         });
 
-        ipcRenderer.on('send-background', (event, command) => {
-            client.sendBackground(command);
+        ipcRenderer.on('send-background', (event, command, noEcho) => {
+            client.sendBackground(command, noEcho);
         });
 
-        ipcRenderer.on('send-command', (event, command) => {
-            client.sendCommand(command);
+        ipcRenderer.on('send-command', (event, command, noEcho) => {
+            client.sendCommand(command, noEcho);
         });
 
         ipcRenderer.on('send-gmcp', (event, data) => {

@@ -40,8 +40,8 @@ Set or created variables can be access in the expression system by name eg ${tes
   - `text` the text to send
   - `echo` echo text to display
 - `client.sendRaw(text)` sends raw text directly to the mud as is
-- `client.sendCommand(text)` sends a command as if sent from the command line
-- `client.sendBackground(text)` sends a command as if sent from the command line with out modifying the current command line
+- `client.sendCommand(text, noEcho?)` sends a command as if sent from the command line
+- `client.sendBackground(text, noEcho?)` sends a command as if sent from the command line with out modifying the current command line
 - `client.print(text, newline)` print text to screen, newline argument is optional and controls weather to start a newline if last line was a fragment/prompt
 - `client.echo(text, fore, back, newline, forceline)` echo text to the screen
   - `test` the text to echo
