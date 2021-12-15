@@ -4,6 +4,8 @@
 
 - **Fixed:**
   - Updated README to update build requirements
+- **Changed:**
+  - Update tinymce 4.8.3 to 5.10.1
 
 ## v0.17.3 2021-12-14
 
