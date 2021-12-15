@@ -7,7 +7,7 @@
   - Add [#pcol](docs/commands.md#display) color text based on start and end positions
   - Add [#highlight](docs/commands.md#display) make text bold or brighter color if already bold
   - Add [#color {pattern} fore,back,bold profile](docs/commands.md#display) pattern and profile arguments to allow for quick trigger creation 
-  - Add [%x1..%99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
+  - Add [%x1..%x99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
   - Add [%ansi(style,fore,back)](docs/functions.md) function to return ansi formatted string
   - Add [%i](docs/functions.md) predefined variable
   - Add [%j..%z](docs/functions.md) predefined variables for nested looping support
