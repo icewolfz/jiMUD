@@ -200,6 +200,7 @@ Controls what is captured into the chat window
 - `Enable warning dialog when closing client and child windows are open` disable or enable warning dialog when closing and child windows are open
 - `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character
 - `Open 'Who is on' in web browser` Open the 'Who is on?' in a web browser, if disabled will open in a child window of jiMUD
+- `Open ShadowMUD help in web browser` Open the ShadowMUD help in a web browser, if disabled will open in a child window of jiMUD
 - `Watch for profile changes` when enabled will watch for profile changes
 - `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
   - `Nothing` Do nothing
