@@ -81,7 +81,7 @@
   - [#nnn](docs/commands.md#repeating-and-loops) counter is now 1 based when using %i..%z instead of 0 based
   - Allow group by ( and ) in command argument parsing
   - Update markdown-it 12.2.0 to 12.3.0
-  - Update monaco-editor 0.30.1 to 0.31.0  
+  - Update monaco-editor 0.30.1 to 0.31.1  
   - Update bootstrap 3.3.7 to 3.4.1
   - Update datatables from 1.10.18 to 1.11.3
   - Update bootstrap select 1.13.17 to 1.13.18
