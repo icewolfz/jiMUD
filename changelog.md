@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.17.4
+
+- **Fixed:**
+  - Updated README to update build requirements
+
 ## v0.17.3 2021-12-14
 
 - **New:**

@@ -4,7 +4,7 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
 
 ## Build
 
-  To build jiMUD you must have node, npm, node-sass, typescript 2.3+, cPython 2.7.x installed
+  To build jiMUD you must have node, npm, typescript 2.3+, cPython installed
   Steps to build:
 
 ### Windows
