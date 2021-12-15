@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.17.3
+## v0.17.3 2021-12-14
 
 - **New:**
   - Add [#cw](docs/commands.md#display) colors all words matching current trigger pattern
