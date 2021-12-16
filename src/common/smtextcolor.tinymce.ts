@@ -18,312 +18,264 @@ declare let tinymce;
 
 // tslint:disable-next-line:only-arrow-functions
 tinymce.PluginManager.add('smtextcolor', function (editor, url) {
-    let cols;
-    let rows;
+    //https://github.com/tinymce/tinymce/blob/f02988422c33deb9a1fe9c5d4968e5144813d657/modules/tinymce/src/themes/silver/main/ts/ui/core/color/ColorSwatch.ts
+    //https://github.com/tinymce/tinymce/tree/master/modules/katamari/src/main/ts/ephox/katamari/api
+    //https://www.tiny.cloud/docs/ui-components/typesoftoolbarbuttons/#splitbutton
 
-    rows = {
-        forecolor: editor.settings.forecolor_rows || editor.settings.textcolor_rows || 5,
-        backcolor: editor.settings.backcolor_rows || editor.settings.textcolor_rows || 5
-    };
-    cols = {
-        forecolor: editor.settings.forecolor_cols || editor.settings.textcolor_cols || 8,
-        backcolor: editor.settings.backcolor_cols || editor.settings.textcolor_cols || 8
-    };
+    type ColorFormat = 'forecolor' | 'hilitecolor';
 
-    function getCurrentColor(format) {
-        let color;
+    const fallbackColor = '#000000';
+    const _colors = ['000000', 'BLACK', '800000', 'RED', '008000', 'GREEN', '808000', 'ORANGE', '0000EE', 'BLUE', '800080', 'MAGENTA', '008080', 'CYAN', 'BBBBBB', 'WHITE', '808080', 'BOLD BLACK', 'FF0000', 'BOLD RED', '00FF00', 'BOLD GREEN', 'FFFF00', 'YELLOW', '5C5CFF', 'BOLD BLUE', 'FF00FF', 'BOLD MAGENTA', '00FFFF', 'BOLD CYAN', 'FFFFFF', 'BOLD WHITE'];
+
+    const getCurrentColor = (editor, format: ColorFormat) => {
+        let color: string | undefined;
 
         editor.dom.getParents(editor.selection.getStart(), (elm) => {
-            const value = elm.style[format === 'forecolor' ? 'color' : 'background-color'];
-            if (value) {
-                color = value;
+            let value;
+
+            if ((value = elm.style[format === 'forecolor' ? 'color' : 'background-color'])) {
+                color = color ? color : value;
             }
         });
 
         return color;
-    }
+    };
 
-    function mapColors(type) {
-        let i;
+    const applyFormat = (editor, format, value) => {
+        editor.undoManager.transact(() => {
+            editor.focus();
+            editor.formatter.apply(format, { value });
+            editor.nodeChanged();
+        });
+    };
+
+    const removeFormat = (editor, format) => {
+        editor.undoManager.transact(() => {
+            editor.focus();
+            editor.formatter.remove(format, { value: null }, null, true);
+            editor.nodeChanged();
+        });
+    };
+
+    const registerCommands = (editor) => {
+        editor.addCommand('mceApplyTextcolor', (format, value) => {
+            applyFormat(editor, format, value);
+        });
+
+        editor.addCommand('mceRemoveTextcolor', (format) => {
+            removeFormat(editor, format);
+        });
+    };
+
+    const getAdditionalColors = (hasCustom: boolean) => {
+        const type: 'choiceitem' = 'choiceitem';
+        const remove = {
+            type,
+            text: 'Remove color',
+            icon: 'color-swatch-remove-color',
+            value: 'remove'
+        };
+        const custom = {
+            type,
+            text: 'Custom color',
+            icon: 'color-picker',
+            value: 'custom'
+        };
+        return hasCustom ? [
+            remove,
+            custom
+        ] : [remove];
+    };
+
+    const applyColor = (editor, format, value, onChoice: (v: string) => void) => {
+        if (value === 'custom') {
+            const dialog = colorPickerDialog(editor);
+            dialog((colorOpt) => {
+                colorOpt.each((color) => {
+                    //Options.addColor(color);
+                    editor.execCommand('mceApplyTextcolor', format, color);
+                    onChoice(color);
+                });
+            }, fallbackColor);
+        } else if (value === 'remove') {
+            onChoice('');
+            editor.execCommand('mceRemoveTextcolor', format);
+        } else {
+            onChoice(value);
+            editor.execCommand('mceApplyTextcolor', format, value);
+        }
+    };
+
+    const mapColors = (colorMap: string[]) => {
         const colors = [];
-        let colorMap;
 
-        colorMap = [
-            '000000', 'Black',
-            '993300', 'Burnt orange',
-            '333300', 'Dark olive',
-            '003300', 'Dark green',
-            '003366', 'Dark azure',
-            '000080', 'Navy Blue',
-            '333399', 'Indigo',
-            '333333', 'Very dark gray',
-            '800000', 'Maroon',
-            'FF6600', 'Orange',
-            '808000', 'Olive',
-            '008000', 'Green',
-            '008080', 'Teal',
-            '0000FF', 'Blue',
-            '666699', 'Grayish blue',
-            '808080', 'Gray',
-            'FF0000', 'Red',
-            'FF9900', 'Amber',
-            '99CC00', 'Yellow green',
-            '339966', 'Sea green',
-            '33CCCC', 'Turquoise',
-            '3366FF', 'Royal blue',
-            '800080', 'Purple',
-            '999999', 'Medium gray',
-            'FF00FF', 'Magenta',
-            'FFCC00', 'Gold',
-            'FFFF00', 'Yellow',
-            '00FF00', 'Lime',
-            '00FFFF', 'Aqua',
-            '00CCFF', 'Sky blue',
-            '993366', 'Red violet',
-            'FFFFFF', 'White',
-            'FF99CC', 'Pink',
-            'FFCC99', 'Peach',
-            'FFFF99', 'Light yellow',
-            'CCFFCC', 'Pale green',
-            'CCFFFF', 'Pale cyan',
-            '99CCFF', 'Light sky blue',
-            'CC99FF', 'Plum'
-        ];
-
-        colorMap = editor.settings.textcolor_map || colorMap;
-        colorMap = editor.settings[type + '_map'] || colorMap;
-
-        for (i = 0; i < colorMap.length; i += 2) {
+        for (let i = 0; i < colorMap.length; i += 2) {
             colors.push({
                 text: colorMap[i + 1],
-                color: '#' + colorMap[i]
+                value: '#' + colorMap[i],
+                type: 'choiceitem'
             });
         }
 
         return colors;
     }
 
-    function renderColorPicker() {
-        const self = this;
-        let colors;
-        let color;
-        let html;
-        let last;
-        let x;
-        let y;
-        let i;
-        const id = self._id;
-        let count = 0;
-        let type;
+    const getCurrentColors = () => _colors.map((color) => ({
+        type: 'choiceitem',
+        text: color,
+        value: color
+    }));
 
-        type = self.settings.origin;
+    //const getColors = (colors, hasCustom: boolean) => colors.concat(_colors.concat(getAdditionalColors(hasCustom)));
+    const getColors = (colors, hasCustom: boolean) => mapColors(_colors).concat(getAdditionalColors(hasCustom));
 
-        function getColorCellHtml(clr, title) {
-            const isNoColor = clr === 'transparent';
+    const getFetch = (colors, hasCustom: boolean) => (callback) => {
+        callback(getColors(colors, hasCustom));
+    };
 
-            return (
-                '<td class="mce-grid-cell' + (isNoColor ? ' mce-colorbtn-trans' : '') + '">' +
-                '<div id="' + id + '-' + (count++) + '"' +
-                ' data-mce-color="' + (clr ? clr : '') + '"' +
-                ' role="option"' +
-                ' tabIndex="-1"' +
-                ' style="' + (clr ? 'background-color: ' + clr : '') + '"' +
-                ' title="' + tinymce.translate(title) + '">' +
-                (isNoColor ? '&#215;' : '') +
-                '</div>' +
-                '</td>'
-            );
-        }
+    const setIconColor = (splitButtonApi, name: string, newColor: string) => {
+        const id = name === 'smforecolor' ? 'tox-icon-text-color__color' : 'tox-icon-highlight-bg-color__color';
+        splitButtonApi.setIconFill(id, newColor);
+    };
 
-        colors = mapColors(type);
-        colors.push({
-            text: tinymce.translate('No color'),
-            color: 'transparent'
-        });
-
-        html = '<table class="mce-grid mce-grid-border mce-colorbutton-grid" role="list" cellspacing="0"><tbody>';
-        last = colors.length - 1;
-
-        for (y = 0; y < rows[type]; y++) {
-            html += '<tr>';
-
-            for (x = 0; x < cols[type]; x++) {
-                i = y * cols[type] + x;
-
-                if (i > last) {
-                    html += '<td></td>';
-                } else {
-                    color = colors[i];
-                    html += getColorCellHtml(color.color, color.text);
-                }
-            }
-
-            html += '</tr>';
-        }
-
-        if (editor.settings.color_picker_callback) {
-            const caption = editor.settings.color_picker_caption || tinymce.translate('Custom...');
-            html += (
-                '<tr>' +
-                '<td colspan="' + cols[type] + '" class="mce-custom-color-btn">' +
-                '<div id="' + id + '-c" class="mce-widget mce-btn mce-btn-small mce-btn-flat" ' +
-                'role="button" tabindex="-1" aria-labelledby="' + id + '-c" style="width: 100%">' +
-                '<button type="button" role="presentation" tabindex="-1">' + caption + '</button>' +
-                '</div>' +
-                '</td>' +
-                '</tr>'
-            );
-
-            if (editor.settings.color_picker_display) {
-                html += '<tr>';
-                for (x = 0; x < cols[type]; x++) {
-                    html += getColorCellHtml('', 'Custom color');
-                }
-                html += '</tr>';
-            }
-        }
-
-        html += '</tbody></table>';
-
-        return html;
-    }
-
-    function applyFormat(format, value) {
-        editor.undoManager.transact(() => {
-            editor.focus();
-            editor.formatter.apply(format, { value: value });
-            editor.nodeChanged();
-        });
-    }
-
-    function removeFormat(format) {
-        editor.undoManager.transact(() => {
-            editor.focus();
-            editor.formatter.remove(format, { value: null }, null, true);
-            editor.nodeChanged();
-        });
-    }
-
-    function onPanelClick(e) {
-        const buttonCtrl = this.parent();
-        let value;
-        let type;
-
-        type = buttonCtrl.settings.origin;
-
-        function selectColor(val) {
-            buttonCtrl.hidePanel();
-            buttonCtrl.color(val);
-            applyFormat(buttonCtrl.settings.format, val);
-        }
-
-        function resetColor() {
-            buttonCtrl.hidePanel();
-            buttonCtrl.resetColor();
-            removeFormat(buttonCtrl.settings.format);
-        }
-
-        function setDivColor(div, val) {
-            div.style.background = val;
-            div.setAttribute('data-mce-color', val);
-        }
-
-        if (tinymce.dom.DOMUtils.DOM.getParent(e.target, '.mce-custom-color-btn')) {
-            buttonCtrl.hidePanel();
-
-            editor.settings.color_picker_callback.call(editor, (val) => {
-                const tableElm = buttonCtrl.panel.getEl().getElementsByTagName('table')[0];
-                let customColorCells;
-                let div;
-                let i;
-
-                customColorCells = tinymce.map(tableElm.rows[tableElm.rows.length - 1].childNodes, (elm) => {
-                    return elm.firstChild;
+    const registerTextColorButton = (editor, name: string, format: ColorFormat, tooltip: string, lastColor) => {
+        editor.ui.registry.addSplitButton(name, {
+            tooltip,
+            presets: 'color',
+            icon: name === 'smforecolor' ? 'text-color' : 'highlight-bg-color',
+            select: (value) => {
+                const optCurrentRgb = getCurrentColor(editor, format);
+                return true;
+            },
+            columns: 5,
+            fetch: getFetch(_colors, true),
+            onAction: (_splitButtonApi) => {
+                applyColor(editor, format, lastColor.get(), () => { });
+            },
+            onItemAction: (_splitButtonApi, value) => {
+                applyColor(editor, format, value, (newColor) => {
+                    lastColor.set(newColor);
+                    editor.fire('TextColorChange', {
+                        name,
+                        color: newColor
+                    });
                 });
+            },
+            onSetup: (splitButtonApi) => {
+                setIconColor(splitButtonApi, name, lastColor.get());
 
-                for (i = 0; i < customColorCells.length; i++) {
-                    div = customColorCells[i];
-                    if (!div.getAttribute('data-mce-color')) {
-                        break;
+                const handler = (e) => {
+                    if (e.name === name) {
+                        setIconColor(splitButtonApi, e.name, e.color);
+                    }
+                };
+
+                editor.on('TextColorChange', handler);
+
+                return () => {
+                    editor.off('TextColorChange', handler);
+                };
+            }
+        });
+    };
+
+    const registerTextColorMenuItem = (editor, name: string, format: ColorFormat, text: string) => {
+        editor.ui.registry.addNestedMenuItem(name, {
+            text,
+            icon: name === 'smforecolor' ? 'text-color' : 'highlight-bg-color',
+            getSubmenuItems: () => [
+                {
+                    type: 'fancymenuitem',
+                    fancytype: 'colorswatch',
+                    onAction: (data) => {
+                        applyColor(editor, format, data.value, () => { });
                     }
                 }
+            ]
+        });
+    };
 
-                // Shift colors to the right
-                // TODO: Might need to be the left on RTL
-                if (i === cols[type]) {
-                    for (i = 0; i < cols[type] - 1; i++) {
-                        setDivColor(customColorCells[i], customColorCells[i + 1].getAttribute('data-mce-color'));
+    const colorPickerDialog = (editor) => (callback, value: string) => {
+        let isValid = false;
+
+        const onSubmit = (api) => {
+            const data = api.getData();
+        };
+
+        const onAction = (_api, details) => {
+            if (details.name === 'hex-valid') {
+                isValid = details.value;
+            }
+        };
+
+        const initialData = {
+            colorpicker: value
+        };
+
+        editor.windowManager.open({
+            title: 'Color Picker',
+            size: 'normal',
+            body: {
+                type: 'panel',
+                items: [
+                    {
+                        type: 'colorpicker',
+                        name: 'colorpicker',
+                        label: 'Color'
                     }
+                ]
+            },
+            buttons: [
+                {
+                    type: 'cancel',
+                    name: 'cancel',
+                    text: 'Cancel'
+                },
+                {
+                    type: 'submit',
+                    name: 'save',
+                    text: 'Save',
+                    primary: true
                 }
-
-                setDivColor(div, val);
-                selectColor(val);
-            }, getCurrentColor(buttonCtrl.settings.format), buttonCtrl.settings.format);
-        }
-
-        value = e.target.getAttribute('data-mce-color');
-        if (value) {
-            if (this.lastId) {
-                document.getElementById(this.lastId).setAttribute('aria-selected', 'false');
+            ],
+            initialData,
+            onAction,
+            onSubmit,
+            onClose: () => { },
+            onCancel: () => {
             }
+        });
+    };
 
-            e.target.setAttribute('aria-selected', true);
-            this.lastId = e.target.id;
+    //const register = (editor) => {
+    registerCommands(editor);
+    registerTextColorButton(editor, 'smforecolor', 'forecolor', 'Text color', Cell(fallbackColor));
+    registerTextColorButton(editor, 'smbackcolor', 'hilitecolor', 'Background color', Cell(fallbackColor));
 
-            if (value === 'transparent') {
-                resetColor();
-            } else {
-                selectColor(value);
-            }
-        } else if (value !== null) {
-            buttonCtrl.hidePanel();
-        }
-    }
+    registerTextColorMenuItem(editor, 'smforecolor', 'forecolor', 'Text color');
+    registerTextColorMenuItem(editor, 'smbackcolor', 'hilitecolor', 'Background color');
+    //};
 
-    function onButtonClick() {
-        const self = this;
-        if (self._color) {
-            applyFormat(self.settings.format, self._color);
-        } else {
-            removeFormat(self.settings.format);
-        }
-    }
+});
 
-    //https://github.com/tinymce/tinymce/blob/f02988422c33deb9a1fe9c5d4968e5144813d657/modules/tinymce/src/themes/silver/main/ts/ui/core/color/ColorSwatch.ts
-    /*
-    editor.ui.registry.addSplitButton('smforecolor', {
-        tooltip: 'Text color',
-        format: 'forecolor',
-        panel: {
-            origin: 'forecolor',
-            role: 'application',
-            ariaRemember: true,
-            html: renderColorPicker,
-            onAction: onPanelClick
-        },
-        onAction: onButtonClick
-    });
+interface Cell<T> {
+    get: () => T;
+    set: (value: T) => void;
+}
 
-    editor.ui.registry.addSplitButton('smbackcolor', {
-        tooltip: 'Background color',
-        format: 'hilitecolor',
-        panel: {
-            origin: 'backcolor',
-            role: 'application',
-            ariaRemember: true,
-            html: renderColorPicker,
-            onAction: onPanelClick
-        },
-        onAction: onButtonClick
-    });
+const Cell = <T>(initial: T): Cell<T> => {
+    let value = initial;
+
+    const get = () => {
+        return value;
+    };
+
+    const set = (v: T) => {
+        value = v;
+    };
 
     return {
-        getMetadata: function () {
-          return {
-            name: 'smtextcolor',
-            url: ''
-          };
-        }
-      }
-    */
-});
+        get,
+        set
+    };
+};

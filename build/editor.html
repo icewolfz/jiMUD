@@ -968,7 +968,7 @@
                     onSetup: buttonApi => buttonPostRender(buttonApi, 'reverse')
                 });
 
-                editor.addMenuItem('style', {
+                editor.ui.registry.addMenuItem('style', {
                     text: 'Style',
                     menu: [
                         {
@@ -1001,7 +1001,7 @@
                     ]
                 });
 
-                editor.addMenuItem('overline', {
+                editor.ui.registry.addMenuItem('overline', {
                     image: '../assets/icons/png/overline.png',
                     text: 'Overline',
                     format: 'overline',
@@ -1009,7 +1009,7 @@
                     onpostrender: buttonPostRender
                 });
 
-                editor.addMenuItem('dblunderline', {
+                editor.ui.registry.addMenuItem('dblunderline', {
                     image: '../assets/icons/png/dblunderline.png',
                     text: 'Double Underline',
                     format: 'dblunderline',
@@ -1017,14 +1017,14 @@
                     onpostrender: buttonPostRender
                 });
 
-                editor.addMenuItem('flash', {
+                editor.ui.registry.addMenuItem('flash', {
                     text: 'Flash',
                     format: 'flash',
                     image: '../assets/icons/png/flash.png',
                     onclick: toggleFormat,
                     onpostrender: buttonPostRender
                 });
-                editor.addMenuItem('reverse', {
+                editor.ui.registry.addMenuItem('reverse', {
                     image: '../assets/icons/png/reverse.png',
                     text: 'Reverse',
                     format: 'reverse',
@@ -1082,7 +1082,7 @@
                 //textcolor_cols: "16",
                 textcolor_rows: '3',
                 textcolor_cols: '8',
-                toolbar: 'send | append | undo redo | forecolor backcolor | bold italic underline strikethrough overline dblunderline flash reverse | insertdatetime',
+                toolbar: 'send | append | undo redo | forecolor backcolor smforecolor smbackcolor | bold italic underline strikethrough overline dblunderline flash reverse | insertdatetime',
                 content_css: 'css/editorcontent.css',
                 formats: {
                     bold: { inline: 'strong', exact: true, links: true, remove_similar: true },
