@@ -687,10 +687,12 @@
 
                 this.buildMenu = function () {
                     var cMenu = new Menu();
-                    cMenu.append(new MenuItem({ role: 'undo', icon: path.join(__dirname, '../assets/icons/png/undo.png') }));
-
-                    cMenu.append(new MenuItem({ role: 'redo', icon: path.join(__dirname, '../assets/icons/png/redo.png') }));
-                    cMenu.append(new MenuItem({ type: 'separator' }));
+                    if (tinymce.activeEditor.undoManager.hasUndo())
+                        cMenu.append(new MenuItem({ label: 'Undo', icon: path.join(__dirname, '../assets/icons/png/undo.png'), click: () => tinymce.activeEditor.undoManager.undo() }));
+                    if (tinymce.activeEditor.undoManager.hasRedo())
+                        cMenu.append(new MenuItem({ label: 'Redo', icon: path.join(__dirname, '../assets/icons/png/redo.png'), click: () => tinymce.activeEditor.undoManager.redo() }));
+                    if (tinymce.activeEditor.undoManager.hasUndo() || tinymce.activeEditor.undoManager.hasRedo())
+                        cMenu.append(new MenuItem({ type: 'separator' }));
                     cMenu.append(new MenuItem({ role: 'cut', icon: path.join(__dirname, '../assets/icons/png/cut.png') }));
                     cMenu.append(new MenuItem({ role: 'copy', icon: path.join(__dirname, '../assets/icons/png/copy.png') }));
                     cMenu.append(new MenuItem({
@@ -1064,8 +1066,9 @@
 
             remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
                 const { selectionText, isEditable } = params;
+                var cMenu;
                 if (isEditable) {
-                    var cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu();
+                    cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu();
                     if (options.spellchecking && params.dictionarySuggestions.length) {
                         cMenu.insert(0, new MenuItem({ type: 'separator' }));
                         for (var w = params.dictionarySuggestions.length - 1; w >= 0; w--)
@@ -1079,17 +1082,53 @@
                             }));
                     }
                     cMenu.popup({ window: remote.getCurrentWindow() });
-                } else if (selectionText && selectionText.trim() !== '') {
+                } /* else if (selectionText && selectionText.trim() !== '') {
                     Menu.buildFromTemplate([
                         { role: 'copy' },
                         { type: 'separator' },
                         { role: 'selectAll' },
                     ]).popup({ window: remote.getCurrentWindow() });
                 }
-                else
-                    Menu.buildFromTemplate([
-                        { role: 'selectAll' },
-                    ]).popup({ window: remote.getCurrentWindow() });
+                */
+                else {
+                    cMenu = [];
+                    console.log(params.editFlags);
+                    if (tinymce.activeEditor.undoManager.hasUndo())
+                        cMenu.push({ label: 'Undo', icon: path.join(__dirname, '../assets/icons/png/undo.png'), click: () => tinymce.activeEditor.undoManager.undo() });
+                    if (tinymce.activeEditor.undoManager.hasRedo())
+                        cMenu.push({ label: 'Redo', icon: path.join(__dirname, '../assets/icons/png/redo.png'), click: () => tinymce.activeEditor.undoManager.redo() });
+                    if (tinymce.activeEditor.undoManager.hasUndo() || tinymce.activeEditor.undoManager.hasRedo())
+                        cMenu.push({ type: 'separator' });
+                    if (params.editFlags.canCut)
+                        cMenu.push({ role: 'cut', icon: path.join(__dirname, '../assets/icons/png/cut.png') });
+                    if (params.editFlags.canCopy) {
+                        cMenu.push({ role: 'copy', icon: path.join(__dirname, '../assets/icons/png/copy.png') });
+                        cMenu.push({
+                            label: 'Copy formatted',
+                            icon: path.join(__dirname, '../assets/icons/png/copy.png'),
+                            click: copyFormatted
+                        });
+                    }
+                    if (params.editFlags.canPaste) {
+                        cMenu.push({ role: 'paste', icon: path.join(__dirname, '../assets/icons/png/paste.png') });
+                        cMenu.push({
+                            label: 'Paste formatted',
+                            icon: path.join(__dirname, '../assets/icons/png/paste.png'),
+                            click: () => {
+                                insertFormated(clipboard.readText('selection') || '');
+                            }
+                        });
+                    }
+                    if (params.editFlags.canDelete)
+                        cMenu.push({ role: 'delete', icon: path.join(__dirname, '../assets/icons/png/delete.png') });
+                    if (params.editFlags.canSelectAll) {
+                        if (cMenu.length && cMenu[cMenu.length - 1].role != 'separator')
+                            cMenu.push({ type: 'separator' });
+                        cMenu.push({ role: 'selectAll' });
+                    }
+
+                    Menu.buildFromTemplate(cMenu).popup({ window: remote.getCurrentWindow() });
+                }
             });
             loadOptions();
         });

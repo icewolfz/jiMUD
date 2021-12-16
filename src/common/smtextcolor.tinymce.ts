@@ -17,7 +17,7 @@
 declare let tinymce;
 
 // tslint:disable-next-line:only-arrow-functions
-tinymce.PluginManager.add('smtextcolor', function(editor, url) {
+tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     let cols;
     let rows;
 
@@ -189,7 +189,7 @@ tinymce.PluginManager.add('smtextcolor', function(editor, url) {
     }
 
     function applyFormat(format, value) {
-        editor.undoManager.transact( () => {
+        editor.undoManager.transact(() => {
             editor.focus();
             editor.formatter.apply(format, { value: value });
             editor.nodeChanged();
@@ -197,7 +197,7 @@ tinymce.PluginManager.add('smtextcolor', function(editor, url) {
     }
 
     function removeFormat(format) {
-        editor.undoManager.transact( () => {
+        editor.undoManager.transact(() => {
             editor.focus();
             editor.formatter.remove(format, { value: null }, null, true);
             editor.nodeChanged();
@@ -292,7 +292,6 @@ tinymce.PluginManager.add('smtextcolor', function(editor, url) {
     //https://github.com/tinymce/tinymce/blob/f02988422c33deb9a1fe9c5d4968e5144813d657/modules/tinymce/src/themes/silver/main/ts/ui/core/color/ColorSwatch.ts
     /*
     editor.ui.registry.addSplitButton('smforecolor', {
-        type: 'ColorButton',
         tooltip: 'Text color',
         format: 'forecolor',
         panel: {
@@ -306,7 +305,6 @@ tinymce.PluginManager.add('smtextcolor', function(editor, url) {
     });
 
     editor.ui.registry.addSplitButton('smbackcolor', {
-        type: 'ColorButton',
         tooltip: 'Background color',
         format: 'hilitecolor',
         panel: {
@@ -318,5 +316,14 @@ tinymce.PluginManager.add('smtextcolor', function(editor, url) {
         },
         onAction: onButtonClick
     });
+
+    return {
+        getMetadata: function () {
+          return {
+            name: 'smtextcolor',
+            url: ''
+          };
+        }
+      }
     */
 });
