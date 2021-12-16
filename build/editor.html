@@ -686,32 +686,43 @@
                     });
                 }
 
-                this.buildMenu = function () {
+                this.buildMenu = function (editFlags) {
                     var cMenu = new Menu();
-                    cMenu.append(new MenuItem({ role: 'undo', icon: path.join(__dirname, '../assets/icons/png/undo.png') }));
-
-                    cMenu.append(new MenuItem({ role: 'redo', icon: path.join(__dirname, '../assets/icons/png/redo.png') }));
-                    cMenu.append(new MenuItem({ type: 'separator' }));
-                    cMenu.append(new MenuItem({ role: 'cut', icon: path.join(__dirname, '../assets/icons/png/cut.png') }));
-                    cMenu.append(new MenuItem({ role: 'copy', icon: path.join(__dirname, '../assets/icons/png/copy.png') }));
-                    cMenu.append(new MenuItem({
-                        label: 'Copy formatted',
-                        icon: path.join(__dirname, '../assets/icons/png/copy.png'),
-                        click: copyFormatted
-                    }));
-                    cMenu.append(new MenuItem({ role: 'paste', icon: path.join(__dirname, '../assets/icons/png/paste.png') }));
-                    cMenu.append(new MenuItem({
-                        label: 'Paste formatted',
-                        icon: path.join(__dirname, '../assets/icons/png/paste.png'),
-                        click: () => {
-                            insertFormated(clipboard.readText('selection') || '');
-                        }
-                    }));
-                    cMenu.append(new MenuItem({ role: 'delete', icon: path.join(__dirname, '../assets/icons/png/delete.png') }));
-                    cMenu.append(new MenuItem({ type: 'separator' }));
-                    cMenu.append(new MenuItem({ role: 'selectAll' }));
-                    cMenu.append(new MenuItem({ type: 'separator' }));
-
+                    if (tinymce.activeEditor.undoManager.hasUndo())
+                        cMenu.append(new MenuItem({ label: 'Undo', icon: path.join(__dirname, '../assets/icons/png/undo.png'), click: () => tinymce.activeEditor.undoManager.undo() }));
+                    if (tinymce.activeEditor.undoManager.hasRedo())
+                        cMenu.append(new MenuItem({ label: 'Redo', icon: path.join(__dirname, '../assets/icons/png/redo.png'), click: () => tinymce.activeEditor.undoManager.redo() }));
+                    if (tinymce.activeEditor.undoManager.hasUndo() || tinymce.activeEditor.undoManager.hasRedo())
+                        cMenu.append(new MenuItem({ type: 'separator' }));
+                    if (editFlags && editFlags.canCut)
+                        cMenu.append(new MenuItem({ role: 'cut', icon: path.join(__dirname, '../assets/icons/png/cut.png') }));
+                    if (editFlags && editFlags.canCopy) {
+                        cMenu.append(new MenuItem({ role: 'copy', icon: path.join(__dirname, '../assets/icons/png/copy.png') }));
+                        cMenu.append(new MenuItem({
+                            label: 'Copy formatted',
+                            icon: path.join(__dirname, '../assets/icons/png/copy.png'),
+                            click: copyFormatted
+                        }));
+                    }
+                    if (editFlags && editFlags.canPaste) {
+                        cMenu.append(new MenuItem({ role: 'paste', icon: path.join(__dirname, '../assets/icons/png/paste.png') }));
+                        cMenu.append(new MenuItem({
+                            label: 'Paste formatted',
+                            icon: path.join(__dirname, '../assets/icons/png/paste.png'),
+                            click: () => {
+                                insertFormated(clipboard.readText('selection') || '');
+                            }
+                        }));
+                    }
+                    if (editFlags && editFlags.canDelete)
+                        cMenu.append(new MenuItem({ role: 'delete', icon: path.join(__dirname, '../assets/icons/png/delete.png') }));
+                    if (editFlags && editFlags.canSelectAll) {
+                        if (cMenu.items.length && cMenu.items[cMenu.items.length - 1].role != 'separator')
+                            cMenu.append(new MenuItem({ type: 'separator' }));
+                        cMenu.append(new MenuItem({ role: 'selectAll' }));
+                    }
+                    if (cMenu.items.length && cMenu.items[cMenu.items.length - 1].role != 'separator')
+                        cMenu.append(new MenuItem({ type: 'separator' }));
                     cMenu.append(new MenuItem({
                         label: 'Style',
                         submenu: [
@@ -925,6 +936,70 @@
                     onpostrender: buttonPostRender
                 });
 
+                editor.addMenuItem('style', {
+                    text: 'Style',
+                    menu: [
+                        {
+                            image: '../assets/icons/png/overline.png',
+                            text: 'Overline',
+                            format: 'overline',
+                            onclick: toggleFormat,
+                            onpostrender: buttonPostRender
+                        }, {
+                            image: '../assets/icons/png/dblunderline.png',
+                            text: 'Double Underline',
+                            format: 'dblunderline',
+                            onclick: toggleFormat,
+                            onpostrender: buttonPostRender
+                        },
+                        {
+                            text: 'Flash',
+                            format: 'flash',
+                            image: '../assets/icons/png/flash.png',
+                            onclick: toggleFormat,
+                            onpostrender: buttonPostRender
+                        },
+                        {
+                            image: '../assets/icons/png/reverse.png',
+                            text: 'Reverse',
+                            format: 'reverse',
+                            onclick: toggleFormat,
+                            onpostrender: buttonPostRender
+                        }
+                    ]
+                });
+
+                editor.addMenuItem('overline', {
+                    image: '../assets/icons/png/overline.png',
+                    text: 'Overline',
+                    format: 'overline',
+                    onclick: toggleFormat,
+                    onpostrender: buttonPostRender
+                });
+
+                editor.addMenuItem('dblunderline', {
+                    image: '../assets/icons/png/dblunderline.png',
+                    text: 'Double Underline',
+                    format: 'dblunderline',
+                    onclick: toggleFormat,
+                    onpostrender: buttonPostRender
+                });
+
+                editor.addMenuItem('flash', {
+                    text: 'Flash',
+                    format: 'flash',
+                    image: '../assets/icons/png/flash.png',
+                    onclick: toggleFormat,
+                    onpostrender: buttonPostRender
+                });
+                editor.addMenuItem('reverse', {
+                    image: '../assets/icons/png/reverse.png',
+                    text: 'Reverse',
+                    format: 'reverse',
+                    onclick: toggleFormat,
+                    onpostrender: buttonPostRender
+                });
+
                 editor.on('Change', function () {
                     addReverse($('.reverse', $(editor.getDoc()).contents()));
                 });
@@ -967,8 +1042,8 @@
                 ],
                 color_picker_callback: function (editor, color, format) { ipcRenderer.send('show-window', 'color', { type: format, color: color || '', window: 'editor' }); },
                 color_picker_caption: 'More&hellip;',
-                //contextmenu: "shadowfore shadowback | bold italic underline strikethrough overline dblunderline flash reverse",
-                nonbreaking_force_tab: true,
+                //contextmenu: "undo redo | cut copy paste | style",
+                //nonbreaking_force_tab: true,
                 //textcolor_map: _ColorTable,
                 //textcolor_rows: "17",
                 //textcolor_cols: "16",
@@ -1029,29 +1104,31 @@
             });
 
             remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
-                const { selectionText, isEditable } = params;
-                if (isEditable) {
-                    var cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu();
-                    if (options.spellchecking && params.dictionarySuggestions.length) {
-                        cMenu.insert(0, new MenuItem({ type: 'separator' }));
-                        for (var w = params.dictionarySuggestions.length - 1; w >= 0; w--)
-                            cMenu.insert(0, new MenuItem({
-                                label: params.dictionarySuggestions[w],
-                                click: function (item) {
-                                    tinymce.activeEditor.undoManager.transact(function () {
-                                        tinymce.activeEditor.selection.setContent(item.label);
-                                    });
-                                }
-                            }));
-                    }
-                    cMenu.popup({ window: remote.getCurrentWindow() });
-                } else if (selectionText && selectionText.trim() !== '') {
+                //const { selectionText, isEditable } = params;
+                //if (isEditable) {
+                if((params.y) < 37) return;
+                var cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu(params.editFlags);
+                if (options.spellchecking && params.dictionarySuggestions.length) {
+                    cMenu.insert(0, new MenuItem({ type: 'separator' }));
+                    for (var w = params.dictionarySuggestions.length - 1; w >= 0; w--)
+                        cMenu.insert(0, new MenuItem({
+                            label: params.dictionarySuggestions[w],
+                            click: function (item) {
+                                tinymce.activeEditor.undoManager.transact(function () {
+                                    tinymce.activeEditor.selection.setContent(item.label);
+                                });
+                            }
+                        }));
+                }
+                cMenu.popup({ window: remote.getCurrentWindow() });
+                /*} else if (selectionText && selectionText.trim() !== '') {
                     Menu.buildFromTemplate([
                         { role: 'copy' },
                         { type: 'separator' },
                         { role: 'selectAll' },
                     ]).popup({ window: remote.getCurrentWindow() });
                 }
+                */
             });
             loadOptions();
         });
