@@ -14,7 +14,7 @@
  * @class tinymce.textcolor.Plugin
  * @private
  */
-declare let tinymce, ipcRenderer;
+declare let tinymce, ipcRenderer, rgbcolor;
 
 // tslint:disable-next-line:only-arrow-functions
 tinymce.PluginManager.add('smtextcolor', function (editor, url) {
@@ -28,6 +28,29 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     const _colors = ['000000', 'BLACK', '800000', 'RED', '008000', 'GREEN', '808000', 'ORANGE', '0000EE', 'BLUE', '800080', 'MAGENTA', '008080', 'CYAN', 'BBBBBB', 'WHITE', '808080', 'BOLD BLACK', 'FF0000', 'BOLD RED', '00FF00', 'BOLD GREEN', 'FFFF00', 'YELLOW', '5C5CFF', 'BOLD BLUE', 'FF00FF', 'BOLD MAGENTA', '00FFFF', 'BOLD CYAN', 'FFFFFF', 'BOLD WHITE'];
 
     let _lastButton;
+
+
+    interface Cell<T> {
+        get: () => T;
+        set: (value: T) => void;
+    }
+
+    const Cell = <T>(initial: T): Cell<T> => {
+        let value = initial;
+
+        const get = () => {
+            return value;
+        };
+
+        const set = (v: T) => {
+            value = v;
+        };
+
+        return {
+            get,
+            set
+        };
+    };
 
     const getCurrentColor = (editor, format: ColorFormat) => {
         let color: string | undefined;
@@ -115,13 +138,6 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
         return colors;
     }
 
-    const getCurrentColors = () => _colors.map((color) => ({
-        type: 'choiceitem',
-        text: color,
-        value: color
-    }));
-
-    //const getColors = (colors, hasCustom: boolean) => colors.concat(_colors.concat(getAdditionalColors(hasCustom)));
     const getColors = (colors, hasCustom: boolean) => mapColors(_colors).concat(getAdditionalColors(hasCustom));
 
     const getFetch = (colors, hasCustom: boolean) => (callback) => {
@@ -133,8 +149,8 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
         splitButtonApi.setIconFill(id, newColor);
     };
 
-    this.setColor = function(name, color) {
-        if(_lastButton)
+    this.setColor = function (name, color) {
+        if (_lastButton)
             setIconColor(_lastButton, name === 'forecolor' ? 'smforecolor' : name, color);
     }
 
@@ -144,8 +160,8 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
             presets: 'color',
             icon: name === 'smforecolor' ? 'text-color' : 'highlight-bg-color',
             select: (value) => {
-                const optCurrentRgb = getCurrentColor(editor, format);
-                return true;
+                const optCurrentRgb = new rgbcolor(getCurrentColor(editor, format) || '').toHex();
+                return optCurrentRgb.toLowerCase() === value.toLowerCase();            
             },
             columns: 5,
             fetch: getFetch(_colors, true),
@@ -197,58 +213,6 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
         });
     };
 
-    const colorPickerDialog = (editor) => (callback, value: string) => {
-        let isValid = false;
-
-        const onSubmit = (api) => {
-            const data = api.getData();
-        };
-
-        const onAction = (_api, details) => {
-            if (details.name === 'hex-valid') {
-                isValid = details.value;
-            }
-        };
-
-        const initialData = {
-            colorpicker: value
-        };
-
-        editor.windowManager.open({
-            title: 'Color Picker',
-            size: 'normal',
-            body: {
-                type: 'panel',
-                items: [
-                    {
-                        type: 'colorpicker',
-                        name: 'colorpicker',
-                        label: 'Color'
-                    }
-                ]
-            },
-            buttons: [
-                {
-                    type: 'cancel',
-                    name: 'cancel',
-                    text: 'Cancel'
-                },
-                {
-                    type: 'submit',
-                    name: 'save',
-                    text: 'Save',
-                    primary: true
-                }
-            ],
-            initialData,
-            onAction,
-            onSubmit,
-            onClose: () => { },
-            onCancel: () => {
-            }
-        });
-    };
-
     registerCommands(editor);
     registerTextColorButton(editor, 'smforecolor', 'forecolor', 'Text color', Cell(fallbackColor));
     registerTextColorButton(editor, 'smbackcolor', 'hilitecolor', 'Background color', Cell(fallbackColor));
@@ -257,24 +221,3 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     registerTextColorMenuItem(editor, 'smbackcolor', 'hilitecolor', 'Background color');
 });
 
-interface Cell<T> {
-    get: () => T;
-    set: (value: T) => void;
-}
-
-const Cell = <T>(initial: T): Cell<T> => {
-    let value = initial;
-
-    const get = () => {
-        return value;
-    };
-
-    const set = (v: T) => {
-        value = v;
-    };
-
-    return {
-        get,
-        set
-    };
-};
