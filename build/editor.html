@@ -469,6 +469,8 @@
                 else
                     break;
             }
+            if(data[0] === 'DIV')
+                data.shift();
 
             for (d = 0, dl = data.length; d < dl; d++) {
                 switch (data[d]) {
