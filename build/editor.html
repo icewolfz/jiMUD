@@ -1313,6 +1313,7 @@
                 tinymce.activeEditor.plugins['shadowmud'].removeFormat(type);
             else
                 tinymce.activeEditor.plugins['shadowmud'].applyFormat(type, '#' + color);
+            tinymce.activeEditor.plugins['smtextcolor'].setColor(type, '#' + color);
         });
 
         ipcRenderer.on('send-editor', (event, text, window) => {

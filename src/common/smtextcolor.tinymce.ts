@@ -14,7 +14,7 @@
  * @class tinymce.textcolor.Plugin
  * @private
  */
-declare let tinymce;
+declare let tinymce, ipcRenderer;
 
 // tslint:disable-next-line:only-arrow-functions
 tinymce.PluginManager.add('smtextcolor', function (editor, url) {
@@ -26,6 +26,8 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
 
     const fallbackColor = '#000000';
     const _colors = ['000000', 'BLACK', '800000', 'RED', '008000', 'GREEN', '808000', 'ORANGE', '0000EE', 'BLUE', '800080', 'MAGENTA', '008080', 'CYAN', 'BBBBBB', 'WHITE', '808080', 'BOLD BLACK', 'FF0000', 'BOLD RED', '00FF00', 'BOLD GREEN', 'FFFF00', 'YELLOW', '5C5CFF', 'BOLD BLUE', 'FF00FF', 'BOLD MAGENTA', '00FFFF', 'BOLD CYAN', 'FFFFFF', 'BOLD WHITE'];
+
+    let _lastButton;
 
     const getCurrentColor = (editor, format: ColorFormat) => {
         let color: string | undefined;
@@ -89,14 +91,7 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
 
     const applyColor = (editor, format, value, onChoice: (v: string) => void) => {
         if (value === 'custom') {
-            const dialog = colorPickerDialog(editor);
-            dialog((colorOpt) => {
-                colorOpt.each((color) => {
-                    //Options.addColor(color);
-                    editor.execCommand('mceApplyTextcolor', format, color);
-                    onChoice(color);
-                });
-            }, fallbackColor);
+            ipcRenderer.send('show-window', 'color', { type: format, color: '', window: 'editor' });
         } else if (value === 'remove') {
             onChoice('');
             editor.execCommand('mceRemoveTextcolor', format);
@@ -138,6 +133,11 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
         splitButtonApi.setIconFill(id, newColor);
     };
 
+    this.setColor = function(name, color) {
+        if(_lastButton)
+            setIconColor(_lastButton, name === 'forecolor' ? 'smforecolor' : name, color);
+    }
+
     const registerTextColorButton = (editor, name: string, format: ColorFormat, tooltip: string, lastColor) => {
         editor.ui.registry.addSplitButton(name, {
             tooltip,
@@ -150,9 +150,11 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
             columns: 5,
             fetch: getFetch(_colors, true),
             onAction: (_splitButtonApi) => {
+                _lastButton = _splitButtonApi;
                 applyColor(editor, format, lastColor.get(), () => { });
             },
             onItemAction: (_splitButtonApi, value) => {
+                _lastButton = _splitButtonApi;
                 applyColor(editor, format, value, (newColor) => {
                     lastColor.set(newColor);
                     editor.fire('TextColorChange', {
@@ -247,15 +249,12 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
         });
     };
 
-    //const register = (editor) => {
     registerCommands(editor);
     registerTextColorButton(editor, 'smforecolor', 'forecolor', 'Text color', Cell(fallbackColor));
     registerTextColorButton(editor, 'smbackcolor', 'hilitecolor', 'Background color', Cell(fallbackColor));
 
     registerTextColorMenuItem(editor, 'smforecolor', 'forecolor', 'Text color');
     registerTextColorMenuItem(editor, 'smbackcolor', 'hilitecolor', 'Background color');
-    //};
-
 });
 
 interface Cell<T> {
