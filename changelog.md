@@ -8,6 +8,7 @@
   - Help: Add more known issue for advanced editor
 - **Fixed:**
   - Updated README to update build requirements
+  - Character Manager: allow empty login
   - Display:
     - Fixed bug with scroll lock auto scrolling when at bottom of display
     - Fixed bug with scroll lock being lost when screen is empty
