@@ -4,6 +4,7 @@
  
 - **New:**
   - Add [#FREEZE](docs/commands.md#display) Scroll lock the display, if state is omitted it will toggle the scroll lock, if state is 0 or false it will disable scroll lock, if state is anything else it will lock the scroll back
+  - Add [#CLR](docs/commands.md#display) Add blank lines to clear the screen ignoring any current trailing blank lines
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
   - Help: Add more known issue for advanced editor
 - **Fixed:**

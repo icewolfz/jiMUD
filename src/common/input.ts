@@ -3287,6 +3287,26 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid syntax use \x1b[4m#fr\x1b[0;-11;-12mEEZE \x1b[3mnumber\x1b[0;-11;-12m');
                 return null;
             //#endregion freeze                
+            case 'clr':
+                if (args.length)
+                    throw new Error('Invalid syntax use #CLR');
+                //nothing to clear so just bail
+                if(this.client.display.lines.length === 0)
+                    return null;
+                i = this.client.display.WindowSize.height + 2;
+                //skip trailing new lines
+                n = this.client.display.lines.length;
+                while(n-- && i)
+                {
+                    if(this.client.display.lines[n].length)
+                        break;
+                    i--;
+                }
+                tmp = [];
+                while (i--)
+                    tmp.push('\n');
+                this.client.print(tmp.join(''), true);
+                return null;
         }
         if (fun.match(/^-?\d+$/)) {
             i = parseInt(fun, 10);

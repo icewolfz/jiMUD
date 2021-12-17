@@ -2,6 +2,9 @@
 
 ## **Display**
 
+#CLR
+>Add blank lines to clear the screen ignoring any current trailing blank lines
+
 <u>#CO</u>LOR *{pattern}* fore,back,bold *profile*
 >Color last added line, comma delimited colors, supports raw jiMUD color codes, ansi word values, any valid HTML color name, of ##RRGGBB html format
 
