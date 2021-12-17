@@ -10,6 +10,8 @@
   - Advanced editor:
     - Fixed `Formatted as commands (No echo)` and `Text as commands (No echo)` echoing to the display
     - Fixed context menu
+    - Fixed background color codes being wrapped in extra %^
+    - Clean up extra codes between 2 resets blocks
 - **Changed:**
   - Update tinymce 4.8.3 to 5.10.1
 
