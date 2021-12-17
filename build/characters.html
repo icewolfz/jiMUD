@@ -276,7 +276,7 @@
                 $('#character-editor button').prop('disabled', false);
                 $('#settings').val(characters.characters[current].settings);
                 $('#map').val(characters.characters[current].map);
-                $('#name').val(characters.characters[current].name);
+                $('#name').val(characters.characters[current].name || current);
                 $('#auto-load').prop('checked', current === characters.load);
                 $('#dev').prop('checked', characters.characters[current].dev);
                 $('#disconnect').prop('checked', characters.characters[current].disconnect);
