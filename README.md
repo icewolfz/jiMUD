@@ -98,10 +98,11 @@ Basic questions answered about jiMUD
   - Dragging multiple files and dropping outside to other applications will only drop the first file, all others ignored. This is a limitation of electron drag and drop support, until it is added it can not be supported outside of application
 - Advanced editor
   - Paste may lose some colors/background colors on pasted, this is a bug in TinyMCE editor
-  - When apply styles to all text some styles may get stuck
+  - When applying styles to all text some styles may get stuck
   - Some styles will not flash when flashing is enabled depending on order of styles applied
   - Reverse style has weird results with heavy nesting of reverse tags and colors, suggest to just use normal background colors.
   - Correction from context menu may remove applied styles depending on if they are just that word
+  - Complex color codes may be returned due to nesting and other complex style choices
 - General slow performance, do not use --disable-gpu it can impact overall performance
 - [Mapper](docs/mapper.md#know-issues)
 - [Code editor](docs/codeeditor.md#know-issues)
