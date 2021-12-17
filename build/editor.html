@@ -729,43 +729,43 @@
                         submenu: [
                             {
                                 label: 'Bold',
-                                icon: path.join(__dirname, '../assets/icons/png/bold.png'),
-                                click: toggleContextFormat
+                                icon: editor.formatter.match('bold') ? path.join(__dirname, '../assets/icons/png/bold.selected.png') : path.join(__dirname, '../assets/icons/png/bold.png'),
+                                click: toggleContextFormat,
                             },
                             {
                                 label: 'Italic',
-                                icon: path.join(__dirname, '../assets/icons/png/italic.png'),
+                                icon: editor.formatter.match('italic') ? path.join(__dirname, '../assets/icons/png/italic.selected.png') : path.join(__dirname, '../assets/icons/png/italic.png'),
                                 click: toggleContextFormat
                             },
                             {
                                 label: 'Underline',
-                                icon: path.join(__dirname, '../assets/icons/png/underline.png'),
+                                icon: editor.formatter.match('underline') ? path.join(__dirname, '../assets/icons/png/underline.selected.png') : path.join(__dirname, '../assets/icons/png/underline.png'),
                                 click: toggleContextFormat
                             },
                             {
                                 label: 'Strikethrough',
-                                icon: path.join(__dirname, '../assets/icons/png/strikethrough.png'),
+                                icon: editor.formatter.match('strikethrough') ? path.join(__dirname, '../assets/icons/png/strikethrough.selected.png') : path.join(__dirname, '../assets/icons/png/strikethrough.png'),
                                 click: toggleContextFormat
                             },
                             {
                                 label: 'Overline',
-                                icon: path.join(__dirname, '../assets/icons/png/overline.png'),
+                                icon: editor.formatter.match('overline') ? path.join(__dirname, '../assets/icons/png/overline.selected.png') : path.join(__dirname, '../assets/icons/png/overline.png'),
                                 click: toggleContextFormat
                             },
                             {
                                 label: 'Double Underline',
                                 format: 'dblunderline',
-                                icon: path.join(__dirname, '../assets/icons/png/dblunderline.png'),
+                                icon: editor.formatter.match('dblunderline') ? path.join(__dirname, '../assets/icons/png/dblunderline.selected.png') : path.join(__dirname, '../assets/icons/png/dblunderline.png'),
                                 click: toggleContextFormat
                             },
                             {
                                 label: 'Flash',
-                                icon: path.join(__dirname, '../assets/icons/png/flash.png'),
+                                icon: editor.formatter.match('flash') ? path.join(__dirname, '../assets/icons/png/flash.selected.png') : path.join(__dirname, '../assets/icons/png/flash.png'),
                                 click: toggleContextFormat
                             },
                             {
                                 label: 'Reverse',
-                                icon: path.join(__dirname, '../assets/icons/png/reverse.png'),
+                                icon: editor.formatter.match('reverse') ? path.join(__dirname, '../assets/icons/png/reverse.selected.png') : path.join(__dirname, '../assets/icons/png/reverse.png'),
                                 click: toggleContextFormat
                             }
                         ]
