@@ -12,6 +12,7 @@
     - Fixed context menu
     - Fixed background color codes being wrapped in extra %^
     - Clean up extra codes between 2 resets blocks
+    - Fixed Bold white background color to use RGB555 color code correctly
 - **Changed:**
   - Update tinymce 4.8.3 to 5.10.1
 

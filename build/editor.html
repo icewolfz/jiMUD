@@ -1253,7 +1253,7 @@
             color = new rgbcolor(options.colors[15] || _dColors[15]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BOLD%^%^WHITE';
             _ColorTable.push(color, 'BOLD WHITE');
-            _bold.push(color);
+            //_bold.push(color);
 
             for (r = 0; r < 6; r++) {
                 for (g = 0; g < 6; g++) {
@@ -1308,6 +1308,7 @@
             for (b = 0, bl = _bold.length; b < bl; b++) {
                 _colors['B' + _bold[b]] = _colors[nearestHex('#' + _bold[b]).substr(1)].toUpperCase();
             }
+            _colors['BFFFFFF'] = 'RGB555';
             tinymce.activeEditor.settings.textcolor_map = _ColorTable;
             tinymce.activeEditor.settings.color_map = _ColorTable;
         }
