@@ -3255,6 +3255,38 @@ export class Input extends EventEmitter {
                     this.client.print(args + '\x1b[0m\n', false);
                 this.client.telnet.prompt = false;
                 return null
+            case 'freeze':
+            case 'fr':
+                //#region freeze
+                if (args.length === 0) {
+                    this.scrollLock = !this.scrollLock;
+                    if (this.scrollLock) {
+                        if (this.client.display.scrollAtBottom)
+                            this.client.display.scrollUp();
+                    }
+                    else {
+                        if (this.client.display.split && this.client.display.split.shown)
+                            this.client.display.scrollDisplay(true);
+                    }
+                }
+                else if (args.length === 1) {
+                    if (args[0] === "0" || args[0] === "false") {
+                        if (this.scrollLock) {
+                            this.scrollLock = false;
+                            if (this.client.display.split && this.client.display.split.shown)
+                                this.client.display.scrollDisplay(true);
+                        }
+                    }
+                    else if (!this.scrollLock) {
+                        this.scrollLock = true;
+                        if (this.client.display.scrollAtBottom)
+                            this.client.display.scrollUp();
+                    }
+                }
+                else if (args.length > 1)
+                    throw new Error('Invalid syntax use \x1b[4m#fr\x1b[0;-11;-12mEEZE \x1b[3mnumber\x1b[0;-11;-12m');
+                return null;
+            //#endregion freeze                
         }
         if (fun.match(/^-?\d+$/)) {
             i = parseInt(fun, 10);

@@ -17,6 +17,9 @@
 [<u>#ECHOP</u>ROMPT](commands/ECHOPROMPT.md) text
 >Display text to the screen
 
+<u>#FR</u>EEZE *state*
+>Scroll lock the display, if state is omitted it will toggle the scroll lock, if state is 0 or false it will disable scroll lock, if state is anything else it will lock the scroll back
+
 <u>#HI</u>GHLIGHT *pattern*
 >make last line or lined with matching pattern bold or brighter color if already bold, or
 

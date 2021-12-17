@@ -3,10 +3,15 @@
 ## v0.17.4
 
 - **New:**
+  - Add [#FREEZE](docs/commands.d#display) Scroll lock the display, if state is omitted it will toggle the scroll lock, if state is 0 or false it will disable scroll lock, if state is anything else it will lock the scroll back
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
   - Help: Add more known issue for advanced editor
 - **Fixed:**
   - Updated README to update build requirements
+  - Display:
+    - Fixed bug with scroll lock auto scrolling when at bottom of display
+    - Fixed bug with scroll lock being lost when screen is empty
+    - Fixed bug with scroll lock being lost when split view is enabled
   - Advanced editor:
     - Fixed `Formatted as commands (No echo)` and `Text as commands (No echo)` echoing to the display
     - Fixed context menu
