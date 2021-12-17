@@ -14,6 +14,7 @@
     - Clean up extra codes between 2 resets blocks
     - Fixed Bold white background color to use RGB555 color code correctly
 - **Changed:**
+  - Revert 0.17.1 hack for child windows as electron seems to have fixed the bug
   - Update tinymce 4.8.3 to 5.10.1
   - Update electron 16.0.4 to 16.0.5
   - Update font-list 1.4.2 to 1.4.3
