@@ -5,6 +5,11 @@
 - **New:**
   - Add [#FREEZE](docs/commands.md#display) Scroll lock the display, if state is omitted it will toggle the scroll lock, if state is 0 or false it will disable scroll lock, if state is anything else it will lock the scroll back
   - Add [#CLR](docs/commands.md#display) Add blank lines to clear the screen ignoring any current trailing blank lines
+  - Add [begins(string1,string2](docs/functions.md#string) return true if string 1 starts with string 2
+  - Add [ends(string1, string2)](docs/functions.md#string) returns true if string 1 ends with string 2
+  - Add [len(string)](docs/functions.md#string) returns the length of string
+  - Add [pos(pattern,string)](docs/functions.md#string) returns the position pattern in string on 1 index scale, 0 if not found  
+  - Add [ipos(pattern,string)](docs/functions.md#string) returns the position pattern in string on 1 index scale, 0 if not found ignoring case
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
   - Help: Add more known issue for advanced editor
 - **Fixed:**

@@ -66,7 +66,6 @@ You can create custom variables using the expression system and the assignment o
 - `zdicedev(xdy+n)` return zMUD/cMUD standard deviation of dice `sqrt(((y - 1)^2 - 1) / 12 * x)`, x is the # of dice, y is the # of sides, with optional +, -, *, / modifier
 - `random(i,j)` return a random number between i and j, if j omitted, i is then considered the maximum and will return a number between 0 and i
 
-
 ### **Conditionals**
 
 - `case(n,value1,value2,value3...)` return the nth value of arguments, from 1 to last argument
@@ -80,6 +79,11 @@ You can create custom variables using the expression system and the assignment o
 - `proper(TEXT)` force TEXT into proper casing
 - `char(i)` return ASCII character for i
 - `ascii(string)` return the ascii value for first letter in string
+- `begins(string1,string2)` return true if string 1 starts with string 2
+- `ends(string1, string2)` returns true if string 1 ends with string 2
+- `len(string)` returns the length of string
+- `pos(pattern,string)` returns the position pattern in string on 1 index scale, 0 if not found
+- `ipos(pattern,string)` returns the position pattern in string on 1 index scale, 0 if not found ignoring case
 
 ### **Miscellaneous**
 - `time(format)` display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]

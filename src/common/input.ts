@@ -3195,6 +3195,7 @@ export class Input extends EventEmitter {
                     return tmp.map(v => v.trim()).join('\n');
                 return null;
             case 'variable':
+            case 'var':
             case 'va':
                 if (args.length === 0) {
                     i = Object.keys(this.client.variables);
@@ -3291,14 +3292,13 @@ export class Input extends EventEmitter {
                 if (args.length)
                     throw new Error('Invalid syntax use #CLR');
                 //nothing to clear so just bail
-                if(this.client.display.lines.length === 0)
+                if (this.client.display.lines.length === 0)
                     return null;
                 i = this.client.display.WindowSize.height + 2;
                 //skip trailing new lines
                 n = this.client.display.lines.length;
-                while(n-- && i)
-                {
-                    if(this.client.display.lines[n].length)
+                while (n-- && i) {
+                    if (this.client.display.lines[n].length)
                         break;
                     i--;
                 }
@@ -4812,6 +4812,36 @@ export class Input extends EventEmitter {
                 if (isNaN(c))
                     throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
                 return String.fromCharCode(c);
+            case 'begins'://(string1,string2)` return true if string 1 starts with string 2
+                args = splitQuoted(this.parseInline(res[2]), ',');
+                if (args.length < 1)
+                    throw new Error('Missing arguments');
+                else if (args.length > 2)
+                    throw new Error('Too many arguments');
+                return this.stripQuotes(args[0]).startsWith(this.stripQuotes(args[1]));
+            case 'ends'://(string1, string2)` returns true if string 1 ends with string 2
+                args = splitQuoted(this.parseInline(res[2]), ',');
+                if (args.length < 1)
+                    throw new Error('Missing arguments');
+                else if (args.length > 2)
+                    throw new Error('Too many arguments');
+                return this.stripQuotes(args[0]).endsWith(this.stripQuotes(args[1]));
+            case 'len'://(string)` returns the length of string
+                return this.stripQuotes(this.parseInline(res[2])).length;
+            case 'pos'://(pattern,string)` returns the position pattern in string on 1 index scale, 0 if not found
+                args = splitQuoted(this.parseInline(res[2]), ',');
+                if (args.length < 1)
+                    throw new Error('Missing arguments');
+                else if (args.length > 2)
+                    throw new Error('Too many arguments');
+                return this.stripQuotes(args[1]).indexOf(this.stripQuotes(args[0])) + 1;
+            case 'ipos'://(pattern,string)` returns the position pattern in string on 1 index scale, 0 if not found
+                args = splitQuoted(this.parseInline(res[2]), ',');
+                if (args.length < 1)
+                    throw new Error('Missing arguments');
+                else if (args.length > 2)
+                    throw new Error('Too many arguments');
+                return this.stripQuotes(args[1]).toLowerCase().indexOf(this.stripQuotes(args[0]).toLowerCase()) + 1;
         }
         return null;
     }
