@@ -32,7 +32,7 @@ Set or created variables can be access in the expression system by name eg ${tes
 
 ## Named arguments
 
-Naming convention uses javascript identifier rules, which are must be at least 1 character of a-z,A-Z,$, or _ followed by a-z,A-Z,$,_, or 0 - 9, and not a javascript keyword
+Naming convention use javascript identifier rules, which are must be at least 1 character of a-z,A-Z,$, or _ followed by a-z,A-Z,$,_, or 0 - 9, and not a javascript keyword
 
 Aliases allow named arguments set using a command delimited list which are converted into local scoped javascript variables,
 Example:
