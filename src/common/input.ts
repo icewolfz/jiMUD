@@ -4479,11 +4479,11 @@ export class Input extends EventEmitter {
                     return moment().format(res[2]);
                 return moment().format();
             case 'lower':
-                return this.parseInline(res[2]).toLowerCase();
+                return this.stripQuotes(this.parseInline(res[2]).toLowerCase());
             case 'upper':
-                return this.parseInline(res[2]).toUpperCase();
+                return this.stripQuotes(this.parseInline(res[2]).toUpperCase());
             case 'proper':
-                return ProperCase(this.parseInline(res[2]));
+                return ProperCase(this.stripQuotes(this.parseInline(res[2])));
             case 'eval':
                 return '' + this.evaluate(this.parseInline(res[2]));
             case 'dice':
@@ -4814,14 +4814,14 @@ export class Input extends EventEmitter {
                 return String.fromCharCode(c);
             case 'begins'://(string1,string2)` return true if string 1 starts with string 2
                 args = splitQuoted(this.parseInline(res[2]), ',');
-                if (args.length < 1)
+                if (args.length < 2)
                     throw new Error('Missing arguments');
                 else if (args.length > 2)
                     throw new Error('Too many arguments');
                 return this.stripQuotes(args[0]).startsWith(this.stripQuotes(args[1]));
             case 'ends'://(string1, string2)` returns true if string 1 ends with string 2
                 args = splitQuoted(this.parseInline(res[2]), ',');
-                if (args.length < 1)
+                if (args.length < 2)
                     throw new Error('Missing arguments');
                 else if (args.length > 2)
                     throw new Error('Too many arguments');
@@ -4830,18 +4830,45 @@ export class Input extends EventEmitter {
                 return this.stripQuotes(this.parseInline(res[2])).length;
             case 'pos'://(pattern,string)` returns the position pattern in string on 1 index scale, 0 if not found
                 args = splitQuoted(this.parseInline(res[2]), ',');
-                if (args.length < 1)
+                if (args.length < 2)
                     throw new Error('Missing arguments');
                 else if (args.length > 2)
                     throw new Error('Too many arguments');
                 return this.stripQuotes(args[1]).indexOf(this.stripQuotes(args[0])) + 1;
             case 'ipos'://(pattern,string)` returns the position pattern in string on 1 index scale, 0 if not found
                 args = splitQuoted(this.parseInline(res[2]), ',');
-                if (args.length < 1)
+                if (args.length < 2)
                     throw new Error('Missing arguments');
                 else if (args.length > 2)
                     throw new Error('Too many arguments');
                 return this.stripQuotes(args[1]).toLowerCase().indexOf(this.stripQuotes(args[0]).toLowerCase()) + 1;
+            case 'regex'://(string,regex,var1,...,varN)
+                args = splitQuoted(res[2], ',');
+                if (args.length < 2)
+                    throw new Error('Missing arguments');
+                c = new RegExp(this.stripQuotes(args[1]), 'gd');
+                c = c.exec(this.stripQuotes(this.parseInline(args[0])));
+                args.shift();
+                args.shift();
+                if (c == null || c.length === 0)
+                    return 0;
+                if (args.length) {
+                    for (sides = 1; sides < c.length; sides++) {
+                        if (!args.length)
+                            break;
+                        this.client.variables[this.stripQuotes(this.parseInline(args[0]))] = c[sides];
+                        args.shift();
+                    }
+                    if (args.length)
+                        this.client.variables[this.stripQuotes(this.parseInline(args[0]))] = c[0].length;
+                }
+                return c.indices[0][0] + 1;
+            case 'trim':
+                return this.stripQuotes(this.parseInline(res[2])).trim();
+            case 'trimleft':
+                return this.stripQuotes(this.parseInline(res[2])).trimLeft();
+            case 'trimright':
+                return this.stripQuotes(this.parseInline(res[2])).trimRight();
         }
         return null;
     }

@@ -82,8 +82,12 @@ You can create custom variables using the expression system and the assignment o
 - `begins(string1,string2)` return true if string 1 starts with string 2
 - `ends(string1, string2)` returns true if string 1 ends with string 2
 - `len(string)` returns the length of string
-- `pos(pattern,string)` returns the position pattern in string on 1 index scale, 0 if not found
-- `ipos(pattern,string)` returns the position pattern in string on 1 index scale, 0 if not found ignoring case
+- `pos(pattern,string)` returns the position of pattern in string on 1 index scale, 0 if not found
+- `ipos(pattern,string)` returns the position of pattern in string on 1 index scale, 0 if not found ignoring case
+- `regex(string,regex,var1,...,varN,varN+1)` test if string matches the regex pattern, if found returns the position of the match, starting at 1 else returns 0, var1 ... varN are optional variable names to store any sub pattern matches, varN+1 is the length of matched string. **Note** the regex argument is not parsed and passed as is due to the complexity of regex formats
+- `%trim(string)` Returns the string without any spaces at the beginning or end
+- `%trimleft(string)` Returns the string without any spaces at the beginning
+- `%trimright(string)` Returns the string without any spaces at the end
 
 ### **Miscellaneous**
 - `time(format)` display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]
