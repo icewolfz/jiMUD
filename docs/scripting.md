@@ -30,6 +30,24 @@ client.variables['test'] = 5;
 
 Set or created variables can be access in the expression system by name eg ${test + 5} would be 10 based from example
 
+## Named arguments
+
+Naming convention uses javascript identifier rules, which are must be at least 1 character of a-z,A-Z,$, or _ followed by a-z,A-Z,$,_, or 0 - 9, and not a javascript keyword
+
+Aliases allow named arguments set using a command delimited list which are converted into local scoped javascript variables,
+Example:
+Alias with named arguments: name,message
+```javascript
+this.print(name + ' says ' + message);
+```
+
+Triggers allow named capturing which are converted into local scoped javascript variables
+Example:
+Trigger pattern: (?\<name>.\*) says (?\<message>.*)
+```javascript
+this.print(name + ' says ' + message);
+```
+
 ## Basic function list
 
 - `client.beep()` play system beep sound

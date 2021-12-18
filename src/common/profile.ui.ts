@@ -450,14 +450,20 @@ export function RunTester() {
             else {
                 let r = '';
                 let m = 0;
-                if (res[0] !== $('#trigger-test-text').val() || _prependTrigger) {
+                if (res[0] !== $('#trigger-test-text').val() && _prependTrigger) {
                     r += '%0 : ' + $('#trigger-test-text').val() + '\n';
                     r += '%x0 : 0 ' + (<string>$('#trigger-test-text').val()).length + '\n';
                     m = 1;
                 }
-                for (let i = 0; i < res.length; i++) {
+                let i;
+                for (i = 0; i < res.length; i++) {
                     r += '%' + (i + m) + ' : ' + res[i] + '\n';
                     r += `%x${i+m} : ${res.indices[i][0]} ${res.indices[i][1]}\n`;
+                }
+                if(res.groups) {
+                    let g = Object.keys(res.groups);
+                    for(i = 0; i < g.length; i++)
+                        r += `\${${g[i]}} : ${res.groups[g[i]]}`;
                 }
                 $('#trigger-test-results').val(r);
             }

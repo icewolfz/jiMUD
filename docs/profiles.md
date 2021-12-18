@@ -33,7 +33,7 @@
   - `Parse` do standard parsing, allows %0 ... %n to access arguments, or %name or $name, [may use alterative ${}/%{} block syntax](functions.md)
   - `Script` the value is javascript, it will evaluate and any thing returned will be sent to the mud. the value is wrapped as a function and any matched patterns are passed as arguments, use standard arguments[#] to access.
 - `Value` the value to send to the mud
-- `Params` this allows you to name arguments in a comma delimited list, each word in the list is the same as the %# and accessed using $name, %name, ${name}, or %{name}
+- `Params` this allows you to name arguments in a comma delimited list, each word in the list is the same as the %# and accessed using $name, ${name}, or %{name}, Naming convention uses javascript identifier rules, which are must be at least 1 character of a-z,A-Z,$, or _ followed by a-z,A-Z,$,_, or 0 - 9, and not a javascript keyword
 - `Priority` the sort order of aliases
 - `Append arguments` append any unused arguments to the end of the value before sending to the mud
 - `Multi` this allows you to have aliases of all the same name, and if false to stop executing on this alias
@@ -65,7 +65,10 @@
   - `Text` the text to test pattern against.
   - `Results` the results of the test, either no match or a list of arguments found.
 - `Type` the type of trigger
-  - `Regular Expression` use javascript regular expressions when matching the pattern against text.
+  - `Regular Expression` use javascript regular expressions when matching the pattern against text, allowed named capturing as, $name, %{name} or ${name}, Naming convention uses javascript identifier rules, which are must be at least 1 character of a-z,A-Z,$, or _ followed by a-z,A-Z,$,_, or 0 - 9, and not a javascript keyword
+    - Example: (?\<name>.\*) says: (?\<message>.*) will store first group as name, and second as message
+      - Access as passe type: %1, \${1}, \%{1}, \${name}, \%{name}, \$name, %1, \${1}, %{1}, $message, \${message}, %{message}
+      - Access as script type: arguments[1], name, arguments[2], message
   - `Command Input Regular Expression` same as Regular Expression but only triggered against text sent from the command input.
   - `Event` fired when pattern matches an event name, either a custom name or built in:
     - `opened` fired when client has finished opening

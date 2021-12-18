@@ -15,6 +15,7 @@
   - Add [%trimleft(string)](docs/functions.md#string)` Returns the string without any spaces at the beginning
   - Add [%trimright(string)](docs/functions.md#string) Returns the string without any spaces at the end
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
+  - [Triggers](docs/profiles.md): Add support for regex name capture that work similar to alias named params
   - Help: Add more known issue for advanced editor
 - **Fixed:**
   - Updated README to update build requirements
@@ -28,6 +29,8 @@
     - Fixed background color codes being wrapped in extra %^
     - Clean up extra codes between 2 resets blocks
     - Fixed Bold white background color to use RGB555 color code correctly
+  - Profile Manager: trigger tester still did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
+  - Fixed alias named arguments not being directly accessible in scripting type
 - **Changed:**
   - Revert 0.17.1 hack for child windows as electron seems to have fixed the bug
   - Update tinymce 4.8.3 to 5.10.1

@@ -4914,8 +4914,22 @@ export class Input extends EventEmitter {
                 break;
             case 2:
                 /*jslint evil: true */
-                const f = new Function('try { ' + alias.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                ret = f.apply(this.client, this.GetNamedArguments(alias.params, args, alias.append));
+                const named = this.GetNamedArguments(alias.params, args);
+                if (named)
+                    ret = Object.keys(named).map(v => `let ${v} = this._input.stack.named["${v}"];`).join('') + '\n';
+                else
+                    ret = '';
+                const f = new Function('try { ' + ret + alias.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                this._stack.push({ loops: [], args: args, named: named, append: alias.append, used: 0 });
+                try {
+                    ret = f.apply(this.client, args);
+                }
+                catch (e) {
+                    throw e;
+                }
+                finally {
+                    this._stack.pop();
+                }
                 if (typeof ret === 'string')
                     ret = this.parseOutgoing(ret, null, null, true);
                 break;
@@ -5152,8 +5166,8 @@ export class Input extends EventEmitter {
                         args.indices = [[0, args[0].length], ...res.indices];
                     }
                     if (ret)
-                        return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re]);
-                    this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re]);
+                        return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re], res.groups ? Object.assign([], res.groups) : 0);
+                    this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups ? Object.assign([], res.groups) : 0);
                 }
             }
             catch (e) {
@@ -5173,13 +5187,13 @@ export class Input extends EventEmitter {
         return line;
     }
 
-    public ExecuteTrigger(trigger, args, r: boolean, idx, regex?) {
+    public ExecuteTrigger(trigger, args, r: boolean, idx, regex?, named?) {
         if (r == null) r = false;
         if (!trigger.enabled) return '';
         let ret; // = '';
         switch (trigger.style) {
             case 1:
-                this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex });
+                this._stack.push({ loops: [], args: args, named: named, used: 0, regex: regex });
                 try {
                     ret = this.parseOutgoing(trigger.value);
                 }
@@ -5197,10 +5211,15 @@ export class Input extends EventEmitter {
                     ret = ret.apply(this.client, args);
                 }
                 else {
-                    if (!this._TriggerFunctionCache[idx])
+                    if (!this._TriggerFunctionCache[idx]) {
+                        if (named)
+                            ret = Object.keys(named).map(v => `let ${v} = this._input.stack.named["${v}"];`).join('') + '\n';
+                        else
+                            ret = '';
                         /*jslint evil: true */
-                        this._TriggerFunctionCache[idx] = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex, indices: args.indices });
+                        this._TriggerFunctionCache[idx] = new Function('try { ' + ret + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    }
+                    this._stack.push({ loops: [], args: args, named: named, used: 0, regex: regex, indices: args.indices });
                     try {
                         ret = this._TriggerFunctionCache[idx].apply(this.client, args);
                     }
