@@ -980,12 +980,7 @@ function createTray() {
             click: () => {
                 let s = getWindowState('main');
                 if (!s) getWindowState('main', win);
-                if (s.maximized)
-                    win.maximize();
-                win.show();
-                if (s.isFullScreen)
-                    win.setFullScreen(s.fullscreen);
-                win.focus();
+                restoreWindowState(win, s, true, true)
                 executeScript('showCharacters()', win, true);
             }
         },
@@ -1062,12 +1057,7 @@ function createTray() {
                         win.minimize();
                 }
                 else {
-                    if (s.maximized)
-                        win.maximize();
-                    win.show();
-                    if (s.isFullScreen)
-                        win.setFullScreen(s.fullscreen);
-                    win.focus();
+                    restoreWindowState(win, s, true, true);
                 }
                 break;
             case TrayClick.hide:
@@ -1097,12 +1087,7 @@ function createTray() {
                         win.minimize();
                 }
                 else {
-                    if (s.maximized)
-                        win.maximize();
-                    win.show();
-                    if (s.isFullScreen)
-                        win.setFullScreen(s.fullscreen);
-                    win.focus();
+                    restoreWindowState(win, s, true, true);
                 }
                 break;
             case TrayClick.hide:
@@ -1399,11 +1384,7 @@ function createWindow() {
         }
         loadWindowScripts(win, 'user');
         await executeScript('loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');updateInterface();', win);
-        if (s.maximized)
-            win.maximize();
-        win.show();
-        if (s.isFullScreen)
-            win.setFullScreen(s.fullscreen);
+        restoreWindowState(win, s, true);
         if (set.showMapper)
             showMapper(true);
         else if (set.mapper.persistent || set.mapper.enabled)
@@ -2486,22 +2467,12 @@ function showSelectedWindow(window, args) {
         if (global.editorOnly) {
             let s = getWindowState('code-editor');
             if (!s) getWindowState('code-editor', winCode);
-            if (s.maximized)
-                winCode.maximize();
-            winCode.show();
-            if (s.isFullScreen)
-                winCode.setFullScreen(s.fullscreen);
-            winCode.focus();
+            restoreWindowState(winCode, s, true, true);
         }
         else {
             let s = getWindowState('main');
             if (!s) getWindowState('main', win);
-            if (s.maximized)
-                win.maximize();
-            win.show();
-            if (s.isFullScreen)
-                win.setFullScreen(s.fullscreen);
-            win.focus();
+            restoreWindowState(win, s, true, true);
         }
     }
     else if (window === 'about')
@@ -3044,7 +3015,7 @@ function getWindowState(id, window) {
     var bounds = states[id];
     if (!window || window.isDestroyed())
         return states[id];
-    if (window.win.isMinimized())
+    if (window.isMinimized())
         return {
             x: bounds.x,
             y: bounds.y,
@@ -3134,6 +3105,17 @@ function trackWindowState(id, window) {
         states[id].width = bounds.width;
         states[id].height = bounds.height;
     }
+}
+
+function restoreWindowState(window, state, show, focus) {
+    if (state.maximized)
+        window.maximize();
+    if (show)
+        window.show();
+    if (state.fullscreen)
+        window.setFullScreen(state.fullscreen);
+    if (focus)
+        window.focus();
 }
 
 function parseTemplate(str, data) {
@@ -3364,9 +3346,7 @@ function createMapper(show, loading, loaded) {
         loadWindowScripts(winMap, 'map');
         addInputContext(winMap, set && set.spellchecking);
         if (show) {
-            if (s.maximized)
-                winMap.maximize();
-            winMap.show();
+            restoreWindowState(winMap, s, true);
         }
         else
             mapperMax = s.maximized;
@@ -3402,9 +3382,9 @@ function showMapper(loading) {
     win.webContents.send('setting-changed', { type: 'normal', name: 'showMapper', value: true, noSave: true });
     set.save(global.settingsFile);
     if (winMap != null) {
-        if (mapperMax)
-            winMap.maximize();
-        winMap.show();
+        restoreWindowState(winMap, {
+            maximized: mapperMax,
+        }, true);
         mapperMax = false;
         if (loading) {
             clearTimeout(loadID);
@@ -3493,9 +3473,7 @@ function showProfiles() {
     winProfiles.once('ready-to-show', () => {
         loadWindowScripts(winProfiles, 'profiles');
         //addInputContext(winProfiles, set && set.spellchecking);
-        if (s.maximized)
-            winProfiles.maximize();
-        winProfiles.show();
+        restoreWindowState(winProfiles, s, true);
         if (profilesReady !== 2)
             profilesReady = 1;
     });
@@ -3625,9 +3603,7 @@ function createEditor(show, loading) {
         loadWindowScripts(winEditor, 'editor');
         //addInputContext(winEditor, set && set.spellchecking);
         if (show) {
-            if (s.maximized)
-                winEditor.maximize();
-            winEditor.show();
+            restoreWindowState(winEditor, s, true);
         }
         else
             editorMax = s.maximized;
@@ -3670,9 +3646,9 @@ function showEditor(loading) {
     if (winEditor != null) {
         if (!editorReady)
             return;
-        if (editorMax)
-            winEditor.maximize();
-        winEditor.show();
+        restoreWindowState(winEditor, {
+            maximized: editorMax
+        }, true);
         editorMax = false;
         if (loading) {
             clearTimeout(loadID);
@@ -3779,9 +3755,7 @@ function createChat(show, loading) {
         loadWindowScripts(winChat, 'chat');
         addInputContext(winChat, set && set.spellchecking);
         if (show) {
-            if (s.maximized)
-                winChat.maximize();
-            winChat.show();
+            restoreWindowState(winChat, s, true);
         }
         else
             chatMax = s.maximized;
@@ -3820,9 +3794,9 @@ function showChat(loading) {
     if (winChat != null) {
         if (!chatReady)
             return;
-        if (chatMax)
-            winChat.maximize();
-        winChat.show();
+        restoreWindowState(winChat, {
+            maximized: chatMax
+        }, true);
         chatMax = false;
         if (loading) {
             clearTimeout(loadID);
@@ -3997,9 +3971,7 @@ function createNewWindow(name, options) {
         if (!options.noInput)
             addInputContext(windows[name].window, global.editorOnly ? (edSet && edSet.spellchecking) : (set && set.spellchecking));
         if (options.show) {
-            if (s.maximized)
-                windows[name].window.maximize();
-            windows[name].window.show();
+            restoreWindowState(windows[name].window, s, true);
         }
         else
             windows[name].max = s.maximized;
@@ -4035,9 +4007,9 @@ function showWindow(name, options, skipSave) {
         set.save(global.settingsFile);
     if (!options) options = { show: true };
     if (windows[name] && windows[name].window) {
-        if (windows[name].max)
-            windows[name].window.maximize();
-        windows[name].window.show();
+        restoreWindowState(windows[name].window, {
+            maximized: windows[name].max
+        }, true);
         windows[name].max = false;
     }
     else
@@ -4345,13 +4317,8 @@ function createCodeEditor(show, loading, loaded) {
     winCode.once('ready-to-show', () => {
         loadWindowScripts(winCode, 'code.editor');
         addInputContext(winCode, edSet && edSet.spellchecking);
-        if (show) {
-            if (s.maximized)
-                winCode.maximize();
-            winCode.show();
-            if (s.isFullScreen)
-                winCode.setFullScreen(s.fullscreen);
-        }
+        if (show)
+            restoreWindowState(winCode, s, true);
         else
             codeMax = s.maximized;
         if (loading) {
@@ -4454,11 +4421,10 @@ function showCodeEditor(loading) {
     if (winCode != null) {
         if (!codeReady)
             return;
-        if (codeMax)
-            winCode.maximize();
-        winCode.show();
-        if (s.isFullScreen)
-            winCode.setFullScreen(s.fullscreen);
+        restoreWindowState(winCode, {
+            maximized: codeMax,
+            fullscreen: s.fullscreen
+        }, true)
         codeMax = false;
         if (loading) {
             clearTimeout(loadID);
