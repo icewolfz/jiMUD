@@ -22,14 +22,11 @@
         }
     </style>
     <script>
-        var doReturn, doClose;
+        var doReturn, doClose, doOk;
 
         window.addEventListener('keydown', (event) => {
-            if (event.which == 27) {
-                if (doClose && !doClose())
-                    return;
-                window.close();
-            }
+            if (event.which == 27)
+                closeWindow();
             else if (event.which == 13) {
                 if (doReturn && !doReturn())
                     return;
@@ -40,6 +37,23 @@
                     defaultButton[0].click();
             }
         });
+
+        window.addEventListener('close', e => {
+            if (doClose && !doClose())
+                e.preventDefault();
+        });
+
+        function closeWindow() {
+            if (doClose && !doClose())
+                return;
+            window.close();
+        }
+
+        function executeOk() {
+            if (doOk && !doOk())
+                return;                
+            closeWindow();
+        }
     </script>
 </head>
 
@@ -47,6 +61,8 @@
     <div class="dialog-body" id="body">
     </div>
     <div class="dialog-footer" id="footer">
+        <button id="btn-cancel" style="float: right" type="button" class="btn btn-default" onclick="closeWindow();">Cancel</button>
+        <button id="btn-ok" style="float: right" type="button" class="btn btn-primary" onclick="executeOk()">Ok</button>
     </div>
 </body>
 

@@ -2926,6 +2926,23 @@
                     }
                 });
         }
+
+        function createDialog(title, width, height, doOk, doReturn, doClose, body, footer) {
+            var dlg = window.open('dialog.html', 'modal', `width=${width || 800},height=${height || 600}`);
+            dlg.document.title = title;
+            dlg.doReturn = doReturn;
+            dlg.doClose = doClose;
+            dlg.doOk = doOk;
+            if(typeof footer === 'string')
+                dlg.document.getElementsByClassName('dialog-footer')[0].innerHTML = footer;
+            else if(footer && footer.nodeType)
+                dlg.document.getElementsByClassName('dialog-footer')[0].appendChild(footer);
+            if(typeof body === 'string')
+                dlg.document.getElementsByClassName('dialog-footer')[0].innerHTML = footer;
+            else if(body && body.nodeType)
+                dlg.document.getElementsByClassName('dialog-body')[0].appendChild(body);            
+            return dlg;
+        }
     </script>
 </head>
 
