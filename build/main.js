@@ -978,9 +978,7 @@ function createTray() {
             label: 'Ch&aracters...',
             id: 'characters',
             click: () => {
-                let s = getWindowState('main');
-                if (!s) getWindowState('main', win);
-                restoreWindowState(win, s, true, true)
+                restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
                 executeScript('showCharacters()', win, true);
             }
         },
@@ -1043,8 +1041,6 @@ function createTray() {
     tray.setContextMenu(contextMenu);
 
     tray.on('click', () => {
-        let s = getWindowState('main');
-        if (!s) getWindowState('main', win);
         switch (set.trayClick) {
             case TrayClick.show:
                 showSelectedWindow();
@@ -1056,9 +1052,8 @@ function createTray() {
                     else
                         win.minimize();
                 }
-                else {
-                    restoreWindowState(win, s, true, true);
-                }
+                else
+                    restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
                 break;
             case TrayClick.hide:
                 if (set.hideOnMinimize)
@@ -1073,8 +1068,6 @@ function createTray() {
     });
 
     tray.on('double-click', () => {
-        let s = getWindowState('main');
-        if (!s) getWindowState('main', win);
         switch (set.trayClick) {
             case TrayClick.show:
                 showSelectedWindow();
@@ -1086,9 +1079,8 @@ function createTray() {
                     else
                         win.minimize();
                 }
-                else {
-                    restoreWindowState(win, s, true, true);
-                }
+                else
+                    restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
                 break;
             case TrayClick.hide:
                 if (set.hideOnMinimize)
@@ -1179,8 +1171,7 @@ function createWindow() {
         }
     });
     require("@electron/remote/main").enable(win.webContents);
-    if (s.fullscreen)
-        win.setFullScreen(s.fullscreen);
+
     // and load the index.html of the app.
     win.loadURL(url.format({
         pathname: path.join(__dirname, 'index.html'),
@@ -1281,6 +1272,11 @@ function createWindow() {
     });
 
     win.webContents.setWindowOpenHandler((details) => {
+        var u = new url.URL(details.url);
+        if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
+            shell.openExternal(details.url);
+            return { action: 'deny' };
+        }        
         return {
             action: 'allow',
             overrideBrowserWindowOptions: buildOptions(details, win, set)
@@ -2464,16 +2460,10 @@ ipcMain.on('show-window', (event, window, args) => {
 
 function showSelectedWindow(window, args) {
     if (!window || window === 'main') {
-        if (global.editorOnly) {
-            let s = getWindowState('code-editor');
-            if (!s) getWindowState('code-editor', winCode);
-            restoreWindowState(winCode, s, true, true);
-        }
-        else {
-            let s = getWindowState('main');
-            if (!s) getWindowState('main', win);
-            restoreWindowState(win, s, true, true);
-        }
+        if (global.editorOnly)
+            restoreWindowState(winCode, getWindowState('code-editor') || getWindowState('code-editor', winCode), true, true);
+        else
+            restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
     }
     else if (window === 'about')
         showAbout();
@@ -3108,11 +3098,12 @@ function trackWindowState(id, window) {
 }
 
 function restoreWindowState(window, state, show, focus) {
-    if (state.maximized)
+    if (!window) return;
+    if (state && state.maximized)
         window.maximize();
     if (show)
         window.show();
-    if (state.fullscreen)
+    if (state && state.fullscreen)
         window.setFullScreen(state.fullscreen);
     if (focus)
         window.focus();
@@ -3278,8 +3269,7 @@ function createMapper(show, loading, loaded) {
         }
     });
     require("@electron/remote/main").enable(winMap.webContents);
-    if (s.fullscreen)
-        winMap.setFullScreen(s.fullscreen);
+
 
     winMap.removeMenu();
     winMap.loadURL(url.format({
@@ -3348,8 +3338,11 @@ function createMapper(show, loading, loaded) {
         if (show) {
             restoreWindowState(winMap, s, true);
         }
-        else
+        else {
+            if (s.fullscreen)
+                winMap.setFullScreen(s.fullscreen);
             mapperMax = s.maximized;
+        }
         if (loading) {
             clearTimeout(loadID);
             loadID = setTimeout(() => { win.focus(); }, 500);
@@ -3449,9 +3442,6 @@ function showProfiles() {
                 logError('Profile manager unresponsive, waiting.\n', true);
         });
     });
-
-    if (s.fullscreen)
-        winProfiles.setFullScreen(s.fullscreen);
 
     if (global.debug)
         winProfiles.webContents.openDevTools();
@@ -3557,9 +3547,6 @@ function createEditor(show, loading) {
         });
     });
 
-    if (s.fullscreen)
-        winEditor.setFullScreen(s.fullscreen);
-
     winEditor.removeMenu();
     winEditor.loadURL(url.format({
         pathname: path.join(__dirname, 'editor.html'),
@@ -3605,8 +3592,11 @@ function createEditor(show, loading) {
         if (show) {
             restoreWindowState(winEditor, s, true);
         }
-        else
+        else {
+            if (s.fullscreen)
+                winEditor.setFullScreen(s.fullscreen);
             editorMax = s.maximized;
+        }
         if (loading) {
             clearTimeout(loadID);
             if (editorOnly && winCode)
@@ -3709,9 +3699,6 @@ function createChat(show, loading) {
         });
     });
 
-    if (s.fullscreen)
-        winChat.setFullScreen(s.fullscreen);
-
     winChat.removeMenu();
     winChat.loadURL(url.format({
         pathname: path.join(__dirname, 'chat.html'),
@@ -3757,8 +3744,11 @@ function createChat(show, loading) {
         if (show) {
             restoreWindowState(winChat, s, true);
         }
-        else
+        else {
+            if (s.fullscreen)
+                winChat.setFullScreen(s.fullscreen);
             chatMax = s.maximized;
+        }
         if (chatReady !== 2)
             chatReady = 1;
         if (loading) {
@@ -3863,9 +3853,6 @@ function createNewWindow(name, options) {
                 logError(`${name} unresponsive, waiting.\n`, true);
         });
     });
-
-    if (s.fullscreen)
-        windows[name].window.setFullScreen(s.fullscreen);
 
     windows[name].window.setMenu(options.menu || null);
 
@@ -3973,8 +3960,11 @@ function createNewWindow(name, options) {
         if (options.show) {
             restoreWindowState(windows[name].window, s, true);
         }
-        else
+        else {
+            if (s.fullscreen)
+                windows[name].window.setFullScreen(s.fullscreen);
             windows[name].max = s.maximized;
+        }
         windows[name].ready = true;
     });
 
@@ -4269,8 +4259,6 @@ function createCodeEditor(show, loading, loaded) {
         });
     });
 
-    if (s.fullscreen)
-        winCode.setFullScreen(s.fullscreen);
     winCode.removeMenu();
     winCode.loadURL(url.format({
         pathname: path.join(__dirname, 'code.editor.html'),
@@ -4319,8 +4307,11 @@ function createCodeEditor(show, loading, loaded) {
         addInputContext(winCode, edSet && edSet.spellchecking);
         if (show)
             restoreWindowState(winCode, s, true);
-        else
+        else {
+            if (s.fullscreen)
+                winCode.setFullScreen(s.fullscreen);
             codeMax = s.maximized;
+        }
         if (loading) {
             clearTimeout(loadID);
             if (!global.editorOnly)
