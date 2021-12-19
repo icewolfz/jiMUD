@@ -21,11 +21,33 @@
             padding: 14px;
         }
     </style>
+    <script>
+        var doReturn, doClose;
+
+        window.addEventListener('keydown', (event) => {
+            if (event.which == 27) {
+                if (doClose && !doClose())
+                    return;
+                window.close();
+            }
+            else if (event.which == 13) {
+                if (doReturn && !doReturn())
+                    return;
+                const footer = document.getElementsByClassName('dialog-footer');
+                if (!footer.length) return;
+                const defaultButton = footer[0].getElementsByClassName('btn-primary');
+                if (defaultButton.length)
+                    defaultButton[0].click();
+            }
+        });
+    </script>
 </head>
+
 <body>
     <div class="dialog-body" id="body">
     </div>
     <div class="dialog-footer" id="footer">
-    </div>    
+    </div>
 </body>
+
 </html>
