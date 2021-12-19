@@ -1402,7 +1402,8 @@ function createWindow() {
         if (s.maximized)
             win.maximize();
         win.show();
-
+        if (s.isFullScreen)
+            win.setFullScreen(s.fullscreen);
         if (set.showMapper)
             showMapper(true);
         else if (set.mapper.persistent || set.mapper.enabled)
@@ -3043,6 +3044,16 @@ function getWindowState(id, window) {
     var bounds = states[id];
     if (!window || window.isDestroyed())
         return states[id];
+    if (window.win.isMinimized())
+        return {
+            x: bounds.x,
+            y: bounds.y,
+            width: bounds.width,
+            height: bounds.height,
+            fullscreen: bounds.fullscreen || window.isFullScreen(),
+            maximized: bounds.maximized || window.isMaximized(),
+            devTools: window.webContents.isDevToolsOpened()
+        };
     return {
         x: bounds.x,
         y: bounds.y,
@@ -4338,6 +4349,8 @@ function createCodeEditor(show, loading, loaded) {
             if (s.maximized)
                 winCode.maximize();
             winCode.show();
+            if (s.isFullScreen)
+                winCode.setFullScreen(s.fullscreen);
         }
         else
             codeMax = s.maximized;
@@ -4444,6 +4457,8 @@ function showCodeEditor(loading) {
         if (codeMax)
             winCode.maximize();
         winCode.show();
+        if (s.isFullScreen)
+            winCode.setFullScreen(s.fullscreen);
         codeMax = false;
         if (loading) {
             clearTimeout(loadID);

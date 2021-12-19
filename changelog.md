@@ -31,6 +31,8 @@
     - Fixed Bold white background color to use RGB555 color code correctly
   - Profile Manager: trigger tester still did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
   - Fixed alias named arguments not being directly accessible in scripting type
+  - Fixed full screen not always being restored on load
+  - Fixed maximized state not being correctly restored on load if window was closed minimized
 - **Changed:**
   - Revert 0.17.1 hack for child windows as electron seems to have fixed the bug
   - Update tinymce 4.8.3 to 5.10.1
