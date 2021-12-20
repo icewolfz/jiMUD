@@ -15,9 +15,12 @@
   - Add [%trimleft(string)](docs/functions.md#string)` Returns the string without any spaces at the beginning
   - Add [%trimright(string)](docs/functions.md#string) Returns the string without any spaces at the end
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
-  - [Triggers](docs/profiles.md): Add support for regex name capture that work similar to alias named params
+  - [Triggers](docs/profiles.md):
+    - Add support for regex name capture that work similar to alias named params
+    - Add `Pattern` and `Command Input Pattern` types to support zMUD/TinTin type pattern matching
   - Help: Add more known issue for advanced editor
   - Add save image as, copy image, copy image link to MXP image context menu
+  - Input parser: Add $var user variable style support
 - **Fixed:**
   - Updated README to update build requirements
   - Display:

@@ -27,7 +27,19 @@ export enum TriggerType {
     Regular = 0,
     CommandInputRegular = 1,
     Event = 2,
-    Alarm = 3
+    Alarm = 3,
+    Pattern = 8,
+    CommandInputPattern = 16
+}
+
+export enum TriggerTypes {
+    None = 0,
+    Regular = 4,
+    CommandInputRegular = 1,
+    Event = 2,
+    Alarm = 32,
+    Pattern = 8,
+    CommandInputPattern = 16
 }
 
 export enum VariableType {
@@ -458,7 +470,7 @@ export class Variable extends Item {
         switch (this.type) {
             case VariableType.Record:
                 if (typeof this.value === 'string')
-                        return this.value;
+                    return this.value;
                 return JSON.stringify(this.value);
             case VariableType.StringList:
                 if (typeof this.value === 'string')
@@ -1323,4 +1335,302 @@ export class ProfileCollection {
         }
         return true;
     }
+}
+
+/*
+*            match any number (even none) of characters or white space
+   .*
+?            match a single character
+   .
+%d            match any number of digits (0-9)
+   \d*
+%n            match a number that starts with a + or - sign
+   [+|-]?\d*
+%w            match any number of alpha characters (a-z) (a word)
+   \w
+%a            match any number of alphanumeric characters (a-z,0-9)
+   [a-zA-Z0-9]*
+%s            match any amount of white space (spaces, tabs)
+   \s*
+%x            match any amount of non-white space
+   \S*
+%y            match any amount of non-white space (same as %x but matches start and end of line)
+   \S*
+%p            match any punctuation
+   \p{P}
+%q            match any punctuation (same as %p but matches start and end of line)
+   \p{P}
+%t            match a direction command
+   ignore for now as idont know what it does             
+%e            match ESC character for ansi patterns
+   \e
+[range]      match any amount of characters listed in range
+   as is in .net
+^            force pattern to match starting at the beginning of the line
+   as is in .net
+$            force pattern to match ending at the end of the line
+   as is in .net
+(pattern)      save the matched pattern in a parameter %1 though %99
+   as is in .net
+~            quote the next character to prevent it to be interpreted as a wild card, required to match special characters
+   replace with \                 
+~~            match a quote character verbatim
+   replace with \\ (not needed as ~ by itself is repalced with a \
+{val1|val2|val3|...} match any of the specified strings can not use other wildcard inside this
+   remove {}
+@variable match any of the specified strings or keys works with string lists and record variables
+   already converted to values if string lines vonvered to the prevous format and handled
+{^string}      do not match the specified string
+   [^string] replace {} with []
+&nn      matches exactly nn characters (fixed width pattern)
+   {nn} remove & and wrap in {}
+&VarName      assigns the matched string to the given variable (see below for more info)
+   (?<VarName>pattern ) research more, prob is varname can contain patterns so have to parse out name and patterns
+   probably best to preparse and get name / pattern then parse pattern seperatly in a recusive call
+added in CMUD 2.0+
+%/regex/% matches the given Regular Expression (Added in v2.0)
+%%function() runs any CMUD function (Added in v2.06) 
+http://forums.zuggsoft.com/modules/mx_kb/kb.php?mode=doc&page=3&refpage=3&a=cmud_Pattern_Match
+           */
+export function convertPattern(pattern: string, client?) {
+    if (!pattern || !pattern.length) return '';
+    enum convertPatternState {
+        None = 0,
+        Ampersand = 1,
+        Percent = 2,
+        StringMatch = 3,
+        SubPattern = 4,
+        AmpersandPercent = 5,
+        AmpersandPattern = 6,
+        AmpersandRange = 7,
+        PercentRegex = 8,
+        Escape = 9,
+        Variable = 10
+    }
+    let state: convertPatternState = convertPatternState.None;
+    let stringBuilder = [];
+    let idx = 0;
+    let tl = pattern.length;
+    let c;
+    let i;
+    let arg;
+    let pat;
+    let nest = 0;
+    for (idx = 0; idx < tl; idx++) {
+        c = pattern.charAt(idx);
+        i = pattern.charCodeAt(idx);
+        switch (state) {
+            case convertPatternState.Ampersand:
+                if (arg.length === 0 && (c === '*' || c === '?' || c === '^' || c === '$'))
+                    pat = c;
+                else if (arg.length === 0 && c === '%')
+                    state = convertPatternState.AmpersandPercent;
+                else if (pat.length === 0 && c === '(') {
+                    pat = c;
+                    state = convertPatternState.AmpersandPattern;
+                }
+                else if (pat.length === 0 && c === '[') {
+                    pat = c;
+                    state = convertPatternState.AmpersandRange;
+                }
+                else if (c === '{')
+                    continue;
+                //end block or no longer valid varname character
+                else if (c === '}' || !((i >= 48 && i <= 57) || (i >= 65 && i <= 90) || (i >= 97 && i <= 122) || i === 95 || i === 36)) {
+                    if (!pat.length && /^\d+$/.exec(arg))
+                        stringBuilder.push('{', arg, '}');
+                    else if (!pat.length)
+                        stringBuilder.push('(?<', arg, '>.*)');
+                    else
+                        stringBuilder.push('(?<', arg, '>', convertPattern(pat), ')');
+                    if (c !== '}')
+                        idx--;
+                    state = convertPatternState.None;
+                }
+                else
+                    arg += c;
+                break;
+            case convertPatternState.AmpersandPercent:
+                pat += '%' + c;
+                state = convertPatternState.Ampersand;
+                break;
+            case convertPatternState.AmpersandPattern:
+                pat += c;
+                if (c === ')')
+                    state = convertPatternState.Ampersand;
+                break;
+            case convertPatternState.AmpersandRange:
+                pat += c;
+                if (c === ']')
+                    state = convertPatternState.Ampersand;
+                break;
+            case convertPatternState.Percent:
+                switch (c) {
+                    case 'd':
+                        stringBuilder.push("\\d+");
+                        state = convertPatternState.None;
+                        break;
+                    case 'n':
+                        stringBuilder.push("[+-]?\\d+");
+                        state = convertPatternState.None;
+                        break;
+                    case 'w':
+                        stringBuilder.push("\\w");
+                        state = convertPatternState.None;
+                        break;
+                    case 'a':
+                        stringBuilder.push("[a-zA-Z0-9]*");
+                        state = convertPatternState.None;
+                        break;
+                    case 's':
+                        stringBuilder.push("\\s*");
+                        state = convertPatternState.None;
+                        break;
+                    case 'x':
+                        stringBuilder.push("\\S*");
+                        state = convertPatternState.None;
+                        break;
+                    case 'y':
+                        stringBuilder.push("\\S*");
+                        state = convertPatternState.None;
+                        break;
+                    case 'p':
+                        stringBuilder.push("[\\.\\?\\!\\:\\;\\-\\—\\(\\)\\[\\]\\'\\\"\\\\/\\,]{1}");
+                        state = convertPatternState.None;
+                        break;
+                    case 'q':
+                        stringBuilder.push("[\\.\\?\\!\\:\\;\\-\\—\\(\\)\\[\\]\\'\\\"\\\\/\\,]{1}");
+                        state = convertPatternState.None;
+                        break;
+                    case 't': //TODO not sure what a direction command is
+                        state = convertPatternState.None;
+                        break;
+                    case 'e':
+                        stringBuilder.push("\x1b");
+                        state = convertPatternState.None;
+                        break;
+                    case '/': // %/pattern/%
+                        state = convertPatternState.PercentRegex;
+                        arg = '';
+                        break;
+                }
+                break;
+            case convertPatternState.PercentRegex:
+                if (c === '%') {
+                    if (!arg.endsWith('/'))
+                        throw new Error('Invalid %/regex/% pattern');
+                    stringBuilder.push(arg.substr(0, arg.length - 1));
+                }
+                else
+                    arg += c;
+                break;
+            case convertPatternState.StringMatch:
+                if (c === '^' && arg.length === 0)
+                    pat = true;
+                else if (c === '}') {
+                    if (pat)
+                        stringBuilder.push('[^', arg, ']');
+                    else
+                        stringBuilder.push(arg);
+                    state = convertPatternState.None;
+                }
+                else
+                    arg += c;
+                break;
+            case convertPatternState.SubPattern:
+                if (c === ':') {
+                    stringBuilder.push('(?<', arg, '>');
+                    state = convertPatternState.None;
+                }
+                else if (c === ')') {
+                    stringBuilder.push('(', convertPattern(arg), ')');
+                    state = convertPatternState.None;
+                    nest--;
+                }
+                else
+                    arg += c;
+                break;
+            case convertPatternState.Escape:
+                stringBuilder.push('\\', c);
+                state = convertPatternState.None;
+                break;
+            case convertPatternState.Variable:
+                if (c === '{' && arg.length === 0)
+                    continue;
+                else if (c === '}' || !((i >= 48 && i <= 57) || (i >= 65 && i <= 90) || (i >= 97 && i <= 122) || i === 95 || i === 36)) {
+                    if (client)
+                        stringBuilder.push(client.variables[arg] || '');
+                    if (c !== '}')
+                        idx--;
+                    state = convertPatternState.None;
+                }
+                else
+                    arg += c;
+                break;
+            default:
+                if (c === '*')
+                    stringBuilder.push('.*');
+                else if (c === '?')
+                    stringBuilder.push('.');
+                else if (c === '~')
+                    state = convertPatternState.Escape;
+                else if (c === '@') {
+                    state = convertPatternState.Variable;
+                    arg = '';
+                }
+                else if (c === '&') {
+                    arg = '';
+                    pat = '';
+                    state = convertPatternState.Ampersand;
+                }
+                else if (c === '%')
+                    state = convertPatternState.Percent;
+                else if (c === '{') {
+                    state = convertPatternState.StringMatch;
+                    arg = '';
+                }
+                else if (c === '(') {
+                    state = convertPatternState.SubPattern;
+                    arg = '';
+                    nest++;
+                }
+                else {
+                    if (c === ')')
+                        nest--;
+                    stringBuilder.push(c);
+                }
+                break;
+        }
+    }
+    switch (state) {
+        case convertPatternState.Ampersand:
+            if (!pat.length && /^\d+$/.exec(arg))
+                stringBuilder.push('{', arg, '}');
+            else if (!pat.length)
+                stringBuilder.push('(?<', arg, '>.*)');
+            else
+                stringBuilder.push('(?<', arg, '>', convertPattern(pat), ')');
+            break;
+        case convertPatternState.AmpersandPercent:
+        case convertPatternState.AmpersandPattern:
+        case convertPatternState.AmpersandRange:
+            throw new Error('Invalid &VarName pattern');
+        case convertPatternState.Percent:
+            throw new Error('Invalid % pattern');
+        case convertPatternState.PercentRegex:
+            throw new Error('Invalid %/regex/% pattern');
+        case convertPatternState.StringMatch:
+            throw new Error('Invalid string match pattern');
+        case convertPatternState.SubPattern:
+            throw new Error('Invalid (sub:pattern) pattern');
+        case convertPatternState.Escape:
+            throw new Error('Invalid escape pattern');
+        case convertPatternState.Variable:
+            if (client)
+                stringBuilder.push(client.variables[arg] || '');
+            break;
+    }
+    if (nest)
+        throw new Error('Invalid save matched pattern');
+    return stringBuilder.join('');
 }

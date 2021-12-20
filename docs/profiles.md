@@ -108,6 +108,33 @@
 
     Hours, minutes, and seconds can use a special wildcard format of *value which will match when the time MOD is zero, eg: *10 matches 10, 20, ...
     ```
+  - `Pattern` use zMUD style pattern matching when matching against text
+  - `Command Input Pattern` use zMUD style pattern matching but only triggered against text sent from the command input.
+    - `*` match any number (even none) of characters or white space
+    - `?` match a single character
+    - `%d` match any number of digits (0-9)
+    - `%n` match a number that starts with a + or - sign
+    - `%w` match any number of alpha characters (a-z) (a word)
+    - `%a` match any number of alphanumeric characters (a-z,0-9)
+    - `%s` match any amount of white space (spaces, tabs)
+    - `%x` match any amount of non-white space
+    - `%y` match any amount of non-white space (same as %x but matches start and end of line)
+    - `%p` match any punctuation
+    - `%q` match any punctuation (same as %p but matches start and end of line)
+    - `%t` match a direction command
+    - `%e` match ESC character for ansi patterns
+    - `[range]` match any amount of characters listed in range
+    - `^` force pattern to match starting at the beginning of the line
+    - `$` force pattern to match ending at the end of the line
+    - `(pattern)` save the matched pattern in a parameter %1 though %99
+    - `~` quote the next character to prevent it to be interpreted as a wild card, required to match special characters
+    - `~~` match a quote character verbatim
+    - `{val1|val2|val3|...}` match any of the specified strings a preference controls the use of wildcards here
+    - `@variable` match any of the specified strings or keys words with variable value
+    - `{^string}` do not match the specified string
+    - `&nn` matches exactly nn characters (fixed width pattern)
+    - `&VarName` assigns the matched string to the given variable
+    - `%/regex/%` matches the given Regular Expression
 - `Name` a unique name to identify the trigger, if more then one trigger exist with the name, the one with the highest priority is used first
 - `Priority` the sort order of triggers
 - `Verbatim` the text is compared exactly how it is, including case

@@ -7,7 +7,7 @@ import { MacroModifiers } from './profile';
 import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted } from './library';
 import { Client } from './client';
 import { Tests } from './test';
-import { Alias, Trigger, Button, Profile, TriggerType } from './profile';
+import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, convertPattern } from './profile';
 import { NewLineType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
@@ -298,7 +298,7 @@ export class Input extends EventEmitter {
         });
 
         this.client.on('add-line', (data) => {
-            this.ExecuteTriggers(TriggerType.Regular, data.line, data.raw, data.fragment, false);
+            this.ExecuteTriggers(TriggerTypes.Regular | TriggerTypes.Pattern, data.line, data.raw, data.fragment, false);
             if (this._gag > 0 && !data.fragment) {
                 data.gagged = true;
                 this._gag--;
@@ -509,6 +509,8 @@ export class Input extends EventEmitter {
     }
 
     private adjustLastLine(n) {
+        if (!this.client.display.lines || this.client.display.lines.length === 0)
+            return 0;
         if (n === this.client.display.lines.length) {
             n--;
             if (this.client.display.lines[n].length === 0)
@@ -3847,7 +3849,7 @@ export class Input extends EventEmitter {
                         state = ParseState.paramsDBlock;
                     else if (eEscape && c === escChar)
                         state = ParseState.paramsDEscape;
-                    else if (!this.stack.named || c.match(/[^a-zA-Z_$]/g)) {
+                    else if (c.match(/[^a-zA-Z_$]/g)) {
                         state = ParseState.none;
                         idx--;
                         if (eAlias && findAlias)
@@ -3862,11 +3864,17 @@ export class Input extends EventEmitter {
                     break;
                 case ParseState.paramsDNamed:
                     if (c.match(/[^a-zA-Z0-9_]/g)) {
-                        if (this.stack.named.hasOwnProperty(arg)) {
+                        if (this.stack.named && this.stack.named.hasOwnProperty(arg)) {
                             if (eAlias && findAlias)
                                 alias += this.stack.named[arg];
                             else
                                 str += this.stack.named[arg];
+                        }
+                        else if (this.client.variables.hasOwnProperty(arg)) {
+                            if (eAlias && findAlias)
+                                alias += this.client.variables[arg];
+                            else
+                                str += this.client.variables[arg];
                         }
                         else if (eAlias && findAlias)
                             alias += '$' + arg;
@@ -4110,7 +4118,7 @@ export class Input extends EventEmitter {
                             }
                             else //else not an alias so normal space
                             {
-                                str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, alias, false, true);
+                                str = this.ExecuteTriggers(TriggerTypes.CommandInputRegular | TriggerTypes.CommandInputPattern, alias, alias, false, true);
                                 if (typeof str === 'number') {
                                     if (str >= 0)
                                         this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
@@ -4124,7 +4132,7 @@ export class Input extends EventEmitter {
                             //no longer look for an alias
                         }
                         else {
-                            str = this.ExecuteTriggers(TriggerType.CommandInputRegular, str, str, false, true);
+                            str = this.ExecuteTriggers(TriggerTypes.CommandInputRegular | TriggerTypes.CommandInputPattern, str, str, false, true);
                             if (typeof str === 'number') {
                                 if (str >= 0)
                                     this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
@@ -4315,7 +4323,7 @@ export class Input extends EventEmitter {
             }
             else //else not an alias so normal space
             {
-                str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, alias, false, true);
+                str = this.ExecuteTriggers(TriggerTypes.CommandInputRegular | TriggerTypes.CommandInputPattern, alias, alias, false, true);
                 if (typeof str === 'number') {
                     if (str >= 0)
                         this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
@@ -4333,7 +4341,7 @@ export class Input extends EventEmitter {
         else if (alias.length > 0) {
             if (str.length > 0)
                 alias += str;
-            str = this.ExecuteTriggers(TriggerType.CommandInputRegular, alias, alias, false, true);
+            str = this.ExecuteTriggers(TriggerTypes.CommandInputRegular | TriggerTypes.CommandInputPattern, alias, alias, false, true);
             if (typeof str === 'number') {
                 if (str >= 0)
                     this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
@@ -4365,7 +4373,7 @@ export class Input extends EventEmitter {
             }
         }
         else if (str.length > 0) {
-            str = this.ExecuteTriggers(TriggerType.CommandInputRegular, str, str, false, true);
+            str = this.ExecuteTriggers(TriggerTypes.CommandInputRegular | TriggerTypes.CommandInputPattern, str, str, false, true);
             if (typeof str === 'number') {
                 if (str >= 0)
                     this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
@@ -4940,7 +4948,7 @@ export class Input extends EventEmitter {
         }
         if (ret == null || ret === undefined)
             return null;
-        ret = this.ExecuteTriggers(TriggerType.CommandInputRegular, ret, ret, false, true);
+        ret = this.ExecuteTriggers(TriggerTypes.CommandInputRegular | TriggerTypes.CommandInputPattern, ret, ret, false, true);
         if (ret == null || ret === undefined)
             return null;
         //Convert to string
@@ -5121,7 +5129,32 @@ export class Input extends EventEmitter {
         this.scrollLock = !this.scrollLock;
     }
 
-    public ExecuteTriggers(type: TriggerType, line?, raw?, frag?: boolean, ret?: boolean) {
+    private hasTriggerType(types: TriggerTypes, type: TriggerType): boolean {
+        if (type === TriggerType.Alarm && (types & TriggerTypes.Alarm) == TriggerTypes.Alarm)
+            return true;
+        if (type === TriggerType.CommandInputPattern && (types & TriggerTypes.CommandInputPattern) == TriggerTypes.CommandInputPattern)
+            return true;
+        if (type === TriggerType.CommandInputRegular && (types & TriggerTypes.CommandInputRegular) == TriggerTypes.CommandInputRegular)
+            return true;
+        if (type === TriggerType.Event && (types & TriggerTypes.Event) == TriggerTypes.Event)
+            return true;
+        if (type === TriggerType.Pattern && (types & TriggerTypes.Pattern) == TriggerTypes.Pattern)
+            return true;
+        if (type === TriggerType.Regular && (types & TriggerTypes.Regular) == TriggerTypes.Regular)
+            return true;
+        return false;
+
+    }
+
+    private getTriggerType(type: TriggerType) {
+        if (type === TriggerType.Regular)
+            return TriggerTypes.Regular;
+        if (type === TriggerType.Alarm)
+            return TriggerTypes.Alarm;
+        return type;
+    }
+
+    public ExecuteTriggers(type: TriggerTypes, line?, raw?, frag?: boolean, ret?: boolean) {
         if (!this.enableTriggers || line == null) return line;
         if (ret == null) ret = false;
         if (frag == null) frag = false;
@@ -5129,6 +5162,7 @@ export class Input extends EventEmitter {
         raw = raw || line;
         this.buildTriggerCache();
         let t = 0;
+        let pattern;
         //scope to get performance
         const triggers = this._TriggerCache;
         const tl = triggers.length;
@@ -5136,7 +5170,7 @@ export class Input extends EventEmitter {
             const trigger = triggers[t];
             //extra check in case error disabled it and do not want to keep triggering the error
             if (!trigger.enabled) continue;
-            if (trigger.type !== undefined && trigger.type !== type) continue;
+            if (trigger.type !== undefined && (type & this.getTriggerType(trigger.type)) !== this.getTriggerType(trigger.type)) continue;
             if (frag && !trigger.triggerPrompt) continue;
             if (!frag && !trigger.triggerNewline && (trigger.triggerNewline !== undefined))
                 continue;
@@ -5149,12 +5183,15 @@ export class Input extends EventEmitter {
                     this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t, [(trigger.raw ? raw : line)]);
                 }
                 else {
-
                     let re;
-                    if (trigger.caseSensitive)
-                        re = this._TriggerRegExCache['g' + trigger.pattern] || (this._TriggerRegExCache['g' + trigger.pattern] = new RegExp(trigger.pattern, 'gd'));
+                    if (trigger.type === TriggerType.Pattern || trigger.type === TriggerType.CommandInputPattern)
+                        pattern = convertPattern(trigger.pattern, this.client);
                     else
-                        re = this._TriggerRegExCache['gi' + trigger.pattern] || (this._TriggerRegExCache['gi' + trigger.pattern] = new RegExp(trigger.pattern, 'gid'));
+                        pattern = trigger.pattern;
+                    if (trigger.caseSensitive)
+                        re = this._TriggerRegExCache['g' + pattern] || (this._TriggerRegExCache['g' + pattern] = new RegExp(pattern, 'gd'));
+                    else
+                        re = this._TriggerRegExCache['gi' + pattern] || (this._TriggerRegExCache['gi' + pattern] = new RegExp(pattern, 'gid'));
                     //reset from last use always
                     re.lastIndex = 0;
                     const res = re.exec(trigger.raw ? raw : line);
@@ -5166,9 +5203,11 @@ export class Input extends EventEmitter {
                         args = [(trigger.raw ? raw : line), ...res];
                         args.indices = [[0, args[0].length], ...res.indices];
                     }
+                    if (res.groups)
+                        Object.keys(res.groups).map(v => this.client.variables[v] = res.groups[v]);
                     if (ret)
-                        return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re], res.groups ? Object.assign([], res.groups) : 0);
-                    this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups ? Object.assign([], res.groups) : 0);
+                        return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re]);
+                    this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re]);
                 }
             }
             catch (e) {
@@ -5442,7 +5481,7 @@ export class Input extends EventEmitter {
             trigger.value = commands;
         if (options) {
             if (options.cmd)
-                trigger.type = TriggerType.CommandInputRegular;
+                trigger.type = TriggerType.CommandInputRegular | TriggerType.CommandInputPattern;
             if (options.prompt)
                 trigger.triggerPrompt = true;
             if (options.nocr)
@@ -5491,271 +5530,4 @@ export class Input extends EventEmitter {
         }
     }
 
-    /*
-*            match any number (even none) of characters or white space
-    .*
-?            match a single character
-    .
-%d            match any number of digits (0-9)
-    \d*
-%n            match a number that starts with a + or - sign
-    [+|-]?\d*
-%w            match any number of alpha characters (a-z) (a word)
-    \w
-%a            match any number of alphanumeric characters (a-z,0-9)
-    [a-zA-Z0-9]*
-%s            match any amount of white space (spaces, tabs)
-    \s*
-%x            match any amount of non-white space
-    \S*
-%y            match any amount of non-white space (same as %x but matches start and end of line)
-    \S*
-%p            match any punctuation
-    \p{P}
-%q            match any punctuation (same as %p but matches start and end of line)
-    \p{P}
-%t            match a direction command
-    ignore for now as idont know what it does             
-%e            match ESC character for ansi patterns
-    \e
-[range]      match any amount of characters listed in range
-    as is in .net
-^            force pattern to match starting at the beginning of the line
-    as is in .net
-$            force pattern to match ending at the end of the line
-    as is in .net
-(pattern)      save the matched pattern in a parameter %1 though %99
-    as is in .net
-~            quote the next character to prevent it to be interpreted as a wild card, required to match special characters
-    replace with \                 
-~~            match a quote character verbatim
-    replace with \\ (not needed as ~ by itself is repalced with a \
-{val1|val2|val3|...} match any of the specified strings can not use other wildcard inside this
-    remove {}
-@variable match any of the specified strings or keys works with string lists and record variables
-    already converted to values if string lines vonvered to the prevous format and handled
-{^string}      do not match the specified string
-    [^string] replace {} with []
-&nn      matches exactly nn characters (fixed width pattern)
-    {nn} remove & and wrap in {}
-&VarName      assigns the matched string to the given variable (see below for more info)
-    (?<VarName>pattern ) research more, prob is varname can contain patterns so have to parse out name and patterns
-    probably best to preparse and get name / pattern then parse pattern seperatly in a recusive call
-added in CMUD 2.0+
-%/regex/% matches the given Regular Expression (Added in v2.0)
-%%function() runs any CMUD function (Added in v2.06) 
-http://forums.zuggsoft.com/modules/mx_kb/kb.php?mode=doc&page=3&refpage=3&a=cmud_Pattern_Match
-            */
-    public static convertPattern(pattern: string) {
-        if (!pattern || !pattern.length) return '';
-        enum convertPatternState {
-            None = 0,
-            Ampersand = 1,
-            Percent = 2,
-            StringMatch = 3,
-            SubPattern = 4,
-            AmpersandPercent = 5,
-            AmpersandPattern = 6,
-            AmpersandRange = 7,
-            PercentRegex = 8,
-            Escape = 9
-        }
-        let state: convertPatternState = convertPatternState.None;
-        let stringBuilder = [];
-        let idx = 0;
-        let tl = pattern.length;
-        let c;
-        let i;
-        let arg;
-        let pat;
-        let nest = 0;
-        for (idx = 0; idx < tl; idx++) {
-            c = pattern.charAt(idx);
-            i = pattern.charCodeAt(idx);
-            switch (state) {
-                case convertPatternState.Ampersand:
-                    if (arg.length === 0 && (c === '*' || c === '?' || c === '^' || c === '$'))
-                        pat = c;
-                    else if (arg.length === 0 && c === '%')
-                        state = convertPatternState.AmpersandPercent;
-                    else if (pat.length === 0 && c === '(') {
-                        pat = c;
-                        state = convertPatternState.AmpersandPattern;
-                    }
-                    else if (pat.length === 0 && c === '[') {
-                        pat = c;
-                        state = convertPatternState.AmpersandRange;
-                    }
-                    else if (c === '{')
-                        continue;
-                    //end block or no longer valid varname character
-                    else if (c === '}' || !((i >= 48 && i <= 57) || (i >= 65 && i <= 90) || (i >= 97 && i <= 122) || i === 95 || i === 36)) {
-                        if (!pat.length && /^\d+$/.exec(arg))
-                            stringBuilder.push('{', arg, '}');
-                        else if (!pat.length)
-                            stringBuilder.push('(?<', arg, '>.*)');
-                        else
-                            stringBuilder.push('(?<', arg, '>', this.convertPattern(pat), ')');
-                    }
-                    else
-                        arg += c;
-                    break;
-                case convertPatternState.AmpersandPercent:
-                    pat += '%' + c;
-                    state = convertPatternState.Ampersand;
-                    break;
-                case convertPatternState.AmpersandPattern:
-                    pat += c;
-                    if (c === ')')
-                        state = convertPatternState.Ampersand;
-                    break;
-                case convertPatternState.AmpersandRange:
-                    pat += c;
-                    if (c === ']')
-                        state = convertPatternState.Ampersand;
-                    break;
-                case convertPatternState.Percent:
-                    switch (c) {
-                        case 'd':
-                            stringBuilder.push("\\d+");
-                            state = convertPatternState.None;
-                            break;
-                        case 'n':
-                            stringBuilder.push("[+-]?\\d+");
-                            state = convertPatternState.None;
-                            break;
-                        case 'w':
-                            stringBuilder.push("\\w");
-                            state = convertPatternState.None;
-                            break;
-                        case 'a':
-                            stringBuilder.push("[a-zA-Z0-9]*");
-                            state = convertPatternState.None;
-                            break;
-                        case 's':
-                            stringBuilder.push("\\s*");
-                            state = convertPatternState.None;
-                            break;
-                        case 'x':
-                            stringBuilder.push("\\S*");
-                            state = convertPatternState.None;
-                            break;
-                        case 'y':
-                            stringBuilder.push("\\S*");
-                            state = convertPatternState.None;
-                            break;
-                        case 'p':
-                            stringBuilder.push("[\\.\\?\\!\\:\\;\\-\\—\\(\\)\\[\\]\\'\\\"\\\\/\\,]{1}");
-                            state = convertPatternState.None;
-                            break;
-                        case 'q':
-                            stringBuilder.push("[\\.\\?\\!\\:\\;\\-\\—\\(\\)\\[\\]\\'\\\"\\\\/\\,]{1}");
-                            state = convertPatternState.None;
-                            break;
-                        case 't': //TODO not sure what a direction command is
-                            state = convertPatternState.None;
-                            break;
-                        case 'e':
-                            stringBuilder.push("\x1b");
-                            state = convertPatternState.None;
-                            break;
-                        case '/': // %/pattern/%
-                            state = convertPatternState.PercentRegex;
-                            arg = '';
-                            break;
-                    }
-                    break;
-                case convertPatternState.PercentRegex:
-                    if (c === '%') {
-                        if (!arg.endsWith('/'))
-                            throw new Error('Invalid %/regex/% pattern');
-                        stringBuilder.push(arg.substr(0, arg.length - 1));
-                    }
-                    else
-                        arg += c;
-                    break;
-                case convertPatternState.StringMatch:
-                    if (c === '^' && arg.length === 0)
-                        pat = true;
-                    else if (c === '}') {
-                        if (pat)
-                            stringBuilder.push('[^', arg, ']');
-                        else
-                            stringBuilder.push(arg);
-                        state = convertPatternState.None;
-                    }
-                    else
-                        arg += c;
-                    break;
-                case convertPatternState.SubPattern:
-                    if (c === ':') {
-                        stringBuilder.push('(?<', arg, '>');
-                        state = convertPatternState.None;
-                    }
-                    else
-                        arg += c;
-                    break;
-                case convertPatternState.Escape:
-                    stringBuilder.push('\\', c);
-                    state = convertPatternState.None;
-                    break;
-                default:
-                    if (c === '*')
-                        stringBuilder.push('.*');
-                    else if (c === '?')
-                        stringBuilder.push('.');
-                    else if (c === '~')
-                        state = convertPatternState.Escape;
-                    else if (c === '&') {
-                        arg = '';
-                        pat = '';
-                        state = convertPatternState.Ampersand;
-                    }
-                    else if (c === '%')
-                        state = convertPatternState.Percent;
-                    else if (c === '{') {
-                        state = convertPatternState.StringMatch;
-                        arg = '';
-                    }
-                    else if (c === '(') {
-                        state = convertPatternState.SubPattern;
-                        arg = '';
-                        nest++;
-                    }
-                    else {
-                        if (c === ')')
-                            nest--;
-                        stringBuilder.push(c);
-                    }
-                    break;
-            }   
-        }
-        switch (state) {
-            case convertPatternState.Ampersand:
-                if (!pat.length && /^\d+$/.exec(arg))
-                    stringBuilder.push('{', arg, '}');
-                else if (!pat.length)
-                    stringBuilder.push('(?<', arg, '>.*)');
-                else
-                    stringBuilder.push('(?<', arg, '>', this.convertPattern(pat), ')');
-                break;
-            case convertPatternState.AmpersandPercent:
-            case convertPatternState.AmpersandPattern:
-            case convertPatternState.AmpersandRange:
-                throw new Error('Invalid &VarName pattern');
-            case convertPatternState.Percent:
-                throw new Error('Invalid % pattern');
-            case convertPatternState.PercentRegex:
-                throw new Error('Invalid %/regex/% pattern');
-            case convertPatternState.StringMatch:
-                throw new Error('Invalid string match pattern');
-            case convertPatternState.SubPattern:
-                throw new Error('Invalid (sub:pattern) pattern');
-            case convertPatternState.Escape:
-                throw new Error('Invalid escape pattern');
-        }
-        if (!nest)
-            throw new Error('Invalid save matched pattern');
-        return stringBuilder.join('');
-    }
 }

@@ -4,7 +4,7 @@ import { ipcRenderer, nativeImage } from 'electron';
 const remote = require('@electron/remote');
 const { Menu, MenuItem } = remote;
 import { FilterArrayByKeyValue, parseTemplate, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode, walkSync } from './library';
-import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroModifiers, ItemStyle } from './profile';
+import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroModifiers, ItemStyle, convertPattern } from './profile';
 export { MacroDisplay } from './profile';
 import { Settings } from './settings';
 import { Menubar } from './menubar';
@@ -440,10 +440,15 @@ export function RunTester() {
         }
         else {
             let re;
+            let pattern;
+            pattern = <string>$('#trigger-pattern').val();
+            if($('#trigger-type').val() === '8' || $('#trigger-type').val() === '16' || $('#trigger-type').val() === 8 || $('#trigger-type').val() === 16)
+                pattern = convertPattern(pattern);               
+
             if ($('#trigger-caseSensitive').prop('checked'))
-                re = new RegExp((<string>$('#trigger-pattern').val()), 'gd');
+                re = new RegExp(pattern, 'gd');
             else
-                re = new RegExp((<string>$('#trigger-pattern').val()), 'gid');
+                re = new RegExp(pattern, 'gid');
             const res = re.exec($('#trigger-test-text').val());
             if (res == null || res.length === 0)
                 $('#trigger-test-results').val('Pattern doesn\'t Match!');
@@ -463,7 +468,7 @@ export function RunTester() {
                 if(res.groups) {
                     let g = Object.keys(res.groups);
                     for(i = 0; i < g.length; i++)
-                        r += `\${${g[i]}} : ${res.groups[g[i]]}`;
+                        r += `\${${g[i]}} : ${res.groups[g[i]]}\n`;
                 }
                 $('#trigger-test-results').val(r);
             }
