@@ -17,6 +17,7 @@
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
   - [Triggers](docs/profiles.md): Add support for regex name capture that work similar to alias named params
   - Help: Add more known issue for advanced editor
+  - Add save image as, copy image, copy image link to MXP image context menu
 - **Fixed:**
   - Updated README to update build requirements
   - Display:

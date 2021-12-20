@@ -812,7 +812,63 @@
                 if (client.defaultContext) {
                     if (c.items.length > 0)
                         c.append(new MenuItem({ type: 'separator' }));
-
+                    if (e.srcElement.nodeName === 'IMG') {
+                        c.append(new MenuItem({
+                            label: 'Save image as...', click: () => {
+                                ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
+                                    title: 'Save image as...',
+                                    defaultPath: path.basename(e.srcElement.src),
+                                    filters: [
+                                        { name: 'Images (*.png)', extensions: ['png'] },
+                                        { name: 'All files (*.*)', extensions: ['*'] },
+                                    ]
+                                }).then(results => {
+                                    if (results.filePath === undefined || results.filePath.length === 0) {
+                                        return;
+                                    }
+                                    var canvas = document.createElement("canvas");
+                                    context = canvas.getContext('2d');
+                                    var base_image = new Image();
+                                    base_image.src = e.srcElement.src;
+                                    base_image.onload = function () {
+                                        canvas.width = base_image.width;
+                                        canvas.height = base_image.height;
+                                        context.globalCompositeOperation = "screen";
+                                        context.clearRect(0, 0, canvas.width, canvas.height);
+                                        context.drawImage(base_image, 0, 0);
+                                        require('fs').writeFile(results.filePath, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG(), err => {
+                                            if (err)
+                                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                                                    type: 'error',
+                                                    title: 'Error generating',
+                                                    message: 'Could not save image'
+                                                });
+                                        });
+                                    };
+                                });
+                            }
+                        }));
+                        c.append(new MenuItem({
+                            label: 'Copy image', click: () => {
+                                var canvas = document.createElement("canvas");
+                                context = canvas.getContext('2d');
+                                var base_image = new Image();
+                                base_image.src = e.srcElement.src;
+                                base_image.onload = function () {
+                                    canvas.width = base_image.width;
+                                    canvas.height = base_image.height;
+                                    context.globalCompositeOperation = "screen";
+                                    context.clearRect(0, 0, canvas.width, canvas.height);
+                                    context.drawImage(base_image, 0, 0);
+                                    clipboard.writeImage(nativeImage.createFromDataURL(canvas.toDataURL()));
+                                };
+                            }
+                        }));
+                        c.append(new MenuItem({
+                            label: 'Copy image link', click: () => { window.writeClipboard(e.srcElement.src); }
+                        }));
+                        c.append(new MenuItem({ type: 'separator' }));
+                    }
                     if (parent && parent.hasClass('URLLink')) {
                         c.append(new MenuItem({ label: 'Open url', click: () => { doLink(parent.attr('title')); } }));
                         c.append(new MenuItem({ label: 'Copy url', click: () => { window.writeClipboard(encodeURI(parent.attr('title'))); } }));
@@ -2933,14 +2989,14 @@
             dlg.doReturn = doReturn;
             dlg.doClose = doClose;
             dlg.doOk = doOk;
-            if(typeof footer === 'string')
+            if (typeof footer === 'string')
                 dlg.document.getElementsByClassName('dialog-footer')[0].innerHTML = footer;
-            else if(footer && footer.nodeType)
+            else if (footer && footer.nodeType)
                 dlg.document.getElementsByClassName('dialog-footer')[0].appendChild(footer);
-            if(typeof body === 'string')
+            if (typeof body === 'string')
                 dlg.document.getElementsByClassName('dialog-footer')[0].innerHTML = footer;
-            else if(body && body.nodeType)
-                dlg.document.getElementsByClassName('dialog-body')[0].appendChild(body);            
+            else if (body && body.nodeType)
+                dlg.document.getElementsByClassName('dialog-body')[0].appendChild(body);
             return dlg;
         }
     </script>
