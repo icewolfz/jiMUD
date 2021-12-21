@@ -4971,7 +4971,7 @@ export class Input extends EventEmitter {
                 if (isNaN(sides))
                     throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
                 sides--;
-                return ((c >> sides) % 2 != 0)
+                return ((c >> sides) % 2 != 0) ? 1 : 0;
             case 'bitxor'://bitxor(v1,v2)
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
@@ -5008,8 +5008,8 @@ export class Input extends EventEmitter {
                 else if (args.length > 1)
                     throw new Error('Too many arguments');
                 if (args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
-                    return true;
-                return false;
+                    return 1;
+                return 0;
             case 'isnumber': //isnumber(s)
                 args = splitQuoted(this.parseInline(res[2]), ',');
                 if (args.length === 0)
@@ -5017,8 +5017,8 @@ export class Input extends EventEmitter {
                 else if (args.length > 1)
                     throw new Error('Too many arguments');
                 if (args[0].match(/^\s*?[-|+]?\d+\s*?$/) || args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
-                    return true;
-                return false;
+                    return 1;
+                return 0;
             case 'string'://string(value)
                 args = splitQuoted(this.parseInline(res[2]), ',');
                 if (args.length === 0)
@@ -5035,6 +5035,10 @@ export class Input extends EventEmitter {
                 args[0] = this.stripQuotes(args[0], true);
                 if (args[0].match(/^\s*?[-|+]?\d+\s*?$/) || args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
                     return parseFloat(args[0]);
+                else if (args[0] === "true")
+                    return 1.0;
+                else if (args[0] === "false")
+                    return 0.0;                    
                 return 0;
         }
         return null;
