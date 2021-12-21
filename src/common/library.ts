@@ -2057,13 +2057,22 @@ export function formatUnit(str, ch?) {
 export function replaceHtml(el, html) {
     const oldEl = typeof el === 'string' ? document.getElementById(el) : el;
     /*@cc_on // Pure innerHTML is slightly faster in IE
-		oldEl.innerHTML = html;
-		return oldEl;
-	@*/
+        oldEl.innerHTML = html;
+        return oldEl;
+    @*/
     const newEl = oldEl.cloneNode(false);
     newEl.innerHTML = html;
     oldEl.parentNode.replaceChild(newEl, oldEl);
     /* Since we just removed the old element from the DOM, return a reference
-	to the new element, which can be used to restore variable references. */
+    to the new element, which can be used to restore variable references. */
     return newEl;
+}
+
+export function isValidIdentifer(str: string): boolean {
+    if (!str || str.length === 0) return false;
+    //valid character check
+    if (!str.match(/^[a-zA-Z_$][a-zA-Z_$0-9]*$/g))
+        return false;
+    //not a keyword
+    return ['break', 'case', 'catch', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof', 'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'class', 'const', 'enum', 'export', 'extends', 'import', 'super', 'implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static', 'yield', 'null', 'true', 'false', 'NaN', 'Infinity', 'undefined', 'eval', 'arguments'].indexOf(str) === -1;
 }

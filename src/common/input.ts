@@ -4,7 +4,7 @@
 //spell-checker:ignore togglecl raiseevent raisedelayed raisede diceavg dicemin dicemax zdicedev dicedev zmud
 import EventEmitter = require('events');
 import { MacroModifiers } from './profile';
-import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted } from './library';
+import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifer } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, convertPattern } from './profile';
@@ -12,8 +12,6 @@ import { NewLineType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
 import { create, all, factory, e, string } from 'mathjs';
-import { cachedDataVersionTag } from 'v8';
-import { off } from 'process';
 
 const allWithCustomFunctions = {
     ...all,
@@ -3210,6 +3208,8 @@ export class Input extends EventEmitter {
                 if (i.match(/^\{.*\}$/g))
                     i = i.substr(1, i.length - 2);
                 i = this.parseInline(i);
+                if(!isValidIdentifer(i))
+                    throw new Error("Invalid variable name");
                 if (args.length === 0)
                     return this.client.variables[i]?.toString();
                 args = args.join(' ');

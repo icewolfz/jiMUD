@@ -1,5 +1,5 @@
 //spell-checker:ignore displaytype, submenu, triggernewline, triggerprompt
-import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority, splitQuoted } from './library';
+import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority, splitQuoted, isValidIdentifer } from './library';
 const path = require('path');
 const fs = require('fs');
 
@@ -1437,6 +1437,8 @@ export function convertPattern(pattern: string, client?) {
                     continue;
                 //end block or no longer valid varname character
                 else if (c === '}' || !((i >= 48 && i <= 57) || (i >= 65 && i <= 90) || (i >= 97 && i <= 122) || i === 95 || i === 36)) {
+                    if (!isValidIdentifer(arg))
+                        throw new Error('Invalid variable name');
                     if (!pat.length && /^\d+$/.exec(arg))
                         stringBuilder.push('{', arg, '}');
                     else if (!pat.length)
@@ -1558,6 +1560,8 @@ export function convertPattern(pattern: string, client?) {
                 if (c === '{' && arg.length === 0)
                     continue;
                 else if (c === '}' || !((i >= 48 && i <= 57) || (i >= 65 && i <= 90) || (i >= 97 && i <= 122) || i === 95 || i === 36)) {
+                    if (!isValidIdentifer(arg))
+                        throw new Error('Invalid variable name')
                     if (client)
                         stringBuilder.push(client.variables[arg] || '');
                     if (c !== '}')
@@ -1604,6 +1608,8 @@ export function convertPattern(pattern: string, client?) {
     }
     switch (state) {
         case convertPatternState.Ampersand:
+            if (!isValidIdentifer(arg))
+                throw new Error('Invalid variable name');
             if (!pat.length && /^\d+$/.exec(arg))
                 stringBuilder.push('{', arg, '}');
             else if (!pat.length)
@@ -1626,6 +1632,8 @@ export function convertPattern(pattern: string, client?) {
         case convertPatternState.Escape:
             throw new Error('Invalid escape pattern');
         case convertPatternState.Variable:
+            if (!isValidIdentifer(arg))
+                throw new Error('Invalid variable name');
             if (client)
                 stringBuilder.push(client.variables[arg] || '');
             break;
