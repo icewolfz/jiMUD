@@ -21,6 +21,11 @@
   - Add [%bitshift(value,number)](docs/functions.md#math) shifts the value the num bits to the left. If num is negative, then the value is shifted to the right. 
   - Add [%bittest(i,bitnum)](docs/functions.md#math) Test a bit within a numeric value and return true if it is set, false if it is not set. bitnum starts at 1. 
   - Add [%bitxor(number1,number2)](docs/functions.md#math) returns the bitwise XOR of the two numbers.  
+  - Add [%number(s))](docs/functions.md#math) convert a numeric string to a number. 
+  - Add [%isfloat(value))](docs/functions.md#math) Returns true if value is a valid floating point number
+  - Add [%isnumber(s))](docs/functions.md#math) true if s represents a valid number. 
+  - Add [%string(value))](docs/functions.md#math) converts value to a string. Quotes are added around the value.
+  - Add [%float(value))](docs/functions.md#math) Returns value as a floating point number.
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
   - [Triggers](docs/profiles.md):
     - Add support for regex name capture that work similar to alias named params

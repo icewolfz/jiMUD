@@ -3208,7 +3208,7 @@ export class Input extends EventEmitter {
                 if (i.match(/^\{.*\}$/g))
                     i = i.substr(1, i.length - 2);
                 i = this.parseInline(i);
-                if(!isValidIdentifier(i))
+                if (!isValidIdentifier(i))
                     throw new Error("Invalid variable name");
                 if (args.length === 0)
                     return this.client.variables[i]?.toString();
@@ -3216,14 +3216,14 @@ export class Input extends EventEmitter {
                 if (args.match(/^\{\s*?.*\s*?\}$/g))
                     args = args.substr(1, args.length - 2);
                 args = this.parseInline(args);
-                if (args.match(/^-?\d+$/)) 
+                if (args.match(/^-?\d+$/))
                     this.client.variables[i] = parseInt(args, 10);
-                else if (args.match(/^-?\d+\.\d+$/)) 
+                else if (args.match(/^-?\d+\.\d+$/))
                     this.client.variables[i] = parseFloat(args);
-                else if(args === "true")
+                else if (args === "true")
                     this.client.variables[i] = true;
-                else if(args === "false")
-                    this.client.variables[i] = false;                    
+                else if (args === "false")
+                    this.client.variables[i] = false;
                 else
                     this.client.variables[i] = args;
                 return null;
@@ -4983,6 +4983,57 @@ export class Input extends EventEmitter {
                 if (isNaN(sides))
                     throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
                 return c ^ sides;
+            case 'number': //number(s)
+                args = splitQuoted(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments');
+                args[0] = this.stripQuotes(args[0], true);
+                if (args[0].match(/^-?\d+$/))
+                    return parseInt(args[0], 10);
+                else if (args[0].match(/^-?\d+\.\d+$/))
+                    return parseFloat(args[0]);
+                else if (args[0] === "true")
+                    return 1;
+                else if (args[0] === "false")
+                    return 0;
+                return 0;
+            case 'isfloat'://isfloat(value)
+                args = splitQuoted(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments');
+                if (args[0].match(/^-?\d+\.\d+$/))
+                    return true;
+                return false;
+            case 'isnumber': //isnumber(s)
+                args = splitQuoted(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments');
+                if (args[0].match(/^-?\d+$/) || args[0].match(/^-?\d+\.\d+$/))
+                    return true;
+                return false;
+            case 'string'://string(value)
+                args = splitQuoted(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments');
+                return `"${this.stripQuotes(args[0]), true}"`;
+            case 'float'://float(value)
+                args = splitQuoted(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments');
+                args[0] = this.stripQuotes(args[0], true);
+                if (args[0].match(/^-?\d+$/) || args[0].match(/^-?\d+\.\d+$/))
+                    return parseFloat(args[0]);
+                return 0;
         }
         return null;
     }
@@ -5011,7 +5062,7 @@ export class Input extends EventEmitter {
             if (n[s].length < 1) continue;
             if (n[s].startsWith('$')) n[s] = n[s].substring(1);
             if (!n[s].match(/^[a-zA-Z0-9_][a-zA-Z0-9_]+$/g)) continue;
-            if(!isValidIdentifier(n[s])) continue;
+            if (!isValidIdentifier(n[s])) continue;
             if (named[n[s]]) continue;
             named[n[s]] = (s + 1 < al) ? args[s + 1] : '';
         }
@@ -5502,14 +5553,14 @@ export class Input extends EventEmitter {
         return code.join('');
     }
 
-    public stripQuotes(str: string) {
+    public stripQuotes(str: string, force?: boolean, forceSingle?: boolean) {
         if (!str || str.length === 0)
             return str;
-        if (this.client.options.parseDoubleQuotes)
+        if (force || this.client.options.parseDoubleQuotes)
             str = str.replace(/^\"(.*)\"$/g, (v, e, w) => {
                 return e.replace(/\\\"/g, '"');
             });
-        if (this.client.options.parseSingleQuotes)
+        if (forceSingle || this.client.options.parseSingleQuotes)
             str = str.replace(/^\'(.*)\'$/g, (v, e, w) => {
                 return e.replace(/\\\'/g, '\'');
             });

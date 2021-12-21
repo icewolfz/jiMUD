@@ -72,6 +72,12 @@ You can create custom variables using the expression system and the assignment o
 - `dicedev(xdy+n)` return standard deviation of dice `sqrt((y^2 - 1) / 12 * x)`, x is the # of dice, y is the # of sides, with optional +, -, *, / modifier
 - `zdicedev(xdy+n)` return zMUD/cMUD standard deviation of dice `sqrt(((y - 1)^2 - 1) / 12 * x)`, x is the # of dice, y is the # of sides, with optional +, -, *, / modifier
 - `random(i,j)` return a random number between i and j, if j omitted, i is then considered the maximum and will return a number between 0 and i
+- `number(s)` convert a numeric string to a number. 
+- `isfloat(value)` Returns true if value is a valid floating point number
+- `isnumber(s)` true if s represents a valid number. 
+- `string(value)` converts value to a string. Quotes are added around the value.
+- `float(value)` Returns value as a floating point number.
+
 ### **Conditionals**
 
 - `case(n,value1,value2,value3...)` return the nth value of arguments, from 1 to last argument
