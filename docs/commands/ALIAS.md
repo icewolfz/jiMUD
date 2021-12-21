@@ -8,7 +8,7 @@
 #### **Arguments:**
 - name - The name of the alias to create
 - index - The index of the alias to alter
-- {commands} - The commands the alias will use when executred
+- {commands} - The commands the alias will use when executed
 - *profile* - The optional profile to look or create the alias in, if not supplied defaults to current active profile
 
 ### **Examples:**
