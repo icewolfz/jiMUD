@@ -54,6 +54,7 @@
     - Detect newlines when using {} block formatting for multi line blocks when possible
     - Skip alias invalid named params
     - Fixed number parsing in places not accepting +#, as +# is a valid positive number and converted to simple #
+    - Fixed ignore spaces around number arguments for functions and commands
   - Fixed [#variable](docs/commands.md) should not evaluate the value to allow use of raw strings as needed, eg #va test {3+5} should store 3+5 not 8, if you want the evaluated value use #var test \${3+5} or #va test \{${3+5}}
   - Fixed [#variable](docs/commands.md) throws an error now when invalid variable names are used
 - **Changed:**
