@@ -45,6 +45,7 @@
   - Fixed full screen not always being restored on load
   - Fixed maximized state not being correctly restored on load if window was closed minimized
   - Input parser: detect newlines when using {} block formatting for multi line blocks when possible
+  - Fixed [#variable](docs/commands.md) should not evaluate the value to allow use of raw strings as needed, eg #va test {3+5} should store 3+5 not 8, if you want the evaluated value use #var test \${3+5} or #va test \{${3+5}}
 - **Changed:**
   - Revert 0.17.1 hack for child windows as electron seems to have fixed the bug
   - Update tinymce 4.8.3 to 5.10.1

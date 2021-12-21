@@ -3216,7 +3216,16 @@ export class Input extends EventEmitter {
                 if (args.match(/^\{\s*?.*\s*?\}$/g))
                     args = args.substr(1, args.length - 2);
                 args = this.parseInline(args);
-                this.client.variables[i] = this.evaluate(this.parseInline(args));;
+                if (args.match(/^-?\d+$/)) 
+                    this.client.variables[i] = parseInt(args, 10);
+                else if (args.match(/^-?\d+\.\d+$/)) 
+                    this.client.variables[i] = parseFloat(args);
+                else if(args === "true")
+                    this.client.variables[i] = true;
+                else if(args === "false")
+                    this.client.variables[i] = false;                    
+                else
+                    this.client.variables[i] = args;
                 return null;
             case 'add':
             case 'ad':
