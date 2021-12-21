@@ -57,6 +57,13 @@ You can create custom variables using the expression system and the assignment o
 
 ### **Math**
 
+- `%bitand(number1,number2)` returns the bitwise AND of the two numbers. 
+- `%bitnot(number)` returns the bitwise inverse of the given number.
+- `%bitor(number1,number2)` returns the bitwise OR of the two numbers. 
+- `%bitset(i,bitnum,value)` Set or reset a bit within a numeric value and return the new numeric value. If value is omitted, 1 (true) is used to set the bit. To reset a bit, the value must be zero. 
+- `%bitshift(value,number)` shifts the value the num bits to the left. If num is negative, then the value is shifted to the right. 
+- `%bittest(i,bitnum)` Test a bit within a numeric value and return true if it is set, false if it is not set. bitnum starts at 1. 
+- `%bitxor(number1,number2)` returns the bitwise XOR of the two numbers.
 - `eval(expression)` evaluate the expression and return the results, a long version of `expression`
 - `dice(xdy+n)` roll a dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
 - `diceavg(xdy+n)` the avg roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
@@ -65,7 +72,6 @@ You can create custom variables using the expression system and the assignment o
 - `dicedev(xdy+n)` return standard deviation of dice `sqrt((y^2 - 1) / 12 * x)`, x is the # of dice, y is the # of sides, with optional +, -, *, / modifier
 - `zdicedev(xdy+n)` return zMUD/cMUD standard deviation of dice `sqrt(((y - 1)^2 - 1) / 12 * x)`, x is the # of dice, y is the # of sides, with optional +, -, *, / modifier
 - `random(i,j)` return a random number between i and j, if j omitted, i is then considered the maximum and will return a number between 0 and i
-
 ### **Conditionals**
 
 - `case(n,value1,value2,value3...)` return the nth value of arguments, from 1 to last argument

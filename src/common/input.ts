@@ -4876,6 +4876,104 @@ export class Input extends EventEmitter {
                 return this.stripQuotes(this.parseInline(res[2])).trimLeft();
             case 'trimright':
                 return this.stripQuotes(this.parseInline(res[2])).trimRight();
+            case 'bitand'://bitand(v1,v2)
+                args = this.parseInline(res[2]).split(',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments');
+                c = parseInt(args[0], 10);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                sides = parseInt(args[1], 10);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
+                return c & sides;
+            case 'bitnot'://bitnot(v1)
+                args = this.parseInline(res[2]).split(',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length !== 1)
+                    throw new Error('Too many arguments');
+                c = parseInt(args[0], 10);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                return ~c;
+            case 'bitor': //bitor(v1,v2)
+                args = this.parseInline(res[2]).split(',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments');
+                c = parseInt(args[0], 10);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                sides = parseInt(args[1], 10);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
+                return c | sides;
+            case 'bitset':
+                args = this.parseInline(res[2]).split(',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length > 3)
+                    throw new Error('Too many arguments');
+                c = parseInt(args[0], 10);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                sides = parseInt(args[1], 10);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
+                sides--;
+                mod = 1;
+                if (args.length === 3) {
+                    mod = parseInt(args[2], 10);
+                    if (isNaN(mod))
+                        throw new Error('Invalid argument \'' + args[2] + '\' must be a number');
+                }
+                return (c & (~(1 << sides))) | ((mod ? 1 : 0) << sides);
+            case 'bitshift'://bitshift(value,num)
+                args = this.parseInline(res[2]).split(',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments');
+                c = parseInt(args[0], 10);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                sides = parseInt(args[1], 10);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
+                if (sides < 0)
+                    return c >> -sides;
+                return c << sides
+            case 'bittest'://bittest(i,bitnum)
+                args = this.parseInline(res[2]).split(',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments');
+                c = parseInt(args[0], 10);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                sides = parseInt(args[1], 10);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
+                sides--;
+                return ((c >> sides) % 2 != 0)
+            case 'bitxor'://bitxor(v1,v2)
+                args = this.parseInline(res[2]).split(',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments');
+                c = parseInt(args[0], 10);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                sides = parseInt(args[1], 10);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
+                return c ^ sides;
         }
         return null;
     }

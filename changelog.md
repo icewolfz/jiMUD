@@ -14,6 +14,13 @@
   - Add [%trim(string)](docs/functions.md#string) Returns the string without any spaces at the beginning or end
   - Add [%trimleft(string)](docs/functions.md#string)` Returns the string without any spaces at the beginning
   - Add [%trimright(string)](docs/functions.md#string) Returns the string without any spaces at the end
+  - Add [%bitand(number1,number2)](docs/functions.md#math) returns the bitwise AND of the two numbers. 
+  - Add [%bitnot(number)](docs/functions.md#math) returns the bitwise inverse of the given number.
+  - Add [%bitor(number1,number2)](docs/functions.md#math) returns the bitwise OR of the two numbers. 
+  - Add [%bitset(i,bitnum,value)](docs/functions.md#math) Set or reset a bit within a numeric value and return the new numeric value. If value is omitted, 1 (true) is used to set the bit. To reset a bit, the value must be zero. 
+  - Add [%bitshift(value,number)](docs/functions.md#math) shifts the value the num bits to the left. If num is negative, then the value is shifted to the right. 
+  - Add [%bittest(i,bitnum)](docs/functions.md#math) Test a bit within a numeric value and return true if it is set, false if it is not set. bitnum starts at 1. 
+  - Add [%bitxor(number1,number2)](docs/functions.md#math) returns the bitwise XOR of the two numbers.  
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
   - [Triggers](docs/profiles.md):
     - Add support for regex name capture that work similar to alias named params
