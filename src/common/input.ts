@@ -2467,14 +2467,14 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color or \x1b[4m#co\x1b[0;-11;-12mlor {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
                 args[0] = this.parseInline(this.stripQuotes(args[0]));
                 n = this.client.display.lines.length;
-                if (args[0].trim().match(/^-?\d+$/g)) {
+                if (args[0].trim().match(/^[-|+]?\d+$/g)) {
                     setTimeout(() => {
                         n = this.adjustLastLine(n);
                         this.client.display.colorSubStrByLine(n, parseInt(args[0], 10));
                     }, 0);
                 }
                 //back,fore from color function
-                else if (args[0].trim().match(/^-?\d+,-?\d+$/g)) {
+                else if (args[0].trim().match(/^[-|+]?\d+,[-|+]?\d+$/g)) {
                     args[0] = args[0].split(',');
                     setTimeout(() => {
                         n = this.adjustLastLine(n);
@@ -2488,7 +2488,7 @@ export class Input extends EventEmitter {
                             i = 370;
                         if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                             i = args[0].trim();
-                        else if (args[0].trim().match(/^-?\d+$/g))
+                        else if (args[0].trim().match(/^[-|+]?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
@@ -2513,7 +2513,7 @@ export class Input extends EventEmitter {
                             i = null;
                         else if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                             i = args[0].trim();
-                        else if (args[0].trim().match(/^-?\d+$/g))
+                        else if (args[0].trim().match(/^[-|+]?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
@@ -2537,7 +2537,7 @@ export class Input extends EventEmitter {
                             p = i;
                             if (args[1].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                                 i = args[1].trim();
-                            else if (args[1].trim().match(/^-?\d+$/g))
+                            else if (args[1].trim().match(/^[-|+]?\d+$/g))
                                 i = parseInt(args[1].trim(), 10);
                             else {
                                 i = getAnsiColorCode(args[1], true);
@@ -2563,7 +2563,7 @@ export class Input extends EventEmitter {
                             i = null;
                         else if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                             i = args[0].trim();
-                        else if (args[0].trim().match(/^-?\d+$/g))
+                        else if (args[0].trim().match(/^[-|+]?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
@@ -2582,7 +2582,7 @@ export class Input extends EventEmitter {
                             p = i * 10;
                         if (args[1].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                             i = args[1].trim();
-                        else if (args[1].trim().match(/^-?\d+$/g))
+                        else if (args[1].trim().match(/^[-|+]?\d+$/g))
                             i = parseInt(args[1].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[1], true);
@@ -2630,7 +2630,7 @@ export class Input extends EventEmitter {
                 if (!trigger) return null;
                 args[0] = this.parseInline(this.stripQuotes(args[0]));
                 n = this.client.display.lines.length;
-                if (args[0].trim().match(/^-?\d+$/g)) {
+                if (args[0].trim().match(/^[-|+]?\d+$/g)) {
                     setTimeout(() => {
                         n = this.adjustLastLine(n);
                         //verbatim so color whole line
@@ -2646,7 +2646,7 @@ export class Input extends EventEmitter {
                     }, 0);
                 }
                 //back,fore from color function
-                else if (args[0].trim().match(/^-?\d+,-?\d+$/g)) {
+                else if (args[0].trim().match(/^[-|+]?\d+,[-|+]?\d+$/g)) {
                     args[0] = args[0].split(',');
                     setTimeout(() => {
                         n = this.adjustLastLine(n);
@@ -2669,7 +2669,7 @@ export class Input extends EventEmitter {
                             i = 370;
                         if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                             i = args[0].trim();
-                        else if (args[0].trim().match(/^-?\d+$/g))
+                        else if (args[0].trim().match(/^[-|+]?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
@@ -2703,7 +2703,7 @@ export class Input extends EventEmitter {
                             i = null;
                         else if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                             i = args[0].trim();
-                        else if (args[0].trim().match(/^-?\d+$/g))
+                        else if (args[0].trim().match(/^[-|+]?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
@@ -2735,7 +2735,7 @@ export class Input extends EventEmitter {
                             p = i;
                             if (args[1].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                                 i = args[1].trim();
-                            else if (args[1].trim().match(/^-?\d+$/g))
+                            else if (args[1].trim().match(/^[-|+]?\d+$/g))
                                 i = parseInt(args[1].trim(), 10);
                             else {
                                 i = getAnsiColorCode(args[1], true);
@@ -2770,7 +2770,7 @@ export class Input extends EventEmitter {
                             i = null;
                         else if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                             i = args[0].trim();
-                        else if (args[0].trim().match(/^-?\d+$/g))
+                        else if (args[0].trim().match(/^[-|+]?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
@@ -2789,7 +2789,7 @@ export class Input extends EventEmitter {
                             p = i * 10;
                         if (args[1].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                             i = args[1].trim();
-                        else if (args[1].trim().match(/^-?\d+$/g))
+                        else if (args[1].trim().match(/^[-|+]?\d+$/g))
                             i = parseInt(args[1].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[1], true);
@@ -2841,13 +2841,13 @@ export class Input extends EventEmitter {
                     item = { xStart: 0 };
                 args[0] = this.parseInline(this.stripQuotes(args[0]));
                 n = this.adjustLastLine(this.client.display.lines.length);
-                if (args[0].trim().match(/^-?\d+$/g)) {
+                if (args[0].trim().match(/^[-|+]?\d+$/g)) {
                     setTimeout(() => {
                         this.colorPosition(n, parseInt(args[0], 10), null, item);
                     }, 0);
                 }
                 //back,fore from color function
-                else if (args[0].trim().match(/^-?\d+,-?\d+$/g)) {
+                else if (args[0].trim().match(/^[-|+]?\d+,[-|+]?\d+$/g)) {
                     args[0] = args[0].split(',');
                     setTimeout(() => {
                         this.colorPosition(n, parseInt(args[0][0], 10), parseInt(args[0][1], 10), item);
@@ -2860,7 +2860,7 @@ export class Input extends EventEmitter {
                             i = 370;
                         if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                             i = args[0].trim();
-                        else if (args[0].trim().match(/^-?\d+$/g))
+                        else if (args[0].trim().match(/^[-|+]?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
@@ -2884,7 +2884,7 @@ export class Input extends EventEmitter {
                             i = null;
                         else if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                             i = args[0].trim();
-                        else if (args[0].trim().match(/^-?\d+$/g))
+                        else if (args[0].trim().match(/^[-|+]?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
@@ -2904,7 +2904,7 @@ export class Input extends EventEmitter {
                             p = i;
                             if (args[1].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                                 i = args[1].trim();
-                            else if (args[1].trim().match(/^-?\d+$/g))
+                            else if (args[1].trim().match(/^[-|+]?\d+$/g))
                                 i = parseInt(args[1].trim(), 10);
                             else {
                                 i = getAnsiColorCode(args[1], true);
@@ -2929,7 +2929,7 @@ export class Input extends EventEmitter {
                             i = null;
                         else if (args[0].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                             i = args[0].trim();
-                        else if (args[0].trim().match(/^-?\d+$/g))
+                        else if (args[0].trim().match(/^[-|+]?\d+$/g))
                             i = parseInt(args[0].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[0]);
@@ -2948,7 +2948,7 @@ export class Input extends EventEmitter {
                             p = i * 10;
                         if (args[1].trim().match(/^#(?:[a-f0-9]{3}|[a-f0-9]{6})\b$/g))
                             i = args[1].trim();
-                        else if (args[1].trim().match(/^-?\d+$/g))
+                        else if (args[1].trim().match(/^[-|+]?\d+$/g))
                             i = parseInt(args[1].trim(), 10);
                         else {
                             i = getAnsiColorCode(args[1], true);
@@ -3216,9 +3216,9 @@ export class Input extends EventEmitter {
                 if (args.match(/^\{\s*?.*\s*?\}$/g))
                     args = args.substr(1, args.length - 2);
                 args = this.parseInline(args);
-                if (args.match(/^-?\d+$/))
+                if (args.match(/^[-|+]?\d+$/))
                     this.client.variables[i] = parseInt(args, 10);
-                else if (args.match(/^-?\d+\.\d+$/))
+                else if (args.match(/^[-|+]?\d+\.\d+$/))
                     this.client.variables[i] = parseFloat(args);
                 else if (args === "true")
                     this.client.variables[i] = true;
@@ -3318,7 +3318,7 @@ export class Input extends EventEmitter {
                 this.client.print(tmp.join(''), true);
                 return null;
         }
-        if (fun.match(/^-?\d+$/)) {
+        if (fun.match(/^[-|+]?\d+$/)) {
             i = parseInt(fun, 10);
             if (args.length === 0)
                 throw new Error('Invalid syntax use #nnn commands');
@@ -3788,7 +3788,7 @@ export class Input extends EventEmitter {
                                     idx = idx - arg.length - 2;
                                 }
                             }
-                            else if (this.stack.args && this.stack.args.indices && arg.match(/^x=?\d+$/)) {
+                            else if (this.stack.args && this.stack.args.indices && arg.match(/^x[-|+]?\d+$/)) {
                                 tmp = parseInt(arg.substring(1), 10);
                                 if (tmp < 0) {
                                     if (-tmp >= this.stack.args.length) {
@@ -3951,7 +3951,7 @@ export class Input extends EventEmitter {
                                     idx = idx - arg.length - 2;
                                 }
                             }
-                            else if (this.stack.args && this.stack.args.indices && arg.match(/^x=?\d+$/)) {
+                            else if (this.stack.args && this.stack.args.indices && arg.match(/^x[-|+]?\d+$/)) {
                                 tmp = parseInt(arg.substring(1), 10);
                                 if (tmp < 0) {
                                     if (-tmp >= this.stack.args.length) {
@@ -4990,9 +4990,9 @@ export class Input extends EventEmitter {
                 else if (args.length > 1)
                     throw new Error('Too many arguments');
                 args[0] = this.stripQuotes(args[0], true);
-                if (args[0].match(/^-?\d+$/))
+                if (args[0].match(/^[-|+]?\d+$/))
                     return parseInt(args[0], 10);
-                else if (args[0].match(/^-?\d+\.\d+$/))
+                else if (args[0].match(/^[-|+]?\d+\.\d+$/))
                     return parseFloat(args[0]);
                 else if (args[0] === "true")
                     return 1;
@@ -5005,7 +5005,7 @@ export class Input extends EventEmitter {
                     throw new Error('Missing arguments');
                 else if (args.length > 1)
                     throw new Error('Too many arguments');
-                if (args[0].match(/^-?\d+\.\d+$/))
+                if (args[0].match(/^[-|+]?\d+\.\d+$/))
                     return true;
                 return false;
             case 'isnumber': //isnumber(s)
@@ -5014,7 +5014,7 @@ export class Input extends EventEmitter {
                     throw new Error('Missing arguments');
                 else if (args.length > 1)
                     throw new Error('Too many arguments');
-                if (args[0].match(/^-?\d+$/) || args[0].match(/^-?\d+\.\d+$/))
+                if (args[0].match(/^[-|+]?\d+$/) || args[0].match(/^[-|+]?\d+\.\d+$/))
                     return true;
                 return false;
             case 'string'://string(value)
@@ -5031,7 +5031,7 @@ export class Input extends EventEmitter {
                 else if (args.length > 1)
                     throw new Error('Too many arguments');
                 args[0] = this.stripQuotes(args[0], true);
-                if (args[0].match(/^-?\d+$/) || args[0].match(/^-?\d+\.\d+$/))
+                if (args[0].match(/^[-|+]?\d+$/) || args[0].match(/^[-|+]?\d+\.\d+$/))
                     return parseFloat(args[0]);
                 return 0;
         }
