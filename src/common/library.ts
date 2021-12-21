@@ -2068,7 +2068,7 @@ export function replaceHtml(el, html) {
     return newEl;
 }
 
-export function isValidIdentifer(str: string): boolean {
+export function isValidIdentifier(str: string): boolean {
     if (!str || str.length === 0) return false;
     //valid character check
     if (!str.match(/^[a-zA-Z_$][a-zA-Z_$0-9]*$/g))

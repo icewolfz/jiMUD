@@ -4,7 +4,7 @@
 //spell-checker:ignore togglecl raiseevent raisedelayed raisede diceavg dicemin dicemax zdicedev dicedev zmud
 import EventEmitter = require('events');
 import { MacroModifiers } from './profile';
-import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifer } from './library';
+import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, convertPattern } from './profile';
@@ -3208,7 +3208,7 @@ export class Input extends EventEmitter {
                 if (i.match(/^\{.*\}$/g))
                     i = i.substr(1, i.length - 2);
                 i = this.parseInline(i);
-                if(!isValidIdentifer(i))
+                if(!isValidIdentifier(i))
                     throw new Error("Invalid variable name");
                 if (args.length === 0)
                     return this.client.variables[i]?.toString();
@@ -5011,6 +5011,7 @@ export class Input extends EventEmitter {
             if (n[s].length < 1) continue;
             if (n[s].startsWith('$')) n[s] = n[s].substring(1);
             if (!n[s].match(/^[a-zA-Z0-9_][a-zA-Z0-9_]+$/g)) continue;
+            if(!isValidIdentifier(n[s])) continue;
             if (named[n[s]]) continue;
             named[n[s]] = (s + 1 < al) ? args[s + 1] : '';
         }

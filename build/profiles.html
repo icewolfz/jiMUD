@@ -159,7 +159,8 @@
                                 <label class="control-label" for="alias-params">Params</label>
                             </td>
                             <td colspan="6">
-                                <input class="form-control" type="text" id="alias-params">
+                                <input class="form-control" type="text" id="alias-params" onkeyup="profileUI.validateIdentifiers(this);" onchange="profileUI.validateIdentifiers(this);">
+                                <div class="form-error"></div>
                             </td>
                         </tr>
                         <tr class="panel-adv-body">

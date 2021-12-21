@@ -375,3 +375,24 @@ table tr:last-child td {
     font-size: 16px;
     vertical-align: baseline;
 }
+
+.form-control-feedback,
+.form-error {
+    display: none;
+}
+
+.has-error .form-control-feedback {
+    display: inline;
+    top: 30px;
+}
+
+.has-error .form-error {
+    display: block;
+    position: absolute;
+}
+
+.aura-error,
+.form-error,
+.has-error a {
+    color: #A94442;
+}

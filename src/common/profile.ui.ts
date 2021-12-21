@@ -3,7 +3,7 @@
 import { ipcRenderer, nativeImage } from 'electron';
 const remote = require('@electron/remote');
 const { Menu, MenuItem } = remote;
-import { FilterArrayByKeyValue, parseTemplate, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode, walkSync } from './library';
+import { FilterArrayByKeyValue, parseTemplate, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode, walkSync, isValidIdentifier } from './library';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroModifiers, ItemStyle, convertPattern } from './profile';
 export { MacroDisplay } from './profile';
 import { Settings } from './settings';
@@ -442,8 +442,8 @@ export function RunTester() {
             let re;
             let pattern;
             pattern = <string>$('#trigger-pattern').val();
-            if($('#trigger-type').val() === '8' || $('#trigger-type').val() === '16' || $('#trigger-type').val() === 8 || $('#trigger-type').val() === 16)
-                pattern = convertPattern(pattern);               
+            if ($('#trigger-type').val() === '8' || $('#trigger-type').val() === '16' || $('#trigger-type').val() === 8 || $('#trigger-type').val() === 16)
+                pattern = convertPattern(pattern);
 
             if ($('#trigger-caseSensitive').prop('checked'))
                 re = new RegExp(pattern, 'gd');
@@ -463,11 +463,11 @@ export function RunTester() {
                 let i;
                 for (i = 0; i < res.length; i++) {
                     r += '%' + (i + m) + ' : ' + res[i] + '\n';
-                    r += `%x${i+m} : ${res.indices[i][0]} ${res.indices[i][1]}\n`;
+                    r += `%x${i + m} : ${res.indices[i][0]} ${res.indices[i][1]}\n`;
                 }
-                if(res.groups) {
+                if (res.groups) {
                     let g = Object.keys(res.groups);
-                    for(i = 0; i < g.length; i++)
+                    for (i = 0; i < g.length; i++)
                         r += `\${${g[i]}} : ${res.groups[g[i]]}\n`;
                 }
                 $('#trigger-test-results').val(r);
@@ -828,6 +828,14 @@ function UpdateMacro(customUndo?: boolean): UpdateState {
 }
 
 function UpdateAlias(customUndo?: boolean): UpdateState {
+    /*
+    if (!validateIdentifiers(<HTMLInputElement>document.getElementById('alias-params'), true)) {
+        if (!$('#alias-editor .btn-adv').data('open'))
+            $('#alias-editor .btn-adv').trigger('click');
+        document.getElementById('alias-params').focus();
+        return UpdateState.Error;
+    }
+    */
     const data: any = UpdateItem(currentProfile.aliases[currentNode.dataAttr.index]);
     if (data) {
         UpdateItemNode(currentProfile.aliases[currentNode.dataAttr.index], 0, data);
@@ -2263,6 +2271,10 @@ function buildTreeview(data, skipInit?) {
                         break;
                     case 'alias':
                         UpdateEditor('alias', currentProfile.aliases[node.dataAttr.index]);
+                        if (!validateIdentifiers(<HTMLInputElement>document.getElementById('alias-params'))) {
+                            if (!$('#alias-editor .btn-adv').data('open'))
+                                $('#alias-editor .btn-adv').trigger('click');
+                        }
                         break;
                     case 'macro':
                         UpdateEditor('macro', currentProfile.macros[node.dataAttr.index], { key: MacroValue });
@@ -4210,4 +4222,26 @@ function exportCurrent() {
         fs.writeFileSync(result.filePath, JSON.stringify(data));
     });
 
+}
+
+export function validateIdentifiers(el: HTMLInputElement, focus?) {
+    if(!el) return;
+    if (el.value.length === 0) {
+        el.parentElement.classList.remove('has-error');
+        el.parentElement.classList.remove('has-feedback');        
+        return true;
+    }
+    const ids = el.value.split(',').filter(v => v.length && !isValidIdentifier(v.trim()))
+    if (ids.length === 0) {
+        el.parentElement.classList.remove('has-error');
+        el.parentElement.classList.remove('has-feedback');
+    }
+    else {
+        el.parentElement.classList.add('has-error');
+        el.parentElement.classList.add('has-feedback');
+        el.nextElementSibling.innerHTML = '<small class="aura-error">Invalid names:' + ids.join(',') + '</small>';
+        if (focus)
+            el.focus();
+    }
+    return ids.length === 0;
 }

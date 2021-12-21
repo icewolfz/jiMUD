@@ -28,6 +28,7 @@
   - Help: Add more known issue for advanced editor
   - Add save image as, copy image, copy image link to MXP image context menu
   - Input parser: Add $var user variable style support
+  - Profile Manager: Alias params are now highlighted with an error if invalid
 - **Fixed:**
   - Updated README to update build requirements
   - Display:
@@ -44,7 +45,9 @@
   - Fixed alias named arguments not being directly accessible in scripting type
   - Fixed full screen not always being restored on load
   - Fixed maximized state not being correctly restored on load if window was closed minimized
-  - Input parser: detect newlines when using {} block formatting for multi line blocks when possible
+  - Input parser:
+    - Detect newlines when using {} block formatting for multi line blocks when possible
+    - Skip alias invalid named params
   - Fixed [#variable](docs/commands.md) should not evaluate the value to allow use of raw strings as needed, eg #va test {3+5} should store 3+5 not 8, if you want the evaluated value use #var test \${3+5} or #va test \{${3+5}}
   - Fixed [#variable](docs/commands.md) throws an error now when invalid variable names are used
 - **Changed:**
