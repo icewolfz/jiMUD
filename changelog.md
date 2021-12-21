@@ -37,6 +37,7 @@
   - Fixed alias named arguments not being directly accessible in scripting type
   - Fixed full screen not always being restored on load
   - Fixed maximized state not being correctly restored on load if window was closed minimized
+  - Input parser: detect newlines when using {} block formatting for multi line blocks when possible
 - **Changed:**
   - Revert 0.17.1 hack for child windows as electron seems to have fixed the bug
   - Update tinymce 4.8.3 to 5.10.1
