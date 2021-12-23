@@ -184,7 +184,12 @@ Controls what is captured into the chat window
 - `Verbatim`
   - `Character` The character used at the start of a line to signify the line should be sent as is starting after the verbatim character
   - `Enabled` Enable or disable verbatim system
-
+- `Parameter`
+  - `Character` The character used for inline variables and functions and trigger/alias parameters %#, see [functions](functions.md) for more details
+  - `Enabled` Enable or disable parameters
+- `N Parameter`
+  - `Character` Similar to Parameter but allows full name symbols when possible for user variables and named parameters, eg $name, see [functions](functions.md) for more details
+  - `Enabled` Enable or disable N Parameter system
 ## Advanced
 
 - `Enable gamepads` Enable gamepad support to allow creating macros using gamepad axes or buttons. **Experimental**

@@ -437,13 +437,11 @@ export class Settings {
     public enableVerbatim: boolean = true;
     public verbatimChar: string = '`';
 
-    /*
     public enableParameters: boolean = true;
     public parametersChar: string = '%';
 
-    public enableNDParameters: boolean = true;
-    public dParametersChar: string = '$';
-    */
+    public enableNParameters: boolean = true;
+    public nParametersChar: string = '$';
 
     public commandDelay: number = 500;
     public commandDelayCount: number = 5;

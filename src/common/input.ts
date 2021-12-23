@@ -84,10 +84,10 @@ enum ParseState {
     paramsPBlock = 9,
     paramsPEscape = 10,
     paramsPNamed = 17,
-    paramsD = 11,
-    paramsDBlock = 12,
-    paramsDEscape = 13,
-    paramsDNamed = 14,
+    paramsN = 11,
+    paramsNBlock = 12,
+    paramsNEscape = 13,
+    paramsNNamed = 14,
     escape = 15,
     verbatim = 16
 }
@@ -577,6 +577,7 @@ export class Input extends EventEmitter {
         let s = 0;
         const pd: boolean = this.client.options.parseDoubleQuotes;
         const ps: boolean = this.client.options.parseSingleQuotes;
+        const cmdChar: string = this.client.options.commandChar;
 
         for (; idx < tl; idx++) {
             c = txt.charAt(idx);
@@ -688,7 +689,7 @@ export class Input extends EventEmitter {
                 break;
                 */
                 default:
-                    if (idx === 0 && c === '#') {
+                    if (idx === 0 && c === cmdChar) {
                         state = 1;
                         fun = '';
                         args = [];
@@ -3416,6 +3417,10 @@ export class Input extends EventEmitter {
         const verbatimChar: string = this.client.options.verbatimChar;
         const eVerbatim: boolean = this.client.options.enableVerbatim;
         const eParamEscape: boolean = this.client.options.enableDoubleParameterEscaping;
+        const paramChar: string = this.client.options.parametersChar;
+        const eParam: boolean = this.client.options.enableParameters;
+        const nParamChar: string = this.client.options.nParametersChar;
+        const eNParam: boolean = this.client.options.enableNParameters;
         let args = [];
         let arg: any = '';
         let findAlias: boolean = true;
@@ -3570,7 +3575,7 @@ export class Input extends EventEmitter {
                     }
                     else if (nest === 0 && (c === '\n' || (stacking && c === stackingChar))) {
                         state = ParseState.none;
-                        str = this.executeScript('#' + str);
+                        str = this.executeScript(cmdChar + str);
                         if (typeof str === 'number') {
                             if (str >= 0)
                                 this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
@@ -3580,8 +3585,8 @@ export class Input extends EventEmitter {
                         if (str !== null) {
                             out += str;
                             /*
-                            if (str.startsWith('#'))
-                                out += '#' + this.parseOutgoing(str.substr(1));
+                            if (str.startsWith(cmdChar))
+                                out += cmdChar + this.parseOutgoing(str.substr(1));
                             else
                                 out += this.parseOutgoing(str);
                             */
@@ -3610,12 +3615,12 @@ export class Input extends EventEmitter {
                     }
                     */
                     switch (c) {
-                        case '%':
+                        case paramChar:
                             if (arg.length === 0) {
                                 if (eAlias && findAlias)
-                                    alias += '%';
+                                    alias += paramChar;
                                 else
-                                    str += '%';
+                                    str += paramChar;
                                 state = ParseState.none;
                                 if (!eParamEscape)
                                     idx--;
@@ -3631,9 +3636,9 @@ export class Input extends EventEmitter {
                                     this.stack.used = this.stack.args.length;
                                 }
                                 else if (eAlias && findAlias)
-                                    alias += '%*';
+                                    alias += paramChar + '*';
                                 else
-                                    str += '%*';
+                                    str += paramChar + '*';
                                 state = ParseState.none;
                                 break;
                             }
@@ -3676,9 +3681,9 @@ export class Input extends EventEmitter {
                                     else if (this.stack.args.indices && tmp < this.stack.args.length)
                                         tmp = this.stack.args.indices[tmp][0] + ' ' + this.stack.args.indices[tmp][1];
                                     else if (_neg)
-                                        tmp = '%x-' + tmp;
+                                        tmp = paramChar + 'x-' + tmp;
                                     else
-                                        tmp = '%x' + tmp;
+                                        tmp = paramChar + 'x' + tmp;
                                 }
                                 else {
                                     if (_neg && tmp < this.stack.args.length)
@@ -3686,9 +3691,9 @@ export class Input extends EventEmitter {
                                     else if (tmp < this.stack.args.length)
                                         tmp = this.stack.args[tmp];
                                     else if (_neg)
-                                        tmp = '%-' + tmp;
+                                        tmp = paramChar + '-' + tmp;
                                     else
-                                        tmp = '%' + tmp;
+                                        tmp = paramChar + tmp;
                                     if (_neg)
                                         this.stack.used = this.stack.args.length;
                                     else if (arg > this.stack.used)
@@ -3713,14 +3718,14 @@ export class Input extends EventEmitter {
                                     }
                                 }
                                 if (eAlias && findAlias) {
-                                    alias += '%';
+                                    alias += paramChar;
                                     if (_neg)
                                         alias += '-';
                                     if (_pos)
                                         alias += 'x';
                                 }
                                 else {
-                                    str += '%';
+                                    str += paramChar;
                                     if (_neg)
                                         str += '-';
                                     if (_pos)
@@ -3742,9 +3747,9 @@ export class Input extends EventEmitter {
                                 str += this.stack.named[arg];
                         }
                         else if (eAlias && findAlias)
-                            alias += '%' + arg;
+                            alias += paramChar + arg;
                         else
-                            str += '%' + arg;
+                            str += paramChar + arg;
                         idx--;
                         state = ParseState.none;
                         arg = '';
@@ -3772,7 +3777,7 @@ export class Input extends EventEmitter {
                                         if (this.client.options.allowEval)
                                             tmp2 = tmp;
                                         else {
-                                            tmp2 = '%';
+                                            tmp2 = paramChar;
                                             idx = idx - tmp.length - 2;
                                         }
                                     }
@@ -3789,7 +3794,7 @@ export class Input extends EventEmitter {
                                 else if (this.client.options.allowEval)
                                     tmp2 = tmp;
                                 else {
-                                    tmp2 = '%';
+                                    tmp2 = paramChar;
                                     idx = idx - arg.length - 2;
                                 }
                             }
@@ -3797,7 +3802,7 @@ export class Input extends EventEmitter {
                                 tmp = parseInt(arg.substring(1), 10);
                                 if (tmp < 0) {
                                     if (-tmp >= this.stack.args.length) {
-                                        tmp2 = '%';
+                                        tmp2 = paramChar;
                                         idx = idx - tmp.length - 2;
                                     }
                                     else
@@ -3806,7 +3811,7 @@ export class Input extends EventEmitter {
                                 else if (tmp < this.stack.args.length)
                                     tmp2 = this.stack.args.indices[tmp][0] + ' ' + this.stack.args.indices[tmp][1];
                                 else {
-                                    tmp2 = '%';
+                                    tmp2 = paramChar;
                                     idx = idx - arg.length - 2;
                                 }
                             }
@@ -3818,7 +3823,7 @@ export class Input extends EventEmitter {
                                     tmp2 = '' + this.evaluate(this.parseInline(arg));
                                 }
                                 else {
-                                    tmp2 += '%';
+                                    tmp2 += paramChar;
                                     idx = idx - arg.length - 2;
                                 }
                             }
@@ -3844,11 +3849,11 @@ export class Input extends EventEmitter {
                 /*
                 case ParseState.paramsPEscape:
                     if (c === '{')
-                        tmp2 = '%{';
+                        tmp2 = paramChar+'{';
                     else if (c === escChar)
-                        tmp2 = '%' + escChar;
+                        tmp2 = paramChar + escChar;
                     else {
-                        tmp2 = '%' + escChar;
+                        tmp2 = paramChar + escChar;
                         idx--;
                     }
                     if (eAlias && findAlias)
@@ -3858,27 +3863,27 @@ export class Input extends EventEmitter {
                     state = ParseState.none;
                     break;
                 */
-                case ParseState.paramsD:
+                case ParseState.paramsN:
                     if (c === '{')
-                        state = ParseState.paramsDBlock;
+                        state = ParseState.paramsNBlock;
                     /*
                     else if (eEscape && c === escChar)
-                        state = ParseState.paramsDEscape;
+                        state = ParseState.paramsNEscape;
                     */
                     else if (c.match(/[^a-zA-Z_$]/g)) {
                         state = ParseState.none;
                         idx--;
                         if (eAlias && findAlias)
-                            alias += '$';
+                            alias += nParamChar;
                         else
-                            str += '$';
+                            str += nParamChar;
                     }
                     else {
                         arg = c;
-                        state = ParseState.paramsDNamed;
+                        state = ParseState.paramsNNamed;
                     }
                     break;
-                case ParseState.paramsDNamed:
+                case ParseState.paramsNNamed:
                     if (c.match(/[^a-zA-Z0-9_]/g)) {
                         if (this.stack.named && this.stack.named.hasOwnProperty(arg)) {
                             if (eAlias && findAlias)
@@ -3893,9 +3898,9 @@ export class Input extends EventEmitter {
                                 str += this.client.variables[arg];
                         }
                         else if (eAlias && findAlias)
-                            alias += '$' + arg;
+                            alias += nParamChar + arg;
                         else
-                            str += '$' + arg;
+                            str += nParamChar + arg;
                         idx--;
                         state = ParseState.none;
                         arg = '';
@@ -3904,13 +3909,13 @@ export class Input extends EventEmitter {
                         arg += c;
                     break;
 /*
-                case ParseState.paramsDEscape:
+                case ParseState.paramsNEscape:
                     if (c === '{')
                         tmp2 = `\{`;
                     else if (c === escChar) 
                         tmp2 = escChar;
                     else {
-                        tmp2 = '$' + escChar;
+                        tmp2 = nParamChar + escChar;
                         idx--;
                     }
                     if (eAlias && findAlias)
@@ -3920,7 +3925,7 @@ export class Input extends EventEmitter {
                     state = ParseState.none;
                     break;
                     */
-                case ParseState.paramsDBlock:
+                case ParseState.paramsNBlock:
                     if (c === '}' && nest === 0) {
                         tmp2 = null;
                         if (arg === 'i')
@@ -3941,7 +3946,7 @@ export class Input extends EventEmitter {
                                         if (this.client.options.allowEval)
                                             tmp2 = tmp;
                                         else {
-                                            tmp2 = '$';
+                                            tmp2 = nParamChar;
                                             idx = idx - arg.length - 2;
                                         }
                                     }
@@ -3958,7 +3963,7 @@ export class Input extends EventEmitter {
                                 else if (this.client.options.allowEval)
                                     tmp2 = tmp;
                                 else {
-                                    tmp2 = '$';
+                                    tmp2 = nParamChar;
                                     idx = idx - arg.length - 2;
                                 }
                             }
@@ -3966,7 +3971,7 @@ export class Input extends EventEmitter {
                                 tmp = parseInt(arg.substring(1), 10);
                                 if (tmp < 0) {
                                     if (-tmp >= this.stack.args.length) {
-                                        tmp2 = '$';
+                                        tmp2 = nParamChar;
                                         idx = idx - arg.length - 2;
                                     }
                                     else
@@ -3975,7 +3980,7 @@ export class Input extends EventEmitter {
                                 else if (tmp < this.stack.args.length)
                                     tmp2 = this.stack.args.indices[tmp][0] + ' ' + this.stack.args.indices[tmp][1];
                                 else {
-                                    tmp2 = '$';
+                                    tmp2 = nParamChar;
                                     idx = idx - arg.length - 2;
                                 }
                             }
@@ -3986,7 +3991,7 @@ export class Input extends EventEmitter {
                                 else if (this.client.options.allowEval)
                                     tmp2 = '' + this.evaluate(this.parseInline(arg));
                                 else {
-                                    tmp2 = '$';
+                                    tmp2 = nParamChar;
                                     idx = idx - arg.length - 2;
                                 }
                             }
@@ -4010,9 +4015,9 @@ export class Input extends EventEmitter {
                         arg += c;
                     break;
                 case ParseState.escape:
-                    if (c === escChar || (stacking && c === stackingChar) || (eVerbatim && c === verbatimChar) || (ePaths && c === spChar) || (eCmd && c === cmdChar))
+                    if (c === escChar || (stacking && c === stackingChar) || (eVerbatim && c === verbatimChar) || (ePaths && c === spChar) || (eCmd && c === cmdChar) || (eParamEscape && c === paramChar) || (eNParam && c === nParamChar))
                         tmp2 = c;
-                    else if ('$%"\'{'.indexOf(c) !== -1)
+                    else if ('"\'{'.indexOf(c) !== -1)
                         tmp2 = c;
                     else
                         tmp2 = escChar + c;
@@ -4040,7 +4045,7 @@ export class Input extends EventEmitter {
                         start = false;
                         continue;
                     }
-                    else if (c === '%') {
+                    else if (eParam && c === paramChar) {
                         state = ParseState.paramsP;
                         _neg = false;
                         _pos = false;
@@ -4048,8 +4053,8 @@ export class Input extends EventEmitter {
                         arg = '';
                         start = false;
                     }
-                    else if (c === '$') {
-                        state = ParseState.paramsD;
+                    else if (eNParam && c === nParamChar) {
+                        state = ParseState.paramsN;
                         _neg = false;
                         _pos = false;
                         _fall = false;
@@ -4182,14 +4187,14 @@ export class Input extends EventEmitter {
         }
         if (state === ParseState.escape)
             str += escChar;
-        else if (state === ParseState.paramsDNamed && arg.length > 0) {
+        else if (state === ParseState.paramsNNamed && arg.length > 0) {
             if (this.stack.named && this.stack.named[arg])
                 str += this.stack.named[arg];
             else if (this.client.variables.hasOwnProperty(arg))
                 str += this.client.variables[arg];
             else {
                 arg = this.parseInline(arg);
-                str += '$';
+                str += nParamChar;
                 if (arg != null) str += arg;
             }
         }
@@ -4211,7 +4216,7 @@ export class Input extends EventEmitter {
             }
             else {
                 arg = this.parseInline(arg);
-                str += '%';
+                str += paramChar;
                 if (_neg)
                     str += '-';
                 if (_pos)
@@ -4221,29 +4226,29 @@ export class Input extends EventEmitter {
         }
         else if (state === ParseState.paramsPBlock) {
             arg = this.parseInline(arg);
-            str += '%{';
+            str += paramChar + '{';
             if (arg != null) str += arg;
         }
-        else if (state === ParseState.paramsD && arg.length > 0) {
+        else if (state === ParseState.paramsN && arg.length > 0) {
             if (this.stack.named) {
                 if (this.stack.named.hasOwnProperty(arg)) {
                     str += this.stack.named[arg];
                 }
                 else {
                     arg = this.parseInline(arg);
-                    str += '$';
+                    str += nParamChar;
                     if (arg != null) str += arg;
                 }
             }
             else {
                 arg = this.parseInline(arg);
-                str += '$';
+                str += nParamChar;
                 if (arg != null) str += arg;
             }
         }
-        else if (state === ParseState.paramsDBlock) {
+        else if (state === ParseState.paramsNBlock) {
             arg = this.parseInline(arg);
-            str += `\${`;
+            str += `${nParamChar}{`;
             if (arg != null) str += arg;
         }
         else if (state === ParseState.path) {
@@ -4252,7 +4257,7 @@ export class Input extends EventEmitter {
             str = '';
         }
         if (!noFunctions && state === ParseState.function) {
-            str = this.executeScript('#' + str);
+            str = this.executeScript(cmdChar + str);
             if (typeof str === 'number') {
                 if (str >= 0)
                     this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);

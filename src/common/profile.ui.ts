@@ -39,6 +39,8 @@ let unarchiver;
 let archive;
 let _spellchecker = true;
 let _prependTrigger = true;
+let _parameter = '%';
+let _nParameter = '$';
 
 const _controllers = {};
 let _controllersCount = 0;
@@ -436,7 +438,7 @@ export function RunTester() {
             else if ($('#trigger-caseSensitive').prop('checked') && $('#trigger-pattern').val() !== $('#trigger-test-text').val())
                 $('#trigger-test-results').val('Pattern doesn\'t Match!');
             else
-                $('#trigger-test-results').val('%0 : ' + $('#trigger-test-text').val() + '\n');
+                $('#trigger-test-results').val(_parameter + '0 : ' + $('#trigger-test-text').val() + '\n');
         }
         else {
             let re;
@@ -456,19 +458,19 @@ export function RunTester() {
                 let r = '';
                 let m = 0;
                 if (res[0] !== $('#trigger-test-text').val() && _prependTrigger) {
-                    r += '%0 : ' + $('#trigger-test-text').val() + '\n';
-                    r += '%x0 : 0 ' + (<string>$('#trigger-test-text').val()).length + '\n';
+                    r += _parameter + '0 : ' + $('#trigger-test-text').val() + '\n';
+                    r += _parameter + 'x0 : 0 ' + (<string>$('#trigger-test-text').val()).length + '\n';
                     m = 1;
                 }
                 let i;
                 for (i = 0; i < res.length; i++) {
-                    r += '%' + (i + m) + ' : ' + res[i] + '\n';
-                    r += `%x${i + m} : ${res.indices[i][0]} ${res.indices[i][1]}\n`;
+                    r += _parameter + (i + m) + ' : ' + res[i] + '\n';
+                    r += `${_parameter}x${i + m} : ${res.indices[i][0]} ${res.indices[i][1]}\n`;
                 }
                 if (res.groups) {
                     let g = Object.keys(res.groups);
                     for (i = 0; i < g.length; i++)
-                        r += `\${${g[i]}} : ${res.groups[g[i]]}\n`;
+                        r += `${_nParameter}${g[i]} : ${res.groups[g[i]]}\n`;
                 }
                 $('#trigger-test-results').val(r);
             }
@@ -2361,6 +2363,8 @@ function loadOptions() {
     _sortDir = options.profiles.sortDirection || 1;
     _spellchecker = options.spellchecking || true;
     _prependTrigger = options.prependTriggeredLine;
+    _parameter = options.parametersChar;
+    _nParameter = options.nParametersChar;
     updatePads();
 
     let theme = parseTemplate(options.theme) + '.css';
