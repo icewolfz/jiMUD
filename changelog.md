@@ -66,6 +66,7 @@
   - Update tinymce 4.8.3 to 5.10.1
   - Update electron 16.0.4 to 16.0.5
   - Update font-list 1.4.2 to 1.4.3
+  - Update mathjs 10.0.0 to 10.0.1
 
 ## v0.17.3 2021-12-14
 
