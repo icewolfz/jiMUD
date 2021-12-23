@@ -3603,10 +3603,12 @@ export class Input extends EventEmitter {
                         state = ParseState.paramsPBlock;
                         continue;
                     }
+                    /*
                     if (eEscape && c === escChar && arg.length === 0) {
                         state = ParseState.paramsPEscape;
                         continue;
                     }
+                    */
                     switch (c) {
                         case '%':
                             if (arg.length === 0) {
@@ -3839,6 +3841,7 @@ export class Input extends EventEmitter {
                     else
                         arg += c;
                     break;
+                /*
                 case ParseState.paramsPEscape:
                     if (c === '{')
                         tmp2 = '%{';
@@ -3854,11 +3857,14 @@ export class Input extends EventEmitter {
                         str += tmp2;
                     state = ParseState.none;
                     break;
+                */
                 case ParseState.paramsD:
                     if (c === '{')
                         state = ParseState.paramsDBlock;
+                    /*
                     else if (eEscape && c === escChar)
                         state = ParseState.paramsDEscape;
+                    */
                     else if (c.match(/[^a-zA-Z_$]/g)) {
                         state = ParseState.none;
                         idx--;
@@ -3897,11 +3903,12 @@ export class Input extends EventEmitter {
                     else
                         arg += c;
                     break;
+/*
                 case ParseState.paramsDEscape:
                     if (c === '{')
-                        tmp2 = `\${`;
-                    else if (c === escChar)
-                        tmp2 = '$' + escChar;
+                        tmp2 = `\{`;
+                    else if (c === escChar) 
+                        tmp2 = escChar;
                     else {
                         tmp2 = '$' + escChar;
                         idx--;
@@ -3912,6 +3919,7 @@ export class Input extends EventEmitter {
                         str += tmp2;
                     state = ParseState.none;
                     break;
+                    */
                 case ParseState.paramsDBlock:
                     if (c === '}' && nest === 0) {
                         tmp2 = null;
@@ -4002,7 +4010,7 @@ export class Input extends EventEmitter {
                         arg += c;
                     break;
                 case ParseState.escape:
-                    if (c === escChar || c === stackingChar || c === verbatimChar || c === spChar)
+                    if (c === escChar || (stacking && c === stackingChar) || (eVerbatim && c === verbatimChar) || (ePaths && c === spChar) || (eCmd && c === cmdChar))
                         tmp2 = c;
                     else if ('$%"\'{'.indexOf(c) !== -1)
                         tmp2 = c;

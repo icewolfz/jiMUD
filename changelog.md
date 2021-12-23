@@ -35,7 +35,6 @@
   - Input parser: Add $var user variable style support
   - Profile Manager: Alias params are now highlighted with an error if invalid
   - [Preferences](docs/preferences.md): Add [Enable Double Parameter Escaping](docs/preferences.md#scripting) to enable/disable doubling up of the parameter character `%` to escape as well as using escape character, default to off as there is an escape system
-
 - **Fixed:**
   - Updated README to update build requirements
   - Display:
@@ -57,6 +56,9 @@
     - Skip alias invalid named params
     - Fixed number parsing in places not accepting +#, as +# is a valid positive number and converted to simple #
     - Fixed ignore spaces around number arguments for functions and commands
+    - Fixed escape characters following parameters, eg $\ or %\ where not correctly parsing escape characters
+    - Fixed not escaping command special character
+    - Fixed do not escape disabled special characters
   - Fixed [#variable](docs/commands.md) should not evaluate the value to allow use of raw strings as needed, eg #va test {3+5} should store 3+5 not 8, if you want the evaluated value use #var test \${3+5} or #va test \{${3+5}}
   - Fixed [#variable](docs/commands.md) throws an error now when invalid variable names are used
 - **Changed:**
