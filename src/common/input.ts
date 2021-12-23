@@ -5379,8 +5379,8 @@ export class Input extends EventEmitter {
                     if (res.groups)
                         Object.keys(res.groups).map(v => this.client.variables[v] = res.groups[v]);
                     if (ret)
-                        return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re]);
-                    this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re]);
+                        return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re], res.groups);
+                    this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups);
                 }
             }
             catch (e) {
@@ -5406,7 +5406,7 @@ export class Input extends EventEmitter {
         let ret; // = '';
         switch (trigger.style) {
             case 1:
-                this._stack.push({ loops: [], args: args, named: named, used: 0, regex: regex });
+                this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex });
                 try {
                     ret = this.parseOutgoing(trigger.value);
                 }
@@ -5426,13 +5426,13 @@ export class Input extends EventEmitter {
                 else {
                     if (!this._TriggerFunctionCache[idx]) {
                         if (named)
-                            ret = Object.keys(named).map(v => `let ${v} = this._input.stack.named["${v}"];`).join('') + '\n';
+                            ret = Object.keys(named).map(v => `let ${v} = this.variables["${v}"];`).join('') + '\n';
                         else
                             ret = '';
                         /*jslint evil: true */
                         this._TriggerFunctionCache[idx] = new Function('try { ' + ret + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                     }
-                    this._stack.push({ loops: [], args: args, named: named, used: 0, regex: regex, indices: args.indices });
+                    this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex, indices: args.indices });
                     try {
                         ret = this._TriggerFunctionCache[idx].apply(this.client, args);
                     }
