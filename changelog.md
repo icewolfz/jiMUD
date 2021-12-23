@@ -34,6 +34,8 @@
   - Add save image as, copy image, copy image link to MXP image context menu
   - Input parser: Add $var user variable style support
   - Profile Manager: Alias params are now highlighted with an error if invalid
+  - [Preferences](docs/preferences.md): Add [Enable Double Parameter Escaping](docs/preferences.md#scripting) to enable/disable doubling up of the parameter character `%` to escape as well as using escape character, default to off as there is an escape system
+
 - **Fixed:**
   - Updated README to update build requirements
   - Display:

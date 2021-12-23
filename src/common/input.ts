@@ -3415,6 +3415,7 @@ export class Input extends EventEmitter {
         const escChar: string = this.client.options.escapeChar;
         const verbatimChar: string = this.client.options.verbatimChar;
         const eVerbatim: boolean = this.client.options.enableVerbatim;
+        const eParamEscape: boolean = this.client.options.enableDoubleParameterEscaping;
         let args = [];
         let arg: any = '';
         let findAlias: boolean = true;
@@ -3614,6 +3615,8 @@ export class Input extends EventEmitter {
                                 else
                                     str += '%';
                                 state = ParseState.none;
+                                if (!eParamEscape)
+                                    idx--;
                             }
                             break;
                         case '*':
@@ -4175,7 +4178,7 @@ export class Input extends EventEmitter {
             if (this.stack.named && this.stack.named[arg])
                 str += this.stack.named[arg];
             else if (this.client.variables.hasOwnProperty(arg))
-                    str += this.client.variables[arg];
+                str += this.client.variables[arg];
             else {
                 arg = this.parseInline(arg);
                 str += '$';
@@ -5038,12 +5041,11 @@ export class Input extends EventEmitter {
                 else if (args[0] === "true")
                     return 1.0;
                 else if (args[0] === "false")
-                    return 0.0;                    
+                    return 0.0;
                 return 0;
         }
         return null;
     }
-
 
     public GetNamedArguments(str: string, args, append?: boolean) {
         if (str === '*')

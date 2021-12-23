@@ -457,6 +457,7 @@ export class Settings {
     public watchForProfilesChanges = false;
     public onProfileChange: OnProfileChange = OnProfileChange.Nothing;
     public onProfileDeleted: OnProfileDeleted = OnProfileDeleted.Nothing;
+    public enableDoubleParameterEscaping = false;
 
     public windows = {};
     public buttons = {
