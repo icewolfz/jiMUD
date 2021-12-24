@@ -480,6 +480,15 @@ export class Variable extends Item {
 
     constructor(data?, profile?) {
         super(data);
+        if (typeof data === 'object') {
+            let prop;
+            for (prop in data) {
+                if (!data.hasOwnProperty(prop)) {
+                    continue;
+                }
+                this[prop] = data[prop];
+            }
+        }
         this.profile = profile;
         if (this.useDefault)
             this.rawValue = this.defaultValue;
