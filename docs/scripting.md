@@ -18,14 +18,12 @@ To use scripting you just have to select script as the type from the type dropdo
 
 ## User variables
 
-You can access them scripting using client.variables['NAME'], client.variables.NAME, this.variables['NAME'], or this.variables.NAME. Some variables may not be accessible to the parser: i and repeatnum are special variables and are used i loops and are not accessible in parse style, named arguments in parse style will be used instead of any user defined of the same name, **variables lost when client is closed**
+You can access them scripting using client.getVariable('NAME') and client.setVariable('NAME', value). Some variables may not be accessible to the parser: i and repeatnum are special variables and are used i loops and are not accessible in parse style, named arguments in parse style will be used instead of any user defined of the same name, **variables lost when client is closed**
 
 Example:
 ```javascript
-this.variables.test = 5;
-this.variables['test'] = 5;
-client.variables.test = 5;
-client.variables['test'] = 5;
+this.setVariable('test', 5);
+client.setVariable('test', 5);
 ```
 
 Set or created variables can be access in the expression system by name eg ${test + 5} would be 10 based from example

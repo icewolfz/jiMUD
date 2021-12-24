@@ -118,13 +118,14 @@ export class Input extends EventEmitter {
     public enableTriggers: boolean = true;
 
     public getScope() {
-        //if no stack use direct for some performance
-        if (this._stack.length === 0)
-            return this.client.variables;
-        if (!this.stack.named && !this.loops.length)
-            return this.client.variables;
         let scope: any = {};
-        Object.assign(scope, this.client.variables);
+        const vars = this.client.variables;
+        const vl = vars.length;
+        for (let v = 0; v < vl; v++)
+            scope[vars[v].name] = vars[v].rawValue;
+        //if no stack use direct for some performance
+        if (this._stack.length === 0 || (!this.stack.named && !this.loops.length))
+            return scope;
         if (this.stack.named)
             Object.assign(scope, this.stack.named);
         if (this.loops.length) {
@@ -140,21 +141,19 @@ export class Input extends EventEmitter {
     }
 
     public setScope(scope) {
-        //if same object no need to update
-        if (scope === this.client.variables) return;
         const ll = this.loops.length;
         for (const name in scope) {
             //not a property, i or repeatnum
             if (!Object.prototype.hasOwnProperty.call(scope, name) || name === 'i' || name === 'repeatnum')
                 continue;
             //if i to z and the loop exist skip it
-            if(name.length === 1 && ll && name.charCodeAt(0) >= 105 && name.charCodeAt(0) < 105 + ll)
+            if (name.length === 1 && ll && name.charCodeAt(0) >= 105 && name.charCodeAt(0) < 105 + ll)
                 continue;
             //part of the named arguments so skip
             if (this.stack.named && Object.prototype.hasOwnProperty.call(this.stack.named, name))
                 continue;
             //update/add new variables
-            this.client.variables[name] = scope[name];
+            this.client.setVariable(name, scope[name]);
         }
     }
 
@@ -3202,11 +3201,11 @@ export class Input extends EventEmitter {
             case 'var':
             case 'va':
                 if (args.length === 0) {
-                    i = Object.keys(this.client.variables);
+                    i = this.client.variables;
                     al = i.length;
                     tmp = [];
                     for (n = 0; n < al; n++)
-                        tmp.push(i[n] + ' = ' + this.client.variables[i[n]]);
+                        tmp.push(i[n].name + ' = ' + i[n].rawValue);
                     return tmp.join('\n');
                 }
                 i = args.shift();
@@ -3216,21 +3215,21 @@ export class Input extends EventEmitter {
                 if (!isValidIdentifier(i))
                     throw new Error("Invalid variable name");
                 if (args.length === 0)
-                    return this.client.variables[i]?.toString();
+                    return this.client.getVariable(i)?.toString();
                 args = args.join(' ');
                 if (args.match(/^\{\s*?.*\s*?\}$/g))
                     args = args.substr(1, args.length - 2);
                 args = this.parseInline(args);
                 if (args.match(/^\s*?[-|+]?\d+\s*?$/))
-                    this.client.variables[i] = parseInt(args, 10);
+                    this.client.setVariable(i, parseInt(args, 10));
                 else if (args.match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
-                    this.client.variables[i] = parseFloat(args);
+                    this.client.setVariable(i, parseFloat(args));
                 else if (args === "true")
-                    this.client.variables[i] = true;
+                    this.client.setVariable(i, true);
                 else if (args === "false")
-                    this.client.variables[i] = false;
+                    this.client.setVariable(i, false);
                 else
-                    this.client.variables[i] = args;
+                    this.client.setVariable(i, args);
                 return null;
             case 'add':
             case 'ad':
@@ -3240,12 +3239,13 @@ export class Input extends EventEmitter {
                 if (i.match(/^\{\s*?.*\s*?\}$/g))
                     i = i.substr(1, i.length - 2);
                 i = this.parseInline(i);
-                if (typeof this.client.variables[i] !== 'number')
+                n = this.client.getVariable(i);
+                if (typeof n !== 'number')
                     throw new Error(i + ' is not a number');
                 args = args.join(' ');
                 if (args.match(/^\{\s*?.*\s*?\}$/g))
                     args = args.substr(1, args.length - 2);
-                this.client.variables[i] += this.evaluate(this.parseInline(args));
+                this.client.setVariable(i, n + this.evaluate(this.parseInline(args)));
                 return null;
             case 'math':
             case 'mat':
@@ -3258,7 +3258,7 @@ export class Input extends EventEmitter {
                 args = args.join(' ');
                 if (args.match(/^\{\s*?.*\s*?\}$/g))
                     args = args.substr(1, args.length - 2);
-                this.client.variables[i] = this.evaluate(this.parseInline(args));
+                this.client.setVariable(i, this.evaluate(this.parseInline(args)));
                 return null;
             case 'evaluate':
             case 'eva':
@@ -3895,11 +3895,11 @@ export class Input extends EventEmitter {
                             else
                                 str += this.stack.named[arg];
                         }
-                        else if (this.client.variables.hasOwnProperty(arg)) {
+                        else if (this.client.hasVariable(arg)) {
                             if (eAlias && findAlias)
-                                alias += this.client.variables[arg];
+                                alias += this.client.getVariable(arg);
                             else
-                                str += this.client.variables[arg];
+                                str += this.client.getVariable(arg);
                         }
                         else if (eAlias && findAlias)
                             alias += nParamChar + arg;
@@ -3912,23 +3912,23 @@ export class Input extends EventEmitter {
                     else
                         arg += c;
                     break;
-/*
-                case ParseState.paramsNEscape:
-                    if (c === '{')
-                        tmp2 = `\{`;
-                    else if (c === escChar) 
-                        tmp2 = escChar;
-                    else {
-                        tmp2 = nParamChar + escChar;
-                        idx--;
-                    }
-                    if (eAlias && findAlias)
-                        alias += tmp2;
-                    else
-                        str += tmp2;
-                    state = ParseState.none;
-                    break;
-                    */
+                /*
+                                case ParseState.paramsNEscape:
+                                    if (c === '{')
+                                        tmp2 = `\{`;
+                                    else if (c === escChar) 
+                                        tmp2 = escChar;
+                                    else {
+                                        tmp2 = nParamChar + escChar;
+                                        idx--;
+                                    }
+                                    if (eAlias && findAlias)
+                                        alias += tmp2;
+                                    else
+                                        str += tmp2;
+                                    state = ParseState.none;
+                                    break;
+                                    */
                 case ParseState.paramsNBlock:
                     if (c === '}' && nest === 0) {
                         tmp2 = null;
@@ -4194,8 +4194,8 @@ export class Input extends EventEmitter {
         else if (state === ParseState.paramsNNamed && arg.length > 0) {
             if (this.stack.named && this.stack.named[arg])
                 str += this.stack.named[arg];
-            else if (this.client.variables.hasOwnProperty(arg))
-                str += this.client.variables[arg];
+            else if (this.client.hasVariable(arg))
+                str += this.client.getVariable(arg);
             else {
                 arg = this.parseInline(arg);
                 str += nParamChar;
@@ -4894,11 +4894,11 @@ export class Input extends EventEmitter {
                     for (sides = 1; sides < c.length; sides++) {
                         if (!args.length)
                             break;
-                        this.client.variables[this.stripQuotes(this.parseInline(args[0]))] = c[sides];
+                        this.client.setVariable(this.stripQuotes(this.parseInline(args[0])), c[sides]);
                         args.shift();
                     }
                     if (args.length)
-                        this.client.variables[this.stripQuotes(this.parseInline(args[0]))] = c[0].length;
+                        this.client.setVariable(this.stripQuotes(this.parseInline(args[0])), c[0].length);
                 }
                 return c.indices[0][0] + 1;
             case 'trim':
@@ -5386,7 +5386,7 @@ export class Input extends EventEmitter {
                         args.indices = [[0, args[0].length], ...res.indices];
                     }
                     if (res.groups)
-                        Object.keys(res.groups).map(v => this.client.variables[v] = res.groups[v]);
+                        Object.keys(res.groups).map(v => this.client.setVariable(v, res.groups[v]));
                     if (ret)
                         return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re], res.groups);
                     this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups);
@@ -5435,7 +5435,7 @@ export class Input extends EventEmitter {
                 else {
                     if (!this._TriggerFunctionCache[idx]) {
                         if (named)
-                            ret = Object.keys(named).map(v => `let ${v} = this.variables["${v}"];`).join('') + '\n';
+                            ret = Object.keys(named).map(v => `let ${v} = this.getVariable("${v}");`).join('') + '\n';
                         else
                             ret = '';
                         /*jslint evil: true */

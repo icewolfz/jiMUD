@@ -8,7 +8,7 @@ import { AnsiColorCode } from './ansi';
 import { parseTemplate, SortItemArrayByPriority, existsSync } from './library';
 import { Settings } from './settings';
 import { Input } from './input';
-import { ProfileCollection, Alias, Trigger, Alarm, Macro, Profile, Button, Context, TriggerType } from './profile';
+import { ProfileCollection, Alias, Trigger, Alarm, Macro, Profile, Button, Context, TriggerType, Variable } from './profile';
 import { MSP } from './msp';
 import { Display } from './display';
 import { exec } from 'child_process';
@@ -26,6 +26,7 @@ interface ItemCache {
     buttons: Button[];
     contexts: Context[];
     defaultContext: boolean;
+    variables: Variable[];
 }
 
 /**
@@ -48,7 +49,8 @@ export class Client extends EventEmitter {
         contexts: null,
         defaultContext: null,
         alarms: null,
-        alarmPatterns: []
+        alarmPatterns: [],
+        variables: null
     };
     private _alarm: NodeJS.Timer;
 
@@ -66,8 +68,6 @@ export class Client extends EventEmitter {
     public connectTime: number = 0;
     public lastSendTime: number = 0;
     public defaultTitle = 'jiMUD';
-
-    public variables: any = {};
 
     set enabledProfiles(value: string[]) {
         const a = [];
@@ -315,6 +315,56 @@ export class Client extends EventEmitter {
             return this._itemCache.defaultContext;
         this._itemCache.defaultContext = this.profiles.defaultContext;
         return this._itemCache.defaultContext;
+    }
+
+    get variables(): Variable[] {
+        if (this._itemCache.variables)
+            return this._itemCache.variables;
+        const keys = this.profiles.keys;
+        const tmp = [];
+        let k = 0;
+        const kl = keys.length;
+        if (kl === 0) return [];
+        if (kl === 1) {
+            if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableVariables)
+                this._itemCache.variables = [];
+            else
+                this._itemCache.variables = SortItemArrayByPriority(this.profiles.items[keys[k]].variables);
+            return this._itemCache.variables;
+        }
+        for (; k < kl; k++) {
+            if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableVariables || this.profiles.items[keys[k]].variables.length === 0)
+                continue;
+            tmp.push.apply(tmp, SortItemArrayByPriority(this.profiles.items[keys[k]].variables));
+        }
+        this._itemCache.variables = tmp;
+        return this._itemCache.variables;
+    }
+
+    public getVariable(name) {
+        const va = this.variables.find(x => x.name === name);
+        if (!va) return null;
+        return va.rawValue;
+    }
+
+    public setVariable(name: string, value, profile?) {
+        let va = this.variables.find(x => x.name === name);
+        if (!va) {
+            va = new Variable({ name: name });
+            if (!profile)
+                profile = this.activeProfile.variables.push(va);
+            else if (typeof profile === 'string')
+                profile = this.profiles.items[profile];
+            if (!profile || !profile.variables)
+                throw new Error('Invalid profile');
+            profile.variables.push(va);
+            this._itemCache.variables = null;
+        }
+        va.rawValue = value;
+    }
+
+    public hasVariable(name) {
+        return this.variables.find(x => x.name === name) !== null;
     }
 
     get activeProfile(): Profile {
@@ -1133,6 +1183,7 @@ export class Client extends EventEmitter {
             macros: null,
             buttons: null,
             contexts: null,
+            variables: null,
             defaultContext: null,
             alarms: null,
             alarmPatterns: []

@@ -419,7 +419,7 @@ export class Variable extends Item {
     public useDefault: boolean = false;
     public params: string = '';
 
-    public set setValue(value: any) {
+    public set rawValue(value: any) {
         switch (this.type) {
             case VariableType.Integer:
                 if (typeof value === 'string') {
@@ -443,7 +443,7 @@ export class Variable extends Item {
         super.value = value;
         this._type = typeof value;
     }
-    public get getValue(): any {
+    public get rawValue(): any {
         switch (this.type) {
             case VariableType.Auto:
                 if (typeof this.value !== this._type) {
@@ -482,7 +482,7 @@ export class Variable extends Item {
         super(data);
         this.profile = profile;
         if (this.useDefault)
-            this.setValue(this.defaultValue);
+            this.rawValue = this.defaultValue;
     }
 
     public clone() {
@@ -514,12 +514,14 @@ export class Profile {
     public macros: Macro[] = [];
     public buttons: Button[] = [];
     public contexts: Context[] = [];
+    public variables: Variable[] = [];
     public enableMacros: boolean = true;
     public enableTriggers: boolean = true;
     public enableAliases: boolean = true;
     public enableButtons: boolean = true;
     public enableContexts: boolean = true;
     public enableDefaultContext: boolean = true;
+    public enableVariables: boolean = true;
 
     constructor(name?: (string | boolean), defaults?: boolean) {
         if (typeof name === 'string') {
@@ -758,6 +760,12 @@ export class Profile {
                 profile.contexts.push(new Context(data.contexts[i], profile));
             }
         }
+        if (data.variables && data.variables.length > 0) {
+            il = data.variables.length;
+            for (i = 0; i < il; i++) {
+                profile.variables.push(new Variable(data.buttons[i], profile));
+            }
+        }
         profile.file = profile.name;
         return profile;
     }
@@ -871,6 +879,15 @@ export class Profile {
                 il = this.contexts.length;
                 for (i = 0; i < il; i++) {
                     data.contexts.push(clone(this.contexts[i], (key, value) => {
+                        if (key === 'profile') return undefined;
+                        return value;
+                    }));
+                }
+            }
+            if (this.variables.length > 0) {
+                il = this.variables.length;
+                for (i = 0; i < il; i++) {
+                    data.variables.push(clone(this.variables[i], (key, value) => {
                         if (key === 'profile') return undefined;
                         return value;
                     }));
@@ -1357,6 +1374,25 @@ export class ProfileCollection {
                 return false;
         }
         return true;
+    }
+
+    get variables(): Button[] {
+        const keys = this.keys;
+        let tmp = [];
+        let k = 0;
+        const kl = keys.length;
+        if (kl === 0) return [];
+        if (kl === 1) {
+            if (!this.items[keys[0]].enabled || !this.items[keys[0]].enableVariables)
+                return [];
+            return this.items[keys[0]].variables;
+        }
+        for (; k < kl; k++) {
+            if (!this.items[keys[k]].enabled || !this.items[keys[k]].enableVariables || this.items[keys[k]].variables.length === 0)
+                continue;
+            tmp = tmp.concat(this.items[keys[k]].variables);
+        }
+        return tmp;
     }
 }
 
