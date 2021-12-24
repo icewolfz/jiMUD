@@ -49,7 +49,8 @@ export enum VariableType {
     StringLiteral = 4,
     StringList = 5,
     Record = 6,
-    Float = 7
+    Float = 7,
+    Array = 8
 }
 
 export function MacroDisplay(item: Macro) {
@@ -418,11 +419,33 @@ export class Variable extends Item {
     public useDefault: boolean = false;
     public params: string = '';
 
-    public set rawValue(value: any) {
+    public set setValue(value: any) {
+        switch(this.type) {
+            case VariableType.Integer:
+                if(typeof value === 'string')
+                {
+                    value = parseInt(value, 10);
+                    if(isNaN(value))
+                        value = 0;
+                }
+                else if(typeof value === 'boolean')
+                    value = value ? 1 : 0;
+                break;
+            case VariableType.Float:
+                if(typeof value === 'string')
+                {
+                    value = parseFloat(value);
+                    if(isNaN(value))
+                        value = 0.0;
+                }
+                else if(typeof value === 'boolean')
+                    value = value ? 1.0 : 0.0;
+                break;
+        }
         super.value = value;
         this._type = typeof value;
     }
-    public get rawValue(): any {
+    public get getValue(): any {
         switch (this.type) {
             case VariableType.Auto:
                 if (typeof this.value !== this._type) {
@@ -1562,8 +1585,12 @@ export function convertPattern(pattern: string, client?) {
                 else if (c === '}' || !((i >= 48 && i <= 57) || (i >= 65 && i <= 90) || (i >= 97 && i <= 122) || i === 95 || i === 36)) {
                     if (!isValidIdentifier(arg))
                         throw new Error('Invalid variable name')
-                    if (client)
-                        stringBuilder.push(client.variables[arg] || '');
+                    if (client) {
+                        if (client.variables[arg] instanceof Variable)
+                            stringBuilder.push(client.variables[arg].value || '');
+                        else
+                            stringBuilder.push(client.variables[arg] || '');
+                    }
                     if (c !== '}')
                         idx--;
                     state = convertPatternState.None;
@@ -1634,8 +1661,12 @@ export function convertPattern(pattern: string, client?) {
         case convertPatternState.Variable:
             if (!isValidIdentifier(arg))
                 throw new Error('Invalid variable name');
-            if (client)
-                stringBuilder.push(client.variables[arg] || '');
+            if (client) {
+                if (client.variables[arg] instanceof Variable)
+                    stringBuilder.push(client.variables[arg].getValue() || '');
+                else
+                    stringBuilder.push(client.variables[arg] || '');
+            }
             break;
     }
     if (nest)
