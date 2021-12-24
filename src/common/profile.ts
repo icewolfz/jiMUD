@@ -420,25 +420,23 @@ export class Variable extends Item {
     public params: string = '';
 
     public set setValue(value: any) {
-        switch(this.type) {
+        switch (this.type) {
             case VariableType.Integer:
-                if(typeof value === 'string')
-                {
+                if (typeof value === 'string') {
                     value = parseInt(value, 10);
-                    if(isNaN(value))
+                    if (isNaN(value))
                         value = 0;
                 }
-                else if(typeof value === 'boolean')
+                else if (typeof value === 'boolean')
                     value = value ? 1 : 0;
                 break;
             case VariableType.Float:
-                if(typeof value === 'string')
-                {
+                if (typeof value === 'string') {
                     value = parseFloat(value);
-                    if(isNaN(value))
+                    if (isNaN(value))
                         value = 0.0;
                 }
-                else if(typeof value === 'boolean')
+                else if (typeof value === 'boolean')
                     value = value ? 1.0 : 0.0;
                 break;
         }
@@ -483,6 +481,8 @@ export class Variable extends Item {
     constructor(data?, profile?) {
         super(data);
         this.profile = profile;
+        if (this.useDefault)
+            this.setValue(this.defaultValue);
     }
 
     public clone() {
@@ -720,7 +720,7 @@ export class Profile {
             if (!data.hasOwnProperty(prop)) {
                 continue;
             }
-            if (prop === 'aliases' || prop === 'triggers' || prop === 'macros' || prop === 'buttons' || prop === 'contexts')
+            if (prop === 'aliases' || prop === 'triggers' || prop === 'macros' || prop === 'buttons' || prop === 'contexts' || prop === 'variables')
                 continue;
             profile[prop] = data[prop];
         }
@@ -885,7 +885,7 @@ export class Profile {
             if (!data.hasOwnProperty(prop)) {
                 continue;
             }
-            if (prop === 'aliases' || prop === 'triggers' || prop === 'macros' || prop === 'buttons' || prop === 'contexts')
+            if (prop === 'aliases' || prop === 'triggers' || prop === 'macros' || prop === 'buttons' || prop === 'contexts' || prop === 'variables')
                 continue;
             profile[prop] = data[prop];
         }
