@@ -76,10 +76,10 @@
 ## v0.17.3 2021-12-14
 
 - **New:**
-  - Add [#cw](docs/commands.md#display) colors all words matching current trigger pattern
-  - Add [#pcol](docs/commands.md#display) color text based on start and end positions
-  - Add [#highlight](docs/commands.md#display) make text bold or brighter color if already bold
-  - Add [#color {pattern} fore,back,bold profile](docs/commands.md#display) pattern and profile arguments to allow for quick trigger creation 
+  - Add [#CW](docs/commands.md#display) colors all words matching current trigger pattern
+  - Add [#PCOL](docs/commands.md#display) color text based on start and end positions
+  - Add [#HIGHLIGHT](docs/commands.md#display) make text bold or brighter color if already bold
+  - Add [#COLOR {pattern} fore,back,bold profile](docs/commands.md#display) pattern and profile arguments to allow for quick trigger creation 
   - Add [%x1..%x99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
   - Add [%ansi(style,fore,back)](docs/functions.md) function to return ansi formatted string
   - Add [%i](docs/functions.md) predefined variable
@@ -94,21 +94,21 @@
   - Add [#continue](docs/commands.md#repeating-and-loops) skips to the next loop iteration
   - Add {} grouping support to [#nnn](docs/commands.md#repeating-and-loops) argument
   - Add [#-nnn](docs/commands.md#repeating-and-loops) repeat commands NNN number of times but with a reverse counter
-  - Add [#if](docs/commands.md#conditionals) if expression is true execute true command, if false and false commands supplied execute them
-  - Add [#case](docs/commands.md#conditionals) return command from list based on the value of index
-  - Add [#switch](docs/commands.md#conditionals) execute each expression until one returns true, if none are true and an else command supplied it is executed instead
-  - Add [#loop](docs/commands.md#repeating-and-loops) Execute the commands a number of times given by the range
-  - Add [#repeat](docs/commands.md#repeating-and-loops) repeat commands number of times returned by expression
-  - Add [#be](docs/commands.md#sounds) short version of [#beep](docs/commands.md)
-  - Add [#add](docs/commands.md#miscellaneous) Add value to variable named name, if current value is non numeric an error will be displayed
-  - Add [#math](docs/commands.md#miscellaneous) Set value to variable named name
-  - Add [#variable](docs/commands.md) Set, get, or display all user set variables
-  - Add [#until](docs/commands.md#repeating-and-loops) Execute commands until the expression evaluates to TRUE
-  - Add [#while](docs/commands.md#repeating-and-loops) Execute commands as long as expression evaluates to TRUE
-  - Add [#forall](docs/commands.md#repeating-and-loops loop stringlist, in the format of a | delimited string and set %i as each word)
-  - Add [#evaluate](docs/commands.md#miscellaneous) Evaluate expression and display to screen like show
-  - Add [#print](docs/commands.md#display) Display text to the screen and append newline, and the display text will not fire triggers
-  - Add [#printprompt](docs/commands.md#display) Display text to the screen, and the display text will not fire triggers
+  - Add [#IF](docs/commands.md#conditionals) if expression is true execute true command, if false and false commands supplied execute them
+  - Add [#CASE](docs/commands.md#conditionals) return command from list based on the value of index
+  - Add [#SWITCH](docs/commands.md#conditionals) execute each expression until one returns true, if none are true and an else command supplied it is executed instead
+  - Add [#LOOP](docs/commands.md#repeating-and-loops) Execute the commands a number of times given by the range
+  - Add [#REPEAT](docs/commands.md#repeating-and-loops) repeat commands number of times returned by expression
+  - Add [#BE](docs/commands.md#sounds) short version of [#BEEP](docs/commands.md)
+  - Add [#ADD](docs/commands.md#miscellaneous) Add value to variable named name, if current value is non numeric an error will be displayed
+  - Add [#MATH](docs/commands.md#miscellaneous) Set value to variable named name
+  - Add [#VARIABLE](docs/commands.md) Set, get, or display all user set variables
+  - Add [#UNTIL](docs/commands.md#repeating-and-loops) Execute commands until the expression evaluates to TRUE
+  - Add [#WHILE](docs/commands.md#repeating-and-loops) Execute commands as long as expression evaluates to TRUE
+  - Add [#FORALL](docs/commands.md#repeating-and-loops loop stringlist, in the format of a | delimited string and set %i as each word)
+  - Add [#EVALUATE](docs/commands.md#miscellaneous) Evaluate expression and display to screen like show
+  - Add [#PRINT](docs/commands.md#display) Display text to the screen and append newline, and the display text will not fire triggers
+  - Add [#PRINTPROMPT](docs/commands.md#display) Display text to the screen, and the display text will not fire triggers
   - Input parser:  
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function
@@ -126,12 +126,12 @@
     - Fixed issues with trailing newlines with nested loops
     - Fixed format error checking to accept only numbers
   - Fixed window size being sent to the mud when status display is hidden/shown
-  - Fixed bug in [#trigger](docs/commands.md#triggers) command and adding to profile not correctly finding if one exist already
-  - Fixed bug in [#event](docs/commands.md#triggers) command and adding to profile not correctly finding if one exist already
-  - Fixed bug in [#wait](docs/commands.md#miscellaneous) to allow parsing of argument to allow for %i and expressions
+  - Fixed bug in [#TRIGGER](docs/commands.md#triggers) command and adding to profile not correctly finding if one exist already
+  - Fixed bug in [#EVENT](docs/commands.md#triggers) command and adding to profile not correctly finding if one exist already
+  - Fixed bug in [#WAIT](docs/commands.md#miscellaneous) to allow parsing of argument to allow for %i and expressions
   - Profile Manager: trigger tester did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
   - Fixed bug with File > Exit when profile manager open and should not close
-  - Fixed bug in [#color](docs/commands.md#display) and [#cw](docs/commands.md#display) not correctly parsing profile argument
+  - Fixed bug in [#COLOR](docs/commands.md#display) and [#CW](docs/commands.md#display) not correctly parsing profile argument
   - Input parser:
     - Fixed - being lost after %
     - Fixed # being lose if %# had a -, * or % following it
@@ -163,15 +163,15 @@
 ## v0.17.2 2021-12-06
 
 - **New:**
-  - Add [#color](docs/commands.md) color last added line
-  - Add [#window](docs/commands.md) to open/show supported windows
-  - Add [#testunicodeemoji](docs/commands.md) to display unicode emoji symbols
+  - Add [#COLOR](docs/commands.md) color last added line
+  - Add [#WINDOW](docs/commands.md) to open/show supported windows
+  - Add [#TESTUNICODEEMOJI](docs/commands.md) to display unicode emoji symbols
   - [Preferences](docs/preferences.md)
     - Add [Open 'Who is on' in web browser](docs/preferences.md#advanced) to open who in child window or browser
     - Add [Disable trigger on error](docs/preferences.md#scripting) to disable a trigger if an error happens, either from pattern or scripting, enabled by default to prevent spamming of broken trigger
     - Add [Prepend triggered line](docs/preferences.md#scripting) disable the fix to prepend the triggered line as %0,$0, or %{0} to return to previous usage
-  - Add [%{color(fore,back,bold)}](docs/functions.md) function to return color codes
-  - Add [%{zcolor(fore,back,effect)}](docs/functions.md) function to convert zmud/cmud style color codes into supported jiMUD codes
+  - Add [%color(fore,back,bold)](docs/functions.md) function to return color codes
+  - Add [%zcolor(fore,back,effect)](docs/functions.md) function to convert zmud/cmud style color codes into supported jiMUD codes
   - Status Display: Add ability to resize
   - Triggers: Add [Trigger on raw](docs/profiles.md) option to match on raw line including any ansi escape codes
   - Themes: Add two new themes, updated [preference](docs/preferences.md) docs to mention custom theme folders and [customizing](docs/customizing.md) docs to explain themes
@@ -187,8 +187,8 @@
     - Fixed bug in MXP expire not clearing send/link end tag
     - Fixed split view resize when horizontal scroll bar visible
   - Ansi Parser: Fixed bug in MXP expire tag not correctly expiring links on same line that come before the tag
-  - Fixed bug with [#gag](docs/commands.md) not working from command line
-  - Fixed bug with [#gag](docs/commands.md) and number argument not correctly working
+  - Fixed bug with [#GAG](docs/commands.md) not working from command line
+  - Fixed bug with [#GAG](docs/commands.md) and number argument not correctly working
   - Triggers:
     - Fixed bug with regex trigger caching
     - Fixed bug with %0, ${0}, $0 not always return full raw line of text **Warning:** this may break some triggers
@@ -201,7 +201,7 @@
   - Status Display: Fixed some monster icon positions
   - Backup: Fixed importing of [Show Script Errors](docs/preferences.md#scripting) setting
 - **Changed:**
-  - Expand [#testmxpexpire](docs/commands.md) to test same line expiring
+  - Expand [#TESTMXPEXPIRE](docs/commands.md) to test same line expiring
   - Use resize cursors instead of column resize cursors for resizable areas
   - Update electron 16.0.1 to 16.0.4
 
