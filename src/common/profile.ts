@@ -763,7 +763,7 @@ export class Profile {
         if (data.variables && data.variables.length > 0) {
             il = data.variables.length;
             for (i = 0; i < il; i++) {
-                profile.variables.push(new Variable(data.buttons[i], profile));
+                profile.variables.push(new Variable(data.variables[i], profile));
             }
         }
         profile.file = profile.name;
@@ -796,12 +796,14 @@ export class Profile {
                 macros: [],
                 buttons: [],
                 contexts: [],
+                variables: [],
                 enableMacros: this.enableMacros,
                 enableTriggers: this.enableTriggers,
                 enableAliases: this.enableAliases,
                 enableButtons: this.enableButtons,
                 enableContexts: this.enableContexts,
-                enableDefaultContext: this.enableDefaultContext
+                enableDefaultContext: this.enableDefaultContext,
+                enableVariables: this.enableVariables
             };
 
             if (this.aliases.length > 0) {
@@ -938,6 +940,12 @@ export class Profile {
                 const item = data.contexts[i].clone();
                 item.profile = profile;
                 profile.contexts.push(item);
+            }
+        }
+        if (data.variables && data.variables.length > 0) {
+            il = data.buttons.length;
+            for (i = 0; i < il; i++) {
+                profile.variables.push(new Variable(data.variables[i], profile));
             }
         }
         return profile;

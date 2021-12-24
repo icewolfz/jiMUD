@@ -443,6 +443,9 @@ export class Settings {
     public enableNParameters: boolean = true;
     public nParametersChar: string = '$';
 
+    public enableVariable: boolean = true;
+    public variableChar: string = '@';
+
     public commandDelay: number = 500;
     public commandDelayCount: number = 5;
 

@@ -89,7 +89,11 @@ enum ParseState {
     paramsNEscape = 13,
     paramsNNamed = 14,
     escape = 15,
-    verbatim = 16
+    verbatim = 16,
+    variable = 18,
+    variableBlock = 19,
+    variableAssign = 20,
+    variableSkipSpace = 21
 }
 
 export class Input extends EventEmitter {
@@ -120,9 +124,9 @@ export class Input extends EventEmitter {
     public getScope() {
         let scope: any = {};
         const vars = this.client.variables;
-        const vl = vars.length;
-        for (let v = 0; v < vl; v++)
-            scope[vars[v].name] = vars[v].rawValue;
+        for (const name in vars) {
+            scope[name] = vars[name].rawValue;
+        }
         //if no stack use direct for some performance
         if (this._stack.length === 0 || (!this.stack.named && !this.loops.length))
             return scope;
@@ -3202,10 +3206,10 @@ export class Input extends EventEmitter {
             case 'va':
                 if (args.length === 0) {
                     i = this.client.variables;
-                    al = i.length;
                     tmp = [];
-                    for (n = 0; n < al; n++)
-                        tmp.push(i[n].name + ' = ' + i[n].rawValue);
+                    for (n in i) {
+                        tmp.push(n + ' = ' + i[n].rawValue);
+                    }
                     return tmp.join('\n');
                 }
                 i = args.shift();
@@ -3425,6 +3429,8 @@ export class Input extends EventEmitter {
         const eParam: boolean = this.client.options.enableParameters;
         const nParamChar: string = this.client.options.nParametersChar;
         const eNParam: boolean = this.client.options.enableNParameters;
+        const varChar: string = this.client.options.variableChar;
+        const eVar: boolean = this.client.options.enableVariable;
         let args = [];
         let arg: any = '';
         let findAlias: boolean = true;
@@ -4043,6 +4049,64 @@ export class Input extends EventEmitter {
                         start = false;
                     }
                     break;
+                case ParseState.variableAssign:
+                case ParseState.variable:
+                    if (c === '{')
+                        state = ParseState.variableBlock;
+                    //invalid start character
+                    else if (arg.length == 0 && c.match(/[^a-zA-Z_$]/g)) {
+                        if (eAlias && findAlias)
+                            alias += varChar;
+                        else
+                            str += varChar;
+                        idx--;
+                        state = ParseState.none;
+                    }
+                    else if (c.match(/[^a-zA-Z0-9_$]/g)) {
+                        if (this.client.hasVariable(arg)) {
+                            if (eAlias && findAlias)
+                                alias += this.client.getVariable(arg);
+                            else
+                                str += this.client.getVariable(arg);
+                        }
+                        else if (eAlias && findAlias)
+                            alias += varChar + arg;
+                        else
+                            str += varChar + arg;
+                        idx--;
+                        state = ParseState.none;
+                        arg = '';
+                    }
+                    else
+                        arg += c;
+                    break;
+                case ParseState.variableBlock:
+                    if (c === '}') {
+                        if (this.client.hasVariable(arg)) {
+                            tmp2 = this.client.getVariable(arg);
+                            if (tmp2 != null && eAlias && findAlias)
+                                alias += tmp2;
+                            else if (tmp2 != null)
+                                str += tmp2;
+                        }
+                        else if (tmp2 != null && eAlias && findAlias)
+                            alias += varChar + '{' + arg;
+                        else if (tmp2 != null)
+                            str += varChar + '{' + arg;
+                        state = ParseState.none;
+                        arg = '';
+                    }
+                    else if (c.match(/[^a-zA-Z0-9_$]/g)) {
+                        if (tmp2 != null && eAlias && findAlias)
+                            alias += varChar + '{' + arg;
+                        else if (tmp2 != null)
+                            str += varChar + '{' + arg;
+                        idx--;
+                        state = ParseState.none;
+                    }
+                    else
+                        arg += c;
+                    break;
                 default:
                     if (eEscape && c === escChar) {
                         state = ParseState.escape;
@@ -4059,6 +4123,14 @@ export class Input extends EventEmitter {
                     }
                     else if (eNParam && c === nParamChar) {
                         state = ParseState.paramsN;
+                        _neg = false;
+                        _pos = false;
+                        _fall = false;
+                        arg = '';
+                        start = false;
+                    }
+                    else if (eVar && c === varChar) {
+                        state = start ? ParseState.variableAssign : ParseState.variable;
                         _neg = false;
                         _pos = false;
                         _fall = false;
@@ -4259,6 +4331,29 @@ export class Input extends EventEmitter {
             str = this.ProcessPath(str);
             if (str !== null) out += str;
             str = '';
+        }
+        else if (state === ParseState.variable && arg.length > 0) {
+            if (this.client.hasVariable(arg))
+                str += this.client.getVariable(arg);
+            else {
+                arg = this.parseInline(arg);
+                str += varChar;
+                if (arg != null) str += arg;
+            }
+        }
+        else if (state === ParseState.variableBlock && arg.length > 0) {
+            arg = this.parseInline(arg);
+            str += `${varChar}{`;
+            if (arg != null) str += arg;
+        }
+        else if (state === ParseState.variableAssign && arg.length > 0) {
+            if (this.client.hasVariable(arg))
+                str += this.client.getVariable(arg);
+            else {
+                arg = this.parseInline(arg);
+                str += varChar;
+                if (arg != null) str += arg;
+            }
         }
         if (!noFunctions && state === ParseState.function) {
             str = this.executeScript(cmdChar + str);
