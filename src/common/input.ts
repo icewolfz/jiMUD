@@ -129,7 +129,7 @@ export class Input extends EventEmitter {
             Object.assign(scope, this.stack.named);
         if (this.loops.length) {
             scope.repeatnum = this.repeatnum;
-            let ll = this.loops.length;
+            const ll = this.loops.length;
             //i to z only
             for (let l = 0; l < ll && l < 18; l++)
                 scope[String.fromCharCode(105 + l)] = this.loops[l];
@@ -142,9 +142,13 @@ export class Input extends EventEmitter {
     public setScope(scope) {
         //if same object no need to update
         if (scope === this.client.variables) return;
+        const ll = this.loops.length;
         for (const name in scope) {
             //not a property, i or repeatnum
             if (!Object.prototype.hasOwnProperty.call(scope, name) || name === 'i' || name === 'repeatnum')
+                continue;
+            //if i to z and the loop exist skip it
+            if(name.length === 1 && ll && name.charCodeAt(0) >= 105 && name.charCodeAt(0) < 105 + ll)
                 continue;
             //part of the named arguments so skip
             if (this.stack.named && Object.prototype.hasOwnProperty.call(this.stack.named, name))

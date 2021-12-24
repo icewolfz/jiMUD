@@ -65,6 +65,7 @@
     - Fixed not escaping command special character
     - Fixed do not escape disabled special characters
     - Fixed command character not being correctly replaced with custom character in some places
+    - Fixed saving nested loop variables as user variables
   - Fixed [#variable](docs/commands.md) should not evaluate the value to allow use of raw strings as needed, eg #va test {3+5} should store 3+5 not 8, if you want the evaluated value use #var test \${3+5} or #va test \{${3+5}}
   - Fixed [#variable](docs/commands.md) throws an error now when invalid variable names are used
 - **Changed:**
