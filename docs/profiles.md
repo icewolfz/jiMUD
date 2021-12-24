@@ -121,7 +121,7 @@
     - `%y` match any amount of non-white space (same as %x but matches start and end of line)
     - `%p` match any punctuation
     - `%q` match any punctuation (same as %p but matches start and end of line)
-    - `%t` match a direction command
+    - `%t` match a direction command, ignored as not supported
     - `%e` match ESC character for ansi patterns
     - `[range]` match any amount of characters listed in range
     - `^` force pattern to match starting at the beginning of the line
