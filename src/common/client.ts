@@ -353,16 +353,42 @@ export class Client extends EventEmitter {
         return this._itemCache.variables;
     }
 
-    public getVariable(name) {
-        const va = this.variables[name];
+    public getVariable(name, key?) {
+        const va: Variable = this.variables[name];
         if (!va) return null;
-        if(va.type === VariableType.StringExpanded)
+        if (va.type === VariableType.StringExpanded) {
+            if (key)
+                throw new Error(`${name} is not an array or record`);
             return this._input.parseInline(va.rawValue);
+        }
+        if (key) {
+            if (va.type === VariableType.StringList || va.type === VariableType.Array || (va.type === VariableType.Auto && Array.isArray(va))) {
+                if (typeof key === 'string') {
+                    if (key.trim().match((/^[-|+]?\d+$/g)))
+                        key = parseInt(key, 10);
+                    else
+                        throw new Error("Index must be a number");
+                }
+                else if (typeof key !== 'number')
+                    throw new Error("Index must be a number");
+                if (key < 0 || key >= va.rawValue.length)
+                    throw new Error("Index out of bounds");
+                return va.rawValue[key];
+            }
+            else if (va.type === VariableType.Record || (va.type === VariableType.Auto && typeof va.rawValue === 'object' && va.rawValue.hasOwnProperty(key)))
+                return va.rawValue[key];
+            else
+                throw new Error(`${name} is not an array or record`);
+        }
         return va.rawValue;
     }
 
-    public setVariable(name: string, value, profile?) {
-        let va;
+    public setVariable(name: string, key, value?, profile?) {
+        let va: Variable;
+        if (value === undefined) {
+            value = key;
+            key = undefined;
+        }
         if (this.variables.hasOwnProperty(name))
             va = this.variables[name];
         else {
@@ -376,7 +402,27 @@ export class Client extends EventEmitter {
             profile.variables.push(va);
             this._itemCache.variables = null;
         }
-        va.rawValue = value;
+        if (key) {
+            if (va.type === VariableType.StringList || va.type === VariableType.Array || (va.type === VariableType.Auto && Array.isArray(va))) {
+                if (typeof key === 'string') {
+                    if (key.trim().match((/^[-|+]?\d+$/g)))
+                        key = parseInt(key, 10);
+                    else
+                        throw new Error("Index must be a number");
+                }
+                else if (typeof key !== 'number')
+                    throw new Error("Index must be a number");
+                if (key < 0 || key >= va.rawValue.length)
+                    throw new Error("Index out of bounds");
+                va.rawValue[key] = value;
+            }
+            else if (va.type === VariableType.Record || (va.type === VariableType.Auto && typeof va.rawValue === 'object' && va.rawValue.hasOwnProperty(key)))
+                va.rawValue[key] = value;
+            else
+                throw new Error(`${name} is not an array or record`);
+        }
+        else
+            va.rawValue = value;
         this.saveProfile(va.profile.name);
     }
 

@@ -439,6 +439,24 @@ export class Variable extends Item {
                 else if (typeof value === 'boolean')
                     value = value ? 1.0 : 0.0;
                 break;
+            case VariableType.StringList:
+                if (typeof value === 'string')
+                    value = splitQuoted(value, "|");
+                else if (!Array.isArray(value))
+                    value = [value];
+                break;
+            case VariableType.Array:
+                if (typeof value === 'string' && value.match(/^\[.*\]/g)) {
+                    value = value.substring(0, value.length - 2);
+                    value = splitQuoted(value, ",");
+                }
+                else if (!Array.isArray(value))
+                    value = [value];
+                break;
+            case VariableType.Record:
+                if (typeof this.value === 'string')
+                    value = JSON.stringify(this.value);
+                break;
         }
         super.value = value;
         this._type = typeof value;
@@ -473,6 +491,19 @@ export class Variable extends Item {
             case VariableType.StringList:
                 if (typeof this.value === 'string')
                     return splitQuoted(this.value, '|');
+                if (!Array.isArray(this.value))
+                    return [this.value];
+                return this.value;
+            case VariableType.Array:
+                if (typeof this.value === 'string' && this.value.match(/^\[.*\]/g)) {
+                    return splitQuoted(this.value.substring(0, this.value.length - 2), ",");
+                }
+                else if (!Array.isArray(this.value))
+                    return [this.value];
+                return this.value;
+            case VariableType.Record:
+                if (typeof this.value === 'string')
+                    return JSON.parse(this.value);
                 return this.value;
         }
         return this.value;
@@ -508,6 +539,10 @@ export class Variable extends Item {
                 if (typeof this.value === 'string')
                     return this.value;
                 return '"' + (<any[]>this.value).join('"|"') + '"';
+            case VariableType.Array:
+                if (typeof this.value === 'string')
+                    return this.value;
+                return '"' + (<any[]>this.value).join('","') + '"';
         }
         return this.value?.toString();
     }

@@ -18,7 +18,7 @@ To use scripting you just have to select script as the type from the type dropdo
 
 ## User variables
 
-You can access them scripting using client.getVariable('NAME') and client.setVariable('NAME', value). Some variables may not be accessible to the parser: i and repeatnum are special variables and are used i loops and are not accessible in parse style, named arguments in parse style will be used instead of any user defined of the same name, **variables lost when client is closed**
+You can access them scripting using client.getVariable('NAME', 'SUBKEY') and client.setVariable('NAME'', 'SUBKEY', value). Some variables may not be accessible to the parser: i and repeatnum are special variables and are used i loops and are not accessible in parse style, named arguments in parse style will be used instead of any user defined of the same name, **variables lost when client is closed**
 
 Example:
 ```javascript
