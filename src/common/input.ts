@@ -11,7 +11,7 @@ import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, convertPatt
 import { NewLineType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
-import { create, all, factory, e, string } from 'mathjs';
+import { create, all, factory } from 'mathjs';
 
 const allWithCustomFunctions = {
     ...all,
