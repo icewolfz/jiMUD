@@ -93,7 +93,9 @@ enum ParseState {
     variable = 18,
     variableBlock = 19,
     variableAssign = 20,
-    variableSkipSpace = 21
+    variableSkipSpace = 21,
+    variableIndex = 22,
+    variableIndexAssign = 23
 }
 
 export class Input extends EventEmitter {

@@ -8,10 +8,9 @@ import { AnsiColorCode } from './ansi';
 import { parseTemplate, SortItemArrayByPriority, existsSync } from './library';
 import { Settings } from './settings';
 import { Input } from './input';
-import { ProfileCollection, Alias, Trigger, Alarm, Macro, Profile, Button, Context, TriggerType, Variable } from './profile';
+import { ProfileCollection, Alias, Trigger, Alarm, Macro, Profile, Button, Context, TriggerType, Variable, VariableType } from './profile';
 import { MSP } from './msp';
 import { Display } from './display';
-import { exec } from 'child_process';
 const { version } = require('../../package.json');
 const path = require('path');
 const fs = require('fs');
@@ -357,6 +356,8 @@ export class Client extends EventEmitter {
     public getVariable(name) {
         const va = this.variables[name];
         if (!va) return null;
+        if(va.type === VariableType.StringExpanded)
+            return this._input.parseInline(va.rawValue);
         return va.rawValue;
     }
 
