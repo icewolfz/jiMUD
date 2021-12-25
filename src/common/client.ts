@@ -401,6 +401,12 @@ export class Client extends EventEmitter {
             va = new Variable({ name: name }, profile);
             profile.variables.push(va);
             this._itemCache.variables = null;
+            if (key) {
+                if (key.trim().match((/^[-|+]?\d+$/g)))
+                    va.rawValue = [];
+                else
+                    va.rawValue = {};
+            }
         }
         if (key) {
             if (va.type === VariableType.StringList || va.type === VariableType.Array || (va.type === VariableType.Auto && Array.isArray(va))) {
@@ -412,8 +418,6 @@ export class Client extends EventEmitter {
                 }
                 else if (typeof key !== 'number')
                     throw new Error("Index must be a number");
-                if (key < 0 || key >= va.rawValue.length)
-                    throw new Error("Index out of bounds");
                 va.rawValue[key] = value;
             }
             else if (va.type === VariableType.Record || (va.type === VariableType.Auto && typeof va.rawValue === 'object' && va.rawValue.hasOwnProperty(key)))
