@@ -690,7 +690,7 @@ export class Status extends EventEmitter {
         this.lagMeter.firstElementChild.textContent = (lag / 1000) + 's';
     }
 
-    public updateInterface(noSpliter?) {
+    public updateInterface(noSplitter?) {
         const display = $('#display');
         const displayBorder = $('#display-border');
         const command = $('#command');
@@ -812,7 +812,7 @@ export class Status extends EventEmitter {
                 this.lagMeter.style.display = 'none';
             }
         }
-        if (!noSpliter)
+        if (!noSplitter)
             this.updateSplitter();
         this.emit('updated-interface');
     }

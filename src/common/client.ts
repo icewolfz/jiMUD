@@ -1,4 +1,4 @@
-// spell-checker:words cmdfont
+// spell-checker:words cmdfont repeatnum
 // spell-checker:ignore endof, Commandon errored
 
 import EventEmitter = require('events');
