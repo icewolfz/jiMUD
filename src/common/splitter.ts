@@ -15,7 +15,7 @@ export enum Orientation {
 }
 
 /**
- * Spliiter display control
+ * Splitter display control
  *
  * @export
  * @class Splitter

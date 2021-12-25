@@ -7,7 +7,7 @@ const path = require('path');
 
 import IRichLanguageConfiguration = monaco.languages.LanguageConfiguration;
 import ILanguage = monaco.languages.IMonarchLanguage;
-import IWordAtPosition = monaco.editor.IWordAtPosition;
+//import IWordAtPosition = monaco.editor.IWordAtPosition;
 //import { DebugTimer } from './editor.base';
 
 //https://github.com/Microsoft/vscode/blob/master/extensions/typescript-language-features/src/features/languageConfiguration.ts

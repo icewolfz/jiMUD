@@ -1437,7 +1437,7 @@ export class ProfileCollection {
 %q            match any punctuation (same as %p but matches start and end of line)
    \p{P}
 %t            match a direction command
-   ignore for now as idont know what it does             
+   ignore for now as i dont know what it does             
 %e            match ESC character for ansi patterns
    \e
 [range]      match any amount of characters listed in range
@@ -1451,21 +1451,20 @@ $            force pattern to match ending at the end of the line
 ~            quote the next character to prevent it to be interpreted as a wild card, required to match special characters
    replace with \                 
 ~~            match a quote character verbatim
-   replace with \\ (not needed as ~ by itself is repalced with a \
+   replace with \\ (not needed as ~ by itself is replaced with a \
 {val1|val2|val3|...} match any of the specified strings can not use other wildcard inside this
    remove {}
-@variable match any of the specified strings or keys works with string lists and record variables
-   already converted to values if string lines vonvered to the prevous format and handled
+@variable match any of the specified strings or keys
+    parsed and replaced with the variable value
 {^string}      do not match the specified string
    [^string] replace {} with []
 &nn      matches exactly nn characters (fixed width pattern)
    {nn} remove & and wrap in {}
 &VarName      assigns the matched string to the given variable (see below for more info)
    (?<VarName>pattern ) research more, prob is varname can contain patterns so have to parse out name and patterns
-   probably best to preparse and get name / pattern then parse pattern seperatly in a recusive call
-added in CMUD 2.0+
-%/regex/% matches the given Regular Expression (Added in v2.0)
-%%function() runs any CMUD function (Added in v2.06) 
+   probably best to pre-parse and get name / pattern then parse pattern separately in a recursive call
+%/regex/% matches the given Regular Expression
+%%function() runs any function
 http://forums.zuggsoft.com/modules/mx_kb/kb.php?mode=doc&page=3&refpage=3&a=cmud_Pattern_Match
            */
 export function convertPattern(pattern: string, client?) {
