@@ -95,7 +95,7 @@ enum ParseState {
     variable = 18,
     variableBlock = 19,
     variableAssign = 20,
-    variableSkipSpace = 21,
+    variableAssignValue = 21,
     variableIndex = 22,
     variableIndexAssign = 23
 }
@@ -4053,7 +4053,6 @@ export class Input extends EventEmitter {
                         start = false;
                     }
                     break;
-                case ParseState.variableAssign:
                 case ParseState.variable:
                     if (c === '{')
                         state = ParseState.variableBlock;
@@ -4067,6 +4066,13 @@ export class Input extends EventEmitter {
                         state = ParseState.none;
                     }
                     else if (c.match(/[^a-zA-Z0-9_$]/g)) {
+                        if (start) {
+                            state = ParseState.variableAssign;
+                            idx--;
+                            start = false;
+                            break;
+                        }
+                        start = false;
                         if (this.client.hasVariable(arg)) {
                             if (eAlias && findAlias)
                                 alias += this.client.getVariable(arg);
@@ -4111,6 +4117,47 @@ export class Input extends EventEmitter {
                     else
                         arg += c;
                     break;
+                case ParseState.variableAssign:
+                    if (c === '=') {
+                        state = ParseState.variableAssignValue;
+                        tmp = '';
+                    }
+                    else if (c.match(/[^\s]/g)) {
+                        state = ParseState.none;
+                        tmp = arg.trimRight();
+                        if (this.client.hasVariable(tmp)) {
+                            str += this.client.getVariable(tmp);
+                            if (tmp.length !== arg.length) {
+                                if (eAlias && findAlias)
+                                    alias += arg.substr(tmp.length);
+                                else
+                                    str += arg.substr(tmp.length);
+                            }
+                        }
+                        else if (eAlias && findAlias)
+                            alias += varChar + arg;
+                        else
+                            str += varChar + arg;
+                        idx--;
+                        state = ParseState.none;
+                    }
+                    else
+                        arg += c;
+                    break;
+                case ParseState.variableAssignValue:
+                    if (c === '\n' || (stacking && c === stackingChar)) {
+                        state = ParseState.none;
+                        this.client.setVariable(arg.trimRight(), tmp.trimLeft());
+                        str = '';
+                        start = true;
+                        if (this.stack.continue || this.stack.break) {
+                            if (out.length === 0) return null;
+                            return out;
+                        }
+                    }
+                    else
+                        tmp += c;
+                    break;
                 default:
                     if (eEscape && c === escChar) {
                         state = ParseState.escape;
@@ -4134,12 +4181,11 @@ export class Input extends EventEmitter {
                         start = false;
                     }
                     else if (eVar && c === varChar) {
-                        state = start ? ParseState.variableAssign : ParseState.variable;
+                        state = ParseState.variable;
                         _neg = false;
                         _pos = false;
                         _fall = false;
                         arg = '';
-                        start = false;
                     }
                     else if (!noFunctions && eCmd && start && c === cmdChar) {
                         state = ParseState.function;
@@ -4350,14 +4396,19 @@ export class Input extends EventEmitter {
             str += `${varChar}{`;
             if (arg != null) str += arg;
         }
-        else if (state === ParseState.variableAssign && arg.length > 0) {
-            if (this.client.hasVariable(arg))
-                str += this.client.getVariable(arg);
-            else {
-                arg = this.parseInline(arg);
-                str += varChar;
-                if (arg != null) str += arg;
+        else if (state === ParseState.variableAssign && arg.length) {
+            tmp = arg.trimRight();
+            if (this.client.hasVariable(tmp)) {
+
+                str += this.client.getVariable(tmp);
+                if (tmp.length !== arg.length)
+                    str += arg.substr(tmp.length);
             }
+            else
+                str += varChar + arg;
+        }
+        else if (state === ParseState.variableAssignValue) {
+            this.client.setVariable(arg.trimRight(), tmp.trimLeft());
         }
         if (!noFunctions && state === ParseState.function) {
             str = this.executeScript(cmdChar + str);
