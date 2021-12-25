@@ -50,7 +50,8 @@ export enum VariableType {
     StringList = 5,
     Record = 6,
     Float = 7,
-    Array = 8
+    Array = 8,
+    JSON = 9
 }
 
 export function MacroDisplay(item: Macro) {
@@ -453,9 +454,10 @@ export class Variable extends Item {
                 else if (!Array.isArray(value))
                     value = [value];
                 break;
+            case VariableType.JSON:
             case VariableType.Record:
                 if (typeof this.value === 'string')
-                    value = JSON.stringify(this.value);
+                    value = JSON.parse(this.value);
                 break;
         }
         super.value = value;
@@ -501,6 +503,7 @@ export class Variable extends Item {
                 else if (!Array.isArray(this.value))
                     return [this.value];
                 return this.value;
+            case VariableType.JSON:
             case VariableType.Record:
                 if (typeof this.value === 'string')
                     return JSON.parse(this.value);
@@ -543,6 +546,10 @@ export class Variable extends Item {
                 if (typeof this.value === 'string')
                     return this.value;
                 return '"' + (<any[]>this.value).join('","') + '"';
+            case VariableType.JSON:
+                if (typeof this.value === 'string')
+                    return this.value;
+                return JSON.stringify(this.value);
         }
         return this.value?.toString();
     }
