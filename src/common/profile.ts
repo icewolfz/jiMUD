@@ -420,83 +420,118 @@ export class Variable extends Item {
     public useDefault: boolean = false;
     public params: string = '';
 
+    /**
+     * Set the raw value and convert to the final value based on set type
+     */
     public set rawValue(value: any) {
+        let _type: string = typeof value;
         switch (this.type) {
             case VariableType.Integer:
+                //attempt to parse the number from string
                 if (typeof value === 'string') {
                     value = parseInt(value, 10);
                     if (isNaN(value))
                         value = 0;
-                }
+                }//boolean is 0 or 1 as a number
                 else if (typeof value === 'boolean')
                     value = value ? 1 : 0;
                 break;
             case VariableType.Float:
+                //attempt to parse float from string
                 if (typeof value === 'string') {
                     value = parseFloat(value);
                     if (isNaN(value))
                         value = 0.0;
-                }
+                }//boolean is 0 or 1 as a number, force as a float using .0
                 else if (typeof value === 'boolean')
                     value = value ? 1.0 : 0.0;
                 break;
             case VariableType.StringList:
+                //a string array that converts to a | delimited string as needed
                 if (typeof value === 'string')
-                    value = splitQuoted(value, "|").map(v => v.match(/^".*"$/g) ? v.substr(0, v.length - 2) : v);
+                    //split by quotes in case a | has been quoted, parse the values striping quotes
+                    value = splitQuoted(value, "|").map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
+                //not a string but need to be an array
                 else if (!Array.isArray(value))
                     value = [value];
+                _type = 'stringlist';
                 break;
             case VariableType.Array:
-                if (typeof value === 'string' && value.match(/^\[.*\]/g)) {
+                //an array is a list of , delimited values with strings optionally quoted
+                //if string and [] brackets convert to array
+                if (typeof value === 'string' && value.match(/^\[.*\]$/g)) {
+                    //strip []
                     value = value.substring(1, value.length - 2);
+                    //split with quotes in mind and convert values as needed
                     value = splitQuoted(value, ",").map(v => parseValue(v, true, false));
                 }
                 else if (!Array.isArray(value))
                     value = [value];
                 break;
             case VariableType.Record:
+                //an associative array of key:value pairs
                 if (typeof value === 'string') {
+                    //attempt json convert even if change it may fail
                     try {
                         value = JSON.parse(value);
                     }
                     catch {
-                        if (value.match(/^\[.*\]/g) || value.match(/^\{.*\}/g)) {
-                            const tmp = {};
+                        const tmp = {};
+                        //strip [] or {}
+                        if (value.match(/^\[.*\]$/g) || value.match(/^\{.*\}$/g))
+                            value.substring(1, value.length - 2)
+                        //split by quoted strings and , delimiter like an array
+                        splitQuoted(value, ",").map(v => {
+                            //each value should be in the format key:value or key=value, split with quotes in mind
+                            const d = splitQuoted(v, "=:");
+                            //strip any quotes and convert values as needed
+                            tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], true) : 0;
+                        });
+                        value = tmp;
+                    }
+                }
+                break;
+            case VariableType.JSON:
+                //json should convert and throw errors if invalid
+                if (typeof value === 'string')
+                    value = JSON.parse(value);
+                break;
+            case VariableType.Auto:
+                //attempt to find value type
+                if (typeof value === 'string')
+                    //attempt to parse with hson
+                    try {
+                        value = JSON.parse(value);
+                    }
+                    catch {
+                        let tmp;
+                        //an array
+                        if (value.match(/^\[.*\]$/g))
+                            value = splitQuoted(value.substring(1, value.length - 2), ",").map(v => parseValue(v, true, false));
+                        //record/object
+                        else if (value.match(/^\{.*\}$/g)) {
+                            tmp = {};
                             splitQuoted(value.substring(1, value.length - 2), ",").map(v => {
                                 const d = splitQuoted(v, "=:");
                                 tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], true) : 0;
                             });
                             value = tmp;
                         }
-                    }
-                }
-                break;
-            case VariableType.JSON:
-                if (typeof value === 'string')
-                    value = JSON.parse(value);
-                break;
-            case VariableType.Auto:
-                if (typeof value === 'string')
-                    try {
-                        value = JSON.parse(value);
-                    }
-                    catch {
-                        if (value.match(/^\[.*\]/g))
-                            value = splitQuoted(value.substring(1, value.length - 2), ",").map(v => parseValue(v, true, false));
-                        else if (value.match(/^\{.*\}/g)) {
-                            const tmp = {};
-                            splitQuoted(value.substring(1, value.length - 2), ",").map(v => {
-                                const d = splitQuoted(v, "=:");
-                                tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], true) : 0;
-                            });
-                            value = tmp;
+                        //string list
+                        else {
+                            tmp = splitQuoted(value, "|").map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
+                            if (tmp.length > 1) {
+                                value = tmp;
+                                _type = 'stringlist';
+                            }
                         }
                     }
                 break;
         }
         super.value = value;
-        this._type = typeof value;
+        this._type = _type;
     }
+    //return rawValue converting as needed
     public get rawValue(): any {
         switch (this.type) {
             case VariableType.Auto:
@@ -508,7 +543,18 @@ export class Variable extends Item {
                             return this.value.toString();
                         case 'boolean':
                             return Boolean(this.value);
+                        case 'stringlist':
+                            if (typeof this.value === 'string')
+                                return splitQuoted(this.value, '|').map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
+                            if (!Array.isArray(this.value))
+                                return [this.value];
                     }
+                }
+                if (this._type === 'stringlist') {
+                    if (typeof this.value === 'string')
+                        return splitQuoted(this.value, '|').map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
+                    if (!Array.isArray(this.value))
+                        return [this.value];
                 }
                 return this.value;
             case VariableType.Float:
@@ -521,9 +567,7 @@ export class Variable extends Item {
                         return JSON.parse(this.value);
                     }
                     catch {
-                        if (this.value.match(/^\[.*\]/g))
-                            return splitQuoted(this.value.substring(1, this.value.length - 2), ",").map(v => parseValue(v, true, false));
-                        if (this.value.match(/^\{.*\}/g)) {
+                        if (this.value.match(/^\[.*\]$/g) || this.value.match(/^\{.*\}$/g)) {
                             const tmp = {};
                             splitQuoted(this.value.substring(1, this.value.length - 2), ",").map(v => {
                                 const d = splitQuoted(v, "=:");
@@ -536,14 +580,13 @@ export class Variable extends Item {
                 return this.value;
             case VariableType.StringList:
                 if (typeof this.value === 'string')
-                    return splitQuoted(this.value, '|').map(v => v.match(/^".*"$/g) ? v.substr(0, v.length - 2) : v);
+                    return splitQuoted(this.value, '|').map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
                 if (!Array.isArray(this.value))
                     return [this.value];
                 return this.value;
             case VariableType.Array:
-                if (typeof this.value === 'string' && this.value.match(/^\[.*\]/g)) {
+                if (typeof this.value === 'string' && this.value.match(/^\[.*\]$/g))
                     return splitQuoted(this.value.substring(1, this.value.length - 2), ",").map(v => parseValue(v, true, false));
-                }
                 else if (!Array.isArray(this.value))
                     return [this.value];
                 return this.value;
@@ -594,6 +637,8 @@ export class Variable extends Item {
                     return this.value;
                 return JSON.stringify(this.value);
             case VariableType.Auto:
+                if (this._type === 'stringlist' && Array.isArray(this.value))
+                    return (<any>this.value).map(v => v.indexOf('|') ? `"${v}"` : v).join('|');
                 if (Array.isArray(this.value))
                     return (<any[]>this.value).map(v => typeof v === 'string' ? `"${v}"` : v).join(',');
                 if (typeof this.value === 'object')
