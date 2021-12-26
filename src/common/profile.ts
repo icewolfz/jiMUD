@@ -1,4 +1,4 @@
-//spell-checker:ignore displaytype, submenu, triggernewline, triggerprompt
+//spell-checker:ignore displaytype, submenu, triggernewline, triggerprompt, stringlist
 import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority, splitQuoted, isValidIdentifier, parseValue } from './library';
 const path = require('path');
 const fs = require('fs');
@@ -448,9 +448,13 @@ export class Variable extends Item {
                 break;
             case VariableType.StringList:
                 //a string array that converts to a | delimited string as needed
-                if (typeof value === 'string')
+                if (typeof value === 'string') {
+                    //strip quotes
+                    if (value.match(/^".*"$/g))
+                        value = splitQuoted(this.value.substr(1, this.value.length - 2), '|').map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
                     //split by quotes in case a | has been quoted, parse the values striping quotes
                     value = splitQuoted(value, "|").map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
+                }
                 //not a string but need to be an array
                 else if (!Array.isArray(value))
                     value = [value];
@@ -499,7 +503,7 @@ export class Variable extends Item {
             case VariableType.Auto:
                 //attempt to find value type
                 if (typeof value === 'string')
-                    //attempt to parse with hson
+                    //attempt to parse with json
                     try {
                         value = JSON.parse(value);
                     }
@@ -518,12 +522,12 @@ export class Variable extends Item {
                             value = tmp;
                         }
                         //string list
-                        else {
-                            tmp = splitQuoted(value, "|").map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
-                            if (tmp.length > 1) {
-                                value = tmp;
-                                _type = 'stringlist';
-                            }
+                        else if (value.indexOf('|')) {
+                            //strip quotes
+                            if (value.match(/^".*"$/g))
+                                value = splitQuoted(this.value.substr(1, this.value.length - 2), '|').map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
+                            value = splitQuoted(value, "|").map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
+                            _type = 'stringlist';
                         }
                     }
                 break;
@@ -551,8 +555,11 @@ export class Variable extends Item {
                     }
                 }
                 if (this._type === 'stringlist') {
-                    if (typeof this.value === 'string')
+                    if (typeof this.value === 'string') {
+                        if (this.value.match(/^".*"$/g))
+                            return splitQuoted(this.value.substr(1, this.value.length - 2), '|').map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
                         return splitQuoted(this.value, '|').map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
+                    }
                     if (!Array.isArray(this.value))
                         return [this.value];
                 }
