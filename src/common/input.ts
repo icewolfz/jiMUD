@@ -96,8 +96,13 @@ enum ParseState {
     variableBlock = 19,
     variableAssign = 20,
     variableAssignValue = 21,
-    variableIndex = 22,
-    variableIndexAssign = 23
+    variableKey = 22,
+    variableKeyAssign = 23,
+    variableKeyAssignValue = 24,
+    variableBlockAssign = 25,
+    variableBlockAssignValue = 26,
+    variableBlockKeyAssign = 27,
+    variableBlockKeyAssignValue = 28,
 }
 
 export class Input extends EventEmitter {
@@ -4100,9 +4105,9 @@ export class Input extends EventEmitter {
                                 str += tmp2;
                         }
                         else if (tmp2 != null && eAlias && findAlias)
-                            alias += varChar + '{' + arg;
+                            alias += varChar + '{' + arg + '}';
                         else if (tmp2 != null)
-                            str += varChar + '{' + arg;
+                            str += varChar + '{' + arg + '}';
                         state = ParseState.none;
                         arg = '';
                     }
