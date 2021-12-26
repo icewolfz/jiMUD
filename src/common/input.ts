@@ -6,7 +6,7 @@
 //spell-checker:ignore bitand bitnot bitor bitshift bittest bitnum bitxor isfloat isnumber
 import EventEmitter = require('events');
 import { MacroModifiers } from './profile';
-import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier } from './library';
+import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, parseValue } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, convertPattern } from './profile';
@@ -3233,17 +3233,7 @@ export class Input extends EventEmitter {
                 args = args.join(' ');
                 if (args.match(/^\{\s*?.*\s*?\}$/g))
                     args = args.substr(1, args.length - 2);
-                args = this.parseInline(args);
-                if (args.match(/^\s*?[-|+]?\d+\s*?$/))
-                    this.client.setVariable(i, parseInt(args, 10));
-                else if (args.match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
-                    this.client.setVariable(i, parseFloat(args));
-                else if (args === "true")
-                    this.client.setVariable(i, true);
-                else if (args === "false")
-                    this.client.setVariable(i, false);
-                else
-                    this.client.setVariable(i, args);
+                this.client.setVariable(i, parseValue(this.parseInline(args)));
                 return null;
             case 'add':
             case 'ad':

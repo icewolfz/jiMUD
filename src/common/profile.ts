@@ -1,5 +1,5 @@
 //spell-checker:ignore displaytype, submenu, triggernewline, triggerprompt
-import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority, splitQuoted, isValidIdentifier } from './library';
+import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority, splitQuoted, isValidIdentifier, parseValue } from './library';
 const path = require('path');
 const fs = require('fs');
 
@@ -442,14 +442,14 @@ export class Variable extends Item {
                 break;
             case VariableType.StringList:
                 if (typeof value === 'string')
-                    value = splitQuoted(value, "|");
+                    value = splitQuoted(value, "|").map(v => v.match(/^".*"$/g) ? v.substr(0, v.length - 2) : v);
                 else if (!Array.isArray(value))
                     value = [value];
                 break;
             case VariableType.Array:
                 if (typeof value === 'string' && value.match(/^\[.*\]/g)) {
                     value = value.substring(1, value.length - 2);
-                    value = splitQuoted(value, ",");
+                    value = splitQuoted(value, ",").map(v => parseValue(v, true, false));
                 }
                 else if (!Array.isArray(value))
                     value = [value];
@@ -464,7 +464,7 @@ export class Variable extends Item {
                             const tmp = {};
                             splitQuoted(value.substring(1, value.length - 2), ",").map(v => {
                                 const d = splitQuoted(v, "=:");
-                                tmp[d[0]] = d.length > 1 ? d[1] : 0;
+                                tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], true) : 0;
                             });
                             value = tmp;
                         }
@@ -482,12 +482,12 @@ export class Variable extends Item {
                     }
                     catch {
                         if (value.match(/^\[.*\]/g))
-                            value = splitQuoted(value.substring(1, value.length - 2), ",")
+                            value = splitQuoted(value.substring(1, value.length - 2), ",").map(v => parseValue(v, true, false));
                         else if (value.match(/^\{.*\}/g)) {
                             const tmp = {};
                             splitQuoted(value.substring(1, value.length - 2), ",").map(v => {
                                 const d = splitQuoted(v, "=:");
-                                tmp[d[0]] = d.length > 1 ? d[1] : 0;
+                                tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], true) : 0;
                             });
                             value = tmp;
                         }
@@ -521,11 +521,13 @@ export class Variable extends Item {
                         return JSON.parse(this.value);
                     }
                     catch {
-                        if (this.value.match(/^\[.*\]/g) || this.value.match(/^\{.*\}/g)) {
+                        if (this.value.match(/^\[.*\]/g))
+                            return splitQuoted(this.value.substring(1, this.value.length - 2), ",").map(v => parseValue(v, true, false));
+                        if (this.value.match(/^\{.*\}/g)) {
                             const tmp = {};
                             splitQuoted(this.value.substring(1, this.value.length - 2), ",").map(v => {
                                 const d = splitQuoted(v, "=:");
-                                tmp[d[0]] = d.length > 1 ? d[1] : 0;
+                                tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], true) : 0;
                             });
                             return tmp;
                         }
@@ -534,13 +536,13 @@ export class Variable extends Item {
                 return this.value;
             case VariableType.StringList:
                 if (typeof this.value === 'string')
-                    return splitQuoted(this.value, '|');
+                    return splitQuoted(this.value, '|').map(v => v.match(/^".*"$/g) ? v.substr(0, v.length - 2) : v);
                 if (!Array.isArray(this.value))
                     return [this.value];
                 return this.value;
             case VariableType.Array:
                 if (typeof this.value === 'string' && this.value.match(/^\[.*\]/g)) {
-                    return splitQuoted(this.value.substring(1, this.value.length - 2), ",");
+                    return splitQuoted(this.value.substring(1, this.value.length - 2), ",").map(v => parseValue(v, true, false));
                 }
                 else if (!Array.isArray(this.value))
                     return [this.value];
@@ -582,18 +584,18 @@ export class Variable extends Item {
             case VariableType.StringList:
                 if (typeof this.value === 'string')
                     return this.value;
-                return '"' + (<any[]>this.value).join('"|"') + '"';
+                return (<any[]>this.value).map(v => v.indexOf('|') ? `"${v}"` : v).join('|');
             case VariableType.Array:
                 if (typeof this.value === 'string')
                     return this.value;
-                return '"' + (<any[]>this.value).join('","') + '"';
+                return (<any[]>this.value).map(v => typeof v === 'string' ? `"${v}"` : v).join(',');
             case VariableType.JSON:
                 if (typeof this.value === 'string')
                     return this.value;
                 return JSON.stringify(this.value);
             case VariableType.Auto:
                 if (Array.isArray(this.value))
-                    return '"' + (<any[]>this.value).join('","') + '"';
+                    return (<any[]>this.value).map(v => typeof v === 'string' ? `"${v}"` : v).join(',');
                 if (typeof this.value === 'object')
                     return JSON.stringify(this.value);
                 break;
