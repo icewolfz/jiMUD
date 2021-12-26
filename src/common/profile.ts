@@ -454,10 +454,26 @@ export class Variable extends Item {
                 else if (!Array.isArray(value))
                     value = [value];
                 break;
-            case VariableType.JSON:
             case VariableType.Record:
-                if (typeof this.value === 'string')
-                    value = JSON.parse(this.value);
+                if (typeof value === 'string') {
+                    try {
+                        value = JSON.parse(value);
+                    }
+                    catch {
+                        if (value.match(/^\[.*\]/g) || value.match(/^\{.*\}/g)) {
+                            const tmp = {};
+                            splitQuoted(value.substring(0, value.length - 2), ",").map(v => {
+                                const d = splitQuoted(v, "=:");
+                                tmp[d[0]] = d.length > 1 ? d[1] : 0;
+                            });
+                            value = tmp;
+                        }
+                    }
+                }
+                break;
+            case VariableType.JSON:
+                if (typeof value === 'string')
+                    value = JSON.parse(value);
                 break;
         }
         super.value = value;
@@ -487,6 +503,14 @@ export class Variable extends Item {
                         return JSON.parse(this.value);
                     }
                     catch {
+                        if (this.value.match(/^\[.*\]/g) || this.value.match(/^\{.*\}/g)) {
+                            const tmp = {};
+                            splitQuoted(this.value.substring(0, this.value.length - 2), ",").map(v => {
+                                const d = splitQuoted(v, "=:");
+                                tmp[d[0]] = d.length > 1 ? d[1] : 0;
+                            });
+                            return tmp;
+                        }
                         return this.value;
                     }
                 return this.value;
@@ -504,7 +528,6 @@ export class Variable extends Item {
                     return [this.value];
                 return this.value;
             case VariableType.JSON:
-            case VariableType.Record:
                 if (typeof this.value === 'string')
                     return JSON.parse(this.value);
                 return this.value;
