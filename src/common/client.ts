@@ -361,6 +361,8 @@ export class Client extends EventEmitter {
                 throw new Error(`${name} is not an array or record`);
             return this._input.parseInline(va.rawValue);
         }
+        if (va.type === VariableType.StringLiteral)
+            return va.rawValue;
         if (key) {
             if (va.type === VariableType.StringList || va.type === VariableType.Array || (va.type === VariableType.Auto && Array.isArray(va))) {
                 if (typeof key === 'string') {
@@ -373,13 +375,22 @@ export class Client extends EventEmitter {
                     throw new Error("Index must be a number");
                 if (key < 0 || key >= va.rawValue.length)
                     throw new Error("Index out of bounds");
+                if (typeof va.rawValue[key] === 'string')
+                    return this._input.parseInline(va.rawValue[key]);
+                return this._input.parseInline(va.rawValue[key]);
+            }
+            else if (va.type === VariableType.Record || (va.type === VariableType.Auto && typeof va.rawValue === 'object')) {
+                if (!va.rawValue.hasOwnProperty(key))
+                    throw new Error(`${name} does not contain ${key}`);
+                if (typeof va.rawValue[key] === 'string')
+                    return this._input.parseInline(va.rawValue[key]);
                 return va.rawValue[key];
             }
-            else if (va.type === VariableType.Record || (va.type === VariableType.Auto && typeof va.rawValue === 'object' && va.rawValue.hasOwnProperty(key)))
-                return va.rawValue[key];
             else
                 throw new Error(`${name} is not an array or record`);
         }
+        if (va.type === VariableType.Auto && typeof va.rawValue === 'string')
+            return this._input.parseInline(va.rawValue);
         return va.rawValue;
     }
 
@@ -409,7 +420,7 @@ export class Client extends EventEmitter {
             }
         }
         if (key) {
-            if (va.type === VariableType.StringList || va.type === VariableType.Array || (va.type === VariableType.Auto && Array.isArray(va))) {
+            if (va.type === VariableType.StringList || va.type === VariableType.Array || (va.type === VariableType.Auto && Array.isArray(va.rawValue))) {
                 if (typeof key === 'string') {
                     if (key.trim().match((/^[-|+]?\d+$/g)))
                         key = parseInt(key, 10);
@@ -420,7 +431,7 @@ export class Client extends EventEmitter {
                     throw new Error("Index must be a number");
                 va.rawValue[key] = value;
             }
-            else if (va.type === VariableType.Record || (va.type === VariableType.Auto && typeof va.rawValue === 'object' && va.rawValue.hasOwnProperty(key)))
+            else if (va.type === VariableType.Record || (va.type === VariableType.Auto && typeof va.rawValue === 'object'))
                 va.rawValue[key] = value;
             else
                 throw new Error(`${name} is not an array or record`);
@@ -433,6 +444,23 @@ export class Client extends EventEmitter {
     public hasVariable(name) {
         return this.variables.hasOwnProperty(name);
     }
+
+    public hasVariableKeys(name) {
+        if (this.variables.hasOwnProperty(name)) {
+            switch (this.variables[name].type) {
+                case VariableType.StringList:
+                case VariableType.Array:
+                case VariableType.Record:
+                    return true;
+                case VariableType.Auto:
+                    if (typeof this.variables[name].rawValue === 'object')
+                        return true;
+                    return Array.isArray(this.variables[name].rawValue);
+            }
+        }
+        return false;
+    }
+
 
     get activeProfile(): Profile {
         const keys = this.profiles.keys;

@@ -448,7 +448,7 @@ export class Variable extends Item {
                 break;
             case VariableType.Array:
                 if (typeof value === 'string' && value.match(/^\[.*\]/g)) {
-                    value = value.substring(0, value.length - 2);
+                    value = value.substring(1, value.length - 2);
                     value = splitQuoted(value, ",");
                 }
                 else if (!Array.isArray(value))
@@ -462,7 +462,7 @@ export class Variable extends Item {
                     catch {
                         if (value.match(/^\[.*\]/g) || value.match(/^\{.*\}/g)) {
                             const tmp = {};
-                            splitQuoted(value.substring(0, value.length - 2), ",").map(v => {
+                            splitQuoted(value.substring(1, value.length - 2), ",").map(v => {
                                 const d = splitQuoted(v, "=:");
                                 tmp[d[0]] = d.length > 1 ? d[1] : 0;
                             });
@@ -474,6 +474,24 @@ export class Variable extends Item {
             case VariableType.JSON:
                 if (typeof value === 'string')
                     value = JSON.parse(value);
+                break;
+            case VariableType.Auto:
+                if (typeof value === 'string')
+                    try {
+                        value = JSON.parse(value);
+                    }
+                    catch {
+                        if (value.match(/^\[.*\]/g))
+                            value = splitQuoted(value.substring(1, value.length - 2), ",")
+                        else if (value.match(/^\{.*\}/g)) {
+                            const tmp = {};
+                            splitQuoted(value.substring(1, value.length - 2), ",").map(v => {
+                                const d = splitQuoted(v, "=:");
+                                tmp[d[0]] = d.length > 1 ? d[1] : 0;
+                            });
+                            value = tmp;
+                        }
+                    }
                 break;
         }
         super.value = value;
@@ -505,7 +523,7 @@ export class Variable extends Item {
                     catch {
                         if (this.value.match(/^\[.*\]/g) || this.value.match(/^\{.*\}/g)) {
                             const tmp = {};
-                            splitQuoted(this.value.substring(0, this.value.length - 2), ",").map(v => {
+                            splitQuoted(this.value.substring(1, this.value.length - 2), ",").map(v => {
                                 const d = splitQuoted(v, "=:");
                                 tmp[d[0]] = d.length > 1 ? d[1] : 0;
                             });
@@ -522,7 +540,7 @@ export class Variable extends Item {
                 return this.value;
             case VariableType.Array:
                 if (typeof this.value === 'string' && this.value.match(/^\[.*\]/g)) {
-                    return splitQuoted(this.value.substring(0, this.value.length - 2), ",");
+                    return splitQuoted(this.value.substring(1, this.value.length - 2), ",");
                 }
                 else if (!Array.isArray(this.value))
                     return [this.value];
@@ -573,6 +591,12 @@ export class Variable extends Item {
                 if (typeof this.value === 'string')
                     return this.value;
                 return JSON.stringify(this.value);
+            case VariableType.Auto:
+                if (Array.isArray(this.value))
+                    return '"' + (<any[]>this.value).join('","') + '"';
+                if (typeof this.value === 'object')
+                    return JSON.stringify(this.value);
+                break;
         }
         return this.value?.toString();
     }

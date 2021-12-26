@@ -3217,7 +3217,7 @@ export class Input extends EventEmitter {
                     i = this.client.variables;
                     tmp = [];
                     for (n in i) {
-                        tmp.push(n + ' = ' + i[n].rawValue);
+                        tmp.push(n + ' = ' + i[n].toString());
                     }
                     return tmp.join('\n');
                 }
@@ -4071,7 +4071,12 @@ export class Input extends EventEmitter {
                         state = ParseState.none;
                     }
                     else if (c.match(/[^a-zA-Z0-9_$]/g)) {
-                        if (start) {
+                        if (c === '[') {
+                            state = ParseState.variableKey;
+                            tmp = '';
+                            break;
+                        }
+                        else if (start) {
                             state = ParseState.variableAssign;
                             idx--;
                             start = false;
@@ -4131,7 +4136,10 @@ export class Input extends EventEmitter {
                         state = ParseState.none;
                         tmp = arg.trimRight();
                         if (this.client.hasVariable(tmp)) {
-                            str += this.client.getVariable(tmp);
+                            if (eAlias && findAlias)
+                                alias += this.client.getVariable(tmp);
+                            else
+                                str += this.client.getVariable(tmp);
                             if (tmp.length !== arg.length) {
                                 if (eAlias && findAlias)
                                     alias += arg.substr(tmp.length);
@@ -4159,6 +4167,45 @@ export class Input extends EventEmitter {
                             if (out.length === 0) return null;
                             return out;
                         }
+                    }
+                    else
+                        tmp += c;
+                    break;
+                case ParseState.variableKey:
+                    if (nest == 0 && c === ']') {
+                        if (this.client.hasVariableKeys(arg)) {
+                            //TODO to assign check state
+                            tmp = this.stripQuotes(this.parseInline(tmp));
+                            if (eAlias && findAlias)
+                                alias += this.client.getVariable(arg, tmp);
+                            else
+                                str += this.client.getVariable(arg, tmp);
+                        }
+                        else if (this.client.hasVariable(arg)) {
+                            if (eAlias && findAlias)
+                                alias += this.client.getVariable(arg);
+                            else
+                                str += this.client.getVariable(arg);
+                            idx -= tmp.length + 2;
+                        }
+                        else {
+                            if (eAlias && findAlias)
+                                alias += varChar + arg;
+                            else
+                                str += varChar + arg;
+                            idx -= tmp.length + 2;
+                        }
+                        state = ParseState.none;
+                        arg = '';
+                        start = false;
+                    }
+                    else if (nest && c === ']') {
+                        nest--;
+                        tmp += c;
+                    }
+                    else if (c === '[') {
+                        nest++;
+                        tmp += c;
                     }
                     else
                         tmp += c;
@@ -4404,7 +4451,6 @@ export class Input extends EventEmitter {
         else if (state === ParseState.variableAssign && arg.length) {
             tmp = arg.trimRight();
             if (this.client.hasVariable(tmp)) {
-
                 str += this.client.getVariable(tmp);
                 if (tmp.length !== arg.length)
                     str += arg.substr(tmp.length);
@@ -4414,6 +4460,24 @@ export class Input extends EventEmitter {
         }
         else if (state === ParseState.variableAssignValue) {
             this.client.setVariable(arg.trimRight(), tmp.trimLeft());
+        }
+        else if (state === ParseState.variableKey) {
+            if (this.client.hasVariable(arg)) {
+                if (eAlias && findAlias)
+                    alias += this.client.getVariable(arg);
+                else
+                    str += this.client.getVariable(arg);
+                arg = this.parseInline('[' + tmp);
+                if (arg != null) str += arg;
+            }
+            else {
+                if (eAlias && findAlias)
+                    alias += varChar + arg;
+                else
+                    str += varChar + arg;
+                arg = this.parseInline('[' + tmp);
+                if (arg != null) str += arg;                    
+            }
         }
         if (!noFunctions && state === ParseState.function) {
             str = this.executeScript(cmdChar + str);
