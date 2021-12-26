@@ -99,10 +99,11 @@ enum ParseState {
     variableKey = 22,
     variableKeyAssign = 23,
     variableKeyAssignValue = 24,
-    variableBlockAssign = 25,
-    variableBlockAssignValue = 26,
+    variableBlockKey = 25,
+    variableBlockKey2 = 26,
     variableBlockKeyAssign = 27,
     variableBlockKeyAssignValue = 28,
+    variableBlockAssign = 29,
 }
 
 export class Input extends EventEmitter {
@@ -4116,6 +4117,14 @@ export class Input extends EventEmitter {
                         state = ParseState.none;
                         arg = '';
                     }
+                    else if (c === '[') {
+                        arg += c;
+                        state = ParseState.variableBlockKey;
+                    }
+                    else if (c === '=') {
+                        state = ParseState.variableBlockAssign;
+                        tmp = '';
+                    }
                     else if (c.match(/[^a-zA-Z0-9_$]/g)) {
                         if (tmp2 != null && eAlias && findAlias)
                             alias += varChar + '{' + arg;
@@ -4126,6 +4135,70 @@ export class Input extends EventEmitter {
                     }
                     else
                         arg += c;
+                    break;
+                case ParseState.variableBlockKey:
+                    if (nest == 0 && c === ']') {
+                        state = ParseState.variableBlockKeyAssign;
+                    }
+                    else if (c === '[') {
+                        nest++;
+                        arg += c;
+                    }
+                    else if (c === ']') {
+                        nest--;
+                        arg += c;
+                    }
+                    else
+                        arg += c;
+                    break;
+                case ParseState.variableBlockKeyAssign:
+                    if (c === '}') {
+                        tmp = arg.substr(arg.indexOf('[') + 1);
+                        arg = arg.substr(0, arg.indexOf('['));
+                        if (this.client.hasVariableKeys(arg)) {
+                            //TODO to assign check state
+                            tmp = this.stripQuotes(this.parseInline(tmp));
+                            if (eAlias && findAlias)
+                                alias += this.client.getVariable(arg, tmp);
+                            else
+                                str += this.client.getVariable(arg, tmp);
+                        }
+                        else {
+                            if (eAlias && findAlias)
+                                alias += varChar + '{' + arg;
+                            else
+                                str += varChar + '{' + arg;
+                            idx -= tmp.length + 2;
+                            state = ParseState.none;
+                        }
+                    }
+                    else if (c === '=') {
+                        state = ParseState.variableBlockKeyAssignValue;
+                        tmp = '';
+                    }
+                    else {
+                        idx -= args.length;
+                        state = ParseState.none;
+                    }
+                    break;
+                case ParseState.variableBlockKeyAssignValue:
+                    if (c === '}') {
+                        tmp2 = arg.substr(arg.indexOf('[') + 1);
+                        arg = arg.substr(0, arg.indexOf('['));
+                        tmp2 = this.stripQuotes(this.parseInline(tmp2.trimLeft()));
+                        state = ParseState.none;
+                        this.client.setVariable(arg, tmp2, tmp);
+                    }
+                    else
+                        tmp += c;
+                    break;
+                case ParseState.variableBlockAssign:
+                    if (c === '}') {
+                        state = ParseState.none;
+                        this.client.setVariable(arg, tmp);
+                    }
+                    else
+                        tmp += c;
                     break;
                 case ParseState.variableAssign:
                     if (c === '=') {
@@ -4443,8 +4516,13 @@ export class Input extends EventEmitter {
                 if (arg != null) str += arg;
             }
         }
-        else if (state === ParseState.variableBlock && arg.length > 0) {
+        else if ((state === ParseState.variableBlock || state === ParseState.variableBlockKey || state === ParseState.variableBlockKeyAssign) && arg.length > 0) {
             arg = this.parseInline(arg);
+            str += `${varChar}{`;
+            if (arg != null) str += arg;
+        }
+        else if ((state === ParseState.variableBlockKeyAssignValue || state === ParseState.variableBlockAssign) && arg.length > 0) {
+            arg = this.parseInline(arg + '=' + tmp);
             str += `${varChar}{`;
             if (arg != null) str += arg;
         }
@@ -4476,7 +4554,7 @@ export class Input extends EventEmitter {
                 else
                     str += varChar + arg;
                 arg = this.parseInline('[' + tmp);
-                if (arg != null) str += arg;                    
+                if (arg != null) str += arg;
             }
         }
         if (!noFunctions && state === ParseState.function) {
