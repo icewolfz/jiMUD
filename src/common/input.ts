@@ -3259,6 +3259,8 @@ export class Input extends EventEmitter {
                 if (i.match(/^\{\s*?.*\s*?\}$/g))
                     i = i.substr(1, i.length - 2);
                 i = this.parseInline(i);
+                if (!isValidIdentifier(i))
+                    throw new Error("Invalid variable name");
                 args = args.join(' ');
                 if (args.match(/^\{\s*?.*\s*?\}$/g))
                     args = args.substr(1, args.length - 2);
@@ -4067,7 +4069,7 @@ export class Input extends EventEmitter {
                             tmp = '';
                             break;
                         }
-                        else if (start) {
+                        else if (start && isValidIdentifier(arg, true)) {
                             state = ParseState.variableAssign;
                             idx--;
                             start = false;
@@ -4107,11 +4109,11 @@ export class Input extends EventEmitter {
                         state = ParseState.none;
                         arg = '';
                     }
-                    else if (c === '[') {
+                    else if (c === '[' && isValidIdentifier(arg, true)) {
                         arg += c;
                         state = ParseState.variableBlockKey;
                     }
-                    else if (c === '=') {
+                    else if (c === '=' && isValidIdentifier(arg), true) {
                         state = ParseState.variableBlockAssign;
                         tmp = '';
                     }

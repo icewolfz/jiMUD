@@ -2068,10 +2068,10 @@ export function replaceHtml(el, html) {
     return newEl;
 }
 
-export function isValidIdentifier(str: string): boolean {
+export function isValidIdentifier(str: string, noRegex?: boolean): boolean {
     if (!str || str.length === 0) return false;
     //valid character check
-    if (!str.match(/^[a-zA-Z_$][a-zA-Z_$0-9]*$/g))
+    if (!noRegex && !str.match(/^[a-zA-Z_$][a-zA-Z_$0-9]*$/g))
         return false;
     //not a keyword
     return ['break', 'case', 'catch', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof', 'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'class', 'const', 'enum', 'export', 'extends', 'import', 'super', 'implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static', 'yield', 'null', 'true', 'false', 'NaN', 'Infinity', 'undefined', 'eval', 'arguments'].indexOf(str) === -1;
