@@ -784,6 +784,13 @@ function setEditorValue(editor, value) {
         $('#' + editor).val(value);
 }
 
+function focusEditor(editor) {
+    if (editors[editor])
+        editors[editor].focus();
+    else
+        $('#' + editor).focus();
+}
+
 export function UpdateEditorMode(type) {
     if (editors[type + '-value']) {
         if ($('#' + type + '-style').val() === '2' || $('#' + type + '-style').val() === ItemStyle.Script) {
@@ -2277,18 +2284,23 @@ function buildTreeview(data, skipInit?) {
                             if (!$('#alias-editor .btn-adv').data('open'))
                                 $('#alias-editor .btn-adv').trigger('click');
                         }
+                        focusEditor('alias-value');
                         break;
                     case 'macro':
                         UpdateEditor('macro', currentProfile.macros[node.dataAttr.index], { key: MacroValue });
+                        focusEditor('macro-value');
                         break;
                     case 'trigger':
                         UpdateEditor('trigger', currentProfile.triggers[node.dataAttr.index], { post: clearTriggerTester });
+                        focusEditor('trigger-value');
                         break;
                     case 'button':
                         UpdateEditor('button', currentProfile.buttons[node.dataAttr.index], { post: UpdateButtonSample });
+                        focusEditor('button-value');
                         break;
                     case 'context':
                         UpdateEditor('context', currentProfile.contexts[node.dataAttr.index], { post: UpdateContextSample });
+                        focusEditor('context-value');
                         break;
                 }
                 document.getElementById('btn-new').title = 'New ' + ((t === 'alias' || t === 'aliases') ? 'alias' : (t.endsWith('s') ? t.substr(0, t.length - 1) : t));
@@ -4229,10 +4241,10 @@ function exportCurrent() {
 }
 
 export function validateIdentifiers(el: HTMLInputElement, focus?) {
-    if(!el) return;
+    if (!el) return;
     if (el.value.length === 0) {
         el.parentElement.classList.remove('has-error');
-        el.parentElement.classList.remove('has-feedback');        
+        el.parentElement.classList.remove('has-feedback');
         return true;
     }
     const ids = el.value.split(',').filter(v => v.length && !isValidIdentifier(v.trim()))
