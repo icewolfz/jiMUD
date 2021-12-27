@@ -52,7 +52,7 @@
     - Fixed background color codes being wrapped in extra %^
     - Clean up extra codes between 2 resets blocks
     - Fixed Bold white background color to use RGB555 color code correctly
-  - Profile Manager: 
+  - Profile Manager:
     - Trigger tester still did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
     - Fix trigger type select width
     - Focus on value editor on select
