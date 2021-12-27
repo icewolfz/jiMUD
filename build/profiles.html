@@ -100,6 +100,11 @@
                     </div>
                     <div class="col-sm-3 form-group">
                         <label class="control-label">
+                            <input type="checkbox" id="profile-enableVariables" onchange="profileUI.updateProfileChecks()" />Enable Variables
+                        </label>
+                    </div>                    
+                    <div class="col-sm-3 form-group">
+                        <label class="control-label">
                             <input type="checkbox" id="profile-enableDefaultContext" onchange="profileUI.updateProfileChecks()" />Enable Default Context
                         </label>
                     </div>
@@ -259,7 +264,7 @@
                                             <label class="control-label" for="trigger-type">Type</label>
                                         </td>
                                         <td>
-                                            <select id="trigger-type" data-container="body" class="selectpicker form-control" style="width: 140px">
+                                            <select id="trigger-type" data-container="body" class="selectpicker form-control" style="width: 140px" data-width="100%">
                                                 <option value="0">Regular Expression</option>
                                                 <option value="1">Command Input Regular Expression</option>
                                                 <option value="2">Event</option>
@@ -550,6 +555,100 @@
                         </tr>
                     </table>
                 </div>
+                <div class="form-inline panel-body" id="variable-editor" class="editor-panel" style="display:none">
+                    <table class="editor-body">
+                        <tr>
+                            <td style="width: 60px">
+                                <label class="control-label" for="variable-name">Name</label>
+                            </td>
+                            <td colspan="6">
+                                <input class="form-control" type="text" id="variable-name" onkeyup="profileUI.validateIdentifier(this);" onchange="profileUI.validateIdentifier(this);">
+                                <div class="form-error"></div>                                
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top;">
+                                <label class="control-label" for="variable-value">Value</label>
+                            </td>
+                            <td colspan="6" class="value-editor">
+                                <textarea class="form-control" id="variable-value" style="height:100%;width: 100%;" wrap="off"></textarea>
+                                <pre id="variable-value-editor" class="editor"></pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="7" class="panel-adv">
+                                <button class="btn btn-default btn-xs btn-adv">
+                                    <i style="font-size: 8px;" class="fa fa-chevron-up"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="panel-adv-body first">
+                            <td colspan="7">
+                                <table style="padding:0;margin:0;width:100%">
+                                    <tr>
+                                        <td style="width: 92px">
+                                            <label class="control-label" for="trigger-type">Type</label>
+                                        </td>
+                                        <td>
+                                            <select id="variable-type" data-container="body" class="selectpicker form-control" style="width: 100%" data-width="100%">
+                                                <option value="1">Auto</option>
+                                                <option value="2">Integer</option>
+                                                <option value="3">StringExpanded</option> 
+                                                <option value="4">StringLiteral</option>
+                                                <option value="5">StringList</option>
+                                                <option value="6">Record</option>
+                                                <option value="7">Float</option>
+                                                <option value="8">Array</option>
+                                                <option value="9">JSON</option>
+                                            </select>
+                                        </td>
+                                        <td style="padding-left:5px;width: 45px;display:none;">
+                                            <label class="control-label" for="variable-style" style="padding-right:4px;">Style</label>
+                                        </td>
+                                        <td style="width: 100px;text-align: right;display:none;">
+                                            <select class="form-control selectpicker" id="variable-style" onchange="profileUI.UpdateEditorMode('variable')">
+                                                <option value="0">Text</option>
+                                                <option value="1">Parse</option>
+                                                <option value="2">Script</option>
+                                            </select>
+                                        </td> 
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>                     
+                        <!--
+                        <tr class="panel-adv-body">
+                            <td>
+                                <label class="control-label" for="variable-params">Params</label>
+                            </td>
+                            <td colspan="6">
+                                <input class="form-control" type="text" id="variable-params" onkeyup="profileUI.validateIdentifiers(this);" onchange="profileUI.validateIdentifiers(this);">
+                                <div class="form-error"></div>
+                            </td>
+                        </tr>
+                        -->
+                        <tr class="panel-adv-body">
+                            <td>
+                                <label class="control-label" for="variable-priority">Priority</label>
+                            </td>
+                            <td style="vertical-align:middle;width: 75px">
+                                <input type="number" class="form-control" id="variable-priority" style="width: 75px">
+                            </td>
+                            <td style="padding-left:5px;vertical-align: bottom;">
+                                <label class="col-sm-6" for="variable-useDefault"><input type="checkbox" id="variable-useDefault" style="border: 0px" onchange="profileUI.enableEditor('variable-value', !this.checked)"> Use Default</label>
+                            </td>
+                        </tr>
+                        <tr class="panel-adv-body">
+                            <td>
+                                <label class="control-label" for="variable-defaultValue">Default value</label>
+                            </td>                            
+                            <td colspan="6">
+                                <input class="form-control" type="text" id="variable-defaultValue">
+                            </td>  
+                        </tr>
+                        </table>
+                    </table>
+                </div>                
             </div>
         </div>
     </div>

@@ -522,7 +522,7 @@ export class Variable extends Item {
                             value = tmp;
                         }
                         //string list
-                        else if (value.indexOf('|')) {
+                        else if (value.indexOf('|') !== -1) {
                             //strip quotes
                             if (value.match(/^".*"$/g))
                                 value = splitQuoted(this.value.substr(1, this.value.length - 2), '|').map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
@@ -625,34 +625,35 @@ export class Variable extends Item {
         return new Variable(this);
     }
 
-    public toString() {
+    public toString(value?) {
+        value = value || this.value;
         switch (this.type) {
             case VariableType.Record:
-                if (typeof this.value === 'string')
-                    return this.value;
-                return JSON.stringify(this.value);
+                if (typeof value === 'string')
+                    return value;
+                return JSON.stringify(value);
             case VariableType.StringList:
-                if (typeof this.value === 'string')
-                    return this.value;
-                return (<any[]>this.value).map(v => v.indexOf('|') ? `"${v}"` : v).join('|');
+                if (typeof value === 'string')
+                    return value;
+                return (<any[]>value).map(v => v.indexOf('|') !== -1 ? `"${v}"` : v).join('|');
             case VariableType.Array:
-                if (typeof this.value === 'string')
-                    return this.value;
-                return (<any[]>this.value).map(v => typeof v === 'string' ? `"${v}"` : v).join(',');
+                if (typeof value === 'string')
+                    return value;
+                return (<any[]>value).map(v => typeof v === 'string' ? `"${v}"` : v).join(',');
             case VariableType.JSON:
-                if (typeof this.value === 'string')
-                    return this.value;
-                return JSON.stringify(this.value);
+                if (typeof value === 'string')
+                    return value;
+                return JSON.stringify(value);
             case VariableType.Auto:
-                if (this._type === 'stringlist' && Array.isArray(this.value))
-                    return (<any>this.value).map(v => v.indexOf('|') ? `"${v}"` : v).join('|');
-                if (Array.isArray(this.value))
-                    return (<any[]>this.value).map(v => typeof v === 'string' ? `"${v}"` : v).join(',');
-                if (typeof this.value === 'object')
-                    return JSON.stringify(this.value);
+                if (this._type === 'stringlist' && Array.isArray(value))
+                    return (<any>value).map(v => v.indexOf('|') !== -1 ? `"${v}"` : v).join('|');
+                if (Array.isArray(value))
+                    return (<any[]>value).map(v => typeof v === 'string' ? `"${v}"` : v).join(',');
+                if (typeof value === 'object')
+                    return JSON.stringify(value);
                 break;
         }
-        return this.value?.toString();
+        return value?.toString();
     }
 }
 

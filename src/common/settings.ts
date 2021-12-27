@@ -52,6 +52,7 @@ export class Profiles {
     public buttonsAdvanced: boolean = false;
     public macrosAdvanced: boolean = false;
     public contextsAdvanced: boolean = false;
+    public variablesAdvanced: boolean = false;
     public enabled: string[] = [];
     public codeEditor: boolean = true;
     public watchFiles: boolean = true;

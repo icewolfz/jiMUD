@@ -52,7 +52,10 @@
     - Fixed background color codes being wrapped in extra %^
     - Clean up extra codes between 2 resets blocks
     - Fixed Bold white background color to use RGB555 color code correctly
-  - Profile Manager: trigger tester still did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
+  - Profile Manager: 
+    - Trigger tester still did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
+    - Fix trigger type select width
+    - Focus on value editor on select
   - Fixed alias named arguments not being directly accessible in scripting type
   - Fixed full screen not always being restored on load
   - Fixed maximized state not being correctly restored on load if window was closed minimized
@@ -68,6 +71,7 @@
     - Fixed saving nested loop variables as user variables
   - Fixed [#variable](docs/commands.md) should not evaluate the value to allow use of raw strings as needed, eg #va test {3+5} should store 3+5 not 8, if you want the evaluated value use #var test \${3+5} or #va test \{${3+5}}
   - Fixed [#variable](docs/commands.md) throws an error now when invalid variable names are used
+  - Fixed Select control selected color text
 - **Changed:**
   - Revert 0.17.1 hack for child windows as electron seems to have fixed the bug
   - Update tinymce 4.8.3 to 5.10.1

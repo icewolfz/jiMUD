@@ -4,7 +4,7 @@ import { ipcRenderer, nativeImage } from 'electron';
 const remote = require('@electron/remote');
 const { Menu, MenuItem } = remote;
 import { FilterArrayByKeyValue, parseTemplate, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode, walkSync, isValidIdentifier } from './library';
-import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroModifiers, ItemStyle, convertPattern } from './profile';
+import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, Variable, MacroModifiers, ItemStyle, convertPattern } from './profile';
 export { MacroDisplay } from './profile';
 import { Settings } from './settings';
 import { Menubar } from './menubar';
@@ -192,6 +192,12 @@ const menubar: Menubar = new Menubar([
                             clearButton('#btn-add-dropdown');
                             addItem('Context', 'contexts', new Context());
                         }
+                    },
+                    {
+                        label: '&Variable', click() {
+                            clearButton('#btn-add-dropdown');
+                            addItem('Variable', 'variables', new Variable());
+                        }
                     }
                 ]
             },
@@ -330,6 +336,10 @@ export function AddNewItem() {
             case 'context':
                 addItem('Context', 'contexts', new Context());
                 break;
+            case 'variables':
+            case 'variable':
+                addItem('Variable', 'variables', new Variable());
+                break;
         }
     }
 }
@@ -416,7 +426,19 @@ function AddNewProfile(d?: Boolean) {
                 state: {
                     checked: profiles.items[n].enableContexts
                 }
-            }
+            },
+            {
+                text: 'Variables',
+                id: 'Profile' + profileID(n) + 'variables',
+                dataAttr: {
+                    profile: n,
+                    type: 'variables'
+                },
+                lazyLoad: profiles.items[n].variables.length > 0,
+                state: {
+                    checked: profiles.items[n].enableVariables
+                }
+            },
         ]
     };
     $('#profile-tree').treeview('addNode', [node, false, false]);
@@ -625,6 +647,7 @@ export function UpdateEnabled() {
         case 'triggers':
         case 'buttons':
         case 'contexts':
+        case 'variables':
         case 'profile':
             const parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(currentProfile.name) + '$', 'id']);
             if (!$('#editor-enabled').prop('checked') && _enabled.indexOf(currentProfile.name.toLowerCase()) !== -1) {
@@ -685,7 +708,14 @@ export function UpdateEnabled() {
             pushUndo({ action: 'update', type: t, item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: { enabled: currentProfile.contexts[currentNode.dataAttr.index].enabled } });
             currentProfile.contexts[currentNode.dataAttr.index].enabled = $('#editor-enabled').prop('checked');
             break;
-
+        case 'variable':
+            if ($('#editor-enabled').prop('checked'))
+                $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id']), { silent: true }]);
+            else
+                $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id']), { silent: true }]);
+            pushUndo({ action: 'update', type: t, item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: { enabled: currentProfile.variables[currentNode.dataAttr.index].enabled } });
+            currentProfile.variables[currentNode.dataAttr.index].enabled = $('#editor-enabled').prop('checked');
+            break;
     }
 }
 
@@ -782,6 +812,20 @@ function setEditorValue(editor, value) {
         editors[editor].getSession().setValue(value);
     else
         $('#' + editor).val(value);
+}
+
+export function enableEditor(editor, value) {
+    if (editors[editor])
+        editors[editor].setReadOnly(!value);
+    else
+        $('#' + editor).prop("disabled", !value);
+}
+
+function focusEditor(editor) {
+    if (editors[editor])
+        editors[editor].focus();
+    else
+        $('#' + editor).focus();
 }
 
 export function UpdateEditorMode(type) {
@@ -883,6 +927,28 @@ function UpdateContext(customUndo?: boolean): UpdateState {
         if (!customUndo)
             pushUndo({ action: 'update', type: 'context', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
         return UpdateState.Changed;
+    }
+    return UpdateState.NoChange;
+}
+
+function UpdateVariable(customUndo?: boolean): UpdateState {
+    const item = currentProfile.variables[currentNode.dataAttr.index];
+    let data: any = UpdateItem(item, { value: true });
+    const val = getEditorValue('variable-value', item.style);
+    enableEditor('variable-value', !item.useDefault);
+    if (item.toString() != val) {
+        if (!data) data = {};
+        data.rawValue = item.toString();
+        item.rawValue = val;
+    }
+    if (data) {
+        if (Object.keys(data).length) {
+            UpdateItemNode(currentProfile.variables[currentNode.dataAttr.index], 0, data);
+            $('#editor-title').text('Variable: ' + GetDisplay(currentProfile.variables[currentNode.dataAttr.index]));
+            if (!customUndo)
+                pushUndo({ action: 'update', type: 'variable', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
+            return UpdateState.Changed;
+        }
     }
     return UpdateState.NoChange;
 }
@@ -1165,7 +1231,20 @@ function newProfileNode(profile?) {
                     checked: profile.enableContexts
                 },
                 nodes: []
-            }
+            },
+            {
+                text: 'Variables',
+                id: id + 'variables',
+                dataAttr: {
+                    profile: key,
+                    type: 'variables'
+                },
+                lazyLoad: profile.variables.length > 0,
+                state: {
+                    checked: profile.enableVariables
+                },
+                nodes: []
+            },
         ]
     };
 }
@@ -1269,6 +1348,11 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
         changed++;
         currentProfile.enableDefaultContext = $('#profile-enableDefaultContext').prop('checked');
     }
+    if (currentProfile.enableVariables !== $('#profile-enableVariables').prop('checked')) {
+        data.enableVariables = currentProfile.enableVariables;
+        changed++;
+        currentProfile.enableVariables = $('#profile-enableVariables').prop('checked');
+    }
 
     if (e !== $('#editor-enabled').prop('checked')) {
         if ($('#editor-enabled').prop('checked')) {
@@ -1320,6 +1404,10 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
                 $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'contexts$', 'id'])]);
             else
                 $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'contexts$', 'id'])]);
+            if (currentProfile.enableVariables)
+                $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'variables$', 'id'])]);
+            else
+                $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'variables$', 'id'])]);
         });
     else {
         val = profileID(currentProfile.name);
@@ -1343,6 +1431,10 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
             $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'contexts$', 'id'])]);
         else
             $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'contexts$', 'id'])]);
+        if (currentProfile.enableVariables)
+            $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'variables$', 'id'])]);
+        else
+            $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'variables$', 'id'])]);
     }
     if (changed > 0 && !customUndo) {
         pushUndo({ action: 'update', type: 'profile', profile: currentProfile.name.toLowerCase(), data: data });
@@ -1375,7 +1467,10 @@ export function updateProfileChecks() {
         $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'contexts$', 'id']), { silent: true }]);
     else
         $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'contexts$', 'id']), { silent: true }]);
-
+    if ($('#profile-enableVariables').prop('checked'))
+        $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'variables$', 'id']), { silent: true }]);
+    else
+        $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + val + 'variables$', 'id']), { silent: true }]);
     _pUndo = false;
 }
 
@@ -1447,6 +1542,13 @@ function nodeCheckChanged(event, node) {
             if (profile === currentProfile)
                 $('#profile-enableContexts').prop('checked', node.state.checked);
             break;
+        case 'variables':
+            profile.enableVariables = node.state.checked;
+            t = 'profile';
+            data.enableVariables = node.state.checked;
+            if (profile === currentProfile)
+                $('#profile-enableVariables').prop('checked', node.state.checked);
+            break;
         case 'alias':
             profile.aliases[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
@@ -1473,6 +1575,12 @@ function nodeCheckChanged(event, node) {
             break;
         case 'context':
             profile.contexts[node.dataAttr.index].enabled = node.state.checked;
+            data.enabled = node.state.checked;
+            if (node.id === currentNode.id)
+                $('#editor-enabled').prop('checked', node.state.checked);
+            break;
+        case 'variable':
+            profile.variables[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
             if (node.id === currentNode.id)
                 $('#editor-enabled').prop('checked', node.state.checked);
@@ -1523,6 +1631,8 @@ function getType(item) {
         return 'macro';
     if (item instanceof Context)
         return 'context';
+    if (item instanceof Variable)
+        return 'variable';
     return 'profile';
 }
 
@@ -1543,6 +1653,9 @@ function getKey(type: string) {
         case 'context':
         case 'contexts':
             return 'contexts';
+        case 'variable':
+        case 'variables':
+            return 'variables';
     }
 }
 
@@ -1610,7 +1723,7 @@ export function doUndo() {
                 }
                 UpdateProfileNode(profiles.items[action.profile]);
                 const t = currentNode.dataAttr.type;
-                if (t === 'profile' || t === 'aliases' || t === 'triggers' || t === 'buttons' || t === 'macros' || t === 'contexts') {
+                if (t === 'profile' || t === 'aliases' || t === 'triggers' || t === 'buttons' || t === 'macros' || t === 'contexts' || t === 'variables') {
                     UpdateEditor('profile', currentProfile, {
                         post: () => {
                             if (currentProfile.name === 'Default') {
@@ -1668,6 +1781,13 @@ export function doUndo() {
                             break;
                         case 'context':
                             UpdateEditor('context', profiles.items[action.profile][key][action.item], { post: UpdateContextSample });
+                            break;
+                        case 'variable':
+                            UpdateEditor('variable', profiles.items[action.profile][key][action.item], {
+                                post: item => {
+                                    enableEditor('variable-value', !item.useDefault);
+                                }
+                            });
                             break;
                     }
                 }
@@ -1784,7 +1904,7 @@ export function doRedo() {
                 }
                 UpdateProfileNode(profiles.items[action.profile]);
                 const t = currentNode.dataAttr.type;
-                if (t === 'profile' || t === 'aliases' || t === 'triggers' || t === 'buttons' || t === 'macros' || t === 'contexts') {
+                if (t === 'profile' || t === 'aliases' || t === 'triggers' || t === 'buttons' || t === 'macros' || t === 'contexts' || t === 'variables') {
                     UpdateEditor('profile', currentProfile, {
                         post: () => {
                             if (currentProfile.name === 'Default') {
@@ -1842,6 +1962,13 @@ export function doRedo() {
                             break;
                         case 'context':
                             UpdateEditor('context', profiles.items[action.profile][key][action.item], { post: UpdateContextSample });
+                            break;
+                        case 'variable':
+                            UpdateEditor('variable', profiles.items[action.profile][key][action.item], {
+                                post: item => {
+                                    enableEditor('variable-value', !item.useDefault);
+                                }
+                            });
                             break;
                     }
                 }
@@ -1994,6 +2121,21 @@ export function doCut(node?) {
             _clip = { type: t, data: [node.dataAttr.index], key: 'contexts', idx: node.dataAttr.index };
             node.$el.css('opacity', '0.5');
             break;
+        case 'variables':
+            data = [];
+            il = profile.variables.length;
+            for (let i = 0; i < il; i++)
+                data.push(i);
+            _clip = { type: 'variable', data: data, key: 'variables' };
+            nodes = $('#profile-tree').treeview('findNodes', ['^' + node.id + '[0-9]+', 'id']);
+            nl = nodes.length;
+            for (let n = 0; n < nl; n++)
+                nodes[n].$el.css('opacity', '0.5');
+            break;
+        case 'variable':
+            _clip = { type: t, data: [node.dataAttr.index], key: 'variables', idx: node.dataAttr.index };
+            node.$el.css('opacity', '0.5');
+            break;
     }
     if (_clip) {
         _clip.profile = profile.name.toLowerCase();
@@ -2073,6 +2215,16 @@ export function doCopy(node?) {
             break;
         case 'context':
             _clip = { type: t, data: [profile.contexts[node.dataAttr.index].clone()], key: 'contexts', idx: node.dataAttr.index };
+            break;
+        case 'variables':
+            data = [];
+            il = profile.variables.length;
+            for (let i = 0; i < il; i++)
+                data.push(profile.variables[i].clone());
+            _clip = { type: 'variable', data: data, key: 'variables' };
+            break;
+        case 'variable':
+            _clip = { type: t, data: [profile.variables[node.dataAttr.index].clone()], key: 'variables', idx: node.dataAttr.index };
             break;
     }
     if (_clip) {
@@ -2161,6 +2313,12 @@ export function doDelete(node?) {
         case 'context':
             DeleteItemConfirm('context', 'contexts', node.dataAttr.index, profiles.items[node.dataAttr.profile]);
             break;
+        case 'variables':
+            DeleteItems('variable', 'variables', profiles.items[node.dataAttr.profile]);
+            break;
+        case 'variable':
+            DeleteItemConfirm('variable', 'variables', node.dataAttr.index, profiles.items[node.dataAttr.profile]);
+            break;
     }
 }
 function updateCurrent(): UpdateState {
@@ -2177,6 +2335,7 @@ function updateCurrent(): UpdateState {
             case 'triggers':
             case 'buttons':
             case 'contexts':
+            case 'variables':
             case 'profile':
                 return UpdateProfile();
             case 'alias':
@@ -2189,6 +2348,8 @@ function updateCurrent(): UpdateState {
                 return UpdateButton();
             case 'context':
                 return UpdateContext();
+            case 'variable':
+                return UpdateVariable();
         }
     }
     return UpdateState.NoChange;
@@ -2241,6 +2402,7 @@ function buildTreeview(data, skipInit?) {
                     case 'triggers':
                     case 'buttons':
                     case 'contexts':
+                    case 'variables':
                     case 'profile':
                         UpdateEditor('profile', currentProfile, {
                             post: () => {
@@ -2277,18 +2439,39 @@ function buildTreeview(data, skipInit?) {
                             if (!$('#alias-editor .btn-adv').data('open'))
                                 $('#alias-editor .btn-adv').trigger('click');
                         }
+                        focusEditor('alias-value');
                         break;
                     case 'macro':
                         UpdateEditor('macro', currentProfile.macros[node.dataAttr.index], { key: MacroValue });
+                        focusEditor('macro-value');
                         break;
                     case 'trigger':
                         UpdateEditor('trigger', currentProfile.triggers[node.dataAttr.index], { post: clearTriggerTester });
+                        focusEditor('trigger-value');
                         break;
                     case 'button':
                         UpdateEditor('button', currentProfile.buttons[node.dataAttr.index], { post: UpdateButtonSample });
+                        focusEditor('button-value');
                         break;
                     case 'context':
                         UpdateEditor('context', currentProfile.contexts[node.dataAttr.index], { post: UpdateContextSample });
+                        focusEditor('context-value');
+                        break;
+                    case 'variable':
+                        UpdateEditor('variable', currentProfile.variables[node.dataAttr.index], {
+                            post: item => {
+                                enableEditor('variable-value', !item.useDefault);
+                                if (item.useDefault)
+                                    $('#variable-defaultValue').focus();
+                                else
+                                    focusEditor('variable-value');
+                            }
+                        });
+                        validateIdentifier(<HTMLInputElement>document.getElementById('variable-name'));
+                        if (!validateIdentifiers(<HTMLInputElement>document.getElementById('variable-params'))) {
+                            if (!$('#variable-editor .btn-adv').data('open'))
+                                $('#variable-editor .btn-adv').trigger('click');
+                        }
                         break;
                 }
                 document.getElementById('btn-new').title = 'New ' + ((t === 'alias' || t === 'aliases') ? 'alias' : (t.endsWith('s') ? t.substr(0, t.length - 1) : t));
@@ -2382,6 +2565,7 @@ function loadOptions() {
     setAdvancedPanel('button', options.profiles.buttonsAdvanced);
     setAdvancedPanel('macro', options.profiles.macrosAdvanced);
     setAdvancedPanel('context', options.profiles.contextsAdvanced);
+    setAdvancedPanel('variable', options.profiles.variablesAdvanced);
 }
 
 function setAdvancedPanel(id, state) {
@@ -2506,6 +2690,12 @@ export function init() {
             label: 'New context', click() {
                 clearButton('#btn-add-dropdown');
                 addItem('Context', 'contexts', new Context());
+            }
+        }));
+        addMenu.append(new MenuItem({
+            label: 'New variable', click() {
+                clearButton('#btn-add-dropdown');
+                addItem('Variable', 'variables', new Variable());
             }
         }));
         addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
@@ -2698,6 +2888,7 @@ export function init() {
     initEditor('alias-value');
     initEditor('button-value');
     initEditor('context-value');
+    initEditor('variable-value');
     buildTreeview(getProfileData());
     $('#profile-tree').on('contextmenu', (event: JQueryEventObject) => {
         event.preventDefault();
@@ -3021,6 +3212,53 @@ export function init() {
                         }));
                     }
                     break;
+                case 'variables':
+                case 'variable':
+                    c.append(new MenuItem({
+                        label: 'New variable', click() {
+                            addItem('Variable', 'variables', new Variable());
+                        }
+                    }));
+                    c.append(new MenuItem({ type: 'separator' }));
+                    c.append(new MenuItem({
+                        label: 'Undo', click() {
+                            doUndo();
+                        },
+                        enabled: _undo.length > 0
+                    }));
+                    c.append(new MenuItem({
+                        label: 'Redo', click() {
+                            doRedo();
+                        },
+                        enabled: _redo.length > 0
+                    }));
+
+                    if (profile.variables.length > 0) {
+                        c.append(new MenuItem({ type: 'separator' }));
+                        c.append(new MenuItem({
+                            label: 'Cut', click() {
+                                doCut(nodes[0]);
+                            }
+                        }));
+                        c.append(new MenuItem({
+                            label: 'Copy', click() {
+                                doCopy(nodes[0]);
+                            }
+                        }));
+                        if (canPaste())
+                            c.append(new MenuItem({
+                                label: 'Paste', click() {
+                                    doPaste(nodes[0]);
+                                }
+                            }));
+                        c.append(new MenuItem({ type: 'separator' }));
+                        c.append(new MenuItem({
+                            label: 'Delete', click() {
+                                doDelete(nodes[0]);
+                            }
+                        }));
+                    }
+                    break;
             }
         }
         c.popup({ window: remote.getCurrentWindow() });
@@ -3319,7 +3557,7 @@ function importProfiles() {
                         const keys = Object.keys(data.profiles);
                         let k = 0;
                         const kl = keys.length;
-                        let item: (Alias | Button | Macro | Trigger | Context);
+                        let item: (Alias | Button | Macro | Trigger | Context | Variable);
                         for (; k < kl; k++) {
                             const p = new Profile(keys[k], false);
                             p.priority = data.profiles[keys[k]].priority;
@@ -3328,6 +3566,7 @@ function importProfiles() {
                             p.enableTriggers = data.profiles[keys[k]].enableTriggers;
                             p.enableAliases = data.profiles[keys[k]].enableAliases;
                             p.enableContexts = data.profiles[keys[k]].enableContexts;
+                            p.enableVariables = data.profiles[keys[k]].enableVariables;
                             let l = data.profiles[keys[k]].macros.length;
                             if (l > 0) {
                                 for (let m = 0; m < l; m++) {
@@ -3387,6 +3626,15 @@ function importProfiles() {
                                     }
                                 }
                             }
+                            l = data.profiles[keys[k]].variables.length;
+                            if (l > 0) {
+                                for (let m = 0; m < l; m++) {
+                                    item = new Variable(data.profiles[keys[k]].variables[m]);
+                                    item.notes = data.profiles[keys[k]].variables[m].notes || '';
+                                    p.variables.push(item);
+                                }
+                            }
+
                             if (profiles.contains(p)) {
                                 if (all === 3) {
                                     _replace.push(profiles.items[p.name.toLowerCase()].clone());
@@ -3830,6 +4078,7 @@ export function doReset(node) {
             n = n.concat($('#profile-tree').treeview('findNodes', ['Profile' + profileID(profile.name) + 'buttons[0-9]+', 'id']));
             n = n.concat($('#profile-tree').treeview('findNodes', ['Profile' + profileID(profile.name) + 'aliases[0-9]+', 'id']));
             n = n.concat($('#profile-tree').treeview('findNodes', ['Profile' + profileID(profile.name) + 'contexts[0-9]+', 'id']));
+            n = n.concat($('#profile-tree').treeview('findNodes', ['Profile' + profileID(profile.name) + 'variables[0-9]+', 'id']));
             $('#profile-tree').treeview('removeNode', [n, { silent: true }]);
             n = {
                 text: 'Aliases',
@@ -3904,15 +4153,32 @@ export function doReset(node) {
             o = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + 'contexts$', 'id']);
             $('#profile-tree').treeview('updateNode', [o[0], n]);
 
+            n = {
+                text: 'Variables',
+                id: 'Profile' + profileID(profile.name) + 'variables',
+                dataAttr: {
+                    profile: profile.name.toLowerCase(),
+                    type: 'variables'
+                },
+                lazyLoad: 0,
+                state: {
+                    checked: profile.enableVariables
+                }
+            };
+            o = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + 'variables$', 'id']);
+            $('#profile-tree').treeview('updateNode', [o[0], n]);
+
             profile.aliases = [];
             profile.macros = [];
             profile.triggers = [];
             profile.buttons = [];
+            profile.variables = [];
             profile.enableMacros = true;
             profile.enableTriggers = true;
             profile.enableAliases = true;
             profile.enableButtons = true;
             profile.enableContexts = true;
+            profile.enableVariables = true;
             profile.enableDefaultContext = true;
             profile.priority = 0;
 
@@ -3925,6 +4191,7 @@ export function doReset(node) {
                 $('#profile-enableTriggers').prop('checked', currentProfile.enableTriggers);
                 $('#profile-enableButtons').prop('checked', currentProfile.enableButtons);
                 $('#profile-enableContexts').prop('checked', currentProfile.enableContexts);
+                $('#profile-enableVariables').prop('checked', currentProfile.enableVariables);
                 $('#profile-enableDefaultContext').prop('checked', currentProfile.enableDefaultContext);
                 $('#editor-enabled').prop('checked', true);
                 $('#profile-priority').val(currentProfile.priority);
@@ -3934,6 +4201,7 @@ export function doReset(node) {
             $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + 'triggers$', 'id'])]);
             $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + 'buttons$', 'id'])]);
             $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + 'contexts$', 'id'])]);
+            $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + 'variables$', 'id'])]);
             $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile.name) + '$', 'id'])]);
 
         }
@@ -3952,7 +4220,7 @@ function UpdateEditor(editor, item, options?) {
     else
         $('#editor-enabled').prop('checked', item.enabled);
     if (typeof options['pre'] === 'function')
-        options['pre']();
+        options['pre'](item);
     let prop;
     for (prop in item) {
         if (!item.hasOwnProperty(prop)) {
@@ -3972,7 +4240,10 @@ function UpdateEditor(editor, item, options?) {
             $(id).prop('checked', item[prop]);
         else if (editors[editor + '-' + prop]) {
             if (editors[editor + '-' + prop]) {
-                editors[editor + '-' + prop].getSession().setValue(item[prop]);
+                if (editor === "variable")
+                    editors[editor + '-' + prop].getSession().setValue(item.toString());
+                else
+                    editors[editor + '-' + prop].getSession().setValue(item[prop]);
                 if (item.style === ItemStyle.Script)
                     editors[editor + '-' + prop].getSession().setMode('ace/mode/javascript');
                 else
@@ -3986,7 +4257,7 @@ function UpdateEditor(editor, item, options?) {
         $(id).data('previous-value', item[prop]);
     }
     if (typeof options['post'] === 'function')
-        options['post']();
+        options['post'](item);
     _pUndo = false;
     _loading--;
 }
@@ -4101,7 +4372,7 @@ ipcRenderer.on('profile-toggled', (event, profile, enabled) => {
     else
         $('#profile-tree').treeview('uncheckNode', [parent, { silent: true }]);
     const t = currentNode.dataAttr.type;
-    if (currentProfile.name === profile && t === 'profile' || t === 'aliases' || t === 'triggers' || t === 'buttons' || t === 'macros' || t === 'contexts')
+    if (currentProfile.name === profile && t === 'profile' || t === 'aliases' || t === 'triggers' || t === 'buttons' || t === 'macros' || t === 'contexts' || t === 'variables')
         $('#editor-enabled').prop('checked', enabled);
 });
 
@@ -4229,10 +4500,10 @@ function exportCurrent() {
 }
 
 export function validateIdentifiers(el: HTMLInputElement, focus?) {
-    if(!el) return;
+    if (!el) return;
     if (el.value.length === 0) {
         el.parentElement.classList.remove('has-error');
-        el.parentElement.classList.remove('has-feedback');        
+        el.parentElement.classList.remove('has-feedback');
         return true;
     }
     const ids = el.value.split(',').filter(v => v.length && !isValidIdentifier(v.trim()))
@@ -4248,4 +4519,24 @@ export function validateIdentifiers(el: HTMLInputElement, focus?) {
             el.focus();
     }
     return ids.length === 0;
+}
+
+export function validateIdentifier(el: HTMLInputElement, focus?) {
+    if (!el) return;
+    if (el.value.length === 0) {
+        el.parentElement.classList.remove('has-error');
+        el.parentElement.classList.remove('has-feedback');
+        return true;
+    }
+    if (isValidIdentifier(el.value)) {
+        el.parentElement.classList.remove('has-error');
+        el.parentElement.classList.remove('has-feedback');
+        return true;
+    }
+    el.parentElement.classList.add('has-error');
+    el.parentElement.classList.add('has-feedback');
+    el.nextElementSibling.innerHTML = '<small class="aura-error">Invalid name</small>';
+    if (focus)
+        el.focus();
+    return false;
 }
