@@ -4069,7 +4069,7 @@ export class Input extends EventEmitter {
                             tmp = '';
                             break;
                         }
-                        else if (start && isValidIdentifier(arg, true)) {
+                        else if (start) {
                             state = ParseState.variableAssign;
                             idx--;
                             start = false;
@@ -4109,11 +4109,11 @@ export class Input extends EventEmitter {
                         state = ParseState.none;
                         arg = '';
                     }
-                    else if (c === '[' && isValidIdentifier(arg, true)) {
+                    else if (c === '[') {
                         arg += c;
                         state = ParseState.variableBlockKey;
                     }
-                    else if (c === '=' && isValidIdentifier(arg), true) {
+                    else if (c === '=') {
                         state = ParseState.variableBlockAssign;
                         tmp = '';
                     }

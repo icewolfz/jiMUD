@@ -4528,7 +4528,7 @@ export function validateIdentifier(el: HTMLInputElement, focus?) {
         el.parentElement.classList.remove('has-feedback');
         return true;
     }
-    if (isValidIdentifier(el.value)) {
+    if (isValidIdentifier(el.value, true)) {
         el.parentElement.classList.remove('has-error');
         el.parentElement.classList.remove('has-feedback');
         return true;
