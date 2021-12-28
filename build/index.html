@@ -1741,6 +1741,7 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
+                        clearWatcher();
                         ipcRenderer.invoke('window', 'closeWindows');
                         ipcRenderer.invoke('window', 'close');
                         client.clearSessionVariables();
