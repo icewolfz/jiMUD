@@ -1700,6 +1700,7 @@
                             clearWatcher();
                             ipcRenderer.invoke('window', 'closeWindows');
                             ipcRenderer.invoke('window', 'close');
+                            client.clearSessionVariables();
                             return;
                         }
                         if (choice !== 0) {
@@ -1712,6 +1713,7 @@
                         clearWatcher();
                         ipcRenderer.invoke('window', 'closeWindows');
                         ipcRenderer.invoke('window', 'close');
+                        client.clearSessionVariables();
                     });
                     return;
                 }
@@ -1741,6 +1743,7 @@
                         closeWindow = true;
                         ipcRenderer.invoke('window', 'closeWindows');
                         ipcRenderer.invoke('window', 'close');
+                        client.clearSessionVariables();
                     });
                     return;
                 }
@@ -1759,6 +1762,7 @@
                         clearWatcher();
                         ipcRenderer.invoke('window', 'closeWindows');
                         ipcRenderer.invoke('window', 'close');
+                        client.clearSessionVariables();
                     });
                 }
                 client.raise('closed');
@@ -1767,6 +1771,7 @@
                 clearWatcher();
                 ipcRenderer.invoke('window', 'closeWindows');
                 ipcRenderer.invoke('window', 'close');
+                client.clearSessionVariables();
                 return;
             };
             $('#status').on('contextmenu', (e) => {

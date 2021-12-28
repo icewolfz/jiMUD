@@ -461,6 +461,31 @@ export class Client extends EventEmitter {
         return false;
     }
 
+    public removeVariable(name) {
+        if (!this.variables.hasOwnProperty(name))
+            return;
+        const va: Variable = this.variables[name];
+        let idx = va.profile.variables.indexOf(va);
+        if (idx === -1)
+            return;
+        va.profile.triggers.splice(idx, 1);
+        this._itemCache.variables = null;
+        this.saveProfile(va.profile.name);
+        this.emit('item-removed', 'variable', va.profile.name, idx);
+    }
+
+    public clearSessionVariables() {
+        let vl = this.variables.length;
+        let c = 0;
+        while (vl-- > 0) {
+            if (this.variables[vl].session) {
+                this.removeVariable(this.variables[vl]);
+                c++;
+            }
+        }
+        if (c)
+            this.saveProfiles();
+    }
 
     get activeProfile(): Profile {
         const keys = this.profiles.keys;

@@ -419,6 +419,7 @@ export class Variable extends Item {
     public defaultValue: string = '';
     public useDefault: boolean = false;
     public params: string = '';
+    public session: boolean = false;
 
     /**
      * Set the raw value and convert to the final value based on set type
