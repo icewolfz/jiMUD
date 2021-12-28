@@ -56,6 +56,7 @@
     - Trigger tester still did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
     - Fix trigger type select width
     - Focus on value editor on select
+    - Fix out of sync closing when asking to save/apply over changed file
   - Fixed alias named arguments not being directly accessible in scripting type
   - Fixed full screen not always being restored on load
   - Fixed maximized state not being correctly restored on load if window was closed minimized
