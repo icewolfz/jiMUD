@@ -2822,9 +2822,8 @@ export function init() {
                 ipcRenderer.invoke('window', 'close');
                 return;
             }
-            evt.returnValue = false;
-            return 'no';
         });
+        return 'no';
     };
 
     document.onkeydown = undoKeydown;
@@ -3720,31 +3719,31 @@ function trashProfiles(p) {
 export function saveProfiles(clearNow?: boolean) {
     if (updateCurrent() !== UpdateState.NoChange)
         return false;
-    if (filesChanged)
-        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+    if (filesChanged) {
+        let response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
             type: 'question',
             title: 'Profiles updated',
             message: 'Profiles have been updated outside of manager, save anyways?',
             buttons: ['Yes', 'No'],
             defaultId: 1
-        }).then(result => {
-            if (result.response === 0) {
-                const p = path.join(parseTemplate('{data}'), 'profiles');
-                if (!existsSync(p))
-                    fs.mkdirSync(p);
-                profiles.save(p);
-                trashProfiles(p);
-                const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-                options.profiles.enabled = _enabled;
-                options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
-                ipcRenderer.send('reload-profiles');
-                if (clearNow)
-                    clearChanges();
-                else
-                    setTimeout(clearChanges, 500);
-            }
         });
+        if (response === 0) {
+            const p = path.join(parseTemplate('{data}'), 'profiles');
+            if (!existsSync(p))
+                fs.mkdirSync(p);
+            profiles.save(p);
+            trashProfiles(p);
+            const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+            options.profiles.enabled = _enabled;
+            options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
+            ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
+            ipcRenderer.send('reload-profiles');
+            if (clearNow)
+                clearChanges();
+            else
+                setTimeout(clearChanges, 500);
+        }
+    }
     else {
         const p = path.join(parseTemplate('{data}'), 'profiles');
         if (!existsSync(p))
