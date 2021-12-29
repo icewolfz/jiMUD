@@ -58,13 +58,13 @@ You can create custom variables using the expression system and the assignment o
 
 ### **Math**
 
-- `%bitand(number1,number2)` returns the bitwise AND of the two numbers. 
-- `%bitnot(number)` returns the bitwise inverse of the given number.
-- `%bitor(number1,number2)` returns the bitwise OR of the two numbers. 
-- `%bitset(i,bitnum,value)` Set or reset a bit within a numeric value and return the new numeric value. If value is omitted, 1 (true) is used to set the bit. To reset a bit, the value must be zero. 
-- `%bitshift(value,number)` shifts the value the num bits to the left. If num is negative, then the value is shifted to the right. 
-- `%bittest(i,bitnum)` Test a bit within a numeric value and return true if it is set, false if it is not set. bitnum starts at 1. 
-- `%bitxor(number1,number2)` returns the bitwise XOR of the two numbers.
+- `bitand(number1,number2)` returns the bitwise AND of the two numbers. 
+- `bitnot(number)` returns the bitwise inverse of the given number.
+- `bitor(number1,number2)` returns the bitwise OR of the two numbers. 
+- `bitset(i,bitnum,value)` Set or reset a bit within a numeric value and return the new numeric value. If value is omitted, 1 (true) is used to set the bit. To reset a bit, the value must be zero. 
+- `bitshift(value,number)` shifts the value the num bits to the left. If num is negative, then the value is shifted to the right. 
+- `bittest(i,bitnum)` Test a bit within a numeric value and return true if it is set, false if it is not set. bitnum starts at 1. 
+- `bitxor(number1,number2)` returns the bitwise XOR of the two numbers.
 - `eval(expression)` evaluate the expression and return the results, a long version of `expression`
 - `dice(xdy+n)` roll a dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
 - `diceavg(xdy+n)` the avg roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
@@ -98,9 +98,9 @@ You can create custom variables using the expression system and the assignment o
 - `pos(pattern,string)` returns the position of pattern in string on 1 index scale, 0 if not found
 - `ipos(pattern,string)` returns the position of pattern in string on 1 index scale, 0 if not found ignoring case
 - `regex(string,regex,var1,...,varN,varN+1)` test if string matches the regex pattern, if found returns the position of the match, starting at 1 else returns 0, var1 ... varN are optional variable names to store any sub pattern matches, varN+1 is the length of matched string. **Note** the regex argument is not parsed and passed as is due to the complexity of regex formats
-- `%trim(string)` Returns the string without any spaces at the beginning or end
-- `%trimleft(string)` Returns the string without any spaces at the beginning
-- `%trimright(string)` Returns the string without any spaces at the end
+- `trim(string)` Returns the string without any spaces at the beginning or end
+- `trimleft(string)` Returns the string without any spaces at the beginning
+- `trimright(string)` Returns the string without any spaces at the end
 
 ### **Miscellaneous**
 - `time(format)` display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]
