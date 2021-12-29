@@ -3322,6 +3322,7 @@
 
         function rename(rows, list, callback) {
             var el = $(rows.nodes()[0].children[0]);
+            var list = $(el.closest('tbody'));
             el.css('position', 'relative');
             var editor = $('<input class="form-control" style="position: absolute;top:0;left:0;right:0;bottom:0;width:auto;margin:0;height: auto;"/>');
             editor.path = rows.data()[0].path;
@@ -3349,6 +3350,7 @@
                 if (e && e.target === editor[0])
                     return;
                 $(window).off('click', editor.update);
+                list.off('contextmenu', 'tr', editor.context);
                 editor.remove();
                 editor = null;
             };
@@ -3371,6 +3373,37 @@
             });
 
             $(window).on('click', editor.update);
+            editor.context = e => {
+                if (e && e.target === editor[0]) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.cancelBubble = true;
+                    return;
+                }
+                editor.close();
+            };
+            editor.on('contextmenu', e => {
+                event.preventDefault();
+                event.stopPropagation();
+                event.cancelBubble = true;
+
+                let menu = [
+                    { role: 'undo' },
+                    { role: 'redo' },
+                    { type: 'separator' },
+                    { role: 'cut' },
+                    { role: 'copy' },
+                    { role: 'paste' },
+                    { type: 'separator' },
+                    { role: 'selectAll' },
+                ];
+                if (ipcRenderer.sendSync('get-global', 'debug')) {
+                    menu.push({ type: 'separator' });
+                    menu.push({ label: 'Inspect', click: `ipcRenderer.send('inspect', ${e.pageX}, ${e.pageY})` });
+                }
+                ipcRenderer.invoke('show-context', menu);
+            })
+            list.on('contextmenu', 'tr', editor.context);
             el.append(editor);
             editor.val(editor.original);
             editor.focus();

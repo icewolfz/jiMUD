@@ -157,6 +157,9 @@
     - Fixed crashing issue when opening external links
     - Fixed changelog links not working
   - Fixed issue with modal child windows not being set to correct parent window
+  - Immortal tools: 
+    - Fixed rename editor to close when right clicking outside of editor
+    - Fixed rename editor context menu to show standard edit menu
 - **Changed:**
   - Remove %named argument support from docs as it never was supported and easier to just remove it
   - [#nnn](docs/commands.md#repeating-and-loops) counter is now 1 based when using %i..%z instead of 0 based
