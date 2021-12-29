@@ -40,7 +40,7 @@ Escaping allows you to prevent special characters from being parsed and allow th
   - `.upper` force to all upper case by appending .lower
   - `.proper` force to proper casing by appending .proper
 - `repeatnum` returns the current index during [#nnn](commands.md#repeating-and-loops) or string from [#FORALL](commands.md#repeating-and-loops)
-- `i` same as repeatnum
+- `i..z` return the index based on the nested order from outer to inner loops
 - `cr` replace with carriage return
 - `esc` escape character, useful for creating ansi color codes
 - `lf` replace with line feed
