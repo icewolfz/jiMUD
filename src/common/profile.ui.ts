@@ -3668,8 +3668,10 @@ function setParseSyntax(editor) {
     editors[editor].getSession().setMode('ace/mode/jimud', () => {
         var session = editors[editor].getSession();
         var rules = session.$mode.$highlightRules.getRules();
-        console.log(rules);
+        //console.log(rules);
         if (Object.prototype.hasOwnProperty.call(rules, 'start')) {
+            rules['start'][3].token = _stacking;
+            rules['start'][3].regex = _stacking;
             rules['start'][5].regex = _parameter + rules['start'][5].regex.substr(1);
             rules['start'][6].regex = _parameter + rules['start'][6].regex.substr(1);
             rules['start'][7].regex = _parameter + rules['start'][7].regex.substr(1);
@@ -3684,7 +3686,9 @@ function setParseSyntax(editor) {
             rules['start'][15].regex = '[' + _parameter + _nParameter + rules['start'][15].regex.substr(3);
             rules['start'][15].splitRegex = new RegExp(rules['start'][15].regex);
             rules['start'][16].regex = '[' + _parameter + _nParameter + rules['start'][16].regex.substr(3);
-            rules['start'][16].splitRegex = new RegExp(rules['start'][16].regex);
+            rules['start'][16].splitRegex = new RegExp(rules['start'][16].regex);            
+            rules['start'][17].regex = '[' + _parameter + _nParameter + rules['start'][17].regex.substr(3);
+            rules['start'][17].splitRegex = new RegExp(rules['start'][17].regex);
             /*
 0: {token: 'string', regex: '".*?"', onMatch: null}
 1: {token: 'string', regex: "'.*?'", onMatch: null}
@@ -3724,7 +3728,7 @@ function setParseSyntax(editor) {
             */
         }
         if (Object.prototype.hasOwnProperty.call(rules, 'bracket')) {
-            rules['bracket'][0].regex = _command + rules['bracket'][0].regex.substr(1);            
+            rules['bracket'][0].regex = '\\s*?' + _command + rules['bracket'][0].regex.substr(5);            
             rules['bracket'][0].splitRegex = new RegExp(rules['bracket'][0].regex);  
             rules['bracket'][3].regex = _verbatim + '.*$';
             rules['bracket'][4].regex = _speed + '.*$';            
