@@ -133,3 +133,4 @@ You can create custom variables using the expression system and the assignment o
       - prepend with x for aixterm bright colors
       - append background to get background code directly
       - eg redbackground to get red background, xred to get aixterm red or xredbackground to get aixterm red background
+- `isdefined(name)` Returns 1 if a variable is defined, 0 if undefined

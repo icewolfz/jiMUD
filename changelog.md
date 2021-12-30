@@ -26,6 +26,7 @@
   - Add [%isnumber(s))](docs/functions.md#math) true if s represents a valid number. 
   - Add [%string(value))](docs/functions.md#math) converts value to a string. Quotes are added around the value.
   - Add [%float(value))](docs/functions.md#math) Returns value as a floating point number.
+  - Add [%isdefined(name)](dics.functions.md#miscellaneous) Returns 1 if a variable is defined, 0 if undefined
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
   - [Triggers](docs/profiles.md):
     - Add support for regex name capture that work similar to alias named params
@@ -72,6 +73,7 @@
     - Fixed do not escape disabled special characters
     - Fixed command character not being correctly replaced with custom character in some places
     - Fixed saving nested loop variables as user variables
+  - Fixed [%dice(xdy+n)](docs/functions.md#math) not correctly parsings argument format
   - Fixed [#variable](docs/commands.md) should not evaluate the value to allow use of raw strings as needed, eg #va test {3+5} should store 3+5 not 8, if you want the evaluated value use #var test \${3+5} or #va test \{${3+5}}
   - Fixed [#variable](docs/commands.md) throws an error now when invalid variable names are used
   - Fixed Select control selected color text
