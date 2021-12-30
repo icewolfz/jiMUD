@@ -33,7 +33,9 @@
   - Help: Add more known issue for advanced editor
   - Add save image as, copy image, copy image link to MXP image context menu
   - Input parser: Add $var user variable style support
-  - Profile Manager: Alias params are now highlighted with an error if invalid
+  - Profile Manager:
+    - Alias params are now highlighted with an error if invalid
+    - Parse style is now syntax highlighted using special characters defined from options
   - [Preferences](docs/preferences.md):
     - Add [Enable Double Parameter Escaping](docs/preferences.md#scripting) to enable/disable doubling up of the parameter character `%` to escape as well as using escape character, default to off as there is an escape system
     - [Parameters character](docs/preferences.md#scripting--special-characters) allows you to change the % character for parameters
