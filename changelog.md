@@ -26,7 +26,7 @@
   - Add [%isnumber(s))](docs/functions.md#math) true if s represents a valid number. 
   - Add [%string(value))](docs/functions.md#math) converts value to a string. Quotes are added around the value.
   - Add [%float(value))](docs/functions.md#math) Returns value as a floating point number.
-  - Add [%isdefined(name)](dics.functions.md#miscellaneous) Returns 1 if a variable is defined, 0 if undefined
+  - Add [%isdefined(name)](docs/functions.md#miscellaneous) Returns 1 if a variable is defined, 0 if undefined
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
   - [Triggers](docs/profiles.md):
     - Add support for regex name capture that work similar to alias named params
