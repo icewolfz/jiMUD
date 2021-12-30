@@ -45,6 +45,7 @@ let _command = '#';
 let _stacking = ';';
 let _speed = '!';
 let _verbatim = '`';
+let _variable = '@';
 
 
 const _controllers = {};
@@ -2563,6 +2564,7 @@ function loadOptions() {
     _stacking = options.commandStackingChar;
     _speed = options.speedpathsChar;
     _verbatim = options.verbatimChar;
+    _variable = options.variableChar;
     updatePads();
 
     let theme = parseTemplate(options.theme) + '.css';
@@ -3915,16 +3917,18 @@ function setParseSyntax(editor) {
             rules['start'][9].regex = '[' + _parameter + _nParameter + ']\\*';
             rules['start'][10].regex = '[' + _parameter + _nParameter + ']{\\*}';
             rules['start'][11].regex = _command + rules['start'][11].regex.substr(1);
-            rules['start'][12].regex = '^' + _command + rules['start'][12].regex.substr(2);            
+            rules['start'][12].regex = '^' + _command + rules['start'][12].regex.substr(2);
             rules['start'][12].splitRegex = new RegExp(rules['start'][12].regex);
             rules['start'][13].regex = '^' + _verbatim + '.*$';
             rules['start'][14].regex = '^' + _speed + '.*$';
             rules['start'][15].regex = '[' + _parameter + _nParameter + rules['start'][15].regex.substr(3);
             rules['start'][15].splitRegex = new RegExp(rules['start'][15].regex);
             rules['start'][16].regex = '[' + _parameter + _nParameter + rules['start'][16].regex.substr(3);
-            rules['start'][16].splitRegex = new RegExp(rules['start'][16].regex);            
+            rules['start'][16].splitRegex = new RegExp(rules['start'][16].regex);
             rules['start'][17].regex = '[' + _parameter + _nParameter + rules['start'][17].regex.substr(3);
             rules['start'][17].splitRegex = new RegExp(rules['start'][17].regex);
+            for (let x = 0; x < 6; x++)
+                rules['start'][18 + x].regex = _variable + rules['start'][18 + x].regex.substr(1);
             /*
 0: {token: 'string', regex: '".*?"', onMatch: null}
 1: {token: 'string', regex: "'.*?'", onMatch: null}
@@ -3950,9 +3954,9 @@ function setParseSyntax(editor) {
             */
         }
         if (Object.prototype.hasOwnProperty.call(rules, 'stacking')) {
-            rules['stacking'][0].regex = _command + rules['stacking'][0].regex.substr(1);            
-            rules['stacking'][0].splitRegex = new RegExp(rules['stacking'][0].regex);  
-            rules['stacking'][1].regex = _command + rules['stacking'][1].regex.substr(1);   
+            rules['stacking'][0].regex = _command + rules['stacking'][0].regex.substr(1);
+            rules['stacking'][0].splitRegex = new RegExp(rules['stacking'][0].regex);
+            rules['stacking'][1].regex = _command + rules['stacking'][1].regex.substr(1);
             rules['stacking'][2].regex = _verbatim + '.*$';
             rules['stacking'][3].regex = _speed + '.*$';
             /*
@@ -3964,11 +3968,11 @@ function setParseSyntax(editor) {
             */
         }
         if (Object.prototype.hasOwnProperty.call(rules, 'bracket')) {
-            rules['bracket'][0].regex = '\\s*?' + _command + rules['bracket'][0].regex.substr(5);            
-            rules['bracket'][0].splitRegex = new RegExp(rules['bracket'][0].regex);  
+            rules['bracket'][0].regex = '\\s*?' + _command + rules['bracket'][0].regex.substr(5);
+            rules['bracket'][0].splitRegex = new RegExp(rules['bracket'][0].regex);
             rules['bracket'][3].regex = _verbatim + '.*$';
-            rules['bracket'][4].regex = _speed + '.*$';            
-            rules['bracket'][6].regex = _command + rules['bracket'][6].regex.substr(1);   
+            rules['bracket'][4].regex = _speed + '.*$';
+            rules['bracket'][6].regex = _command + rules['bracket'][6].regex.substr(1);
             /*
 0: {regex: '\\s*?#([a-zA-Z_$][a-zA-Z0-9_$]*)\\b', next: 'start', splitRegex: /^\s*?#([a-zA-Z_$][a-zA-Z0-9_$]*)\b$/, token: ƒ, onMatch: ƒ}
 1: {token: 'string', regex: '".*?"', onMatch: null}
@@ -3980,7 +3984,7 @@ function setParseSyntax(editor) {
 7: {token: 'constant.numeric', regex: '[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b', onMatch: null}
 8: {token: 'text', regex: '\\s+', next: 'start', onMatch: null}      
             */
-        }        
+        }
         //console.log(rules);
         // force recreation of tokenizer
         session.$mode.$tokenizer = null;
@@ -4002,6 +4006,8 @@ function resetParseSyutax() {
         setParseSyntax('button-value');
     if (editors['context-value'] && editors['context-value'].getSession().getMode() === "ace/mode/jimud")
         setParseSyntax('context-value');
+    if (editors['variable-value'] && editors['variable-value'].getSession().getMode() === "ace/mode/jimud")
+        setParseSyntax('variable-value');
 }
 
 function resetUndo() {
