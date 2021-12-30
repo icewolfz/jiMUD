@@ -33,7 +33,9 @@
   - Help: Add more known issue for advanced editor
   - Add save image as, copy image, copy image link to MXP image context menu
   - Input parser: Add $var user variable style support
-  - Profile Manager: Alias params are now highlighted with an error if invalid
+  - Profile Manager:
+    - Alias params are now highlighted with an error if invalid
+    - Parse style is now syntax highlighted using special characters defined from options
   - [Preferences](docs/preferences.md):
     - Add [Enable Double Parameter Escaping](docs/preferences.md#scripting) to enable/disable doubling up of the parameter character `%` to escape as well as using escape character, default to off as there is an escape system
     - [Parameters character](docs/preferences.md#scripting--special-characters) allows you to change the % character for parameters
@@ -74,12 +76,14 @@
   - Fixed [#variable](docs/commands.md) throws an error now when invalid variable names are used
   - Fixed Select control selected color text
   - Fixed [Watch for profile changes](docs/preferences.md#advanced) not always being cleared when client closed
+  - Docs: Fixed [i..z](docs/functions.md#predefined-variables) description
 - **Changed:**
   - Revert 0.17.1 hack for child windows as electron seems to have fixed the bug
   - Update tinymce 4.8.3 to 5.10.1
   - Update electron 16.0.4 to 16.0.5
   - Update font-list 1.4.2 to 1.4.3
-  - Update mathjs 10.0.0 to 10.0.1
+  - Update mathjs 10.0.0 to 10.0.2
+  - Update better-sqlite3 7.4.5 to 7.4.6
 
 ## v0.17.3 2021-12-14
 
@@ -157,6 +161,9 @@
     - Fixed crashing issue when opening external links
     - Fixed changelog links not working
   - Fixed issue with modal child windows not being set to correct parent window
+  - Immortal tools: 
+    - Fixed rename editor to close when right clicking outside of editor
+    - Fixed rename editor context menu to show standard edit menu
 - **Changed:**
   - Remove %named argument support from docs as it never was supported and easier to just remove it
   - [#nnn](docs/commands.md#repeating-and-loops) counter is now 1 based when using %i..%z instead of 0 based

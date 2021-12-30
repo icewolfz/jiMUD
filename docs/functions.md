@@ -9,7 +9,7 @@ There is a special format for argument variables for aliases and triggers.
 - `%#`, `%{#}`, or `${#}` allows you to access arguments for alias and triggers, where # is the argument you want, while 0 is the full text
 - `%x#`, `%{x#}`, or `${x#}` allows you to access arguments' start and end indexes for triggers, where # is the argument indexes you want, while 0 is the full text indexes in format of START END
 - `%*`, `%{*}`, or `${*}` returns the full text minus alias name or matched text for triggers
-- `$name`, `${name}`, or `%{name}` is for aliased [parameters](profiles.md#aliases), this allow yous to name arguments for easier understanding, where name is from the alias parameter list
+- `$name`, `${name}`, or `%{name}` is for aliased [parameters](profiles.md#aliases), this allow you to name arguments for easier understanding, where name is from the alias parameter list
 - `%%` allows you to escape a %, can be disabled setting [Disable double parameter escaping](preferences.md#scripting)
 - `\%` using the [set escape character](preferences.md#scripting--special-characters), default `\`
 
@@ -40,7 +40,7 @@ Escaping allows you to prevent special characters from being parsed and allow th
   - `.upper` force to all upper case by appending .lower
   - `.proper` force to proper casing by appending .proper
 - `repeatnum` returns the current index during [#nnn](commands.md#repeating-and-loops) or string from [#FORALL](commands.md#repeating-and-loops)
-- `i` same as repeatnum
+- `i..z` return the index based on the nested order from outer to inner loops
 - `cr` replace with carriage return
 - `esc` escape character, useful for creating ansi color codes
 - `lf` replace with line feed
@@ -58,13 +58,13 @@ You can create custom variables using the expression system and the assignment o
 
 ### **Math**
 
-- `%bitand(number1,number2)` returns the bitwise AND of the two numbers. 
-- `%bitnot(number)` returns the bitwise inverse of the given number.
-- `%bitor(number1,number2)` returns the bitwise OR of the two numbers. 
-- `%bitset(i,bitnum,value)` Set or reset a bit within a numeric value and return the new numeric value. If value is omitted, 1 (true) is used to set the bit. To reset a bit, the value must be zero. 
-- `%bitshift(value,number)` shifts the value the num bits to the left. If num is negative, then the value is shifted to the right. 
-- `%bittest(i,bitnum)` Test a bit within a numeric value and return true if it is set, false if it is not set. bitnum starts at 1. 
-- `%bitxor(number1,number2)` returns the bitwise XOR of the two numbers.
+- `bitand(number1,number2)` returns the bitwise AND of the two numbers. 
+- `bitnot(number)` returns the bitwise inverse of the given number.
+- `bitor(number1,number2)` returns the bitwise OR of the two numbers. 
+- `bitset(i,bitnum,value)` Set or reset a bit within a numeric value and return the new numeric value. If value is omitted, 1 (true) is used to set the bit. To reset a bit, the value must be zero. 
+- `bitshift(value,number)` shifts the value the num bits to the left. If num is negative, then the value is shifted to the right. 
+- `bittest(i,bitnum)` Test a bit within a numeric value and return true if it is set, false if it is not set. bitnum starts at 1. 
+- `bitxor(number1,number2)` returns the bitwise XOR of the two numbers.
 - `eval(expression)` evaluate the expression and return the results, a long version of `expression`
 - `dice(xdy+n)` roll a dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
 - `diceavg(xdy+n)` the avg roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
@@ -98,9 +98,9 @@ You can create custom variables using the expression system and the assignment o
 - `pos(pattern,string)` returns the position of pattern in string on 1 index scale, 0 if not found
 - `ipos(pattern,string)` returns the position of pattern in string on 1 index scale, 0 if not found ignoring case
 - `regex(string,regex,var1,...,varN,varN+1)` test if string matches the regex pattern, if found returns the position of the match, starting at 1 else returns 0, var1 ... varN are optional variable names to store any sub pattern matches, varN+1 is the length of matched string. **Note** the regex argument is not parsed and passed as is due to the complexity of regex formats
-- `%trim(string)` Returns the string without any spaces at the beginning or end
-- `%trimleft(string)` Returns the string without any spaces at the beginning
-- `%trimright(string)` Returns the string without any spaces at the end
+- `trim(string)` Returns the string without any spaces at the beginning or end
+- `trimleft(string)` Returns the string without any spaces at the beginning
+- `trimright(string)` Returns the string without any spaces at the end
 
 ### **Miscellaneous**
 - `time(format)` display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]

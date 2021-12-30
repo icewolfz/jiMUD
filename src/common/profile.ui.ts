@@ -41,6 +41,11 @@ let _spellchecker = true;
 let _prependTrigger = true;
 let _parameter = '%';
 let _nParameter = '$';
+let _command = '#';
+let _stacking = ';';
+let _speed = '!';
+let _verbatim = '`';
+
 
 const _controllers = {};
 let _controllersCount = 0;
@@ -800,6 +805,8 @@ function getEditorValue(editor, style: ItemStyle) {
     if (editors[editor]) {
         if (style === ItemStyle.Script)
             editors[editor].getSession().setMode('ace/mode/javascript');
+        else if (style === ItemStyle.Parse)
+            setParseSyntax(editor);
         else
             editors[editor].getSession().setMode('ace/mode/text');
         return editors[editor].getSession().getValue();
@@ -833,6 +840,10 @@ export function UpdateEditorMode(type) {
         if ($('#' + type + '-style').val() === '2' || $('#' + type + '-style').val() === ItemStyle.Script) {
             editors[type + '-value'].getSession().setMode('ace/mode/javascript');
             setTimeout(() => editors[type + '-value'].getSession().setMode('ace/mode/javascript'), 100);
+        }
+        else if ($('#' + type + '-style').val() === '1' || $('#' + type + '-style').val() === ItemStyle.Parse) {
+            setParseSyntax(type + '-value');
+            setTimeout(() => setParseSyntax(type + '-value'), 100);
         }
         else {
             editors[type + '-value'].getSession().setMode('ace/mode/text');
@@ -2548,6 +2559,10 @@ function loadOptions() {
     _prependTrigger = options.prependTriggeredLine;
     _parameter = options.parametersChar;
     _nParameter = options.nParametersChar;
+    _command = options.commandChar;
+    _stacking = options.commandStackingChar;
+    _speed = options.speedpathsChar;
+    _verbatim = options.verbatimChar;
     updatePads();
 
     let theme = parseTemplate(options.theme) + '.css';
@@ -3885,6 +3900,110 @@ function initEditor(id) {
 
 let dragging = false;
 
+function setParseSyntax(editor) {
+    editors[editor].getSession().setMode('ace/mode/jimud', () => {
+        var session = editors[editor].getSession();
+        var rules = session.$mode.$highlightRules.getRules();
+        //console.log(rules);
+        if (Object.prototype.hasOwnProperty.call(rules, 'start')) {
+            rules['start'][3].token = _stacking;
+            rules['start'][3].regex = _stacking;
+            rules['start'][5].regex = _parameter + rules['start'][5].regex.substr(1);
+            rules['start'][6].regex = _parameter + rules['start'][6].regex.substr(1);
+            rules['start'][7].regex = _parameter + rules['start'][7].regex.substr(1);
+            rules['start'][8].regex = '\\' + _nParameter + rules['start'][8].regex.substr(2);
+            rules['start'][9].regex = '[' + _parameter + _nParameter + ']\\*';
+            rules['start'][10].regex = '[' + _parameter + _nParameter + ']{\\*}';
+            rules['start'][11].regex = _command + rules['start'][11].regex.substr(1);
+            rules['start'][12].regex = '^' + _command + rules['start'][12].regex.substr(2);            
+            rules['start'][12].splitRegex = new RegExp(rules['start'][12].regex);
+            rules['start'][13].regex = '^' + _verbatim + '.*$';
+            rules['start'][14].regex = '^' + _speed + '.*$';
+            rules['start'][15].regex = '[' + _parameter + _nParameter + rules['start'][15].regex.substr(3);
+            rules['start'][15].splitRegex = new RegExp(rules['start'][15].regex);
+            rules['start'][16].regex = '[' + _parameter + _nParameter + rules['start'][16].regex.substr(3);
+            rules['start'][16].splitRegex = new RegExp(rules['start'][16].regex);            
+            rules['start'][17].regex = '[' + _parameter + _nParameter + rules['start'][17].regex.substr(3);
+            rules['start'][17].splitRegex = new RegExp(rules['start'][17].regex);
+            /*
+0: {token: 'string', regex: '".*?"', onMatch: null}
+1: {token: 'string', regex: "'.*?'", onMatch: null}
+2: {token: 'string', regex: '`.*?`', onMatch: null}
+3: {token: ';', regex: ';', next: 'stacking', onMatch: null}
+4: {token: 'constant.numeric', regex: '[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b', onMatch: null}
+5: {token: 'storage.modifier', regex: '%x?[1-9]?\\d\\b', onMatch: null}
+6: {token: 'storage.modifier', regex: '%\\{x?[1-9]?\\d\\}', onMatch: null}
+7: {token: 'storage.modifier', regex: '%[i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z]\\b', onMatch: null}
+8: {token: 'storage.modifier', regex: '\\$\\{x?[1-9]?\\d\\}', onMatch: null}
+9: {token: 'storage.modifier', regex: '[%$]\\*', onMatch: null}
+10: {token: 'storage.modifier', regex: '[%$]{\\*}', onMatch: null}
+11: {token: 'keyword', regex: '#\\d+\\s', onMatch: null}
+12: {regex: '^#([a-zA-Z_$][a-zA-Z0-9_$]*)\\b', splitRegex: /^#([a-zA-Z_$][a-zA-Z0-9_$]*)\b$/, token: ƒ, onMatch: ƒ}
+13: {token: 'constant.language', regex: '^`.*$', onMatch: null}
+14: {token: 'comment', regex: '^!.*$', onMatch: null}
+15: {regex: '[%$]{(\\w*)}', splitRegex: /^[%$]{(\w*)}$/, token: ƒ, onMatch: ƒ}
+16: {regex: '[%$]{(\\w*)\\(.*\\)}', splitRegex: /^[%$]{(\w*)\(.*\)}$/, token: ƒ, onMatch: ƒ}
+17: {token: '{', regex: '\\{', next: 'bracket', onMatch: null}
+18: {token: 'paren.lparen', regex: '[\\{}]', onMatch: null}
+19: {token: 'paren.rparen', regex: '[\\}]', onMatch: null}
+20: {token: 'text', regex: '\\s+', onMatch: null}         
+            */
+        }
+        if (Object.prototype.hasOwnProperty.call(rules, 'stacking')) {
+            rules['stacking'][0].regex = _command + rules['stacking'][0].regex.substr(1);            
+            rules['stacking'][0].splitRegex = new RegExp(rules['stacking'][0].regex);  
+            rules['stacking'][1].regex = _command + rules['stacking'][1].regex.substr(1);   
+            rules['stacking'][2].regex = _verbatim + '.*$';
+            rules['stacking'][3].regex = _speed + '.*$';
+            /*
+0: {regex: '#([a-zA-Z_$][a-zA-Z0-9_$]*)\\b', next: 'start', splitRegex: /^#([a-zA-Z_$][a-zA-Z0-9_$]*)\b$/, token: ƒ, onMatch: ƒ}
+1: {token: 'keyword', regex: '#\\d+\\s', next: 'start', onMatch: null}
+2: {token: 'constant.language', regex: '`.*$', next: 'start', onMatch: null}
+3: {token: 'comment', regex: '!.*$', next: 'start', onMatch: null}
+4: {token: 'text', regex: '\\s+', next: 'start', onMatch: null}
+            */
+        }
+        if (Object.prototype.hasOwnProperty.call(rules, 'bracket')) {
+            rules['bracket'][0].regex = '\\s*?' + _command + rules['bracket'][0].regex.substr(5);            
+            rules['bracket'][0].splitRegex = new RegExp(rules['bracket'][0].regex);  
+            rules['bracket'][3].regex = _verbatim + '.*$';
+            rules['bracket'][4].regex = _speed + '.*$';            
+            rules['bracket'][6].regex = _command + rules['bracket'][6].regex.substr(1);   
+            /*
+0: {regex: '\\s*?#([a-zA-Z_$][a-zA-Z0-9_$]*)\\b', next: 'start', splitRegex: /^\s*?#([a-zA-Z_$][a-zA-Z0-9_$]*)\b$/, token: ƒ, onMatch: ƒ}
+1: {token: 'string', regex: '".*?"', onMatch: null}
+2: {token: 'string', regex: "'.*?'", onMatch: null}
+3: {token: 'constant.language', regex: '`.*$', next: 'start', onMatch: null}
+4: {token: 'comment', regex: '!.*$', next: 'start', onMatch: null}
+5: {token: ';', regex: ';', next: 'stacking', onMatch: null}
+6: {token: 'keyword', regex: '#\\d+\\s', onMatch: null}
+7: {token: 'constant.numeric', regex: '[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b', onMatch: null}
+8: {token: 'text', regex: '\\s+', next: 'start', onMatch: null}      
+            */
+        }        
+        //console.log(rules);
+        // force recreation of tokenizer
+        session.$mode.$tokenizer = null;
+        session.bgTokenizer.setTokenizer(session.$mode.getTokenizer());
+        // force re-highlight whole document
+        session.bgTokenizer.start(0);
+    });
+}
+
+function resetParseSyutax() {
+    if (!editors) return;
+    if (editors['trigger-value'] && editors['trigger-value'].getSession().getMode() === "ace/mode/jimud")
+        setParseSyntax('trigger-value');
+    if (editors['macro-value'] && editors['macro-value'].getSession().getMode() === "ace/mode/jimud")
+        setParseSyntax('macro-value');
+    if (editors['alias-value'] && editors['alias-value'].getSession().getMode() === "ace/mode/jimud")
+        setParseSyntax('alias-value');
+    if (editors['button-value'] && editors['button-value'].getSession().getMode() === "ace/mode/jimud")
+        setParseSyntax('button-value');
+    if (editors['context-value'] && editors['context-value'].getSession().getMode() === "ace/mode/jimud")
+        setParseSyntax('context-value');
+}
+
 function resetUndo() {
     _undo = [];
     _redo = [];
@@ -4245,6 +4364,8 @@ function UpdateEditor(editor, item, options?) {
                     editors[editor + '-' + prop].getSession().setValue(item[prop]);
                 if (item.style === ItemStyle.Script)
                     editors[editor + '-' + prop].getSession().setMode('ace/mode/javascript');
+                else if (item.style === ItemStyle.Parse)
+                    setParseSyntax(editor + '-' + prop);
                 else
                     editors[editor + '-' + prop].getSession().setMode('ace/mode/text');
             }
@@ -4329,6 +4450,7 @@ ipcRenderer.on('reload-options', (event) => {
     const so = _sort;
     const sd = _sortDir;
     loadOptions();
+    resetParseSyutax();
     if (so !== _sort || sd !== _sortDir)
         sortTree(true);
 });
@@ -4337,6 +4459,7 @@ ipcRenderer.on('change-options', (event, file) => {
     const so = _sort;
     const sd = _sortDir;
     loadOptions();
+    resetParseSyutax();
     if (so !== _sort || sd !== _sortDir)
         sortTree(true);
     filesChanged = true;
