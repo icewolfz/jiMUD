@@ -86,7 +86,6 @@
   - Update electron 16.0.4 to 16.0.5
   - Update font-list 1.4.2 to 1.4.3
   - Update mathjs 10.0.0 to 10.0.2
-  - Update better-sqlite3 7.4.5 to 7.4.6
 
 ## v0.17.3 2021-12-14
 
