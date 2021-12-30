@@ -256,12 +256,12 @@ export class Input extends EventEmitter {
             let sides;
             let mod;
             if (args.length === 1) {
-                res = /(\d+)\s+d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0].toString());
+                res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
                 if (!res || res.length < 3) throw new Error('Invalid dice');
                 c = parseInt(res[1]);
                 sides = res[2];
-                if (res.length > 3 && args[2])
-                    mod = this.evaluate(res[3]);
+                if (res.length > 3)
+                    mod = res[3];
             }
             else if (args.length > 1) {
                 c = parseInt(args[0].toString());
@@ -285,14 +285,26 @@ export class Input extends EventEmitter {
             if (sides === '%')
                 sum /= 100;
             if (mod)
-                return this.evaluate(sum + mod);
+                return math.evaluate(sum + mod, scope);
             return sum;
         };
 
         dice.rawArgs = true;
-
+        const isdefined: any = (args, math, scope) => {
+            if (args.length === 1) {
+                args[0] = this.stripQuotes(args[0].toString());
+                if (this.client.variables.hasOwnProperty(args[0]))
+                    return 1;
+                if(scope.has(args[0]))
+                    return 1;
+                return 0;
+            }
+            throw new Error('Invalid arguments to isdefined');
+        };
+        isdefined.rawArgs = true;
         mathjs.import({
-            dice: dice
+            dice: dice,
+            isdefined: isdefined
         }, {});
 
         this._tests = new Tests(client);
@@ -993,12 +1005,12 @@ export class Input extends EventEmitter {
                     }
                 }
                 if (args.length !== 0) {
-                    if (args[0].match(/^\{\s*?.*\s*?\}$/g)) {
+                    if (args[0].match(/^\{[\s\S]*\}$/g)) {
                         item.commands = args.shift();
                         item.commands = item.commands.substr(1, item.commands.length - 2);
                     }
                     if (args.length === 1) {
-                        if (args[0].match(/^\{\s*?.*\s*?\}$/g))
+                        if (args[0].match(/^\{[\s\S]*\}$/g))
                             args[0] = args[0].substr(1, args[0].length - 2);
                         else
                             args[0] = this.stripQuotes(args[0]);
@@ -1035,7 +1047,7 @@ export class Input extends EventEmitter {
                             throw new Error('Invalid trigger options');
                     }
                     else if (args.length === 2) {
-                        if (args[0].match(/^\{\s*?.*\s*?\}$/g))
+                        if (args[0].match(/^\{[\s\S]*\}$/g))
                             args[0] = args[0].substr(1, args[0].length - 2);
                         if (args[0].length !== 0) {
                             this.parseInline(args[0]).split(',').forEach(o => {
@@ -1100,7 +1112,7 @@ export class Input extends EventEmitter {
                 if (args.length === 0)
                     throw new Error('Missing commands or options');
 
-                if (args[0].match(/^\{\s*?.*\s*?\}$/g)) {
+                if (args[0].match(/^\{[\s\S]*\}$/g)) {
                     item.commands = args.shift();
                     item.commands = item.commands.substr(1, item.commands.length - 2);
                 }
@@ -1138,7 +1150,7 @@ export class Input extends EventEmitter {
                         throw new Error('Invalid event options');
                 }
                 else if (args.length === 2) {
-                    if (args[0].match(/^\{\s*?.*\s*?\}$/g))
+                    if (args[0].match(/^\{[\s\S]*\}$/g))
                         args[0] = args[0].substr(1, args[0].length - 2);
                     if (args[0].length !== 0) {
                         this.parseInline(args[0]).split(',').forEach(o => {
@@ -1359,7 +1371,7 @@ export class Input extends EventEmitter {
                 if (args[0].length === 0)
                     throw new Error('Invalid button name, caption or commands');
 
-                if (args[0].match(/^\{\s*?.*\s*?\}$/g)) {
+                if (args[0].match(/^\{[\s\S]*\}$/g)) {
                     item.commands = args.shift();
                     item.commands = item.commands.substr(1, item.commands.length - 2);
                 }
@@ -1367,13 +1379,13 @@ export class Input extends EventEmitter {
                     item.name = this.stripQuotes(args.shift());
                     if (!item.name || item.name.length === 0)
                         throw new Error('Invalid button name or caption');
-                    if (args[0].match(/^\{\s*?.*\s*?\}$/g)) {
+                    if (args[0].match(/^\{[\s\S]*\}$/g)) {
                         item.commands = args.shift();
                         item.commands = item.commands.substr(1, item.commands.length - 2);
                     }
                     else {
                         item.caption = this.stripQuotes(args.shift());
-                        if (!args[0].match(/^\{\s*?.*\s*?\}$/g))
+                        if (!args[0].match(/^\{[\s\S]*\}$/g))
                             throw new Error('Missing commands');
                     }
                 }
@@ -1384,7 +1396,7 @@ export class Input extends EventEmitter {
                         item.icon = item.icon.substr(1, item.icon.length - 2);
                     }
                     if (args.length === 1) {
-                        if (args[0].match(/^\{\s*?.*\s*?\}$/g))
+                        if (args[0].match(/^\{[\s\S]*\}$/g))
                             args[0] = args[0].substr(1, args[0].length - 2);
                         else
                             args[0] = this.stripQuotes(args[0]);
@@ -1418,7 +1430,7 @@ export class Input extends EventEmitter {
                             throw new Error('Invalid button options');
                     }
                     else if (args.length === 2) {
-                        if (args[0].match(/^\{\s*?.*\s*?\}$/g))
+                        if (args[0].match(/^\{[\s\S]*\}$/g))
                             args[0] = args[0].substr(1, args[0].length - 2);
                         if (args[0].length !== 0) {
                             this.parseInline(args[0]).split(',').forEach(o => {
@@ -1632,7 +1644,7 @@ export class Input extends EventEmitter {
                         throw new Error('Invalid syntax use \x1b[4m#ala\x1b[0;-11;-12mrm {timepattern} {commands} profile');
                     args[0] = args[0].substr(1, args[0].length - 2);
                     args[0] = this.parseInline(args[0]);
-                    if (args[1].match(/^\{\s*?.*\s*?\}$/g))
+                    if (args[1].match(/^\{[\s\S]*\}$/g))
                         args[1] = args[1].substr(1, args[1].length - 2);
                     if (args.length === 3) {
                         profile = this.stripQuotes(args[2]);
@@ -1677,7 +1689,7 @@ export class Input extends EventEmitter {
                     pattern = pattern.substr(1, pattern.length - 2);
                 pattern = this.parseInline(pattern);
                 if (args.length === 3) {
-                    if (args[2].match(/^\{\s*?.*\s*?\}$/g))
+                    if (args[2].match(/^\{[\s\S]*\}$/g))
                         commands = args[2].substr(1, args[2].length - 2);
                     else
                         profile = this.stripQuotes(args[2]);
@@ -1685,7 +1697,7 @@ export class Input extends EventEmitter {
                 else if (args.length === 4) {
                     commands = args[2];
                     profile = this.stripQuotes(args[3]);
-                    if (commands.match(/^\{\s*?.*\s*?\}$/g))
+                    if (commands.match(/^\{[\s\S]*\}$/g))
                         commands = commands.substr(1, commands.length - 2);
                 }
                 if (!profile || profile.length === 0) {
@@ -3031,16 +3043,16 @@ export class Input extends EventEmitter {
             case 'if':
                 if (!args.length || args.length > 3)
                     throw new Error('Invalid syntax use #if {expression} {true-command} \x1b[3m{false-command}\x1b[0;-11;-12m');
-                if (args[0].match(/^\{\s*?.*\s*?\}$/g))
+                if (args[0].match(/^\{[\s\S]*\}$/g))
                     args[0] = args[0].substr(1, args[0].length - 2);
                 tmp = null;
                 if (this.evaluate(this.parseInline(args[0]))) {
-                    if (args[1].match(/^\{\s*?.*\s*?\}$/g))
+                    if (args[1].match(/^\{[\s\S]*\}$/g))
                         args[1] = args[1].substr(1, args[1].length - 2);
                     tmp = this.parseOutgoing(args[1]);
                 }
                 else if (args.length > 2) {
-                    if (args[2].match(/^\{\s*?.*\s*?\}$/g))
+                    if (args[2].match(/^\{[\s\S]*\}$/g))
                         args[2] = args[2].substr(1, args[2].length - 2);
                     tmp = this.parseOutgoing(args[2]);
                 }
@@ -3051,11 +3063,11 @@ export class Input extends EventEmitter {
             case 'ca':
                 if (!args.length || args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m#ca\x1b[0;-11;-12mse\x1b[0;-11;-12m index {command 1} \x1b[3m{command n}\x1b[0;-11;-12m');
-                if (args[0].match(/^\{\s*?.*\s*?\}$/g))
+                if (args[0].match(/^\{[\s\S]*\}$/g))
                     args[0] = args[0].substr(1, args[0].length - 2);
                 n = this.evaluate(this.parseInline(args[0]));
                 if (n > 0 && n < args.length) {
-                    if (args[n].match(/^\{\s*?.*\s*?\}$/g))
+                    if (args[n].match(/^\{[\s\S]*\}$/g))
                         args[n] = args[n].substr(1, args[n].length - 2);
                     tmp = this.parseOutgoing(args[n]);
                     if (tmp != null && tmp.length > 0)
@@ -3073,10 +3085,10 @@ export class Input extends EventEmitter {
                 al = args.length;
                 //skip every other one as odd items are the commands to execute
                 for (i = 0; i < al; i += 2) {
-                    if (args[i].match(/^\{\s*?.*\s*?\}$/g))
+                    if (args[i].match(/^\{[\s\S]*\}$/g))
                         args[i] = args[i].substr(1, args[i].length - 2);
                     if (this.evaluate(this.parseInline(args[i]))) {
-                        if (args[i + 1].match(/^\{\s*?.*\s*?\}$/g))
+                        if (args[i + 1].match(/^\{[\s\S]*\}$/g))
                             args[i + 1] = args[i + 1].substr(1, args[i + 1].length - 2);
                         tmp = this.parseOutgoing(args[i + 1]);
                         if (tmp != null && tmp.length > 0)
@@ -3085,7 +3097,7 @@ export class Input extends EventEmitter {
                     }
                 }
                 if (n) {
-                    if (n.match(/^\{\s*?.*\s*?\}$/g))
+                    if (n.match(/^\{[\s\S]*\}$/g))
                         n = n.substr(1, n.length - 2);
                     tmp = this.parseOutgoing(n);
                     if (tmp != null && tmp.length > 0)
@@ -3098,7 +3110,7 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid syntax use \x1b[4m#loo\x1b[0;-11;-12mp\x1b[0;-11;-12m range {commands}');
                 n = this.parseInline(args.shift()).split(',');
                 args = args.join(' ');
-                if (args.match(/^\{\s*?.*\s*?\}$/g))
+                if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
                 if (n.length === 1) {
                     tmp = parseInt(n[0], 10);
@@ -3114,11 +3126,11 @@ export class Input extends EventEmitter {
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m#rep\x1b[0;-11;-12meat\x1b[0;-11;-12m expression {commands}');
                 i = args.shift();
-                if (i.match(/^\{\s*?.*\s*?\}$/g))
+                if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
                 i = this.evaluate(this.parseInline(i));
                 args = args.join(' ');
-                if (args.match(/^\{\s*?.*\s*?\}$/g))
+                if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
                 if (i < 1)
                     return this.executeForLoop((-i) + 1, 1, args);
@@ -3127,10 +3139,10 @@ export class Input extends EventEmitter {
                 if (args.length < 2)
                     throw new Error('Invalid syntax use #until expression {commands}');
                 i = args.shift();
-                if (i.match(/^\{\s*?.*\s*?\}$/g))
+                if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
                 args = args.join(' ');
-                if (args.match(/^\{\s*?.*\s*?\}$/g))
+                if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
                 tmp = [];
                 this.loops.push(0);
@@ -3156,10 +3168,10 @@ export class Input extends EventEmitter {
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m#wh\x1b[0;-11;-12mile expression {commands}');
                 i = args.shift();
-                if (i.match(/^\{\s*?.*\s*?\}$/g))
+                if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
                 args = args.join(' ');
-                if (args.match(/^\{\s*?.*\s*?\}$/g))
+                if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
                 tmp = [];
                 this.loops.push(0);
@@ -3185,10 +3197,10 @@ export class Input extends EventEmitter {
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m#fo\x1b[0;-11;-12mrall stringlist {commands}');
                 i = args.shift();
-                if (i.match(/^\{\s*?.*\s*?\}$/g))
+                if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
                 args = args.join(' ');
-                if (args.match(/^\{\s*?.*\s*?\}$/g))
+                if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
                 tmp = [];
                 i = splitQuoted(this.stripQuotes(this.parseInline(i)), '|');
@@ -3231,7 +3243,7 @@ export class Input extends EventEmitter {
                 if (args.length === 0)
                     return this.client.getVariable(i)?.toString();
                 args = args.join(' ');
-                if (args.match(/^\{\s*?.*\s*?\}$/g))
+                if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
                 this.client.setVariable(i, parseValue(this.parseInline(args)));
                 return null;
@@ -3240,14 +3252,14 @@ export class Input extends EventEmitter {
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m#ad\x1b[0;-11;-12md name value');
                 i = args.shift();
-                if (i.match(/^\{\s*?.*\s*?\}$/g))
+                if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
                 i = this.parseInline(i);
                 n = this.client.getVariable(i);
                 if (typeof n !== 'number')
                     throw new Error(i + ' is not a number');
                 args = args.join(' ');
-                if (args.match(/^\{\s*?.*\s*?\}$/g))
+                if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
                 this.client.setVariable(i, n + this.evaluate(this.parseInline(args)));
                 return null;
@@ -3256,13 +3268,13 @@ export class Input extends EventEmitter {
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m#mat\x1b[0;-11;-12mh name value');
                 i = args.shift();
-                if (i.match(/^\{\s*?.*\s*?\}$/g))
+                if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
                 i = this.parseInline(i);
                 if (!isValidIdentifier(i))
                     throw new Error("Invalid variable name");
                 args = args.join(' ');
-                if (args.match(/^\{\s*?.*\s*?\}$/g))
+                if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
                 this.client.setVariable(i, this.evaluate(this.parseInline(args)));
                 return null;
@@ -3334,7 +3346,7 @@ export class Input extends EventEmitter {
             if (args.length === 0)
                 throw new Error('Invalid syntax use #nnn commands');
             args = args.join(' ');
-            if (args.match(/^\{\s*?.*\s*?\}$/g))
+            if (args.match(/^\{[\s\S]*\}$/g))
                 args = args.substr(1, args.length - 2);
             if (i < 1)
                 return this.executeForLoop((-i) + 1, 1, args);
@@ -4817,7 +4829,7 @@ export class Input extends EventEmitter {
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid dice');
                 if (args.length === 1) {
-                    res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
+                    res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0]);
                     if (!res || res.length < 3) return null;
                     c = parseInt(res[1]);
                     sides = res[2];
@@ -5348,6 +5360,16 @@ export class Input extends EventEmitter {
                     return 1.0;
                 else if (args[0] === "false")
                     return 0.0;
+                return 0;
+            case 'isdefined':
+                args = splitQuoted(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments');
+                args[0] = this.stripQuotes(args[0], true);
+                if (this.client.variables.hasOwnProperty(args[0]))
+                    return 1;
                 return 0;
         }
         return null;
