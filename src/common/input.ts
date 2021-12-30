@@ -293,7 +293,7 @@ export class Input extends EventEmitter {
         const isdefined: any = (args, math, scope) => {
             if (args.length === 1) {
                 args[0] = this.stripQuotes(args[0].toString());
-                if (this.client.variables.hasOwnProperty(args[0]))
+                if (this.client.hasVariable(args[0]))
                     return 1;
                 if(scope.has(args[0]))
                     return 1;
@@ -5368,7 +5368,7 @@ export class Input extends EventEmitter {
                 else if (args.length > 1)
                     throw new Error('Too many arguments');
                 args[0] = this.stripQuotes(args[0], true);
-                if (this.client.variables.hasOwnProperty(args[0]))
+                if (this.client.hasVariable(args[0]))
                     return 1;
                 return 0;
         }
