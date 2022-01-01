@@ -58,9 +58,9 @@
     "babel-minify": "^0.5.1",
     "electron": "^16.0.5",
     "electron-builder": "^22.14.5",
-    "eslint": "^8.5.0",
+    "eslint": "^8.6.0",
     "eslint-plugin-html": "^6.2.0",
-    "sass": "^1.45.1"
+    "sass": "^1.45.2"
   },
   "build": {
     "appId": "jiMUD",
