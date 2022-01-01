@@ -26,7 +26,7 @@
   - Add [%isnumber(s))](docs/functions.md#math) true if s represents a valid number. 
   - Add [%string(value))](docs/functions.md#math) converts value to a string. Quotes are added around the value.
   - Add [%float(value))](docs/functions.md#math) Returns value as a floating point number.
-  - Add [%isdefined(name)](dics.functions.md#miscellaneous) Returns 1 if a variable is defined, 0 if undefined
+  - Add [%isdefined(name)](docs/functions.md#miscellaneous) Returns 1 if a variable is defined, 0 if undefined
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
   - [Triggers](docs/profiles.md):
     - Add support for regex name capture that work similar to alias named params
@@ -86,7 +86,6 @@
   - Update electron 16.0.4 to 16.0.5
   - Update font-list 1.4.2 to 1.4.3
   - Update mathjs 10.0.0 to 10.0.2
-  - Update better-sqlite3 7.4.5 to 7.4.6
 
 ## v0.17.3 2021-12-14
 
