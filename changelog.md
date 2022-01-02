@@ -89,6 +89,7 @@
   - Update mathjs 10.0.0 to 10.0.2
   - Update better-sqlite3 7.4.5 to 7.4.6
   - Rearrange [General](docs/preferences.md#general) to reduce scrolling
+  - Increase character manager dialog height to remove scrolling when possible
 
 ## v0.17.3 2021-12-14
 
