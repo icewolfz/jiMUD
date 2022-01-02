@@ -136,7 +136,7 @@
   },
   "dependencies": {
     "@electron/remote": "^2.0.1",
-    "better-sqlite3": "^7.4.5",
+    "better-sqlite3": "^7.4.6",
     "buzz": "^1.2.1",
     "chokidar": "^3.5.2",
     "electron-updater": "^4.6.1",
