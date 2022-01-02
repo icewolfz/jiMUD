@@ -49,7 +49,8 @@
     "clean:code": "del /q .\\out\\*.js && del /q .\\out\\editor\\*.js && del /q .\\build\\js\\*.js && del /q .\\build\\js\\editor\\*.js",
     "clean:css": "del /q .\\build\\css\\*.css",
     "clean:dist": "rm -rf ./dist",
-    "list": "asar l .\\dist\\win-unpacked\\resources\\app.asar > .\\dist\\files%npm_package_version%.txt"
+    "list": "asar l .\\dist\\win-unpacked\\resources\\app.asar > .\\dist\\files%npm_package_version%.txt",
+    "rebuild": "electron-rebuild"
   },
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
@@ -58,6 +59,7 @@
     "babel-minify": "^0.5.1",
     "electron": "^16.0.5",
     "electron-builder": "^22.14.5",
+    "electron-rebuild": "^3.2.5",
     "eslint": "^8.6.0",
     "eslint-plugin-html": "^6.2.0",
     "sass": "^1.45.2"
