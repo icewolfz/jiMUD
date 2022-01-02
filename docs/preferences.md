@@ -5,7 +5,6 @@ Reset - Resetting will revert all settings back to default values
 ## General
 
 - `Auto connect onload` This will cause the client to try and connect as soon as the client has finished loading.
-- `Auto connect delay` This determines the delay before an auto connect happens
 - `Auto create character` When connecting to mud and if it returns a character name, create/load character
 - `Auto login` Attempt to auto login using character and supplied password from character manager
 - `Auto takeover login` Automatically issue yes to takeover character after login
@@ -19,6 +18,7 @@ Reset - Resetting will revert all settings back to default values
   - `Reconnect dialog` show the reconnect dialog with options and delayed reconnect timer
   - `Character manager` show character manager
   - `Close` close the client
+- `Auto connect delay` This determines the delay before an auto connect happens
 - `Max reconnect delay` set the maximum time in seconds, for reconnecting when using reconnect dialog, setting to 0 will revert to classic unlimited behavior.
 - `Check for updates on load` check for new version every time you load the client
 - `Enable sound` disable or enable sound globally
