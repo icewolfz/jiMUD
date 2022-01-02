@@ -154,7 +154,9 @@ Controls what is captured into the chat window
 ## Status
 
 - `Show Lagmeter` Whether to enable the lag meter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
+- `Show lag in title` Display lag in title bar, **note** this is not 100% correct always due to overhead variables that cant be controlled.
 - `Show Experience Needed as Progressbar` display the experience needed value as a progress bar
+- `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
 
 ## Scripting
 
@@ -198,7 +200,6 @@ Controls what is captured into the chat window
 - `Log errors` Log errors to {data}/jimud.error.log [FAQ - Predefined path variables](faq.md#what-predefined-variables-can-be-use-for-paths)
 - `Show extended error messages` Display extended stack information for errors
 - `Fix hidden windows` Move windows that have been hidden off screen to on onscreen
-- `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
 - `Hide when minimized` will hide the main window and any window set as a child **note** due to bugs in linux this feature may not work
 - `Show in taskbar` will show or hide the main window from the system's taskbar
 - `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden
