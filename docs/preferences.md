@@ -5,7 +5,6 @@ Reset - Resetting will revert all settings back to default values
 ## General
 
 - `Auto connect onload` This will cause the client to try and connect as soon as the client has finished loading.
-- `Auto connect delay` This determines the delay before an auto connect happens
 - `Auto create character` When connecting to mud and if it returns a character name, create/load character
 - `Auto login` Attempt to auto login using character and supplied password from character manager
 - `Auto takeover login` Automatically issue yes to takeover character after login
@@ -19,6 +18,7 @@ Reset - Resetting will revert all settings back to default values
   - `Reconnect dialog` show the reconnect dialog with options and delayed reconnect timer
   - `Character manager` show character manager
   - `Close` close the client
+- `Auto connect delay` This determines the delay before an auto connect happens
 - `Max reconnect delay` set the maximum time in seconds, for reconnecting when using reconnect dialog, setting to 0 will revert to classic unlimited behavior.
 - `Check for updates on load` check for new version every time you load the client
 - `Enable sound` disable or enable sound globally
@@ -154,7 +154,9 @@ Controls what is captured into the chat window
 ## Status
 
 - `Show Lagmeter` Whether to enable the lag meter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
+- `Show lag in title` Display lag in title bar, **note** this is not 100% correct always due to overhead variables that cant be controlled.
 - `Show Experience Needed as Progressbar` display the experience needed value as a progress bar
+- `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
 
 ## Scripting
 
@@ -198,7 +200,6 @@ Controls what is captured into the chat window
 - `Log errors` Log errors to {data}/jimud.error.log [FAQ - Predefined path variables](faq.md#what-predefined-variables-can-be-use-for-paths)
 - `Show extended error messages` Display extended stack information for errors
 - `Fix hidden windows` Move windows that have been hidden off screen to on onscreen
-- `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
 - `Hide when minimized` will hide the main window and any window set as a child **note** due to bugs in linux this feature may not work
 - `Show in taskbar` will show or hide the main window from the system's taskbar
 - `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden

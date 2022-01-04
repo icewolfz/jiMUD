@@ -49,18 +49,20 @@
     "clean:code": "del /q .\\out\\*.js && del /q .\\out\\editor\\*.js && del /q .\\build\\js\\*.js && del /q .\\build\\js\\editor\\*.js",
     "clean:css": "del /q .\\build\\css\\*.css",
     "clean:dist": "rm -rf ./dist",
-    "list": "asar l .\\dist\\win-unpacked\\resources\\app.asar > .\\dist\\files%npm_package_version%.txt"
+    "list": "asar l .\\dist\\win-unpacked\\resources\\app.asar > .\\dist\\files%npm_package_version%.txt",
+    "rebuild": "electron-rebuild"
   },
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.11",
-    "@types/node": "^16.11.17",
+    "@types/node": "^16.11.18",
     "babel-minify": "^0.5.1",
-    "electron": "^16.0.5",
+    "electron": "^16.0.6",
     "electron-builder": "^22.14.5",
-    "eslint": "^8.5.0",
+    "electron-rebuild": "^3.2.5",
+    "eslint": "^8.6.0",
     "eslint-plugin-html": "^6.2.0",
-    "sass": "^1.45.1"
+    "sass": "^1.45.2"
   },
   "build": {
     "appId": "jiMUD",
@@ -136,7 +138,7 @@
   },
   "dependencies": {
     "@electron/remote": "^2.0.1",
-    "better-sqlite3": "^7.4.5",
+    "better-sqlite3": "^7.4.6",
     "buzz": "^1.2.1",
     "chokidar": "^3.5.2",
     "electron-updater": "^4.6.1",

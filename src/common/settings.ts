@@ -391,6 +391,7 @@ export class Settings {
     public maxReconnectDelay: number = 3600;
     public enableBackgroundThrottling: boolean = true;
     public showInTaskBar: boolean = true;
+    public showLagInTitle: boolean = false;
 
     public enableKeepAlive: boolean = false;
     public keepAliveDelay: number = 0;

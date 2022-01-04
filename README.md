@@ -27,11 +27,14 @@ Build and package files are all saved to dist folder
 ## Run
 
 1. npm install - install node modules
+1. npm run rebuild - this rebuilds modules to work with electron if needed
 1. npm run compile - compile typescript into javascript files
 1. npm run start - start jiMUD
 
 This will allow you to run jiMUD directly from this folder with out the need to
 package into a self contained folder or building an installer.
+**Note** you only need to run the install, rebuild, and compile steps the first 
+time or any time you update the packages.
 
 ## Standalone application
 

@@ -22,6 +22,7 @@ export class Status extends EventEmitter {
     private _updating: UpdateType;
     private dragging = false;
     private _spitterDistance;
+    private _title;
 
     public client: Client;
 
@@ -375,7 +376,9 @@ export class Status extends EventEmitter {
         this.infoLimb[limb] = health;
     }
 
-    public setTitle(title: string) {
+    public setTitle(title: string, noSave?: boolean) {
+        if(!noSave)
+            this._title = title;
         if (!title || title.length === 0) {
             window.document.title = 'jiMUD';
             $('#character-name').html('&nbsp;');
@@ -682,6 +685,12 @@ export class Status extends EventEmitter {
 
     public updateLagMeter(lag: number, force?: boolean) {
         if (!this.lagMeter) return;
+        if (this.client.options.showLagInTitle) {
+            if (!this._title || this._title.length === 0)
+                this.setTitle(`${lag / 1000}s`, true);
+            else
+                this.setTitle(`${this._title} - ${lag / 1000}s`, true);
+        }
         if (!this.client.options.lagMeter && !force) return;
         let p = 100;
         p = lag / 200 * 100;

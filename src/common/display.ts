@@ -501,12 +501,16 @@ export class Display extends EventEmitter {
         this.buildStyleSheet();
 
         this._VScroll = new ScrollBar({ parent: this._el, content: this._view, autoScroll: true, type: ScrollType.vertical });
-        this._VScroll.on('scroll', () => {
-            this.doUpdate(UpdateType.scroll | UpdateType.view);
+        this._VScroll.on('scroll', (pos, changed) => {
+            if(!changed)
+                this.doUpdate(UpdateType.view);
+            else
+                this.doUpdate(UpdateType.scroll | UpdateType.view);
         });
         this._HScroll = new ScrollBar({ parent: this._el, content: this._view, type: ScrollType.horizontal, autoScroll: false });
-        this._HScroll.on('scroll', () => {
-            this.doUpdate(UpdateType.scroll);
+        this._HScroll.on('scroll', (pos, changed) => {
+            if(changed)
+                this.doUpdate(UpdateType.scroll);
         });
         //this.update();
 
@@ -4300,9 +4304,7 @@ export class ScrollBar extends EventEmitter {
         if (this._position < 0)
             this._position = 0;
         this.update();
-        //only update if it changed
-        if (prv !== this.position || force)
-            this.emit('scroll', this.position);
+        this.emit('scroll', this.position, prv !== this.position || force);
     }
 
     /**
