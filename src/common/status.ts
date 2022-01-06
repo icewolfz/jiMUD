@@ -288,6 +288,10 @@ export class Status extends EventEmitter {
         return this.info['skills'][skill] || 0;
     }
 
+    get name() {
+        return this.info['name'];
+    }
+
     get ac(): boolean {
         return this._ac;
     }
