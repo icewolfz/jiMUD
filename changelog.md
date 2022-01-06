@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.17.4
+## v0.17.4 2022-01-05
  
 - **New:**
   - Add [#FREEZE](docs/commands.md#display) Scroll lock the display, if state is omitted it will toggle the scroll lock, if state is 0 or false it will disable scroll lock, if state is anything else it will lock the scroll back
