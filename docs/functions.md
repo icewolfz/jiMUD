@@ -35,7 +35,8 @@ Escaping allows you to prevent special characters from being parsed and allow th
 - `selline` same as $selline
 - `selurl` same as $selectedurl
 - `copied` return clipboard text
-- `selected`, `selectedword`, `selectedline`, `selectedurl`, `selword`, `selline`, `selurl`, or `copied` allow the following post fixes:
+- `character` return current character name from GMCP, falls back to character manager login name, or empty string
+- `selected`, `selectedword`, `selectedline`, `selectedurl`, `selword`, `selline`, `selurl`, `character`, or `copied` allow the following post fixes:
   - `.lower` force to all lower case by appending .lower
   - `.upper` force to all upper case by appending .lower
   - `.proper` force to proper casing by appending .proper

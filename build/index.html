@@ -78,6 +78,15 @@
             configurable: true
         });
 
+        Object.defineProperty(window, '$character', {
+            get: function () {
+                if (_status)
+                    return _status.name || _charName || ipcRenderer.sendSync('get-global', 'characterLogin') || '';
+                return _charName || ipcRenderer.sendSync('get-global', 'characterLogin') || '';
+            },
+            configurable: true
+        });
+
         Object.defineProperty(window, '$copied', {
             get: function () {
                 return clipboard.readText('selection') || '';

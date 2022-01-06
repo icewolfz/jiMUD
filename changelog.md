@@ -28,6 +28,7 @@
   - Add [%float(value))](docs/functions.md#math) Returns value as a floating point number.
   - Add [%isdefined(name)](docs/functions.md#miscellaneous) Returns 1 if a variable is defined, 0 if undefined
   - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
+  - Add [$character](docs/functions#predefined-variables) to return current name from GMCP status info if possible and falls back to character manager login name or empty string
   - [Triggers](docs/profiles.md):
     - Add support for regex name capture that work similar to alias named params
     - Add `Pattern` and `Command Input Pattern` types to support zMUD/TinTin type pattern matching

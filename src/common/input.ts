@@ -295,7 +295,7 @@ export class Input extends EventEmitter {
                 args[0] = this.stripQuotes(args[0].toString());
                 if (this.client.hasVariable(args[0]))
                     return 1;
-                if(scope.has(args[0]))
+                if (scope.has(args[0]))
                     return 1;
                 return 0;
             }
@@ -4763,6 +4763,14 @@ export class Input extends EventEmitter {
                 return this.loops[0];
             case 'repeatnum':
                 return this.vStack['$repeatnum'] || this.repeatnum;
+            case 'character':
+                return window.$character;
+            case 'character.lower':
+                return window.$character.toLowerCase();
+            case 'character.upper':
+                return window.$character.toUpperCase();
+            case 'character.proper':
+                return ProperCase(window.$character);
             case 'selected':
             case 'selectedurl':
             case 'selectedline':
