@@ -45,6 +45,7 @@
     - [N Parameters character](docs/preferences.md#scripting--special-characters) allows you to change the $ character for named parameters
     - [Enable N Parameters](docs/preferences.md#scripting--special-characters) disable N parameter system
     - [Show lag in title](docs/preferences.md#status) Display lag in title bar
+  - Add [Parse caption](docs/profiles.md#context) to parse context menu captions using the command parser to allow predefined variables or expressions
 - **Fixed:**
   - Updated README to update build requirements
   - Display:

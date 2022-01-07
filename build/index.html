@@ -518,6 +518,7 @@
                 else {
                     menu = {};
                     menu.label = context[x].caption;
+                    menu.caption = context[x].caption;
                     menu.item = context[x];
                     menu.click = (item) => {
                         executeContext(item.item);
@@ -577,6 +578,8 @@
                     else {
                         menu = {};
                         menu.label = context[x].caption;
+                        if (context[x].parse)
+                            menu.caption = context[x].caption;
                         menu.item = context[x];
                         menu.click = (item) => {
                             executeContext(item.item);
@@ -815,6 +818,8 @@
                     iUrl = 2;
                 client.raise('context-pre-build', [iUrl]);
                 _context.forEach((item) => {
+                    if (item.caption && item.caption.length)
+                        item.label = client.parseInline(item.caption);
                     c.append(item);
                 });
 
@@ -2284,7 +2289,10 @@
                         button = $('<a href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"' + p + '></a>');
                     if (item.stretch)
                         button.addClass('button-stretch');
-                    button.prop('title', item.caption);
+                    if (item.parse)
+                        button.prop('title', item.caption);
+                    else
+                        button.prop('title', client.parseInline(item.caption));
                     if (item.icon.startsWith('fa-'))
                         button.html('<i class="fa ' + item.icon + '"></i>');
                     else if (item.icon.startsWith('gi-'))

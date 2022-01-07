@@ -263,6 +263,7 @@ export class Button extends Item {
     public send: boolean = true;
     public chain: boolean = false;
     public stretch: boolean = false;
+    public parse: boolean = false;
     constructor(data?, profile?) {
         super(data);
         this.caption = 'NewButton';
@@ -383,6 +384,7 @@ export class Context extends Item {
     public chain: boolean = false;
     public parent: string = '';
     public items: Context[] = [];
+    public parse: boolean = false;
     constructor(data?, profile?) {
         super(data);
         this.caption = 'NewContext';
