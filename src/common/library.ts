@@ -746,7 +746,13 @@ String.prototype.splitQuote = function (this: string, sep: string, type?, escape
                     if (s > pS || s === 0) {
                         str.push(this.substr(pS, s - pS));
                         pS = s + 1;
+                        break;
                     }
+                    else if (s === pS) {
+                        str.push('');       
+                        pS = s + 1;
+                        break;
+                    }             
                     else if (s === tl - 1)
                         str.push('');
                 }
@@ -1364,6 +1370,11 @@ export function splitQuoted(str, sep, t?, e?) {
                         ps = s + 1;
                         break;
                     }
+                    else if (s === ps) {
+                        strings.push('');       
+                        ps = s + 1;
+                        break;
+                    }                    
                     else if (s === (sl - 1))
                         strings.push('');
                 }
