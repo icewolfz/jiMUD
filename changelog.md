@@ -78,6 +78,7 @@
     - Fixed saving nested loop variables as user variables
     - Fixed bug when splitting quoted strings
   - Fixed [%dice(xdy+n)](docs/functions.md#math) not correctly parsings argument format
+  - Fixed [%if(expression,true,false)](docs/functions.md#conditionals) not erroring if missing false argument
   - Fixed [#variable](docs/commands.md) should not evaluate the value to allow use of raw strings as needed, eg #va test {3+5} should store 3+5 not 8, if you want the evaluated value use #var test \${3+5} or #va test \{${3+5}}
   - Fixed [#variable](docs/commands.md) throws an error now when invalid variable names are used
   - Fixed Select control selected color text

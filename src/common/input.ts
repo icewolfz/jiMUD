@@ -4846,7 +4846,7 @@ export class Input extends EventEmitter {
                 return '';
             case 'if': //if(exp,true,false)
                 args = splitQuoted(this.parseInline(res[2]), ',');
-                if (args.length === 0)
+                if (args.length < 3)
                     throw new Error('Missing arguments');
                 if (args.length !== 3)
                     throw new Error('Too many arguments');
