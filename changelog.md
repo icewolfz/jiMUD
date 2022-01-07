@@ -94,6 +94,7 @@
   - Update better-sqlite3 7.4.5 to 7.4.6
   - Rearrange [General](docs/preferences.md#general) to reduce scrolling
   - Increase character manager dialog height to remove scrolling when possible
+  - Update markdown-it 12.3.0 to 12.3.1
 
 ## v0.17.3 2021-12-14
 
