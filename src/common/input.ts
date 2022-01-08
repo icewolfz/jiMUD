@@ -261,10 +261,10 @@ export class Input extends EventEmitter {
                     mod = args[2].compile().eval(scope);
             }
             else
-                throw new Error('Invalid arguments to dice');
+                throw new Error('Invalid arguments for dice');
             let sum = 0;
             for (let i = 0; i < c; i++) {
-                if (sides === 'F')
+                if (sides === 'F' || sides === 'f')
                     sum += fudgeDice();
                 else if (sides === '%')
                     sum += ~~(Math.random() * 100) + 1;
@@ -288,7 +288,7 @@ export class Input extends EventEmitter {
                     return 1;
                 return 0;
             }
-            throw new Error('Invalid arguments to isdefined');
+            throw new Error('Invalid arguments for isdefined');
         };
         isdefined.rawArgs = true;
         mathjs.import({
@@ -1859,9 +1859,9 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid syntax use \x1b[4m#wa\x1b[0;-11;-12mit number');
                 i = parseInt(this.parseInline(args[0]), 10);
                 if (isNaN(i))
-                    throw new Error('Invalid number \'' + i + '\'');
+                    throw new Error('Invalid number \'' + i + '\' for wait');
                 if (i < 1)
-                    throw new Error('Must be greater then zero');
+                    throw new Error('Must be greater then zero for wait');
                 return i;
             case 'showclient':
             case 'showcl':
@@ -1923,9 +1923,9 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid syntax use \x1b[4m#raisede\x1b[0;-11;-12mlayed milliseconds name or \x1b[4m#raisede\x1b[0;-11;-12mlayed milliseconds name arguments');
                 i = parseInt(this.stripQuotes(args[0]), 10);
                 if (isNaN(i))
-                    throw new Error('Invalid number \'' + args[0] + '\'');
+                    throw new Error('Invalid number \'' + args[0] + '\' for raisedelayed');
                 if (i < 1)
-                    throw new Error('Must be greater then zero');
+                    throw new Error('Must be greater then zero for raisedelayed');
                 args.shift();
                 if (this.client.options.parseDoubleQuotes)
                     args.forEach((a) => {
@@ -3192,7 +3192,7 @@ export class Input extends EventEmitter {
                 if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
                 tmp = [];
-                i = splitQuoted(this.stripQuotes(this.parseInline(i)), '|');
+                i = this.splitByQuotes(this.stripQuotes(this.parseInline(i)), '|');
                 al = i.length;
                 for (n = 0; n < al; n++) {
                     this.loops.push(i[n]);
@@ -3255,7 +3255,7 @@ export class Input extends EventEmitter {
                     i = i.substr(1, i.length - 2);
                 i = this.parseInline(i);
                 if (typeof this.client.variables[i] !== 'number')
-                    throw new Error(i + ' is not a number');
+                    throw new Error(i + ' is not a number for add');
                 args = args.join(' ');
                 if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
@@ -4533,6 +4533,7 @@ export class Input extends EventEmitter {
         let args;
         let min;
         let max;
+        let escape = this.client.options.allowEscape ? this.client.options.escapeChar : '';
         switch (res[1]) {
             case 'time':
                 if (res[2] && res[2].length > 0)
@@ -4564,7 +4565,7 @@ export class Input extends EventEmitter {
                         mod = args[2].trim();
                 }
                 else
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for dice');
 
                 if (sides === 'F' || sides === 'f')
                     sides = 'F';
@@ -4575,7 +4576,7 @@ export class Input extends EventEmitter {
 
                 let sum = 0;
                 for (let i = 0; i < c; i++) {
-                    if (sides === 'F')
+                    if (sides === 'F' || sides === 'f')
                         sum += fudgeDice();
                     else if (sides === '%')
                         sum += ~~(Math.random() * 100) + 1;
@@ -4591,7 +4592,7 @@ export class Input extends EventEmitter {
                 //The average of any XdY is X*(Y+1)/2.
                 //(min + max) / 2 * a + m
                 args = this.parseInline(res[2]).split(',');
-                if (args.length === 0) throw new Error('Invalid dice');
+                if (args.length === 0) throw new Error('Invalid dice for diceavg');
                 if (args.length === 1) {
                     res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
                     if (!res || res.length < 3) return null;
@@ -4607,7 +4608,7 @@ export class Input extends EventEmitter {
                         mod = args[2].trim();
                 }
                 else
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for diceavg');
                 min = 1;
                 if (sides === 'F' || sides === 'f') {
                     min = -1;
@@ -4625,7 +4626,7 @@ export class Input extends EventEmitter {
                 return '' + ((min + max) / 2 * c);
             case 'dicemin':
                 args = this.parseInline(res[2]).split(',');
-                if (args.length === 0) throw new Error('Invalid dice');
+                if (args.length === 0) throw new Error('Invalid dice for dicemin');
                 if (args.length === 1) {
                     res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
                     if (!res || res.length < 3) return null;
@@ -4641,7 +4642,7 @@ export class Input extends EventEmitter {
                         mod = args[2];
                 }
                 else
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for dicemin');
                 min = 1;
                 if (sides === 'F' || sides === 'f')
                     min = -1;
@@ -4655,7 +4656,7 @@ export class Input extends EventEmitter {
                 return '' + (min * c);
             case 'dicemax':
                 args = this.parseInline(res[2]).split(',');
-                if (args.length === 0) throw new Error('Invalid dice');
+                if (args.length === 0) throw new Error('Invalid dice for dicemax');
                 if (args.length === 1) {
                     res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
                     if (!res || res.length < 3) return null;
@@ -4671,7 +4672,7 @@ export class Input extends EventEmitter {
                         mod = args[2].trim();
                 }
                 else
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for dicemax');
 
                 if (sides === 'F' || sides === 'f')
                     max = 1;
@@ -4686,7 +4687,7 @@ export class Input extends EventEmitter {
             case 'dicedev':
                 const fun = res[1];
                 args = this.parseInline(res[2]).split(',');
-                if (args.length === 0) throw new Error('Invalid dice');
+                if (args.length === 0) throw new Error('Invalid dice for dicedev');
                 if (args.length === 1) {
                     res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
                     if (!res || res.length < 3) return null;
@@ -4702,7 +4703,7 @@ export class Input extends EventEmitter {
                         mod = args[2].trim();
                 }
                 else
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for dicedev');
 
                 if (sides === 'F' || sides === 'f')
                     max = 6;
@@ -4720,7 +4721,7 @@ export class Input extends EventEmitter {
             case 'color':
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for color');
                 else if (args.length === 1) {
                     if (args[0] === 'bold')
                         return '370';
@@ -4751,7 +4752,7 @@ export class Input extends EventEmitter {
                         args.push('bold');
                     }
                     if (args[2] !== 'bold')
-                        throw new Error('Only bold is supported as third argument');
+                        throw new Error('Only bold is supported as third argument for color');
                     c = getAnsiColorCode(args[0]);
                     if (c === -1)
                         throw new Error('Invalid fore color');
@@ -4765,21 +4766,21 @@ export class Input extends EventEmitter {
             case 'zcolor':
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for zcolor');
                 else if (args.length > 1)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for zcolor');
                 return getColorCode(parseInt(args[0], 10));
             case 'ansi':
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for ansi');
                 c = args.length;
                 mod = [];
                 min = {};
                 for (sides = 0; sides < c; sides++) {
                     max = getAnsiCode(args[sides].trim());
                     if (max === -1)
-                        throw new Error('Invalid color or style');
+                        throw new Error('Invalid color or style for ansi');
                     //style
                     if (max >= 0 && max < 30)
                         min[max] = 1;
@@ -4795,7 +4796,7 @@ export class Input extends EventEmitter {
                 //else fore,back
                 else {
                     if (mod.length > 2)
-                        throw new Error('Too many colors');
+                        throw new Error('Too many colors for ansi');
                     if (mod.length > 1) {
                         if (mod[1] === 'current')
                             mod = '';
@@ -4811,7 +4812,7 @@ export class Input extends EventEmitter {
                 }
                 min = [...Object.keys(min), ...mod]
                 if (!min.length)
-                    throw new Error('Invalid colors or styles');
+                    throw new Error('Invalid colors or styles for ansi');
                 //remove any current flags
                 min = min.filter(f => f !== '');
                 return `\x1b[${min.join(';')}m`;
@@ -4823,21 +4824,21 @@ export class Input extends EventEmitter {
                 else if (args.length === 2)
                     return mathjs.randomInt(parseInt(args[0], 10), parseInt(args[1], 10) + 1);
                 else
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for random');
             case 'case': //case(index,n1,n2...)
-                args = splitQuoted(this.parseInline(res[2]), ',');
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for case');
                 c = this.evaluate(this.parseInline(args[0]));
                 if (c > 0 && c < args.length)
                     return this.stripQuotes(args[c]);
                 return '';
             case 'switch': //switch(exp,value...)
-                args = splitQuoted(this.parseInline(res[2]), ',');
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for switch');
                 if (args.length % 2 === 1)
-                    throw new Error('All expressions must have a value');
+                    throw new Error('All expressions must have a value for switch');
                 sides = args.length;
                 for (c = 0; c < sides; c += 2) {
                     if (this.evaluate(args[c]))
@@ -4845,67 +4846,67 @@ export class Input extends EventEmitter {
                 }
                 return '';
             case 'if': //if(exp,true,false)
-                args = splitQuoted(this.parseInline(res[2]), ',');
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length < 3)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for if');
                 if (args.length !== 3)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for if');
                 if (this.evaluate(args[0]))
                     return this.stripQuotes(args[1].trim());
                 return this.stripQuotes(args[2].trim());
             case 'ascii': //ascii(string)
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for ascii');
                 else if (args.length > 1)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for ascii');
                 if (args[0].trim().length === 0)
-                    throw new Error('Invalid argument, empty string');
+                    throw new Error('Invalid argument, empty string for ascii');
                 return args[0].trim().charCodeAt(0);
             case 'char': //char(number)
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for char');
                 else if (args.length > 1)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for char');
                 c = parseInt(args[0], 10);
                 if (isNaN(c))
-                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number for char');
                 return String.fromCharCode(c);
             case 'begins'://(string1,string2)` return true if string 1 starts with string 2
-                args = splitQuoted(this.parseInline(res[2]), ',');
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length < 2)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for begins');
                 else if (args.length > 2)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for begins');
                 return this.stripQuotes(args[0]).startsWith(this.stripQuotes(args[1]));
             case 'ends'://(string1, string2)` returns true if string 1 ends with string 2
-                args = splitQuoted(this.parseInline(res[2]), ',');
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length < 2)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for ends');
                 else if (args.length > 2)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for ends');
                 return this.stripQuotes(args[0]).endsWith(this.stripQuotes(args[1]));
             case 'len'://(string)` returns the length of string
                 return this.stripQuotes(this.parseInline(res[2])).length;
             case 'pos'://(pattern,string)` returns the position pattern in string on 1 index scale, 0 if not found
-                args = splitQuoted(this.parseInline(res[2]), ',');
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length < 2)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for pos');
                 else if (args.length > 2)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for pos');
                 return this.stripQuotes(args[1]).indexOf(this.stripQuotes(args[0])) + 1;
             case 'ipos'://(pattern,string)` returns the position pattern in string on 1 index scale, 0 if not found
-                args = splitQuoted(this.parseInline(res[2]), ',');
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length < 2)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for ipos');
                 else if (args.length > 2)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for ipos');
                 return this.stripQuotes(args[1]).toLowerCase().indexOf(this.stripQuotes(args[0]).toLowerCase()) + 1;
             case 'regex'://(string,regex,var1,...,varN)
-                args = splitQuoted(res[2], ',');
+                args = this.splitByQuotes(res[2], ',');
                 if (args.length < 2)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for regex');
                 c = new RegExp(this.stripQuotes(args[1]), 'gd');
                 c = c.exec(this.stripQuotes(this.parseInline(args[0])));
                 args.shift();
@@ -4932,107 +4933,107 @@ export class Input extends EventEmitter {
             case 'bitand'://bitand(v1,v2)
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for bitand');
                 else if (args.length !== 2)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for bitand');
                 c = parseInt(args[0], 10);
                 if (isNaN(c))
-                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number for bitand');
                 sides = parseInt(args[1], 10);
                 if (isNaN(sides))
-                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number for bitand');
                 return c & sides;
             case 'bitnot'://bitnot(v1)
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for bitnot');
                 else if (args.length !== 1)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for bitnot');
                 c = parseInt(args[0], 10);
                 if (isNaN(c))
-                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number for bitnot');
                 return ~c;
             case 'bitor': //bitor(v1,v2)
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for bitor');
                 else if (args.length !== 2)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for bitor');
                 c = parseInt(args[0], 10);
                 if (isNaN(c))
-                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number for bitor');
                 sides = parseInt(args[1], 10);
                 if (isNaN(sides))
-                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number for bitor');
                 return c | sides;
             case 'bitset':
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for bitset');
                 else if (args.length > 3)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for bitset');
                 c = parseInt(args[0], 10);
                 if (isNaN(c))
-                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number for bitset');
                 sides = parseInt(args[1], 10);
                 if (isNaN(sides))
-                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number for bitset');
                 sides--;
                 mod = 1;
                 if (args.length === 3) {
                     mod = parseInt(args[2], 10);
                     if (isNaN(mod))
-                        throw new Error('Invalid argument \'' + args[2] + '\' must be a number');
+                        throw new Error('Invalid argument \'' + args[2] + '\' must be a number for bitset');
                 }
                 return (c & (~(1 << sides))) | ((mod ? 1 : 0) << sides);
             case 'bitshift'://bitshift(value,num)
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for bitshift');
                 else if (args.length !== 2)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for bitshift');
                 c = parseInt(args[0], 10);
                 if (isNaN(c))
-                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number for bitshift');
                 sides = parseInt(args[1], 10);
                 if (isNaN(sides))
-                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number for bitshift');
                 if (sides < 0)
                     return c >> -sides;
                 return c << sides
             case 'bittest'://bittest(i,bitnum)
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for bittest');
                 else if (args.length !== 2)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for bittest');
                 c = parseInt(args[0], 10);
                 if (isNaN(c))
-                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number for bittest');
                 sides = parseInt(args[1], 10);
                 if (isNaN(sides))
-                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number for bittest');
                 sides--;
                 return ((c >> sides) % 2 != 0) ? 1 : 0;
             case 'bitxor'://bitxor(v1,v2)
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for bitxor');
                 else if (args.length !== 2)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for bitxor');
                 c = parseInt(args[0], 10);
                 if (isNaN(c))
-                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[0] + '\' must be a number for bitxor');
                 sides = parseInt(args[1], 10);
                 if (isNaN(sides))
-                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number');
+                    throw new Error('Invalid argument \'' + args[1] + '\' must be a number for bitxor');
                 return c ^ sides;
             case 'number': //number(s)
-                args = splitQuoted(this.parseInline(res[2]), ',');
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for number');
                 else if (args.length > 1)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for number');
                 args[0] = this.stripQuotes(args[0], true);
                 if (args[0].match(/^\s*?[-|+]?\d+\s*?$/))
                     return parseInt(args[0], 10);
@@ -5044,36 +5045,36 @@ export class Input extends EventEmitter {
                     return 0;
                 return 0;
             case 'isfloat'://isfloat(value)
-                args = splitQuoted(this.parseInline(res[2]), ',');
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for isfloat');
                 else if (args.length > 1)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for isfloat');
                 if (args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
                     return 1;
                 return 0;
             case 'isnumber': //isnumber(s)
-                args = splitQuoted(this.parseInline(res[2]), ',');
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for isnumber');
                 else if (args.length > 1)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for isnumber');
                 if (args[0].match(/^\s*?[-|+]?\d+\s*?$/) || args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
                     return 1;
                 return 0;
             case 'string'://string(value)
-                args = splitQuoted(this.parseInline(res[2]), ',');
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for string');
                 else if (args.length > 1)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for string');
                 return `"${this.stripQuotes(args[0]), true}"`;
             case 'float'://float(value)
-                args = splitQuoted(this.parseInline(res[2]), ',');
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for float');
                 else if (args.length > 1)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for float');
                 args[0] = this.stripQuotes(args[0], true);
                 if (args[0].match(/^\s*?[-|+]?\d+\s*?$/) || args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
                     return parseFloat(args[0]);
@@ -5083,15 +5084,67 @@ export class Input extends EventEmitter {
                     return 0.0;
                 return 0;
             case 'isdefined':
-                args = splitQuoted(this.parseInline(res[2]), ',');
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0)
-                    throw new Error('Missing arguments');
+                    throw new Error('Missing arguments for isdefined');
                 else if (args.length > 1)
-                    throw new Error('Too many arguments');
+                    throw new Error('Too many arguments for isdefined');
                 args[0] = this.stripQuotes(args[0], true);
                 if (this.client.variables.hasOwnProperty(args[0]))
                     return 1;
                 return 0;
+            case 'escape':
+                args = this.stripQuotes(this.parseInline(res[2]));
+                if (this.client.options.allowEscape) {
+                    c = escape;
+                    if (escape === '\\')
+                        c += escape;
+                    if (this.client.options.parseDoubleQuotes)
+                        c += '"';
+                    if (this.client.options.parseSingleQuotes)
+                        c += '\'';
+                    if (this.client.options.commandStacking)
+                        c += this.client.options.commandStackingChar;
+                    if (this.client.options.enableSpeedpaths)
+                        c += this.client.options.speedpathsChar;
+                    if (this.client.options.enableCommands)
+                        c += this.client.options.commandChar;
+                    if (this.client.options.enableVerbatim)
+                        c += this.client.options.verbatimChar;
+                    if (this.client.options.enableDoubleParameterEscaping)
+                        c += this.client.options.parametersChar;
+                    if (this.client.options.enableNParameters)
+                        c += this.client.options.nParametersChar;
+                    return args.replace(new RegExp(`[${c}]`, 'g'), escape + '$&');
+                }
+                return args.replace(/[\\"']/g, '\$&');
+            case 'unescape':
+                args = this.stripQuotes(this.parseInline(res[2]));
+                if (this.client.options.allowEscape) {
+                    c = escape;
+                    if (escape === '\\')
+                        c += escape;
+                    if (this.client.options.parseDoubleQuotes)
+                        c += '"';
+                    if (this.client.options.parseSingleQuotes)
+                        c += '\'';
+                    if (this.client.options.commandStacking)
+                        c += this.client.options.commandStackingChar;
+                    if (this.client.options.enableSpeedpaths)
+                        c += this.client.options.speedpathsChar;
+                    if (this.client.options.enableCommands)
+                        c += this.client.options.commandChar;
+                    if (this.client.options.enableVerbatim)
+                        c += this.client.options.verbatimChar;
+                    if (this.client.options.enableDoubleParameterEscaping)
+                        c += this.client.options.parametersChar;
+                    if (this.client.options.enableNParameters)
+                        c += this.client.options.nParametersChar;
+                    if (escape === '\\')
+                        return args.replace(new RegExp(`\\\\[${c}]`, 'g'), (m) => m.substr(1));
+                    return args.replace(new RegExp(`${escape}[${c}]`, 'g'), (m) => m.substr(1));
+                }
+                return args.replace(/\\[\\"']/g, (m) => m.substr(1));
         }
         return null;
     }
@@ -5622,6 +5675,22 @@ export class Input extends EventEmitter {
                 return e.replace(/\\\'/g, '\'');
             });
         return str;
+    }
+
+    public splitByQuotes(str: string, sep: string, force?: boolean, forceSingle?: boolean) {
+        let t = 0;
+        let e = 0;
+        if (!str || str.length === 0)
+            return str;
+        if (force || this.client.options.parseDoubleQuotes) {
+            t |= 2;
+            e |= this.client.options.allowEscape ? 2 : 0;
+        }
+        if (forceSingle || this.client.options.parseSingleQuotes) {
+            t |= 1;
+            e |= this.client.options.allowEscape ? 1 : 0;
+        }
+        return splitQuoted(str, sep, t, e, this.client.options.escapeChar);
     }
 
     public createTrigger(pattern: string, commands: string, profile?: string | Profile, options?, name?: string) {

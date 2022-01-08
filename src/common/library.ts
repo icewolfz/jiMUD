@@ -705,11 +705,12 @@ if (typeof String.prototype.trimStart !== 'function') {
 }
 */
 
-String.prototype.splitQuote = function (this: string, sep: string, type?, escape?) {
+String.prototype.splitQuote = function (this: string, sep: string, type?, escape?, escapeChar?) {
     if (this.length === 0)
         return [this];
     if (!type) type = 1 | 2;
     if (!escape) escape = 1 | 2;
+    if (!escapeChar) escapeChar = '\\';
     let quote: boolean = false;
     let sQuote: boolean = false;
     const str = [];
@@ -725,7 +726,7 @@ String.prototype.splitQuote = function (this: string, sep: string, type?, escape
         c = this.charAt(s);
         if (c === '"' && (type & 2) === 2) {
             if ((escape & 2) === 2) {
-                if (s === 0 || pC !== '\\')
+                if (s === 0 || pC !== escapeChar)
                     quote = !quote;
             }
             else
@@ -733,7 +734,7 @@ String.prototype.splitQuote = function (this: string, sep: string, type?, escape
         }
         else if (c === '\'' && (type & 1) === 1) {
             if ((escape & 1) === 1) {
-                if (s === 0 || pC !== '\\')
+                if (s === 0 || pC !== escapeChar)
                     sQuote = !sQuote;
             }
             else
@@ -1330,9 +1331,10 @@ function testWhite(x) {
     return /^\s$/.test(x.charAt(0));
 }
 
-export function splitQuoted(str, sep, t?, e?) {
+export function splitQuoted(str, sep, t?, e?, ec?) {
     if (typeof (t) === 'undefined') t = 1 | 2;
     if (typeof (e) === 'undefined') e = 0;
+    if (typeof (ec) === 'undefined') ec = '\\';
     if (!str || str.length === 0 || !sep || sep.length === 0)
         return [str];
     sep = sep.split('');
@@ -1347,7 +1349,7 @@ export function splitQuoted(str, sep, t?, e?) {
         c = str.charAt(s);
         if (c === '"' && (t & 2) === 2) {
             if ((e & 2) === 2 && s > 0) {
-                if (s - 1 > 0 && str.charAt(s - 1) !== '\\')
+                if (s - 1 > 0 && str.charAt(s - 1) !== ec)
                     q = !q;
             }
             else
@@ -1355,7 +1357,7 @@ export function splitQuoted(str, sep, t?, e?) {
         }
         else if (c === '\'' && (t & 1) === 1) {
             if ((e & 1) === 1 && s > 0) {
-                if (s - 1 > 0 && str.charAt(s - 1) !== '\\')
+                if (s - 1 > 0 && str.charAt(s - 1) !== ec)
                     sq = !sq;
             }
             else

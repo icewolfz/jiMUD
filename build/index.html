@@ -518,7 +518,8 @@
                 else {
                     menu = {};
                     menu.label = context[x].caption;
-                    menu.caption = context[x].caption;
+                    if (context[x].parse)                   
+                        menu.caption = context[x].caption;
                     menu.item = context[x];
                     menu.click = (item) => {
                         executeContext(item.item);

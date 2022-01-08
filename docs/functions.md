@@ -102,6 +102,8 @@ You can create custom variables using the expression system and the assignment o
 - `trim(string)` Returns the string without any spaces at the beginning or end
 - `trimleft(string)` Returns the string without any spaces at the beginning
 - `trimright(string)` Returns the string without any spaces at the end
+- `escape(string)` Returns a string with all special characters escaped based on what is enabled in scripting settings
+- `unescape(string)` Returns a string with all escapes based on what is enabled in scripting settings removed
 
 ### **Miscellaneous**
 - `time(format)` display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]
