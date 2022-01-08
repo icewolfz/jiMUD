@@ -4,7 +4,7 @@
 
 - **New:**
   - Add [%escape(string)](docs/functions.md#string)  escape all characters in string if escaping is allowed and if those characters need escaping
-  - Add [%unsxape(string)](docs/functions.md#string) strip escape characters from string if escaping is allowed and those characters are enabled
+  - Add [%unescape(string)](docs/functions.md#string) strip escape characters from string if escaping is allowed and those characters are enabled
   - Add $selectedword, $selword, $selectedurl, $selurl, $selectedline, $selline, $selected, $character, $copied for direct access in expressions
 - **Fixed:**
   - Input parser:
