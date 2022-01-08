@@ -259,6 +259,28 @@ export class Input extends EventEmitter {
         }
     }
 
+    private getDiceArguments(arg, scope, fun) {
+        let res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(arg.toString());
+        if (!res || res.length < 3) {
+            res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(arg.toString());
+            if (!res || res.length < 3) {
+                //if failed with raw args try compiling and processing in case a variable or expression to build a string
+                arg = arg.compile().evaluate(scope);
+                res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(arg.toString());
+                if (!res || res.length < 3) {
+                    //check for % dice
+                    res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(arg.toString());
+                    if (!res || res.length < 3)
+                        throw new Error('Invalid dice for ' + (fun || 'dice'));
+                    res[2] = '%';
+                }
+            }
+            else
+                res[2] = '%';
+        }
+        return res;
+    }
+
     constructor(client: Client) {
         super();
         if (!client)
@@ -278,22 +300,16 @@ export class Input extends EventEmitter {
                 let mod;
                 let min;
                 let max;
-                if (args.length === 0) throw new Error('Invalid dice for diceavg');
+                if (args.length === 0) throw new Error('Invalid arguments for diceavg');
                 if (args.length === 1) {
-                    res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                    if (!res || res.length < 3) {
-                        res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                        if (!res || res.length < 3)
-                            throw new Error('Invalid dice');
-                        res[2] = '%';
-                    }
+                    res = this.getDiceArguments(args[0], scope, 'diceavg');
                     c = parseInt(res[1]);
                     sides = res[2];
                     if (res.length > 3)
                         mod = res[3];
                 }
                 else if (args.length < 4) {
-                    c = parseInt(args[0].toString());
+                    c = args[0].compile().evaluate(scope);
                     sides = args[1].toString().trim();
                     if (sides !== 'F' && sides !== '%')
                         sides = args[1].compile().evaluate(scope);
@@ -324,22 +340,16 @@ export class Input extends EventEmitter {
                 let sides;
                 let mod;
                 let min;
-                if (args.length === 0) throw new Error('Invalid dice for dicemin');
+                if (args.length === 0) throw new Error('Invalid arguments for dicemin');
                 if (args.length === 1) {
-                    res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                    if (!res || res.length < 3) {
-                        res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                        if (!res || res.length < 3)
-                            throw new Error('Invalid dice');
-                        res[2] = '%';
-                    }
+                    res = res = this.getDiceArguments(args[0], scope, 'dicemin');
                     c = parseInt(res[1]);
                     sides = res[2];
                     if (res.length > 3)
                         mod = res[3];
                 }
                 else if (args.length < 4) {
-                    c = parseInt(args[0].toString());
+                    c = args[0].compile().evaluate(scope);
                     sides = args[1].toString().trim();
                     if (sides !== 'F' && sides !== '%')
                         sides = args[1].compile().evaluate(scope);
@@ -363,22 +373,16 @@ export class Input extends EventEmitter {
                 let sides;
                 let mod;
                 let max;
-                if (args.length === 0) throw new Error('Invalid dice for dicemax');
+                if (args.length === 0) throw new Error('Invalid arguments for dicemax');
                 if (args.length === 1) {
-                    res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                    if (!res || res.length < 3) {
-                        res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                        if (!res || res.length < 3)
-                            throw new Error('Invalid dice');
-                        res[2] = '%';
-                    }
+                    res = this.getDiceArguments(args[0], scope, 'dicemax');
                     c = parseInt(res[1]);
                     sides = res[2];
                     if (res.length > 3)
                         mod = res[3];
                 }
                 else if (args.length < 4) {
-                    c = parseInt(args[0].toString());
+                    c = args[0].compile().evaluate(scope);
                     sides = args[1].toString().trim();
                     if (sides !== 'F' && sides !== '%')
                         sides = args[1].compile().evaluate(scope);
@@ -404,22 +408,16 @@ export class Input extends EventEmitter {
                 let sides;
                 let mod;
                 let max;
-                if (args.length === 0) throw new Error('Invalid dice for dicedev');
+                if (args.length === 0) throw new Error('Invalid arguments for dicedev');
                 if (args.length === 1) {
-                    res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                    if (!res || res.length < 3) {
-                        res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                        if (!res || res.length < 3)
-                            throw new Error('Invalid dice');
-                        res[2] = '%';
-                    }
+                    res = this.getDiceArguments(args[0], scope, 'dicedev');
                     c = parseInt(res[1]);
                     sides = res[2];
                     if (res.length > 3)
                         mod = res[3];
                 }
                 else if (args.length < 4) {
-                    c = parseInt(args[0].toString());
+                    c = args[0].compile().evaluate(scope);
                     sides = args[1].toString().trim();
                     if (sides !== 'F' && sides !== '%')
                         sides = args[1].compile().evaluate(scope);
@@ -444,22 +442,16 @@ export class Input extends EventEmitter {
                 let sides;
                 let mod;
                 let max;
-                if (args.length === 0) throw new Error('Invalid dice for zdicedev');
+                if (args.length === 0) throw new Error('Invalid arguments for zdicedev');
                 if (args.length === 1) {
-                    res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                    if (!res || res.length < 3) {
-                        res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                        if (!res || res.length < 3)
-                            throw new Error('Invalid dice');
-                        res[2] = '%';
-                    }
+                    res = this.getDiceArguments(args[0], scope, 'zdicedev');
                     c = parseInt(res[1]);
                     sides = res[2];
                     if (res.length > 3)
                         mod = res[3];
                 }
                 else if (args.length < 4) {
-                    c = parseInt(args[0].toString());
+                    c = args[0].compile().evaluate(scope);
                     sides = args[1].toString().trim();
                     if (sides !== 'F' && sides !== '%')
                         sides = args[1].compile().evaluate(scope);
@@ -485,21 +477,14 @@ export class Input extends EventEmitter {
                 let sides;
                 let mod;
                 if (args.length === 1) {
-                    console.log(args[0].toString());
-                    res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                    if (!res || res.length < 3) {
-                        res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                        if (!res || res.length < 3)
-                            throw new Error('Invalid dice');
-                        res[2] = '%';
-                    }
+                    res = this.getDiceArguments(args[0], scope, 'dice');
                     c = parseInt(res[1]);
                     sides = res[2];
                     if (res.length > 3)
                         mod = res[3];
                 }
                 else if (args.length > 1) {
-                    c = parseInt(args[0].toString());
+                    c = args[0].compile().evaluate(scope);
                     sides = args[1].toString().trim();
                     if (sides !== 'F' && sides !== '%')
                         sides = args[1].compile().evaluate(scope);
