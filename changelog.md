@@ -12,6 +12,7 @@
     - Use custom escape character when splitting function arguments with quotes
   - Fix dice when using fudge dice
   - Fix parsing of sub context menus
+  - Fix $selectedword, $selword, $selectedurl, $selurl, $selectedline, $selline, when used from command line to use mouse position to correctly get the selected word,line, or url
 - **Changed:**
   - Error messages for commands and functions will add name to better understand where the error is
 
