@@ -5402,6 +5402,8 @@ export class Input extends EventEmitter {
                         c += this.client.options.parametersChar;
                     if (this.client.options.enableNParameters)
                         c += this.client.options.nParametersChar;
+                    if (this.client.options.enableVariable)
+                        c += this.client.options.variableChar;
                     return args.replace(new RegExp(`[${c}]`, 'g'), escape + '$&');
                 }
                 return args.replace(/[\\"']/g, '\$&');
@@ -5427,6 +5429,8 @@ export class Input extends EventEmitter {
                         c += this.client.options.parametersChar;
                     if (this.client.options.enableNParameters)
                         c += this.client.options.nParametersChar;
+                    if (this.client.options.enableVariable)
+                        c += this.client.options.variableChar;
                     if (escape === '\\')
                         return args.replace(new RegExp(`\\\\[${c}]`, 'g'), (m) => m.substr(1));
                     return args.replace(new RegExp(`${escape}[${c}]`, 'g'), (m) => m.substr(1));
