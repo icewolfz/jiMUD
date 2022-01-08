@@ -32,44 +32,6 @@
             });
         });
 
-        ['$selectedword', '$selword'].forEach((a) => {
-            Object.defineProperty(window, a, {
-                get: function () {
-                    if (!lastMouse) return '';
-                    return client.display.getWordFromPosition(client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY));
-                },
-                configurable: true
-            });
-        });
-
-        ['$selectedurl', '$selurl'].forEach((a) => {
-            Object.defineProperty(window, a, {
-                get: function () {
-                    if (!lastMouse) return '';
-                    var parent = $(lastMouse.srcElement.parentNode);
-                    if (parent && parent.hasClass('URLLink'))
-                        return parent.title;
-                    else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
-                        return parent.data('href');
-                    return '';
-                },
-                configurable: true
-            });
-        });
-
-        ['$selectedline', '$selline'].forEach((a) => {
-            Object.defineProperty(window, a, {
-                get: function () {
-                    if (!lastMouse) return '';
-                    var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
-                    if (pos.y < 0 || pos.y >= client.display.lines.length)
-                        return '';
-                    return client.display.lines[pos.y];
-                },
-                configurable: true
-            });
-        });
-
         Object.defineProperty(window, '$selected', {
             get: function () {
                 if (!client) return '';
@@ -97,42 +59,70 @@
         Object.defineProperty(window, '$selword', {
             get: function () {
                 if (!client) return '';
-                return client._input.vStack['$selword'] || _selword || '';
+                return client._input.vStack['$selword'] || _selword || (lastMouse ? client.display.getWordFromPosition(client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY)) : '');
             },
             configurable: true
         });
         Object.defineProperty(window, '$selurl', {
             get: function () {
                 if (!client) return '';
-                return client._input.vStack['$selurl'] || _selurl || '';
+                let value = client._input.vStack['$selurl'] || _selurl || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var parent = $(lastMouse.srcElement.parentNode);
+                if (parent && parent.hasClass('URLLink'))
+                    return parent.title;
+                else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
+                    return parent.data('href');
+                return '';
             },
             configurable: true
         });
         Object.defineProperty(window, '$selline', {
             get: function () {
                 if (!client) return '';
-                return client._input.vStack['$selline'] || _selline || '';
+                let value = client._input.vStack['$selline'] || _selline || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
+                if (pos.y < 0 || pos.y >= client.display.lines.length)
+                    return '';
+                return client.display.lines[pos.y];
             },
             configurable: true
         });
         Object.defineProperty(window, '$selectedword', {
             get: function () {
                 if (!client) return '';
-                return client._input.vStack['$selectedword'] || _selword || '';
+                return client._input.vStack['$selectedword'] || _selword || (lastMouse ? client.display.getWordFromPosition(client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY)) : '');
             },
             configurable: true
         });
         Object.defineProperty(window, '$selectedurl', {
             get: function () {
                 if (!client) return '';
-                return client._input.vStack['$selectedurl'] || _selurl || '';
+                let value = client._input.vStack['$selectedurl'] || _selurl || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var parent = $(lastMouse.srcElement.parentNode);
+                if (parent && parent.hasClass('URLLink'))
+                    return parent.title;
+                else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
+                    return parent.data('href');
+                return '';
             },
             configurable: true
         });
         Object.defineProperty(window, '$selectedline', {
             get: function () {
                 if (!client) return '';
-                return client._input.vStack['$selectedline'] || _selline || '';
+                let value = client._input.vStack['$selectedline'] || _selline || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
+                if (pos.y < 0 || pos.y >= client.display.lines.length)
+                    return '';
+                return client.display.lines[pos.y];
             },
             configurable: true
         });
@@ -518,7 +508,7 @@
                 else {
                     menu = {};
                     menu.label = context[x].caption;
-                    if (context[x].parse)                   
+                    if (context[x].parse)
                         menu.caption = context[x].caption;
                     menu.item = context[x];
                     menu.click = (item) => {

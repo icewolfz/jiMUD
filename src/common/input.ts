@@ -137,6 +137,11 @@ export class Input extends EventEmitter {
         for (const name in vars) {
             scope[name] = vars[name].rawValue;
         }
+        ['$selectedword', '$selword', '$selectedurl', '$selurl', '$selectedline',
+            '$selline', '$selected', '$character', '$copied'].forEach((a) => {
+                scope[a] = window[a];
+                scope[a.substr(1)] = window[a];
+            });
         //if no stack use direct for some performance
         if (this._stack.length === 0 || (!this.stack.named && !this.loops.length))
             return scope;
@@ -160,6 +165,27 @@ export class Input extends EventEmitter {
             //not a property, i or repeatnum
             if (!Object.prototype.hasOwnProperty.call(scope, name) || name === 'i' || name === 'repeatnum')
                 continue;
+            switch (name) {
+                case '$selectedword':
+                case '$selword':
+                case '$selectedurl':
+                case '$selurl':
+                case '$selectedline':
+                case '$selline':
+                case '$selected':
+                case '$character':
+                case '$copied':
+                case 'selectedword':
+                case 'selword':
+                case 'selectedurl':
+                case 'selurl':
+                case 'selectedline':
+                case 'selline':
+                case 'selected':
+                case 'character':
+                case 'copied':
+                    continue;
+            }
             //if i to z and the loop exist skip it
             if (name.length === 1 && ll && name.charCodeAt(0) >= 105 && name.charCodeAt(0) < 105 + ll)
                 continue;
