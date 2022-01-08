@@ -1,6 +1,20 @@
 # Changelog
 
-## v0.17.4
+## v0.17.5
+
+- **New:**
+  = Add [%escape(string)](docs/functions.md#string)  escape all characters in string if escaping is allowed and if those characters need escaping
+  - Add [%unsxape(string)](docs/functions.md#string) strip escape characters from string if escaping is allowed and those characters are enabled
+- **Fixed:**
+  - Input parser:
+    - Correctly escape function arguments when quoting arguments with respect to scripting quote settings
+    - Use custom escape character when splitting function arguments with quotes
+  - Fix dice when using fudge dice
+  - Fix parsing of sub context menus
+- **Changed:**
+  - Error messages for commands and functions will add name to better understand where the error is
+
+## v0.17.4 2022-01-07
  
 - **New:**
   - Add [#FREEZE](docs/commands.md#display) Scroll lock the display, if state is omitted it will toggle the scroll lock, if state is 0 or false it will disable scroll lock, if state is anything else it will lock the scroll back
@@ -45,6 +59,7 @@
     - [N Parameters character](docs/preferences.md#scripting--special-characters) allows you to change the $ character for named parameters
     - [Enable N Parameters](docs/preferences.md#scripting--special-characters) disable N parameter system
     - [Show lag in title](docs/preferences.md#status) Display lag in title bar
+  - Add [Parse caption](docs/profiles.md#context) to parse context menu captions using the command parser to allow predefined variables or expressions
 - **Fixed:**
   - Updated README to update build requirements
   - Display:
@@ -76,7 +91,9 @@
     - Fixed do not escape disabled special characters
     - Fixed command character not being correctly replaced with custom character in some places
     - Fixed saving nested loop variables as user variables
+    - Fixed bug when splitting quoted strings
   - Fixed [%dice(xdy+n)](docs/functions.md#math) not correctly parsings argument format
+  - Fixed [%if(expression,true,false)](docs/functions.md#conditionals) not erroring if missing false argument
   - Fixed [#variable](docs/commands.md) should not evaluate the value to allow use of raw strings as needed, eg #va test {3+5} should store 3+5 not 8, if you want the evaluated value use #var test \${3+5} or #va test \{${3+5}}
   - Fixed [#variable](docs/commands.md) throws an error now when invalid variable names are used
   - Fixed Select control selected color text
@@ -91,6 +108,7 @@
   - Update better-sqlite3 7.4.5 to 7.4.6
   - Rearrange [General](docs/preferences.md#general) to reduce scrolling
   - Increase character manager dialog height to remove scrolling when possible
+  - Update markdown-it 12.3.0 to 12.3.1
 
 ## v0.17.3 2021-12-14
 

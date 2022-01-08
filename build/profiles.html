@@ -15,6 +15,7 @@
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
     <link id="theme" rel="stylesheet" href="" type="text/css">
 </head>
+
 <body>
     <div id="toolbar" class="btn-toolbar" role="toolbar">
         <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="profileUI.doRefresh()">
@@ -311,7 +312,7 @@
                                 </label>
                                 <label class="col-sm-4" for="trigger-raw">
                                     <input type="checkbox" id="trigger-raw" style="border: 0px"> Trigger on raw
-                                </label>                                
+                                </label>
                             </td>
                         </tr>
                     </table>
@@ -455,7 +456,10 @@
                                     <input type="checkbox" id="button-append" style="border: 0px"> Append to command</label>
                                 <label class="col-sm-6" for="button-chain">
                                     <input type="checkbox" id="button-chain" style="border: 0px"> Daisy chain</label>
-
+                                <!--
+                                <label class="col-sm-6" for="button-parse">
+                                    <input type="checkbox" id="button-parse" style="border: 0px;"> Parse caption</label>
+                                -->
                                 <label class="col-sm-6" for="button-stretch">
                                     <input type="checkbox" id="button-stretch" style="border: 0px" onchange="profileUI.UpdateButtonSample();"> Stretch icon</label>
                             </td>
@@ -551,6 +555,8 @@
                                     <input type="checkbox" id="context-append" style="border: 0px"> Append to command</label>
                                 <label class="col-sm-6" for="context-chain">
                                     <input type="checkbox" id="context-chain" style="border: 0px"> Daisy chain</label>
+                                <label class="col-sm-6" for="context-parse">
+                                    <input type="checkbox" id="context-parse" style="border: 0px;"> Parse caption</label>
                             </td>
                         </tr>
                     </table>
@@ -665,7 +671,7 @@
         <div>
             <progress max="100" id="progress-dialog-progressbar"></progress>
         </div>
-    </dialog>    
+    </dialog>
     <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>

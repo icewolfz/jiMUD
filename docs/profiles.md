@@ -177,3 +177,4 @@
 - `Send to Mud` send the value to the mud
 - `Append to Command` append value to the end of the command input
 - `Daisy Chain` this will append the value to the command line if it ends with a space then send the command line to the mud, if no space it will be handled as a standard macro and send the value.
+- `Parse caption` parse the caption using the command parser to allow predefined variables,functions or expressions if allowed
