@@ -3831,6 +3831,7 @@ export class Input extends EventEmitter {
         const eParam: boolean = this.client.options.enableParameters;
         const nParamChar: string = this.client.options.nParametersChar;
         const eNParam: boolean = this.client.options.enableNParameters;
+        const eEval: boolean = this.client.options.allowEval;
         let args = [];
         let arg: any = '';
         let findAlias: boolean = true;
@@ -4184,7 +4185,7 @@ export class Input extends EventEmitter {
                                 tmp = parseInt(arg, 10);
                                 if (tmp < 0) {
                                     if (-tmp >= this.stack.args.length) {
-                                        if (this.client.options.allowEval)
+                                        if (eEval)
                                             tmp2 = tmp;
                                         else {
                                             tmp2 = paramChar;
@@ -4201,7 +4202,7 @@ export class Input extends EventEmitter {
                                     if (arg > this.stack.used)
                                         this.stack.used = tmp;
                                 }
-                                else if (this.client.options.allowEval)
+                                else if (eEval)
                                     tmp2 = tmp;
                                 else {
                                     tmp2 = paramChar;
@@ -4229,7 +4230,7 @@ export class Input extends EventEmitter {
                                 tmp = this.parseVariable(arg);
                                 if (tmp != null)
                                     tmp2 = tmp;
-                                else if (this.client.options.allowEval) {
+                                else if (eEval) {
                                     tmp2 = '' + this.evaluate(this.parseInline(arg));
                                 }
                                 else {
@@ -4353,7 +4354,7 @@ export class Input extends EventEmitter {
                                 tmp = parseInt(arg, 10);
                                 if (tmp < 0) {
                                     if (-tmp >= this.stack.args.length) {
-                                        if (this.client.options.allowEval)
+                                        if (eEval)
                                             tmp2 = tmp;
                                         else {
                                             tmp2 = nParamChar;
@@ -4370,7 +4371,7 @@ export class Input extends EventEmitter {
                                     if (tmp > this.stack.used)
                                         this.stack.used = tmp;
                                 }
-                                else if (this.client.options.allowEval)
+                                else if (eEval)
                                     tmp2 = tmp;
                                 else {
                                     tmp2 = nParamChar;
@@ -4398,7 +4399,7 @@ export class Input extends EventEmitter {
                                 c = this.parseVariable(arg);
                                 if (c != null)
                                     tmp2 = c;
-                                else if (this.client.options.allowEval)
+                                else if (eEval)
                                     tmp2 = '' + this.evaluate(this.parseInline(arg));
                                 else {
                                     tmp2 = nParamChar;
