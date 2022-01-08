@@ -21,7 +21,11 @@ There is a special format for argument variables for aliases and triggers.
 
 Expressions, [when enabled](preferences.md#scripting) or using eval(), are basic math or supported math functions supported by [Mathjs](http://mathjs.org/) which include all the standard javascript Math functions, the i and repeatnum variables You may also embed \${} variables and functions as well for example: \${5+5} will return 10 or \${5 + i} will return 5 + what ever the current value of i is, \${5 + \${dice(2d10)}} will return 5 + a 2, 10 sided dice rolls noticed how it requires the ${} as dice is a jiMUD functions not a math function.
 
-**Note** expressions only work with numbers, math symbols, predefined constants, or ${} functions
+Many predefined functions can be called directly in an expression with out the \${} but will not be parsed by the command parser but the expression engine instead, example from above can be simplified as ${5 + dice(2d10)} and return the same value as the expanded version
+
+**Note** expressions only work with numbers, math symbols, predefined constants, most predefined functions, or ${} functions, any strings must be quoted to be used in the expression engine
+
+**Note** when using functions in the expression engine arguments are not parsed by the command parser, example: \${eval(len(\${selected}))} would return the leng of \${selected} not the value of \${selected} and does not work the same as \${eval(\${len(\${selected})})} you can access selected directly using selected or $selected
 
 Escaping allows you to prevent special characters from being parsed and allow them to be used as normal, characters that are escaped are $%"'{, command character, escape character, speedpath character, verbatim character. For example: \${copied} would return as ${copied} as the \ prevents the \$ from being parsed as variable or function, note how you do not have to escape the { as it is not required as the $ is not processed so { will be read as a normal character.
 

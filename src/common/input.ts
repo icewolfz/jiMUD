@@ -265,62 +265,443 @@ export class Input extends EventEmitter {
             throw new Error('Invalid client!');
         this.client = client;
 
-        const dice: any = (args, math, scope) => {
-            let res;
-            let c;
-            let sides;
-            let mod;
-            if (args.length === 1) {
-                res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                if (!res || res.length < 3) throw new Error('Invalid dice');
-                c = parseInt(res[1]);
-                sides = res[2];
-                if (res.length > 3)
-                    mod = res[3];
-            }
-            else if (args.length > 1) {
-                c = parseInt(args[0].toString());
-                sides = args[1].toString().trim();
-                if (sides !== 'F' && sides !== '%')
-                    sides = args[1].compile().eval(scope);
-                if (args.length > 2)
-                    mod = args[2].compile().eval(scope);
-            }
-            else
-                throw new Error('Invalid arguments for dice');
-            let sum = 0;
-            for (let i = 0; i < c; i++) {
-                if (sides === 'F' || sides === 'f')
-                    sum += fudgeDice();
-                else if (sides === '%')
-                    sum += ~~(Math.random() * 100) + 1;
+        //TODO add color, zcolor, ansi, number, isfloat, isnumber, string, float, escape, unescape
+        const funs = {
+            esc: '\x1b',
+            cr: '\n',
+            lf: '\r',
+            crlf: '\r\n',
+            diceavg: (args, math, scope) => {
+                let res;
+                let c;
+                let sides;
+                let mod;
+                let min;
+                let max;
+                if (args.length === 0) throw new Error('Invalid dice for diceavg');
+                if (args.length === 1) {
+                    res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
+                    if (!res || res.length < 3) {
+                        res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
+                        if (!res || res.length < 3)
+                            throw new Error('Invalid dice');
+                        res[2] = '%';
+                    }
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
+                }
+                else if (args.length < 4) {
+                    c = parseInt(args[0].toString());
+                    sides = args[1].toString().trim();
+                    if (sides !== 'F' && sides !== '%')
+                        sides = args[1].compile().evaluate(scope);
+                    if (args.length > 2)
+                        mod = args[2].compile().evaluate(scope);
+                }
                 else
-                    sum += ~~(Math.random() * sides) + 1;
-            }
-            if (sides === '%')
-                sum /= 100;
-            if (mod)
-                return math.evaluate(sum + mod, scope);
-            return sum;
-        };
+                    throw new Error('Too many arguments for diceavg');
+                min = 1;
+                if (sides === 'F' || sides === 'f') {
+                    min = -1;
+                    max = 1;
+                }
+                else if (sides === '%') {
+                    max = 1;
+                    min = 0;
+                }
+                else
+                    max = parseInt(sides);
 
-        dice.rawArgs = true;
-        const isdefined: any = (args, math, scope) => {
-            if (args.length === 1) {
-                args[0] = this.stripQuotes(args[0].toString());
-                if (this.client.variables.hasOwnProperty(args[0]))
-                    return 1;
-                if (scope.has(args[0]))
-                    return 1;
-                return 0;
-            }
-            throw new Error('Invalid arguments for isdefined');
+                if (mod)
+                    return math.evaluate(((min + max) / 2 * c) + mod, scope);
+                return (min + max) / 2 * c;
+            },
+            dicemin: (args, math, scope) => {
+                let res;
+                let c;
+                let sides;
+                let mod;
+                let min;
+                if (args.length === 0) throw new Error('Invalid dice for dicemin');
+                if (args.length === 1) {
+                    res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
+                    if (!res || res.length < 3) {
+                        res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
+                        if (!res || res.length < 3)
+                            throw new Error('Invalid dice');
+                        res[2] = '%';
+                    }
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
+                }
+                else if (args.length < 4) {
+                    c = parseInt(args[0].toString());
+                    sides = args[1].toString().trim();
+                    if (sides !== 'F' && sides !== '%')
+                        sides = args[1].compile().evaluate(scope);
+                    if (args.length > 2)
+                        mod = args[2].compile().evaluate(scope);
+                }
+                else
+                    throw new Error('Too many arguments for dicemin');
+                min = 1;
+                if (sides === 'F' || sides === 'f')
+                    min = -1;
+                else if (sides === '%')
+                    min = 0;
+                if (mod)
+                    return math.evaluate((min * c) + mod, scope);
+                return min * c;
+            },
+            dicemax: (args, math, scope) => {
+                let res;
+                let c;
+                let sides;
+                let mod;
+                let max;
+                if (args.length === 0) throw new Error('Invalid dice for dicemax');
+                if (args.length === 1) {
+                    res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
+                    if (!res || res.length < 3) {
+                        res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
+                        if (!res || res.length < 3)
+                            throw new Error('Invalid dice');
+                        res[2] = '%';
+                    }
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
+                }
+                else if (args.length < 4) {
+                    c = parseInt(args[0].toString());
+                    sides = args[1].toString().trim();
+                    if (sides !== 'F' && sides !== '%')
+                        sides = args[1].compile().evaluate(scope);
+                    if (args.length > 2)
+                        mod = args[2].compile().evaluate(scope);
+                }
+                else
+                    throw new Error('Too many arguments for dicemax');
+                if (sides === 'F' || sides === 'f')
+                    max = 1;
+                else if (sides === '%')
+                    max = 1;
+                else
+                    max = parseInt(sides);
+
+                if (mod)
+                    return math.evaluate((max * c) + mod, scope);
+                return max * c;
+            },
+            dicedev: (args, math, scope) => {
+                let res;
+                let c;
+                let sides;
+                let mod;
+                let max;
+                if (args.length === 0) throw new Error('Invalid dice for dicedev');
+                if (args.length === 1) {
+                    res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
+                    if (!res || res.length < 3) {
+                        res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
+                        if (!res || res.length < 3)
+                            throw new Error('Invalid dice');
+                        res[2] = '%';
+                    }
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
+                }
+                else if (args.length < 4) {
+                    c = parseInt(args[0].toString());
+                    sides = args[1].toString().trim();
+                    if (sides !== 'F' && sides !== '%')
+                        sides = args[1].compile().evaluate(scope);
+                    if (args.length > 2)
+                        mod = args[2].compile().evaluate(scope);
+                }
+                else
+                    throw new Error('Too many arguments for dicedev');
+                if (sides === 'F' || sides === 'f')
+                    max = 6;
+                else if (sides === '%')
+                    max = 1;
+                else
+                    max = parseInt(sides);
+                if (mod)
+                    return math.evaluate(Math.sqrt(((max * max) - 1) / 12 * c) + mod, scope);
+                return Math.sqrt(((max * max) - 1) / 12 * c);
+            },
+            zdicedev: (args, math, scope) => {
+                let res;
+                let c;
+                let sides;
+                let mod;
+                let max;
+                if (args.length === 0) throw new Error('Invalid dice for zdicedev');
+                if (args.length === 1) {
+                    res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
+                    if (!res || res.length < 3) {
+                        res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
+                        if (!res || res.length < 3)
+                            throw new Error('Invalid dice');
+                        res[2] = '%';
+                    }
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
+                }
+                else if (args.length < 4) {
+                    c = parseInt(args[0].toString());
+                    sides = args[1].toString().trim();
+                    if (sides !== 'F' && sides !== '%')
+                        sides = args[1].compile().evaluate(scope);
+                    if (args.length > 2)
+                        mod = args[2].compile().evaluate(scope);
+                }
+                else
+                    throw new Error('Too many arguments for zdicedev');
+                if (sides === 'F' || sides === 'f')
+                    max = 6;
+                else if (sides === '%')
+                    max = 1;
+                else
+                    max = parseInt(sides);
+                max--;
+                if (mod)
+                    return math.evaluate(Math.sqrt(((max * max) - 1) / 12 * c) + mod, scope);
+                return Math.sqrt(((max * max) - 1) / 12 * c);
+            },
+            dice: (args, math, scope) => {
+                let res;
+                let c;
+                let sides;
+                let mod;
+                if (args.length === 1) {
+                    console.log(args[0].toString());
+                    res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
+                    if (!res || res.length < 3) {
+                        res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
+                        if (!res || res.length < 3)
+                            throw new Error('Invalid dice');
+                        res[2] = '%';
+                    }
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
+                }
+                else if (args.length > 1) {
+                    c = parseInt(args[0].toString());
+                    sides = args[1].toString().trim();
+                    if (sides !== 'F' && sides !== '%')
+                        sides = args[1].compile().evaluate(scope);
+                    if (args.length > 2)
+                        mod = args[2].compile().evaluate(scope);
+                }
+                else
+                    throw new Error('Invalid arguments for dice');
+                let sum = 0;
+                for (let i = 0; i < c; i++) {
+                    if (sides === 'F' || sides === 'f')
+                        sum += fudgeDice();
+                    else if (sides === '%')
+                        sum += ~~(Math.random() * 100.0) + 1.0;
+                    else
+                        sum += ~~(Math.random() * sides) + 1;
+                }
+                if (sides === '%')
+                    sum /= 100.0;
+                if (mod)
+                    return math.evaluate(sum + mod, scope);
+                return sum;
+            },
+            isdefined: (args, math, scope) => {
+                if (args.length === 1) {
+                    args[0] = this.stripQuotes(args[0].toString());
+                    if (this.client.variables.hasOwnProperty(args[0]))
+                        return 1;
+                    if (scope.has(args[0]))
+                        return 1;
+                    return 0;
+                }
+                throw new Error('Invalid arguments for isdefined');
+            },
+            time: (args, math, scope) => {
+                if (args.length > 1)
+                    throw new Error('Too many arguments for time');
+                if (args.length)
+                    return moment().format(math.evaluate(args[0].toString(), scope));
+                return moment().format();
+            },
+            if: (args, math, scope) => {
+                if (args.length < 3)
+                    throw new Error('Missing arguments for if');
+                if (args.length !== 3)
+                    throw new Error('Too many arguments for if');
+                if (math.evaluate(args[0].toString(), scope))
+                    return math.evaluate(args[1].toString(), scope);
+                return math.evaluate(args[2].toString(), scope);
+            },
+            len: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for len');
+                if (args.length !== 1)
+                    throw new Error('Too many arguments for len');
+                return math.evaluate(args[0].toString(), scope).toString().length;
+            },
+            case: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for case');
+                let i = math.evaluate(args[0].toString(), scope);
+                if (i > 0 && i < args.length)
+                    return math.evaluate(args[i].toString(), scope);
+                return null;
+            },
+            switch: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for switch');
+                if (args.length % 2 === 1)
+                    throw new Error('All expressions must have a value for switch');
+                let i = args.length
+                for (let c = 0; c < i; c += 2) {
+                    if (math.evaluate(args[c].toString(), scope))
+                        return math.evaluate(args[c + 1].toString(), scope);
+                }
+                return null;
+            },
+            ascii: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for ascii');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for ascii');
+                if (args[0].toString().trim().length === 0)
+                    throw new Error('Invalid argument, empty string for ascii');
+                return args[0].toString().trim().charCodeAt(0);
+            },
+            char: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for char');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for char');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for char');
+                return String.fromCharCode(c);
+            },
+            bitand: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bitand');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments for bitand');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bitand');
+                let sides = args[1].compile().evaluate(scope);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1].toString() + '\' must be a number for bitand');
+                return c & sides;
+            },
+            bitnot: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bitnot');
+                else if (args.length !== 1)
+                    throw new Error('Too many arguments for bitnot');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bitnot');
+                return ~c;
+            },
+            bitor: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bitor');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments for bitor');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bitor');
+                let sides = args[1].compile().evaluate(scope);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1].toString() + '\' must be a number for bitor');
+                return c | sides;
+            },
+            bitset: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bitset');
+                else if (args.length > 3)
+                    throw new Error('Too many arguments for bitset');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bitset');
+                let sides = args[1].compile().evaluate(scope);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1].toString() + '\' must be a number for bitset');
+                sides--;
+                let mod = 1;
+                if (args.length === 3) {
+                    mod = args[2].compile().evaluate(scope);
+                    if (isNaN(mod))
+                        throw new Error('Invalid argument \'' + args[2].toString() + '\' must be a number for bitset');
+                }
+                return (c & (~(1 << sides))) | ((mod ? 1 : 0) << sides);
+            },
+            bitshift: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bitshift');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments for bitshift');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bitshift');
+                let sides = args[1].compile().evaluate(scope);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1].toString() + '\' must be a number for bitshift');
+                if (sides < 0)
+                    return c >> -sides;
+                return c << sides
+            },
+            bittest: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bittest');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments for bittest');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bittest');
+                let sides = args[1].compile().evaluate(scope);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1].toString() + '\' must be a number for bittest');
+                sides--;
+                return ((c >> sides) % 2 != 0) ? 1 : 0;
+            },
+            bitxor: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bitxor');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments for bitxor');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bitxor');
+                let sides = args[1].compile().evaluate(scope);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1].toString() + '\' must be a number for bitxor');
+                return c ^ sides;
+            },
         };
-        isdefined.rawArgs = true;
-        mathjs.import({
-            dice: dice,
-            isdefined: isdefined
-        }, {});
+        for (let fun in funs) {
+            if (!funs.hasOwnProperty(fun) || typeof funs[fun] !== 'function') {
+                continue;
+            }
+            funs[fun].rawArgs = true;
+        }
+        mathjs.import(funs, {});
 
         this._tests = new Tests(client);
         this._commandHistory = [];
@@ -4595,9 +4976,7 @@ export class Input extends EventEmitter {
 
                 if (sides === 'F' || sides === 'f')
                     sides = 'F';
-                else if (sides === '%')
-                    sides = 100;
-                else
+                else if (sides !== '%')
                     sides = parseInt(sides);
 
                 let sum = 0;
@@ -4605,12 +4984,12 @@ export class Input extends EventEmitter {
                     if (sides === 'F' || sides === 'f')
                         sum += fudgeDice();
                     else if (sides === '%')
-                        sum += ~~(Math.random() * 100) + 1;
+                        sum += ~~(Math.random() * 100.0) + 1.0;
                     else
                         sum += ~~(Math.random() * sides) + 1;
                 }
                 if (sides === '%')
-                    sum /= 100;
+                    sum /= 100.0;
                 if (mod)
                     return this.evaluate(sum + mod);
                 return '' + sum;
@@ -4674,8 +5053,6 @@ export class Input extends EventEmitter {
                     min = -1;
                 else if (sides === '%')
                     min = 0;
-                else
-                    sides = parseInt(sides);
 
                 if (mod)
                     return this.evaluate((min * c) + mod);
@@ -4713,7 +5090,7 @@ export class Input extends EventEmitter {
             case 'dicedev':
                 const fun = res[1];
                 args = this.parseInline(res[2]).split(',');
-                if (args.length === 0) throw new Error('Invalid dice for dicedev');
+                if (args.length === 0) throw new Error('Invalid dice for ' + fun);
                 if (args.length === 1) {
                     res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
                     if (!res || res.length < 3) return null;
@@ -4729,7 +5106,7 @@ export class Input extends EventEmitter {
                         mod = args[2].trim();
                 }
                 else
-                    throw new Error('Too many arguments for dicedev');
+                    throw new Error('Too many arguments for ' + fun);
 
                 if (sides === 'F' || sides === 'f')
                     max = 6;
@@ -4742,8 +5119,8 @@ export class Input extends EventEmitter {
                 if (fun === 'zdicedev')
                     max--;
                 if (mod)
-                    return this.evaluate(Math.sqrt((max * max - 1) / 12 * c) + mod);
-                return '' + Math.sqrt((max * max - 1) / 12 * c);
+                    return this.evaluate(Math.sqrt(((max * max) - 1) / 12 * c) + mod);
+                return '' + Math.sqrt(((max * max) - 1) / 12 * c);
             case 'color':
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
