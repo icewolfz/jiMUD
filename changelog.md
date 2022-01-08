@@ -15,6 +15,8 @@
   - Fix dice when using #d% returning 1d100 instead of a % of 0 to 1
   - Fix parsing of sub context menus
   - Fix $selectedword, $selword, $selectedurl, $selurl, $selectedline, $selline, when used from command line to use mouse position to correctly get the selected word,line, or url
+  - Fix [#CW](docs/commands.md#display), [#COLOR](docs/commands.md#display), [#HIGHLIGHT](docs/commands.md#display) trigger creation syntax to use set command character instead of hard coded #
+  - All #command error messages now correctly use the set command character when displaying syntax
 - **Changed:**
   - Error messages for commands and functions will add name to better understand where the error is
 
