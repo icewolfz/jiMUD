@@ -2571,8 +2571,10 @@ export class Display extends EventEmitter {
                     if (s < 0) s = 0;
                     if (e > this.lines[sL].length)
                         e = this.lines[sL].length;
-                    e = this.textWidth(this.lines[sL].substring(s, e).replace(/ /g, '\u00A0'));
-                    s = this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0'));
+                    e = this.lineWidth(sL, s, e);
+                    s = this.lineWidth(sL, 0, s);                        
+                    //e = this.textWidth(this.lines[sL].substring(s, e).replace(/ /g, '\u00A0'));
+                    //s = this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0'));
                 }
                 if (!this._overlays[type][sL])
                     this._overlays[type][sL] = [];
