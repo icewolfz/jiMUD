@@ -11,6 +11,7 @@
   - Input parser:
     - Correctly escape function arguments when quoting arguments with respect to scripting quote settings
     - Use custom escape character when splitting function arguments with quotes
+    - Fix escaping of command stack when used in a path, after a function, or alias
   - Fix dice when using fudge dice
   - Fix dice when using #d% returning 1d100 instead of a % of 0 to 1
   - Fix parsing of sub context menus
@@ -18,6 +19,7 @@
   - Fix [#CW](docs/commands.md#display), [#COLOR](docs/commands.md#display), [#HIGHLIGHT](docs/commands.md#display) trigger creation syntax to use set command character instead of hard coded #
   - All #command error messages now correctly use the set command character when displaying syntax
   - Make [#VARIABLE](docs/commands.md#createmodify-profile-or-items) respect strip quote settings when storing value
+  - Display: issues with overlays and unicode background selection sizes
 - **Changed:**
   - Error messages for commands and functions will add name to better understand where the error is
 
