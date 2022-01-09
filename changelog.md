@@ -17,6 +17,7 @@
   - Fix $selectedword, $selword, $selectedurl, $selurl, $selectedline, $selline, when used from command line to use mouse position to correctly get the selected word,line, or url
   - Fix [#CW](docs/commands.md#display), [#COLOR](docs/commands.md#display), [#HIGHLIGHT](docs/commands.md#display) trigger creation syntax to use set command character instead of hard coded #
   - All #command error messages now correctly use the set command character when displaying syntax
+  - Make [#VARIABLE](docs/commands.md#createmodify-profile-or-items) respect strip quote settings when storing value
 - **Changed:**
   - Error messages for commands and functions will add name to better understand where the error is
 

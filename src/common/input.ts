@@ -287,7 +287,7 @@ export class Input extends EventEmitter {
             throw new Error('Invalid client!');
         this.client = client;
 
-        //TODO add color, zcolor, ansi, number, isfloat, isnumber, string, float, escape, unescape
+        //TODO add color, zcolor, ansi,  escape, unescape
         const funs = {
             esc: '\x1b',
             cr: '\n',
@@ -679,6 +679,116 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid argument \'' + args[1].toString() + '\' must be a number for bitxor');
                 return c ^ sides;
             },
+            tonumber: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for number');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for number');
+                args[0] = args[0].compile().evaluate(scope).toString();
+                if (args[0].match(/^\s*?[-|+]?\d+\s*?$/))
+                    return parseInt(args[0], 10);
+                else if (args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
+                    return parseFloat(args[0]);
+                else if (args[0] === "true")
+                    return 1;
+                else if (args[0] === "false")
+                    return 0;
+                return 0;
+            },
+            isfloat: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for isfloat');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for isfloat');
+                args[0] = args[0].compile().evaluate(scope).toString();
+                if (args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
+                    return 1;
+                return 0;
+
+            },
+            isnumber: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for isnumber');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for isnumber');
+                args[0] = args[0].compile().evaluate(scope).toString();
+                if (args[0].match(/^\s*?[-|+]?\d+\s*?$/) || args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
+                    return 1;
+                return 0;
+
+            },
+            tostring: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for string');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for string');
+                return args[0].compile().evaluate(scope).toString();
+            },
+            float: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for float');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for float');
+                args[0] = args[0].compile().evaluate(scope).toString();
+                if (args[0].match(/^\s*?[-|+]?\d+\s*?$/) || args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
+                    return parseFloat(args[0]);
+                else if (args[0] === "true")
+                    return 1.0;
+                else if (args[0] === "false")
+                    return 0.0;
+                return 0;
+            },
+            trim: (args, math, scope) => {
+                if (args.length !== 1)
+                    throw new Error('Missing arguments for trim');
+                return args[0].compile().evaluate(scope).toString().trim();
+            },
+            trimleft: (args, math, scope) => {
+                if (args.length !== 1)
+                    throw new Error('Missing arguments for trimleft');
+                return args[0].compile().evaluate(scope).toString().trimLeft();
+            },
+            trimright: (args, math, scope) => {
+                if (args.length !== 1)
+                    throw new Error('Missing arguments for trimright');
+                return args[0].compile().evaluate(scope).toString().trimRight();
+            },
+            pos: (args, math, scope) => {
+                if (args.length < 2)
+                    throw new Error('Missing arguments for pos');
+                else if (args.length > 2)
+                    throw new Error('Too many arguments for pos');
+                args[0] = args[0].compile().evaluate(scope).toString();
+                args[1] = args[1].compile().evaluate(scope).toString();
+                return args[1].indexOf(args[0]) + 1;
+            },
+            ipos: (args, math, scope) => {
+                if (args.length < 2)
+                    throw new Error('Missing arguments for pos');
+                else if (args.length > 2)
+                    throw new Error('Too many arguments for pos');
+                args[0] = args[0].compile().evaluate(scope).toString().toLowerCase();
+                args[1] = args[1].compile().evaluate(scope).toString().toLowerCase();
+                return args[1].indexOf(args[0]) + 1;
+            },
+            ends: (args, math, scope) => {
+                if (args.length < 2)
+                    throw new Error('Missing arguments for ends');
+                else if (args.length > 2)
+                    throw new Error('Too many arguments for ends');
+                args[0] = args[0].compile().evaluate(scope).toString().toLowerCase();
+                args[1] = args[1].compile().evaluate(scope).toString().toLowerCase();
+                return args[0].endsWith(args[1]);
+            },
+            begins: (args, math, scope) => {
+                if (args.length < 2)
+                    throw new Error('Missing arguments for begins');
+                else if (args.length > 2)
+                    throw new Error('Too many arguments for begins');
+                args[0] = args[0].compile().evaluate(scope).toString().toLowerCase();
+                args[1] = args[1].compile().evaluate(scope).toString().toLowerCase();
+                return args[0].startsWith(args[1]);
+            }
         };
         for (let fun in funs) {
             if (!funs.hasOwnProperty(fun) || typeof funs[fun] !== 'function') {
@@ -3636,7 +3746,7 @@ export class Input extends EventEmitter {
                 else if (args === "false")
                     this.client.variables[i] = false;
                 else
-                    this.client.variables[i] = args;
+                    this.client.variables[i] = this.stripQuotes(args);
                 return null;
             case 'add':
             case 'ad':
