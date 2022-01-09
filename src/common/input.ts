@@ -270,68 +270,544 @@ export class Input extends EventEmitter {
         }
     }
 
+    private getDiceArguments(arg, scope, fun) {
+        let res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(arg.toString());
+        if (!res || res.length < 3) {
+            res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(arg.toString());
+            if (!res || res.length < 3) {
+                //if failed with raw args try compiling and processing in case a variable or expression to build a string
+                arg = arg.compile().evaluate(scope);
+                res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(arg.toString());
+                if (!res || res.length < 3) {
+                    //check for % dice
+                    res = /(\d+)\s*?d\s*?\/\s*?(100)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(arg.toString());
+                    if (!res || res.length < 3)
+                        throw new Error('Invalid dice for ' + (fun || 'dice'));
+                    res[2] = '%';
+                }
+            }
+            else
+                res[2] = '%';
+        }
+        return res;
+    }
+
     constructor(client: Client) {
         super();
         if (!client)
             throw new Error('Invalid client!');
         this.client = client;
 
-        const dice: any = (args, math, scope) => {
-            let res;
-            let c;
-            let sides;
-            let mod;
-            if (args.length === 1) {
-                res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(args[0].toString());
-                if (!res || res.length < 3) throw new Error('Invalid dice');
-                c = parseInt(res[1]);
-                sides = res[2];
-                if (res.length > 3)
-                    mod = res[3];
-            }
-            else if (args.length > 1) {
-                c = parseInt(args[0].toString());
-                sides = args[1].toString().trim();
-                if (sides !== 'F' && sides !== '%')
-                    sides = args[1].compile().eval(scope);
-                if (args.length > 2)
-                    mod = args[2].compile().eval(scope);
-            }
-            else
-                throw new Error('Invalid arguments for dice');
-            let sum = 0;
-            for (let i = 0; i < c; i++) {
-                if (sides === 'F' || sides === 'f')
-                    sum += fudgeDice();
-                else if (sides === '%')
-                    sum += ~~(Math.random() * 100) + 1;
+        //TODO add color, zcolor, ansi,  escape, unescape
+        const funs = {
+            esc: '\x1b',
+            cr: '\n',
+            lf: '\r',
+            crlf: '\r\n',
+            diceavg: (args, math, scope) => {
+                let res;
+                let c;
+                let sides;
+                let mod;
+                let min;
+                let max;
+                if (args.length === 0) throw new Error('Invalid arguments for diceavg');
+                if (args.length === 1) {
+                    res = this.getDiceArguments(args[0], scope, 'diceavg');
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
+                }
+                else if (args.length < 4) {
+                    c = args[0].compile().evaluate(scope);
+                    sides = args[1].toString().trim();
+                    if (sides !== 'F' && sides !== '%')
+                        sides = args[1].compile().evaluate(scope);
+                    if (args.length > 2)
+                        mod = args[2].compile().evaluate(scope);
+                }
                 else
-                    sum += ~~(Math.random() * sides) + 1;
-            }
-            if (sides === '%')
-                sum /= 100;
-            if (mod)
-                return math.evaluate(sum + mod, scope);
-            return sum;
-        };
+                    throw new Error('Too many arguments for diceavg');
+                min = 1;
+                if (sides === 'F' || sides === 'f') {
+                    min = -1;
+                    max = 1;
+                }
+                else if (sides === '%') {
+                    max = 1;
+                    min = 0;
+                }
+                else
+                    max = parseInt(sides);
 
-        dice.rawArgs = true;
-        const isdefined: any = (args, math, scope) => {
-            if (args.length === 1) {
-                args[0] = this.stripQuotes(args[0].toString());
-                if (this.client.hasVariable(args[0]))
+                if (mod)
+                    return math.evaluate(((min + max) / 2 * c) + mod, scope);
+                return (min + max) / 2 * c;
+            },
+            dicemin: (args, math, scope) => {
+                let res;
+                let c;
+                let sides;
+                let mod;
+                let min;
+                if (args.length === 0) throw new Error('Invalid arguments for dicemin');
+                if (args.length === 1) {
+                    res = res = this.getDiceArguments(args[0], scope, 'dicemin');
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
+                }
+                else if (args.length < 4) {
+                    c = args[0].compile().evaluate(scope);
+                    sides = args[1].toString().trim();
+                    if (sides !== 'F' && sides !== '%')
+                        sides = args[1].compile().evaluate(scope);
+                    if (args.length > 2)
+                        mod = args[2].compile().evaluate(scope);
+                }
+                else
+                    throw new Error('Too many arguments for dicemin');
+                min = 1;
+                if (sides === 'F' || sides === 'f')
+                    min = -1;
+                else if (sides === '%')
+                    min = 0;
+                if (mod)
+                    return math.evaluate((min * c) + mod, scope);
+                return min * c;
+            },
+            dicemax: (args, math, scope) => {
+                let res;
+                let c;
+                let sides;
+                let mod;
+                let max;
+                if (args.length === 0) throw new Error('Invalid arguments for dicemax');
+                if (args.length === 1) {
+                    res = this.getDiceArguments(args[0], scope, 'dicemax');
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
+                }
+                else if (args.length < 4) {
+                    c = args[0].compile().evaluate(scope);
+                    sides = args[1].toString().trim();
+                    if (sides !== 'F' && sides !== '%')
+                        sides = args[1].compile().evaluate(scope);
+                    if (args.length > 2)
+                        mod = args[2].compile().evaluate(scope);
+                }
+                else
+                    throw new Error('Too many arguments for dicemax');
+                if (sides === 'F' || sides === 'f')
+                    max = 1;
+                else if (sides === '%')
+                    max = 1;
+                else
+                    max = parseInt(sides);
+
+                if (mod)
+                    return math.evaluate((max * c) + mod, scope);
+                return max * c;
+            },
+            dicedev: (args, math, scope) => {
+                let res;
+                let c;
+                let sides;
+                let mod;
+                let max;
+                if (args.length === 0) throw new Error('Invalid arguments for dicedev');
+                if (args.length === 1) {
+                    res = this.getDiceArguments(args[0], scope, 'dicedev');
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
+                }
+                else if (args.length < 4) {
+                    c = args[0].compile().evaluate(scope);
+                    sides = args[1].toString().trim();
+                    if (sides !== 'F' && sides !== '%')
+                        sides = args[1].compile().evaluate(scope);
+                    if (args.length > 2)
+                        mod = args[2].compile().evaluate(scope);
+                }
+                else
+                    throw new Error('Too many arguments for dicedev');
+                if (sides === 'F' || sides === 'f')
+                    max = 6;
+                else if (sides === '%')
+                    max = 1;
+                else
+                    max = parseInt(sides);
+                if (mod)
+                    return math.evaluate(Math.sqrt(((max * max) - 1) / 12 * c) + mod, scope);
+                return Math.sqrt(((max * max) - 1) / 12 * c);
+            },
+            zdicedev: (args, math, scope) => {
+                let res;
+                let c;
+                let sides;
+                let mod;
+                let max;
+                if (args.length === 0) throw new Error('Invalid arguments for zdicedev');
+                if (args.length === 1) {
+                    res = this.getDiceArguments(args[0], scope, 'zdicedev');
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
+                }
+                else if (args.length < 4) {
+                    c = args[0].compile().evaluate(scope);
+                    sides = args[1].toString().trim();
+                    if (sides !== 'F' && sides !== '%')
+                        sides = args[1].compile().evaluate(scope);
+                    if (args.length > 2)
+                        mod = args[2].compile().evaluate(scope);
+                }
+                else
+                    throw new Error('Too many arguments for zdicedev');
+                if (sides === 'F' || sides === 'f')
+                    max = 6;
+                else if (sides === '%')
+                    max = 1;
+                else
+                    max = parseInt(sides);
+                max--;
+                if (mod)
+                    return math.evaluate(Math.sqrt(((max * max) - 1) / 12 * c) + mod, scope);
+                return Math.sqrt(((max * max) - 1) / 12 * c);
+            },
+            dice: (args, math, scope) => {
+                let res;
+                let c;
+                let sides;
+                let mod;
+                if (args.length === 1) {
+                    res = this.getDiceArguments(args[0], scope, 'dice');
+                    c = parseInt(res[1]);
+                    sides = res[2];
+                    if (res.length > 3)
+                        mod = res[3];
+                }
+                else if (args.length > 1) {
+                    c = args[0].compile().evaluate(scope);
+                    sides = args[1].toString().trim();
+                    if (sides !== 'F' && sides !== '%')
+                        sides = args[1].compile().evaluate(scope);
+                    if (args.length > 2)
+                        mod = args[2].compile().evaluate(scope);
+                }
+                else
+                    throw new Error('Invalid arguments for dice');
+                let sum = 0;
+                for (let i = 0; i < c; i++) {
+                    if (sides === 'F' || sides === 'f')
+                        sum += fudgeDice();
+                    else if (sides === '%')
+                        sum += ~~(Math.random() * 100.0) + 1.0;
+                    else
+                        sum += ~~(Math.random() * sides) + 1;
+                }
+                if (sides === '%')
+                    sum /= 100.0;
+                if (mod)
+                    return math.evaluate(sum + mod, scope);
+                return sum;
+            },
+            isdefined: (args, math, scope) => {
+                if (args.length === 1) {
+                    args[0] = this.stripQuotes(args[0].toString());
+                    if (this.client.hasVariable(args[0]))
+                        return 1;
+                    if (scope.has(args[0]))
+                        return 1;
+                    return 0;
+                }
+                throw new Error('Invalid arguments for isdefined');
+            },
+            time: (args, math, scope) => {
+                if (args.length > 1)
+                    throw new Error('Too many arguments for time');
+                if (args.length)
+                    return moment().format(math.evaluate(args[0].toString(), scope));
+                return moment().format();
+            },
+            if: (args, math, scope) => {
+                if (args.length < 3)
+                    throw new Error('Missing arguments for if');
+                if (args.length !== 3)
+                    throw new Error('Too many arguments for if');
+                if (math.evaluate(args[0].toString(), scope))
+                    return math.evaluate(args[1].toString(), scope);
+                return math.evaluate(args[2].toString(), scope);
+            },
+            len: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for len');
+                if (args.length !== 1)
+                    throw new Error('Too many arguments for len');
+                return math.evaluate(args[0].toString(), scope).toString().length;
+            },
+            case: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for case');
+                let i = math.evaluate(args[0].toString(), scope);
+                if (i > 0 && i < args.length)
+                    return math.evaluate(args[i].toString(), scope);
+                return null;
+            },
+            switch: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for switch');
+                if (args.length % 2 === 1)
+                    throw new Error('All expressions must have a value for switch');
+                let i = args.length
+                for (let c = 0; c < i; c += 2) {
+                    if (math.evaluate(args[c].toString(), scope))
+                        return math.evaluate(args[c + 1].toString(), scope);
+                }
+                return null;
+            },
+            ascii: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for ascii');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for ascii');
+                if (args[0].toString().trim().length === 0)
+                    throw new Error('Invalid argument, empty string for ascii');
+                return args[0].toString().trim().charCodeAt(0);
+            },
+            char: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for char');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for char');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for char');
+                return String.fromCharCode(c);
+            },
+            bitand: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bitand');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments for bitand');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bitand');
+                let sides = args[1].compile().evaluate(scope);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1].toString() + '\' must be a number for bitand');
+                return c & sides;
+            },
+            bitnot: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bitnot');
+                else if (args.length !== 1)
+                    throw new Error('Too many arguments for bitnot');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bitnot');
+                return ~c;
+            },
+            bitor: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bitor');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments for bitor');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bitor');
+                let sides = args[1].compile().evaluate(scope);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1].toString() + '\' must be a number for bitor');
+                return c | sides;
+            },
+            bitset: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bitset');
+                else if (args.length > 3)
+                    throw new Error('Too many arguments for bitset');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bitset');
+                let sides = args[1].compile().evaluate(scope);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1].toString() + '\' must be a number for bitset');
+                sides--;
+                let mod = 1;
+                if (args.length === 3) {
+                    mod = args[2].compile().evaluate(scope);
+                    if (isNaN(mod))
+                        throw new Error('Invalid argument \'' + args[2].toString() + '\' must be a number for bitset');
+                }
+                return (c & (~(1 << sides))) | ((mod ? 1 : 0) << sides);
+            },
+            bitshift: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bitshift');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments for bitshift');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bitshift');
+                let sides = args[1].compile().evaluate(scope);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1].toString() + '\' must be a number for bitshift');
+                if (sides < 0)
+                    return c >> -sides;
+                return c << sides
+            },
+            bittest: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bittest');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments for bittest');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bittest');
+                let sides = args[1].compile().evaluate(scope);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1].toString() + '\' must be a number for bittest');
+                sides--;
+                return ((c >> sides) % 2 != 0) ? 1 : 0;
+            },
+            bitxor: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for bitxor');
+                else if (args.length !== 2)
+                    throw new Error('Too many arguments for bitxor');
+                let c = args[0].compile().evaluate(scope);
+                if (isNaN(c))
+                    throw new Error('Invalid argument \'' + args[0].toString() + '\' must be a number for bitxor');
+                let sides = args[1].compile().evaluate(scope);
+                if (isNaN(sides))
+                    throw new Error('Invalid argument \'' + args[1].toString() + '\' must be a number for bitxor');
+                return c ^ sides;
+            },
+            tonumber: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for number');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for number');
+                args[0] = args[0].compile().evaluate(scope).toString();
+                if (args[0].match(/^\s*?[-|+]?\d+\s*?$/))
+                    return parseInt(args[0], 10);
+                else if (args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
+                    return parseFloat(args[0]);
+                else if (args[0] === "true")
                     return 1;
-                if (scope.has(args[0]))
+                else if (args[0] === "false")
+                    return 0;
+                return 0;
+            },
+            isfloat: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for isfloat');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for isfloat');
+                args[0] = args[0].compile().evaluate(scope).toString();
+                if (args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
                     return 1;
                 return 0;
+
+            },
+            isnumber: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for isnumber');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for isnumber');
+                args[0] = args[0].compile().evaluate(scope).toString();
+                if (args[0].match(/^\s*?[-|+]?\d+\s*?$/) || args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
+                    return 1;
+                return 0;
+
+            },
+            tostring: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for string');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for string');
+                return args[0].compile().evaluate(scope).toString();
+            },
+            float: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for float');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for float');
+                args[0] = args[0].compile().evaluate(scope).toString();
+                if (args[0].match(/^\s*?[-|+]?\d+\s*?$/) || args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
+                    return parseFloat(args[0]);
+                else if (args[0] === "true")
+                    return 1.0;
+                else if (args[0] === "false")
+                    return 0.0;
+                return 0;
+            },
+            trim: (args, math, scope) => {
+                if (args.length !== 1)
+                    throw new Error('Missing arguments for trim');
+                return args[0].compile().evaluate(scope).toString().trim();
+            },
+            trimleft: (args, math, scope) => {
+                if (args.length !== 1)
+                    throw new Error('Missing arguments for trimleft');
+                return args[0].compile().evaluate(scope).toString().trimLeft();
+            },
+            trimright: (args, math, scope) => {
+                if (args.length !== 1)
+                    throw new Error('Missing arguments for trimright');
+                return args[0].compile().evaluate(scope).toString().trimRight();
+            },
+            pos: (args, math, scope) => {
+                if (args.length < 2)
+                    throw new Error('Missing arguments for pos');
+                else if (args.length > 2)
+                    throw new Error('Too many arguments for pos');
+                args[0] = args[0].compile().evaluate(scope).toString();
+                args[1] = args[1].compile().evaluate(scope).toString();
+                return args[1].indexOf(args[0]) + 1;
+            },
+            ipos: (args, math, scope) => {
+                if (args.length < 2)
+                    throw new Error('Missing arguments for pos');
+                else if (args.length > 2)
+                    throw new Error('Too many arguments for pos');
+                args[0] = args[0].compile().evaluate(scope).toString().toLowerCase();
+                args[1] = args[1].compile().evaluate(scope).toString().toLowerCase();
+                return args[1].indexOf(args[0]) + 1;
+            },
+            ends: (args, math, scope) => {
+                if (args.length < 2)
+                    throw new Error('Missing arguments for ends');
+                else if (args.length > 2)
+                    throw new Error('Too many arguments for ends');
+                args[0] = args[0].compile().evaluate(scope).toString().toLowerCase();
+                args[1] = args[1].compile().evaluate(scope).toString().toLowerCase();
+                return args[0].endsWith(args[1]);
+            },
+            begins: (args, math, scope) => {
+                if (args.length < 2)
+                    throw new Error('Missing arguments for begins');
+                else if (args.length > 2)
+                    throw new Error('Too many arguments for begins');
+                args[0] = args[0].compile().evaluate(scope).toString().toLowerCase();
+                args[1] = args[1].compile().evaluate(scope).toString().toLowerCase();
+                return args[0].startsWith(args[1]);
             }
-            throw new Error('Invalid arguments for isdefined');
         };
-        isdefined.rawArgs = true;
-        mathjs.import({
-            dice: dice,
-            isdefined: isdefined
-        }, {});
+        for (let fun in funs) {
+            if (!funs.hasOwnProperty(fun) || typeof funs[fun] !== 'function') {
+                continue;
+            }
+            funs[fun].rawArgs = true;
+        }
+        mathjs.import(funs, {});
 
         this._tests = new Tests(client);
         this._commandHistory = [];
@@ -764,12 +1240,12 @@ export class Input extends EventEmitter {
             if (arg.endsWith('\n'))
                 arg = arg.substring(0, args.length - 1);
             if (arg.length > 0) args.push(arg);
-            return this.executeFunction(fun, args, raw);
+            return this.executeFunction(fun, args, raw, cmdChar);
         }
         return txt;
     }
 
-    public executeFunction(fun: string, args, raw: string) {
+    public executeFunction(fun: string, args, raw: string, cmdChar: string) {
         let n;
         let f = false;
         let items;
@@ -789,7 +1265,7 @@ export class Input extends EventEmitter {
             case 'testfile':
                 args = this.parseInline(args.join(' '));
                 if (!args || args.length === 0)
-                    throw new Error('Invalid syntax use #testfile file');
+                    throw new Error('Invalid syntax use ' + cmdChar + 'testfile file');
                 if (!isFileSync(args))
                     throw new Error('Invalid file "' + args + '"');
                 tmp = fs.readFileSync(args, 'utf-8');
@@ -805,7 +1281,7 @@ export class Input extends EventEmitter {
                 args = this.parseInline(args.join(' '));
                 items = [];
                 if (!args || args.length === 0)
-                    throw new Error('Invalid syntax use #testspeedfile file');
+                    throw new Error('Invalid syntax use ' + cmdChar + 'testspeedfile file');
                 if (!isFileSync(args))
                     throw new Error('Invalid file "' + args + '"');
                 tmp = fs.readFileSync(args, 'utf-8');
@@ -835,7 +1311,7 @@ export class Input extends EventEmitter {
                 args = this.parseInline(args.join(' '));
                 items = [];
                 if (!args || args.length === 0)
-                    throw new Error('Invalid syntax use #testspeedfile file');
+                    throw new Error('Invalid syntax use ' + cmdChar + 'testspeedfile file');
                 if (!isFileSync(args))
                     throw new Error('Invalid file "' + args + '"');
                 tmp = fs.readFileSync(args, 'utf-8');
@@ -879,7 +1355,7 @@ export class Input extends EventEmitter {
                 reload = true;
                 p = path.join(parseTemplate('{data}'), 'profiles');
                 if (args.length < 1 || args.length > 2)
-                    throw new Error('Invalid syntax use \x1b[4m#unt\x1b[0;-11;-12mrigger {pattern|name} \x1b[3mprofile\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'unt\x1b[0;-11;-12mrigger {pattern|name} \x1b[3mprofile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
                     throw new Error('Invalid name or pattern');
                 //{pattern} {commands} profile
@@ -973,7 +1449,7 @@ export class Input extends EventEmitter {
                         }
                         return null;
                     default:
-                        throw new Error('Invalid syntax use \x1b[4m#sus\x1b[0;-11;-12mpend id \x1b[3mprofile\x1b[0;-11;-12m or \x1b[4m#sus\x1b[0;-11;-12mpend');
+                        throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sus\x1b[0;-11;-12mpend id \x1b[3mprofile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'sus\x1b[0;-11;-12mpend');
                 }
             case 'resume':
             case 'resu':
@@ -998,7 +1474,7 @@ export class Input extends EventEmitter {
                         }
                         return null;
                     default:
-                        throw new Error('Invalid syntax use \x1b[4m#resu\x1b[0;-11;-12mme id \x1b[3mprofile\x1b[0;-11;-12m or \x1b[4m#resu\x1b[0;-11;-12mme');
+                        throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'resu\x1b[0;-11;-12mme id \x1b[3mprofile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'resu\x1b[0;-11;-12mme');
                 }
             case 'trigger':
             case 'tr':
@@ -1013,7 +1489,7 @@ export class Input extends EventEmitter {
                 };
                 p = path.join(parseTemplate('{data}'), 'profiles');
                 if (args.length < 2 || args.length > 5)
-                    throw new Error('Invalid syntax use \x1b[4m#tr\x1b[0;-11;-12migger name {pattern} {commands} \x1b[3moptions profile\x1b[0;-11;-12m or \x1b[4m#tr\x1b[0;-11;-12migger {pattern} {commands} \x1b[3m{options} profile\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'tr\x1b[0;-11;-12migger name {pattern} {commands} \x1b[3moptions profile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'tr\x1b[0;-11;-12migger {pattern} {commands} \x1b[3m{options} profile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
                     throw new Error('Invalid trigger name or pattern');
 
@@ -1128,7 +1604,7 @@ export class Input extends EventEmitter {
                 };
                 p = path.join(parseTemplate('{data}'), 'profiles');
                 if (args.length < 2 || args.length > 4)
-                    throw new Error('Invalid syntax use \x1b[4m#ev\x1b[0;-11;-12ment name {commands} \x1b[3moptions profile\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ev\x1b[0;-11;-12ment name {commands} \x1b[3moptions profile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
                     throw new Error('Invalid event name');
 
@@ -1301,14 +1777,14 @@ export class Input extends EventEmitter {
             case 'une':
                 //#region unevent
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use \x1b[4m#une\x1b[0;-11;-12mvent name or \x1b[4m#une\x1b[0;-11;-12mvent {name} \x1b[3mprofile\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'une\x1b[0;-11;-12mvent name or \x1b[4m' + cmdChar + 'une\x1b[0;-11;-12mvent {name} \x1b[3mprofile\x1b[0;-11;-12m');
                 else {
                     reload = true;
                     profile = null;
                     p = path.join(parseTemplate('{data}'), 'profiles');
                     if (args[0].match(/^\{.*\}$/g) || args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g)) {
                         if (args.length > 2)
-                            throw new Error('Invalid syntax use \x1b[4m#une\x1b[0;-11;-12mvent name or \x1b[4m#une\x1b[0;-11;-12mvent {name} \x1b[3mprofile\x1b[0;-11;-12m');
+                            throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'une\x1b[0;-11;-12mvent name or \x1b[4m' + cmdChar + 'une\x1b[0;-11;-12mvent {name} \x1b[3mprofile\x1b[0;-11;-12m');
                         if (args.length === 2) {
                             profile = this.parseInline(this.stripQuotes(args[1]));
                             if (this.client.profiles.contains(profile))
@@ -1393,7 +1869,7 @@ export class Input extends EventEmitter {
                 };
                 p = path.join(parseTemplate('{data}'), 'profiles');
                 if (args.length < 2 || args.length > 5)
-                    throw new Error('Invalid syntax use \x1b[4m#bu\x1b[0;-11;-12mtton name|index or \x1b[4m#bu\x1b[0;-11;-12mtton name \x1b[3mcaption\x1b[0;-11;-12m {commands} \x1b[3m{icon} options profile\x1b[0;-11;-12m or \x1b[4m#by\x1b[0;-11;-12mutton \x1b[3mcaption\x1b[0;-11;-12m {commands} \x1b[3m{icon} {options} profile\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'bu\x1b[0;-11;-12mtton name|index or \x1b[4m' + cmdChar + 'bu\x1b[0;-11;-12mtton name \x1b[3mcaption\x1b[0;-11;-12m {commands} \x1b[3m{icon} options profile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'by\x1b[0;-11;-12mutton \x1b[3mcaption\x1b[0;-11;-12m {commands} \x1b[3m{icon} {options} profile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
                     throw new Error('Invalid button name, caption or commands');
 
@@ -1584,14 +2060,14 @@ export class Input extends EventEmitter {
             case 'unb':
                 //#region unbutton
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use \x1b[4m#unb\x1b[0;-11;-12mtton name or \x1b[4m#unb\x1b[0;-11;-12mtton {name} \x1b[3mprofile\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'unb\x1b[0;-11;-12mtton name or \x1b[4m' + cmdChar + 'unb\x1b[0;-11;-12mtton {name} \x1b[3mprofile\x1b[0;-11;-12m');
                 else {
                     reload = true;
                     profile = null;
                     p = path.join(parseTemplate('{data}'), 'profiles');
                     if (args[0].match(/^\{.*\}$/g) || args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g)) {
                         if (args.length > 2)
-                            throw new Error('Invalid syntax use \x1b[4m#unb\x1b[0;-11;-12mtton name or \x1b[4m#unb\x1b[0;-11;-12mtton {name} \x1b[3mprofile\x1b[0;-11;-12m');
+                            throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'unb\x1b[0;-11;-12mtton name or \x1b[4m' + cmdChar + 'unb\x1b[0;-11;-12mtton {name} \x1b[3mprofile\x1b[0;-11;-12m');
                         if (args.length === 2) {
                             profile = this.parseInline(this.stripQuotes(args[1]));
                             if (this.client.profiles.contains(profile))
@@ -1661,13 +2137,13 @@ export class Input extends EventEmitter {
                 n = false;
                 p = path.join(parseTemplate('{data}'), 'profiles');
                 if (args.length < 2 || args.length > 4)
-                    throw new Error('Invalid syntax use \x1b[4m#ala\x1b[0;-11;-12mrm name {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m, \x1b[4m#ala\x1b[0;-11;-12mrm name {timepattern} \x1b[3mprofile\x1b[0;-11;-12m, or \x1b[4m#ala\x1b[0;-11;-12mrm {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ala\x1b[0;-11;-12mrm name {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m, \x1b[4m' + cmdChar + 'ala\x1b[0;-11;-12mrm name {timepattern} \x1b[3mprofile\x1b[0;-11;-12m, or \x1b[4m' + cmdChar + 'ala\x1b[0;-11;-12mrm {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
                     throw new Error('Invalid name or timepattern');
                 //{pattern} {commands} profile
                 if (args[0].match(/^\{.*\}$/g)) {
                     if (args.length > 3)
-                        throw new Error('Invalid syntax use \x1b[4m#ala\x1b[0;-11;-12mrm {timepattern} {commands} profile');
+                        throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ala\x1b[0;-11;-12mrm {timepattern} {commands} profile');
                     args[0] = args[0].substr(1, args[0].length - 2);
                     args[0] = this.parseInline(args[0]);
                     if (args[1].match(/^\{[\s\S]*\}$/g))
@@ -1817,7 +2293,7 @@ export class Input extends EventEmitter {
             case 'ungag':
             case 'ung':
                 if (args.length > 0)
-                    throw new Error('Invalid syntax use \x1b[4m#ung\x1b[0;-11;-12mag number or \x1b[4m#ung\x1b[0;-11;-12mag');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ung\x1b[0;-11;-12mag number or \x1b[4m' + cmdChar + 'ung\x1b[0;-11;-12mag');
                 if (this._gagID.length) {
                     clearTimeout(this._gagID.pop());
                     this._gags.pop();
@@ -1850,7 +2326,7 @@ export class Input extends EventEmitter {
                     return null;
                 }
                 else if (args.length > 1)
-                    throw new Error('Invalid syntax use \x1b[4m#ga\x1b[0;-11;-12mg number or \x1b[4m#ga\x1b[0;-11;-12mg');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ga\x1b[0;-11;-12mg number or \x1b[4m' + cmdChar + 'ga\x1b[0;-11;-12mg');
                 i = parseInt(args[0], 10);
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\'');
@@ -1893,7 +2369,7 @@ export class Input extends EventEmitter {
             case 'wait':
             case 'wa':
                 if (args.length === 0 || args.length > 1)
-                    throw new Error('Invalid syntax use \x1b[4m#wa\x1b[0;-11;-12mit number');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'wa\x1b[0;-11;-12mit number');
                 i = parseInt(this.parseInline(args[0]), 10);
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + i + '\' for wait');
@@ -1927,7 +2403,7 @@ export class Input extends EventEmitter {
                         });
                     });
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use #\x1b[4mraise\x1b[0;-11;-12mevent name or #\x1b[4mraise\x1b[0;-11;-12mevent name arguments');
+                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mraise\x1b[0;-11;-12mevent name or ' + cmdChar + '\x1b[4mraise\x1b[0;-11;-12mevent name arguments');
                 else if (args.length === 1)
                     this.client.raise(args[0]);
                 else
@@ -1948,7 +2424,7 @@ export class Input extends EventEmitter {
                         });
                     });
                 if (args.length === 0 || args.length > 2)
-                    throw new Error('Invalid syntax use #\x1b[4mwin\x1b[0;-11;-12mdow name');
+                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mwin\x1b[0;-11;-12mdow name');
                 else if (args.length === 1)
                     this.client.emit('window', this.stripQuotes(this.parseInline(args[0])));
                 else
@@ -1957,7 +2433,7 @@ export class Input extends EventEmitter {
             case 'raisedelayed':
             case 'raisede':
                 if (args.length < 2)
-                    throw new Error('Invalid syntax use \x1b[4m#raisede\x1b[0;-11;-12mlayed milliseconds name or \x1b[4m#raisede\x1b[0;-11;-12mlayed milliseconds name arguments');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'raisede\x1b[0;-11;-12mlayed milliseconds name or \x1b[4m' + cmdChar + 'raisede\x1b[0;-11;-12mlayed milliseconds name arguments');
                 i = parseInt(this.stripQuotes(args[0]), 10);
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\' for raisedelayed');
@@ -1985,7 +2461,7 @@ export class Input extends EventEmitter {
             case 'notify':
             case 'not':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use \x1b[4m#not\x1b[0;-11;-12mify title \x1b[3mmessage icon\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'not\x1b[0;-11;-12mify title \x1b[3mmessage icon\x1b[0;-11;-12m');
                 else {
                     args[0] = this.stripQuotes(args[0]);
                     if (args[args.length - 1].match(/^\{.*\}$/g)) {
@@ -1993,7 +2469,7 @@ export class Input extends EventEmitter {
                         n = { icon: parseTemplate(this.parseInline(item.substr(1, item.length - 2))) };
                     }
                     if (args.length === 0)
-                        throw new Error('Invalid syntax use \x1b[4m#not\x1b[0;-11;-12mify title \x1b[3mmessage icon\x1b[0;-11;-12m');
+                        throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'not\x1b[0;-11;-12mify title \x1b[3mmessage icon\x1b[0;-11;-12m');
                     if (args.length === 1)
                         this.client.notify(this.parseInline(this.stripQuotes(args[0])), null, n);
                     else
@@ -2125,7 +2601,7 @@ export class Input extends EventEmitter {
             case 'alias':
             case 'al':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use \x1b[4m#al\x1b[0;-11;-12mias name value or \x1b[4m#al\x1b[0;-11;-12mias name {value} \x1b[3mprofile\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'al\x1b[0;-11;-12mias name value or \x1b[4m' + cmdChar + 'al\x1b[0;-11;-12mias name {value} \x1b[3mprofile\x1b[0;-11;-12m');
                 else if (args.length === 1)
                     throw new Error('Must supply an alias value');
                 else {
@@ -2135,7 +2611,7 @@ export class Input extends EventEmitter {
                     p = path.join(parseTemplate('{data}'), 'profiles');
                     if (args[0].match(/^\{.*\}$/g) || args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g)) {
                         if (args.length > 2)
-                            throw new Error('Invalid syntax use \x1b[4m#al\x1b[0;-11;-12mias name value or \x1b[4m#al\x1b[0;-11;-12mias name {value} \x1b[3mprofile\x1b[0;-11;-12m');
+                            throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'al\x1b[0;-11;-12mias name value or \x1b[4m' + cmdChar + 'al\x1b[0;-11;-12mias name {value} \x1b[3mprofile\x1b[0;-11;-12m');
                         if (args.length === 2) {
                             profile = this.parseInline(this.stripQuotes(args[1]));
                             if (this.client.profiles.contains(profile))
@@ -2197,14 +2673,14 @@ export class Input extends EventEmitter {
             case 'unalias':
             case 'una':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use \x1b[4m#una\x1b[0;-11;-12mlias name or \x1b[4m#una\x1b[0;-11;-12mlias {name} \x1b[3mprofile\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'una\x1b[0;-11;-12mlias name or \x1b[4m' + cmdChar + 'una\x1b[0;-11;-12mlias {name} \x1b[3mprofile\x1b[0;-11;-12m');
                 else {
                     reload = true;
                     profile = null;
                     p = path.join(parseTemplate('{data}'), 'profiles');
                     if (args[0].match(/^\{.*\}$/g) || args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g)) {
                         if (args.length > 2)
-                            throw new Error('Invalid syntax use \x1b[4m#una\x1b[0;-11;-12mlias name or \x1b[4m#una\x1b[0;-11;-12mlias {name} \x1b[3mprofile\x1b[0;-11;-12m');
+                            throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'una\x1b[0;-11;-12mlias name or \x1b[4m' + cmdChar + 'una\x1b[0;-11;-12mlias {name} \x1b[3mprofile\x1b[0;-11;-12m');
                         if (args.length === 2) {
                             profile = this.stripQuotes(args[1]);
                             profile = this.parseInline(profile);
@@ -2266,7 +2742,7 @@ export class Input extends EventEmitter {
             case 'setsetting':
             case 'sets':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use \x1b[4m#sets\x1b[0;-11;-12metting name value');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sets\x1b[0;-11;-12metting name value');
                 else if (args.length === 1)
                     throw new Error('Must supply a setsetting value');
                 else {
@@ -2349,7 +2825,7 @@ export class Input extends EventEmitter {
             case 'getsetting':
             case 'gets':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use \x1b[4m#gets\x1b[0;-11;-12metting name');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'gets\x1b[0;-11;-12metting name');
                 else {
                     n = this.stripQuotes(this.parseInline(args.join(' ')));
                     if (/^\s*?\d+\s*?$/.exec(n)) {
@@ -2434,7 +2910,7 @@ export class Input extends EventEmitter {
             case 'profile':
             case 'pro':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'pro\x1b[0;-11;-12mfile name or \x1b[4m' + cmdChar + 'pro\x1b[0;-11;-12mfile name enable/disable');
                 else if (args.length === 1) {
                     args[0] = this.parseInline(args[0]);
                     this.client.toggleProfile(args[0]);
@@ -2455,7 +2931,7 @@ export class Input extends EventEmitter {
                             throw new Error('Profile not found');
                     }
                     if (!args[1])
-                        throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
+                        throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'pro\x1b[0;-11;-12mfile name or \x1b[4m' + cmdChar + 'pro\x1b[0;-11;-12mfile name enable/disable');
                     args[1] = this.parseInline(args[1]);
                     switch (args[1].toLowerCase()) {
                         case 'enable':
@@ -2484,7 +2960,7 @@ export class Input extends EventEmitter {
                             }
                             break;
                         default:
-                            throw new Error('Invalid syntax use \x1b[4m#pro\x1b[0;-11;-12mfile name or \x1b[4m#pro\x1b[0;-11;-12mfile name enable/disable');
+                            throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'pro\x1b[0;-11;-12mfile name or \x1b[4m' + cmdChar + 'pro\x1b[0;-11;-12mfile name enable/disable');
                     }
                 }
                 if (this.client.telnet.prompt)
@@ -2507,20 +2983,20 @@ export class Input extends EventEmitter {
                     else
                         item.pattern = this.parseInline(this.stripQuotes(item.pattern));
                     if (args.length === 2) {
-                        item.commands = '#COLOR ' + this.parseInline(args[0]);
+                        item.commands = cmdChar + 'COLOR ' + this.parseInline(args[0]);
                         item.profile = this.stripQuotes(args[1]);
                         if (item.profile.length !== 0)
                             item.profile = this.parseInline(item.profile);
                     }
                     else
-                        item.commands = '#COLOR ' + this.parseInline(args[0]);
+                        item.commands = cmdChar + 'COLOR ' + this.parseInline(args[0]);
                     this.createTrigger(item.pattern, item.commands, item.profile);
                     return null;
                 }
                 else if (args.length !== 1)
-                    throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color or \x1b[4m#co\x1b[0;-11;-12mlor {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'co\x1b[0;-11;-12mlor color or \x1b[4m' + cmdChar + 'co\x1b[0;-11;-12mlor {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
                 if (args.length !== 1)
-                    throw new Error('Invalid syntax use \x1b[4m#co\x1b[0;-11;-12mlor color or \x1b[4m#co\x1b[0;-11;-12mlor {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'co\x1b[0;-11;-12mlor color or \x1b[4m' + cmdChar + 'co\x1b[0;-11;-12mlor {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
                 args[0] = this.parseInline(this.stripQuotes(args[0]));
                 n = this.client.display.lines.length;
                 if (args[0].trim().match(/^[-|+]?\d+$/g)) {
@@ -2670,18 +3146,18 @@ export class Input extends EventEmitter {
                     else
                         item.pattern = this.parseInline(this.stripQuotes(item.pattern));
                     if (args.length === 2) {
-                        item.commands = '#CW ' + this.parseInline(args[0]);
+                        item.commands = cmdChar + 'CW ' + this.parseInline(args[0]);
                         item.profile = this.stripQuotes(args[1]);
                         if (item.profile.length !== 0)
                             item.profile = this.parseInline(item.profile);
                     }
                     else
-                        item.commands = '#CW ' + this.parseInline(args[0]);
+                        item.commands = cmdChar + 'CW ' + this.parseInline(args[0]);
                     this.createTrigger(item.pattern, item.commands, item.profile);
                     return null;
                 }
                 else if (args.length !== 1)
-                    throw new Error('Invalid syntax use #cw color or #cw {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use ' + cmdChar + 'cw color or ' + cmdChar + 'cw {pattern} color \x1b[3mprofile\x1b[0;-11;-12m');
                 //no regex so
                 if (!trigger) return null;
                 args[0] = this.parseInline(this.stripQuotes(args[0]));
@@ -2874,11 +3350,11 @@ export class Input extends EventEmitter {
                 return null;
             case 'pcol':
                 if (args.length < 1 || args.length > 5)
-                    throw new Error('Invalid syntax use #pcol color \x1b[3mXStart, XEnd, YStart, YEnd\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use ' + cmdChar + 'pcol color \x1b[3mXStart, XEnd, YStart, YEnd\x1b[0;-11;-12m');
                 if (args.length > 1) {
                     tmp = [].concat(...args.slice(1).map(s => this.parseInline(this.stripQuotes(s)).split(' ')));
                     if (tmp.length > 4)
-                        throw new Error('Too many arguments use #pcol color \x1b[3mXStart, XEnd, YStart, YEnd\x1b[0;-11;-12m');
+                        throw new Error('Too many arguments use ' + cmdChar + 'pcol color \x1b[3mXStart, XEnd, YStart, YEnd\x1b[0;-11;-12m');
                     item = { xStart: 0 };
                     if (tmp.length > 0)
                         item.xStart = parseInt(tmp[0], 10);
@@ -3027,7 +3503,7 @@ export class Input extends EventEmitter {
                     item = {
                         profile: null,
                         pattern: null,
-                        commands: '#HIGHLIGHT'
+                        commands: cmdChar + 'HIGHLIGHT'
                     };
                     item.pattern = args.shift();
                     if (item.pattern.match(/^\{.*\}$/g))
@@ -3040,7 +3516,7 @@ export class Input extends EventEmitter {
                     return null;
                 }
                 else if (args.length)
-                    throw new Error('Too many arguments use \x1b[4m#hi\x1b[0;-11;-12mghlight \x1b[3mpattern profile\x1b[0;-11;-12m');
+                    throw new Error('Too many arguments use \x1b[4m' + cmdChar + 'hi\x1b[0;-11;-12mghlight \x1b[3mpattern profile\x1b[0;-11;-12m');
                 n = this.client.display.lines.length;
                 setTimeout(() => {
                     n = this.adjustLastLine(n);
@@ -3050,9 +3526,9 @@ export class Input extends EventEmitter {
             case 'break':
             case 'br':
                 if (args.length)
-                    throw new Error('Invalid syntax use \x1b[4m#br\x1b[0;-11;-12meak\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'br\x1b[0;-11;-12meak\x1b[0;-11;-12m');
                 if (!this.loops.length)
-                    throw new Error('\x1b[4m#br\x1b[0;-11;-12meak\x1b[0;-11;-12m must be used in a loop.');
+                    throw new Error('\x1b[4m' + cmdChar + 'br\x1b[0;-11;-12meak\x1b[0;-11;-12m must be used in a loop.');
                 if (this.stack.break)
                     this.stack.break++;
                 else
@@ -3061,14 +3537,14 @@ export class Input extends EventEmitter {
             case 'continue':
             case 'cont':
                 if (args.length)
-                    throw new Error('Invalid syntax use \x1b[4m#cont\x1b[0;-11;-12minue\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'cont\x1b[0;-11;-12minue\x1b[0;-11;-12m');
                 if (!this.loops.length)
-                    throw new Error('\x1b[4m#cont\x1b[0;-11;-12minue\x1b[0;-11;-12m must be used in a loop.');
+                    throw new Error('\x1b[4m' + cmdChar + 'cont\x1b[0;-11;-12minue\x1b[0;-11;-12m must be used in a loop.');
                 this.stack.continue = true;
                 return -2;
             case 'if':
                 if (!args.length || args.length > 3)
-                    throw new Error('Invalid syntax use #if {expression} {true-command} \x1b[3m{false-command}\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use ' + cmdChar + 'if {expression} {true-command} \x1b[3m{false-command}\x1b[0;-11;-12m');
                 if (args[0].match(/^\{[\s\S]*\}$/g))
                     args[0] = args[0].substr(1, args[0].length - 2);
                 tmp = null;
@@ -3088,7 +3564,7 @@ export class Input extends EventEmitter {
             case 'case':
             case 'ca':
                 if (!args.length || args.length < 2)
-                    throw new Error('Invalid syntax use \x1b[4m#ca\x1b[0;-11;-12mse\x1b[0;-11;-12m index {command 1} \x1b[3m{command n}\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ca\x1b[0;-11;-12mse\x1b[0;-11;-12m index {command 1} \x1b[3m{command n}\x1b[0;-11;-12m');
                 if (args[0].match(/^\{[\s\S]*\}$/g))
                     args[0] = args[0].substr(1, args[0].length - 2);
                 n = this.evaluate(this.parseInline(args[0]));
@@ -3103,7 +3579,7 @@ export class Input extends EventEmitter {
             case 'switch':
             case 'sw':
                 if (!args.length || args.length < 2)
-                    throw new Error('Invalid syntax use \x1b[4m#sw\x1b[0;-11;-12mitch\x1b[0;-11;-12m (expression) {command} \x1b[3m(expression) {command} ... {else_command}\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sw\x1b[0;-11;-12mitch\x1b[0;-11;-12m (expression) {command} \x1b[3m(expression) {command} ... {else_command}\x1b[0;-11;-12m');
                 if (args.length % 2 === 1)
                     n = args.pop();
                 else
@@ -3133,7 +3609,7 @@ export class Input extends EventEmitter {
             case 'loop':
             case 'loo':
                 if (args.length < 2)
-                    throw new Error('Invalid syntax use \x1b[4m#loo\x1b[0;-11;-12mp\x1b[0;-11;-12m range {commands}');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'loo\x1b[0;-11;-12mp\x1b[0;-11;-12m range {commands}');
                 n = this.parseInline(args.shift()).split(',');
                 args = args.join(' ');
                 if (args.match(/^\{[\s\S]*\}$/g))
@@ -3150,7 +3626,7 @@ export class Input extends EventEmitter {
             case 'repeat':
             case 'rep':
                 if (args.length < 2)
-                    throw new Error('Invalid syntax use \x1b[4m#rep\x1b[0;-11;-12meat\x1b[0;-11;-12m expression {commands}');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'rep\x1b[0;-11;-12meat\x1b[0;-11;-12m expression {commands}');
                 i = args.shift();
                 if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
@@ -3163,7 +3639,7 @@ export class Input extends EventEmitter {
                 return this.executeForLoop(0, i, args);
             case 'until':
                 if (args.length < 2)
-                    throw new Error('Invalid syntax use #until expression {commands}');
+                    throw new Error('Invalid syntax use ' + cmdChar + 'until expression {commands}');
                 i = args.shift();
                 if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
@@ -3192,7 +3668,7 @@ export class Input extends EventEmitter {
             case 'while':
             case 'wh':
                 if (args.length < 2)
-                    throw new Error('Invalid syntax use \x1b[4m#wh\x1b[0;-11;-12mile expression {commands}');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'wh\x1b[0;-11;-12mile expression {commands}');
                 i = args.shift();
                 if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
@@ -3221,7 +3697,7 @@ export class Input extends EventEmitter {
             case 'forall':
             case 'fo':
                 if (args.length < 2)
-                    throw new Error('Invalid syntax use \x1b[4m#fo\x1b[0;-11;-12mrall stringlist {commands}');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'fo\x1b[0;-11;-12mrall stringlist {commands}');
                 i = args.shift();
                 if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
@@ -3271,12 +3747,18 @@ export class Input extends EventEmitter {
                 args = args.join(' ');
                 if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
-                this.client.setVariable(i, parseValue(this.parseInline(args)));
+                //respect the quote settings
+                tmp = 0;
+                if (this.client.options.parseDoubleQuotes)
+                    tmp |= 2;
+                if (this.client.options.parseSingleQuotes)
+                    tmp |= 1;
+                this.client.setVariable(i, parseValue(this.parseInline(args), tmp));
                 return null;
             case 'add':
             case 'ad':
                 if (args.length < 2)
-                    throw new Error('Invalid syntax use \x1b[4m#ad\x1b[0;-11;-12md name value');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ad\x1b[0;-11;-12md name value');
                 i = args.shift();
                 if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
@@ -3292,7 +3774,7 @@ export class Input extends EventEmitter {
             case 'math':
             case 'mat':
                 if (args.length < 2)
-                    throw new Error('Invalid syntax use \x1b[4m#mat\x1b[0;-11;-12mh name value');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'mat\x1b[0;-11;-12mh name value');
                 i = args.shift();
                 if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
@@ -3307,7 +3789,7 @@ export class Input extends EventEmitter {
             case 'evaluate':
             case 'eva':
                 if (args.length === 0)
-                    throw new Error('Invalid syntax use \x1b[4m#eva\x1b[0;-11;-12mluate expression');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'eva\x1b[0;-11;-12mluate expression');
                 args = '' + this.evaluate(this.parseInline(args.join(' ')));
                 if (this.client.telnet.prompt)
                     this.client.print('\n' + args + '\x1b[0m\n', false);
@@ -3344,12 +3826,12 @@ export class Input extends EventEmitter {
                     }
                 }
                 else if (args.length > 1)
-                    throw new Error('Invalid syntax use \x1b[4m#fr\x1b[0;-11;-12mEEZE \x1b[3mnumber\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'fr\x1b[0;-11;-12mEEZE \x1b[3mnumber\x1b[0;-11;-12m');
                 return null;
             //#endregion freeze                
             case 'clr':
                 if (args.length)
-                    throw new Error('Invalid syntax use #CLR');
+                    throw new Error('Invalid syntax use ' + cmdChar + 'CLR');
                 //nothing to clear so just bail
                 if (this.client.display.lines.length === 0)
                     return null;
@@ -3370,7 +3852,7 @@ export class Input extends EventEmitter {
         if (fun.match(/^[-|+]?\d+$/)) {
             i = parseInt(fun, 10);
             if (args.length === 0)
-                throw new Error('Invalid syntax use #nnn commands');
+                throw new Error('Invalid syntax use ' + cmdChar + 'nnn commands');
             args = args.join(' ');
             if (args.match(/^\{[\s\S]*\}$/g))
                 args = args.substr(1, args.length - 2);
@@ -3471,6 +3953,7 @@ export class Input extends EventEmitter {
         const eNParam: boolean = this.client.options.enableNParameters;
         const varChar: string = this.client.options.variableChar;
         const eVar: boolean = this.client.options.enableVariable;
+        const eEval: boolean = this.client.options.allowEval;
         let args = [];
         let arg: any = '';
         let findAlias: boolean = true;
@@ -3824,7 +4307,7 @@ export class Input extends EventEmitter {
                                 tmp = parseInt(arg, 10);
                                 if (tmp < 0) {
                                     if (-tmp >= this.stack.args.length) {
-                                        if (this.client.options.allowEval)
+                                        if (eEval)
                                             tmp2 = tmp;
                                         else {
                                             tmp2 = paramChar;
@@ -3841,7 +4324,7 @@ export class Input extends EventEmitter {
                                     if (arg > this.stack.used)
                                         this.stack.used = tmp;
                                 }
-                                else if (this.client.options.allowEval)
+                                else if (eEval)
                                     tmp2 = tmp;
                                 else {
                                     tmp2 = paramChar;
@@ -3869,7 +4352,7 @@ export class Input extends EventEmitter {
                                 tmp = this.parseVariable(arg);
                                 if (tmp != null)
                                     tmp2 = tmp;
-                                else if (this.client.options.allowEval) {
+                                else if (eEval) {
                                     tmp2 = '' + this.evaluate(this.parseInline(arg));
                                 }
                                 else {
@@ -3993,7 +4476,7 @@ export class Input extends EventEmitter {
                                 tmp = parseInt(arg, 10);
                                 if (tmp < 0) {
                                     if (-tmp >= this.stack.args.length) {
-                                        if (this.client.options.allowEval)
+                                        if (eEval)
                                             tmp2 = tmp;
                                         else {
                                             tmp2 = nParamChar;
@@ -4010,7 +4493,7 @@ export class Input extends EventEmitter {
                                     if (tmp > this.stack.used)
                                         this.stack.used = tmp;
                                 }
-                                else if (this.client.options.allowEval)
+                                else if (eEval)
                                     tmp2 = tmp;
                                 else {
                                     tmp2 = nParamChar;
@@ -4038,7 +4521,7 @@ export class Input extends EventEmitter {
                                 c = this.parseVariable(arg);
                                 if (c != null)
                                     tmp2 = c;
-                                else if (this.client.options.allowEval)
+                                else if (eEval)
                                     tmp2 = '' + this.evaluate(this.parseInline(arg));
                                 else {
                                     tmp2 = nParamChar;
@@ -4882,9 +5365,7 @@ export class Input extends EventEmitter {
 
                 if (sides === 'F' || sides === 'f')
                     sides = 'F';
-                else if (sides === '%')
-                    sides = 100;
-                else
+                else if (sides !== '%')
                     sides = parseInt(sides);
 
                 let sum = 0;
@@ -4892,12 +5373,12 @@ export class Input extends EventEmitter {
                     if (sides === 'F' || sides === 'f')
                         sum += fudgeDice();
                     else if (sides === '%')
-                        sum += ~~(Math.random() * 100) + 1;
+                        sum += ~~(Math.random() * 100.0) + 1.0;
                     else
                         sum += ~~(Math.random() * sides) + 1;
                 }
                 if (sides === '%')
-                    sum /= 100;
+                    sum /= 100.0;
                 if (mod)
                     return this.evaluate(sum + mod);
                 return '' + sum;
@@ -4961,8 +5442,6 @@ export class Input extends EventEmitter {
                     min = -1;
                 else if (sides === '%')
                     min = 0;
-                else
-                    sides = parseInt(sides);
 
                 if (mod)
                     return this.evaluate((min * c) + mod);
@@ -5000,7 +5479,7 @@ export class Input extends EventEmitter {
             case 'dicedev':
                 const fun = res[1];
                 args = this.parseInline(res[2]).split(',');
-                if (args.length === 0) throw new Error('Invalid dice for dicedev');
+                if (args.length === 0) throw new Error('Invalid dice for ' + fun);
                 if (args.length === 1) {
                     res = /(\d+)d(F|f|%|\d+)([-|+|*|/]?\d+)?/g.exec(args[0]);
                     if (!res || res.length < 3) return null;
@@ -5016,7 +5495,7 @@ export class Input extends EventEmitter {
                         mod = args[2].trim();
                 }
                 else
-                    throw new Error('Too many arguments for dicedev');
+                    throw new Error('Too many arguments for ' + fun);
 
                 if (sides === 'F' || sides === 'f')
                     max = 6;
@@ -5029,8 +5508,8 @@ export class Input extends EventEmitter {
                 if (fun === 'zdicedev')
                     max--;
                 if (mod)
-                    return this.evaluate(Math.sqrt((max * max - 1) / 12 * c) + mod);
-                return '' + Math.sqrt((max * max - 1) / 12 * c);
+                    return this.evaluate(Math.sqrt(((max * max) - 1) / 12 * c) + mod);
+                return '' + Math.sqrt(((max * max) - 1) / 12 * c);
             case 'color':
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0)
@@ -5960,8 +6439,9 @@ export class Input extends EventEmitter {
         const ll = lines.length;
         const code = [];
         const b = [];
+        const cmdChar = this.client.options.commandChar;
         for (; l < ll; l++) {
-            if (lines[l].trim().startsWith('#wait ')) {
+            if (lines[l].trim().startsWith(cmdChar + 'wait ')) {
                 code.push('setTimeout(()=> {');
                 b.unshift(parseInt(lines[l].trim().substr(5), 10) || 0);
             }

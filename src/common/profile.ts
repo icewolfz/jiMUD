@@ -470,7 +470,7 @@ export class Variable extends Item {
                     //strip []
                     value = value.substring(1, value.length - 2);
                     //split with quotes in mind and convert values as needed
-                    value = splitQuoted(value, ",").map(v => parseValue(v, true, false));
+                    value = splitQuoted(value, ",").map(v => parseValue(v, 2, false));
                 }
                 else if (!Array.isArray(value))
                     value = [value];
@@ -492,7 +492,7 @@ export class Variable extends Item {
                             //each value should be in the format key:value or key=value, split with quotes in mind
                             const d = splitQuoted(v, "=:");
                             //strip any quotes and convert values as needed
-                            tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], true) : 0;
+                            tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], 2) : 0;
                         });
                         value = tmp;
                     }
@@ -514,13 +514,13 @@ export class Variable extends Item {
                         let tmp;
                         //an array
                         if (value.match(/^\[.*\]$/g))
-                            value = splitQuoted(value.substring(1, value.length - 2), ",").map(v => parseValue(v, true, false));
+                            value = splitQuoted(value.substring(1, value.length - 2), ",").map(v => parseValue(v, 2, false));
                         //record/object
                         else if (value.match(/^\{.*\}$/g)) {
                             tmp = {};
                             splitQuoted(value.substring(1, value.length - 2), ",").map(v => {
                                 const d = splitQuoted(v, "=:");
-                                tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], true) : 0;
+                                tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], 2) : 0;
                             });
                             value = tmp;
                         }
@@ -581,7 +581,7 @@ export class Variable extends Item {
                             const tmp = {};
                             splitQuoted(this.value.substring(1, this.value.length - 2), ",").map(v => {
                                 const d = splitQuoted(v, "=:");
-                                tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], true) : 0;
+                                tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], 2) : 0;
                             });
                             return tmp;
                         }
@@ -596,7 +596,7 @@ export class Variable extends Item {
                 return this.value;
             case VariableType.Array:
                 if (typeof this.value === 'string' && this.value.match(/^\[.*\]$/g))
-                    return splitQuoted(this.value.substring(1, this.value.length - 2), ",").map(v => parseValue(v, true, false));
+                    return splitQuoted(this.value.substring(1, this.value.length - 2), ",").map(v => parseValue(v, 2, false));
                 else if (!Array.isArray(this.value))
                     return [this.value];
                 return this.value;

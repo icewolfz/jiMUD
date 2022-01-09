@@ -2092,17 +2092,18 @@ export function isValidIdentifier(str: string, noKeywords?: boolean, noRegex?: b
     return ['break', 'case', 'catch', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof', 'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'class', 'const', 'enum', 'export', 'extends', 'import', 'super', 'implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static', 'yield', 'null', 'true', 'false', 'NaN', 'Infinity', 'undefined', 'eval', 'arguments'].indexOf(str) === -1;
 }
 
-export function parseValue(str: string, stripQuotes?: boolean, boolType?: boolean, numBool?: boolean) {
+export function parseValue(str: string, stripQuotes?, boolType?: boolean, numBool?: boolean) {
     if (str.match(/^\s*?[-|+]?\d+\s*?$/))
         return parseInt(str, 10);
     if (str.match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
         return parseFloat(str);
-    if (stripQuotes && str.match(/^".*"$/g))
+    if ((stripQuotes & 2) === 2 && str.match(/^".*"$/g))
+        return str.substr(0, str.length - 2);
+    if ((stripQuotes & 1) === 1 && str.match(/^'.*'$/g))
         return str.substr(0, str.length - 2);
     if (!boolType && str === "true")
         return numBool ? 1 : true;
     if (!boolType && str === "false")
         return numBool ? 0 : false;
     return str;
-
 }

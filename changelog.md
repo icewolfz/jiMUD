@@ -4,15 +4,20 @@
 
 - **New:**
   - Add [%escape(string)](docs/functions.md#string)  escape all characters in string if escaping is allowed and if those characters need escaping
-  - Add [%unsxape(string)](docs/functions.md#string) strip escape characters from string if escaping is allowed and those characters are enabled
+  - Add [%unescape(string)](docs/functions.md#string) strip escape characters from string if escaping is allowed and those characters are enabled
   - Add $selectedword, $selword, $selectedurl, $selurl, $selectedline, $selline, $selected, $character, $copied for direct access in expressions
+  - Add versions of most predefined functions to the expression system to allow for inline usage using [%eval](docs/functions.md#math) or in math, note this is not always the sam as full expanded form of ${function(args)} as that will process in the command parsing system while when used with eval or math expressions it will be parsed with the expression engine instead
 - **Fixed:**
   - Input parser:
     - Correctly escape function arguments when quoting arguments with respect to scripting quote settings
     - Use custom escape character when splitting function arguments with quotes
   - Fix dice when using fudge dice
+  - Fix dice when using #d% returning 1d100 instead of a % of 0 to 1
   - Fix parsing of sub context menus
   - Fix $selectedword, $selword, $selectedurl, $selurl, $selectedline, $selline, when used from command line to use mouse position to correctly get the selected word,line, or url
+  - Fix [#CW](docs/commands.md#display), [#COLOR](docs/commands.md#display), [#HIGHLIGHT](docs/commands.md#display) trigger creation syntax to use set command character instead of hard coded #
+  - All #command error messages now correctly use the set command character when displaying syntax
+  - Make [#VARIABLE](docs/commands.md#createmodify-profile-or-items) respect strip quote settings when storing value
 - **Changed:**
   - Error messages for commands and functions will add name to better understand where the error is
 
