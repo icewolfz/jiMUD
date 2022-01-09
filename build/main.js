@@ -4412,10 +4412,7 @@ function showCodeEditor(loading) {
     if (winCode != null) {
         if (!codeReady)
             return;
-        restoreWindowState(winCode, {
-            maximized: codeMax,
-            fullscreen: s.fullscreen
-        }, true)
+        restoreWindowState(winCode, getWindowState('code-editor', winCode), true)
         codeMax = false;
         if (loading) {
             clearTimeout(loadID);

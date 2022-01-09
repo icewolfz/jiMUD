@@ -20,6 +20,7 @@
   - All #command error messages now correctly use the set command character when displaying syntax
   - Make [#VARIABLE](docs/commands.md#createmodify-profile-or-items) respect strip quote settings when storing value
   - Display: issues with overlays and unicode background selection sizes
+  - Fixed code editor not being correctly restored if already open
 - **Changed:**
   - Error messages for commands and functions will add name to better understand where the error is
 
