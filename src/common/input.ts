@@ -91,7 +91,10 @@ enum ParseState {
     paramsNEscape = 13,
     paramsNNamed = 14,
     escape = 15,
-    verbatim = 16
+    verbatim = 16,
+    aliasArgumentsEscape = 17,
+    pathEscape = 18,
+    functionEscape = 19
 }
 
 export class Input extends EventEmitter {
@@ -4009,6 +4012,10 @@ export class Input extends EventEmitter {
                         state = ParseState.aliasArgumentsSingle;
                         start = false;
                     }
+                    else if (eEscape && c === escChar) {
+                        state = ParseState.aliasArgumentsEscape;
+                        start = false;
+                    }
                     //end of alias at end of text, new line, or command stack if enabled
                     else if (idx === tl - 1 || c === '\n' || (stacking && c === stackingChar)) {
                         if (!(c === '\n' || (stacking && c === stackingChar)))
@@ -4061,8 +4068,21 @@ export class Input extends EventEmitter {
                     arg += c;
                     start = false;
                     break;
+                case ParseState.aliasArgumentsEscape:
+                    state = ParseState.aliasArguments;
+                    if (c === escChar || (stacking && c === stackingChar) || (eVerbatim && c === verbatimChar) || (ePaths && c === spChar) || (eCmd && c === cmdChar) || (eParamEscape && c === paramChar) || (eNParam && c === nParamChar))
+                        arg += c;
+                    else if ('"\'{'.indexOf(c) !== -1)
+                        arg += c;
+                    else
+                        arg += escChar + c;
+                    break;
                 case ParseState.path: //path found
-                    if (c === '\n' || (stacking && c === stackingChar)) {
+                    if (eEscape && c === escChar) {
+                        state = ParseState.pathEscape;
+                        start = false;
+                    }
+                    else if (c === '\n' || (stacking && c === stackingChar)) {
                         state = ParseState.none;
                         str = this.ProcessPath(str);
                         if (str !== null) out += str;
@@ -4083,6 +4103,15 @@ export class Input extends EventEmitter {
                         start = false;
                     }
                     break;
+                case ParseState.pathEscape:
+                    state = ParseState.path;
+                    if (c === escChar || (stacking && c === stackingChar) || (eVerbatim && c === verbatimChar) || (ePaths && c === spChar) || (eCmd && c === cmdChar) || (eParamEscape && c === paramChar) || (eNParam && c === nParamChar))
+                        str += c;
+                    else if ('"\'{'.indexOf(c) !== -1)
+                        str += c;
+                    else
+                        str += escChar + c;
+                    break;
                 case ParseState.function:
                     if (c === '{') {
                         start = false;
@@ -4093,6 +4122,10 @@ export class Input extends EventEmitter {
                         start = false;
                         str += c;
                         nest--;
+                    }
+                    else if (nest === 0 && eEscape && c === escChar) {
+                        state = ParseState.functionEscape;
+                        start = false;
                     }
                     else if (nest === 0 && (c === '\n' || (stacking && c === stackingChar))) {
                         state = ParseState.none;
@@ -4123,6 +4156,10 @@ export class Input extends EventEmitter {
                         str += c;
                         start = false;
                     }
+                    break;
+                case ParseState.functionEscape:
+                    state = ParseState.function;
+                    str += escChar + c;
                     break;
                 case ParseState.paramsP:
                     if (c === '{' && arg.length === 0) {

@@ -11,6 +11,7 @@
   - Input parser:
     - Correctly escape function arguments when quoting arguments with respect to scripting quote settings
     - Use custom escape character when splitting function arguments with quotes
+    - Fix escaping of command stack when used in a path, after a function, or alias
   - Fix dice when using fudge dice
   - Fix dice when using #d% returning 1d100 instead of a % of 0 to 1
   - Fix parsing of sub context menus
