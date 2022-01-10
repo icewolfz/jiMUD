@@ -1276,7 +1276,7 @@ function createWindow() {
         if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
             shell.openExternal(details.url);
             return { action: 'deny' };
-        }        
+        }
         return {
             action: 'allow',
             overrideBrowserWindowOptions: buildOptions(details, win, set)
@@ -4412,7 +4412,11 @@ function showCodeEditor(loading) {
     if (winCode != null) {
         if (!codeReady)
             return;
-        restoreWindowState(winCode, getWindowState('code-editor', winCode), true)
+        var s = getWindowState('code-editor', winCode);
+        restoreWindowState(winCode, {
+            maximized: codeMax,
+            fullscreen: s.fullscreen
+        }, true);
         codeMax = false;
         if (loading) {
             clearTimeout(loadID);
