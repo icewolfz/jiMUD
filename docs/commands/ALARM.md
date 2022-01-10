@@ -5,7 +5,7 @@
 ### **Syntax:** #ALA *name* {time pattern} {commands} *profile*
 > Create or alter an alarm trigger
 
-### **Related:** [#SUSPEND](SUSPEND.md), [#RESUME](RESUME.md), [#TRIGGER](TRIGGER.md), [$UNTRIGGER](UNTRIGGER.md)
+### **Related:** [#SUSPEND](SUSPEND.md), [#RESUME](RESUME.md), [#TRIGGER](TRIGGER.md), [#UNTRIGGER](UNTRIGGER.md)
 
 #### **Arguments:**
 - name - optional name of alarm to alter

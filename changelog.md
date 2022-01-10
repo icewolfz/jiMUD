@@ -24,6 +24,7 @@
   - Make [#VARIABLE](docs/commands.md#createmodify-profile-or-items) respect strip quote settings when storing value
   - Display: issues with overlays and unicode background selection sizes
   - Fixed code editor not being correctly restored if already open
+  - Help: Fixed command page links
 - **Changed:**
   - Error messages for commands and functions will add name to better understand where the error is
   - Update markdown-it 12.3.1 to 12.3.2

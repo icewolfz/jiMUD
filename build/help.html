@@ -40,7 +40,7 @@
                     tokens[idx].attrPush(['target', '_blank']);
                 else {
                     tokens[idx].attrs[tokens[idx].attrIndex('href')][1] = '#';
-                    tokens[idx].attrPush(['onclick', `event.preventDefault();openLink('${ref}');return false;`]);
+                    tokens[idx].attrPush(['onclick', `event.preventDefault();openLink('${ref}', 1);return false;`]);
                 }
             }
             return old_render(tokens, idx, options, env, self);
@@ -55,6 +55,7 @@
         var dragging = false;
         var lastSel = $("#contents option:selected");
         var _options;
+        var _path = '';
         var _data = [
             {
                 text: 'Home',
@@ -129,10 +130,12 @@
         ]
 
         // eslint-disable-next-line no-unused-vars
-        function openLink(url) {
+        function openLink(url, p) {
             lastSel = $("#contents option:selected");
             if (url.startsWith('docs/'))
                 url = url.substr(5);
+            else if (p)
+                url = _path + url;
             url = url.split('#');
             contents.val(url[0].substr(0, url[0].length - 3)).selectpicker('render');
             contents.change();
@@ -165,6 +168,10 @@
         function loadContents(url) {
             container[0].scrollTop = 0;
             if (url) {
+                if (url.lastIndexOf('/') === -1)
+                    _path = '';
+                else
+                    _path = url.substring(0, url.lastIndexOf('/') + 1);
                 var file = path.join(__dirname, '..', 'docs', url.replace('///g', path.sep) + '.md');
                 if (isFileSync(file)) {
                     var data = fs.readFileSync(file, 'utf8');
@@ -243,7 +250,7 @@
             if (options.navSize < 202)
                 options.navSize = 202;
             $('#sidebar').css('width', options.navSize);
-            $('#container').css('left', options.navSize);            
+            $('#container').css('left', options.navSize);
         }
 
         function saveOptions() {
@@ -448,7 +455,7 @@
         ipcRenderer.on('reload-options', () => {
             loadOptions();
         });
-        
+
         ipcRenderer.on('setting-changed', (event, data) => {
             if (data.type === 'extensions' && data.name === 'help') {
                 loadOptions(data.value);
