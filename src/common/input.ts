@@ -1230,7 +1230,7 @@ export class Input extends EventEmitter {
             else if (state === 4)
                 arg += '\'';
             if (arg.endsWith('\n'))
-                arg = arg.substring(0, args.length - 1);
+                arg = arg.substring(0, arg.length - 1);
             if (arg.length > 0) args.push(arg);
             return this.executeFunction(fun, args, raw, cmdChar);
         }
