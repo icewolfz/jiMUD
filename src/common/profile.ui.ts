@@ -45,6 +45,8 @@ let _command = '#';
 let _stacking = ';';
 let _speed = '!';
 let _verbatim = '`';
+let _profileLoadExpand = true;
+let _profileLoadSelect = 'default';
 
 
 const _controllers = {};
@@ -2349,8 +2351,11 @@ function buildTreeview(data, skipInit?) {
             data: data,
             onInitialized: (event, nodes) => {
                 if (!skipInit && !currentNode) {
-                    const n = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
-                    $('#profile-tree').treeview('expandNode', [n]);
+                    if (!profiles.contains(_profileLoadSelect))
+                        _profileLoadSelect = 'default';
+                    const n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(_profileLoadSelect) + '$', 'id']);
+                    if (_profileLoadExpand)
+                        $('#profile-tree').treeview('expandNode', [n]);
                     $('#profile-tree').treeview('selectNode', [n]);
                 }
                 else if (!currentNode)
@@ -2392,6 +2397,10 @@ function loadOptions() {
     _stacking = options.commandStackingChar;
     _speed = options.speedpathsChar;
     _verbatim = options.verbatimChar;
+    _profileLoadExpand = options.profiles.profileExpandSelected;
+    _profileLoadSelect = options.profiles.profileSelected;
+    if (!profiles.contains(_profileLoadSelect))
+        _profileLoadSelect = 'default';
     updatePads();
 
     let theme = parseTemplate(options.theme) + '.css';
@@ -3491,7 +3500,7 @@ function trashProfiles(p) {
         const rl = _remove.length;
         for (let r = 0; r < rl; r++) {
             const file = path.join(p, _remove[r].file.toLowerCase() + '.json');
-            if(!isFileSync(file)) continue;
+            if (!isFileSync(file)) continue;
             ipcRenderer.send('trash-item', file);
         }
     }
@@ -3681,14 +3690,14 @@ function setParseSyntax(editor) {
             rules['start'][9].regex = '[' + _parameter + _nParameter + ']\\*';
             rules['start'][10].regex = '[' + _parameter + _nParameter + ']{\\*}';
             rules['start'][11].regex = _command + rules['start'][11].regex.substr(1);
-            rules['start'][12].regex = '^' + _command + rules['start'][12].regex.substr(2);            
+            rules['start'][12].regex = '^' + _command + rules['start'][12].regex.substr(2);
             rules['start'][12].splitRegex = new RegExp(rules['start'][12].regex);
             rules['start'][13].regex = '^' + _verbatim + '.*$';
             rules['start'][14].regex = '^' + _speed + '.*$';
             rules['start'][15].regex = '[' + _parameter + _nParameter + rules['start'][15].regex.substr(3);
             rules['start'][15].splitRegex = new RegExp(rules['start'][15].regex);
             rules['start'][16].regex = '[' + _parameter + _nParameter + rules['start'][16].regex.substr(3);
-            rules['start'][16].splitRegex = new RegExp(rules['start'][16].regex);            
+            rules['start'][16].splitRegex = new RegExp(rules['start'][16].regex);
             rules['start'][17].regex = '[' + _parameter + _nParameter + rules['start'][17].regex.substr(3);
             rules['start'][17].splitRegex = new RegExp(rules['start'][17].regex);
             /*
@@ -3716,9 +3725,9 @@ function setParseSyntax(editor) {
             */
         }
         if (Object.prototype.hasOwnProperty.call(rules, 'stacking')) {
-            rules['stacking'][0].regex = _command + rules['stacking'][0].regex.substr(1);            
-            rules['stacking'][0].splitRegex = new RegExp(rules['stacking'][0].regex);  
-            rules['stacking'][1].regex = _command + rules['stacking'][1].regex.substr(1);   
+            rules['stacking'][0].regex = _command + rules['stacking'][0].regex.substr(1);
+            rules['stacking'][0].splitRegex = new RegExp(rules['stacking'][0].regex);
+            rules['stacking'][1].regex = _command + rules['stacking'][1].regex.substr(1);
             rules['stacking'][2].regex = _verbatim + '.*$';
             rules['stacking'][3].regex = _speed + '.*$';
             /*
@@ -3730,11 +3739,11 @@ function setParseSyntax(editor) {
             */
         }
         if (Object.prototype.hasOwnProperty.call(rules, 'bracket')) {
-            rules['bracket'][0].regex = '\\s*?' + _command + rules['bracket'][0].regex.substr(5);            
-            rules['bracket'][0].splitRegex = new RegExp(rules['bracket'][0].regex);  
+            rules['bracket'][0].regex = '\\s*?' + _command + rules['bracket'][0].regex.substr(5);
+            rules['bracket'][0].splitRegex = new RegExp(rules['bracket'][0].regex);
             rules['bracket'][3].regex = _verbatim + '.*$';
-            rules['bracket'][4].regex = _speed + '.*$';            
-            rules['bracket'][6].regex = _command + rules['bracket'][6].regex.substr(1);   
+            rules['bracket'][4].regex = _speed + '.*$';
+            rules['bracket'][6].regex = _command + rules['bracket'][6].regex.substr(1);
             /*
 0: {regex: '\\s*?#([a-zA-Z_$][a-zA-Z0-9_$]*)\\b', next: 'start', splitRegex: /^\s*?#([a-zA-Z_$][a-zA-Z0-9_$]*)\b$/, token: ƒ, onMatch: ƒ}
 1: {token: 'string', regex: '".*?"', onMatch: null}
@@ -3746,7 +3755,7 @@ function setParseSyntax(editor) {
 7: {token: 'constant.numeric', regex: '[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b', onMatch: null}
 8: {token: 'text', regex: '\\s+', next: 'start', onMatch: null}      
             */
-        }        
+        }
         //console.log(rules);
         // force recreation of tokenizer
         session.$mode.$tokenizer = null;

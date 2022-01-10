@@ -58,6 +58,8 @@ export class Profiles {
     public sortOrder: ProfileSortOrder = ProfileSortOrder.Priority | ProfileSortOrder.Index;
     public sortDirection: number = 1;
     public showInTaskBar: boolean = false;
+    public profileSelected: string = 'default';
+    public profileExpandSelected: boolean = true;
 }
 
 /**

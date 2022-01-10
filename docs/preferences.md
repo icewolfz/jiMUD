@@ -242,6 +242,8 @@ Controls what is captured into the chat window
   - `Index` sort by index
   - `Priority` sort by item priority
 - `Profile manager sort direction` select to display items in ascending or descending order  **note** Changing this setting while profile manager is open will not resort the displayed items
+- `Profile to select on load` select which profile to pick when profile manager is first opened, falls back to Default if profile not found
+- `Expand selected profile on load` auto expand selected profile when profile manager is first opened
 
 ## Advanced > Tray
 
