@@ -26,6 +26,7 @@
   - Fixed code editor not being correctly restored if already open
 - **Changed:**
   - Error messages for commands and functions will add name to better understand where the error is
+  - Update markdown-it 12.3.1 to 12.3.2
 
 ## v0.17.4 2022-01-07
  
