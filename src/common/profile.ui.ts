@@ -46,6 +46,8 @@ let _stacking = ';';
 let _speed = '!';
 let _verbatim = '`';
 let _variable = '@';
+let _profileLoadExpand = true;
+let _profileLoadSelect = 'default';
 
 
 const _controllers = {};
@@ -2521,8 +2523,11 @@ function buildTreeview(data, skipInit?) {
             data: data,
             onInitialized: (event, nodes) => {
                 if (!skipInit && !currentNode) {
-                    const n = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
-                    $('#profile-tree').treeview('expandNode', [n]);
+                    if (!profiles.contains(_profileLoadSelect))
+                        _profileLoadSelect = 'default';
+                    const n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(_profileLoadSelect) + '$', 'id']);
+                    if (_profileLoadExpand)
+                        $('#profile-tree').treeview('expandNode', [n]);
                     $('#profile-tree').treeview('selectNode', [n]);
                 }
                 else if (!currentNode)
@@ -2565,6 +2570,10 @@ function loadOptions() {
     _speed = options.speedpathsChar;
     _verbatim = options.verbatimChar;
     _variable = options.variableChar;
+    _profileLoadExpand = options.profiles.profileExpandSelected;
+    _profileLoadSelect = options.profiles.profileSelected;
+    if (!profiles.contains(_profileLoadSelect))
+        _profileLoadSelect = 'default';
     updatePads();
 
     let theme = parseTemplate(options.theme) + '.css';
@@ -3729,7 +3738,7 @@ function trashProfiles(p) {
         const rl = _remove.length;
         for (let r = 0; r < rl; r++) {
             const file = path.join(p, _remove[r].file.toLowerCase() + '.json');
-            if(!isFileSync(file)) continue;
+            if (!isFileSync(file)) continue;
             ipcRenderer.send('trash-item', file);
         }
     }

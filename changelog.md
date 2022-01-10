@@ -7,11 +7,15 @@
   - Add [%unescape(string)](docs/functions.md#string) strip escape characters from string if escaping is allowed and those characters are enabled
   - Add $selectedword, $selword, $selectedurl, $selurl, $selectedline, $selline, $selected, $character, $copied for direct access in expressions
   - Add versions of most predefined functions to the expression system to allow for inline usage using [%eval](docs/functions.md#math) or in math, note this is not always the sam as full expanded form of ${function(args)} as that will process in the command parsing system while when used with eval or math expressions it will be parsed with the expression engine instead
+  - [Preferences](docs/preferences.md):
+    - Add [Profile to select on load](docs/preferences.md#advanced--profile-manager) pick which profile is auto selected when profile manager opened
+    - Add [Expand selected profile on load](docs/preferences.md#advanced--profile-manager) auto expand selected profile when profile manager opened
 - **Fixed:**
   - Input parser:
     - Correctly escape function arguments when quoting arguments with respect to scripting quote settings
     - Use custom escape character when splitting function arguments with quotes
     - Fix escaping of command stack when used in a path, after a function, or alias
+    - Fix issue when parsing command arguments ending with a newline
   - Fix dice when using fudge dice
   - Fix dice when using #d% returning 1d100 instead of a % of 0 to 1
   - Fix parsing of sub context menus
@@ -20,8 +24,11 @@
   - All #command error messages now correctly use the set command character when displaying syntax
   - Make [#VARIABLE](docs/commands.md#createmodify-profile-or-items) respect strip quote settings when storing value
   - Display: issues with overlays and unicode background selection sizes
+  - Fixed code editor not being correctly restored if already open
+  - Help: Fixed command page links
 - **Changed:**
   - Error messages for commands and functions will add name to better understand where the error is
+  - Update markdown-it 12.3.1 to 12.3.2
 
 ## v0.17.4 2022-01-07
  
