@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.17.5
+## v0.17.5 2022-01-10
 
 - **New:**
   - Add [%escape(string)](docs/functions.md#string)  escape all characters in string if escaping is allowed and if those characters need escaping
