@@ -15,6 +15,12 @@ import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
 import { create, all, factory } from 'mathjs';
 
+/**
+ * Contains custom operator overrides functions for MATHJS to add string support
+ * @constant
+ * @type {object}
+ * 
+ */
 const allWithCustomFunctions = {
     ...all,
 
@@ -51,16 +57,50 @@ const allWithCustomFunctions = {
     })
 };
 
+/**
+ * MATHJS expression engine
+ * @constant
+ * @type {object}
+ */
 const mathjs = create(allWithCustomFunctions, {});
+/**
+ * Buzz sound library
+ * @type {object}
+ * @constant
+ */
 const buzz = require('buzz');
+/**
+ * Node path object
+ * @type {object}
+ * @constant
+ */
 const path = require('path');
+/**
+ * Moment time format and manipulation
+ * @type {object}
+ * @constant
+ */
 const moment = require('moment');
+/**
+ * Node file system
+ * @type {object}
+ * @constant
+ */
 const fs = require('fs');
 
+/**
+ * Return the proper case of a string for each word
+ * @param {string} str - The string to proper capitalize each word of
+ * @returns {string}
+ */
 function ProperCase(str) {
     return str.replace(/\w*\S*/g, (txt) => { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
 }
 
+/**
+ * Return a fudge dice random value
+ * @returns {number} Returns -1, 1 or 0 randomly
+ */
 function fudgeDice() {
     switch (~~(Math.random() * 6) + 1) {
         case 1:
@@ -73,6 +113,11 @@ function fudgeDice() {
     return 0;
 }
 
+/**
+ * Enum for input parse state
+ * @readonly
+ * @enum {number}
+ */
 enum ParseState {
     none = 0,
     doubleQuoted = 1,
@@ -97,6 +142,13 @@ enum ParseState {
     functionEscape = 19
 }
 
+/**
+ * Command input parser
+ * 
+ * @class Input
+ * @extends {EventEmitter}
+ * @param {Object} client - the mud client object
+ */
 export class Input extends EventEmitter {
     private _historyIdx: number = -1;
     private _commandHistory: string[];
@@ -290,7 +342,7 @@ export class Input extends EventEmitter {
             throw new Error('Invalid client!');
         this.client = client;
 
-        //TODO add color, zcolor, ansi,  escape, unescape
+        //@TODO add color, zcolor, ansi,  escape, unescape functions
         const funs = {
             esc: '\x1b',
             cr: '\n',
