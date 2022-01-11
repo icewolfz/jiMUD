@@ -1,12 +1,16 @@
 # Changelog
 
-## v0.17.5
+## v0.17.6
+
+- **Fixed:**
+  - Profile manager: Profiles are now sorted according to the [Profile manager sort order](docs/preferences.md#advanced--profile-manager) and [Profile manager sort direction](docs/preferences.md#advanced--profile-manager) settings like items
+## v0.17.5 2022-01-10
 
 - **New:**
   - Add [%escape(string)](docs/functions.md#string)  escape all characters in string if escaping is allowed and if those characters need escaping
   - Add [%unescape(string)](docs/functions.md#string) strip escape characters from string if escaping is allowed and those characters are enabled
   - Add $selectedword, $selword, $selectedurl, $selurl, $selectedline, $selline, $selected, $character, $copied for direct access in expressions
-  - Add versions of most predefined functions to the expression system to allow for inline usage using [%eval](docs/functions.md#math) or in math, note this is not always the sam as full expanded form of ${function(args)} as that will process in the command parsing system while when used with eval or math expressions it will be parsed with the expression engine instead
+  - Add versions of most predefined functions to the expression system to allow for inline usage using [%eval](docs/functions.md#math) or in math, note this is not always the same as full expanded form of ${function(args)} as that will process in the command parsing system while when used with eval or math expressions it will be parsed with the expression engine instead
   - [Preferences](docs/preferences.md):
     - Add [Profile to select on load](docs/preferences.md#advanced--profile-manager) pick which profile is auto selected when profile manager opened
     - Add [Expand selected profile on load](docs/preferences.md#advanced--profile-manager) auto expand selected profile when profile manager opened
@@ -23,7 +27,7 @@
   - Fix [#CW](docs/commands.md#display), [#COLOR](docs/commands.md#display), [#HIGHLIGHT](docs/commands.md#display) trigger creation syntax to use set command character instead of hard coded #
   - All #command error messages now correctly use the set command character when displaying syntax
   - Make [#VARIABLE](docs/commands.md#createmodify-profile-or-items) respect strip quote settings when storing value
-  - Display: issues with overlays and unicode background selection sizes
+  - Display: issues with overlays and Unicode background selection sizes
   - Fixed code editor not being correctly restored if already open
   - Help: Fixed command page links
 - **Changed:**
@@ -221,7 +225,7 @@
 - **New:**
   - Add [#COLOR](docs/commands.md) color last added line
   - Add [#WINDOW](docs/commands.md) to open/show supported windows
-  - Add [#TESTUNICODEEMOJI](docs/commands.md) to display unicode emoji symbols
+  - Add [#TESTUNICODEEMOJI](docs/commands.md) to display Unicode emoji symbols
   - [Preferences](docs/preferences.md)
     - Add [Open 'Who is on' in web browser](docs/preferences.md#advanced) to open who in child window or browser
     - Add [Disable trigger on error](docs/preferences.md#scripting) to disable a trigger if an error happens, either from pattern or scripting, enabled by default to prevent spamming of broken trigger
@@ -236,10 +240,10 @@
 - **Fixed:**
   - Mac: Fix window menu item on main bar
   - Display:
-    - Fixed unicode combining character selection issues
-    - Fixed unicode selection width when font style is italic
+    - Fixed Unicode combining character selection issues
+    - Fixed Unicode selection width when font style is italic
     - Fixed mouse cursor to use standard text cursor
-    - Fixed more unicode surrogate/variant pair selection issues
+    - Fixed more Unicode surrogate/variant pair selection issues
     - Fixed bug in MXP expire not clearing send/link end tag
     - Fixed split view resize when horizontal scroll bar visible
   - Ansi Parser: Fixed bug in MXP expire tag not correctly expiring links on same line that come before the tag
@@ -274,8 +278,8 @@
 - **Fixed:**
   - Fix scripting predefined variables $selectedword, $selectedline, $selectedurl, $selword, $selline, $selurl so they are correctly set for use in javascript
   - Display:
-    - Fix to unicode width when italic font style
-    - Fix to unicode surrogate/variant pair selection
+    - Fix to Unicode width when italic font style
+    - Fix to Unicode surrogate/variant pair selection
   - Code editor: change how ([ ]) and ({ }) are handled in bracket detection for better matching and coloring support
   - Preferences: Fixed color scheme selection not working
 - **Changed:**
@@ -749,7 +753,7 @@
 - **Fixed:**
   - Fixed spell checker, electron 5.0 changed api
   - Fixed issue not resetting telnet prompt flag when doing local text display
-  - Fixed URL detection and valid unicode characters
+  - Fixed URL detection and valid Unicode characters
   - Fixed Copy and open url to properly URL encode characters
 - **Changed:**
   - Update fs-extra from 7.0.1 to 8.0.1
@@ -940,7 +944,7 @@
     - Add advanced properties to object editor
   - About: do live updates of CPU/memory usage
 - **Changed:**
-  - ANSI Parser: use unicode zero space character instead of wbr tag to reduce memory
+  - ANSI Parser: use Unicode zero space character instead of wbr tag to reduce memory
   - Update monaco-editor from 0.15.0 to 0.15.5
   - Update electron-updater 3.2.3 to 4.0.4
   - Update electron 3.0.9 to 3.0.10
@@ -1125,7 +1129,7 @@
       - Fixed closing of custom defined tags
       - Fixed MXP send tags
     - Fixed HTML property to return correct HTML markup
-    - Match whole unicode words on context or double click
+    - Match whole Unicode words on context or double click
     - Debounce selection mouse dragging to improve performance
     - Fixed split view selection performance issues
     - Fixed split position on resize
@@ -1203,9 +1207,9 @@
     - Fixed add button to create new item based on currently selected item
     - Fixed add button tool tip shows type of new item to be created
   - Display:
-    - Fixed overlay and selection highlighting for unicode half and full width characters
+    - Fixed overlay and selection highlighting for Unicode half and full width characters
     - Fixed pasting or cutting text into find search box
-    - Fixed unicode spacing issues when different colors or font styles are used
+    - Fixed Unicode spacing issues when different colors or font styles are used
     - Fixed split section not firing click event
   - Preferences dialog:
     - Fixed drop down font selection height not being correct
