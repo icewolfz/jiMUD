@@ -361,7 +361,8 @@ function AddNewProfile(d?: Boolean) {
         },
         dataAttr: {
             type: 'profile',
-            profile: n
+            profile: n,
+            priority: p.priority,
         },
         nodes: [
             {
@@ -1115,7 +1116,8 @@ function newProfileNode(profile?) {
         id: id,
         dataAttr: {
             type: 'profile',
-            profile: key
+            profile: key,
+            priority: profile.priority,
         },
         state: {
             checked: _enabled.indexOf(key) !== -1
@@ -1221,6 +1223,13 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
     let val = <string>$('#profile-name').val();
     const e = _enabled.indexOf(currentProfile.name.toLowerCase()) !== -1;
     let p;
+    const selected = currentNode.state.selected;
+    const expanded = currentNode.state.expanded;       
+    if (currentProfile.priority !== parseInt(<string>$('#profile-priority').val(), 10)) {
+        data.priority = currentProfile.priority;
+        changed++;
+        currentProfile.priority = parseInt(<string>$('#profile-priority').val(), 10);
+    }    
     if (val !== currentProfile.name) {
         data.name = val;
         changed++;
@@ -1242,10 +1251,19 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
         currentProfile.name = val;
         profiles.add(currentProfile);
         $('#editor-title').text('Profile: ' + currentProfile.name);
-
-        const selected = currentNode.state.selected;
-        const expanded = currentNode.state.expanded;
-
+        let node = $('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id'])[0];
+        $('#profile-tree').treeview('updateNode', [node, newProfileNode()]);
+        node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
+        if (selected) {
+            $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
+            currentNode = node;
+        }
+        if (expanded)
+            $('#profile-tree').treeview('expandNode', [node]);
+        p = sortTree();
+    }
+    else if(changed)
+    {    
         let node = $('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id'])[0];
         $('#profile-tree').treeview('updateNode', [node, newProfileNode()]);
         node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
@@ -1310,12 +1328,6 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
                 changed++;
             }
         }
-    }
-
-    if (currentProfile.priority !== parseInt(<string>$('#profile-priority').val(), 10)) {
-        data.priority = currentProfile.priority;
-        changed++;
-        currentProfile.priority = parseInt(<string>$('#profile-priority').val(), 10);
     }
     if (p)
         p.then(() => {
@@ -2371,12 +2383,11 @@ function getProfileData() {
     let profile;
 
     for (profile in profiles.items) {
-        if (!profiles.items.hasOwnProperty(profile) || profile === 'default') continue;
+        if (!profiles.items.hasOwnProperty(profile)) continue;
         data.push(newProfileNode(profile));
     }
-
-    data.sort((a, b) => { return a.text.localeCompare(b.text); });
-    data.unshift(newProfileNode('default'));
+    //data.sort((a, b) => { return a.text.localeCompare(b.text); });
+    data.sort(sortNodes);
     return data;
 }
 
@@ -3105,7 +3116,7 @@ export function sortTree(s?: boolean) {
     let cl;
 
     for (profile in profiles.items) {
-        if (!profiles.items.hasOwnProperty(profile) || profile === 'default') continue;
+        if (!profiles.items.hasOwnProperty(profile)) continue;
         n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + '$', 'id']);
         n = cleanNode(n[0]);
         if (s) {
@@ -3118,7 +3129,8 @@ export function sortTree(s?: boolean) {
         }
         data.push(n);
     }
-    data.sort((a, b) => { return a.text.localeCompare(b.text); });
+    data.sort(sortNodes);
+    /*
     n = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
     if (n.length > 0) {
         n = cleanNode(n[0]);
@@ -3132,6 +3144,7 @@ export function sortTree(s?: boolean) {
         }
         data.unshift(n);
     }
+    */
     return buildTreeview(data, true);
 }
 
