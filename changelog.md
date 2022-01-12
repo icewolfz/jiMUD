@@ -6,7 +6,7 @@
   - Profile manager:
     - Profiles are now sorted according to the [Profile manager sort order](docs/preferences.md#advanced--profile-manager) and [Profile manager sort direction](docs/preferences.md#advanced--profile-manager) settings like items
     - Fix context menu editor icon sample width
-
+  - Fix [#trigger](docs/commands.md#triggers) name syntax not working
 ## v0.17.5 2022-01-10
 
 - **New:**

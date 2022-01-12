@@ -6287,7 +6287,7 @@ export class Input extends EventEmitter {
         let reload = true;
         let isNew = false;
         const p = path.join(parseTemplate('{data}'), 'profiles');
-        if (!pattern)
+        if (!pattern && !name)
             throw new Error(`Trigger '${name || ''}' not found`);
         if (!profile) {
             const keys = this.client.profiles.keys;
