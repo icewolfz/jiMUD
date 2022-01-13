@@ -2,8 +2,15 @@
 
 ## v0.17.6
 
+- **New:**
+  - Mapper: Add `Edit > Reset map` to allow users to delete and create a fresh map file
 - **Fixed:**
-  - Profile manager: Profiles are now sorted according to the [Profile manager sort order](docs/preferences.md#advanced--profile-manager) and [Profile manager sort direction](docs/preferences.md#advanced--profile-manager) settings like items
+  - Profile manager:
+    - Profiles are now sorted according to the [Profile manager sort order](docs/preferences.md#advanced--profile-manager) and [Profile manager sort direction](docs/preferences.md#advanced--profile-manager) settings like items
+    - Fix context menu editor icon sample width
+  - Fix [#TRIGGER](docs/commands.md#triggers) name syntax not working
+  - Fixed extra new lines being added when parsing text in the middle of triggers
+
 ## v0.17.5 2022-01-10
 
 - **New:**

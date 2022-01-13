@@ -1162,7 +1162,7 @@ export class Client extends EventEmitter {
         if (txt == null || typeof txt === 'undefined') return;
         if (newline == null) newline = false;
         if (remote == null) remote = false;
-        if (newline && this.display.textLength > 0 && !this.display.EndOfLine && this.display.EndOfLineLength !== 0 && !this.telnet.prompt)
+        if (newline && this.display.textLength > 0 && !this.display.EndOfLine && this.display.EndOfLineLength !== 0 && !this.telnet.prompt && !this.display.parseQueueEndOfLine)
             txt = '\n' + txt;
         this.parseInternal(txt, remote);
     }

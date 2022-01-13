@@ -77,6 +77,8 @@
                     { label: 'Remove all', click: removeAll },
                     { type: 'separator' },
                     { label: 'Compact map', click: compact },
+                    { type: 'separator' },
+                    { label: 'Reset map', click: resetMap },
                 ]
             },
             {
@@ -1229,6 +1231,20 @@
             }).then(result => {
                 if (result.response === 0)
                     mapper.clearAll();
+            });
+        }
+
+        function resetMap() {
+            clearButton('#remove');
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                type: 'question',
+                title: 'Reset map',
+                message: 'This will delete your map data file and recreate a fresh new one, do you want do delete your file?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+            }).then(result => {
+                if (result.response === 0)
+                    mapper.resetMap();
             });
         }
 

@@ -1013,6 +1013,14 @@ export class Display extends EventEmitter {
         return this._parser.EndOfLine;
     }
 
+    get parseQueueLength(): number {
+        return this._parser.parseQueueLength;
+    }
+
+    get parseQueueEndOfLine(): boolean {
+        return this._parser.parseQueueEndOfLine;
+    }
+
     get EndOfLineLength(): number {
         if (this.lines.length === 0)
             return 0;

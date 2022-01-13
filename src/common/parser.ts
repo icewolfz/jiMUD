@@ -2532,6 +2532,16 @@ export class Parser extends EventEmitter {
         return ansi + 'm';
     }
 
+    public get parseQueueLength() {
+        return this.parsing.length;
+    }
+
+    public get parseQueueEndOfLine() {
+        if(this.parsing.length)
+            return this.parsing[this.parsing.length - 1][0].endsWith('\n');
+        return false;
+    }
+
     public parse(text: string, remote?: boolean, force?: boolean) {
         if (text == null || text.length === 0)
             return text;

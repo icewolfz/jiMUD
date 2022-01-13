@@ -2751,6 +2751,11 @@ ipcMain.on('trash-item', (event, file) => {
     shell.trashItem(file).catch(err => logError(err));
 });
 
+ipcMain.on('trash-item-sync', async (event, file) => {
+    await shell.trashItem(file).catch(err => logError(err));
+    event.returnValue = true;
+});
+
 ipcMain.on('parseTemplate', (event, str, data) => {
     event.returnValue = parseTemplate(str, data);
 });
