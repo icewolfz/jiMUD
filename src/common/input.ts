@@ -155,6 +155,7 @@ export class Input extends EventEmitter {
     private _locked: number = 0;
     private _tests: Tests;
     private _TriggerCache: Trigger[] = null;
+    private _TriggerStates = [];
     private _TriggerFunctionCache = {};
     private _TriggerRegExCache = {};
     private _scrollLock: boolean = false;
@@ -6022,9 +6023,12 @@ export class Input extends EventEmitter {
         const triggers = this._TriggerCache;
         const tl = triggers.length;
         for (; t < tl; t++) {
-            const trigger = triggers[t];
+            let trigger = triggers[t];
+            const parent = trigger;
             //extra check in case error disabled it and do not want to keep triggering the error
             if (!trigger.enabled) continue;
+            if (trigger.state !== 0)
+                trigger = trigger.triggers[trigger.state];
             if (trigger.type !== undefined && (type & this.getTriggerType(trigger.type)) !== this.getTriggerType(trigger.type)) continue;
             if (frag && !trigger.triggerPrompt) continue;
             if (!frag && !trigger.triggerNewline && (trigger.triggerNewline !== undefined))
@@ -6033,9 +6037,14 @@ export class Input extends EventEmitter {
                 if (trigger.verbatim) {
                     if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) continue;
                     else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) continue;
+                    if (parent.triggers.length) {
+                        parent.state++;
+                        if (parent.state >= parent.triggers.length)
+                            parent.state = 0;
+                    }
                     if (ret)
-                        return this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], true, t, [(trigger.raw ? raw : line)]);
-                    this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t, [(trigger.raw ? raw : line)]);
+                        return this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], true, t, [(trigger.raw ? raw : line)], 0, parent);
+                    this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t, [(trigger.raw ? raw : line)], 0, parent);
                 }
                 else {
                     let re;
@@ -6060,9 +6069,14 @@ export class Input extends EventEmitter {
                     }
                     if (res.groups)
                         Object.keys(res.groups).map(v => this.client.variables[v] = res.groups[v]);
+                    if (parent.triggers.length) {
+                        parent.state++;
+                        if (parent.state >= parent.triggers.length)
+                            parent.state = 0;
+                    }
                     if (ret)
-                        return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re], res.groups);
-                    this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups);
+                        return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re], res.groups, parent);
+                    this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups, parent);
                 }
             }
             catch (e) {
@@ -6082,7 +6096,7 @@ export class Input extends EventEmitter {
         return line;
     }
 
-    public ExecuteTrigger(trigger, args, r: boolean, idx, regex?, named?) {
+    public ExecuteTrigger(trigger, args, r: boolean, idx, regex?, named?, parent?: Trigger) {
         if (r == null) r = false;
         if (!trigger.enabled) return '';
         let ret; // = '';
@@ -6132,10 +6146,12 @@ export class Input extends EventEmitter {
                 ret = trigger.value;
                 break;
         }
-        if (trigger.temp) {
-            if (idx >= 0)
-                this._TriggerCache.splice(idx, 1);
-            this.client.removeTrigger(trigger);
+        if (parent.temp) {
+            if (parent.triggers.length == 0 || parent.state === parent.triggers.length - 1) {
+                if (idx >= 0)
+                    this._TriggerCache.splice(idx, 1);
+                this.client.removeTrigger(parent);
+            }
         }
         if (ret == null || ret === undefined)
             return null;
@@ -6156,7 +6172,7 @@ export class Input extends EventEmitter {
         }
     }
 
-    public clearTriggerCache() { this._TriggerCache = null; this._TriggerFunctionCache = {}; this._TriggerRegExCache = {}; }
+    public clearTriggerCache() { this._TriggerCache = null; this._TriggerStates = []; this._TriggerFunctionCache = {}; this._TriggerRegExCache = {}; }
 
     public buildTriggerCache() {
         if (this._TriggerCache == null) {
@@ -6168,6 +6184,7 @@ export class Input extends EventEmitter {
 
     public clearCaches() {
         this._TriggerCache = null;
+        this._TriggerStates = [];
         this._TriggerFunctionCache = {};
         this._gamepadCaches = null;
         this._lastSuspend = -1;
@@ -6186,10 +6203,19 @@ export class Input extends EventEmitter {
             args.unshift(event);
         const tl = this._TriggerCache.length;
         for (; t < tl; t++) {
-            if (this._TriggerCache[t].type !== TriggerType.Event) continue;
-            if (this._TriggerCache[t].caseSensitive && event !== this._TriggerCache[t].pattern) continue;
-            if (!this._TriggerCache[t].caseSensitive && event.toLowerCase() !== this._TriggerCache[t].pattern.toLowerCase()) continue;
-            this.ExecuteTrigger(this._TriggerCache[t], args, false, t);
+            let trigger = this._TriggerCache[t];
+            const parent = trigger;
+            if (trigger.state !== 0)
+                trigger = trigger.triggers[trigger.state];
+            if (trigger.type !== TriggerType.Event) continue;
+            if (trigger.caseSensitive && event !== trigger.pattern) continue;
+            if (!trigger.caseSensitive && event.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
+            this.ExecuteTrigger(trigger, args, false, t, 0, 0, parent);
+            if (parent.triggers.length) {
+                parent.state++;
+                if (parent.state >= parent.triggers.length)
+                    parent.state = 0;
+            }
         }
     }
 

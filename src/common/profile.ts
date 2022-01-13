@@ -355,6 +355,9 @@ export class Trigger extends Item {
     public temp: boolean = false;
     public caseSensitive: boolean = false;
     public raw: boolean = false;
+    public state: number = 0;
+    public params: string = '';
+    public triggers: Trigger[] = [];
 
     constructor(data?, profile?) {
         super(data);
@@ -365,7 +368,15 @@ export class Trigger extends Item {
                 if (!data.hasOwnProperty(prop)) {
                     continue;
                 }
-                this[prop] = data[prop];
+                if (prop === "triggers") {
+                    this.triggers = [];
+                    const il = data.triggers.length;
+                    for (let i = 0; i < il; i++) {
+                        this.triggers.push(new Trigger(data.triggers[i]));
+                    }
+                }
+                else
+                    this[prop] = data[prop];
             }
         }
         this.profile = profile;
