@@ -10,6 +10,7 @@
     - Fix context menu editor icon sample width
   - Fix [#TRIGGER](docs/commands.md#triggers) name syntax not working
   - Fixed extra new lines being added when parsing text in the middle of triggers
+
 ## v0.17.5 2022-01-10
 
 - **New:**
