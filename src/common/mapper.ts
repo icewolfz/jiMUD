@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('better-sqlite3');
 const PF = require('./../../lib/pathfinding.js');
+import { isFileSync } from './library';
 
 export enum RoomDetails {
     None = 0,
@@ -2719,5 +2720,24 @@ export class Mapper extends EventEmitter {
         if (this.$focused === value) return;
         this.$focused = value;
         this.doUpdate(UpdateType.draw);
+    }
+
+    public resetMap() {
+        this.save(() => {
+            this._db.close();
+            if(ipcRenderer.sendSync('trash-item-sync', this.mapFile)) {
+                this.initializeDatabase();
+            }
+            /*
+            fs.unlink(this.mapFile, (err) => {
+                if (err) {
+                    console.log(this.mapFile, err);
+                } else {
+                    console.log(this.mapFile, 'deleted');
+                }
+                this.initializeDatabase();
+            });           
+            */
+        });
     }
 }

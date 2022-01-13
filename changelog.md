@@ -2,6 +2,8 @@
 
 ## v0.17.6
 
+- **New:**
+  - Mapper: Add `Edit > Reset map` to allow users to delete and create a fresh map file
 - **Fixed:**
   - Profile manager:
     - Profiles are now sorted according to the [Profile manager sort order](docs/preferences.md#advanced--profile-manager) and [Profile manager sort direction](docs/preferences.md#advanced--profile-manager) settings like items
