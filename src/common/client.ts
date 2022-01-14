@@ -638,7 +638,7 @@ export class Client extends EventEmitter {
                 if (err.code === 'ECONNREFUSED')
                     this.errored = true;
                 if (err.code)
-                    this.error(err.code + ' - ' + msg.join(', '));
+                    this.error(err.code + ': ' + msg.join(', '));
                 else
                     this.error(msg.join(', '));
                 if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET')
@@ -941,7 +941,7 @@ export class Client extends EventEmitter {
         else if (err.stack && this.options.showErrorsExtended)
             msg = err.stack;
         else if (err instanceof Error || err instanceof TypeError)
-            msg = err.name + ' - ' + err.message;
+            msg = err.name + ': ' + err.message;
         else if (err.message)
             msg = err.message;
         else
