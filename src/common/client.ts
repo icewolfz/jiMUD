@@ -487,6 +487,15 @@ export class Client extends EventEmitter {
             this.saveProfiles();
     }
 
+    public initDefaultVariables(profile?) {
+        let vl = this.variables.length;
+        while (vl-- > 0) {
+            if(profile && profile != this.variables[vl].profile) continue;
+            if (this.variables[vl].useDefault)
+                this.variables[vl].rawValue = this.variables[vl].defaultValue;
+        }
+    }
+
     get activeProfile(): Profile {
         const keys = this.profiles.keys;
         //search for first enabled profile
@@ -561,6 +570,7 @@ export class Client extends EventEmitter {
         this.profiles.load(profile, p);
         this.clearCache();
         this.startAlarms();
+        this.initDefaultVariables(this.profiles.items[profile.toLowerCase()]);
         this.emit('profile-loaded', profile);
     }
 
