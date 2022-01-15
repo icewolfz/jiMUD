@@ -6028,20 +6028,24 @@ export class Input extends EventEmitter {
             //extra check in case error disabled it and do not want to keep triggering the error
             if (!trigger.enabled) continue;
             if (trigger.state !== 0) {
-                trigger = trigger.triggers[trigger.state];
+                //trigger states are 1 based as 0 is parent trigger
+                trigger = trigger.triggers[trigger.state - 1];
                 //skip disabled states
                 while (!trigger.enabled && parent.state !== 0) {
                     //advance state
                     parent.state++;
                     //if no more states start over and stop
-                    if (parent.state >= parent.triggers.length) {
+                    if (parent.state > parent.triggers.length) {
                         parent.state = 0;
                         //reset to first state
-                        trigger = trigger.triggers[parent.state];
+                        trigger = trigger.triggers[parent.state - 1];
                         //stop checking
                         break;
                     }
-                    trigger = trigger.triggers[parent.state];
+                    if (parent.state)
+                        trigger = trigger.triggers[parent.state - 1];
+                    else
+                        trigger = parent;
                 }
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
@@ -6056,7 +6060,8 @@ export class Input extends EventEmitter {
                     else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) continue;
                     if (parent.triggers.length) {
                         parent.state++;
-                        if (parent.state >= parent.triggers.length)
+                        //1 based sp 1 to length
+                        if (parent.state > parent.triggers.length)
                             parent.state = 0;
                     }
                     if (ret)
@@ -6088,7 +6093,8 @@ export class Input extends EventEmitter {
                         Object.keys(res.groups).map(v => this.client.variables[v] = res.groups[v]);
                     if (parent.triggers.length) {
                         parent.state++;
-                        if (parent.state >= parent.triggers.length)
+                        //1 based
+                        if (parent.state > parent.triggers.length)
                             parent.state = 0;
                     }
                     if (ret)
@@ -6164,7 +6170,7 @@ export class Input extends EventEmitter {
                 break;
         }
         if (parent.temp) {
-            if (parent.triggers.length == 0 || parent.state === parent.triggers.length - 1) {
+            if (parent.triggers.length == 0 || parent.state === parent.triggers.length) {
                 if (idx >= 0)
                     this._TriggerCache.splice(idx, 1);
                 this.client.removeTrigger(parent);
@@ -6222,15 +6228,38 @@ export class Input extends EventEmitter {
         for (; t < tl; t++) {
             let trigger = this._TriggerCache[t];
             const parent = trigger;
-            if (trigger.state !== 0)
-                trigger = trigger.triggers[trigger.state];
+            //in case it got disabled by something
+            if (!trigger.enabled) continue;
+            if (trigger.state !== 0) {
+                //trigger states are 1 based as 0 is parent trigger
+                trigger = trigger.triggers[trigger.state - 1];
+                //skip disabled states
+                while (!trigger.enabled && parent.state !== 0) {
+                    //advance state
+                    parent.state++;
+                    //if no more states start over and stop
+                    if (parent.state > parent.triggers.length) {
+                        parent.state = 0;
+                        //reset to first state
+                        trigger = trigger.triggers[parent.state - 1];
+                        //stop checking
+                        break;
+                    }
+                    if (parent.state)
+                        trigger = trigger.triggers[parent.state - 1];
+                    else
+                        trigger = parent;
+                }
+                //last check to be 100% sure enabled
+                if (!trigger.enabled) continue;
+            }
             if (trigger.type !== TriggerType.Event) continue;
             if (trigger.caseSensitive && event !== trigger.pattern) continue;
             if (!trigger.caseSensitive && event.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
             this.ExecuteTrigger(trigger, args, false, t, 0, 0, parent);
             if (parent.triggers.length) {
                 parent.state++;
-                if (parent.state >= parent.triggers.length)
+                if (parent.state > parent.triggers.length)
                     parent.state = 0;
             }
         }
