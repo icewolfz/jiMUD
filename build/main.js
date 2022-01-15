@@ -4122,9 +4122,9 @@ function logError(err, skipClient) {
     if (err.stack && set.showErrorsExtended)
         msg = err.stack;
     else if (err instanceof TypeError)
-        msg = err.name + ' - ' + err.message;
+        msg = err.name + ': ' + err.message;
     else if (err instanceof Error)
-        msg = err.name + ' - ' + err.message;
+        msg = err.name + ': ' + err.message;
     else if (err.message)
         msg = err.message;
     else

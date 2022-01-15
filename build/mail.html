@@ -476,9 +476,9 @@
             if (error.stack && options.showErrorsExtended)
                 msg = error.stack;
             else if (error instanceof TypeError)
-                msg = error.name + ' - ' + error.message;
+                msg = error.name + ': ' + error.message;
             else if (error instanceof Error)
-                msg = error.name + ' - ' + error.message;
+                msg = error.name + ': ' + error.message;
             else if (error.message)
                 msg = error.message;
             else
