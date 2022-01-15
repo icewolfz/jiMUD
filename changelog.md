@@ -10,6 +10,9 @@
     - Fix context menu editor icon sample width
   - Fix [#TRIGGER](docs/commands.md#triggers) name syntax not working
   - Fixed extra new lines being added when parsing text in the middle of triggers
+- **Changed:**
+  - Update electron 16.0.6 to 16.0.7
+  - Update font-list 1.4.3 to 1.4.5
 
 ## v0.17.5 2022-01-10
 
