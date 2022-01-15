@@ -6027,8 +6027,25 @@ export class Input extends EventEmitter {
             const parent = trigger;
             //extra check in case error disabled it and do not want to keep triggering the error
             if (!trigger.enabled) continue;
-            if (trigger.state !== 0)
+            if (trigger.state !== 0) {
                 trigger = trigger.triggers[trigger.state];
+                //skip disabled states
+                while (!trigger.enabled && parent.state !== 0) {
+                    //advance state
+                    parent.state++;
+                    //if no more states start over and stop
+                    if (parent.state >= parent.triggers.length) {
+                        parent.state = 0;
+                        //reset to first state
+                        trigger = trigger.triggers[parent.state];
+                        //stop checking
+                        break;
+                    }
+                    trigger = trigger.triggers[parent.state];
+                }
+                //last check to be 100% sure enabled
+                if (!trigger.enabled) continue;
+            }
             if (trigger.type !== undefined && (type & this.getTriggerType(trigger.type)) !== this.getTriggerType(trigger.type)) continue;
             if (frag && !trigger.triggerPrompt) continue;
             if (!frag && !trigger.triggerNewline && (trigger.triggerNewline !== undefined))
