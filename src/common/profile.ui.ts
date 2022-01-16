@@ -490,30 +490,32 @@ export function RunTester() {
     }
 }
 
+function addTriggerStateDropdown(item, state) {
+    return `<li><a href="#" style="padding-right: 62px;" onclick="profileUI.SelectTriggerState(${state});">${state}: ${htmlEncode(GetDisplay(item))}
+    <span class="btn-group" style="right: 15px;position: absolute;">
+    <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${state}, -1);event.cancelBubble = true;">
+    <i class="fa fa-angle-double-up"></i></button>
+    <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${state}, 1);event.cancelBubble = true;"><i class="fa fa-angle-double-down"></i></button></span></a></li>`;
+}
+
 function initTriggerEditor(item) {
     $(window).trigger('resize');
+    setState(0);
     if (item.triggers && item.triggers.length) {
         $($('#trigger-states').parent()).css('display', '');
         let items = [];
         const tl = item.triggers.length;
-        items.push(`<li><a href="#" style="padding-right: 62px;" onclick="profileUI.SelectTriggerState(0);">0: ${htmlEncode(GetDisplay(item))}
-        <span class="btn-group" style="right: 15px;position: absolute;">
-        <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(0, -1);event.cancelBubble = true;">
-        <i class="fa fa-angle-double-up"></i></button>
-        <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(0, 1);event.cancelBubble = true;"><i class="fa fa-angle-double-down"></i></button></span></a></li>`);
+        items.push(addTriggerStateDropdown(item, 0));
         for (let t = 0; t < tl; t++) {
-            items.push(`<li><a href="#" style="padding-right: 62px;" onclick="profileUI.SelectTriggerState(${t + 1});">${t + 1}: ${htmlEncode(GetDisplay(item.triggers[t]))}
-            <span class="btn-group" style="right: 15px;position: absolute;">
-            <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${t + 1}, -1);event.cancelBubble = true;">
-            <i class="fa fa-angle-double-up"></i></button>
-            <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${t + 1}, 1);event.cancelBubble = true;"><i class="fa fa-angle-double-down"></i></button></span></a></li>`);
+            items.push(addTriggerStateDropdown(item.triggers[t], t + 1));
         }
         $('#trigger-states-dropdown').html(items.join(''));
     }
     else {
+        $('#trigger-states-dropdown').html(addTriggerStateDropdown(item, 0));
         $($('#trigger-states').parent()).css('display', 'none');
-        $('#trigger-states-dropdown').html('');
     }
+    $('#trigger-states-dropdown li')[0].classList.add('selected', 'active');
     $('#trigger-states-delete').prop('disabled', !(item.triggers && item.triggers.length));
 }
 
@@ -524,15 +526,82 @@ function clearTriggerTester() {
 }
 
 export function AddTriggerState() {
-
+    const item = new Trigger();
+    currentProfile.triggers[currentNode.dataAttr.index].triggers.push(item);
+    $('#trigger-states-dropdown').append((addTriggerStateDropdown(item, currentProfile.triggers[currentNode.dataAttr.index].triggers.length)));
+    $('#trigger-states-delete').prop('disabled', false);
+    $($('#trigger-states').parent()).css('display', '');
+    SelectTriggerState(currentProfile.triggers[currentNode.dataAttr.index].triggers.length);
 }
 
-export function SelectTriggerState(state) {
-
+export function SelectTriggerState(state, noUpdate?) {
+    if (!noUpdate)
+        UpdateTrigger();
+    setState(state);
+    if (state === 0)
+        UpdateEditor('trigger', currentProfile.triggers[currentNode.dataAttr.index], { post: clearTriggerTester });
+    else
+        UpdateEditor('trigger', currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1], { post: clearTriggerTester });
+    focusEditor('trigger-value');
+    $('#trigger-states-dropdown li').removeClass('selected');
+    $('#trigger-states-dropdown li').removeClass('active');
+    $('#trigger-states-dropdown li')[state].classList.add('selected', 'active');
 }
 
 export function DeleteTriggerState() {
+    const state = getState();
+    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+        type: 'question',
+        title: 'Delete current trigger state?',
+        message: 'Are you sure you want to delete this trigger state?',
+        buttons: ['Yes', 'No'],
+        defaultId: 1
+    }).then(result => {
+        if (result.response === 0) {
+            removeTriggerState(state, currentProfile, currentNode.dataAttr.index, true);
+        }
+    });
+}
 
+function removeTriggerState(state, profile, idx, update, customUndo?) {
+    let item = profile.triggers[idx];
+    if (!customUndo)
+        pushUndo({ action: 'deletestate', type: 'trigger', data: { key: 'triggers', idx: idx, profile: profile.name.toLowerCase() }, item: item.clone(), subitem: state });
+    if (state === 0) {
+        sortNodeChildren('Profile' + profileID(profile.name) + 'triggers');
+        const items = item.triggers;
+        item = items.shift();
+        item.triggers = items;
+        profile.triggers[idx] = item;
+        UpdateItemNode(profile.triggers[idx]);
+        if (update)
+            $('#editor-title').text('Trigger: ' + GetDisplay(profile.triggers[idx]));
+    }
+    else {
+        item.triggers.splice(state - 1, 1);
+        if(state > item.triggers.length)
+            state = item.triggers.length;
+        if (update)
+            $('#editor-title').text('Trigger: ' + GetDisplay(profile.triggers[idx].triggers[state - 1]));
+    }
+    if (!update)
+        return;
+    if (item.triggers && item.triggers.length) {
+        $($('#trigger-states').parent()).css('display', '');
+        let items = [];
+        const tl = item.triggers.length;
+        items.push(addTriggerStateDropdown(item, 0));
+        for (let t = 0; t < tl; t++) {
+            items.push(addTriggerStateDropdown(item.triggers[t], t + 1));
+        }
+        $('#trigger-states-dropdown').html(items.join(''));
+    }
+    else {
+        $('#trigger-states-dropdown').html(addTriggerStateDropdown(item, 0));
+        $($('#trigger-states').parent()).css('display', 'none');
+    }
+    $('#trigger-states-delete').prop('disabled', !(item.triggers && item.triggers.length));
+    SelectTriggerState(state, true);
 }
 
 export function moveTriggerState(state, direction) {
@@ -713,12 +782,19 @@ export function UpdateEnabled() {
             currentProfile.macros[currentNode.dataAttr.index].enabled = $('#editor-enabled').prop('checked');
             break;
         case 'trigger':
-            if ($('#editor-enabled').prop('checked'))
-                $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id']), { silent: true }]);
-            else
-                $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id']), { silent: true }]);
-            pushUndo({ action: 'update', type: t, item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: { enabled: currentProfile.triggers[currentNode.dataAttr.index].enabled } });
-            currentProfile.triggers[currentNode.dataAttr.index].enabled = $('#editor-enabled').prop('checked');
+            const state = getState();
+            if (state === 0) {
+                if ($('#editor-enabled').prop('checked'))
+                    $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id']), { silent: true }]);
+                else
+                    $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id']), { silent: true }]);
+                pushUndo({ action: 'update', type: t, item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: { enabled: currentProfile.triggers[currentNode.dataAttr.index].enabled } });
+                currentProfile.triggers[currentNode.dataAttr.index].enabled = $('#editor-enabled').prop('checked');
+            }
+            else {
+                pushUndo({ action: 'update', type: t, item: currentNode.dataAttr.index, subitem: state, profile: currentProfile.name.toLowerCase(), data: { enabled: currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1].enabled } });
+                currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1].enabled = $('#editor-enabled').prop('checked');
+            }
             break;
         case 'button':
             if ($('#editor-enabled').prop('checked'))
@@ -913,13 +989,35 @@ function UpdateAlias(customUndo?: boolean): UpdateState {
     return UpdateState.NoChange;
 }
 
+function getState() {
+    return parseInt((<HTMLInputElement>document.getElementById('state')).value, 10);
+}
+
+function setState(state) {
+    (<HTMLInputElement>document.getElementById('state')).value = state;
+}
+
 function UpdateTrigger(customUndo?: boolean): UpdateState {
-    const data: any = UpdateItem(currentProfile.triggers[currentNode.dataAttr.index]);
+    const state = getState();
+    let data: any;
+    if (state === 0)
+        data = UpdateItem(currentProfile.triggers[currentNode.dataAttr.index]);
+    else
+        data = UpdateItem(currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1]);
     if (data) {
-        UpdateItemNode(currentProfile.triggers[currentNode.dataAttr.index], 0, data);
-        $('#editor-title').text('Trigger: ' + GetDisplay(currentProfile.triggers[currentNode.dataAttr.index]));
-        if (!customUndo)
-            pushUndo({ action: 'update', type: 'trigger', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
+        if (state === 0) {
+            $('#trigger-states-dropdown li:nth-child(' + (state + 1) + ') a').contents().first().replaceWith(`${state}: ${htmlEncode(GetDisplay(currentProfile.triggers[currentNode.dataAttr.index]))}`);
+            UpdateItemNode(currentProfile.triggers[currentNode.dataAttr.index], 0, data);
+            $('#editor-title').text('Trigger: ' + GetDisplay(currentProfile.triggers[currentNode.dataAttr.index]));
+            if (!customUndo)
+                pushUndo({ action: 'update', type: 'trigger', item: currentNode.dataAttr.index, subitem: 0, profile: currentProfile.name.toLowerCase(), data: data });
+        }
+        else {
+            $('#trigger-states-dropdown li:nth-child(' + (state + 1) + ') a').contents().first().replaceWith(`${state}: ${htmlEncode(GetDisplay(currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1]))}`);
+            $('#editor-title').text('Trigger: ' + GetDisplay(currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1]));
+            if (!customUndo)
+                pushUndo({ action: 'update', type: 'trigger', item: currentNode.dataAttr.index, subitem: state, profile: currentProfile.name.toLowerCase(), data: data });
+        }
         return UpdateState.Changed;
     }
     return UpdateState.NoChange;
@@ -1536,7 +1634,7 @@ function nodeCheckChanged(event, node) {
         case 'trigger':
             profile.triggers[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
-            if (node.id === currentNode.id)
+            if (node.id === currentNode.id && getState() === 0)
                 $('#editor-enabled').prop('checked', node.state.checked);
             break;
         case 'button':
@@ -1665,6 +1763,30 @@ export function doUndo() {
             else
                 insertItem(action.type, action.data.key, action.item, action.data.idx, profiles.items[action.data.profile], true);
             break;
+        case 'deletestate':
+            profiles.items[action.data.profile].triggers[action.data.idx] = action.item.clone();
+            sortNodeChildren('Profile' + profileID(profiles.items[action.data.profile].name) + 'triggers');
+            //current node that is being modified is the selected one
+            if (currentProfile === profiles.items[action.data.profile] && currentNode.dataAttr.index === action.data.idx && currentNode.dataAttr.type == action.type) {
+                const item = profiles.items[action.data.profile].triggers[action.data.idx];
+                if (item.triggers && item.triggers.length) {
+                    $($('#trigger-states').parent()).css('display', '');
+                    let items = [];
+                    const tl = item.triggers.length;
+                    items.push(addTriggerStateDropdown(item, 0));
+                    for (let t = 0; t < tl; t++) {
+                        items.push(addTriggerStateDropdown(item.triggers[t], t + 1));
+                    }
+                    $('#trigger-states-dropdown').html(items.join(''));
+                }
+                else {
+                    $('#trigger-states-dropdown').html(addTriggerStateDropdown(item, 0));
+                    $($('#trigger-states').parent()).css('display', 'none');
+                }
+                $('#trigger-states-delete').prop('disabled', !(item.triggers && item.triggers.length));
+                SelectTriggerState(action.subitem, true);
+            }
+            break;
         case 'update':
             const current = {};
             if (action.type === 'profile') {
@@ -1735,7 +1857,10 @@ export function doUndo() {
                             UpdateEditor('macro', profiles.items[action.profile][key][action.item], { key: MacroValue });
                             break;
                         case 'trigger':
-                            UpdateEditor('trigger', profiles.items[action.profile][key][action.item], { pre: initTriggerEditor, post: clearTriggerTester });
+                            if (action.subitem)
+                                UpdateEditor('trigger', profiles.items[action.profile][key][action.item].triggers[action.subitem - 1], { pre: initTriggerEditor, post: clearTriggerTester });
+                            else
+                                UpdateEditor('trigger', profiles.items[action.profile][key][action.item], { pre: initTriggerEditor, post: clearTriggerTester });
                             break;
                         case 'button':
                             UpdateEditor('button', profiles.items[action.profile][key][action.item], { post: UpdateButtonSample });
@@ -1839,6 +1964,9 @@ export function doRedo() {
             else
                 DeleteItem(action.type, action.data.key, action.data.idx, profiles.items[action.data.profile], true);
             break;
+        case 'deletestate':
+            removeTriggerState(action.subitem, profiles.items[action.data.profile], action.data.idx, currentProfile === profiles.items[action.data.profile] && currentNode.dataAttr.index === action.data.idx && currentNode.dataAttr.type == action.type, true);
+            break;
         case 'update':
             const current = {};
             if (action.type === 'profile') {
@@ -1909,7 +2037,10 @@ export function doRedo() {
                             UpdateEditor('macro', profiles.items[action.profile][key][action.item], { key: MacroValue });
                             break;
                         case 'trigger':
-                            UpdateEditor('trigger', profiles.items[action.profile][key][action.item], { pre: initTriggerEditor, post: clearTriggerTester });
+                            if (action.subitem)
+                                UpdateEditor('trigger', profiles.items[action.profile][key][action.item].triggers[action.subitem - 1], { pre: initTriggerEditor, post: clearTriggerTester });
+                            else
+                                UpdateEditor('trigger', profiles.items[action.profile][key][action.item], { pre: initTriggerEditor, post: clearTriggerTester });
                             break;
                         case 'button':
                             UpdateEditor('button', profiles.items[action.profile][key][action.item], { post: UpdateButtonSample });
