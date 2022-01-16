@@ -368,7 +368,7 @@ export class Trigger extends Item {
                 if (!data.hasOwnProperty(prop)) {
                     continue;
                 }
-                if (prop === "triggers") {
+                if (prop === 'triggers') {
                     this.triggers = [];
                     const il = data.triggers.length;
                     for (let i = 0; i < il; i++) {

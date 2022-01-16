@@ -490,12 +490,15 @@ export function RunTester() {
     }
 }
 
-function addTriggerStateDropdown(item, state) {
-    return `<li><a href="#" style="padding-right: 62px;" onclick="profileUI.SelectTriggerState(${state});">${state}: ${htmlEncode(GetDisplay(item))}
+function addTriggerStateDropdown(item, state, contentOnly?) {
+    var content = `<a href="#" style="padding-right: 62px;" onclick="profileUI.SelectTriggerState(${state});">${state}: ${htmlEncode(GetDisplay(item))}
     <span class="btn-group" style="right: 15px;position: absolute;">
     <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${state}, -1);event.cancelBubble = true;">
     <i class="fa fa-angle-double-up"></i></button>
-    <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${state}, 1);event.cancelBubble = true;"><i class="fa fa-angle-double-down"></i></button></span></a></li>`;
+    <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${state}, 1);event.cancelBubble = true;"><i class="fa fa-angle-double-down"></i></button></span></a>`;
+    if (contentOnly)
+        return content;
+    return `<li>${content}</li>`;
 }
 
 function initTriggerEditor(item) {
@@ -510,6 +513,8 @@ function initTriggerEditor(item) {
             items.push(addTriggerStateDropdown(item.triggers[t], t + 1));
         }
         $('#trigger-states-dropdown').html(items.join(''));
+        $('#trigger-states-dropdown li:last-child button:nth-child(2)').prop('disabled', true);
+        $('#trigger-states-dropdown li:first-child button:nth-child(1)').prop('disabled', true);
     }
     else {
         $('#trigger-states-dropdown').html(addTriggerStateDropdown(item, 0));
@@ -528,7 +533,9 @@ function clearTriggerTester() {
 export function AddTriggerState() {
     const item = new Trigger();
     currentProfile.triggers[currentNode.dataAttr.index].triggers.push(item);
+    $('#trigger-states-dropdown li:last-child button:nth-child(2)').prop('disabled', false);
     $('#trigger-states-dropdown').append((addTriggerStateDropdown(item, currentProfile.triggers[currentNode.dataAttr.index].triggers.length)));
+    $('#trigger-states-dropdown li:last-child button:nth-child(2)').prop('disabled', true);
     $('#trigger-states-delete').prop('disabled', false);
     $($('#trigger-states').parent()).css('display', '');
     SelectTriggerState(currentProfile.triggers[currentNode.dataAttr.index].triggers.length);
@@ -579,7 +586,7 @@ function removeTriggerState(state, profile, idx, update, customUndo?) {
     }
     else {
         item.triggers.splice(state - 1, 1);
-        if(state > item.triggers.length)
+        if (state > item.triggers.length)
             state = item.triggers.length;
         if (update)
             $('#editor-title').text('Trigger: ' + GetDisplay(profile.triggers[idx].triggers[state - 1]));
@@ -595,6 +602,8 @@ function removeTriggerState(state, profile, idx, update, customUndo?) {
             items.push(addTriggerStateDropdown(item.triggers[t], t + 1));
         }
         $('#trigger-states-dropdown').html(items.join(''));
+        $('#trigger-states-dropdown li:last-child button:nth-child(2)').prop('disabled', true);
+        $('#trigger-states-dropdown li:first-child button:nth-child(1)').prop('disabled', true);
     }
     else {
         $('#trigger-states-dropdown').html(addTriggerStateDropdown(item, 0));
@@ -605,7 +614,64 @@ function removeTriggerState(state, profile, idx, update, customUndo?) {
 }
 
 export function moveTriggerState(state, direction) {
+    swapTriggerState(state, state + direction, currentProfile, currentNode.dataAttr.index, true);
+}
 
+function swapTriggerState(oldState, newState, profile, idx, update, customUndo?) {
+    let item = profile.triggers[idx];
+    if (newState < 0 || newState > item.triggers.length)
+        return;
+    if (!customUndo)
+        pushUndo({ action: 'swapstate', type: 'trigger', data: { key: 'triggers', idx: idx, profile: profile.name.toLowerCase() }, item: item.clone(), prevItem: oldState, newItem: newState });
+    const items = item.triggers;
+    let o;
+    let n;
+    //new one becomes main trigger
+    if (newState == 0) {
+        o = items.shift();
+        o.triggers = items;
+        n = item;
+        n.triggers = [];
+        o.state = n.state;
+        items.unshift(n);
+        profile.triggers[idx] = o;
+        UpdateItemNode(profile.triggers[idx]);
+        if (update) {
+            $('#trigger-states-dropdown li:nth-child(1)').html(addTriggerStateDropdown(o, 0, true));
+            $('#trigger-states-dropdown li:nth-child(2)').html(addTriggerStateDropdown(n, 1, true));
+        }
+    }
+    //main trigger becomes first state
+    else if (oldState === 0) {
+        n = items.shift();
+        n.triggers = items;
+        o = item;
+        o.triggers = [];
+        n.state = o.state;
+        items.unshift(o);
+        profile.triggers[idx] = n;
+        UpdateItemNode(profile.triggers[idx]);
+        if (update) {
+            $('#trigger-states-dropdown li:nth-child(1)').html(addTriggerStateDropdown(n, 0, true));
+            $('#trigger-states-dropdown li:nth-child(2)').html(addTriggerStateDropdown(o, 1, true));
+        }
+    }
+    else {
+        n = items[newState - 1];
+        items[newState - 1] = items[oldState - 1];
+        items[oldState - 1] = n;
+        if (update) {
+            $('#trigger-states-dropdown li:nth-child(' + (newState + 1) + ')').html(addTriggerStateDropdown(items[newState - 1], newState, true));
+            $('#trigger-states-dropdown li:nth-child(' + (oldState + 1) + ')').html(addTriggerStateDropdown(items[oldState - 1], oldState, true));
+        }
+    }
+    $('#trigger-states-dropdown li:first-child button:nth-child(1)').prop('disabled', true);
+    $('#trigger-states-dropdown li:last-child button:nth-child(2)').prop('disabled', true);
+    if (oldState === getState()) {
+        setState(newState);
+        $('#trigger-states-dropdown li')[oldState].classList.remove('selected', 'active');
+        $('#trigger-states-dropdown li')[newState].classList.add('selected', 'active');
+    }
 }
 
 export function UpdateButtonSample() {
@@ -1787,6 +1853,9 @@ export function doUndo() {
                 SelectTriggerState(action.subitem, true);
             }
             break;
+        case 'swapstate':
+            swapTriggerState(action.newItem, action.prevItem, profiles.items[action.data.profile], action.data.idx, currentProfile === profiles.items[action.data.profile] && currentNode.dataAttr.index === action.data.idx && currentNode.dataAttr.type == action.type, true);
+            break;
         case 'update':
             const current = {};
             if (action.type === 'profile') {
@@ -1966,6 +2035,9 @@ export function doRedo() {
             break;
         case 'deletestate':
             removeTriggerState(action.subitem, profiles.items[action.data.profile], action.data.idx, currentProfile === profiles.items[action.data.profile] && currentNode.dataAttr.index === action.data.idx && currentNode.dataAttr.type == action.type, true);
+            break;
+        case 'swapstate':
+            swapTriggerState(action.prevItem, action.newItem, profiles.items[action.data.profile], action.data.idx, currentProfile === profiles.items[action.data.profile] && currentNode.dataAttr.index === action.data.idx && currentNode.dataAttr.type == action.type, true);
             break;
         case 'update':
             const current = {};
