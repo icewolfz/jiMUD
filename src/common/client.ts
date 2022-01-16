@@ -220,7 +220,8 @@ export class Client extends EventEmitter {
             return;
         this.profiles.items[keys[k]].triggers.splice(idx, 1);
         this._itemCache.triggers = null;
-        if (trigger.type === TriggerType.Alarm && this._itemCache.alarms) {
+        //an alarm or has sub types see if cached
+        if ((trigger.triggers.length || trigger.type === TriggerType.Alarm) && this._itemCache.alarms) {
             idx = this._itemCache.alarms.indexOf(trigger);
             if (idx !== -1) {
                 this._itemCache.alarms.splice(idx, 1);
@@ -243,7 +244,16 @@ export class Client extends EventEmitter {
             if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableTriggers)
                 this._itemCache.alarms = [];
             else
-                this._itemCache.alarms = $.grep(SortItemArrayByPriority(this.profiles.items[keys[k]].triggers), (a) => {
+                this._itemCache.alarms = $.grep(SortItemArrayByPriority(this.profiles.items[keys[k]].triggers), (a: Trigger) => {
+                    //has sub triggers of type alarm so cache them for future use as well
+                    if (a && a.enabled && a.triggers.length) {
+                        if (a.type === TriggerType.Alarm) return true;
+                        //loop sub states if one is alarm cache it for future
+                        for (let s = 0, sl = a.triggers.length; s < sl; s++)
+                            if (a.triggers[s].enabled && a.triggers[s].type === TriggerType.Alarm)
+                                return true;
+                        return false;
+                    }
                     return a && a.enabled && a.type === TriggerType.Alarm;
                 });
             this._itemCache.alarms.reverse();
@@ -255,6 +265,15 @@ export class Client extends EventEmitter {
             tmp.push.apply(tmp, SortItemArrayByPriority(this.profiles.items[keys[k]].triggers));
         }
         this._itemCache.alarms = $.grep(tmp, (a) => {
+            //has sub triggers of type alarm so cache them for future use as well
+            if (a && a.enabled && a.triggers.length) {
+                if (a.type === TriggerType.Alarm) return true;
+                //loop sub states if one is alarm cache it for future
+                for (let s = 0, sl = a.triggers.length; s < sl; s++)
+                    if (a.triggers[s].enabled && a.triggers[s].type === TriggerType.Alarm)
+                        return true;
+                return false;
+            }
             return a && a.enabled && a.type === TriggerType.Alarm;
         });
         this._itemCache.alarms.reverse();
@@ -465,15 +484,26 @@ export class Client extends EventEmitter {
             return 0;
         let pattern = this._itemCache.alarmPatterns[idx];
         if (!pattern) {
-            pattern = Alarm.parse(this.alarms[idx]);
+            //use an object to store to prevent having to loop over large array
+            pattern = {};
+            if (this.alarms[idx].type === TriggerType.Alarm)
+                pattern[0] = Alarm.parse(this.alarms[idx]);
+            for (let s = 0, sl = this.alarms[idx].triggers.length; s < sl; s++) {
+                //enabled and is alarm
+                if (this.alarms[idx].triggers[s].enabled && this.alarms[idx].triggers[s].type === TriggerType.Alarm)
+                    pattern[s] = Alarm.parse(this.alarms[idx].triggers[s]);
+            }
             this._itemCache.alarmPatterns[idx] = pattern;
         }
-        if (state) {
-            pattern.startTime += Date.now() - pattern.suspended;
-            pattern.suspended = 0;
+        for (const p in pattern) {
+            if (!pattern.hasOwnProperty(p)) continue;
+            if (state) {
+                pattern[p].startTime += Date.now() - pattern[p].suspended;
+                pattern[p].suspended = 0;
+            }
+            else
+                pattern[p].suspended = Date.now();
         }
-        else
-            pattern.suspended = Date.now();
     }
 
     public updateAlarms() {
@@ -507,11 +537,49 @@ export class Client extends EventEmitter {
         const now = Date.now();
         const alarms = this.alarms;
         for (a = al - 1; a >= 0; a--) {
-            let alarm = patterns[a];
-            if (!alarm) {
-                alarm = Alarm.parse(alarms[a]);
-                patterns[a] = alarm;
+            let trigger = alarms[a];
+            const parent = trigger;
+            //not enabled skip
+            if (!trigger.enabled) continue;
+            //get sub state
+            if (trigger.state !== 0) {
+                //trigger states are 1 based as 0 is parent trigger
+                trigger = trigger.triggers[trigger.state - 1];
+                //skip disabled states
+                while (!trigger.enabled && parent.state !== 0) {
+                    //advance state
+                    parent.state++;
+                    //if no more states start over and stop
+                    if (parent.state > parent.triggers.length) {
+                        parent.state = 0;
+                        //reset to first state
+                        trigger = trigger.triggers[parent.state - 1];
+                        //stop checking
+                        break;
+                    }
+                    if (parent.state)
+                        trigger = trigger.triggers[parent.state - 1];
+                    else
+                        trigger = parent;
+                }
+                //last check to be 100% sure enabled
+                if (!trigger.enabled) continue;
             }
+            //not an alarm either has sub alarms or was updated
+            if (trigger.type !== TriggerType.Alarm) continue;
+            let alarm = patterns[a];
+            //not found build cache
+            if (!alarm) {
+                patterns[a] = {};
+                if (trigger.type === TriggerType.Alarm)
+                    patterns[a][0] = Alarm.parse(trigger);
+                for (let s = 0, sl = trigger.triggers.length; s < sl; s++) {
+                    if (trigger.triggers[s].type === TriggerType.Alarm)
+                        patterns[a][s] = Alarm.parse(trigger.triggers[s]);
+                }
+            }
+            //we want to sub state pattern
+            alarm = alarm[trigger.state];
             let match: boolean = true;
             let ts;
             if (alarm.start)
@@ -549,9 +617,35 @@ export class Client extends EventEmitter {
                 match = match && alarm.seconds === ts.seconds();
 
             if (match && !alarm.suspended) {
-                this._input.ExecuteTrigger(alarms[a], [alarm.pattern], false, -a);
-                if (alarm.temp)
-                    this.removeTrigger(alarms[a]);
+                this._input.ExecuteTrigger(trigger, [alarm.pattern], false, -a);
+                if (alarm.temp) {
+                    //has sub state so only remove the temp alarm state
+                    if (parent.triggers.length) {
+                        if (parent.state === 0) {
+                            const item = parent.triggers.shift();
+                            item.triggers = parent.triggers;
+                            alarms[a] = item;
+                            patterns[a] = null;
+                            this.saveProfile(parent.profile.name);
+                            const idx = parent.profile.triggers.indexOf(parent)
+                            this.emit('item-updated', 'trigger', parent.profile.name, idx);
+                        }
+                        else {
+                            parent.triggers.splice(parent.state - 1, 1);
+                            patterns[a].splice(parent.state - 1, 1);
+                            this.saveProfile(parent.profile.name);
+                            const idx = parent.profile.triggers.indexOf(parent)
+                            this.emit('item-updated', 'trigger', parent.profile.name, idx);
+                        }
+                    }
+                    else
+                        this.removeTrigger(parent);
+                } //not temp advance state
+                else if (parent.triggers.length) {
+                    parent.state++;
+                    if (parent.state > parent.triggers.length)
+                        parent.state = 0;
+                }
             }
         }
     }
