@@ -617,34 +617,42 @@ export class Client extends EventEmitter {
                 match = match && alarm.seconds === ts.seconds();
 
             if (match && !alarm.suspended) {
-                this._input.ExecuteTrigger(trigger, [alarm.pattern], false, -a);
+                //save as if temp alarm as execute trigger advances state and temp alarms will need different state shifts
+                const state = parent.state;
+                this._input.ExecuteTrigger(trigger, [alarm.pattern], false, -a, null, null, parent);
                 if (alarm.temp) {
                     //has sub state so only remove the temp alarm state
                     if (parent.triggers.length) {
-                        if (parent.state === 0) {
+                        if (state === 0) {
                             const item = parent.triggers.shift();
+                            //restore previous state as shifted state may have skipped next state
+                            item.state = state;
+                            //if removed temp shift state adjust
+                            if (item.state > item.triggers.length)
+                                item.state = 0;
                             item.triggers = parent.triggers;
                             alarms[a] = item;
                             patterns[a] = null;
                             this.saveProfile(parent.profile.name);
                             const idx = parent.profile.triggers.indexOf(parent)
+                            parent.profile.triggers[idx] = item;
                             this.emit('item-updated', 'trigger', parent.profile.name, idx);
                         }
                         else {
-                            parent.triggers.splice(parent.state - 1, 1);
-                            patterns[a].splice(parent.state - 1, 1);
+                            parent.triggers.splice(state - 1, 1);
+                            patterns[a].splice(state - 1, 1);
+                            //restore previous state as shifted state may have skipped next state
+                            parent.state = state;
+                            //if removed temp shift state adjust
+                            if (parent.state > parent.triggers.length)
+                                parent.state = 0;                            
                             this.saveProfile(parent.profile.name);
-                            const idx = parent.profile.triggers.indexOf(parent)
+                            const idx = parent.profile.triggers.indexOf(parent);
                             this.emit('item-updated', 'trigger', parent.profile.name, idx);
                         }
                     }
                     else
                         this.removeTrigger(parent);
-                } //not temp advance state
-                else if (parent.triggers.length) {
-                    parent.state++;
-                    if (parent.state > parent.triggers.length)
-                        parent.state = 0;
                 }
             }
         }

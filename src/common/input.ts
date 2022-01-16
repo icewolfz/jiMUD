@@ -6058,12 +6058,6 @@ export class Input extends EventEmitter {
                 if (trigger.verbatim) {
                     if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) continue;
                     else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) continue;
-                    if (parent.triggers.length) {
-                        parent.state++;
-                        //1 based sp 1 to length
-                        if (parent.state > parent.triggers.length)
-                            parent.state = 0;
-                    }
                     if (ret)
                         return this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], true, t, [(trigger.raw ? raw : line)], 0, parent);
                     this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t, [(trigger.raw ? raw : line)], 0, parent);
@@ -6091,12 +6085,6 @@ export class Input extends EventEmitter {
                     }
                     if (res.groups)
                         Object.keys(res.groups).map(v => this.client.variables[v] = res.groups[v]);
-                    if (parent.triggers.length) {
-                        parent.state++;
-                        //1 based
-                        if (parent.state > parent.triggers.length)
-                            parent.state = 0;
-                    }
                     if (ret)
                         return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re], res.groups, parent);
                     this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups, parent);
@@ -6169,12 +6157,44 @@ export class Input extends EventEmitter {
                 ret = trigger.value;
                 break;
         }
-        if (parent.temp) {
-            if (parent.triggers.length == 0 || parent.state === parent.triggers.length) {
+        if (trigger.temp) {
+            if (parent.triggers.length) {
+                if (parent.state === 0) {
+                    //main trigger temp, replace with first state
+                    const item = parent.triggers.shift();
+                    item.triggers = parent.triggers;
+                    item.state = parent.state;
+                    //if removed temp shift state adjust
+                    if (item.state > item.triggers.length)
+                        item.state = 0;                    
+                    if (idx >= 0)
+                        this._TriggerCache[idx] = item;
+                    this.client.saveProfile(parent.profile.name);
+                    const pIdx = parent.profile.triggers.indexOf(parent);
+                    parent.profile.triggers[pIdx] = item;
+                    this.client.emit('item-updated', 'trigger', parent.profile.name, pIdx);
+                }
+                else {
+                    //remove only temp sub state
+                    parent.triggers.splice(parent.state - 1, 1);
+                    //if removed temp shift state adjust
+                    if (parent.state > parent.triggers.length)
+                        parent.state = 0;                    
+                    this.client.saveProfile(parent.profile.name);
+                    this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
+                }
+            }
+            else {
                 if (idx >= 0)
                     this._TriggerCache.splice(idx, 1);
                 this.client.removeTrigger(parent);
             }
+        }
+        else if (parent.triggers.length) {
+            parent.state++;
+            //1 based
+            if (parent.state > parent.triggers.length)
+                parent.state = 0;
         }
         if (ret == null || ret === undefined)
             return null;
@@ -6257,11 +6277,6 @@ export class Input extends EventEmitter {
             if (trigger.caseSensitive && event !== trigger.pattern) continue;
             if (!trigger.caseSensitive && event.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
             this.ExecuteTrigger(trigger, args, false, t, 0, 0, parent);
-            if (parent.triggers.length) {
-                parent.state++;
-                if (parent.state > parent.triggers.length)
-                    parent.state = 0;
-            }
         }
     }
 
