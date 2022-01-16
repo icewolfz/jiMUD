@@ -13,6 +13,7 @@
 - **Changed:**
   - Update electron 16.0.6 to 16.0.7
   - Update font-list 1.4.3 to 1.4.5
+  - Update mathjs 10.0.2 to 10.1.0
 
 ## v0.17.5 2022-01-10
 
