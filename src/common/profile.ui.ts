@@ -490,10 +490,53 @@ export function RunTester() {
     }
 }
 
+function initTriggerEditor(item) {
+    $(window).trigger('resize');
+    if (item.triggers && item.triggers.length) {
+        $($('#trigger-states').parent()).css('display', '');
+        let items = [];
+        const tl = item.triggers.length;
+        items.push(`<li><a href="#" style="padding-right: 62px;" onclick="profileUI.SelectTriggerState(0);">0: ${htmlEncode(GetDisplay(item))}
+        <span class="btn-group" style="right: 15px;position: absolute;">
+        <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(0, -1);event.cancelBubble = true;">
+        <i class="fa fa-angle-double-up"></i></button>
+        <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(0, 1);event.cancelBubble = true;"><i class="fa fa-angle-double-down"></i></button></span></a></li>`);
+        for (let t = 0; t < tl; t++) {
+            items.push(`<li><a href="#" style="padding-right: 62px;" onclick="profileUI.SelectTriggerState(${t + 1});">${t + 1}: ${htmlEncode(GetDisplay(item.triggers[t]))}
+            <span class="btn-group" style="right: 15px;position: absolute;">
+            <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${t + 1}, -1);event.cancelBubble = true;">
+            <i class="fa fa-angle-double-up"></i></button>
+            <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${t + 1}, 1);event.cancelBubble = true;"><i class="fa fa-angle-double-down"></i></button></span></a></li>`);
+        }
+        $('#trigger-states-dropdown').html(items.join(''));
+    }
+    else {
+        $($('#trigger-states').parent()).css('display', 'none');
+        $('#trigger-states-dropdown').html('');
+    }
+    $('#trigger-states-delete').prop('disabled', !(item.triggers && item.triggers.length));
+}
+
 function clearTriggerTester() {
     $('#trigger-test-text').val('');
     $('#trigger-test-results').val('');
     $('.nav-tabs a[href="#tab-trigger-value"]').tab('show');
+}
+
+export function AddTriggerState() {
+
+}
+
+export function SelectTriggerState(state) {
+
+}
+
+export function DeleteTriggerState() {
+
+}
+
+export function moveTriggerState(state, direction) {
+
 }
 
 export function UpdateButtonSample() {
@@ -1224,12 +1267,12 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
     const e = _enabled.indexOf(currentProfile.name.toLowerCase()) !== -1;
     let p;
     const selected = currentNode.state.selected;
-    const expanded = currentNode.state.expanded;       
+    const expanded = currentNode.state.expanded;
     if (currentProfile.priority !== parseInt(<string>$('#profile-priority').val(), 10)) {
         data.priority = currentProfile.priority;
         changed++;
         currentProfile.priority = parseInt(<string>$('#profile-priority').val(), 10);
-    }    
+    }
     if (val !== currentProfile.name) {
         data.name = val;
         changed++;
@@ -1262,8 +1305,7 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
             $('#profile-tree').treeview('expandNode', [node]);
         p = sortTree();
     }
-    else if(changed)
-    {    
+    else if (changed) {
         let node = $('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id'])[0];
         $('#profile-tree').treeview('updateNode', [node, newProfileNode()]);
         node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
@@ -1693,7 +1735,7 @@ export function doUndo() {
                             UpdateEditor('macro', profiles.items[action.profile][key][action.item], { key: MacroValue });
                             break;
                         case 'trigger':
-                            UpdateEditor('trigger', profiles.items[action.profile][key][action.item], { post: clearTriggerTester });
+                            UpdateEditor('trigger', profiles.items[action.profile][key][action.item], { pre: initTriggerEditor, post: clearTriggerTester });
                             break;
                         case 'button':
                             UpdateEditor('button', profiles.items[action.profile][key][action.item], { post: UpdateButtonSample });
@@ -1867,7 +1909,7 @@ export function doRedo() {
                             UpdateEditor('macro', profiles.items[action.profile][key][action.item], { key: MacroValue });
                             break;
                         case 'trigger':
-                            UpdateEditor('trigger', profiles.items[action.profile][key][action.item], { post: clearTriggerTester });
+                            UpdateEditor('trigger', profiles.items[action.profile][key][action.item], { pre: initTriggerEditor, post: clearTriggerTester });
                             break;
                         case 'button':
                             UpdateEditor('button', profiles.items[action.profile][key][action.item], { post: UpdateButtonSample });
@@ -2316,7 +2358,7 @@ function buildTreeview(data, skipInit?) {
                         focusEditor('macro-value');
                         break;
                     case 'trigger':
-                        UpdateEditor('trigger', currentProfile.triggers[node.dataAttr.index], { post: clearTriggerTester });
+                        UpdateEditor('trigger', currentProfile.triggers[node.dataAttr.index], { pre: initTriggerEditor, post: clearTriggerTester });
                         focusEditor('trigger-value');
                         break;
                     case 'button':
@@ -2480,6 +2522,8 @@ export function init() {
             $('#content').css('left', document.body.clientWidth - 300);
             ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: document.body.clientWidth - 300 });
         }
+        $('#trigger-states-dropdown').css('width', $('#trigger-pattern').outerWidth() + 17 + 'px');
+        $('#trigger-states-dropdown').css('left', (-$('#trigger-pattern').outerWidth()) + 'px');
     });
 
     $(document).mouseup((e) => {
@@ -4106,7 +4150,7 @@ function UpdateEditor(editor, item, options?) {
     else
         $('#editor-enabled').prop('checked', item.enabled);
     if (typeof options['pre'] === 'function')
-        options['pre']();
+        options['pre'](item);
     let prop;
     for (prop in item) {
         if (!item.hasOwnProperty(prop)) {
@@ -4142,7 +4186,7 @@ function UpdateEditor(editor, item, options?) {
         $(id).data('previous-value', item[prop]);
     }
     if (typeof options['post'] === 'function')
-        options['post']();
+        options['post'](item);
     _pUndo = false;
     _loading--;
 }

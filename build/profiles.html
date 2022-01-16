@@ -190,38 +190,18 @@
                             <td colspan="4">
                                 <div class="input-group" style="width:100%;">
                                     <input class="form-control" type="text" id="trigger-pattern">
+                                    <input type="hidden" id="state">
                                     <span class="input-group-btn" style="width: 17px;">
-                                        <button title="Select state" id="trigger-states" class="btn btn-default" style="width:100%;border-radius: 0;padding-left:4px;padding-right:4px;border-left:0px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                        <button title="Select state" id="trigger-states" class="btn btn-default" style="width:100%;border-radius: 0;padding-left:4px;padding-right:4px;border-left:0px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-boundary="window">
                                             <span class="caret"></span>
                                         </button>
-                                        <ul id="trigger-states-dropdown" class="dropdown-menu dropdown-menu-right" aria-labelledby="trigger-states">
-                                            <li><a href="#" style="padding-right: 62px;">0: PATTERN
-                                                    <span class="btn-group" style="right: 15px;position: absolute;">
-                                                        <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="event.cancelBubble = true;">
-                                                            <i class="fa fa-angle-double-up"></i>
-                                                        </button>
-                                                        <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="event.cancelBubble = true;">
-                                                            <i class="fa fa-angle-double-down"></i>
-                                                        </button>
-                                                    </span>
-                                                </a></li>
-                                            <li class="active selected"><a href="#" style="padding-right: 62px;">0: PATTERN
-                                                    <span class="btn-group" style="right: 15px;position: absolute;">
-                                                        <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="event.cancelBubble = true;">
-                                                            <i class="fa fa-angle-double-up"></i>
-                                                        </button>
-                                                        <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="event.cancelBubble = true;">
-                                                            <i class="fa fa-angle-double-down"></i>
-                                                        </button>
-                                                    </span>
-                                                </a></li>
-                                        </ul>
+                                        <ul id="trigger-states-dropdown" class="dropdown-menu" aria-labelledby="trigger-states" style="max-height: 200px;overflow: auto;"></ul>
                                     </span>
                                     <span class="input-group-btn" style="width: 1%;">
-                                        <button class="btn btn-default" type="button" onclick="" title="Add new trigger state">
+                                        <button class="btn btn-default" type="button" onclick="profileUI.AddTriggerState()" title="Add new trigger state">
                                             <i class="fa fa-plus"></i>
                                         </button>
-                                        <button id="trigger-states-delete" disabled="disabled" class="btn btn-danger" type="button" onclick="" title="Delete current trigger state">
+                                        <button id="trigger-states-delete" disabled="disabled" class="btn btn-danger" type="button" onclick="profileUI.DeleteTriggerState()" title="Delete current trigger state">
                                             <i class="fa fa-times"></i>
                                         </button>
                                     </span>
