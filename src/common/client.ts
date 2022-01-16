@@ -215,7 +215,11 @@ export class Client extends EventEmitter {
                 if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableTriggers || this.profiles.items[keys[k]].triggers.length === 0)
                     continue;
                 idx = this.profiles.items[keys[k]].triggers.indexOf(trigger);
+                //found trigger bail, or it will keep looking and k index will be wrong profile
+                if(idx !== -1)
+                    break;
             }
+        //check to be sure trigger found
         if (idx === -1)
             return;
         this.profiles.items[keys[k]].triggers.splice(idx, 1);
