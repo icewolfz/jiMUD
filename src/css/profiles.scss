@@ -396,3 +396,16 @@ table tr:last-child td {
 .has-error a {
     color: #A94442;
 }
+
+#trigger-states-dropdown.dropdown-menu>li>a>span {
+    background: white;
+}
+
+#trigger-states-dropdown.dropdown-menu>.active>a>span {
+    background: inherit;
+}
+
+#trigger-states-dropdown.dropdown-menu>.active>a>span,
+#trigger-states-dropdown.dropdown-menu>li>a:hover>span {
+    background: inherit;
+}

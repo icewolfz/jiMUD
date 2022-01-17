@@ -492,7 +492,7 @@ export function RunTester() {
 
 function addTriggerStateDropdown(item, state, contentOnly?) {
     var content = `<a href="#" style="padding-right: 62px;" onclick="profileUI.SelectTriggerState(${state});">${state}: ${htmlEncode(GetDisplay(item))}
-    <span class="btn-group" style="right: 15px;position: absolute;">
+    <span class="btn-group" style="right: 0px;position: absolute;padding-right: 15px;">    
     <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${state}, -1);event.cancelBubble = true;">
     <i class="fa fa-angle-double-up"></i></button>
     <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${state}, 1);event.cancelBubble = true;"><i class="fa fa-angle-double-down"></i></button></span></a>`;
@@ -522,6 +522,8 @@ function initTriggerEditor(item) {
     }
     $('#trigger-states-dropdown li')[0].classList.add('selected', 'active');
     $('#trigger-states-delete').prop('disabled', !(item.triggers && item.triggers.length));
+    $('#trigger-priority').parent().css('display', '');
+    $('#trigger-priority').parent().prev().css('display', '');
 }
 
 function clearTriggerTester() {
@@ -553,6 +555,8 @@ export function SelectTriggerState(state, noUpdate?) {
     $('#trigger-states-dropdown li').removeClass('selected');
     $('#trigger-states-dropdown li').removeClass('active');
     $('#trigger-states-dropdown li')[state].classList.add('selected', 'active');
+    $('#trigger-priority').parent().css('display', state === 0 ? '' : 'none');
+    $('#trigger-priority').parent().prev().css('display', state === 0 ? '' : 'none');
 }
 
 export function DeleteTriggerState() {
@@ -578,6 +582,8 @@ function removeTriggerState(state, profile, idx, update, customUndo?) {
         sortNodeChildren('Profile' + profileID(profile.name) + 'triggers');
         const items = item.triggers;
         item = items.shift();
+        item.state = profile.triggers[idx].state;
+        item.priority = profile.triggers[idx].priority;
         item.triggers = items;
         profile.triggers[idx] = item;
         UpdateItemNode(profile.triggers[idx]);
@@ -633,12 +639,15 @@ function swapTriggerState(oldState, newState, profile, idx, update, customUndo?)
         n = item;
         n.triggers = [];
         o.state = n.state;
+        o.priority = n.priority;
         items.unshift(n);
         profile.triggers[idx] = o;
         UpdateItemNode(profile.triggers[idx]);
         if (update) {
             $('#trigger-states-dropdown li:nth-child(1)').html(addTriggerStateDropdown(o, 0, true));
             $('#trigger-states-dropdown li:nth-child(2)').html(addTriggerStateDropdown(n, 1, true));
+            $('#trigger-priority').parent().css('display', '');
+            $('#trigger-priority').parent().prev().css('display', '');
         }
     }
     //main trigger becomes first state
@@ -648,12 +657,15 @@ function swapTriggerState(oldState, newState, profile, idx, update, customUndo?)
         o = item;
         o.triggers = [];
         n.state = o.state;
+        n.priority = o.priority;
         items.unshift(o);
         profile.triggers[idx] = n;
         UpdateItemNode(profile.triggers[idx]);
         if (update) {
             $('#trigger-states-dropdown li:nth-child(1)').html(addTriggerStateDropdown(n, 0, true));
             $('#trigger-states-dropdown li:nth-child(2)').html(addTriggerStateDropdown(o, 1, true));
+            $('#trigger-priority').parent().css('display', 'none');
+            $('#trigger-priority').parent().prev().css('display', 'none');            
         }
     }
     else {
