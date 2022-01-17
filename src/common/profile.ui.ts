@@ -518,12 +518,15 @@ function initTriggerEditor(item) {
     }
     else {
         $('#trigger-states-dropdown').html(addTriggerStateDropdown(item, 0));
+        $('#trigger-states-dropdown li:first-child button:nth-child(1)').prop('disabled', true);
         $($('#trigger-states').parent()).css('display', 'none');
     }
     $('#trigger-states-dropdown li')[0].classList.add('selected', 'active');
     $('#trigger-states-delete').prop('disabled', !(item.triggers && item.triggers.length));
     $('#trigger-priority').parent().css('display', '');
     $('#trigger-priority').parent().prev().css('display', '');
+    $('#trigger-state').parent().css('display', item.triggers && item.triggers.length ? '' : 'none');
+    $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? '' : 'none');
 }
 
 function clearTriggerTester() {
@@ -552,11 +555,15 @@ export function SelectTriggerState(state, noUpdate?) {
     else
         UpdateEditor('trigger', currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1], { post: clearTriggerTester });
     focusEditor('trigger-value');
+    if(!currentProfile.triggers[currentNode.dataAttr.index].triggers || currentProfile.triggers[currentNode.dataAttr.index].triggers.length === 0)
+        return;
     $('#trigger-states-dropdown li').removeClass('selected');
     $('#trigger-states-dropdown li').removeClass('active');
     $('#trigger-states-dropdown li')[state].classList.add('selected', 'active');
     $('#trigger-priority').parent().css('display', state === 0 ? '' : 'none');
     $('#trigger-priority').parent().prev().css('display', state === 0 ? '' : 'none');
+    $('#trigger-state').parent().css('display', state === 0 ? '' : 'none');
+    $('#trigger-state').parent().prev().css('display', state === 0 ? '' : 'none');
 }
 
 export function DeleteTriggerState() {
@@ -613,9 +620,14 @@ function removeTriggerState(state, profile, idx, update, customUndo?) {
     }
     else {
         $('#trigger-states-dropdown').html(addTriggerStateDropdown(item, 0));
+        $('#trigger-states-dropdown li:first-child button:nth-child(1)').prop('disabled', true);
         $($('#trigger-states').parent()).css('display', 'none');
     }
     $('#trigger-states-delete').prop('disabled', !(item.triggers && item.triggers.length));
+    $('#trigger-priority').parent().css('display', !(item.triggers && item.triggers.length) || state === 0 ? '' : 'none');
+    $('#trigger-priority').parent().prev().css('display', !(item.triggers && item.triggers.length) || state === 0 ? '' : 'none');
+    $('#trigger-state').parent().css('display', item.triggers && item.triggers.length ? (state === 0 ? '' : 'none') : 'none');
+    $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? (state === 0 ? '' : 'none') : 'none');
     SelectTriggerState(state, true);
 }
 
@@ -648,6 +660,8 @@ function swapTriggerState(oldState, newState, profile, idx, update, customUndo?)
             $('#trigger-states-dropdown li:nth-child(2)').html(addTriggerStateDropdown(n, 1, true));
             $('#trigger-priority').parent().css('display', '');
             $('#trigger-priority').parent().prev().css('display', '');
+            $('#trigger-state').parent().css('display', '');
+            $('#trigger-state').parent().prev().css('display', '');
         }
     }
     //main trigger becomes first state
@@ -665,7 +679,9 @@ function swapTriggerState(oldState, newState, profile, idx, update, customUndo?)
             $('#trigger-states-dropdown li:nth-child(1)').html(addTriggerStateDropdown(n, 0, true));
             $('#trigger-states-dropdown li:nth-child(2)').html(addTriggerStateDropdown(o, 1, true));
             $('#trigger-priority').parent().css('display', 'none');
-            $('#trigger-priority').parent().prev().css('display', 'none');            
+            $('#trigger-priority').parent().prev().css('display', 'none');
+            $('#trigger-state').parent().css('display', 'none');
+            $('#trigger-state').parent().prev().css('display', 'none');
         }
     }
     else {
@@ -1859,9 +1875,14 @@ export function doUndo() {
                 }
                 else {
                     $('#trigger-states-dropdown').html(addTriggerStateDropdown(item, 0));
+                    $('#trigger-states-dropdown li:first-child button:nth-child(1)').prop('disabled', true);
                     $($('#trigger-states').parent()).css('display', 'none');
                 }
                 $('#trigger-states-delete').prop('disabled', !(item.triggers && item.triggers.length));
+                $('#trigger-priority').parent().css('display', !(item.triggers && item.triggers.length) || action.subitem === 0 ? '' : 'none');
+                $('#trigger-priority').parent().prev().css('display', !(item.triggers && item.triggers.length) || action.subitem === 0 ? '' : 'none');
+                $('#trigger-state').parent().css('display', item.triggers && item.triggers.length ? (action.subitem === 0 ? '' : 'none') : 'none');
+                $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? (action.subitem === 0 ? '' : 'none') : 'none');            
                 SelectTriggerState(action.subitem, true);
             }
             break;

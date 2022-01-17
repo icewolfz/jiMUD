@@ -6047,6 +6047,9 @@ export class Input extends EventEmitter {
                     else
                         trigger = parent;
                 }
+                //changed state save
+                this.client.saveProfile(parent.profile.name, true);
+                this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
             }
@@ -6195,6 +6198,9 @@ export class Input extends EventEmitter {
             //1 based
             if (parent.state > parent.triggers.length)
                 parent.state = 0;
+            //changed state save
+            this.client.saveProfile(parent.profile.name, true);
+            this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
         }
         if (ret == null || ret === undefined)
             return null;
@@ -6270,6 +6276,9 @@ export class Input extends EventEmitter {
                     else
                         trigger = parent;
                 }
+                //changed state save
+                this.client.saveProfile(parent.profile.name, true);
+                this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
             }

@@ -216,7 +216,7 @@ export class Client extends EventEmitter {
                     continue;
                 idx = this.profiles.items[keys[k]].triggers.indexOf(trigger);
                 //found trigger bail, or it will keep looking and k index will be wrong profile
-                if(idx !== -1)
+                if (idx !== -1)
                     break;
             }
         //check to be sure trigger found
@@ -424,17 +424,19 @@ export class Client extends EventEmitter {
         this.emit('profile-removed', profile);
     }
 
-    public saveProfiles() {
+    public saveProfiles(noChanges?: boolean) {
         const p = path.join(parseTemplate('{data}'), 'profiles');
         if (!existsSync(p))
             fs.mkdirSync(p);
         this.profiles.save(p);
-        this.clearCache();
-        this.startAlarms();
+        if (!noChanges) {
+            this.clearCache();
+            this.startAlarms();
+        }
         this.emit('profiles-updated');
     }
 
-    public saveProfile(profile: string) {
+    public saveProfile(profile: string, noChanges?: boolean) {
         profile = profile.toLowerCase();
         //is not loaded so no reason to even save it
         if (!this.profiles.contains(profile))
@@ -443,8 +445,11 @@ export class Client extends EventEmitter {
         if (!existsSync(p))
             fs.mkdirSync(p);
         this.profiles.items[profile].save(p);
-        this.clearCache();
-        this.startAlarms();
+        //minor update that does not effect caching
+        if (!noChanges) {
+            this.clearCache();
+            this.startAlarms();
+        }
         this.emit('profile-updated', profile);
     }
 
@@ -566,6 +571,8 @@ export class Client extends EventEmitter {
                     else
                         trigger = parent;
                 }
+                this.saveProfile(parent.profile.name, true);
+                this.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
             }
@@ -649,7 +656,7 @@ export class Client extends EventEmitter {
                             parent.state = state;
                             //if removed temp shift state adjust
                             if (parent.state > parent.triggers.length)
-                                parent.state = 0;                            
+                                parent.state = 0;
                             this.saveProfile(parent.profile.name);
                             const idx = parent.profile.triggers.indexOf(parent);
                             this.emit('item-updated', 'trigger', parent.profile.name, idx);
