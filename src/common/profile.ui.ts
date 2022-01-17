@@ -502,7 +502,6 @@ function addTriggerStateDropdown(item, state, contentOnly?) {
 }
 
 function initTriggerEditor(item) {
-    $(window).trigger('resize');
     setState(0);
     if (item.triggers && item.triggers.length) {
         $($('#trigger-states').parent()).css('display', '');
@@ -527,6 +526,7 @@ function initTriggerEditor(item) {
     $('#trigger-priority').parent().prev().css('display', '');
     $('#trigger-state').parent().css('display', item.triggers && item.triggers.length ? '' : 'none');
     $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? '' : 'none');
+    $(window).trigger('resize');
 }
 
 function clearTriggerTester() {
@@ -543,6 +543,8 @@ export function AddTriggerState() {
     $('#trigger-states-dropdown li:last-child button:nth-child(2)').prop('disabled', true);
     $('#trigger-states-delete').prop('disabled', false);
     $($('#trigger-states').parent()).css('display', '');
+    if (currentProfile.triggers[currentNode.dataAttr.index].triggers.length === 1)
+        $(window).trigger('resize');
     SelectTriggerState(currentProfile.triggers[currentNode.dataAttr.index].triggers.length);
 }
 
@@ -555,7 +557,7 @@ export function SelectTriggerState(state, noUpdate?) {
     else
         UpdateEditor('trigger', currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1], { post: clearTriggerTester });
     focusEditor('trigger-value');
-    if(!currentProfile.triggers[currentNode.dataAttr.index].triggers || currentProfile.triggers[currentNode.dataAttr.index].triggers.length === 0)
+    if (!currentProfile.triggers[currentNode.dataAttr.index].triggers || currentProfile.triggers[currentNode.dataAttr.index].triggers.length === 0)
         return;
     $('#trigger-states-dropdown li').removeClass('selected');
     $('#trigger-states-dropdown li').removeClass('active');
@@ -601,8 +603,12 @@ function removeTriggerState(state, profile, idx, update, customUndo?) {
         item.triggers.splice(state - 1, 1);
         if (state > item.triggers.length)
             state = item.triggers.length;
-        if (update)
-            $('#editor-title').text('Trigger: ' + GetDisplay(profile.triggers[idx].triggers[state - 1]));
+        if (update) {
+            if (state === 0)
+                $('#editor-title').text('Trigger: ' + GetDisplay(profile.triggers[idx]));
+            else
+                $('#editor-title').text('Trigger: ' + GetDisplay(profile.triggers[idx].triggers[state - 1]));
+        }
     }
     if (!update)
         return;
@@ -1882,7 +1888,7 @@ export function doUndo() {
                 $('#trigger-priority').parent().css('display', !(item.triggers && item.triggers.length) || action.subitem === 0 ? '' : 'none');
                 $('#trigger-priority').parent().prev().css('display', !(item.triggers && item.triggers.length) || action.subitem === 0 ? '' : 'none');
                 $('#trigger-state').parent().css('display', item.triggers && item.triggers.length ? (action.subitem === 0 ? '' : 'none') : 'none');
-                $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? (action.subitem === 0 ? '' : 'none') : 'none');            
+                $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? (action.subitem === 0 ? '' : 'none') : 'none');
                 SelectTriggerState(action.subitem, true);
             }
             break;
