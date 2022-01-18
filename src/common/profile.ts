@@ -832,7 +832,7 @@ export class Profile {
             if (this.triggers.length > 0) {
                 il = this.triggers.length;
                 for (i = 0; i < il; i++) {
-                    data.triggers.push({
+                    const t = {
                         pattern: this.triggers[i].pattern,
                         value: this.triggers[i].value,
                         priority: this.triggers[i].priority,
@@ -847,8 +847,37 @@ export class Profile {
                         triggerprompt: this.triggers[i].triggerPrompt,
                         raw: this.triggers[i].raw,
                         type: this.triggers[i].type,
-                        notes: this.triggers[i].notes || ''
-                    });
+                        notes: this.triggers[i].notes || '',
+                        state: this.triggers[i].state || 0,
+                        params: this.triggers[i].params || '',
+                        triggers: []
+                    }
+                    if (this.triggers[i].triggers && this.triggers[i].triggers.length) {
+                        const sl = this.triggers[i].triggers.length;
+                        for (let s = 0; s < sl; s++) {
+                            t.triggers.push({
+                                pattern: this.triggers[i].triggers[s].pattern,
+                                value: this.triggers[i].triggers[s].value,
+                                priority: this.triggers[i].triggers[s].priority,
+                                verbatim: this.triggers[i].triggers[s].verbatim,
+                                style: this.triggers[i].triggers[s].style,
+                                name: this.triggers[i].triggers[s].name,
+                                group: this.triggers[i].triggers[s].group,
+                                enabled: this.triggers[i].triggers[s].enabled,
+                                display: this.triggers[i].triggers[s].display,
+                                triggernewline: this.triggers[i].triggers[s].triggerNewline,
+                                caseSensitive: this.triggers[i].triggers[s].caseSensitive,
+                                triggerprompt: this.triggers[i].triggers[s].triggerPrompt,
+                                raw: this.triggers[i].triggers[s].raw,
+                                type: this.triggers[i].triggers[s].type,
+                                notes: this.triggers[i].triggers[s].notes || '',
+                                state: this.triggers[i].triggers[s].state || 0,
+                                params: this.triggers[i].triggers[s].params || '',
+                                triggers: []
+                            });
+                        }
+                    }
+                    data.triggers.push(t);
                 }
             }
             if (this.macros.length > 0) {
