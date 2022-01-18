@@ -108,6 +108,8 @@ export class Alarm {
     public minutesWildcard: boolean = true;
     public startTime: number;
     public suspended: number = 0;
+    public tempTime: number;
+    public prevTime: number;
 
     constructor(data?, pattern?) {
         if (typeof data === 'string') {
@@ -117,6 +119,7 @@ export class Alarm {
         this.parent = data;
         this.pattern = pattern;
         this.startTime = Date.now();
+        this.prevTime = this.startTime;
     }
 
     public static parse(parent, pattern?: string, readOnly?: boolean): Alarm {
@@ -223,6 +226,13 @@ export class Alarm {
         if (readOnly)
             t.temp = false;
         return t;
+    }
+
+    public setTempTime(value: number) {
+        if (!value)
+            this.tempTime = 0;
+        else
+            this.tempTime = Date.now() + value;
     }
 }
 

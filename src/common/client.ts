@@ -508,11 +508,98 @@ export class Client extends EventEmitter {
             if (!pattern.hasOwnProperty(p)) continue;
             if (state) {
                 pattern[p].startTime += Date.now() - pattern[p].suspended;
+                pattern[p].prevTime += Date.now() - pattern[p].suspended;
                 pattern[p].suspended = 0;
             }
             else
                 pattern[p].suspended = Date.now();
         }
+    }
+
+    public setAlarmTempTime(idx, temp: number) {
+        if (typeof idx === 'object')
+            idx = this.alarms.indexOf(idx);
+        if (idx === -1 || idx >= this.alarms.length)
+            return 0;
+        let pattern = this._itemCache.alarmPatterns[idx];
+        if (!pattern) {
+            //use an object to store to prevent having to loop over large array
+            pattern = {};
+            if (this.alarms[idx].type === TriggerType.Alarm)
+                pattern[0] = Alarm.parse(this.alarms[idx]);
+            for (let s = 0, sl = this.alarms[idx].triggers.length; s < sl; s++) {
+                //enabled and is alarm
+                if (this.alarms[idx].triggers[s].enabled && this.alarms[idx].triggers[s].type === TriggerType.Alarm)
+                    pattern[s] = Alarm.parse(this.alarms[idx].triggers[s]);
+            }
+            this._itemCache.alarmPatterns[idx] = pattern;
+        }
+        if (pattern[0])
+            pattern[0].setTempTime(temp);
+    }
+
+    public getRemainingAlarmTime(idx) {
+        if (typeof idx === 'object')
+            idx = this.alarms.indexOf(idx);
+        if (idx === -1 || idx >= this.alarms.length)
+            return 0;
+        if (!this.alarms[idx].enabled)
+            return 0;
+        let pattern = this._itemCache.alarmPatterns[idx];
+        if (!pattern) {
+            //use an object to store to prevent having to loop over large array
+            pattern = {};
+            if (this.alarms[idx].type === TriggerType.Alarm)
+                pattern[0] = Alarm.parse(this.alarms[idx]);
+            for (let s = 0, sl = this.alarms[idx].triggers.length; s < sl; s++) {
+                //enabled and is alarm
+                if (this.alarms[idx].triggers[s].enabled && this.alarms[idx].triggers[s].type === TriggerType.Alarm)
+                    pattern[s] = Alarm.parse(this.alarms[idx].triggers[s]);
+            }
+            this._itemCache.alarmPatterns[idx] = pattern;
+        }
+        if (pattern[0]) {
+            let ts;
+            let adjust = 0;
+            const alarm = pattern[0];
+            const now = Date.now();
+            if (alarm.start)
+                ts = moment.duration(now - this.connectTime);
+            else
+                ts = moment.duration(now - alarm.startTime);
+            const sec = ts.asMilliseconds() / 1000.0;
+            const min = Math.floor(sec / 60.0);
+            const hr = Math.floor(min / 60.0);
+
+            if (alarm.hoursWildCard) {
+                if (alarm.hours === 0)
+                    adjust += 3600000;
+                else if (alarm.hours !== -1)
+                    adjust += 3600000 * hr === 0 ? 1 : (hr % alarm.hours);
+            }
+            else if (alarm.hours !== -1)
+                adjust += 3600000 * alarm.hours;
+            if (alarm.minutesWildcard) {
+                if (alarm.minutes === 0)
+                    adjust += 60000;
+                else if (alarm.minutes !== -1)
+                    adjust += 60000 * min === 0 ? 1 : (min % alarm.minutes);
+            }
+            else if (alarm.minutes !== -1)
+                adjust += 60000 * alarm.minutes;
+
+            if (alarm.secondsWildcard) {
+                if (alarm.seconds === 0)
+                    adjust += 1000;
+                else if (alarm.seconds !== -1) {
+                    adjust += 1000 * alarm.seconds;
+                }
+            }
+            else if (alarm.seconds !== -1)
+                adjust += 1000 * alarm.seconds;
+            return adjust - (now - alarm.prevTime);
+        }
+        return 0;
     }
 
     public updateAlarms() {
@@ -536,6 +623,7 @@ export class Client extends EventEmitter {
         if (!this.options.enableTriggers)
             return;
         let a = 0;
+        let changed = false;
         const al = this.alarms.length;
         if (al === 0 && this._alarm) {
             clearInterval(this._alarm);
@@ -570,9 +658,12 @@ export class Client extends EventEmitter {
                         trigger = trigger.triggers[parent.state - 1];
                     else
                         trigger = parent;
+                    changed = true;
                 }
-                this.saveProfile(parent.profile.name, true);
-                this.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
+                if (changed) {
+                    this.saveProfile(parent.profile.name, true);
+                    this.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
+                }
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
             }
@@ -593,42 +684,50 @@ export class Client extends EventEmitter {
             //we want to sub state pattern
             alarm = alarm[trigger.state];
             let match: boolean = true;
-            let ts;
-            if (alarm.start)
-                ts = moment.duration(now - this.connectTime);
-            else
-                ts = moment.duration(now - alarm.startTime);
-            if (ts.asMilliseconds() < 1000)
-                continue;
-            const sec = Math.floor(ts.asMilliseconds() / 1000);
-            const min = Math.floor(sec / 60);
-            const hr = Math.floor(min / 60);
-            if (alarm.hoursWildCard) {
-                if (alarm.hours === 0)
-                    match = match && ts.hours() === 0;
+            //a temp time was set so it overrides all matches as once the temp time has been reached end
+            if (alarm.tempTime) {
+                match = now >= alarm.tempTime;
+                if (match)
+                    alarm.tempTime = 0;
+            }
+            else {
+                let ts;
+                if (alarm.start)
+                    ts = moment.duration(now - this.connectTime);
+                else
+                    ts = moment.duration(now - alarm.startTime);
+                if (ts.asMilliseconds() < 1000)
+                    continue;
+                const sec = Math.round(ts.asMilliseconds() / 1000);
+                const min = Math.floor(sec / 60);
+                const hr = Math.floor(min / 60);
+                if (alarm.hoursWildCard) {
+                    if (alarm.hours === 0)
+                        match = match && ts.hours() === 0;
+                    else if (alarm.hours !== -1)
+                        match = match && hr !== 0 && hr % alarm.hours === 0;
+                }
                 else if (alarm.hours !== -1)
-                    match = match && hr % alarm.hours === 0;
-            }
-            else if (alarm.hours !== -1)
-                match = match && alarm.hours === ts.hours();
-            if (alarm.minutesWildcard) {
-                if (alarm.minutes === 0)
-                    match = match && ts.minutes() === 0;
+                    match = match && alarm.hours === ts.hours();
+                if (alarm.minutesWildcard) {
+                    if (alarm.minutes === 0)
+                        match = match && ts.minutes() === 0;
+                    else if (alarm.minutes !== -1)
+                        match = match && min !== 0 && min % alarm.minutes === 0;
+                }
                 else if (alarm.minutes !== -1)
-                    match = match && min % alarm.minutes === 0;
-            }
-            else if (alarm.minutes !== -1)
-                match = match && alarm.minutes === ts.minutes();
-            if (alarm.secondsWildcard) {
-                if (alarm.seconds === 0)
-                    match = match && ts.seconds() === 0;
+                    match = match && alarm.minutes === ts.minutes();
+                if (alarm.secondsWildcard) {
+                    if (alarm.seconds === 0)
+                        match = match && ts.seconds() === 0;
+                    else if (alarm.seconds !== -1)
+                        match = match && sec % alarm.seconds === 0;
+                }
                 else if (alarm.seconds !== -1)
-                    match = match && sec % alarm.seconds === 0;
+                    match = match && alarm.seconds === ts.seconds();
             }
-            else if (alarm.seconds !== -1)
-                match = match && alarm.seconds === ts.seconds();
-
             if (match && !alarm.suspended) {
+                alarm.prevTime = now;
                 //save as if temp alarm as execute trigger advances state and temp alarms will need different state shifts
                 const state = parent.state;
                 this._input.ExecuteTrigger(trigger, [alarm.pattern], false, -a, null, null, parent);
@@ -641,7 +740,7 @@ export class Client extends EventEmitter {
                             item.state = state;
                             item.priority = parent.priority;
                             item.name = parent.name;
-                            item.profile = parent.profile;                            
+                            item.profile = parent.profile;
                             //if removed temp shift state adjust
                             if (item.state > item.triggers.length)
                                 item.state = 0;

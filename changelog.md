@@ -15,6 +15,7 @@
   - Fixed extra new lines being added when parsing text in the middle of triggers
   - Fixed temporary triggers and [#UNTRIGGER](docs/commands.md#triggers) some times removing trigger from wrong profile
   - Fixed issue with client.echo, client.sendCommand, and client.sendBackground when used in script type and passing non string values
+  - Fixed Trigger alarms to be more accurate and not double fire some times
 - **Changed:**
   - Update electron 16.0.6 to 16.0.7
   - Update font-list 1.4.3 to 1.4.5
