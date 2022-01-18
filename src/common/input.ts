@@ -1420,7 +1420,7 @@ export class Input extends EventEmitter {
                     if (kl === 1) {
                         if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
                             throw Error('No enabled profiles found!');
-                        item = profile.findAny('triggers', { name: args[0], pattern: args[0] });
+                        item = this.client.profiles.items[keys[k]].findAny('triggers', { name: args[0], pattern: args[0] });
                     }
                     else {
                         for (; k < kl; k++) {
