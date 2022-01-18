@@ -526,6 +526,7 @@ function initTriggerEditor(item) {
     $('#trigger-priority').parent().prev().css('display', '');
     $('#trigger-state').parent().css('display', item.triggers && item.triggers.length ? '' : 'none');
     $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? '' : 'none');
+    $('#triggers-name').css('display', '');
     $(window).trigger('resize');
 }
 
@@ -566,6 +567,7 @@ export function SelectTriggerState(state, noUpdate?) {
     $('#trigger-priority').parent().prev().css('display', state === 0 ? '' : 'none');
     $('#trigger-state').parent().css('display', state === 0 ? '' : 'none');
     $('#trigger-state').parent().prev().css('display', state === 0 ? '' : 'none');
+    $('#triggers-name').css('display', state === 0 ? '' : 'none');
 }
 
 export function DeleteTriggerState() {
@@ -593,6 +595,7 @@ function removeTriggerState(state, profile, idx, update, customUndo?) {
         item = items.shift();
         item.state = profile.triggers[idx].state;
         item.priority = profile.triggers[idx].priority;
+        item.name = profile.triggers[idx].name;
         item.triggers = items;
         profile.triggers[idx] = item;
         UpdateItemNode(profile.triggers[idx]);
@@ -634,6 +637,7 @@ function removeTriggerState(state, profile, idx, update, customUndo?) {
     $('#trigger-priority').parent().prev().css('display', !(item.triggers && item.triggers.length) || state === 0 ? '' : 'none');
     $('#trigger-state').parent().css('display', item.triggers && item.triggers.length ? (state === 0 ? '' : 'none') : 'none');
     $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? (state === 0 ? '' : 'none') : 'none');
+    $('#triggers-name').css('display', !(item.triggers && item.triggers.length) || state === 0 ? '' : 'none');
     SelectTriggerState(state, true);
 }
 
@@ -658,6 +662,7 @@ function swapTriggerState(oldState, newState, profile, idx, update, customUndo?)
         n.triggers = [];
         o.state = n.state;
         o.priority = n.priority;
+        o.name = n.name;
         items.unshift(n);
         profile.triggers[idx] = o;
         UpdateItemNode(profile.triggers[idx]);
@@ -668,6 +673,7 @@ function swapTriggerState(oldState, newState, profile, idx, update, customUndo?)
             $('#trigger-priority').parent().prev().css('display', '');
             $('#trigger-state').parent().css('display', '');
             $('#trigger-state').parent().prev().css('display', '');
+            $('#triggers-name').css('display', '');
         }
     }
     //main trigger becomes first state
@@ -678,6 +684,7 @@ function swapTriggerState(oldState, newState, profile, idx, update, customUndo?)
         o.triggers = [];
         n.state = o.state;
         n.priority = o.priority;
+        n.name = o.name;
         items.unshift(o);
         profile.triggers[idx] = n;
         UpdateItemNode(profile.triggers[idx]);
@@ -688,6 +695,7 @@ function swapTriggerState(oldState, newState, profile, idx, update, customUndo?)
             $('#trigger-priority').parent().prev().css('display', 'none');
             $('#trigger-state').parent().css('display', 'none');
             $('#trigger-state').parent().prev().css('display', 'none');
+            $('#triggers-name').css('display', 'none');
         }
     }
     else {
@@ -1889,6 +1897,7 @@ export function doUndo() {
                 $('#trigger-priority').parent().prev().css('display', !(item.triggers && item.triggers.length) || action.subitem === 0 ? '' : 'none');
                 $('#trigger-state').parent().css('display', item.triggers && item.triggers.length ? (action.subitem === 0 ? '' : 'none') : 'none');
                 $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? (action.subitem === 0 ? '' : 'none') : 'none');
+                $('#triggers-name').css('display', !(item.triggers && item.triggers.length) || action.subitem === 0 ? '' : 'none');
                 SelectTriggerState(action.subitem, true);
             }
             break;
@@ -3699,6 +3708,14 @@ function importProfiles() {
                                     item.temp = data.profiles[keys[k]].triggers[m].temp;
                                     item.type = data.profiles[keys[k]].triggers[m].type;
                                     item.notes = data.profiles[keys[k]].triggers[m].notes || '';
+                                    item.state = data.profiles[keys[k]].triggers[m].state || 0;
+                                    item.params = data.profiles[keys[k]].triggers[m].params || '';
+                                    if (data.profiles[keys[k]].triggers[m].triggers && data.profiles[keys[k]].triggers[m].triggers.length) {
+                                        const il = data.profiles[keys[k]].triggers[m].triggers.length;
+                                        for (let i = 0; i < il; i++) {
+                                            item.triggers.push(new Trigger(data.profiles[keys[k]].triggers[m].triggers[i]));
+                                        }
+                                    }
                                     p.triggers.push(item);
                                 }
                             }
