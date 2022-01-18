@@ -12,6 +12,7 @@
     - Profiles are now sorted according to the [Profile manager sort order](docs/preferences.md#advanced--profile-manager) and [Profile manager sort direction](docs/preferences.md#advanced--profile-manager) settings like items
     - Fix context menu editor icon sample width
   - Fix [#TRIGGER](docs/commands.md#triggers) name syntax not working
+  - Fixed [#UNTRIGGER](docs/commands.md#triggers) failing when trying to remove when only 1 profile exist
   - Fixed extra new lines being added when parsing text in the middle of triggers
   - Fixed temporary triggers and [#UNTRIGGER](docs/commands.md#triggers) some times removing trigger from wrong profile
   - Fixed issue with client.echo, client.sendCommand, and client.sendBackground when used in script type and passing non string values
