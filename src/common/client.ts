@@ -1090,6 +1090,8 @@ export class Client extends EventEmitter {
         if (fore == null) fore = AnsiColorCode.LocalEcho;
         if (back == null) back = AnsiColorCode.LocalEchoBack;
         const codes = '\x1b[0,' + this.display.CurrentAnsiCode() + '\n';
+        //make its a string in case raw js passes number or something else
+        str = '' + str;
         if (str.endsWith('\n'))
             str = str.substr(0, str.length - 1);
         if (this.telnet.prompt && forceLine) {
@@ -1153,6 +1155,8 @@ export class Client extends EventEmitter {
             else
                 this._input.AddCommandToHistory(txt);
         }
+        //make its a string in case raw js passes number or something else
+        txt = '' + txt;
         if (!txt.endsWith('\n'))
             txt = txt + '\n';
         const data = { value: txt, handled: false };
@@ -1175,6 +1179,8 @@ export class Client extends EventEmitter {
             else
                 this._input.AddCommandToHistory(txt);
         }
+        //make its a string in case raw js passes number or something else
+        txt = '' + txt;
         if (!txt.endsWith('\n'))
             txt = txt + '\n';
         const data = { value: txt, handled: false };
