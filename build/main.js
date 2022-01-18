@@ -2528,6 +2528,11 @@ ipcMain.on('profile-item-removed', (event, type, profile, idx) => {
         winProfiles.webContents.send('profile-item-removed', type, profile, idx);
 });
 
+ipcMain.on('profile-updated', (event, profile, noChanges) => {
+    if (winProfiles)
+        winProfiles.webContents.send('profile-updated', profile, noChanges);
+});
+
 ipcMain.on('profile-toggled', (event, profile, enabled) => {
     if (winProfiles)
         winProfiles.webContents.send('profile-toggled', profile, enabled);

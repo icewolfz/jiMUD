@@ -6049,7 +6049,7 @@ export class Input extends EventEmitter {
                 }
                 //changed state save
                 this.client.saveProfile(parent.profile.name, true);
-                this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
+                this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
             }
@@ -6167,6 +6167,8 @@ export class Input extends EventEmitter {
                     const item = parent.triggers.shift();
                     item.triggers = parent.triggers;
                     item.state = parent.state;
+                    item.name = parent.name;
+                    item.profile = parent.profile;
                     //if removed temp shift state adjust
                     if (item.state > item.triggers.length)
                         item.state = 0;                    
@@ -6175,7 +6177,7 @@ export class Input extends EventEmitter {
                     this.client.saveProfile(parent.profile.name);
                     const pIdx = parent.profile.triggers.indexOf(parent);
                     parent.profile.triggers[pIdx] = item;
-                    this.client.emit('item-updated', 'trigger', parent.profile.name, pIdx);
+                    this.client.emit('item-updated', 'trigger', parent.profile.name, pIdx, item);
                 }
                 else {
                     //remove only temp sub state
@@ -6184,7 +6186,7 @@ export class Input extends EventEmitter {
                     if (parent.state > parent.triggers.length)
                         parent.state = 0;                    
                     this.client.saveProfile(parent.profile.name);
-                    this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
+                    this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
                 }
             }
             else {
@@ -6200,7 +6202,7 @@ export class Input extends EventEmitter {
                 parent.state = 0;
             //changed state save
             this.client.saveProfile(parent.profile.name, true);
-            this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
+            this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
         }
         if (ret == null || ret === undefined)
             return null;
@@ -6278,7 +6280,7 @@ export class Input extends EventEmitter {
                 }
                 //changed state save
                 this.client.saveProfile(parent.profile.name, true);
-                this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
+                this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
             }

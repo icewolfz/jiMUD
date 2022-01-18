@@ -4549,6 +4549,11 @@ ipcRenderer.on('profile-item-removed', (event, type, profile, idx) => {
     $('#btn-refresh').addClass('btn-warning');
 });
 
+ipcRenderer.on('profile-updated', (event, profile, noChanges) => {
+    //filesChanged = true;
+    //$('#btn-refresh').addClass('btn-warning');
+});
+
 ipcRenderer.on('profile-toggled', (event, profile, enabled) => {
     const parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + '$', 'id']);
     if (!parent) return;

@@ -433,7 +433,7 @@ export class Client extends EventEmitter {
             this.clearCache();
             this.startAlarms();
         }
-        this.emit('profiles-updated');
+        this.emit('profiles-updated', noChanges);
     }
 
     public saveProfile(profile: string, noChanges?: boolean) {
@@ -450,7 +450,7 @@ export class Client extends EventEmitter {
             this.clearCache();
             this.startAlarms();
         }
-        this.emit('profile-updated', profile);
+        this.emit('profile-updated', profile, noChanges);
     }
 
     public toggleProfile(profile: string) {
@@ -588,6 +588,7 @@ export class Client extends EventEmitter {
                     if (trigger.triggers[s].type === TriggerType.Alarm)
                         patterns[a][s] = Alarm.parse(trigger.triggers[s]);
                 }
+                alarm = patterns[a];
             }
             //we want to sub state pattern
             alarm = alarm[trigger.state];
@@ -638,6 +639,9 @@ export class Client extends EventEmitter {
                             const item = parent.triggers.shift();
                             //restore previous state as shifted state may have skipped next state
                             item.state = state;
+                            item.priority = parent.priority;
+                            item.name = parent.name;
+                            item.profile = parent.profile;                            
                             //if removed temp shift state adjust
                             if (item.state > item.triggers.length)
                                 item.state = 0;
@@ -647,7 +651,7 @@ export class Client extends EventEmitter {
                             this.saveProfile(parent.profile.name);
                             const idx = parent.profile.triggers.indexOf(parent)
                             parent.profile.triggers[idx] = item;
-                            this.emit('item-updated', 'trigger', parent.profile.name, idx);
+                            this.emit('item-updated', 'trigger', parent.profile.name, idx, item);
                         }
                         else {
                             parent.triggers.splice(state - 1, 1);
@@ -659,7 +663,7 @@ export class Client extends EventEmitter {
                                 parent.state = 0;
                             this.saveProfile(parent.profile.name);
                             const idx = parent.profile.triggers.indexOf(parent);
-                            this.emit('item-updated', 'trigger', parent.profile.name, idx);
+                            this.emit('item-updated', 'trigger', parent.profile.name, idx, parent);
                         }
                     }
                     else
