@@ -6228,6 +6228,14 @@ export class Input extends EventEmitter {
     public buildTriggerCache() {
         if (this._TriggerCache == null) {
             this._TriggerCache = $.grep(this.client.triggers, (a) => {
+                if (a && a.enabled && a.triggers.length) {
+                    if (a.type !== TriggerType.Alarm) return true;
+                    //loop sub states if one is not alarm cache it for future
+                    for (let s = 0, sl = a.triggers.length; s < sl; s++)
+                        if (a.triggers[s].enabled && a.triggers[s].type !== TriggerType.Alarm)
+                            return true;
+                    return false;
+                }                
                 return a.enabled && a.type !== TriggerType.Alarm;
             });
         }
