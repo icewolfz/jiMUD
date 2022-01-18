@@ -6071,7 +6071,10 @@ export class Input extends EventEmitter {
             const parent = trigger;
             //extra check in case error disabled it and do not want to keep triggering the error
             if (!trigger.enabled) continue;
-            if (trigger.state !== 0) {
+            //safety check in case a state was deleted
+            if (trigger.state > trigger.triggers.length)
+                trigger.state = 0;              
+            if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
                 //trigger states are 1 based as 0 is parent trigger
                 trigger = trigger.triggers[trigger.state - 1];
                 //skip disabled states
@@ -6314,7 +6317,10 @@ export class Input extends EventEmitter {
             const parent = trigger;
             //in case it got disabled by something
             if (!trigger.enabled) continue;
-            if (trigger.state !== 0) {
+            //safety check in case a state was deleted
+            if (trigger.state > trigger.triggers.length)
+                trigger.state = 0;              
+            if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
                 //trigger states are 1 based as 0 is parent trigger
                 trigger = trigger.triggers[trigger.state - 1];
                 //skip disabled states

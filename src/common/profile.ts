@@ -201,7 +201,9 @@ export class Alarm {
                 if (parts[1][0] === '*') {
                     t.minutesWildcard = true;
                     parts[1] = parts[1].substr(1);
-                }
+                } 
+                else
+                    t.minutesWildcard = false;
                 tmp = parseInt(parts[1], 10);
                 if (isNaN(tmp))
                     throw new Error('Invalid Format: ' + parts[1]);

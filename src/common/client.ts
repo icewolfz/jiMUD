@@ -563,6 +563,7 @@ export class Client extends EventEmitter {
             let adjust = 0;
             const alarm = pattern[0];
             const now = Date.now();
+            const dNow = new Date();
             if (alarm.start)
                 ts = moment.duration(now - this.connectTime);
             else
@@ -578,7 +579,7 @@ export class Client extends EventEmitter {
                     adjust += 3600000 * (hr === 0 ? 1 : (hr % alarm.hours));
             }
             else if (alarm.hours !== -1)
-                adjust += 3600000 * alarm.hours;
+                adjust += 3600000 * alarm.start ? alarm.hours : (dNow.getHours() - alarm.hours);;
             if (alarm.minutesWildcard) {
                 if (alarm.minutes === 0)
                     adjust += 60000;
@@ -586,7 +587,7 @@ export class Client extends EventEmitter {
                     adjust += 60000 * (min === 0 ? 1 : (min % alarm.minutes));
             }
             else if (alarm.minutes !== -1)
-                adjust += 60000 * alarm.minutes;
+                adjust += 60000 * alarm.start ? alarm.minutes : (dNow.getMinutes() - alarm.minutes);;
 
             if (alarm.secondsWildcard) {
                 if (alarm.seconds === 0)
@@ -596,7 +597,7 @@ export class Client extends EventEmitter {
                 }
             }
             else if (alarm.seconds !== -1)
-                adjust += 1000 * alarm.seconds;
+                adjust += 1000 * alarm.start ? alarm.seconds : (dNow.getSeconds() - alarm.seconds);
             return adjust - (now - alarm.prevTime);
         }
         return 0;
@@ -633,13 +634,17 @@ export class Client extends EventEmitter {
         const patterns = this._itemCache.alarmPatterns;
         const now = Date.now();
         const alarms = this.alarms;
+        const dNow = new Date();
         for (a = al - 1; a >= 0; a--) {
             let trigger = alarms[a];
             const parent = trigger;
             //not enabled skip
             if (!trigger.enabled) continue;
+            //safety check in case a state was deleted
+            if (trigger.state > trigger.triggers.length)
+                trigger.state = 0;            
             //get sub state
-            if (trigger.state !== 0) {
+            if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
                 //trigger states are 1 based as 0 is parent trigger
                 trigger = trigger.triggers[trigger.state - 1];
                 //skip disabled states
@@ -708,7 +713,7 @@ export class Client extends EventEmitter {
                         match = match && hr !== 0 && hr % alarm.hours === 0;
                 }
                 else if (alarm.hours !== -1)
-                    match = match && alarm.hours === ts.hours();
+                    match = match && alarm.hours === (alarm.start ? ts.hours() : dNow.getHours());
                 if (alarm.minutesWildcard) {
                     if (alarm.minutes === 0)
                         match = match && ts.minutes() === 0;
@@ -716,7 +721,7 @@ export class Client extends EventEmitter {
                         match = match && min !== 0 && min % alarm.minutes === 0;
                 }
                 else if (alarm.minutes !== -1)
-                    match = match && alarm.minutes === ts.minutes();
+                    match = match && alarm.minutes === (alarm.start ? ts.minutes() : dNow.getMinutes());
                 if (alarm.secondsWildcard) {
                     if (alarm.seconds === 0)
                         match = match && ts.seconds() === 0;
@@ -724,7 +729,7 @@ export class Client extends EventEmitter {
                         match = match && sec % alarm.seconds === 0;
                 }
                 else if (alarm.seconds !== -1)
-                    match = match && alarm.seconds === ts.seconds();
+                    match = match && alarm.seconds === (alarm.start ? ts.seconds() : dNow.getSeconds());
             }
             if (match && !alarm.suspended) {
                 alarm.prevTime = now;
