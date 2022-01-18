@@ -575,7 +575,7 @@ export class Client extends EventEmitter {
                 if (alarm.hours === 0)
                     adjust += 3600000;
                 else if (alarm.hours !== -1)
-                    adjust += 3600000 * hr === 0 ? 1 : (hr % alarm.hours);
+                    adjust += 3600000 * (hr === 0 ? 1 : (hr % alarm.hours));
             }
             else if (alarm.hours !== -1)
                 adjust += 3600000 * alarm.hours;
@@ -583,7 +583,7 @@ export class Client extends EventEmitter {
                 if (alarm.minutes === 0)
                     adjust += 60000;
                 else if (alarm.minutes !== -1)
-                    adjust += 60000 * min === 0 ? 1 : (min % alarm.minutes);
+                    adjust += 60000 * (min === 0 ? 1 : (min % alarm.minutes));
             }
             else if (alarm.minutes !== -1)
                 adjust += 60000 * alarm.minutes;
