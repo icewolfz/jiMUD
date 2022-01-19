@@ -1632,7 +1632,7 @@ ipcMain.on('load-default', () => {
         for (name in windows) {
             if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
                 continue;
-            windows[name].webContents.send('load-default');
+            windows[name].webContents.send('load-default', true);
         }
         return;
     }
@@ -1695,13 +1695,13 @@ ipcMain.on('load-char', (event, char) => {
     //already loaded so no need to switch
     if (char === global.character) {
         loadCharacter(char);
-        win.webContents.send('load-char', char);
+        win.webContents.send('load-char', char, true);
         if (winMap)
-            winMap.webContents.send('load-char', char);
+            winMap.webContents.send('load-char', char, true);
         for (name in windows) {
             if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
                 continue;
-            windows[name].window.webContents.send('load-char', char);
+            windows[name].window.webContents.send('load-char', char, true);
         }
         return;
     }
@@ -2526,6 +2526,11 @@ ipcMain.on('profile-item-updated', (event, type, profile, idx, item) => {
 ipcMain.on('profile-item-removed', (event, type, profile, idx) => {
     if (winProfiles)
         winProfiles.webContents.send('profile-item-removed', type, profile, idx);
+});
+
+ipcMain.on('profile-updated', (event, profile, noChanges) => {
+    if (winProfiles)
+        winProfiles.webContents.send('profile-updated', profile, noChanges);
 });
 
 ipcMain.on('profile-toggled', (event, profile, enabled) => {

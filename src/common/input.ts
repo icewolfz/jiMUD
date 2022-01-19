@@ -155,8 +155,10 @@ export class Input extends EventEmitter {
     private _locked: number = 0;
     private _tests: Tests;
     private _TriggerCache: Trigger[] = null;
+    private _TriggerStates = [];
     private _TriggerFunctionCache = {};
     private _TriggerRegExCache = {};
+    private _LastTrigger = null;
     private _scrollLock: boolean = false;
     private _gag: number = 0;
     private _gagID: NodeJS.Timer[] = [];
@@ -312,6 +314,10 @@ export class Input extends EventEmitter {
             this._scrollLock = locked;
             this.emit('scroll-lock', this.scrollLock);
         }
+    }
+
+    get lastTriggerExecuted() {
+        return this._LastTrigger;
     }
 
     private getDiceArguments(arg, scope, fun) {
@@ -5733,6 +5739,44 @@ export class Input extends EventEmitter {
                     return args.replace(new RegExp(`${escape}[${c}]`, 'g'), (m) => m.substr(1));
                 }
                 return args.replace(/\\[\\"']/g, (m) => m.substr(1));
+            /*
+            case 'alarm':
+                c = -1;
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments for alarm');
+                if (args.length > 3)
+                    throw new Error('Too many arguments for alarm');
+                args[0] = this.stripQuotes(args[0]);
+                if (args.length === 1) {
+                    sides = this.client.alarms;
+                    max = sides.length;
+                    if (max === 0)
+                        return 0;
+                    c = 0;
+                    for (; c < max; c++) {
+                        //only main state counts here
+                        if (sides[c].type !== TriggerType.Alarm) continue;
+                        if (sides[c].name === args[0] || sides[c].pattern === args[0]) {
+                            if (sides[c].suspended)
+                                return 0;
+                            return this.client.getRemainingAlarmTime(c);
+                        }
+                    }
+                }
+                else if (args.length === 2) {
+                    c = parseInt(args[1], 10);
+                    if (isNaN(c)) {
+                    }
+                    else {
+
+                    }
+                }
+                else if (args.length === 3) {
+
+                }
+                return 0;
+                */
         }
         return null;
     }
@@ -6018,13 +6062,47 @@ export class Input extends EventEmitter {
         this.buildTriggerCache();
         let t = 0;
         let pattern;
+        let changed = false;
         //scope to get performance
         const triggers = this._TriggerCache;
         const tl = triggers.length;
         for (; t < tl; t++) {
-            const trigger = triggers[t];
+            let trigger = triggers[t];
+            const parent = trigger;
             //extra check in case error disabled it and do not want to keep triggering the error
             if (!trigger.enabled) continue;
+            //safety check in case a state was deleted
+            if (trigger.state > trigger.triggers.length)
+                trigger.state = 0;              
+            if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
+                //trigger states are 1 based as 0 is parent trigger
+                trigger = trigger.triggers[trigger.state - 1];
+                //skip disabled states
+                while (!trigger.enabled && parent.state !== 0) {
+                    //advance state
+                    parent.state++;
+                    //if no more states start over and stop
+                    if (parent.state > parent.triggers.length) {
+                        parent.state = 0;
+                        //reset to first state
+                        trigger = trigger.triggers[parent.state - 1];
+                        //stop checking
+                        break;
+                    }
+                    if (parent.state)
+                        trigger = trigger.triggers[parent.state - 1];
+                    else
+                        trigger = parent;
+                    changed = true;
+                }
+                //changed state save
+                if (changed) {
+                    this.client.saveProfile(parent.profile.name, true);
+                    this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
+                }
+                //last check to be 100% sure enabled
+                if (!trigger.enabled) continue;
+            }
             if (trigger.type !== undefined && (type & this.getTriggerType(trigger.type)) !== this.getTriggerType(trigger.type)) continue;
             if (frag && !trigger.triggerPrompt) continue;
             if (!frag && !trigger.triggerNewline && (trigger.triggerNewline !== undefined))
@@ -6034,8 +6112,8 @@ export class Input extends EventEmitter {
                     if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) continue;
                     else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) continue;
                     if (ret)
-                        return this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], true, t, [(trigger.raw ? raw : line)]);
-                    this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t, [(trigger.raw ? raw : line)]);
+                        return this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], true, t, [(trigger.raw ? raw : line)], 0, parent);
+                    this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t, [(trigger.raw ? raw : line)], 0, parent);
                 }
                 else {
                     let re;
@@ -6061,8 +6139,8 @@ export class Input extends EventEmitter {
                     if (res.groups)
                         Object.keys(res.groups).map(v => this.client.variables[v] = res.groups[v]);
                     if (ret)
-                        return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re], res.groups);
-                    this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups);
+                        return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re], res.groups, parent);
+                    this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups, parent);
                 }
             }
             catch (e) {
@@ -6082,9 +6160,10 @@ export class Input extends EventEmitter {
         return line;
     }
 
-    public ExecuteTrigger(trigger, args, r: boolean, idx, regex?, named?) {
+    public ExecuteTrigger(trigger, args, r: boolean, idx, regex?, named?, parent?: Trigger) {
         if (r == null) r = false;
         if (!trigger.enabled) return '';
+        this._LastTrigger = trigger;
         let ret; // = '';
         switch (trigger.style) {
             case 1:
@@ -6133,9 +6212,48 @@ export class Input extends EventEmitter {
                 break;
         }
         if (trigger.temp) {
-            if (idx >= 0)
-                this._TriggerCache.splice(idx, 1);
-            this.client.removeTrigger(trigger);
+            if (parent.triggers.length) {
+                if (parent.state === 0) {
+                    //main trigger temp, replace with first state
+                    const item = parent.triggers.shift();
+                    item.triggers = parent.triggers;
+                    item.state = parent.state;
+                    item.name = parent.name;
+                    item.profile = parent.profile;
+                    //if removed temp shift state adjust
+                    if (item.state > item.triggers.length)
+                        item.state = 0;
+                    if (idx >= 0)
+                        this._TriggerCache[idx] = item;
+                    this.client.saveProfile(parent.profile.name);
+                    const pIdx = parent.profile.triggers.indexOf(parent);
+                    parent.profile.triggers[pIdx] = item;
+                    this.client.emit('item-updated', 'trigger', parent.profile.name, pIdx, item);
+                }
+                else {
+                    //remove only temp sub state
+                    parent.triggers.splice(parent.state - 1, 1);
+                    //if removed temp shift state adjust
+                    if (parent.state > parent.triggers.length)
+                        parent.state = 0;
+                    this.client.saveProfile(parent.profile.name);
+                    this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
+                }
+            }
+            else {
+                if (idx >= 0)
+                    this._TriggerCache.splice(idx, 1);
+                this.client.removeTrigger(parent);
+            }
+        }
+        else if (parent.triggers.length) {
+            parent.state++;
+            //1 based
+            if (parent.state > parent.triggers.length)
+                parent.state = 0;
+            //changed state save
+            this.client.saveProfile(parent.profile.name, true);
+            this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
         }
         if (ret == null || ret === undefined)
             return null;
@@ -6156,11 +6274,19 @@ export class Input extends EventEmitter {
         }
     }
 
-    public clearTriggerCache() { this._TriggerCache = null; this._TriggerFunctionCache = {}; this._TriggerRegExCache = {}; }
+    public clearTriggerCache() { this._TriggerCache = null; this._TriggerStates = []; this._TriggerFunctionCache = {}; this._TriggerRegExCache = {}; }
 
     public buildTriggerCache() {
         if (this._TriggerCache == null) {
             this._TriggerCache = $.grep(this.client.triggers, (a) => {
+                if (a && a.enabled && a.triggers.length) {
+                    if (a.type !== TriggerType.Alarm) return true;
+                    //loop sub states if one is not alarm cache it for future
+                    for (let s = 0, sl = a.triggers.length; s < sl; s++)
+                        if (a.triggers[s].enabled && a.triggers[s].type !== TriggerType.Alarm)
+                            return true;
+                    return false;
+                }
                 return a.enabled && a.type !== TriggerType.Alarm;
             });
         }
@@ -6168,6 +6294,7 @@ export class Input extends EventEmitter {
 
     public clearCaches() {
         this._TriggerCache = null;
+        this._TriggerStates = [];
         this._TriggerFunctionCache = {};
         this._gamepadCaches = null;
         this._lastSuspend = -1;
@@ -6186,10 +6313,43 @@ export class Input extends EventEmitter {
             args.unshift(event);
         const tl = this._TriggerCache.length;
         for (; t < tl; t++) {
-            if (this._TriggerCache[t].type !== TriggerType.Event) continue;
-            if (this._TriggerCache[t].caseSensitive && event !== this._TriggerCache[t].pattern) continue;
-            if (!this._TriggerCache[t].caseSensitive && event.toLowerCase() !== this._TriggerCache[t].pattern.toLowerCase()) continue;
-            this.ExecuteTrigger(this._TriggerCache[t], args, false, t);
+            let trigger = this._TriggerCache[t];
+            const parent = trigger;
+            //in case it got disabled by something
+            if (!trigger.enabled) continue;
+            //safety check in case a state was deleted
+            if (trigger.state > trigger.triggers.length)
+                trigger.state = 0;              
+            if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
+                //trigger states are 1 based as 0 is parent trigger
+                trigger = trigger.triggers[trigger.state - 1];
+                //skip disabled states
+                while (!trigger.enabled && parent.state !== 0) {
+                    //advance state
+                    parent.state++;
+                    //if no more states start over and stop
+                    if (parent.state > parent.triggers.length) {
+                        parent.state = 0;
+                        //reset to first state
+                        trigger = trigger.triggers[parent.state - 1];
+                        //stop checking
+                        break;
+                    }
+                    if (parent.state)
+                        trigger = trigger.triggers[parent.state - 1];
+                    else
+                        trigger = parent;
+                }
+                //changed state save
+                this.client.saveProfile(parent.profile.name, true);
+                this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
+                //last check to be 100% sure enabled
+                if (!trigger.enabled) continue;
+            }
+            if (trigger.type !== TriggerType.Event) continue;
+            if (trigger.caseSensitive && event !== trigger.pattern) continue;
+            if (!trigger.caseSensitive && event.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
+            this.ExecuteTrigger(trigger, args, false, t, 0, 0, parent);
         }
     }
 

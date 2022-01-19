@@ -5,6 +5,8 @@
 - **New:**
   - Mapper: Add `Edit > Reset map` to allow users to delete and create a fresh map file
   - Profile Manager: Parse style now has basic code folding
+  - Multi State triggers - Allows you to create multi line or conditional triggers
+    - Full profile manger support to add, edit, reorder, delete each state
 - **Fixed:**
   - Profile manager:
     - Profiles are now sorted according to the [Profile manager sort order](docs/preferences.md#advanced--profile-manager) and [Profile manager sort direction](docs/preferences.md#advanced--profile-manager) settings like items
@@ -14,6 +16,9 @@
   - Fixed extra new lines being added when parsing text in the middle of triggers
   - Fixed temporary triggers and [#UNTRIGGER](docs/commands.md#triggers) some times removing trigger from wrong profile
   - Fixed issue with client.echo, client.sendCommand, and client.sendBackground when used in script type and passing non string values
+  - Fixed Trigger alarms to be more accurate and not double fire some times
+  - Fixed Trigger alarms always being stuck in wildcard mode, should require * explicit to execute wildcards
+  - Fixed auto connect when loading same character again
 - **Changed:**
   - Update electron 16.0.6 to 16.0.7
   - Update font-list 1.4.3 to 1.4.5

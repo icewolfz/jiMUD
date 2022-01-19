@@ -978,10 +978,12 @@
             client.on('initialized', () => {
                 autoConnect();
             });
-            client.on('profile-updated', (profile) => {
-                ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
-                doUpdate(24);
-                ipcRenderer.send('profile-updated', profile);
+            client.on('profile-updated', (profile, noChanges) => {
+                if (!noChanges) {
+                    ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
+                    doUpdate(24);
+                }
+                ipcRenderer.send('profile-updated', profile, noChanges);
             });
 
             client.on('profile-toggled', (profile, enabled) => {
@@ -990,11 +992,15 @@
                 ipcRenderer.send('profile-toggled', profile, enabled);
             });
 
-            client.on('profiles-updated', () => {
+            client.on('profiles-updated', (noChanges) => {
+                //nothing important changed so ignore
+                if (noChanges) return;
                 doUpdate(76);
             });
 
-            client.on('profile-loaded', profile => {
+            client.on('profile-loaded', (profile, noChanges) => {
+                //nothing important changed so ignore
+                if (noChanges) return;
                 doUpdate(76);
             });
 
@@ -1436,10 +1442,10 @@
                 ipcRenderer.send('profile-item-added', type, profile, item);
             });
 
-            client.on('item-updated', (type, profile, item) => {
+            client.on('item-updated', (type, profile, idx, item) => {
                 if (type === 'button')
                     doUpdate(8);
-                ipcRenderer.send('profile-item-updated', type, profile, item);
+                ipcRenderer.send('profile-item-updated', type, profile, idx, item);
             });
 
             client.on('item-removed', (type, profile, idx) => {
@@ -2418,7 +2424,7 @@
                 _backup.getChunk();
         });
 
-        ipcRenderer.on('load-char', (event, char) => {
+        ipcRenderer.on('load-char', (event, char, same) => {
             _charName = ipcRenderer.sendSync('get-global', 'characterLogin');
             if (!client.connected) {
                 _logger.postMessage({ action: 'name', args: _charName });
@@ -2430,10 +2436,11 @@
                 _skipDisconnect = 1;
                 client.close();
             }
-            //autoConnect();
+            if(same)
+                autoConnect();
         });
 
-        ipcRenderer.on('load-default', () => {
+        ipcRenderer.on('load-default', (same) => {
             _charName = 0;
             if (!client.connected) {
                 _logger.postMessage({ action: 'name', args: '' });
@@ -2442,7 +2449,8 @@
             _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
             if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect'))
                 client.close();
-
+            if(same)
+                autoConnect();
         });
 
         ipcRenderer.on('change-options', () => {
