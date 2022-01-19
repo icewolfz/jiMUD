@@ -565,18 +565,12 @@ export class Client extends EventEmitter {
             let future = now;
             let fend = future + 90000000;
             let mod = 1000;
-            if (alarm.seconds === 0)
+            if (alarm.seconds !== -1)
                 mod = 1000;
-            else if (alarm.seconds !== -1)
-                mod = alarm.seconds * 1000;
-            else if (alarm.minutes === 0)
-                mod = 60000;
             else if (alarm.minutes !== -1)
-                mod = alarm.minutes * 60000;
-            else if (alarm.minutes === 0)
-                mod = 3600000;
+                mod = 60000;
             else if (alarm.hours !== -1)
-                mod = alarm.hours * 3600000;
+                mod = 3600000;
             if (alarm.tempTime) {
                 if (alarm.tempTime - now > 0)
                     return alarm.tempTime - now;
@@ -623,7 +617,7 @@ export class Client extends EventEmitter {
                     future += mod;
                     dNow.setTime(dNow.getTime() + mod);
                 }
-                return future - now;
+                return -1;
             }
         }
         return 0;
