@@ -2424,7 +2424,7 @@
                 _backup.getChunk();
         });
 
-        ipcRenderer.on('load-char', (event, char) => {
+        ipcRenderer.on('load-char', (event, char, same) => {
             _charName = ipcRenderer.sendSync('get-global', 'characterLogin');
             if (!client.connected) {
                 _logger.postMessage({ action: 'name', args: _charName });
@@ -2436,10 +2436,11 @@
                 _skipDisconnect = 1;
                 client.close();
             }
-            //autoConnect();
+            if(same)
+                autoConnect();
         });
 
-        ipcRenderer.on('load-default', () => {
+        ipcRenderer.on('load-default', (same) => {
             _charName = 0;
             if (!client.connected) {
                 _logger.postMessage({ action: 'name', args: '' });
@@ -2448,7 +2449,8 @@
             _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
             if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect'))
                 client.close();
-
+            if(same)
+                autoConnect();
         });
 
         ipcRenderer.on('change-options', () => {
