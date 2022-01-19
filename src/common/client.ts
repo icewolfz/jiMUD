@@ -567,7 +567,7 @@ export class Client extends EventEmitter {
             let mod = 1000;
             if (alarm.seconds !== -1)
                 mod = 1000;
-            else if (alarm.minutes !== -1) 
+            else if (alarm.minutes !== -1)
                 mod = 60000;
             else if (alarm.hours !== -1)
                 mod = 3600000;
@@ -577,42 +577,8 @@ export class Client extends EventEmitter {
                 return 0;
             }
             else {
-                let ts;
-                let match;
                 while (future < fend) {
-                    match = true;
-                    if (alarm.start)
-                        ts = moment.duration(future - this.connectTime);
-                    else
-                        ts = moment.duration(future - alarm.startTime);
-                    const sec = Math.round(ts.asMilliseconds() / 1000);
-                    const min = Math.floor(sec / 60);
-                    const hr = Math.floor(min / 60);
-                    if (alarm.hoursWildCard) {
-                        if (alarm.hours === 0)
-                            match = match && ts.hours() === 0;
-                        else if (alarm.hours !== -1)
-                            match = match && hr !== 0 && hr % alarm.hours === 0;
-                    }
-                    else if (alarm.hours !== -1)
-                        match = match && alarm.hours === (alarm.start ? ts.hours() : dNow.getHours());
-                    if (alarm.minutesWildcard) {
-                        if (alarm.minutes === 0)
-                            match = match && ts.minutes() === 0;
-                        else if (alarm.minutes !== -1)
-                            match = match && min !== 0 && min % alarm.minutes === 0;
-                    }
-                    else if (alarm.minutes !== -1)
-                        match = match && alarm.minutes === (alarm.start ? ts.minutes() : dNow.getMinutes());
-                    if (alarm.secondsWildcard) {
-                        if (alarm.seconds === 0)
-                            match = match && ts.seconds() === 0;
-                        else if (alarm.seconds !== -1)
-                            match = match && sec % alarm.seconds === 0;
-                    }
-                    else if (alarm.seconds !== -1)
-                        match = match && alarm.seconds === (alarm.start ? ts.seconds() : dNow.getSeconds());
-                    if (match)
+                    if (this.alarm_match(alarm, future, dNow))
                         return future - now;
                     future += mod;
                     dNow.setTime(dNow.getTime() + mod);
@@ -715,42 +681,8 @@ export class Client extends EventEmitter {
                 if (match)
                     alarm.tempTime = 0;
             }
-            else {
-                let ts;
-                if (alarm.start)
-                    ts = moment.duration(now - this.connectTime);
-                else
-                    ts = moment.duration(now - alarm.startTime);
-                if (ts.asMilliseconds() < 1000)
-                    continue;
-                const sec = Math.round(ts.asMilliseconds() / 1000);
-                const min = Math.floor(sec / 60);
-                const hr = Math.floor(min / 60);
-                if (alarm.hoursWildCard) {
-                    if (alarm.hours === 0)
-                        match = match && ts.hours() === 0;
-                    else if (alarm.hours !== -1)
-                        match = match && hr !== 0 && hr % alarm.hours === 0;
-                }
-                else if (alarm.hours !== -1)
-                    match = match && alarm.hours === (alarm.start ? ts.hours() : dNow.getHours());
-                if (alarm.minutesWildcard) {
-                    if (alarm.minutes === 0)
-                        match = match && ts.minutes() === 0;
-                    else if (alarm.minutes !== -1)
-                        match = match && min !== 0 && min % alarm.minutes === 0;
-                }
-                else if (alarm.minutes !== -1)
-                    match = match && alarm.minutes === (alarm.start ? ts.minutes() : dNow.getMinutes());
-                if (alarm.secondsWildcard) {
-                    if (alarm.seconds === 0)
-                        match = match && ts.seconds() === 0;
-                    else if (alarm.seconds !== -1)
-                        match = match && sec % alarm.seconds === 0;
-                }
-                else if (alarm.seconds !== -1)
-                    match = match && alarm.seconds === (alarm.start ? ts.seconds() : dNow.getSeconds());
-            }
+            else
+                match = this.alarm_match(alarm, now, dNow);
             if (match && !alarm.suspended) {
                 alarm.prevTime = now;
                 //save as if temp alarm as execute trigger advances state and temp alarms will need different state shifts
@@ -795,6 +727,47 @@ export class Client extends EventEmitter {
                 }
             }
         }
+    }
+
+    private alarm_match(alarm, now, dNow) {
+        if (!alarm || alarm.suspended) return false;
+        let match: boolean = true;
+        let ts;
+        if (alarm.start)
+            ts = moment.duration(now - this.connectTime);
+        else
+            ts = moment.duration(now - alarm.startTime);
+        if (ts.asMilliseconds() < 1000)
+            return false;
+        const sec = Math.round(ts.asMilliseconds() / 1000);
+        const min = Math.floor(sec / 60);
+        const hr = Math.floor(min / 60);
+        if (alarm.hoursWildCard) {
+            if (alarm.hours === 0)
+                match = match && ts.hours() === 0;
+            else if (alarm.hours !== -1)
+                match = match && hr !== 0 && hr % alarm.hours === 0;
+        }
+        else if (alarm.hours !== -1)
+            match = match && alarm.hours === (alarm.start ? ts.hours() : dNow.getHours());
+        if (alarm.minutesWildcard) {
+            if (alarm.minutes === 0)
+                match = match && ts.minutes() === 0;
+            else if (alarm.minutes !== -1)
+                match = match && min !== 0 && min % alarm.minutes === 0;
+        }
+        else if (alarm.minutes !== -1)
+            match = match && alarm.minutes === (alarm.start ? ts.minutes() : dNow.getMinutes());
+        if (alarm.secondsWildcard) {
+            if (alarm.seconds === 0)
+                match = match && ts.seconds() === 0;
+            else if (alarm.seconds !== -1)
+                match = match && sec % alarm.seconds === 0;
+        }
+        else if (alarm.seconds !== -1)
+            match = match && alarm.seconds === (alarm.start ? ts.seconds() : dNow.getSeconds());
+
+        return match;
     }
 
     constructor(display, command, settings?: string) {
