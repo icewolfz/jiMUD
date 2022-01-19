@@ -567,7 +567,7 @@ export class Client extends EventEmitter {
             let mod = 1000;
             if (alarm.seconds !== -1)
                 mod = 1000;
-            else if (alarm.minutes !== -1)
+            else if (alarm.minutes !== -1) 
                 mod = 60000;
             else if (alarm.hours !== -1)
                 mod = 3600000;

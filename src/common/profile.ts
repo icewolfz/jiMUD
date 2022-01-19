@@ -151,6 +151,8 @@ export class Alarm {
                     t.secondsWildcard = true;
                     parts[0] = parts[0].substr(1);
                 }
+                else
+                    t.secondsWildcard = false;
                 tmp = parseInt(parts[0], 10);
                 if (isNaN(tmp))
                     throw new Error('Invalid Format: ' + parts[0]);
@@ -165,6 +167,8 @@ export class Alarm {
                     t.minutesWildcard = true;
                     parts[0] = parts[0].substr(1);
                 }
+                else
+                    t.minutesWildcard = false;
                 tmp = parseInt(parts[0], 10);
                 if (isNaN(tmp))
                     throw new Error('Invalid Format: ' + parts[0]);
@@ -191,6 +195,8 @@ export class Alarm {
                     t.hoursWildcard = true;
                     parts[0] = parts[0].substr(1);
                 }
+                else
+                    t.hoursWildcard = false;
                 tmp = parseInt(parts[0], 10);
                 if (isNaN(tmp))
                     throw new Error('Invalid Format: ' + parts[0]);

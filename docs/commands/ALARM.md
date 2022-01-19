@@ -28,7 +28,7 @@
 `#ALARM {-30:00} {save}`
 > Executes the save command every 30 minutes 
 
-`#ALARM {5} {save}`
+`#ALARM {*5} {save}`
 > Executes the save command every 5 seconds
 
 `#ALARM {+5} {save}`
