@@ -21,6 +21,7 @@
   - Fixed Trigger alarms always being stuck in wildcard mode, should require * explicit to execute wildcards
   - Fixed auto connect when loading same character again
 - **Changed:**
+  - Reformat [functions](docs/functions.md) doc layout
   - Update electron 16.0.6 to 16.0.7
   - Update font-list 1.4.3 to 1.4.5
   - Update mathjs 10.0.2 to 10.1.0
