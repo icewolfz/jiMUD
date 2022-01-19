@@ -849,6 +849,90 @@ export class Input extends EventEmitter {
                 args[0] = args[0].compile().evaluate(scope).toString().toLowerCase();
                 args[1] = args[1].compile().evaluate(scope).toString().toLowerCase();
                 return args[0].startsWith(args[1]);
+            },
+            alarm: (args, math, scope) => {
+                let alarms;
+                let a;
+                let al;
+                let t;
+                let p;
+                switch (args.length) {
+                    case 0:
+                        throw new Error('Missing arguments for alarm');
+                    case 1:
+                        args[0] = args[0].compile().evaluate(scope).toString();
+                        alarms = this.client.alarms;
+                        al = alarms.length;
+                        if (al === 0)
+                            throw new Error('No alarms set.');
+                        a = 0;
+                        for (; a < al; a++) {
+                            //only main state counts here
+                            if (alarms[a].type !== TriggerType.Alarm) continue;
+                            if (alarms[a].name === args[0] || alarms[a].pattern === args[0]) {
+                                if (alarms[a].suspended)
+                                    return 0;
+                                return this.client.getRemainingAlarmTime(a);
+                            }
+                        }
+                        return;
+                    case 2:
+                        t = args[1].compile().evaluate(scope);
+                        args[0] = args[0].compile().evaluate(scope).toString();
+                        alarms = this.client.alarms;
+                        al = alarms.length;
+                        if (al === 0)
+                            throw new Error('No alarms set.');
+                        a = 0;
+                        if (typeof t === 'string') {
+                            for (; a < al; a++) {
+                                //only main state counts here
+                                if (alarms[a].type !== TriggerType.Alarm) continue;
+                                if (alarms[a].name === args[0] || alarms[a].pattern === args[0]) {
+                                    if (alarms[a].profile.name.toUpperCase() !== t.toUpperCase())
+                                        continue;
+                                    if (alarms[a].suspended)
+                                        return 0;
+                                    return this.client.getRemainingAlarmTime(a);
+                                }
+                            }
+                            throw new Error('Alarm not found in profile: ' + t + '.');
+                        }
+                        else {
+                            for (; a < al; a++) {
+                                //only main state counts here
+                                if (alarms[a].type !== TriggerType.Alarm) continue;
+                                if (alarms[a].name === args[0] || alarms[a].pattern === args[0]) {
+                                    if (!alarms[a].suspended)
+                                        this.client.setAlarmTempTime(a, t);
+                                    return t;
+                                }
+                            }
+                            throw new Error('Alarm not found.');
+                        }
+                    case 3:
+                        t = args[1].compile().evaluate(scope);
+                        args[0] = args[0].compile().evaluate(scope).toString()
+                        p = args[2].compile().evaluate(scope).toString();
+                        alarms = this.client.alarms;
+                        al = alarms.length;
+                        if (al === 0)
+                            throw new Error('No alarms set.');
+                        a = 0;
+                        for (; a < al; a++) {
+                            //only main state counts here
+                            if (alarms[a].type !== TriggerType.Alarm) continue;
+                            if (alarms[a].name === args[0] || alarms[a].pattern === args[0]) {
+                                if (alarms[a].profile.name.toUpperCase() !== p.toUpperCase())
+                                    continue;
+                                if (!alarms[a].suspended)
+                                    this.client.setAlarmTempTime(a, t);
+                                return t;
+                            }
+                        }
+                        throw Error('Could not set time, alarm not found in profile: ' + args[2] + '.');
+                }
+                throw new Error('Too many arguments for alarm');
             }
         };
         for (let fun in funs) {
@@ -5739,21 +5823,19 @@ export class Input extends EventEmitter {
                     return args.replace(new RegExp(`${escape}[${c}]`, 'g'), (m) => m.substr(1));
                 }
                 return args.replace(/\\[\\"']/g, (m) => m.substr(1));
-            /*
             case 'alarm':
-                c = -1;
                 args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0)
                     throw new Error('Missing arguments for alarm');
                 if (args.length > 3)
                     throw new Error('Too many arguments for alarm');
                 args[0] = this.stripQuotes(args[0]);
+                sides = this.client.alarms;
+                max = sides.length;
+                if (max === 0)
+                    throw new Error('No alarms set.');
+                c = 0;
                 if (args.length === 1) {
-                    sides = this.client.alarms;
-                    max = sides.length;
-                    if (max === 0)
-                        return 0;
-                    c = 0;
                     for (; c < max; c++) {
                         //only main state counts here
                         if (sides[c].type !== TriggerType.Alarm) continue;
@@ -5765,18 +5847,54 @@ export class Input extends EventEmitter {
                     }
                 }
                 else if (args.length === 2) {
-                    c = parseInt(args[1], 10);
-                    if (isNaN(c)) {
+                    mod = parseInt(args[1], 10);
+                    if (isNaN(mod)) {
+                        args[1] = this.stripQuotes(args[1].trim());
+                        for (; c < max; c++) {
+                            //only main state counts here
+                            if (sides[c].type !== TriggerType.Alarm) continue;
+                            if (sides[c].name === args[0] || sides[c].pattern === args[0]) {
+                                if (sides[c].profile.name.toUpperCase() !== args[1].toUpperCase())
+                                    continue;
+                                if (sides[c].suspended)
+                                    return 0;
+                                return this.client.getRemainingAlarmTime(c);
+                            }
+                        }
+                        throw Error('Alarm not found in profile: ' + args[1] + '.');
                     }
                     else {
-
+                        for (; c < max; c++) {
+                            //only main state counts here
+                            if (sides[c].type !== TriggerType.Alarm) continue;
+                            if (sides[c].name === args[0] || sides[c].pattern === args[0]) {
+                                if (!sides[c].suspended)
+                                    this.client.setAlarmTempTime(c, mod);
+                                return mod;
+                            }
+                        }
+                        throw Error('Alarm not found.');
                     }
                 }
                 else if (args.length === 3) {
-
+                    mod = parseInt(args[1], 10);
+                    if (isNaN(mod))
+                        throw new Error("Invalid time for alarm");
+                    args[2] = this.stripQuotes(args[2].trim());
+                    for (; c < max; c++) {
+                        //only main state counts here
+                        if (sides[c].type !== TriggerType.Alarm) continue;
+                        if (sides[c].name === args[0] || sides[c].pattern === args[0]) {
+                            if (sides[c].profile.name.toUpperCase() !== args[2].toUpperCase())
+                                continue;
+                            if (!sides[c].suspended)
+                                this.client.setAlarmTempTime(c, mod);
+                            return mod;
+                        }
+                    }
+                    throw Error('Could not set time, alarm not found in profile: ' + args[2] + '.');
                 }
                 return 0;
-                */
         }
         return null;
     }
@@ -6073,7 +6191,7 @@ export class Input extends EventEmitter {
             if (!trigger.enabled) continue;
             //safety check in case a state was deleted
             if (trigger.state > trigger.triggers.length)
-                trigger.state = 0;              
+                trigger.state = 0;
             if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
                 //trigger states are 1 based as 0 is parent trigger
                 trigger = trigger.triggers[trigger.state - 1];
@@ -6319,7 +6437,7 @@ export class Input extends EventEmitter {
             if (!trigger.enabled) continue;
             //safety check in case a state was deleted
             if (trigger.state > trigger.triggers.length)
-                trigger.state = 0;              
+                trigger.state = 0;
             if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
                 //trigger states are 1 based as 0 is parent trigger
                 trigger = trigger.triggers[trigger.state - 1];

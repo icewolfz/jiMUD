@@ -3,6 +3,7 @@
 ## v0.17.6
 
 - **New:**
+  - Add [%alarm("name|pattern", setTime, "profile")](docs/functions.md#miscellaneous) return or set the time for alarm with name or matching pattern
   - Mapper: Add `Edit > Reset map` to allow users to delete and create a fresh map file
   - Profile Manager: Parse style now has basic code folding
   - Multi State triggers - Allows you to create multi line or conditional triggers
