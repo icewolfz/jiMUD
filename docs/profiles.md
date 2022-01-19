@@ -56,6 +56,8 @@
 
 - `Enable` enable/disable selected trigger
 - `Pattern` the pattern to match against
+  - `Add trigger state` Add a new trigger state to current trigger making a multi state trigger, see [Multi state triggers](profiles.md#multi-state-triggers)
+  - `Remove trigger state` Remove the current trigger state, only enabled if multiple states
 - `Style` how the value is processed
   - `Text` send value as is
   - `Parse` do standard parsing, allows %0 ... %n to access arguments regex matches, [may use alterative ${}/%{} block syntax](functions.md)
@@ -136,13 +138,20 @@
     - `&VarName` assigns the matched string to the given variable
     - `%/regex/%` matches the given Regular Expression
 - `Name` a unique name to identify the trigger, if more then one trigger exist with the name, the one with the highest priority is used first
-- `Priority` the sort order of triggers
+- `Priority` the sort order of triggers, if multi state trigger only the 0 state supports Priority
+- `State` if multi state trigger this sets the current state to begin triggering
 - `Verbatim` the text is compared exactly how it is, including case
 - `Temporary` the trigger will be deleted on first execution
 - `Case sensitive` causes trigger to make sure letter cases are matched, eg A equal A and not a, off A equal a or A
 - `Trigger on Newline` this causes the trigger to execute if it is a full line of text
 - `Trigger on Prompt` this causes the trigger to execute if prompt/partial line of text.
 - `Trigger on raw` this causes the trigger to match the raw text of the line including any ansi escape codes, you can use \x1b or \u001b in pattern for escape code, eg \1x\[0m would match the ansi bold sequence
+
+## Multi state triggers
+
+Multi state triggers are an advanced form of triggers that let you chain or trigger based on multiple conditions, you can add as many states you like and rearrange them as needed and mix any of the supported trigger types. Each state is a full trigger allowing for total control on how each state will work, the `Priority` and `State` options only exist on the primary 0 state. You can edit each state by selecting the state you want to edit from the drop down menu from the pattern input box, this is also where you can rearrange patterns using the move up or down button for each displayed state. All disabled states will be skipped.
+
+Temporary states will be removed from the trigger after being executed and shift all other states down, if last state the entire trigger will be removed as normal Temporary trigger
 
 ## Buttons
 

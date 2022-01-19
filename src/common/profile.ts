@@ -109,6 +109,8 @@ export class Alarm {
     public minutesWildcard: boolean = true;
     public startTime: number;
     public suspended: number = 0;
+    public tempTime: number;
+    public prevTime: number;
 
     constructor(data?, pattern?) {
         if (typeof data === 'string') {
@@ -118,6 +120,7 @@ export class Alarm {
         this.parent = data;
         this.pattern = pattern;
         this.startTime = Date.now();
+        this.prevTime = this.startTime;
     }
 
     public static parse(parent, pattern?: string, readOnly?: boolean): Alarm {
@@ -149,6 +152,8 @@ export class Alarm {
                     t.secondsWildcard = true;
                     parts[0] = parts[0].substr(1);
                 }
+                else
+                    t.secondsWildcard = false;
                 tmp = parseInt(parts[0], 10);
                 if (isNaN(tmp))
                     throw new Error('Invalid Format: ' + parts[0]);
@@ -163,6 +168,8 @@ export class Alarm {
                     t.minutesWildcard = true;
                     parts[0] = parts[0].substr(1);
                 }
+                else
+                    t.minutesWildcard = false;
                 tmp = parseInt(parts[0], 10);
                 if (isNaN(tmp))
                     throw new Error('Invalid Format: ' + parts[0]);
@@ -189,6 +196,8 @@ export class Alarm {
                     t.hoursWildcard = true;
                     parts[0] = parts[0].substr(1);
                 }
+                else
+                    t.hoursWildcard = false;
                 tmp = parseInt(parts[0], 10);
                 if (isNaN(tmp))
                     throw new Error('Invalid Format: ' + parts[0]);
@@ -199,7 +208,9 @@ export class Alarm {
                 if (parts[1][0] === '*') {
                     t.minutesWildcard = true;
                     parts[1] = parts[1].substr(1);
-                }
+                } 
+                else
+                    t.minutesWildcard = false;
                 tmp = parseInt(parts[1], 10);
                 if (isNaN(tmp))
                     throw new Error('Invalid Format: ' + parts[1]);
@@ -224,6 +235,13 @@ export class Alarm {
         if (readOnly)
             t.temp = false;
         return t;
+    }
+
+    public setTempTime(value: number) {
+        if (!value)
+            this.tempTime = 0;
+        else
+            this.tempTime = Date.now() + value;
     }
 }
 
@@ -356,6 +374,9 @@ export class Trigger extends Item {
     public temp: boolean = false;
     public caseSensitive: boolean = false;
     public raw: boolean = false;
+    public state: number = 0;
+    public params: string = '';
+    public triggers: Trigger[] = [];
 
     constructor(data?, profile?) {
         super(data);
@@ -366,7 +387,15 @@ export class Trigger extends Item {
                 if (!data.hasOwnProperty(prop)) {
                     continue;
                 }
-                this[prop] = data[prop];
+                if (prop === 'triggers') {
+                    this.triggers = [];
+                    const il = data.triggers.length;
+                    for (let i = 0; i < il; i++) {
+                        this.triggers.push(new Trigger(data.triggers[i]));
+                    }
+                }
+                else
+                    this[prop] = data[prop];
             }
         }
         this.profile = profile;
@@ -985,7 +1014,7 @@ export class Profile {
             if (this.triggers.length > 0) {
                 il = this.triggers.length;
                 for (i = 0; i < il; i++) {
-                    data.triggers.push({
+                    const t = {
                         pattern: this.triggers[i].pattern,
                         value: this.triggers[i].value,
                         priority: this.triggers[i].priority,
@@ -1000,8 +1029,37 @@ export class Profile {
                         triggerprompt: this.triggers[i].triggerPrompt,
                         raw: this.triggers[i].raw,
                         type: this.triggers[i].type,
-                        notes: this.triggers[i].notes || ''
-                    });
+                        notes: this.triggers[i].notes || '',
+                        state: this.triggers[i].state || 0,
+                        params: this.triggers[i].params || '',
+                        triggers: []
+                    }
+                    if (this.triggers[i].triggers && this.triggers[i].triggers.length) {
+                        const sl = this.triggers[i].triggers.length;
+                        for (let s = 0; s < sl; s++) {
+                            t.triggers.push({
+                                pattern: this.triggers[i].triggers[s].pattern,
+                                value: this.triggers[i].triggers[s].value,
+                                priority: this.triggers[i].triggers[s].priority,
+                                verbatim: this.triggers[i].triggers[s].verbatim,
+                                style: this.triggers[i].triggers[s].style,
+                                name: this.triggers[i].triggers[s].name,
+                                group: this.triggers[i].triggers[s].group,
+                                enabled: this.triggers[i].triggers[s].enabled,
+                                display: this.triggers[i].triggers[s].display,
+                                triggernewline: this.triggers[i].triggers[s].triggerNewline,
+                                caseSensitive: this.triggers[i].triggers[s].caseSensitive,
+                                triggerprompt: this.triggers[i].triggers[s].triggerPrompt,
+                                raw: this.triggers[i].triggers[s].raw,
+                                type: this.triggers[i].triggers[s].type,
+                                notes: this.triggers[i].triggers[s].notes || '',
+                                state: this.triggers[i].triggers[s].state || 0,
+                                params: this.triggers[i].triggers[s].params || '',
+                                triggers: []
+                            });
+                        }
+                    }
+                    data.triggers.push(t);
                 }
             }
             if (this.macros.length > 0) {

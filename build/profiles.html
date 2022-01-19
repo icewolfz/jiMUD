@@ -193,7 +193,24 @@
                                 <label class="control-label" for="trigger-pattern">Pattern</label>
                             </td>
                             <td colspan="4">
-                                <input class="form-control" type="text" id="trigger-pattern">
+                                <div class="input-group" style="width:100%;">
+                                    <input class="form-control" type="text" id="trigger-pattern">
+                                    <input type="hidden" id="state">
+                                    <span class="input-group-btn" style="width: 17px;">
+                                        <button title="Select state" id="trigger-states" class="btn btn-default" style="width:100%;border-radius: 0;padding-left:4px;padding-right:4px;border-left:0px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-boundary="window">
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul id="trigger-states-dropdown" class="dropdown-menu" aria-labelledby="trigger-states" style="max-height: 200px;overflow: auto;overflow-x: hidden;"></ul>
+                                    </span>
+                                    <span class="input-group-btn" style="width: 1%;">
+                                        <button style="padding: 6px 4px;" class="btn btn-default" type="button" onclick="profileUI.AddTriggerState()" title="Add new trigger state">
+                                            <i class="fa fa-plus"></i>
+                                        </button>
+                                        <button style="padding: 6px 4px;" id="trigger-states-delete" disabled="disabled" class="btn btn-danger" type="button" onclick="profileUI.DeleteTriggerState()" title="Delete current trigger state">
+                                            <i class="fa fa-times"></i>
+                                        </button>
+                                    </span>
+                                </div>
                             </td>
                             <td style="padding-left:4px;width: 45px">
                                 <label class="control-label" for="trigger-style" style="padding-right:4px;">Style</label>
@@ -285,13 +302,24 @@
                             </td>
                         </tr>
                         <tr class="panel-adv-body">
-                            <td>
-                                <label class="control-label" for="macro-name">Name</label>
+                            <td colspan="7" id="triggers-name">
+                                <table style="padding:0;margin:0;width:100%">
+                                    <tr>
+                                        <td style="width: 60px">
+                                            <label class="control-label" for="macro-name">Name</label>
+                                        </td>
+                                        <td>
+                                            <input class="form-control" style="width: 100%" type="text" id="trigger-name">
+                                        </td>
+                                        <td style="width: 60px;padding-left:5px">
+                                            <label class="control-label" for="trigger-state">State</label>
+                                        </td>
+                                        <td style="width: 100px">
+                                            <input type="number" class="form-control" id="trigger-state" style="width: 100%">
+                                        </td>
+                                    </tr>
+                                </table>
                             </td>
-                            <td colspan="6">
-                                <input class="form-control" style="width: 100%" type="text" id="trigger-name">
-                            </td>
-
                         </tr>
                         <tr class="panel-adv-body">
                             <td colspan="7" style="padding-left:5px;vertical-align: bottom;">
