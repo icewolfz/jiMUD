@@ -436,6 +436,15 @@ export class Backup extends EventEmitter {
                             item.temp = data.profiles[keys[k]].triggers[m].temp ? true : false;
                             item.type = data.profiles[keys[k]].triggers[m].type;
                             item.notes = data.profiles[keys[k]].triggers[m].notes || '';
+                            item.state = data.profiles[keys[k]].triggers[m].state || 0;
+                            item.params = data.profiles[keys[k]].triggers[m].params || '';
+                            item.fired = data.profiles[keys[k]].triggers[m].fired ? true : false;
+                            if (data.profiles[keys[k]].triggers[m].triggers && data.profiles[keys[k]].triggers[m].triggers.length) {
+                                const il = data.profiles[keys[k]].triggers[m].triggers.length;
+                                for (let i = 0; i < il; i++) {
+                                    item.triggers.push(new Trigger(data.profiles[keys[k]].triggers[m].triggers[i]));
+                                }
+                            }                            
                             p.triggers.push(item);
                         }
                     }

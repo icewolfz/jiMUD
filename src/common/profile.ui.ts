@@ -3710,6 +3710,7 @@ function importProfiles() {
                                     item.notes = data.profiles[keys[k]].triggers[m].notes || '';
                                     item.state = data.profiles[keys[k]].triggers[m].state || 0;
                                     item.params = data.profiles[keys[k]].triggers[m].params || '';
+                                    item.fired = data.profiles[keys[k]].triggers[m].fired;
                                     if (data.profiles[keys[k]].triggers[m].triggers && data.profiles[keys[k]].triggers[m].triggers.length) {
                                         const il = data.profiles[keys[k]].triggers[m].triggers.length;
                                         for (let i = 0; i < il; i++) {
