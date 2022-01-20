@@ -860,6 +860,143 @@ export class Input extends EventEmitter {
                 args[0] = args[0].compile().evaluate(scope).toString().toLowerCase();
                 args[1] = args[1].compile().evaluate(scope).toString().toLowerCase();
                 return args[0].startsWith(args[1]);
+            },
+            alarm: (args, math, scope) => {
+                let alarms;
+                let a;
+                let al;
+                let t;
+                let p;
+                switch (args.length) {
+                    case 0:
+                        throw new Error('Missing arguments for alarm');
+                    case 1:
+                        args[0] = args[0].compile().evaluate(scope).toString();
+                        alarms = this.client.alarms;
+                        al = alarms.length;
+                        if (al === 0)
+                            throw new Error('No alarms set.');
+                        a = 0;
+                        for (; a < al; a++) {
+                            //only main state counts here
+                            if (alarms[a].type !== TriggerType.Alarm) continue;
+                            if (alarms[a].name === args[0] || alarms[a].pattern === args[0]) {
+                                if (alarms[a].suspended)
+                                    return 0;
+                                return this.client.getRemainingAlarmTime(a);
+                            }
+                        }
+                        return;
+                    case 2:
+                        t = args[1].compile().evaluate(scope);
+                        args[0] = args[0].compile().evaluate(scope).toString();
+                        alarms = this.client.alarms;
+                        al = alarms.length;
+                        if (al === 0)
+                            throw new Error('No alarms set.');
+                        a = 0;
+                        if (typeof t === 'string') {
+                            for (; a < al; a++) {
+                                //only main state counts here
+                                if (alarms[a].type !== TriggerType.Alarm) continue;
+                                if (alarms[a].name === args[0] || alarms[a].pattern === args[0]) {
+                                    if (alarms[a].profile.name.toUpperCase() !== t.toUpperCase())
+                                        continue;
+                                    if (alarms[a].suspended)
+                                        return 0;
+                                    return this.client.getRemainingAlarmTime(a);
+                                }
+                            }
+                            throw new Error('Alarm not found in profile: ' + t + '.');
+                        }
+                        else {
+                            for (; a < al; a++) {
+                                //only main state counts here
+                                if (alarms[a].type !== TriggerType.Alarm) continue;
+                                if (alarms[a].name === args[0] || alarms[a].pattern === args[0]) {
+                                    if (!alarms[a].suspended)
+                                        this.client.setAlarmTempTime(a, t);
+                                    return t;
+                                }
+                            }
+                            throw new Error('Alarm not found.');
+                        }
+                    case 3:
+                        t = args[1].compile().evaluate(scope);
+                        args[0] = args[0].compile().evaluate(scope).toString()
+                        p = args[2].compile().evaluate(scope).toString();
+                        alarms = this.client.alarms;
+                        al = alarms.length;
+                        if (al === 0)
+                            throw new Error('No alarms set.');
+                        a = 0;
+                        for (; a < al; a++) {
+                            //only main state counts here
+                            if (alarms[a].type !== TriggerType.Alarm) continue;
+                            if (alarms[a].name === args[0] || alarms[a].pattern === args[0]) {
+                                if (alarms[a].profile.name.toUpperCase() !== p.toUpperCase())
+                                    continue;
+                                if (!alarms[a].suspended)
+                                    this.client.setAlarmTempTime(a, t);
+                                return t;
+                            }
+                        }
+                        throw Error('Could not set time, alarm not found in profile: ' + args[2] + '.');
+                }
+                throw new Error('Too many arguments for alarm');
+            },
+            state: (args, math, scope) => {
+                let trigger;
+                if (args.length === 0)
+                    throw new Error('Missing arguments for state');
+                if (args.length > 2)
+                    throw new Error('Too many arguments for state');
+                args[0] = args[0].compile().evaluate(scope).toString();
+                if (args.length === 1) {
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0)
+                        return null;
+                    if (kl === 1) {
+                        if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                            throw Error('No enabled profiles found!');
+                        trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                        trigger = trigger.find(t => {
+                            return t.name === args[0] || t.pattern === args[0];
+                        });
+                    }
+                    else {
+                        for (; k < kl; k++) {
+                            if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                continue;
+                            trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                            trigger = trigger.find(t => {
+                                return t.name === args[0] || t.pattern === args[0];
+                            });
+                            if (trigger)
+                                break;
+                        }
+                    }
+                }
+                else if (args.length === 2) {
+                    args[1].compile().evaluate(scope);
+                    let profile;
+                    if (this.client.profiles.contains(args[1]))
+                        profile = this.client.profiles.items[args[1].toLowerCase()];
+                    else {
+                        profile = Profile.load(path.join(path.join(parseTemplate('{data}'), 'profiles'), args[1].toLowerCase() + '.json'));
+                        if (!profile)
+                            throw new Error('Profile not found: ' + args[1]);
+                    }
+                    trigger = SortItemArrayByPriority(profile.triggers);
+                    trigger = trigger.find(t => {
+                        return t.name === args[0] || t.pattern === args[0];
+                    });
+                }
+                if (trigger)
+                    return trigger.triggers && trigger.triggers.length ? trigger.state : 0;
+                throw new Error('Trigger not found');
             }
         };
         for (let fun in funs) {
@@ -1459,7 +1596,7 @@ export class Input extends EventEmitter {
                 else {
                     profile = this.parseInline(profile);
                     if (this.client.profiles.contains(profile)) {
-                        profile = this.client.profiles.items[profile];
+                        profile = this.client.profiles.items[profile.toLowerCase()];
                         item = profile.findAny('triggers', { name: args[0], pattern: args[0] });
                         if (!item)
                             throw new Error('Trigger \'' + args[0] + '\' not found in \'' + profile.name + '\'!');
@@ -1645,7 +1782,7 @@ export class Input extends EventEmitter {
                             throw new Error('Invalid trigger options');
                         item.profile = this.stripQuotes(args[1]);
                         if (item.profile.length !== 0)
-                            tmp = this.parseInline(item.profile);
+                            item.profile = this.parseInline(item.profile);
                     }
                 }
                 this.createTrigger(item.pattern, item.commands, item.profile, item.options, item.name);
@@ -1745,7 +1882,7 @@ export class Input extends EventEmitter {
                         throw new Error('Invalid event options');
                     item.profile = this.stripQuotes(args[1]);
                     if (item.profile.length !== 0)
-                        tmp = this.parseInline(item.profile);
+                        item.profile = this.parseInline(item.profile);
                 }
 
                 if (!item.profile || item.profile.length === 0) {
@@ -1782,9 +1919,9 @@ export class Input extends EventEmitter {
                 }
                 else {
                     if (this.client.profiles.contains(item.profile))
-                        profile = this.client.profiles.items[item.profile];
+                        profile = this.client.profiles.items[item.profile.toLowerCase()];
                     else {
-                        profile = Profile.load(path.join(p, item.profile + '.json'));
+                        profile = Profile.load(path.join(p, item.profile.toLowerCase() + '.json'));
                         reload = false;
                         if (!profile)
                             throw new Error('Profile not found: ' + item.profile);
@@ -1847,7 +1984,7 @@ export class Input extends EventEmitter {
                         if (args.length > 2)
                             throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'une\x1b[0;-11;-12mvent name or \x1b[4m' + cmdChar + 'une\x1b[0;-11;-12mvent {name} \x1b[3mprofile\x1b[0;-11;-12m');
                         if (args.length === 2) {
-                            profile = this.parseInline(this.stripQuotes(args[1]));
+                            profile = this.parseInline(this.stripQuotes(args[1])).toLowerCase();
                             if (this.client.profiles.contains(profile))
                                 profile = this.client.profiles.items[profile];
                             else {
@@ -2025,7 +2162,7 @@ export class Input extends EventEmitter {
                             throw new Error('Invalid button options');
                         item.profile = this.stripQuotes(args[1]);
                         if (item.profile.length !== 0)
-                            tmp = this.parseInline(item.profile);
+                            item.profile = this.parseInline(item.profile);
                     }
                 }
                 if (!item.profile || item.profile.length === 0) {
@@ -2062,10 +2199,10 @@ export class Input extends EventEmitter {
                 }
                 else {
                     if (this.client.profiles.contains(item.profile))
-                        profile = this.client.profiles.items[item.profile];
+                        profile = this.client.profiles.items[item.profile.toLowerCase()];
                     else {
                         reload = false;
-                        profile = Profile.load(path.join(p, item.profile + '.json'));
+                        profile = Profile.load(path.join(p, item.profile.toLowerCase() + '.json'));
                         if (!profile)
                             throw new Error('Profile not found: ' + item.profile);
                     }
@@ -2132,11 +2269,11 @@ export class Input extends EventEmitter {
                         if (args.length === 2) {
                             profile = this.parseInline(this.stripQuotes(args[1]));
                             if (this.client.profiles.contains(profile))
-                                profile = this.client.profiles.items[profile];
+                                profile = this.client.profiles.items[profile.toLowerCase()];
                             else {
                                 name = profile;
                                 reload = false;
-                                profile = Profile.load(path.join(p, profile + '.json'));
+                                profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
                                 if (!profile)
                                     throw new Error('Profile not found: ' + name);
                             }
@@ -2218,11 +2355,11 @@ export class Input extends EventEmitter {
                         profile = this.client.activeProfile;
                     else {
                         if (this.client.profiles.contains(profile))
-                            profile = this.client.profiles.items[profile];
+                            profile = this.client.profiles.items[profile.toLowerCase()];
                         else {
                             name = profile;
                             reload = false;
-                            profile = Profile.load(path.join(p, profile + '.json'));
+                            profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
                             if (!profile)
                                 throw new Error('Profile not found: ' + name);
                         }
@@ -2314,11 +2451,11 @@ export class Input extends EventEmitter {
                 else {
                     profile = this.parseInline(profile);
                     if (this.client.profiles.contains(profile))
-                        profile = this.client.profiles.items[profile];
+                        profile = this.client.profiles.items[profile.toLowerCase()];
                     else {
                         name = profile;
                         reload = false;
-                        profile = Profile.load(path.join(p, profile + '.json'));
+                        profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
                         if (!profile)
                             throw new Error('Profile not found: ' + name);
                     }
@@ -2676,11 +2813,11 @@ export class Input extends EventEmitter {
                         if (args.length === 2) {
                             profile = this.parseInline(this.stripQuotes(args[1]));
                             if (this.client.profiles.contains(profile))
-                                profile = this.client.profiles.items[profile];
+                                profile = this.client.profiles.items[profile.toLowerCase()];
                             else {
                                 name = profile;
                                 reload = false;
-                                profile = Profile.load(path.join(p, profile + '.json'));
+                                profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
                                 if (!profile)
                                     throw new Error('Profile not found: ' + name);
                             }
@@ -2746,11 +2883,11 @@ export class Input extends EventEmitter {
                             profile = this.stripQuotes(args[1]);
                             profile = this.parseInline(profile);
                             if (this.client.profiles.contains(profile))
-                                profile = this.client.profiles.items[profile];
+                                profile = this.client.profiles.items[profile.toLowerCase()];
                             else {
                                 name = profile;
                                 reload = false;
-                                profile = Profile.load(path.join(p, profile + '.json'));
+                                profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
                                 if (!profile)
                                     throw new Error('Profile not found: ' + name);
                             }
@@ -3908,6 +4045,10 @@ export class Input extends EventEmitter {
                 while (i--)
                     tmp.push('\n');
                 this.client.print(tmp.join(''), true);
+                return null;
+            case 'fire':
+                args = this.parseInline(args.join(' ') + '\n');
+                this.ExecuteTriggers(TriggerTypes.Regular | TriggerTypes.Pattern, args, args, false, false);
                 return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
@@ -6036,21 +6177,19 @@ export class Input extends EventEmitter {
                     return args.replace(new RegExp(`${escape}[${c}]`, 'g'), (m) => m.substr(1));
                 }
                 return args.replace(/\\[\\"']/g, (m) => m.substr(1));
-            /*
             case 'alarm':
-                c = -1;
                 args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0)
                     throw new Error('Missing arguments for alarm');
                 if (args.length > 3)
                     throw new Error('Too many arguments for alarm');
                 args[0] = this.stripQuotes(args[0]);
+                sides = this.client.alarms;
+                max = sides.length;
+                if (max === 0)
+                    throw new Error('No alarms set.');
+                c = 0;
                 if (args.length === 1) {
-                    sides = this.client.alarms;
-                    max = sides.length;
-                    if (max === 0)
-                        return 0;
-                    c = 0;
                     for (; c < max; c++) {
                         //only main state counts here
                         if (sides[c].type !== TriggerType.Alarm) continue;
@@ -6062,18 +6201,106 @@ export class Input extends EventEmitter {
                     }
                 }
                 else if (args.length === 2) {
-                    c = parseInt(args[1], 10);
-                    if (isNaN(c)) {
+                    mod = parseInt(args[1], 10);
+                    if (isNaN(mod)) {
+                        args[1] = this.stripQuotes(args[1].trim());
+                        for (; c < max; c++) {
+                            //only main state counts here
+                            if (sides[c].type !== TriggerType.Alarm) continue;
+                            if (sides[c].name === args[0] || sides[c].pattern === args[0]) {
+                                if (sides[c].profile.name.toUpperCase() !== args[1].toUpperCase())
+                                    continue;
+                                if (sides[c].suspended)
+                                    return 0;
+                                return this.client.getRemainingAlarmTime(c);
+                            }
+                        }
+                        throw Error('Alarm not found in profile: ' + args[1] + '.');
                     }
                     else {
-
+                        for (; c < max; c++) {
+                            //only main state counts here
+                            if (sides[c].type !== TriggerType.Alarm) continue;
+                            if (sides[c].name === args[0] || sides[c].pattern === args[0]) {
+                                if (!sides[c].suspended)
+                                    this.client.setAlarmTempTime(c, mod);
+                                return mod;
+                            }
+                        }
+                        throw Error('Alarm not found.');
                     }
                 }
                 else if (args.length === 3) {
-
+                    mod = parseInt(args[1], 10);
+                    if (isNaN(mod))
+                        throw new Error("Invalid time for alarm");
+                    args[2] = this.stripQuotes(args[2].trim());
+                    for (; c < max; c++) {
+                        //only main state counts here
+                        if (sides[c].type !== TriggerType.Alarm) continue;
+                        if (sides[c].name === args[0] || sides[c].pattern === args[0]) {
+                            if (sides[c].profile.name.toUpperCase() !== args[2].toUpperCase())
+                                continue;
+                            if (!sides[c].suspended)
+                                this.client.setAlarmTempTime(c, mod);
+                            return mod;
+                        }
+                    }
+                    throw Error('Could not set time, alarm not found in profile: ' + args[2] + '.');
                 }
                 return 0;
-                */
+            case 'state':
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments for state');
+                if (args.length > 2)
+                    throw new Error('Too many arguments for state');
+                args[0] = this.stripQuotes(args[0]);
+                mod = null;
+                if (args.length === 1) {
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0)
+                        return null;
+                    if (kl === 1) {
+                        if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                            throw Error('No enabled profiles found!');
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                        sides = sides.find(t => {
+                            return t.name === args[0] || t.pattern === args[0];
+                        });
+                    }
+                    else {
+                        for (; k < kl; k++) {
+                            if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                continue;
+                            sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                            sides = sides.find(t => {
+                                return t.name === args[0] || t.pattern === args[0];
+                            });
+                            if (sides)
+                                break;
+                        }
+                    }
+                }
+                else if (args.length === 2) {
+                    args[1] = this.stripQuotes(args[1].trim());
+                    if (this.client.profiles.contains(args[1]))
+                        mod = this.client.profiles.items[args[1].toLowerCase()];
+                    else {
+                        mod = Profile.load(path.join(path.join(parseTemplate('{data}'), 'profiles'), args[1].toLowerCase() + '.json'));
+                        if (!mod)
+                            throw new Error('Profile not found: ' + args[1]);
+                    }
+                    sides = SortItemArrayByPriority(mod.triggers);
+                    sides = sides.find(t => {
+                        return t.name === args[0] || t.pattern === args[0];
+                    });
+                }
+                if (sides)
+                    return sides.triggers && sides.triggers.length ? sides.state : 0;
+                throw new Error('Trigger not found');
         }
         return null;
     }
@@ -6370,7 +6597,7 @@ export class Input extends EventEmitter {
             if (!trigger.enabled) continue;
             //safety check in case a state was deleted
             if (trigger.state > trigger.triggers.length)
-                trigger.state = 0;              
+                trigger.state = 0;
             if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
                 //trigger states are 1 based as 0 is parent trigger
                 trigger = trigger.triggers[trigger.state - 1];
@@ -6616,7 +6843,7 @@ export class Input extends EventEmitter {
             if (!trigger.enabled) continue;
             //safety check in case a state was deleted
             if (trigger.state > trigger.triggers.length)
-                trigger.state = 0;              
+                trigger.state = 0;
             if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
                 //trigger states are 1 based as 0 is parent trigger
                 trigger = trigger.triggers[trigger.state - 1];
@@ -6779,11 +7006,11 @@ export class Input extends EventEmitter {
             }
         }
         else if (typeof profile === 'string') {
-            if (this.client.profiles.contains(profile))
-                profile = this.client.profiles.items[profile];
+            if (this.client.profiles.contains(profile.toLowerCase()))
+                profile = this.client.profiles.items[profile.toLowerCase()];
             else {
                 reload = false;
-                profile = Profile.load(path.join(p, profile + '.json'));
+                profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
                 if (!profile)
                     throw new Error('Profile not found: ' + profile);
             }

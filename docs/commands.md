@@ -176,6 +176,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#UNE</u>VENT name *profile*
 >Delete an event
 
+#FIRE text
+>Send text to trigger system as if received from the mud, triggering matching triggers with out displaying to screen and effecting current last line
+
 ## **Miscellaneous**
 
 <u>#AD</u>D name value
