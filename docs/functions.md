@@ -289,3 +289,6 @@ alarm("name|pattern", *"profile"*)<br>
 alarm("name|pattern", *setTime*)<br>
 alarm("name|pattern", *setTime*, *"profile"*)
 >Return or set the time for alarm with name or matching pattern
+
+state("name|pattern", *"profile"*)
+>Returns the current trigger state of the trigger given by the name or pattern, if no profile it will search all enabled profiles until match found
