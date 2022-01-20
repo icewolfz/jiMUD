@@ -509,6 +509,8 @@ export class Client extends EventEmitter {
             if (state) {
                 pattern[p].startTime += Date.now() - pattern[p].suspended;
                 pattern[p].prevTime += Date.now() - pattern[p].suspended;
+                if (pattern[p].tempTime)
+                    pattern[p].tempTime += Date.now() - pattern[p].suspended;
                 pattern[p].suspended = 0;
             }
             else
@@ -674,6 +676,13 @@ export class Client extends EventEmitter {
             }
             //we want to sub state pattern
             alarm = alarm[trigger.state];
+            if (alarm.restart) {
+                alarm.startTime = Date.now();
+                alarm.prevTime = alarm.startTime;
+                if (alarm.tempTime)
+                    alarm.tempTime += Date.now() - alarm.restart;
+                alarm.restart = 0;
+            }
             let match: boolean = true;
             //a temp time was set so it overrides all matches as once the temp time has been reached end
             if (alarm.tempTime) {
@@ -688,6 +697,13 @@ export class Client extends EventEmitter {
                 //save as if temp alarm as execute trigger advances state and temp alarms will need different state shifts
                 const state = parent.state;
                 this._input.ExecuteTrigger(trigger, [alarm.pattern], false, -a, null, null, parent);
+                if (state !== parent.state)
+                    alarm.restart = Date.now();
+                const tState = this._input.getTriggerState(-a);
+                if (tState && tState.reParse) {
+                    a--;
+                    this._input.clearTriggerState(-a);
+                }
                 if (alarm.temp) {
                     //has sub state so only remove the temp alarm state
                     if (parent.triggers.length) {

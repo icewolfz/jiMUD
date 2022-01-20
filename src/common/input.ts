@@ -155,7 +155,7 @@ export class Input extends EventEmitter {
     private _locked: number = 0;
     private _tests: Tests;
     private _TriggerCache: Trigger[] = null;
-    private _TriggerStates = [];
+    private _TriggerStates = {};
     private _TriggerFunctionCache = {};
     private _TriggerRegExCache = {};
     private _LastTrigger = null;
@@ -6290,6 +6290,7 @@ export class Input extends EventEmitter {
         let t = 0;
         let pattern;
         let changed = false;
+        let val;
         //scope to get performance
         const triggers = this._TriggerCache;
         const tl = triggers.length;
@@ -6338,9 +6339,7 @@ export class Input extends EventEmitter {
                 if (trigger.verbatim) {
                     if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) continue;
                     else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) continue;
-                    if (ret)
-                        return this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], true, t, [(trigger.raw ? raw : line)], 0, parent);
-                    this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t, [(trigger.raw ? raw : line)], 0, parent);
+                    val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], ret, t, [(trigger.raw ? raw : line)], 0, parent);
                 }
                 else {
                     let re;
@@ -6365,10 +6364,13 @@ export class Input extends EventEmitter {
                     }
                     if (res.groups)
                         Object.keys(res.groups).map(v => this.client.variables[v] = res.groups[v]);
-                    if (ret)
-                        return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re], res.groups, parent);
-                    this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups, parent);
+                    val = this.ExecuteTrigger(trigger, args, ret, t, [trigger.raw ? raw : line, re], res.groups, parent);
                 }
+                if (this._TriggerStates[t] && this._TriggerStates[t].reParse) {
+                    t--;
+                    delete this._TriggerStates[t];
+                }
+                else if (ret) return val;
             }
             catch (e) {
                 if (this.client.options.disableTriggerOnError) {
@@ -6390,6 +6392,17 @@ export class Input extends EventEmitter {
     public ExecuteTrigger(trigger, args, r: boolean, idx, regex?, named?, parent?: Trigger) {
         if (r == null) r = false;
         if (!trigger.enabled) return '';
+        if (trigger.fired) {
+            trigger.fired = false;
+            parent.state++;
+            //1 based
+            if (parent.state > parent.triggers.length)
+                parent.state = 0;
+            this._TriggerStates[idx] = { reParse: true };
+            this.client.saveProfile(parent.profile.name, true);
+            this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
+            return '';
+        }
         this._LastTrigger = trigger;
         let ret; // = '';
         switch (trigger.style) {
@@ -6501,7 +6514,19 @@ export class Input extends EventEmitter {
         }
     }
 
-    public clearTriggerCache() { this._TriggerCache = null; this._TriggerStates = []; this._TriggerFunctionCache = {}; this._TriggerRegExCache = {}; }
+    public getTriggerState(idx) {
+        return this._TriggerStates[idx];
+    }
+
+    public clearTriggerState(idx) {
+        delete this._TriggerStates[idx];
+    }
+
+    public setTriggerState(idx, data) {
+        this._TriggerStates[idx] = data;
+    }
+
+    public clearTriggerCache() { this._TriggerCache = null; this._TriggerStates = {}; this._TriggerFunctionCache = {}; this._TriggerRegExCache = {}; }
 
     public buildTriggerCache() {
         if (this._TriggerCache == null) {
@@ -6521,7 +6546,7 @@ export class Input extends EventEmitter {
 
     public clearCaches() {
         this._TriggerCache = null;
-        this._TriggerStates = [];
+        this._TriggerStates = {};
         this._TriggerFunctionCache = {};
         this._gamepadCaches = null;
         this._lastSuspend = -1;
@@ -6542,6 +6567,7 @@ export class Input extends EventEmitter {
         for (; t < tl; t++) {
             let trigger = this._TriggerCache[t];
             const parent = trigger;
+            let changed = false;
             //in case it got disabled by something
             if (!trigger.enabled) continue;
             //safety check in case a state was deleted
@@ -6566,10 +6592,13 @@ export class Input extends EventEmitter {
                         trigger = trigger.triggers[parent.state - 1];
                     else
                         trigger = parent;
+                    changed = true;
                 }
                 //changed state save
-                this.client.saveProfile(parent.profile.name, true);
-                this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
+                if (changed) {
+                    this.client.saveProfile(parent.profile.name, true);
+                    this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
+                }
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
             }
@@ -6577,6 +6606,10 @@ export class Input extends EventEmitter {
             if (trigger.caseSensitive && event !== trigger.pattern) continue;
             if (!trigger.caseSensitive && event.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
             this.ExecuteTrigger(trigger, args, false, t, 0, 0, parent);
+            if (this._TriggerStates[t] && this._TriggerStates[t].reParse) {
+                t--;
+                delete this._TriggerStates[t];
+            }
         }
     }
 
