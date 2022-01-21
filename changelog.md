@@ -5,7 +5,8 @@
 - **New:**
   - Add [%alarm("name|pattern", setTime, "profile")](docs/functions.md#miscellaneous) return or set the time for alarm with name or matching pattern
   - Add [#FIRE text](docs/commands.md#triggers) Send text to trigger system as if received from the mud, triggering matching triggers with out displaying to screen and effecting current last line
-  - Add [#STATE id state profile](docs/commands.md#triggers) Set the state of a trigger
+  - Add [#STATE name|pattern state profile](docs/commands.md#triggers) Set the state of a trigger
+  - Add [#SET name|pattern state value profile](docs/commands.md#triggers) Set the fired state of a trigger
   - Add [%state("name|pattern", "profile")](docs/functions.md#miscellaneous) Returns the current trigger state of the trigger given by the name or pattern, if no profile it will search all enabled profiles until match found
   - Mapper: Add `Edit > Reset map` to allow users to delete and create a fresh map file
   - Profile Manager: Parse style now has basic code folding

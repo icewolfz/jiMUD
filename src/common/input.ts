@@ -4058,7 +4058,7 @@ export class Input extends EventEmitter {
                         if (args[0].match(/^\s*?[-|+]?\d+\s*?$/)) {
                             if (!this._LastTrigger)
                                 throw new Error("No trigger has fired yet, unable to set state");
-                            trigger = this._lastSuspend;
+                            trigger = this._LastTrigger;
                             n = trigger.state;
                             trigger.state = parseInt(args[0], 10);
                         }
@@ -4144,9 +4144,11 @@ export class Input extends EventEmitter {
                             trigger = trigger.find(t => {
                                 return t.name === args[0] || t.pattern === args[0];
                             });
+                            if (!trigger)
+                                throw new Error("Trigger not found: " + args[0] + " in profile: " + profile.name);
                             n = trigger.state;
                             trigger.state = 0;
-                        }                        
+                        }
                         break;
                     case 3: //name|pattern state profile
                         if (args[0].match(/^\s*?[-|+]?\d+\s*?$/))
@@ -4163,17 +4165,18 @@ export class Input extends EventEmitter {
                         trigger = trigger.find(t => {
                             return t.name === args[0] || t.pattern === args[0];
                         });
+                        if (!trigger)
+                            throw new Error("Trigger not found: " + args[0]);
                         n = trigger.state;
                         trigger.state = parseInt(args[1], 10);
                         break;
                     default:
                         throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sta\x1b[0;-11;-12mte \x1b[3m name|pattern state profile\x1b[0;-11;-12m');
                 }
-                if(trigger.state < 0 || trigger.state > trigger.triggers.length)
-                {
+                if (trigger.state < 0 || trigger.state > trigger.triggers.length) {
                     trigger.state = n;
                     throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
-                }                
+                }
                 trigger.fired = false;
                 this.client.restartAlarmState(trigger, n, trigger.state);
                 this.client.saveProfile(trigger.profile.name, true);
@@ -4181,6 +4184,186 @@ export class Input extends EventEmitter {
                 this.client.echo('Trigger state set to ' + trigger.state + '.', -7, -8, true, true);
                 return null;
             case 'set':
+                //#SET pattern|name state value profile
+                //@TODO add fire support if type is manual fire it if not fired when manual sub type added
+                //setup args for easy use
+                args = args.map(m => {
+                    if (!m || !m.length)
+                        return m;
+                    if (m.match(/^\{.*\}$/g))
+                        return this.parseInline(m.substr(1, m.length - 2));
+                    return this.parseInline(this.stripQuotes(m));
+                })
+                n = 0;
+                switch (args.length) {
+                    case 0: //state - set fired to true for last trigger
+                        throw new Error('Invalid syntax use ' + cmdChar + 'set \x1b[3mname|pattern\x1b[0;-11;-12m state \x1b[3mvalue profile\x1b[0;-11;-12m');
+                    case 1:
+                        //state
+                        if (args[0].match(/^\s*?[-|+]?\d+\s*?$/)) {
+                            if (!this._LastTrigger)
+                                throw new Error("No trigger has fired yet, unable to set state");
+                            trigger = this._LastTrigger;
+                            n = parseInt(args[0], 10)
+                            if (n < 0 || n > trigger.triggers.length)
+                                throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                            if (n === 0)
+                                trigger.fired = true;
+                            else
+                                trigger.triggers[n - 1].fired = true;
+                        }
+                        else
+                            throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                        break;
+                    case 2:
+                        //state value - set fired to value for last trigger
+                        if (args[0].match(/^\s*?[-|+]?\d+\s*?$/)) {
+                            if (!this._LastTrigger)
+                                throw new Error("No trigger has fired yet, unable to set state");
+                            trigger = this._LastTrigger;
+                            n = parseInt(args[0], 10)
+                            if (n < 0 || n > trigger.triggers.length)
+                                throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                            if (args[1] !== "0" && args[1] !== "1" && args[1] !== "true" && args[1] !== "false")
+                                throw new Error("Value must be 0, 1, true, or false");
+                            if (n === 0)
+                                trigger.fired = args[1] === "1" || args[1] === "true";
+                            else
+                                trigger.triggers[n - 1].fired = args[1] === "1" || args[1] === "true";
+                        }
+                        //pattern|name state - set trigger state fired to true
+                        else {
+                            const keys = this.client.profiles.keys;
+                            let k = 0;
+                            const kl = keys.length;
+                            if (kl === 0)
+                                return null;
+                            if (kl === 1) {
+                                if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                                    throw Error('No enabled profiles found!');
+                                trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                trigger = trigger.find(t => {
+                                    return t.name === args[0] || t.pattern === args[0];
+                                });
+                            }
+                            else {
+                                for (; k < kl; k++) {
+                                    if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                        continue;
+                                    trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                    trigger = trigger.find(t => {
+                                        return t.name === args[0] || t.pattern === args[0];
+                                    });
+                                    if (trigger)
+                                        break;
+                                }
+                            }
+                            if (!trigger)
+                                throw new Error("Trigger not found: " + args[0]);
+                            n = parseInt(args[1], 10)
+                            if (n < 0 || n > trigger.triggers.length)
+                                throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                            if (n === 0)
+                                trigger.fired = true;
+                            else
+                                trigger.triggers[n - 1].fired = true;
+                        }
+                        break;
+                    case 3:
+                        //pattern|name state profile - set trigger state to fired in profile
+                        if (args[2] === "0" && args[2] !== "1" && args[2] !== "true" && args[21] !== "false") {
+                            profile = args[2];
+                            if (this.client.profiles.contains(profile))
+                                profile = this.client.profiles.items[profile.toLowerCase()];
+                            else {
+                                profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                                if (!profile)
+                                    throw new Error('Profile not found: ' + args[1]);
+                            }
+                            trigger = SortItemArrayByPriority(profile.triggers);
+                            trigger = trigger.find(t => {
+                                return t.name === args[0] || t.pattern === args[0];
+                            });
+                            if (!trigger)
+                                throw new Error("Trigger not found: " + args[0] + " in profile: " + profile.name);
+                            n = parseInt(args[1], 10)
+                            if (n < 0 || n > trigger.triggers.length)
+                                throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                            if (n === 0)
+                                trigger.fired = true;
+                            else
+                                trigger.triggers[n - 1].fired = true;
+                        }
+                        //pattern|name state value - set trigger state fired to value          
+                        else {
+                            const keys = this.client.profiles.keys;
+                            let k = 0;
+                            const kl = keys.length;
+                            if (kl === 0)
+                                return null;
+                            if (kl === 1) {
+                                if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                                    throw Error('No enabled profiles found!');
+                                trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                trigger = trigger.find(t => {
+                                    return t.name === args[0] || t.pattern === args[0];
+                                });
+                            }
+                            else {
+                                for (; k < kl; k++) {
+                                    if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                        continue;
+                                    trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                    trigger = trigger.find(t => {
+                                        return t.name === args[0] || t.pattern === args[0];
+                                    });
+                                    if (trigger)
+                                        break;
+                                }
+                            }
+                            if (!trigger)
+                                throw new Error("Trigger not found: " + args[0]);
+                            n = parseInt(args[1], 10)
+                            if (n < 0 || n > trigger.triggers.length)
+                                throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                            if (n === 0)
+                                trigger.fired = args[2] === "1" || args[2] === "true";
+                            else
+                                trigger.triggers[n - 1].fired = args[2] === "1" || args[2] === "true";
+                        }
+                        break;
+                    case 4:
+                        //pattern|name state value profile - set trigger state to value in profile 
+                        profile = args[2];
+                        if (this.client.profiles.contains(profile))
+                            profile = this.client.profiles.items[profile.toLowerCase()];
+                        else {
+                            profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                            if (!profile)
+                                throw new Error('Profile not found: ' + args[1]);
+                        }
+                        trigger = SortItemArrayByPriority(profile.triggers);
+                        trigger = trigger.find(t => {
+                            return t.name === args[0] || t.pattern === args[0];
+                        });
+                        if (!trigger)
+                            throw new Error("Trigger not found: " + args[0] + " in profile: " + profile.name);
+                        if (args[2] !== "0" && args[2] !== "1" && args[2] !== "true" && args[2] !== "false")
+                            throw new Error("Value must be 0, 1, true, or false");
+                        if (n === 0)
+                            trigger.fired = args[2] === "1" || args[2] === "true";
+                        else
+                            trigger.triggers[n - 1].fired = args[2] === "1" || args[2] === "true";
+                        break;
+                    default:
+                        throw new Error('Invalid syntax use ' + cmdChar + 'set \x1b[3mname|pattern\x1b[0;-11;-12m state \x1b[3mvalue profile\x1b[0;-11;-12m');
+                }
+                this.client.saveProfile(trigger.profile.name, true);
+                this.client.emit('item-updated', 'trigger', trigger.profile.name, trigger.profile.triggers.indexOf(trigger), trigger);
+                if (n === 0)
+                    this.client.echo('Trigger state 0 fired state set to ' + trigger.fired + '.', -7, -8, true, true);
+                else
+                    this.client.echo('Trigger state ' + n + ' fired state set to ' + trigger.triggers[n - 1].fired + '.', -7, -8, true, true);
                 return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
