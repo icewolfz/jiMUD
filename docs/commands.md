@@ -150,6 +150,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#EV</u>ENT name {commands} *options<sup>1</sup> profile*
 >create or update event
 
+#FIRE text
+>Send text to trigger system as if received from the mud, triggering matching triggers with out displaying to screen and effecting current last line
+
 <u>#RAISE</u>EVENT name arguments
 >fire a custom event
 >>`#raiseevent "test" 1 2 3 "4 5"` will fire an event named test with arguments 1, 2, 3, and 4 5
@@ -160,6 +163,9 @@ Display text to the screen, and the display text will not fire triggers
 
 <u>#RESU</u>ME *name|pattern*
 >enable an alarm, id arguments omitted will attempt to suspend last suspended alarm
+
+<u>#STA</u>TE *name|pattern* *state* *profile*
+>Set the state of trigger, if pattern and profile are omitted, state is set of the last executed trigger, if state omitted trigger state is set to 0, and fire state is set to not fired to ready fire the trigger
 
 <u>#SUS</u>PEND *name|pattern*
 >disable an alarm, id arguments omitted will attempt to suspend last added alarm
@@ -175,9 +181,6 @@ Display text to the screen, and the display text will not fire triggers
 
 <u>#UNE</u>VENT name *profile*
 >Delete an event
-
-#FIRE text
->Send text to trigger system as if received from the mud, triggering matching triggers with out displaying to screen and effecting current last line
 
 ## **Miscellaneous**
 

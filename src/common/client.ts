@@ -490,7 +490,7 @@ export class Client extends EventEmitter {
         if (typeof idx === 'object')
             idx = this.alarms.indexOf(idx);
         if (idx === -1 || idx >= this.alarms.length)
-            return 0;
+            return;
         let pattern = this._itemCache.alarmPatterns[idx];
         if (!pattern) {
             //use an object to store to prevent having to loop over large array
@@ -522,7 +522,7 @@ export class Client extends EventEmitter {
         if (typeof idx === 'object')
             idx = this.alarms.indexOf(idx);
         if (idx === -1 || idx >= this.alarms.length)
-            return 0;
+            return;
         let pattern = this._itemCache.alarmPatterns[idx];
         if (!pattern) {
             //use an object to store to prevent having to loop over large array
@@ -538,6 +538,32 @@ export class Client extends EventEmitter {
         }
         if (pattern[0])
             pattern[0].setTempTime(temp);
+    }
+
+    public restartAlarmState(idx, oldState, newState) {
+        if (oldState === newState)
+            return;
+        if (typeof idx === 'object')
+            idx = this.alarms.indexOf(idx);
+        if (idx === -1 || idx >= this.alarms.length)
+            return;
+        let pattern = this._itemCache.alarmPatterns[idx];
+        if (!pattern) {
+            //use an object to store to prevent having to loop over large array
+            pattern = {};
+            if (this.alarms[idx].type === TriggerType.Alarm)
+                pattern[0] = Alarm.parse(this.alarms[idx]);
+            for (let s = 0, sl = this.alarms[idx].triggers.length; s < sl; s++) {
+                //enabled and is alarm
+                if (this.alarms[idx].triggers[s].enabled && this.alarms[idx].triggers[s].type === TriggerType.Alarm)
+                    pattern[s] = Alarm.parse(this.alarms[idx].triggers[s]);
+            }
+            this._itemCache.alarmPatterns[idx] = pattern;
+        }
+        if (pattern[oldState])
+            pattern[oldState].restart = Date.now();
+        if (pattern[newState])
+            pattern[newState].restart = Date.now();
     }
 
     public getRemainingAlarmTime(idx) {

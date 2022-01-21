@@ -1548,7 +1548,7 @@ export class Input extends EventEmitter {
                 //{pattern} {commands} profile
                 if (args[0].match(/^\{.*\}$/g))
                     args[0] = this.parseInline(args[0].substr(1, args[0].length - 2));
-                else if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
+                else
                     args[0] = this.parseInline(this.stripQuotes(args[0]));
                 if (args.length === 2) {
                     profile = this.stripQuotes(args[2]);
@@ -1685,7 +1685,7 @@ export class Input extends EventEmitter {
                     item.pattern = this.parseInline(item.pattern.substr(1, item.pattern.length - 2));
                 }
                 else {
-                    item.name = this.stripQuotes(args.shift());
+                    item.name = this.parseInline(this.stripQuotes(args.shift()));
                     if (!item.name || item.name.length === 0)
                         throw new Error('Invalid trigger name');
                     if (args[0].match(/^\{.*\}$/g)) {
@@ -1795,7 +1795,7 @@ export class Input extends EventEmitter {
                 if (args[0].length === 0)
                     throw new Error('Invalid event name');
 
-                item.name = this.stripQuotes(args.shift());
+                item.name = this.parseInline(this.stripQuotes(args.shift()));
                 if (!item.name || item.name.length === 0)
                     throw new Error('Invalid event name');
                 if (args.length === 0)
@@ -2065,7 +2065,7 @@ export class Input extends EventEmitter {
                     item.commands = item.commands.substr(1, item.commands.length - 2);
                 }
                 else {
-                    item.name = this.stripQuotes(args.shift());
+                    item.name = this.parseInline(this.stripQuotes(args.shift()));
                     if (!item.name || item.name.length === 0)
                         throw new Error('Invalid button name or caption');
                     if (args[0].match(/^\{[\s\S]*\}$/g)) {
@@ -4039,6 +4039,143 @@ export class Input extends EventEmitter {
             case 'fire':
                 args = this.parseInline(args.join(' ') + '\n');
                 this.ExecuteTriggers(TriggerTypes.Regular | TriggerTypes.Pattern, args, args, false, false);
+                return null;
+            case 'state': //#STATE id state profile
+            case 'sta':
+                //setup args for easy use
+                args = args.map(m => {
+                    if (!m || !m.length)
+                        return m;
+                    if (m.match(/^\{.*\}$/g))
+                        return this.parseInline(m.substr(1, m.length - 2));
+                    return this.parseInline(this.stripQuotes(m));
+                })
+                switch (args.length) {
+                    case 0:
+                        throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sta\x1b[0;-11;-12mte \x1b[3m name|pattern state profile\x1b[0;-11;-12m');
+                    case 1:
+                        //state
+                        if (args[0].match(/^\s*?[-|+]?\d+\s*?$/)) {
+                            if (!this._LastTrigger)
+                                throw new Error("No trigger has fired yet, unable to set state");
+                            trigger = this._lastSuspend;
+                            n = trigger.state;
+                            trigger.state = parseInt(args[0], 10);
+                        }
+                        else {
+                            //name|pattern
+                            const keys = this.client.profiles.keys;
+                            let k = 0;
+                            const kl = keys.length;
+                            if (kl === 0)
+                                return null;
+                            if (kl === 1) {
+                                if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                                    throw Error('No enabled profiles found!');
+                                trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                trigger = trigger.find(t => {
+                                    return t.name === args[0] || t.pattern === args[0];
+                                });
+                            }
+                            else {
+                                for (; k < kl; k++) {
+                                    if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                        continue;
+                                    trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                    trigger = trigger.find(t => {
+                                        return t.name === args[0] || t.pattern === args[0];
+                                    });
+                                    if (trigger)
+                                        break;
+                                }
+                            }
+                            if (!trigger)
+                                throw new Error("Trigger not found: " + args[0]);
+                            n = trigger.state;
+                            trigger.state = 0;
+                        }
+                        break;
+                    case 2:
+                        if (args[0].match(/^\s*?[-|+]?\d+\s*?$/))
+                            throw new Error('Invalid argument to ' + cmdChar + 'state, first argument must be name|pattern');
+                        //name|pattern state
+                        if (args[1].match(/^\s*?[-|+]?\d+\s*?$/)) {
+                            const keys = this.client.profiles.keys;
+                            let k = 0;
+                            const kl = keys.length;
+                            if (kl === 0)
+                                return null;
+                            if (kl === 1) {
+                                if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                                    throw Error('No enabled profiles found!');
+                                trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                trigger = trigger.find(t => {
+                                    return t.name === args[0] || t.pattern === args[0];
+                                });
+                            }
+                            else {
+                                for (; k < kl; k++) {
+                                    if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                        continue;
+                                    trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                    trigger = trigger.find(t => {
+                                        return t.name === args[0] || t.pattern === args[0];
+                                    });
+                                    if (trigger)
+                                        break;
+                                }
+                            }
+                            if (!trigger)
+                                throw new Error("Trigger not found: " + args[0]);
+                            n = trigger.state;
+                            trigger.state = parseInt(args[1], 10);
+                        }
+                        //name|pattern profile
+                        else {
+                            profile = args[1];
+                            if (this.client.profiles.contains(profile))
+                                profile = this.client.profiles.items[profile.toLowerCase()];
+                            else {
+                                profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                                if (!profile)
+                                    throw new Error('Profile not found: ' + args[1]);
+                            }
+                            trigger = SortItemArrayByPriority(profile.triggers);
+                            trigger = trigger.find(t => {
+                                return t.name === args[0] || t.pattern === args[0];
+                            });
+                            n = trigger.state;
+                            trigger.state = 0;
+                        }                        
+                        break;
+                    case 3: //name|pattern state profile
+                        if (args[0].match(/^\s*?[-|+]?\d+\s*?$/))
+                            throw new Error('Invalid argument to ' + cmdChar + 'state, first argument must be name|pattern');
+                        profile = args[2];
+                        if (this.client.profiles.contains(profile))
+                            profile = this.client.profiles.items[profile.toLowerCase()];
+                        else {
+                            profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                            if (!profile)
+                                throw new Error('Profile not found: ' + args[2]);
+                        }
+                        trigger = SortItemArrayByPriority(profile.triggers);
+                        trigger = trigger.find(t => {
+                            return t.name === args[0] || t.pattern === args[0];
+                        });
+                        n = trigger.state;
+                        trigger.state = parseInt(args[1], 10);
+                        break;
+                    default:
+                        throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sta\x1b[0;-11;-12mte \x1b[3m name|pattern state profile\x1b[0;-11;-12m');
+                }
+                trigger.fired = false;
+                this.client.restartAlarmState(trigger, n, trigger.state);
+                this.client.saveProfile(trigger.profile.name, true);
+                this.client.emit('item-updated', 'trigger', trigger.profile.name, trigger.profile.triggers.indexOf(trigger), trigger);
+                this.client.echo('Trigger state set to ' + trigger.state + '.', -7, -8, true, true);
+                return null;
+            case 'set':
                 return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
@@ -6762,11 +6899,11 @@ export class Input extends EventEmitter {
             trigger.name = name || '';
             trigger.pattern = pattern;
             (<Profile>profile).triggers.push(trigger);
-            this.client.echo('Trigger \'' + (trigger.name || trigger.pattern) + '\' added.', -7, -8, true, true);
+            this.client.echo('Trigger added.', -7, -8, true, true);
             isNew = true;
         }
         else
-            this.client.echo('Trigger \'' + (trigger.name || trigger.pattern) + '\' updated.', -7, -8, true, true);
+            this.client.echo('Trigger updated.', -7, -8, true, true);
         if (pattern !== null)
             trigger.pattern = pattern;
         if (commands !== null)
