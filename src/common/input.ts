@@ -1666,7 +1666,6 @@ export class Input extends EventEmitter {
             case 'trigger':
             case 'tr':
                 //#region trigger
-                reload = true;
                 item = {
                     profile: null,
                     name: null,
@@ -1718,7 +1717,19 @@ export class Input extends EventEmitter {
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                        if (o.trim().startsWith('params=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                            item.options['params'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('type=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            item.options['type'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger priority option '${o.trim()}'`);
@@ -1753,7 +1764,19 @@ export class Input extends EventEmitter {
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                        if (o.trim().startsWith('params=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                            item.options['params'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('type=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            item.options['type'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger priority option '${o.trim()}'`);
@@ -4364,6 +4387,138 @@ export class Input extends EventEmitter {
                     this.client.echo('Trigger state 0 fired state set to ' + trigger.fired + '.', -7, -8, true, true);
                 else
                     this.client.echo('Trigger state ' + n + ' fired state set to ' + trigger.triggers[n - 1].fired + '.', -7, -8, true, true);
+                return null;
+            case 'condition':
+            case 'cond':
+                //#region condition
+                item = {
+                    profile: null,
+                    name: null,
+                    pattern: null,
+                    commands: null,
+                    options: { priority: 0 }
+                };
+                p = path.join(parseTemplate('{data}'), 'profiles');
+                if (args.length < 2 || args.length > 5)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'cond\x1b[0;-11;-12mition name|pattern {pattern} {commands} \x1b[3moptions profile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'cond\x1b[0;-11;-12mition {pattern} {commands} \x1b[3m{options} profile\x1b[0;-11;-12m');
+                if (args[0].length === 0)
+                    throw new Error('Invalid trigger name or pattern');
+
+                if (args[0].match(/^\{.*\}$/g)) {
+                    item.pattern = args.shift();
+                    item.pattern = this.parseInline(item.pattern.substr(1, item.pattern.length - 2));
+                }
+                else {
+                    item.name = this.parseInline(this.stripQuotes(args.shift()));
+                    if (!item.name || item.name.length === 0)
+                        throw new Error('Invalid trigger name');
+                    if (args[0].match(/^\{.*\}$/g)) {
+                        item.pattern = args.shift();
+                        item.pattern = this.parseInline(item.pattern.substr(1, item.pattern.length - 2));
+                    }
+                }
+                if (args.length !== 0) {
+                    if (args[0].match(/^\{[\s\S]*\}$/g)) {
+                        item.commands = args.shift();
+                        item.commands = item.commands.substr(1, item.commands.length - 2);
+                    }
+                    if (args.length === 1) {
+                        if (args[0].match(/^\{[\s\S]*\}$/g))
+                            args[0] = args[0].substr(1, args[0].length - 2);
+                        else
+                            args[0] = this.stripQuotes(args[0]);
+                        if (args[0].length !== 0) {
+                            this.parseInline(args[0]).split(',').forEach(o => {
+                                switch (o.trim()) {
+                                    case 'nocr':
+                                    case 'prompt':
+                                    case 'case':
+                                    case 'verbatim':
+                                    case 'disable':
+                                    case 'enable':
+                                    case 'cmd':
+                                    case 'temporary':
+                                    case 'raw':
+                                    case 'type':
+                                        item.options[o.trim()] = true;
+                                        break;
+                                    default:
+                                        if (o.trim().startsWith('type=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            item.options['type'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger priority option '${o.trim()}'`);
+                                            i = parseInt(tmp[1], 10);
+                                            if (isNaN(i))
+                                                throw new Error('Invalid trigger priority value \'' + tmp[1] + '\' must be a number');
+                                            item.options['priority'] = i;
+                                        }
+                                        else
+                                            throw new Error(`Invalid trigger option '${o.trim()}'`);
+                                }
+                            });
+                        }
+                        else
+                            throw new Error('Invalid trigger options');
+                    }
+                    else if (args.length === 2) {
+                        if (args[0].match(/^\{[\s\S]*\}$/g))
+                            args[0] = args[0].substr(1, args[0].length - 2);
+                        if (args[0].length !== 0) {
+                            this.parseInline(args[0]).split(',').forEach(o => {
+                                switch (o.trim()) {
+                                    case 'nocr':
+                                    case 'prompt':
+                                    case 'case':
+                                    case 'verbatim':
+                                    case 'disable':
+                                    case 'enable':
+                                    case 'cmd':
+                                    case 'temporary':
+                                    case 'raw':
+                                        item.options[o.trim()] = true;
+                                        break;
+                                    default:
+                                        if (o.trim().startsWith('params=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                            item.options['params'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('type=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            item.options['type'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger priority option '${o.trim()}'`);
+                                            i = parseInt(tmp[1], 10);
+                                            if (isNaN(i))
+                                                throw new Error('Invalid trigger priority value \'' + tmp[1] + '\' must be a number');
+                                            item.options['priority'] = i;
+                                        }
+                                        else
+                                            throw new Error(`Invalid trigger option '${o.trim()}'`);
+                                }
+                            });
+                        }
+                        else
+                            throw new Error('Invalid trigger options');
+                        item.profile = this.stripQuotes(args[1]);
+                        if (item.profile.length !== 0)
+                            item.profile = this.parseInline(item.profile);
+                    }
+                }
+                this.createTrigger(item.pattern, item.commands, item.profile, item.options, item.name, true);
+                //#endregion
                 return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
@@ -7027,8 +7182,9 @@ export class Input extends EventEmitter {
         return splitQuoted(str, sep, t, e, this.client.options.escapeChar);
     }
 
-    public createTrigger(pattern: string, commands: string, profile?: string | Profile, options?, name?: string) {
+    public createTrigger(pattern: string, commands: string, profile?: string | Profile, options?, name?: string, subTrigger?: boolean) {
         let trigger;
+        let sTrigger;
         let reload = true;
         let isNew = false;
         const p = path.join(parseTemplate('{data}'), 'profiles');
@@ -7044,7 +7200,16 @@ export class Input extends EventEmitter {
                 if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
                     throw Error('No enabled profiles found!');
                 profile = this.client.profiles.items[keys[0]];
-                if (name !== null)
+                if (subTrigger) {
+                    if (!name) {
+                        if (!this.client.profiles.items[keys[k]].triggers.length)
+                            throw new Error(`No triggers exist`);
+                        trigger = this.client.profiles.items[keys[k]].triggers[this.client.profiles.items[keys[k]].triggers.length - 1];
+                    }
+                    else
+                        trigger = this.client.profiles.items[keys[k]].findAny('triggers', { name: name, pattern: name });
+                }
+                else if (name !== null)
                     trigger = this.client.profiles.items[keys[k]].find('triggers', 'name', name);
                 else
                     trigger = this.client.profiles.items[keys[k]].find('triggers', 'pattern', pattern);
@@ -7053,7 +7218,16 @@ export class Input extends EventEmitter {
                 for (; k < kl; k++) {
                     if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
                         continue;
-                    if (name !== null)
+                    if (subTrigger) {
+                        if (!name) {
+                            if (!this.client.profiles.items[keys[k]].triggers.length)
+                                throw new Error(`No triggers exist`);
+                            trigger = this.client.profiles.items[keys[k]].triggers[this.client.profiles.items[keys[k]].triggers.length - 1];
+                        }
+                        else
+                            trigger = this.client.profiles.items[keys[k]].findAny('triggers', { name: name, pattern: name });
+                    }
+                    else if (name !== null)
                         trigger = this.client.profiles.items[keys[k]].find('triggers', 'name', name);
                     else
                         trigger = this.client.profiles.items[keys[k]].find('triggers', 'pattern', pattern);
@@ -7075,50 +7249,143 @@ export class Input extends EventEmitter {
                 if (!profile)
                     throw new Error('Profile not found: ' + profile);
             }
-            if (name !== null)
+            if (subTrigger) {
+                if (!name) {
+                    if (!(<Profile>profile).triggers.length)
+                        throw new Error(`No triggers exist`);
+                    trigger = (<Profile>profile).triggers[(<Profile>profile).triggers.length - 1];
+                }
+                else
+                    trigger = (<Profile>profile).findAny('triggers', { name: name, pattern: name });
+            }
+            else if (name !== null)
                 trigger = (<Profile>profile).find('triggers', 'name', name);
             else
                 trigger = (<Profile>profile).find('triggers', 'pattern', pattern);
         }
-        if (!trigger) {
-            if (!pattern)
+        if (subTrigger) {
+            if (!trigger)
                 throw new Error(`Trigger '${name || ''}' not found`);
-            trigger = new Trigger();
-            trigger.name = name || '';
-            trigger.pattern = pattern;
-            (<Profile>profile).triggers.push(trigger);
-            this.client.echo('Trigger added.', -7, -8, true, true);
-            isNew = true;
+            sTrigger
+            sTrigger = new Trigger();
+            sTrigger.pattern = pattern;
+            trigger.triggers.push(sTrigger);
+            this.client.echo('Trigger sub state added.', -7, -8, true, true);
+            reload = false;
+            if (pattern !== null)
+                trigger.pattern = pattern;
+            if (commands !== null)
+                sTrigger.value = commands;
+            if (options) {
+                if (options.cmd)
+                    sTrigger.type = TriggerType.CommandInputRegular | TriggerType.CommandInputPattern;
+                if (options.prompt)
+                    sTrigger.triggerPrompt = true;
+                if (options.nocr)
+                    sTrigger.triggerNewline = false;
+                if (options.case)
+                    sTrigger.caseSensitive = true;
+                if (options.raw)
+                    sTrigger.raw = true;
+                if (options.verbatim)
+                    sTrigger.verbatim = true;
+                if (options.disable)
+                    sTrigger.enabled = false;
+                else if (options.enable)
+                    sTrigger.enabled = true;
+                if (options.temporary)
+                    sTrigger.temp = true;
+                if (options.params)
+                    sTrigger.params = options.params;
+                if (options.type) {
+                    switch (options.type.replace(/ /g, '').toUpperCase()) {
+                        case '0':
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '8':
+                        case '16':
+                            sTrigger.type = TriggerType[parseInt(options.type, 10)];
+                            break;
+                        case 'REGULAREXPRESSION':
+                        case 'COMMANDINPUTREGULAREXPRESSION':
+                        case 'EVENT':
+                        case 'ALARM':
+                        case 'COMMAND':
+                        case 'COMMANDINPUTPATTERN':
+                            sTrigger.type = TriggerType[options.type];
+                            break;
+                        default:
+                            throw new Error('Invalid trigger type');
+                    }
+                }
+            }
         }
-        else
-            this.client.echo('Trigger updated.', -7, -8, true, true);
-        if (pattern !== null)
-            trigger.pattern = pattern;
-        if (commands !== null)
-            trigger.value = commands;
-        if (options) {
-            if (options.cmd)
-                trigger.type = TriggerType.CommandInputRegular | TriggerType.CommandInputPattern;
-            if (options.prompt)
-                trigger.triggerPrompt = true;
-            if (options.nocr)
-                trigger.triggerNewline = false;
-            if (options.case)
-                trigger.caseSensitive = true;
-            if (options.raw)
-                trigger.raw = true;
-            if (options.verbatim)
-                trigger.verbatim = true;
-            if (options.disable)
-                trigger.enabled = false;
-            else if (options.enable)
-                trigger.enabled = true;
-            if (options.temporary)
-                trigger.temp = true;
-            trigger.priority = options.priority;
+        else {
+            if (!trigger) {
+                if (!pattern)
+                    throw new Error(`Trigger '${name || ''}' not found`);
+                trigger = new Trigger();
+                trigger.name = name || '';
+                trigger.pattern = pattern;
+                (<Profile>profile).triggers.push(trigger);
+                this.client.echo('Trigger added.', -7, -8, true, true);
+                isNew = true;
+            }
+            else
+                this.client.echo('Trigger updated.', -7, -8, true, true);
+            if (pattern !== null)
+                trigger.pattern = pattern;
+            if (commands !== null)
+                trigger.value = commands;
+            if (options) {
+                if (options.cmd)
+                    trigger.type = TriggerType.CommandInputRegular | TriggerType.CommandInputPattern;
+                if (options.prompt)
+                    trigger.triggerPrompt = true;
+                if (options.nocr)
+                    trigger.triggerNewline = false;
+                if (options.case)
+                    trigger.caseSensitive = true;
+                if (options.raw)
+                    trigger.raw = true;
+                if (options.verbatim)
+                    trigger.verbatim = true;
+                if (options.disable)
+                    trigger.enabled = false;
+                else if (options.enable)
+                    trigger.enabled = true;
+                if (options.temporary)
+                    trigger.temp = true;
+                if (options.params)
+                    trigger.params = options.params;
+                if (options.type) {
+                    switch (options.type.replace(/ /g, '').toUpperCase()) {
+                        case '0':
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '8':
+                        case '16':
+                            trigger.type = TriggerType[parseInt(options.type, 10)];
+                            break;
+                        case 'REGULAREXPRESSION':
+                        case 'COMMANDINPUTREGULAREXPRESSION':
+                        case 'EVENT':
+                        case 'ALARM':
+                        case 'COMMAND':
+                        case 'COMMANDINPUTPATTERN':
+                            trigger.type = TriggerType[options.type];
+                            break;
+                        default:
+                            throw new Error('Invalid trigger type');
+                    }
+                }
+                trigger.priority = options.priority;
+            }
+            else
+                trigger.priority = 0;
         }
-        else
-            trigger.priority = 0;
         (<Profile>profile).save(p);
         if (reload)
             this.client.clearCache();

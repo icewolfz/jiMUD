@@ -1001,7 +1001,7 @@ export class Profile {
         return null;
     }
 
-    public findAny(type, field, value) {
+    public findAny(type, field, value?) {
         let tmp;
         if (!type || type.length === 0 || !this[type] || this[type].length === 0)
             return null;

@@ -147,6 +147,9 @@ Display text to the screen, and the display text will not fire triggers
 [<u>#ALA</u>RM](commands/ALARM.md) *name* {time pattern} {commands} *profile*
 >Create or alter an alarm trigger
 
+<u>#COND</u>ITION *name|pattern* {pattern} *{commands} options<sup>1</sup> profile*
+>create a new trigger sub state, if name or pattern is omitted state will be added to last created trigger
+
 <u>#EV</u>ENT name {commands} *options<sup>1</sup> profile*
 >create or update event
 
@@ -342,7 +345,15 @@ Explain what each argument does and if it is optional
 - `temporary` temporary trigger
 - `cmd` command input trigger, invalid for events
 - `priority=#` set the priority of trigger
-- `raw` raw trigger, invalid for events
+- `raw` raw trigger, invalid for events, invalid for events
+- `params=value` param setting for trigger types that support it, invalid for events
+- `type=#|value` the trigger type, this overrides `cmd` option if set, invalid for events
+    - 0 or regularexpression - create regular expression trigger
+    - 1 or commandinputregularexpression - create command in put regular expression trigger
+    - 2 or event - create event
+    - 3 or alarm - create alarm
+    - 8 or command - create command
+    - 16 or commandinputpattern  - create command input pattern
 
 2.Button options
 
