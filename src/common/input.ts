@@ -4169,6 +4169,11 @@ export class Input extends EventEmitter {
                     default:
                         throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sta\x1b[0;-11;-12mte \x1b[3m name|pattern state profile\x1b[0;-11;-12m');
                 }
+                if(trigger.state < 0 || trigger.state > trigger.triggers.length)
+                {
+                    trigger.state = n;
+                    throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                }                
                 trigger.fired = false;
                 this.client.restartAlarmState(trigger, n, trigger.state);
                 this.client.saveProfile(trigger.profile.name, true);
