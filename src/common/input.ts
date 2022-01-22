@@ -1727,6 +1727,8 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            if (!this.isTriggerType(tmp[1]))
+                                                throw new Error('Invalid trigger type');
                                             item.options['type'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
@@ -1774,6 +1776,9 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            if (!this.isTriggerType(tmp[1]))
+                                                throw new Error('Invalid trigger type');
+
                                             item.options['type'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
@@ -4447,6 +4452,8 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            if (!this.isTriggerType(tmp[1], true))
+                                                throw new Error('Invalid trigger type');
                                             item.options['type'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
@@ -4494,6 +4501,9 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            if (!this.isTriggerType(tmp[1], 0))
+                                                throw new Error('Invalid trigger type');
+
                                             item.options['type'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
@@ -7269,11 +7279,9 @@ export class Input extends EventEmitter {
             sTrigger
             sTrigger = new Trigger();
             sTrigger.pattern = pattern;
-            trigger.triggers.push(sTrigger);
-            this.client.echo('Trigger sub state added.', -7, -8, true, true);
             reload = false;
             if (pattern !== null)
-                trigger.pattern = pattern;
+                sTrigger.pattern = pattern;
             if (commands !== null)
                 sTrigger.value = commands;
             if (options) {
@@ -7298,28 +7306,14 @@ export class Input extends EventEmitter {
                 if (options.params)
                     sTrigger.params = options.params;
                 if (options.type) {
-                    switch (options.type.replace(/ /g, '').toUpperCase()) {
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '8':
-                        case '16':
-                            sTrigger.type = TriggerType[parseInt(options.type, 10)];
-                            break;
-                        case 'REGULAREXPRESSION':
-                        case 'COMMANDINPUTREGULAREXPRESSION':
-                        case 'EVENT':
-                        case 'ALARM':
-                        case 'COMMAND':
-                        case 'COMMANDINPUTPATTERN':
-                            sTrigger.type = TriggerType[options.type];
-                            break;
-                        default:
-                            throw new Error('Invalid trigger type');
-                    }
+                    if (this.isTriggerType(options.type, true))
+                        sTrigger.type = this.convertTriggerType(options.type);
+                    else
+                        throw new Error('Invalid trigger type');
                 }
             }
+            trigger.triggers.push(sTrigger);
+            this.client.echo('Trigger sub state added.', -7, -8, true, true);
         }
         else {
             if (!trigger) {
@@ -7360,26 +7354,10 @@ export class Input extends EventEmitter {
                 if (options.params)
                     trigger.params = options.params;
                 if (options.type) {
-                    switch (options.type.replace(/ /g, '').toUpperCase()) {
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '8':
-                        case '16':
-                            trigger.type = TriggerType[parseInt(options.type, 10)];
-                            break;
-                        case 'REGULAREXPRESSION':
-                        case 'COMMANDINPUTREGULAREXPRESSION':
-                        case 'EVENT':
-                        case 'ALARM':
-                        case 'COMMAND':
-                        case 'COMMANDINPUTPATTERN':
-                            trigger.type = TriggerType[options.type];
-                            break;
-                        default:
-                            throw new Error('Invalid trigger type');
-                    }
+                    if (this.isTriggerType(options.type))
+                        trigger.type = this.convertTriggerType(options.type);
+                    else
+                        throw new Error('Invalid trigger type');
                 }
                 trigger.priority = options.priority;
             }
@@ -7394,6 +7372,45 @@ export class Input extends EventEmitter {
         else
             this.emit('item-updated', 'trigger', (<Profile>profile).name, (<Profile>profile).triggers.indexOf(trigger), trigger);
         profile = null;
+    }
+
+    private isTriggerType(type, subOnly?) {
+        switch (type.replace(/ /g, '').toUpperCase()) {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '8':
+            case '16':
+            case 'REGULAREXPRESSION':
+            case 'COMMANDINPUTREGULAREXPRESSION':
+            case 'EVENT':
+            case 'ALARM':
+            case 'COMMAND':
+            case 'COMMANDINPUTPATTERN':
+                return true;
+        }
+        return false;
+    }
+
+    private convertTriggerType(type) {
+        switch (type.replace(/ /g, '').toUpperCase()) {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '8':
+            case '16':
+                return TriggerType[parseInt(type, 10)];
+            case 'REGULAREXPRESSION':
+            case 'COMMANDINPUTREGULAREXPRESSION':
+            case 'EVENT':
+            case 'ALARM':
+            case 'COMMAND':
+            case 'COMMANDINPUTPATTERN':
+                return TriggerType[type];
+        }
+        throw new Error('Invalid trigger type');
     }
 
     private colorPosition(n: number, fore, back, item) {
