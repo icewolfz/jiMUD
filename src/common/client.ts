@@ -671,7 +671,7 @@ export class Client extends EventEmitter {
         if (typeof idx === 'object')
             idx = this.alarms.indexOf(idx);
         if (idx === -1 || idx >= this.alarms.length)
-            return 0;
+            return;
         let pattern = this._itemCache.alarmPatterns[idx];
         if (!pattern) {
             //use an object to store to prevent having to loop over large array
@@ -690,6 +690,8 @@ export class Client extends EventEmitter {
             if (state) {
                 pattern[p].startTime += Date.now() - pattern[p].suspended;
                 pattern[p].prevTime += Date.now() - pattern[p].suspended;
+                if (pattern[p].tempTime)
+                    pattern[p].tempTime += Date.now() - pattern[p].suspended;
                 pattern[p].suspended = 0;
             }
             else
@@ -701,7 +703,7 @@ export class Client extends EventEmitter {
         if (typeof idx === 'object')
             idx = this.alarms.indexOf(idx);
         if (idx === -1 || idx >= this.alarms.length)
-            return 0;
+            return;
         let pattern = this._itemCache.alarmPatterns[idx];
         if (!pattern) {
             //use an object to store to prevent having to loop over large array
@@ -717,6 +719,32 @@ export class Client extends EventEmitter {
         }
         if (pattern[0])
             pattern[0].setTempTime(temp);
+    }
+
+    public restartAlarmState(idx, oldState, newState) {
+        if (oldState === newState)
+            return;
+        if (typeof idx === 'object')
+            idx = this.alarms.indexOf(idx);
+        if (idx === -1 || idx >= this.alarms.length)
+            return;
+        let pattern = this._itemCache.alarmPatterns[idx];
+        if (!pattern) {
+            //use an object to store to prevent having to loop over large array
+            pattern = {};
+            if (this.alarms[idx].type === TriggerType.Alarm)
+                pattern[0] = Alarm.parse(this.alarms[idx]);
+            for (let s = 0, sl = this.alarms[idx].triggers.length; s < sl; s++) {
+                //enabled and is alarm
+                if (this.alarms[idx].triggers[s].enabled && this.alarms[idx].triggers[s].type === TriggerType.Alarm)
+                    pattern[s] = Alarm.parse(this.alarms[idx].triggers[s]);
+            }
+            this._itemCache.alarmPatterns[idx] = pattern;
+        }
+        if (pattern[oldState])
+            pattern[oldState].restart = Date.now();
+        if (pattern[newState])
+            pattern[newState].restart = Date.now();
     }
 
     public getRemainingAlarmTime(idx) {
@@ -855,6 +883,13 @@ export class Client extends EventEmitter {
             }
             //we want to sub state pattern
             alarm = alarm[trigger.state];
+            if (alarm.restart) {
+                alarm.startTime = Date.now();
+                alarm.prevTime = alarm.startTime;
+                if (alarm.tempTime)
+                    alarm.tempTime += Date.now() - alarm.restart;
+                alarm.restart = 0;
+            }
             let match: boolean = true;
             //a temp time was set so it overrides all matches as once the temp time has been reached end
             if (alarm.tempTime) {
@@ -869,6 +904,13 @@ export class Client extends EventEmitter {
                 //save as if temp alarm as execute trigger advances state and temp alarms will need different state shifts
                 const state = parent.state;
                 this._input.ExecuteTrigger(trigger, [alarm.pattern], false, -a, null, null, parent);
+                if (state !== parent.state)
+                    alarm.restart = Date.now();
+                const tState = this._input.getTriggerState(-a);
+                if (tState && tState.reParse) {
+                    a--;
+                    this._input.clearTriggerState(-a);
+                }
                 if (alarm.temp) {
                     //has sub state so only remove the temp alarm state
                     if (parent.triggers.length) {

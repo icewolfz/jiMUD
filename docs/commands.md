@@ -147,8 +147,14 @@ Display text to the screen, and the display text will not fire triggers
 [<u>#ALA</u>RM](commands/ALARM.md) *name* {time pattern} {commands} *profile*
 >Create or alter an alarm trigger
 
+<u>#COND</u>ITION *name|pattern* {pattern} *{commands} options<sup>1</sup> profile*
+>create a new trigger sub state, if name or pattern is omitted state will be added to last created trigger
+
 <u>#EV</u>ENT name {commands} *options<sup>1</sup> profile*
 >create or update event
+
+#FIRE text
+>Send text to trigger system as if received from the mud, triggering matching triggers with out displaying to screen and effecting current last line
 
 <u>#RAISE</u>EVENT name arguments
 >fire a custom event
@@ -160,6 +166,12 @@ Display text to the screen, and the display text will not fire triggers
 
 <u>#RESU</u>ME *name|pattern*
 >enable an alarm, id arguments omitted will attempt to suspend last suspended alarm
+
+#SET *name|pattern* state *value profile*
+>Set the fired state of trigger, if pattern omitted it will set the fired state of the last executed trigger, if value is omitted it will set the fired state to true, if trigger type is manual it will set the fired state then fire the trigger based on the new state, value must be 0, 1, true, or false, when fired state set to true when the trigger is executed it will be skipped and reset the fired state to default for next execution
+
+<u>#STA</u>TE *name|pattern* *state* *profile*
+>Set the state of trigger, if pattern and profile are omitted, state is set of the last executed trigger, if state omitted trigger state is set to 0, and fire state is set to not fired to ready fire the trigger
 
 <u>#SUS</u>PEND *name|pattern*
 >disable an alarm, id arguments omitted will attempt to suspend last added alarm
@@ -175,9 +187,6 @@ Display text to the screen, and the display text will not fire triggers
 
 <u>#UNE</u>VENT name *profile*
 >Delete an event
-
-#FIRE text
->Send text to trigger system as if received from the mud, triggering matching triggers with out displaying to screen and effecting current last line
 
 ## **Miscellaneous**
 
@@ -336,7 +345,15 @@ Explain what each argument does and if it is optional
 - `temporary` temporary trigger
 - `cmd` command input trigger, invalid for events
 - `priority=#` set the priority of trigger
-- `raw` raw trigger, invalid for events
+- `raw` raw trigger, invalid for events, invalid for events
+- `params=value` param setting for trigger types that support it, invalid for events
+- `type=#|value` the trigger type, this overrides `cmd` option if set, invalid for events
+    - 0 or regularexpression - create regular expression trigger
+    - 1 or commandinputregularexpression - create command in put regular expression trigger
+    - 2 or event - create event
+    - 3 or alarm - create alarm
+    - 8 or command - create command
+    - 16 or commandinputpattern  - create command input pattern
 
 2.Button options
 

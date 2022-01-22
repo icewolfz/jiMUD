@@ -5,6 +5,9 @@
 - **New:**
   - Add [%alarm("name|pattern", setTime, "profile")](docs/functions.md#miscellaneous) return or set the time for alarm with name or matching pattern
   - Add [#FIRE text](docs/commands.md#triggers) Send text to trigger system as if received from the mud, triggering matching triggers with out displaying to screen and effecting current last line
+  - Add [#STATE name|pattern state profile](docs/commands.md#triggers) Set the state of a trigger
+  - Add [#SET name|pattern state value profile](docs/commands.md#triggers) Set the fired state of a trigger
+  - Add [#CONDITION name|pattern {pattern} {commands} options profile](docs/commands.md#triggers) create a new trigger sub state, if name or pattern is omitted state will be added to last created trigger
   - Add [%state("name|pattern", "profile")](docs/functions.md#miscellaneous) Returns the current trigger state of the trigger given by the name or pattern, if no profile it will search all enabled profiles until match found
   - Mapper: Add `Edit > Reset map` to allow users to delete and create a fresh map file
   - Profile Manager: Parse style now has basic code folding
@@ -23,11 +26,15 @@
   - Fixed Trigger alarms always being stuck in wildcard mode, should require * explicit to execute wildcards
   - Fixed auto connect when loading same character again
   - Fix profile loading issues for [#TRIGGER](docs/commands.md#triggers), [#UNTRIGGER](docs/commands.md#triggers), [#EVENT](docs/commands.md#triggers), [#UNEVENT](docs/commands.md#triggers), [#BUTTON](docs/commands.md#createmodify-profile-or-items), [#UNBUTTON](docs/commands.md#createmodify-profile-or-items), [#ALARM](docs/commands.md#riggers), [#ALIAS](docs/commands.md#createmodify-profile-or-items), [#UNALIAS](docs/commands.md#createmodify-profile-or-items)
+  - Fix parsing of some arguments for [#TRIGGER](docs/commands.md#triggers), [#UNTRIGGER](docs/commands.md#triggers), [#EVENT](docs/commands.md#triggers), [#BUTTON](docs/commands.md#createmodify-profile-or-items)
 - **Changed:**
+  - [#TRIGGER](docs/commands.md#triggers) add/update message no longer contains name or pattern to prevent trigger from accidentally triggering
   - Reformat [functions](docs/functions.md) doc layout
   - Update electron 16.0.6 to 16.0.7
   - Update font-list 1.4.3 to 1.4.5
   - Update mathjs 10.0.2 to 10.1.0
+  - Update better-sqlite3 7.4.6 to 7.5.0
+  - Update chokidar 3.5.2 to 3.5.3
 
 ## v0.17.5 2022-01-10
 

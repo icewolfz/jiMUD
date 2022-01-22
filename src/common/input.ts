@@ -167,7 +167,7 @@ export class Input extends EventEmitter {
     private _locked: number = 0;
     private _tests: Tests;
     private _TriggerCache: Trigger[] = null;
-    private _TriggerStates = [];
+    private _TriggerStates = {};
     private _TriggerFunctionCache = {};
     private _TriggerRegExCache = {};
     private _LastTrigger = null;
@@ -1559,7 +1559,7 @@ export class Input extends EventEmitter {
                 //{pattern} {commands} profile
                 if (args[0].match(/^\{.*\}$/g))
                     args[0] = this.parseInline(args[0].substr(1, args[0].length - 2));
-                else if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
+                else
                     args[0] = this.parseInline(this.stripQuotes(args[0]));
                 if (args.length === 2) {
                     profile = this.stripQuotes(args[2]);
@@ -1677,7 +1677,6 @@ export class Input extends EventEmitter {
             case 'trigger':
             case 'tr':
                 //#region trigger
-                reload = true;
                 item = {
                     profile: null,
                     name: null,
@@ -1696,7 +1695,7 @@ export class Input extends EventEmitter {
                     item.pattern = this.parseInline(item.pattern.substr(1, item.pattern.length - 2));
                 }
                 else {
-                    item.name = this.stripQuotes(args.shift());
+                    item.name = this.parseInline(this.stripQuotes(args.shift()));
                     if (!item.name || item.name.length === 0)
                         throw new Error('Invalid trigger name');
                     if (args[0].match(/^\{.*\}$/g)) {
@@ -1729,7 +1728,19 @@ export class Input extends EventEmitter {
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                        if (o.trim().startsWith('params=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                            item.options['params'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('type=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            item.options['type'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger priority option '${o.trim()}'`);
@@ -1764,7 +1775,19 @@ export class Input extends EventEmitter {
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                        if (o.trim().startsWith('params=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                            item.options['params'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('type=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            item.options['type'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger priority option '${o.trim()}'`);
@@ -1806,7 +1829,7 @@ export class Input extends EventEmitter {
                 if (args[0].length === 0)
                     throw new Error('Invalid event name');
 
-                item.name = this.stripQuotes(args.shift());
+                item.name = this.parseInline(this.stripQuotes(args.shift()));
                 if (!item.name || item.name.length === 0)
                     throw new Error('Invalid event name');
                 if (args.length === 0)
@@ -2076,7 +2099,7 @@ export class Input extends EventEmitter {
                     item.commands = item.commands.substr(1, item.commands.length - 2);
                 }
                 else {
-                    item.name = this.stripQuotes(args.shift());
+                    item.name = this.parseInline(this.stripQuotes(args.shift()));
                     if (!item.name || item.name.length === 0)
                         throw new Error('Invalid button name or caption');
                     if (args[0].match(/^\{[\s\S]*\}$/g)) {
@@ -4049,6 +4072,463 @@ export class Input extends EventEmitter {
             case 'fire':
                 args = this.parseInline(args.join(' ') + '\n');
                 this.ExecuteTriggers(TriggerTypes.Regular | TriggerTypes.Pattern, args, args, false, false);
+                return null;
+            case 'state': //#STATE id state profile
+            case 'sta':
+                //setup args for easy use
+                args = args.map(m => {
+                    if (!m || !m.length)
+                        return m;
+                    if (m.match(/^\{.*\}$/g))
+                        return this.parseInline(m.substr(1, m.length - 2));
+                    return this.parseInline(this.stripQuotes(m));
+                })
+                switch (args.length) {
+                    case 0:
+                        throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sta\x1b[0;-11;-12mte \x1b[3m name|pattern state profile\x1b[0;-11;-12m');
+                    case 1:
+                        //state
+                        if (args[0].match(/^\s*?[-|+]?\d+\s*?$/)) {
+                            if (!this._LastTrigger)
+                                throw new Error("No trigger has fired yet, unable to set state");
+                            trigger = this._LastTrigger;
+                            n = trigger.state;
+                            trigger.state = parseInt(args[0], 10);
+                        }
+                        else {
+                            //name|pattern
+                            const keys = this.client.profiles.keys;
+                            let k = 0;
+                            const kl = keys.length;
+                            if (kl === 0)
+                                return null;
+                            if (kl === 1) {
+                                if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                                    throw Error('No enabled profiles found!');
+                                trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                trigger = trigger.find(t => {
+                                    return t.name === args[0] || t.pattern === args[0];
+                                });
+                            }
+                            else {
+                                for (; k < kl; k++) {
+                                    if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                        continue;
+                                    trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                    trigger = trigger.find(t => {
+                                        return t.name === args[0] || t.pattern === args[0];
+                                    });
+                                    if (trigger)
+                                        break;
+                                }
+                            }
+                            if (!trigger)
+                                throw new Error("Trigger not found: " + args[0]);
+                            n = trigger.state;
+                            trigger.state = 0;
+                        }
+                        break;
+                    case 2:
+                        if (args[0].match(/^\s*?[-|+]?\d+\s*?$/))
+                            throw new Error('Invalid argument to ' + cmdChar + 'state, first argument must be name|pattern');
+                        //name|pattern state
+                        if (args[1].match(/^\s*?[-|+]?\d+\s*?$/)) {
+                            const keys = this.client.profiles.keys;
+                            let k = 0;
+                            const kl = keys.length;
+                            if (kl === 0)
+                                return null;
+                            if (kl === 1) {
+                                if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                                    throw Error('No enabled profiles found!');
+                                trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                trigger = trigger.find(t => {
+                                    return t.name === args[0] || t.pattern === args[0];
+                                });
+                            }
+                            else {
+                                for (; k < kl; k++) {
+                                    if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                        continue;
+                                    trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                    trigger = trigger.find(t => {
+                                        return t.name === args[0] || t.pattern === args[0];
+                                    });
+                                    if (trigger)
+                                        break;
+                                }
+                            }
+                            if (!trigger)
+                                throw new Error("Trigger not found: " + args[0]);
+                            n = trigger.state;
+                            trigger.state = parseInt(args[1], 10);
+                        }
+                        //name|pattern profile
+                        else {
+                            profile = args[1];
+                            if (this.client.profiles.contains(profile))
+                                profile = this.client.profiles.items[profile.toLowerCase()];
+                            else {
+                                profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                                if (!profile)
+                                    throw new Error('Profile not found: ' + args[1]);
+                            }
+                            trigger = SortItemArrayByPriority(profile.triggers);
+                            trigger = trigger.find(t => {
+                                return t.name === args[0] || t.pattern === args[0];
+                            });
+                            if (!trigger)
+                                throw new Error("Trigger not found: " + args[0] + " in profile: " + profile.name);
+                            n = trigger.state;
+                            trigger.state = 0;
+                        }
+                        break;
+                    case 3: //name|pattern state profile
+                        if (args[0].match(/^\s*?[-|+]?\d+\s*?$/))
+                            throw new Error('Invalid argument to ' + cmdChar + 'state, first argument must be name|pattern');
+                        profile = args[2];
+                        if (this.client.profiles.contains(profile))
+                            profile = this.client.profiles.items[profile.toLowerCase()];
+                        else {
+                            profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                            if (!profile)
+                                throw new Error('Profile not found: ' + args[2]);
+                        }
+                        trigger = SortItemArrayByPriority(profile.triggers);
+                        trigger = trigger.find(t => {
+                            return t.name === args[0] || t.pattern === args[0];
+                        });
+                        if (!trigger)
+                            throw new Error("Trigger not found: " + args[0]);
+                        n = trigger.state;
+                        trigger.state = parseInt(args[1], 10);
+                        break;
+                    default:
+                        throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sta\x1b[0;-11;-12mte \x1b[3m name|pattern state profile\x1b[0;-11;-12m');
+                }
+                if (trigger.state < 0 || trigger.state > trigger.triggers.length) {
+                    trigger.state = n;
+                    throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                }
+                trigger.fired = false;
+                this.client.restartAlarmState(trigger, n, trigger.state);
+                this.client.saveProfile(trigger.profile.name, true);
+                this.client.emit('item-updated', 'trigger', trigger.profile.name, trigger.profile.triggers.indexOf(trigger), trigger);
+                this.client.echo('Trigger state set to ' + trigger.state + '.', -7, -8, true, true);
+                return null;
+            case 'set':
+                //#SET pattern|name state value profile
+                //@TODO add fire support if type is manual fire it if not fired when manual sub type added
+                //setup args for easy use
+                args = args.map(m => {
+                    if (!m || !m.length)
+                        return m;
+                    if (m.match(/^\{.*\}$/g))
+                        return this.parseInline(m.substr(1, m.length - 2));
+                    return this.parseInline(this.stripQuotes(m));
+                })
+                n = 0;
+                switch (args.length) {
+                    case 0: //state - set fired to true for last trigger
+                        throw new Error('Invalid syntax use ' + cmdChar + 'set \x1b[3mname|pattern\x1b[0;-11;-12m state \x1b[3mvalue profile\x1b[0;-11;-12m');
+                    case 1:
+                        //state
+                        if (args[0].match(/^\s*?[-|+]?\d+\s*?$/)) {
+                            if (!this._LastTrigger)
+                                throw new Error("No trigger has fired yet, unable to set state");
+                            trigger = this._LastTrigger;
+                            n = parseInt(args[0], 10)
+                            if (n < 0 || n > trigger.triggers.length)
+                                throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                            if (n === 0)
+                                trigger.fired = true;
+                            else
+                                trigger.triggers[n - 1].fired = true;
+                        }
+                        else
+                            throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                        break;
+                    case 2:
+                        //state value - set fired to value for last trigger
+                        if (args[0].match(/^\s*?[-|+]?\d+\s*?$/)) {
+                            if (!this._LastTrigger)
+                                throw new Error("No trigger has fired yet, unable to set state");
+                            trigger = this._LastTrigger;
+                            n = parseInt(args[0], 10)
+                            if (n < 0 || n > trigger.triggers.length)
+                                throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                            if (args[1] !== "0" && args[1] !== "1" && args[1] !== "true" && args[1] !== "false")
+                                throw new Error("Value must be 0, 1, true, or false");
+                            if (n === 0)
+                                trigger.fired = args[1] === "1" || args[1] === "true";
+                            else
+                                trigger.triggers[n - 1].fired = args[1] === "1" || args[1] === "true";
+                        }
+                        //pattern|name state - set trigger state fired to true
+                        else {
+                            const keys = this.client.profiles.keys;
+                            let k = 0;
+                            const kl = keys.length;
+                            if (kl === 0)
+                                return null;
+                            if (kl === 1) {
+                                if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                                    throw Error('No enabled profiles found!');
+                                trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                trigger = trigger.find(t => {
+                                    return t.name === args[0] || t.pattern === args[0];
+                                });
+                            }
+                            else {
+                                for (; k < kl; k++) {
+                                    if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                        continue;
+                                    trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                    trigger = trigger.find(t => {
+                                        return t.name === args[0] || t.pattern === args[0];
+                                    });
+                                    if (trigger)
+                                        break;
+                                }
+                            }
+                            if (!trigger)
+                                throw new Error("Trigger not found: " + args[0]);
+                            n = parseInt(args[1], 10)
+                            if (n < 0 || n > trigger.triggers.length)
+                                throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                            if (n === 0)
+                                trigger.fired = true;
+                            else
+                                trigger.triggers[n - 1].fired = true;
+                        }
+                        break;
+                    case 3:
+                        //pattern|name state profile - set trigger state to fired in profile
+                        if (args[2] === "0" && args[2] !== "1" && args[2] !== "true" && args[21] !== "false") {
+                            profile = args[2];
+                            if (this.client.profiles.contains(profile))
+                                profile = this.client.profiles.items[profile.toLowerCase()];
+                            else {
+                                profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                                if (!profile)
+                                    throw new Error('Profile not found: ' + args[1]);
+                            }
+                            trigger = SortItemArrayByPriority(profile.triggers);
+                            trigger = trigger.find(t => {
+                                return t.name === args[0] || t.pattern === args[0];
+                            });
+                            if (!trigger)
+                                throw new Error("Trigger not found: " + args[0] + " in profile: " + profile.name);
+                            n = parseInt(args[1], 10)
+                            if (n < 0 || n > trigger.triggers.length)
+                                throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                            if (n === 0)
+                                trigger.fired = true;
+                            else
+                                trigger.triggers[n - 1].fired = true;
+                        }
+                        //pattern|name state value - set trigger state fired to value          
+                        else {
+                            const keys = this.client.profiles.keys;
+                            let k = 0;
+                            const kl = keys.length;
+                            if (kl === 0)
+                                return null;
+                            if (kl === 1) {
+                                if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
+                                    throw Error('No enabled profiles found!');
+                                trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                trigger = trigger.find(t => {
+                                    return t.name === args[0] || t.pattern === args[0];
+                                });
+                            }
+                            else {
+                                for (; k < kl; k++) {
+                                    if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
+                                        continue;
+                                    trigger = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                    trigger = trigger.find(t => {
+                                        return t.name === args[0] || t.pattern === args[0];
+                                    });
+                                    if (trigger)
+                                        break;
+                                }
+                            }
+                            if (!trigger)
+                                throw new Error("Trigger not found: " + args[0]);
+                            n = parseInt(args[1], 10)
+                            if (n < 0 || n > trigger.triggers.length)
+                                throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
+                            if (n === 0)
+                                trigger.fired = args[2] === "1" || args[2] === "true";
+                            else
+                                trigger.triggers[n - 1].fired = args[2] === "1" || args[2] === "true";
+                        }
+                        break;
+                    case 4:
+                        //pattern|name state value profile - set trigger state to value in profile 
+                        profile = args[2];
+                        if (this.client.profiles.contains(profile))
+                            profile = this.client.profiles.items[profile.toLowerCase()];
+                        else {
+                            profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                            if (!profile)
+                                throw new Error('Profile not found: ' + args[1]);
+                        }
+                        trigger = SortItemArrayByPriority(profile.triggers);
+                        trigger = trigger.find(t => {
+                            return t.name === args[0] || t.pattern === args[0];
+                        });
+                        if (!trigger)
+                            throw new Error("Trigger not found: " + args[0] + " in profile: " + profile.name);
+                        if (args[2] !== "0" && args[2] !== "1" && args[2] !== "true" && args[2] !== "false")
+                            throw new Error("Value must be 0, 1, true, or false");
+                        if (n === 0)
+                            trigger.fired = args[2] === "1" || args[2] === "true";
+                        else
+                            trigger.triggers[n - 1].fired = args[2] === "1" || args[2] === "true";
+                        break;
+                    default:
+                        throw new Error('Invalid syntax use ' + cmdChar + 'set \x1b[3mname|pattern\x1b[0;-11;-12m state \x1b[3mvalue profile\x1b[0;-11;-12m');
+                }
+                this.client.saveProfile(trigger.profile.name, true);
+                this.client.emit('item-updated', 'trigger', trigger.profile.name, trigger.profile.triggers.indexOf(trigger), trigger);
+                if (n === 0)
+                    this.client.echo('Trigger state 0 fired state set to ' + trigger.fired + '.', -7, -8, true, true);
+                else
+                    this.client.echo('Trigger state ' + n + ' fired state set to ' + trigger.triggers[n - 1].fired + '.', -7, -8, true, true);
+                return null;
+            case 'condition':
+            case 'cond':
+                //#region condition
+                item = {
+                    profile: null,
+                    name: null,
+                    pattern: null,
+                    commands: null,
+                    options: { priority: 0 }
+                };
+                p = path.join(parseTemplate('{data}'), 'profiles');
+                if (args.length < 2 || args.length > 5)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'cond\x1b[0;-11;-12mition name|pattern {pattern} {commands} \x1b[3moptions profile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'cond\x1b[0;-11;-12mition {pattern} {commands} \x1b[3m{options} profile\x1b[0;-11;-12m');
+                if (args[0].length === 0)
+                    throw new Error('Invalid trigger name or pattern');
+
+                if (args[0].match(/^\{.*\}$/g)) {
+                    item.pattern = args.shift();
+                    item.pattern = this.parseInline(item.pattern.substr(1, item.pattern.length - 2));
+                }
+                else {
+                    item.name = this.parseInline(this.stripQuotes(args.shift()));
+                    if (!item.name || item.name.length === 0)
+                        throw new Error('Invalid trigger name');
+                    if (args[0].match(/^\{.*\}$/g)) {
+                        item.pattern = args.shift();
+                        item.pattern = this.parseInline(item.pattern.substr(1, item.pattern.length - 2));
+                    }
+                }
+                if (args.length !== 0) {
+                    if (args[0].match(/^\{[\s\S]*\}$/g)) {
+                        item.commands = args.shift();
+                        item.commands = item.commands.substr(1, item.commands.length - 2);
+                    }
+                    if (args.length === 1) {
+                        if (args[0].match(/^\{[\s\S]*\}$/g))
+                            args[0] = args[0].substr(1, args[0].length - 2);
+                        else
+                            args[0] = this.stripQuotes(args[0]);
+                        if (args[0].length !== 0) {
+                            this.parseInline(args[0]).split(',').forEach(o => {
+                                switch (o.trim()) {
+                                    case 'nocr':
+                                    case 'prompt':
+                                    case 'case':
+                                    case 'verbatim':
+                                    case 'disable':
+                                    case 'enable':
+                                    case 'cmd':
+                                    case 'temporary':
+                                    case 'raw':
+                                    case 'type':
+                                        item.options[o.trim()] = true;
+                                        break;
+                                    default:
+                                        if (o.trim().startsWith('type=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            item.options['type'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger priority option '${o.trim()}'`);
+                                            i = parseInt(tmp[1], 10);
+                                            if (isNaN(i))
+                                                throw new Error('Invalid trigger priority value \'' + tmp[1] + '\' must be a number');
+                                            item.options['priority'] = i;
+                                        }
+                                        else
+                                            throw new Error(`Invalid trigger option '${o.trim()}'`);
+                                }
+                            });
+                        }
+                        else
+                            throw new Error('Invalid trigger options');
+                    }
+                    else if (args.length === 2) {
+                        if (args[0].match(/^\{[\s\S]*\}$/g))
+                            args[0] = args[0].substr(1, args[0].length - 2);
+                        if (args[0].length !== 0) {
+                            this.parseInline(args[0]).split(',').forEach(o => {
+                                switch (o.trim()) {
+                                    case 'nocr':
+                                    case 'prompt':
+                                    case 'case':
+                                    case 'verbatim':
+                                    case 'disable':
+                                    case 'enable':
+                                    case 'cmd':
+                                    case 'temporary':
+                                    case 'raw':
+                                        item.options[o.trim()] = true;
+                                        break;
+                                    default:
+                                        if (o.trim().startsWith('params=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                            item.options['params'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('type=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            item.options['type'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger priority option '${o.trim()}'`);
+                                            i = parseInt(tmp[1], 10);
+                                            if (isNaN(i))
+                                                throw new Error('Invalid trigger priority value \'' + tmp[1] + '\' must be a number');
+                                            item.options['priority'] = i;
+                                        }
+                                        else
+                                            throw new Error(`Invalid trigger option '${o.trim()}'`);
+                                }
+                            });
+                        }
+                        else
+                            throw new Error('Invalid trigger options');
+                        item.profile = this.stripQuotes(args[1]);
+                        if (item.profile.length !== 0)
+                            item.profile = this.parseInline(item.profile);
+                    }
+                }
+                this.createTrigger(item.pattern, item.commands, item.profile, item.options, item.name, true);
+                //#endregion
                 return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
@@ -6587,6 +7067,7 @@ export class Input extends EventEmitter {
         let t = 0;
         let pattern;
         let changed = false;
+        let val;
         //scope to get performance
         const triggers = this._TriggerCache;
         const tl = triggers.length;
@@ -6635,9 +7116,7 @@ export class Input extends EventEmitter {
                 if (trigger.verbatim) {
                     if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) continue;
                     else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) continue;
-                    if (ret)
-                        return this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], true, t, [(trigger.raw ? raw : line)], 0, parent);
-                    this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t, [(trigger.raw ? raw : line)], 0, parent);
+                    val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], ret, t, [(trigger.raw ? raw : line)], 0, parent);
                 }
                 else {
                     let re;
@@ -6662,10 +7141,13 @@ export class Input extends EventEmitter {
                     }
                     if (res.groups)
                         Object.keys(res.groups).map(v => this.client.setVariable(v, res.groups[v]));
-                    if (ret)
-                        return this.ExecuteTrigger(trigger, args, true, t, [trigger.raw ? raw : line, re], res.groups, parent);
-                    this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups, parent);
+                    val = this.ExecuteTrigger(trigger, args, ret, t, [trigger.raw ? raw : line, re], res.groups, parent);
                 }
+                if (this._TriggerStates[t] && this._TriggerStates[t].reParse) {
+                    t--;
+                    delete this._TriggerStates[t];
+                }
+                else if (ret) return val;
             }
             catch (e) {
                 if (this.client.options.disableTriggerOnError) {
@@ -6687,6 +7169,17 @@ export class Input extends EventEmitter {
     public ExecuteTrigger(trigger, args, r: boolean, idx, regex?, named?, parent?: Trigger) {
         if (r == null) r = false;
         if (!trigger.enabled) return '';
+        if (trigger.fired) {
+            trigger.fired = false;
+            parent.state++;
+            //1 based
+            if (parent.state > parent.triggers.length)
+                parent.state = 0;
+            this._TriggerStates[idx] = { reParse: true };
+            this.client.saveProfile(parent.profile.name, true);
+            this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
+            return '';
+        }
         this._LastTrigger = trigger;
         let ret; // = '';
         switch (trigger.style) {
@@ -6798,7 +7291,19 @@ export class Input extends EventEmitter {
         }
     }
 
-    public clearTriggerCache() { this._TriggerCache = null; this._TriggerStates = []; this._TriggerFunctionCache = {}; this._TriggerRegExCache = {}; }
+    public getTriggerState(idx) {
+        return this._TriggerStates[idx];
+    }
+
+    public clearTriggerState(idx) {
+        delete this._TriggerStates[idx];
+    }
+
+    public setTriggerState(idx, data) {
+        this._TriggerStates[idx] = data;
+    }
+
+    public clearTriggerCache() { this._TriggerCache = null; this._TriggerStates = {}; this._TriggerFunctionCache = {}; this._TriggerRegExCache = {}; }
 
     public buildTriggerCache() {
         if (this._TriggerCache == null) {
@@ -6818,7 +7323,7 @@ export class Input extends EventEmitter {
 
     public clearCaches() {
         this._TriggerCache = null;
-        this._TriggerStates = [];
+        this._TriggerStates = {};
         this._TriggerFunctionCache = {};
         this._gamepadCaches = null;
         this._lastSuspend = -1;
@@ -6839,6 +7344,7 @@ export class Input extends EventEmitter {
         for (; t < tl; t++) {
             let trigger = this._TriggerCache[t];
             const parent = trigger;
+            let changed = false;
             //in case it got disabled by something
             if (!trigger.enabled) continue;
             //safety check in case a state was deleted
@@ -6863,10 +7369,13 @@ export class Input extends EventEmitter {
                         trigger = trigger.triggers[parent.state - 1];
                     else
                         trigger = parent;
+                    changed = true;
                 }
                 //changed state save
-                this.client.saveProfile(parent.profile.name, true);
-                this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
+                if (changed) {
+                    this.client.saveProfile(parent.profile.name, true);
+                    this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
+                }
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
             }
@@ -6874,6 +7383,10 @@ export class Input extends EventEmitter {
             if (trigger.caseSensitive && event !== trigger.pattern) continue;
             if (!trigger.caseSensitive && event.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
             this.ExecuteTrigger(trigger, args, false, t, 0, 0, parent);
+            if (this._TriggerStates[t] && this._TriggerStates[t].reParse) {
+                t--;
+                delete this._TriggerStates[t];
+            }
         }
     }
 
@@ -6966,8 +7479,9 @@ export class Input extends EventEmitter {
         return splitQuoted(str, sep, t, e, this.client.options.escapeChar);
     }
 
-    public createTrigger(pattern: string, commands: string, profile?: string | Profile, options?, name?: string) {
+    public createTrigger(pattern: string, commands: string, profile?: string | Profile, options?, name?: string, subTrigger?: boolean) {
         let trigger;
+        let sTrigger;
         let reload = true;
         let isNew = false;
         const p = path.join(parseTemplate('{data}'), 'profiles');
@@ -6983,7 +7497,16 @@ export class Input extends EventEmitter {
                 if (this.client.enabledProfiles.indexOf(keys[0]) === -1 || !this.client.profiles.items[keys[0]].enableTriggers)
                     throw Error('No enabled profiles found!');
                 profile = this.client.profiles.items[keys[0]];
-                if (name !== null)
+                if (subTrigger) {
+                    if (!name) {
+                        if (!this.client.profiles.items[keys[k]].triggers.length)
+                            throw new Error(`No triggers exist`);
+                        trigger = this.client.profiles.items[keys[k]].triggers[this.client.profiles.items[keys[k]].triggers.length - 1];
+                    }
+                    else
+                        trigger = this.client.profiles.items[keys[k]].findAny('triggers', { name: name, pattern: name });
+                }
+                else if (name !== null)
                     trigger = this.client.profiles.items[keys[k]].find('triggers', 'name', name);
                 else
                     trigger = this.client.profiles.items[keys[k]].find('triggers', 'pattern', pattern);
@@ -6992,7 +7515,16 @@ export class Input extends EventEmitter {
                 for (; k < kl; k++) {
                     if (this.client.enabledProfiles.indexOf(keys[k]) === -1 || !this.client.profiles.items[keys[k]].enableTriggers || this.client.profiles.items[keys[k]].triggers.length === 0)
                         continue;
-                    if (name !== null)
+                    if (subTrigger) {
+                        if (!name) {
+                            if (!this.client.profiles.items[keys[k]].triggers.length)
+                                throw new Error(`No triggers exist`);
+                            trigger = this.client.profiles.items[keys[k]].triggers[this.client.profiles.items[keys[k]].triggers.length - 1];
+                        }
+                        else
+                            trigger = this.client.profiles.items[keys[k]].findAny('triggers', { name: name, pattern: name });
+                    }
+                    else if (name !== null)
                         trigger = this.client.profiles.items[keys[k]].find('triggers', 'name', name);
                     else
                         trigger = this.client.profiles.items[keys[k]].find('triggers', 'pattern', pattern);
@@ -7014,50 +7546,143 @@ export class Input extends EventEmitter {
                 if (!profile)
                     throw new Error('Profile not found: ' + profile);
             }
-            if (name !== null)
+            if (subTrigger) {
+                if (!name) {
+                    if (!(<Profile>profile).triggers.length)
+                        throw new Error(`No triggers exist`);
+                    trigger = (<Profile>profile).triggers[(<Profile>profile).triggers.length - 1];
+                }
+                else
+                    trigger = (<Profile>profile).findAny('triggers', { name: name, pattern: name });
+            }
+            else if (name !== null)
                 trigger = (<Profile>profile).find('triggers', 'name', name);
             else
                 trigger = (<Profile>profile).find('triggers', 'pattern', pattern);
         }
-        if (!trigger) {
-            if (!pattern)
+        if (subTrigger) {
+            if (!trigger)
                 throw new Error(`Trigger '${name || ''}' not found`);
-            trigger = new Trigger();
-            trigger.name = name || '';
-            trigger.pattern = pattern;
-            (<Profile>profile).triggers.push(trigger);
-            this.client.echo('Trigger \'' + (trigger.name || trigger.pattern) + '\' added.', -7, -8, true, true);
-            isNew = true;
+            sTrigger
+            sTrigger = new Trigger();
+            sTrigger.pattern = pattern;
+            trigger.triggers.push(sTrigger);
+            this.client.echo('Trigger sub state added.', -7, -8, true, true);
+            reload = false;
+            if (pattern !== null)
+                trigger.pattern = pattern;
+            if (commands !== null)
+                sTrigger.value = commands;
+            if (options) {
+                if (options.cmd)
+                    sTrigger.type = TriggerType.CommandInputRegular | TriggerType.CommandInputPattern;
+                if (options.prompt)
+                    sTrigger.triggerPrompt = true;
+                if (options.nocr)
+                    sTrigger.triggerNewline = false;
+                if (options.case)
+                    sTrigger.caseSensitive = true;
+                if (options.raw)
+                    sTrigger.raw = true;
+                if (options.verbatim)
+                    sTrigger.verbatim = true;
+                if (options.disable)
+                    sTrigger.enabled = false;
+                else if (options.enable)
+                    sTrigger.enabled = true;
+                if (options.temporary)
+                    sTrigger.temp = true;
+                if (options.params)
+                    sTrigger.params = options.params;
+                if (options.type) {
+                    switch (options.type.replace(/ /g, '').toUpperCase()) {
+                        case '0':
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '8':
+                        case '16':
+                            sTrigger.type = TriggerType[parseInt(options.type, 10)];
+                            break;
+                        case 'REGULAREXPRESSION':
+                        case 'COMMANDINPUTREGULAREXPRESSION':
+                        case 'EVENT':
+                        case 'ALARM':
+                        case 'COMMAND':
+                        case 'COMMANDINPUTPATTERN':
+                            sTrigger.type = TriggerType[options.type];
+                            break;
+                        default:
+                            throw new Error('Invalid trigger type');
+                    }
+                }
+            }
         }
-        else
-            this.client.echo('Trigger \'' + (trigger.name || trigger.pattern) + '\' updated.', -7, -8, true, true);
-        if (pattern !== null)
-            trigger.pattern = pattern;
-        if (commands !== null)
-            trigger.value = commands;
-        if (options) {
-            if (options.cmd)
-                trigger.type = TriggerType.CommandInputRegular | TriggerType.CommandInputPattern;
-            if (options.prompt)
-                trigger.triggerPrompt = true;
-            if (options.nocr)
-                trigger.triggerNewline = false;
-            if (options.case)
-                trigger.caseSensitive = true;
-            if (options.raw)
-                trigger.raw = true;
-            if (options.verbatim)
-                trigger.verbatim = true;
-            if (options.disable)
-                trigger.enabled = false;
-            else if (options.enable)
-                trigger.enabled = true;
-            if (options.temporary)
-                trigger.temp = true;
-            trigger.priority = options.priority;
+        else {
+            if (!trigger) {
+                if (!pattern)
+                    throw new Error(`Trigger '${name || ''}' not found`);
+                trigger = new Trigger();
+                trigger.name = name || '';
+                trigger.pattern = pattern;
+                (<Profile>profile).triggers.push(trigger);
+                this.client.echo('Trigger added.', -7, -8, true, true);
+                isNew = true;
+            }
+            else
+                this.client.echo('Trigger updated.', -7, -8, true, true);
+            if (pattern !== null)
+                trigger.pattern = pattern;
+            if (commands !== null)
+                trigger.value = commands;
+            if (options) {
+                if (options.cmd)
+                    trigger.type = TriggerType.CommandInputRegular | TriggerType.CommandInputPattern;
+                if (options.prompt)
+                    trigger.triggerPrompt = true;
+                if (options.nocr)
+                    trigger.triggerNewline = false;
+                if (options.case)
+                    trigger.caseSensitive = true;
+                if (options.raw)
+                    trigger.raw = true;
+                if (options.verbatim)
+                    trigger.verbatim = true;
+                if (options.disable)
+                    trigger.enabled = false;
+                else if (options.enable)
+                    trigger.enabled = true;
+                if (options.temporary)
+                    trigger.temp = true;
+                if (options.params)
+                    trigger.params = options.params;
+                if (options.type) {
+                    switch (options.type.replace(/ /g, '').toUpperCase()) {
+                        case '0':
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '8':
+                        case '16':
+                            trigger.type = TriggerType[parseInt(options.type, 10)];
+                            break;
+                        case 'REGULAREXPRESSION':
+                        case 'COMMANDINPUTREGULAREXPRESSION':
+                        case 'EVENT':
+                        case 'ALARM':
+                        case 'COMMAND':
+                        case 'COMMANDINPUTPATTERN':
+                            trigger.type = TriggerType[options.type];
+                            break;
+                        default:
+                            throw new Error('Invalid trigger type');
+                    }
+                }
+                trigger.priority = options.priority;
+            }
+            else
+                trigger.priority = 0;
         }
-        else
-            trigger.priority = 0;
         (<Profile>profile).save(p);
         if (reload)
             this.client.clearCache();

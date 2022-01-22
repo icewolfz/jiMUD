@@ -109,6 +109,7 @@ export class Alarm {
     public minutesWildcard: boolean = true;
     public startTime: number;
     public suspended: number = 0;
+    public restart: number = 0;
     public tempTime: number;
     public prevTime: number;
 
@@ -377,6 +378,7 @@ export class Trigger extends Item {
     public state: number = 0;
     public params: string = '';
     public triggers: Trigger[] = [];
+    public fired: boolean = false;
 
     constructor(data?, profile?) {
         super(data);
@@ -1178,7 +1180,7 @@ export class Profile {
         return null;
     }
 
-    public findAny(type, field, value) {
+    public findAny(type, field, value?) {
         let tmp;
         if (!type || type.length === 0 || !this[type] || this[type].length === 0)
             return null;
