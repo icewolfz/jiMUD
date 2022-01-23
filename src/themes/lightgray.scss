@@ -21,11 +21,23 @@ body {
     right: 168px;
 }
 
-#display-split-bar,
-#display-split-ghost-bar {
+#display-split-bar {
     border-top: 1px solid #{$borderColor};
     border-bottom: 1px solid #{$borderColor};
     background-color: #{$panelBackground};
+}
+
+#display-split-ghost-bar {
+    border-top: 1px solid #{$borderColor};
+    border-bottom: 1px solid #{$borderColor};
+    background-color: #666;
+}
+
+#display-split-bar:hover,
+#display-split-bar:active,
+#display-split-bar:focus {
+    background-color: #666;    
+    transition-delay: 1s;
 }
 
 #command {
