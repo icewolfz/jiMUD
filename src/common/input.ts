@@ -647,24 +647,28 @@ export class Input extends EventEmitter {
                                     return i.pattern === args[0];
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'event':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
                                 sides = sides.find(i => {
                                     return i.type === TriggerType.Event && (i.pattern === args[0] || i.name === args[0]);
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'trigger':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
                                 sides = sides.find(i => {
                                     return i.pattern === args[0] || i.name === args[0];
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'macro':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].macros);
                                 sides = sides.find(i => {
                                     return MacroDisplay(i).toLowerCase() === args[0].toLowerCase() || i.name === args[0];
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'button':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
                                 sides = sides.find(i => {
@@ -1096,6 +1100,13 @@ export class Input extends EventEmitter {
                 if (trigger)
                     return trigger.triggers && trigger.triggers.length ? trigger.state : 0;
                 throw new Error('Trigger not found');
+            },
+            null: (args, math, scope) => {
+                if (args.length === 0)
+                    return null;
+                if (args.length !== 1)
+                    throw new Error('Too many arguments for null');
+                return math.evaluate(args[0].toString(), scope) ? 1 : 0;
             }
         };
         for (let fun in funs) {
@@ -4080,6 +4091,16 @@ export class Input extends EventEmitter {
                     tmp |= 1;
                 this.client.setVariable(i, parseValue(this.parseInline(args), tmp));
                 return null;
+            case 'unvar':
+            case 'unv':
+                if (args.length !== 1)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'unv\x1b[0;-11;-12mar name ');
+                i = args.shift();
+                if (i.match(/^\{[\s\S]*\}$/g))
+                    i = i.substr(1, i.length - 2);
+                i = this.parseInline(i);
+                delete this.client.variables[i];
+                return null;
             case 'add':
             case 'ad':
                 if (args.length < 2)
@@ -6770,24 +6791,28 @@ export class Input extends EventEmitter {
                                     return i.pattern === args[0];
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'event':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
                                 sides = sides.find(i => {
                                     return i.type === TriggerType.Event && (i.pattern === args[0] || i.name === args[0]);
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'trigger':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
                                 sides = sides.find(i => {
                                     return i.pattern === args[0] || i.name === args[0];
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'macro':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].macros);
                                 sides = sides.find(i => {
                                     return MacroDisplay(i).toLowerCase() === args[0].toLowerCase() || i.name === args[0];
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'button':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
                                 sides = sides.find(i => {
@@ -6992,6 +7017,13 @@ export class Input extends EventEmitter {
                 if (sides)
                     return sides.triggers && sides.triggers.length ? sides.state : 0;
                 throw new Error('Trigger not found');
+            case 'null':
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    return null;
+                if (args.length !== 1)
+                    throw new Error('Too many arguments for null');
+                return this.evaluate(args[0]) === null ? 1 : 0;
         }
         return null;
     }
