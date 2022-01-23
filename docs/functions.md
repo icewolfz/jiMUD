@@ -296,3 +296,6 @@ alarm("name|pattern", *setTime*, *"profile"*)
 
 state("name|pattern", *"profile"*)
 >Returns the current trigger state of the trigger given by the name or pattern, if no profile it will search all enabled profiles until match found
+
+null(*value*)
+>Returns 1 if value null, 0 if not null, if value omitted returns null

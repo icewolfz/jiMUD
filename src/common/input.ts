@@ -1081,6 +1081,13 @@ export class Input extends EventEmitter {
                 if (trigger)
                     return trigger.triggers && trigger.triggers.length ? trigger.state : 0;
                 throw new Error('Trigger not found');
+            },
+            null: (args, math, scope) => {
+                if (args.length === 0)
+                    return null;
+                if (args.length !== 1)
+                    throw new Error('Too many arguments for null');
+                return math.evaluate(args[0].toString(), scope) ? 1 : 0;
             }
         };
         for (let fun in funs) {
@@ -6697,6 +6704,13 @@ export class Input extends EventEmitter {
                 if (sides)
                     return sides.triggers && sides.triggers.length ? sides.state : 0;
                 throw new Error('Trigger not found');
+            case 'null':
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    return null;
+                if (args.length !== 1)
+                    throw new Error('Too many arguments for null');
+                return this.evaluate(args[0]) === null ? 1 : 0;
         }
         return null;
     }
