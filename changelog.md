@@ -8,6 +8,7 @@
   - Add [#STATE name|pattern state profile](docs/commands.md#triggers) Set the state of a trigger
   - Add [#SET name|pattern state value profile](docs/commands.md#triggers) Set the fired state of a trigger
   - Add [#CONDITION name|pattern {pattern} {commands} options profile](docs/commands.md#triggers) create a new trigger sub state, if name or pattern is omitted state will be added to last created trigger
+  - Add [#CR](docs/commands.md#miscellaneous) Send a blank line to the mud
   - Add [%state("name|pattern", "profile")](docs/functions.md#miscellaneous) Returns the current trigger state of the trigger given by the name or pattern, if no profile it will search all enabled profiles until match found
   - Mapper: Add `Edit > Reset map` to allow users to delete and create a fresh map file
   - Profile Manager: Parse style now has basic code folding

@@ -4530,6 +4530,10 @@ export class Input extends EventEmitter {
                 this.createTrigger(item.pattern, item.commands, item.profile, item.options, item.name, true);
                 //#endregion
                 return null;
+            case 'cr':
+                this.client.sendBackground('\n');
+                return null;
+
         }
         if (fun.match(/^[-|+]?\d+$/)) {
             i = parseInt(fun, 10);

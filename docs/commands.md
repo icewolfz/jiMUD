@@ -196,6 +196,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#CH</u>AT text
 >Send text to chat window and append a new line
 
+#CR
+>Send a blank line to the mud
+
 <u>#CHATP</u>ROMPT text
 >same as #chat but does not append a new line
 
