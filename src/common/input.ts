@@ -631,30 +631,35 @@ export class Input extends EventEmitter {
                                     return i.pattern === args[0];
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'event':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
                                 sides = sides.find(i => {
                                     return i.type === TriggerType.Event && (i.pattern === args[0] || i.name === args[0]);
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'trigger':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
                                 sides = sides.find(i => {
                                     return i.pattern === args[0] || i.name === args[0];
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'macro':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].macros);
                                 sides = sides.find(i => {
                                     return MacroDisplay(i).toLowerCase() === args[0].toLowerCase() || i.name === args[0];
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'button':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
                                 sides = sides.find(i => {
                                     return i.caption === args[0] || i.name === args[0]
                                 });
                                 if (sides) return 1;
+                                return 0;
                             //case 'variable':
                             //case 'path':
                             //case 'status':
@@ -6463,30 +6468,35 @@ export class Input extends EventEmitter {
                                     return i.pattern === args[0];
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'event':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
                                 sides = sides.find(i => {
                                     return i.type === TriggerType.Event && (i.pattern === args[0] || i.name === args[0]);
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'trigger':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
                                 sides = sides.find(i => {
                                     return i.pattern === args[0] || i.name === args[0];
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'macro':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].macros);
                                 sides = sides.find(i => {
                                     return MacroDisplay(i).toLowerCase() === args[0].toLowerCase() || i.name === args[0];
                                 });
                                 if (sides) return 1;
+                                return 0;
                             case 'button':
                                 sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
                                 sides = sides.find(i => {
                                     return i.caption === args[0] || i.name === args[0]
                                 });
                                 if (sides) return 1;
+                                return 0;
                             //case 'variable':
                             //case 'path':
                             //case 'status':
