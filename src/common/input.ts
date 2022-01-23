@@ -5,7 +5,7 @@
 //spell-checker:ignore testfile testspeedfile testspeedfiler nosend printprompt printp pcol forall stringlist zcolor ipos trimleft trimright
 //spell-checker:ignore bitand bitnot bitor bitshift bittest bitnum bitxor isfloat isnumber
 import EventEmitter = require('events');
-import { MacroModifiers } from './profile';
+import { MacroModifiers, MacroDisplay } from './profile';
 import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, parseValue } from './library';
 import { Client } from './client';
 import { Tests } from './test';
@@ -590,6 +590,96 @@ export class Input extends EventEmitter {
                     return 0;
                 }
                 throw new Error('Invalid arguments for isdefined');
+            },
+            defined: (args, math, scope) => {
+                let sides;
+                if (args.length === 0)
+                    throw new Error('Missing arguments for defined');
+                else if (args.length === 1) {
+                    args[0] = this.stripQuotes(args[0], true);
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0) return 0;
+                    //have to check each profile as the client only caches enabled items for speed
+                    for (; k < kl; k++) {
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                        sides = sides.find(i => {
+                            return i.pattern === args[0];
+                        });
+                        if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                        sides = sides.find(i => {
+                            return i.pattern === args[0] || i.name === args[0];
+                        });
+                        if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].macros);
+                        sides = sides.find(i => {
+                            return MacroDisplay(i).toLowerCase() === args[0].toLowerCase() || i.name === args[0];
+                        });
+                        if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                        sides = sides.find(i => {
+                            return i.caption === args[0] || i.name === args[0]
+                        });
+                        if (sides) return 1;
+                    }
+                    return this.client.variables.hasOwnProperty(args[0]);
+                }
+                else if (args.length === 2) {
+                    args[0] = this.stripQuotes(args[0].toString());
+                    args[0] = this.stripQuotes(args[1].toString());
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0) return 0;
+                    //have to check each profile as the client only caches enabled items for speed
+                    for (; k < kl; k++) {
+                        switch (args[1]) {
+                            case 'alias':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                                sides = sides.find(i => {
+                                    return i.pattern === args[0];
+                                });
+                                if (sides) return 1;
+                            case 'event':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                sides = sides.find(i => {
+                                    return i.type === TriggerType.Event && (i.pattern === args[0] || i.name === args[0]);
+                                });
+                                if (sides) return 1;
+                            case 'trigger':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                sides = sides.find(i => {
+                                    return i.pattern === args[0] || i.name === args[0];
+                                });
+                                if (sides) return 1;
+                            case 'macro':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].macros);
+                                sides = sides.find(i => {
+                                    return MacroDisplay(i).toLowerCase() === args[0].toLowerCase() || i.name === args[0];
+                                });
+                                if (sides) return 1;
+                            case 'button':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                                sides = sides.find(i => {
+                                    return i.caption === args[0] || i.name === args[0]
+                                });
+                                if (sides) return 1;
+                            //case 'variable':
+                            //case 'path':
+                            //case 'status':
+                            //case 'class':
+                            //case 'menu':                        
+                            //case 'module':
+                        }
+                    }
+                    if (args[1] === 'variable')
+                        return this.client.variables.hasOwnProperty(args[0]) || scope.has(args[0]);
+                }
+                else
+                    throw new Error('Too many arguments for defined');
+                return 0;
             },
             time: (args, math, scope) => {
                 if (args.length > 1)
@@ -1738,6 +1828,8 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            if (!this.isTriggerType(tmp[1]))
+                                                throw new Error('Invalid trigger type');
                                             item.options['type'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
@@ -1785,6 +1877,9 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            if (!this.isTriggerType(tmp[1]))
+                                                throw new Error('Invalid trigger type');
+
                                             item.options['type'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
@@ -4457,6 +4552,8 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            if (!this.isTriggerType(tmp[1], true))
+                                                throw new Error('Invalid trigger type');
                                             item.options['type'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
@@ -4504,6 +4601,9 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
+                                            if (!this.isTriggerType(tmp[1], 0))
+                                                throw new Error('Invalid trigger type');
+
                                             item.options['type'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
@@ -4530,6 +4630,10 @@ export class Input extends EventEmitter {
                 this.createTrigger(item.pattern, item.commands, item.profile, item.options, item.name, true);
                 //#endregion
                 return null;
+            case 'cr':
+                this.client.sendBackground('\n');
+                return null;
+
         }
         if (fun.match(/^[-|+]?\d+$/)) {
             i = parseInt(fun, 10);
@@ -6601,6 +6705,95 @@ export class Input extends EventEmitter {
                 if (this.client.hasVariable(args[0]))
                     return 1;
                 return 0;
+            case 'defined':
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments for defined');
+                else if (args.length === 1) {
+                    args[0] = this.stripQuotes(args[0], true);
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0) return 0;
+                    //have to check each profile as the client only caches enabled items for speed
+                    for (; k < kl; k++) {
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                        sides = sides.find(i => {
+                            return i.pattern === args[0];
+                        });
+                        if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                        sides = sides.find(i => {
+                            return i.pattern === args[0] || i.name === args[0];
+                        });
+                        if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].macros);
+                        sides = sides.find(i => {
+                            return MacroDisplay(i).toLowerCase() === args[0].toLowerCase() || i.name === args[0];
+                        });
+                        if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                        sides = sides.find(i => {
+                            return i.caption === args[0] || i.name === args[0]
+                        });
+                        if (sides) return 1;
+                    }
+                    return this.client.variables.hasOwnProperty(args[0]);
+                }
+                else if (args.length === 2) {
+                    args[0] = this.stripQuotes(args[0], true);
+                    args[1] = this.stripQuotes(args[1], true).toLowerCase();
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0) return 0;
+                    //have to check each profile as the client only caches enabled items for speed
+                    for (; k < kl; k++) {
+                        switch (args[1]) {
+                            case 'alias':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                                sides = sides.find(i => {
+                                    return i.pattern === args[0];
+                                });
+                                if (sides) return 1;
+                            case 'event':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                sides = sides.find(i => {
+                                    return i.type === TriggerType.Event && (i.pattern === args[0] || i.name === args[0]);
+                                });
+                                if (sides) return 1;
+                            case 'trigger':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                sides = sides.find(i => {
+                                    return i.pattern === args[0] || i.name === args[0];
+                                });
+                                if (sides) return 1;
+                            case 'macro':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].macros);
+                                sides = sides.find(i => {
+                                    return MacroDisplay(i).toLowerCase() === args[0].toLowerCase() || i.name === args[0];
+                                });
+                                if (sides) return 1;
+                            case 'button':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                                sides = sides.find(i => {
+                                    return i.caption === args[0] || i.name === args[0]
+                                });
+                                if (sides) return 1;
+                            //case 'variable':
+                            //case 'path':
+                            //case 'status':
+                            //case 'class':
+                            //case 'menu':                        
+                            //case 'module':
+                        }
+                    }
+                    if (args[1] === 'variable')
+                        return this.client.variables.hasOwnProperty(args[0]);
+                }
+                else
+                    throw new Error('Too many arguments for defined');
+                return 0;
             case 'escape':
                 args = this.stripQuotes(this.parseInline(res[2]));
                 if (this.client.options.allowEscape) {
@@ -7566,11 +7759,9 @@ export class Input extends EventEmitter {
             sTrigger
             sTrigger = new Trigger();
             sTrigger.pattern = pattern;
-            trigger.triggers.push(sTrigger);
-            this.client.echo('Trigger sub state added.', -7, -8, true, true);
             reload = false;
             if (pattern !== null)
-                trigger.pattern = pattern;
+                sTrigger.pattern = pattern;
             if (commands !== null)
                 sTrigger.value = commands;
             if (options) {
@@ -7595,28 +7786,14 @@ export class Input extends EventEmitter {
                 if (options.params)
                     sTrigger.params = options.params;
                 if (options.type) {
-                    switch (options.type.replace(/ /g, '').toUpperCase()) {
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '8':
-                        case '16':
-                            sTrigger.type = TriggerType[parseInt(options.type, 10)];
-                            break;
-                        case 'REGULAREXPRESSION':
-                        case 'COMMANDINPUTREGULAREXPRESSION':
-                        case 'EVENT':
-                        case 'ALARM':
-                        case 'COMMAND':
-                        case 'COMMANDINPUTPATTERN':
-                            sTrigger.type = TriggerType[options.type];
-                            break;
-                        default:
-                            throw new Error('Invalid trigger type');
-                    }
+                    if (this.isTriggerType(options.type, true))
+                        sTrigger.type = this.convertTriggerType(options.type);
+                    else
+                        throw new Error('Invalid trigger type');
                 }
             }
+            trigger.triggers.push(sTrigger);
+            this.client.echo('Trigger sub state added.', -7, -8, true, true);
         }
         else {
             if (!trigger) {
@@ -7657,26 +7834,10 @@ export class Input extends EventEmitter {
                 if (options.params)
                     trigger.params = options.params;
                 if (options.type) {
-                    switch (options.type.replace(/ /g, '').toUpperCase()) {
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '8':
-                        case '16':
-                            trigger.type = TriggerType[parseInt(options.type, 10)];
-                            break;
-                        case 'REGULAREXPRESSION':
-                        case 'COMMANDINPUTREGULAREXPRESSION':
-                        case 'EVENT':
-                        case 'ALARM':
-                        case 'COMMAND':
-                        case 'COMMANDINPUTPATTERN':
-                            trigger.type = TriggerType[options.type];
-                            break;
-                        default:
-                            throw new Error('Invalid trigger type');
-                    }
+                    if (this.isTriggerType(options.type))
+                        trigger.type = this.convertTriggerType(options.type);
+                    else
+                        throw new Error('Invalid trigger type');
                 }
                 trigger.priority = options.priority;
             }
@@ -7691,6 +7852,45 @@ export class Input extends EventEmitter {
         else
             this.emit('item-updated', 'trigger', (<Profile>profile).name, (<Profile>profile).triggers.indexOf(trigger), trigger);
         profile = null;
+    }
+
+    private isTriggerType(type, subOnly?) {
+        switch (type.replace(/ /g, '').toUpperCase()) {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '8':
+            case '16':
+            case 'REGULAREXPRESSION':
+            case 'COMMANDINPUTREGULAREXPRESSION':
+            case 'EVENT':
+            case 'ALARM':
+            case 'COMMAND':
+            case 'COMMANDINPUTPATTERN':
+                return true;
+        }
+        return false;
+    }
+
+    private convertTriggerType(type) {
+        switch (type.replace(/ /g, '').toUpperCase()) {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '8':
+            case '16':
+                return TriggerType[parseInt(type, 10)];
+            case 'REGULAREXPRESSION':
+            case 'COMMANDINPUTREGULAREXPRESSION':
+            case 'EVENT':
+            case 'ALARM':
+            case 'COMMAND':
+            case 'COMMANDINPUTPATTERN':
+                return TriggerType[type];
+        }
+        throw new Error('Invalid trigger type');
     }
 
     private colorPosition(n: number, fore, back, item) {

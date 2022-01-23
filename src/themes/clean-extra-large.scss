@@ -19,8 +19,7 @@ body {
     right: 168px;
 }
 
-#display-split-bar,
-#display-split-ghost-bar {
+#display-split-bar {
     -webkit-border-radius: 10px;
     border-radius: 10px;
     background: #33302b;
@@ -28,6 +27,23 @@ body {
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
     border: 1px solid #{$borderColor};
     height: 8px;
+}
+
+#display-split-ghost-bar {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: #d70000;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    border: 1px solid #{$borderColor};
+    height: 8px;
+}
+
+#display-split-bar:hover,
+#display-split-bar:active,
+#display-split-bar:focus {
+    background-color: #d70000;    
+    transition-delay: 1s;
 }
 
 #display-split-frame

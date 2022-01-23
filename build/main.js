@@ -201,7 +201,7 @@ var menuTemp = [
                 }
             },
             {
-                label: '&Enable triggers',
+                label: 'E&nable triggers',
                 id: 'enableTriggers',
                 type: 'checkbox',
                 checked: true,
