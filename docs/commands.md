@@ -142,6 +142,9 @@ Display text to the screen, and the display text will not fire triggers
 [#<u>UNA</u>LIAS](commands/UNALIAS.md) name *profile*
 >Delete an alias
 
+<u>#UNV</u>AR name
+>Delete variable
+
 ## **Triggers**
 
 [<u>#ALA</u>RM](commands/ALARM.md) *name* {time pattern} {commands} *profile*

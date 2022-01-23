@@ -4069,6 +4069,16 @@ export class Input extends EventEmitter {
                 else
                     this.client.variables[i] = this.stripQuotes(args);
                 return null;
+            case 'unvar':
+            case 'unv':
+                if (args.length !== 1)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'unv\x1b[0;-11;-12mar name ');
+                i = args.shift();
+                if (i.match(/^\{[\s\S]*\}$/g))
+                    i = i.substr(1, i.length - 2);
+                i = this.parseInline(i);
+                delete this.client.variables[i];
+                return null;
             case 'add':
             case 'ad':
                 if (args.length < 2)
