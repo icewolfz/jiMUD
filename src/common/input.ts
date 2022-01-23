@@ -1082,7 +1082,7 @@ export class Input extends EventEmitter {
                     return trigger.triggers && trigger.triggers.length ? trigger.state : 0;
                 throw new Error('Trigger not found');
             },
-            null: (args, math, scope) => {
+            isnull: (args, math, scope) => {
                 if (args.length === 0)
                     return null;
                 if (args.length !== 1)
@@ -6739,7 +6739,7 @@ export class Input extends EventEmitter {
                 if (sides)
                     return sides.triggers && sides.triggers.length ? sides.state : 0;
                 throw new Error('Trigger not found');
-            case 'null':
+            case 'isnull':
                 args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0)
                     return null;
