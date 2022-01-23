@@ -2128,13 +2128,8 @@ export class Input extends EventEmitter {
                     items = SortItemArrayByPriority(profile.triggers.filter(t => t.type === TriggerType.Event));
                     n = this.stripQuotes(n);
                     tmp = n;
-                    for (i = 0, al = items.length; i < al; i++) {
-                        if (items[i].name === n || items[i]['pattern'] === n) {
-                            n = i;
-                            f = true;
-                            break;
-                        }
-                    }
+                    n = items.findIndex(i => i.pattern === n || i.name === n);
+                    f = n !== -1;                    
                     if (!f)
                         this.client.echo('Event \'' + tmp + '\' not found.', -7, -8, true, true);
                     else {
@@ -2418,13 +2413,8 @@ export class Input extends EventEmitter {
                     }
                     else {
                         n = this.stripQuotes(n);
-                        for (i = 0, al = items.length; i < al; i++) {
-                            if (items[i].name === n || items[i]['caption'] === n) {
-                                n = i;
-                                f = true;
-                                break;
-                            }
-                        }
+                        n = items.findIndex(i => i.name === n || i.caption === n);
+                        f = n !== -1;                        
                     }
                     if (!f)
                         this.client.echo('Button \'' + tmp + '\' not found.', -7, -8, true, true);
@@ -3034,13 +3024,8 @@ export class Input extends EventEmitter {
                     }
                     else {
                         tmp = n;
-                        for (i = 0, al = items.length; i < al; i++) {
-                            if (items[i]['pattern'] === n) {
-                                n = i;
-                                f = true;
-                                break;
-                            }
-                        }
+                        n = items.findIndex(i => i.pattern === n);
+                        f = n !== -1;
                     }
                     if (!f)
                         this.client.echo('Alias \'' + tmp + '\' not found.', -7, -8, true, true);
