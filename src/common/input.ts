@@ -623,6 +623,11 @@ export class Input extends EventEmitter {
                             return i.caption === args[0] || i.name === args[0]
                         });
                         if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].variables);
+                        sides = sides.find(i => {
+                            return i.name === args[0]
+                        });
+                        if (sides) return 1;
                     }
                     return this.client.variables.hasOwnProperty(args[0]);
                 }
@@ -666,7 +671,13 @@ export class Input extends EventEmitter {
                                     return i.caption === args[0] || i.name === args[0]
                                 });
                                 if (sides) return 1;
-                            //case 'variable':
+                            case 'variable':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].variables);
+                                sides = sides.find(i => {
+                                    return i.name === args[0]
+                                });
+                                if (sides) return 1;
+                                return 0;
                             //case 'path':
                             //case 'status':
                             //case 'class':
@@ -674,8 +685,6 @@ export class Input extends EventEmitter {
                             //case 'module':
                         }
                     }
-                    if (args[1] === 'variable')
-                        return this.client.variables.hasOwnProperty(args[0]) || scope.has(args[0]);
                 }
                 else
                     throw new Error('Too many arguments for defined');
@@ -6737,8 +6746,13 @@ export class Input extends EventEmitter {
                             return i.caption === args[0] || i.name === args[0]
                         });
                         if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].variables);
+                        sides = sides.find(i => {
+                            return i.name === args[0]
+                        });
+                        if (sides) return 1;
                     }
-                    return this.client.variables.hasOwnProperty(args[0]);
+                    return 0;
                 }
                 else if (args.length === 2) {
                     args[0] = this.stripQuotes(args[0], true);
@@ -6780,7 +6794,13 @@ export class Input extends EventEmitter {
                                     return i.caption === args[0] || i.name === args[0]
                                 });
                                 if (sides) return 1;
-                            //case 'variable':
+                            case 'variable':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].variables);
+                                sides = sides.find(i => {
+                                    return i.name === args[0]
+                                });
+                                if (sides) return 1;
+                                return 0;
                             //case 'path':
                             //case 'status':
                             //case 'class':
@@ -6788,8 +6808,6 @@ export class Input extends EventEmitter {
                             //case 'module':
                         }
                     }
-                    if (args[1] === 'variable')
-                        return this.client.variables.hasOwnProperty(args[0]);
                 }
                 else
                     throw new Error('Too many arguments for defined');
