@@ -4093,13 +4093,67 @@ export class Input extends EventEmitter {
                 return null;
             case 'unvar':
             case 'unv':
-                if (args.length !== 1)
-                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'unv\x1b[0;-11;-12mar name ');
-                i = args.shift();
-                if (i.match(/^\{[\s\S]*\}$/g))
-                    i = i.substr(1, i.length - 2);
-                i = this.parseInline(i);
-                delete this.client.variables[i];
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'unv\x1b[0;-11;-12mar name or \x1b[4m' + cmdChar + 'unv\x1b[0;-11;-12mar {name} \x1b[3mprofile\x1b[0;-11;-12m');
+                else {
+                    reload = true;
+                    profile = null;
+                    p = path.join(parseTemplate('{data}'), 'profiles');
+                    if (args[0].match(/^\{.*\}$/g) || args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g)) {
+                        if (args.length > 2)
+                            throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'una\x1b[0;-11;-12mlias name or \x1b[4m' + cmdChar + 'una\x1b[0;-11;-12mlias {name} \x1b[3mprofile\x1b[0;-11;-12m');
+                        if (args.length === 2) {
+                            profile = this.stripQuotes(args[1]);
+                            profile = this.parseInline(profile);
+                            if (this.client.profiles.contains(profile))
+                                profile = this.client.profiles.items[profile.toLowerCase()];
+                            else {
+                                name = profile;
+                                reload = false;
+                                profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                                if (!profile)
+                                    throw new Error('Profile not found: ' + name);
+                            }
+                        }
+                        else
+                            profile = this.client.activeProfile;
+                        if (args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g))
+                            n = this.parseInline(this.stripQuotes(args[0]));
+                        else
+                            n = this.parseInline(args[0].substr(1, args[0].length - 2));
+                    }
+                    else {
+                        n = this.parseInline(args.join(' '));
+                        profile = this.client.activeProfile;
+                    }
+                    items = profile.variables;
+                    n = this.stripQuotes(n);
+                    if (/^\s*?\d+\s*?$/.exec(n)) {
+                        tmp = n;
+                        n = parseInt(n, 10);
+                        if (n < 0 || n >= items.length)
+                            throw new Error('Variable index must be >= 0 and < ' + items.length);
+                        else
+                            f = true;
+                    }
+                    else {
+                        tmp = n;
+                        n = items.findIndex(i => i.name === n);
+                        f = n !== -1;
+                    }
+                    if (!f)
+                        this.client.echo('Variable \'' + tmp + '\' not found.', -7, -8, true, true);
+                    else {
+                        this.client.echo('Variable \'' + items[n].name + '\' removed.', -7, -8, true, true);
+                        items.splice(n, 1);
+                        profile.variables = items;
+                        profile.save(p);
+                        if (reload)
+                            this.client.clearCache();
+                        profile = null;
+                        this.emit('item-removed', 'variable', profile.name, n);
+                    }
+                }
                 return null;
             case 'add':
             case 'ad':
