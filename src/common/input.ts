@@ -2129,7 +2129,7 @@ export class Input extends EventEmitter {
                     n = this.stripQuotes(n);
                     tmp = n;
                     n = items.findIndex(i => i.pattern === n || i.name === n);
-                    f = n !== -1;                    
+                    f = n !== -1;
                     if (!f)
                         this.client.echo('Event \'' + tmp + '\' not found.', -7, -8, true, true);
                     else {
@@ -2414,7 +2414,7 @@ export class Input extends EventEmitter {
                     else {
                         n = this.stripQuotes(n);
                         n = items.findIndex(i => i.name === n || i.caption === n);
-                        f = n !== -1;                        
+                        f = n !== -1;
                     }
                     if (!f)
                         this.client.echo('Button \'' + tmp + '\' not found.', -7, -8, true, true);
@@ -4630,7 +4630,57 @@ export class Input extends EventEmitter {
             case 'cr':
                 this.client.sendBackground('\n');
                 return null;
-
+            case 'send':
+            case 'se':
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd file \x1b[3mprefix suffix\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd text');
+                tmp = this.stripQuotes(this.parseInline(args[0]));
+                if (isFileSync(tmp)) {
+                    p = '';
+                    i = '';
+                    if (args.length > 1)
+                        p = this.stripQuotes(this.parseInline(args[1]));
+                    if (args.length > 2)
+                        i = this.stripQuotes(this.parseInline(args[2]));
+                    //handle \n and \r\n for windows and linux files
+                    items = fs.readFileSync(f, 'utf8').split(/\r?\n/);
+                    items.forEach(line => {
+                        this.client.sendBackground(p + line + i);
+                    });
+                }
+                else
+                    this.client.sendBackground(this.stripQuotes(args.join(' ')));
+                return null
+            case 'sendraw':
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'sendraw text or ' + cmdChar + 'sendraw file \x1b[3mprefix suffix\x1b[0;-11;-12m');
+                tmp = this.stripQuotes(this.parseInline(args[0]));
+                if (isFileSync(tmp)) {
+                    p = '';
+                    i = '';
+                    if (args.length > 1)
+                        p = this.stripQuotes(this.parseInline(args[1]));
+                    if (args.length > 2)
+                        i = this.stripQuotes(this.parseInline(args[2]));
+                    //handle \n and \r\n for windows and linux files
+                    items = fs.readFileSync(f, 'utf8').split(/\r?\n/);
+                    items.forEach(line => {
+                        this.client.sendRaw(p + line + i + '\n');
+                    });
+                }
+                else {
+                    args = args.join(' ');
+                    if (!args.endsWith('\n'))
+                        args = args + '\n';
+                    this.client.sendRaw(args);
+                }
+                return null;
+            case 'sendprompt':
+            case 'sendp':
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sendp\x1b[0;-11;-12mrompt text');
+                this.client.sendRaw(args.join(' '));
+                return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
             i = parseInt(fun, 10);

@@ -9,6 +9,9 @@
   - Add [#SET name|pattern state value profile](docs/commands.md#triggers) Set the fired state of a trigger
   - Add [#CONDITION name|pattern {pattern} {commands} options profile](docs/commands.md#triggers) create a new trigger sub state, if name or pattern is omitted state will be added to last created trigger
   - Add [#CR](docs/commands.md#miscellaneous) Send a blank line to the mud
+  - Add [#SEND](docs/commands.md#miscellaneous) Send file to mud line by line pre-pending and appending supplied prefix and suffix to each line as if sent from command input, if not a valid file sent as text if from command input
+  - Add [#SENDRAW](docs/commands.md#miscellaneous) Send raw text or file directly to mud with out parsing or echoing to the screen appending a newline if needed
+  - Add [#SENDPROMPT](docs/commands.md#miscellaneous) Send raw text directly to mud with out parsing or echoing to the screen with no appended newline
   - Add [#UNVAR name](docs/commands.md#createmodify-profile-or-items) Delete variable
   - Add [%state("name|pattern", "profile")](docs/functions.md#miscellaneous) Returns the current trigger state of the trigger given by the name or pattern, if no profile it will search all enabled profiles until match found
   - Add [%defined(name,type)](docs/functions.md#miscellaneous) is item defined, similar to isdefined

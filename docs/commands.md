@@ -226,6 +226,21 @@ Display text to the screen, and the display text will not fire triggers
 <u>#NOT</u>IFY title message *{icon}*
 >display a notification popup with no sound, use [client.notify](scriptind.md#basic-function-list) to turn off silent option or #playsound
 
+<u>#SE</u>ND file *prefix suffix*
+>Send file to mud line by line pre-pending and appending supplied prefix and suffix to each line as if sent from command input
+
+<u>#SE</u>ND text
+>Send text to mud as if sent from command line
+
+#SENDRAW file *prefix suffix*
+>Send file to mud line by line pre-pending and appending supplied prefix and suffix to each line with out parsing or echoing to the screen
+
+#SENDRAW text
+>Send raw text directly to mud with out parsing or echoing to the screen appending a newline if needed
+
+<u>SENDP</u>ROMPT text
+>Send raw text directly to mud with out parsing or echoing to the screen with no appended newline
+
 <u>#SETS</u>ETTING name value
 >alter a setting value see: [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
 
