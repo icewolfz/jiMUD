@@ -5,7 +5,7 @@
 //spell-checker:ignore testfile testspeedfile testspeedfiler nosend printprompt printp pcol forall stringlist zcolor ipos trimleft trimright
 //spell-checker:ignore bitand bitnot bitor bitshift bittest bitnum bitxor isfloat isnumber
 import EventEmitter = require('events');
-import { MacroModifiers } from './profile';
+import { MacroModifiers, MacroDisplay } from './profile';
 import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier } from './library';
 import { Client } from './client';
 import { Tests } from './test';
@@ -579,6 +579,96 @@ export class Input extends EventEmitter {
                     return 0;
                 }
                 throw new Error('Invalid arguments for isdefined');
+            },
+            defined: (args, math, scope) => {
+                let sides;
+                if (args.length === 0)
+                    throw new Error('Missing arguments for defined');
+                else if (args.length === 1) {
+                    args[0] = this.stripQuotes(args[0], true);
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0) return 0;
+                    //have to check each profile as the client only caches enabled items for speed
+                    for (; k < kl; k++) {
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                        sides = sides.find(i => {
+                            return i.pattern === args[0];
+                        });
+                        if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                        sides = sides.find(i => {
+                            return i.pattern === args[0] || i.name === args[0];
+                        });
+                        if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].macros);
+                        sides = sides.find(i => {
+                            return MacroDisplay(i).toLowerCase() === args[0].toLowerCase() || i.name === args[0];
+                        });
+                        if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                        sides = sides.find(i => {
+                            return i.caption === args[0] || i.name === args[0]
+                        });
+                        if (sides) return 1;
+                    }
+                    return this.client.variables.hasOwnProperty(args[0]);
+                }
+                else if (args.length === 2) {
+                    args[0] = this.stripQuotes(args[0].toString());
+                    args[0] = this.stripQuotes(args[1].toString());
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0) return 0;
+                    //have to check each profile as the client only caches enabled items for speed
+                    for (; k < kl; k++) {
+                        switch (args[1]) {
+                            case 'alias':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                                sides = sides.find(i => {
+                                    return i.pattern === args[0];
+                                });
+                                if (sides) return 1;
+                            case 'event':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                sides = sides.find(i => {
+                                    return i.type === TriggerType.Event && (i.pattern === args[0] || i.name === args[0]);
+                                });
+                                if (sides) return 1;
+                            case 'trigger':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                sides = sides.find(i => {
+                                    return i.pattern === args[0] || i.name === args[0];
+                                });
+                                if (sides) return 1;
+                            case 'macro':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].macros);
+                                sides = sides.find(i => {
+                                    return MacroDisplay(i).toLowerCase() === args[0].toLowerCase() || i.name === args[0];
+                                });
+                                if (sides) return 1;
+                            case 'button':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                                sides = sides.find(i => {
+                                    return i.caption === args[0] || i.name === args[0]
+                                });
+                                if (sides) return 1;
+                            //case 'variable':
+                            //case 'path':
+                            //case 'status':
+                            //case 'class':
+                            //case 'menu':                        
+                            //case 'module':
+                        }
+                    }
+                    if (args[1] === 'variable')
+                        return this.client.variables.hasOwnProperty(args[0]) || scope.has(args[0]);
+                }
+                else
+                    throw new Error('Too many arguments for defined');
+                return 0;
             },
             time: (args, math, scope) => {
                 if (args.length > 1)
@@ -6321,6 +6411,95 @@ export class Input extends EventEmitter {
                 args[0] = this.stripQuotes(args[0], true);
                 if (this.client.variables.hasOwnProperty(args[0]))
                     return 1;
+                return 0;
+            case 'defined':
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    throw new Error('Missing arguments for defined');
+                else if (args.length === 1) {
+                    args[0] = this.stripQuotes(args[0], true);
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0) return 0;
+                    //have to check each profile as the client only caches enabled items for speed
+                    for (; k < kl; k++) {
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                        sides = sides.find(i => {
+                            return i.pattern === args[0];
+                        });
+                        if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                        sides = sides.find(i => {
+                            return i.pattern === args[0] || i.name === args[0];
+                        });
+                        if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].macros);
+                        sides = sides.find(i => {
+                            return MacroDisplay(i).toLowerCase() === args[0].toLowerCase() || i.name === args[0];
+                        });
+                        if (sides) return 1;
+                        sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                        sides = sides.find(i => {
+                            return i.caption === args[0] || i.name === args[0]
+                        });
+                        if (sides) return 1;
+                    }
+                    return this.client.variables.hasOwnProperty(args[0]);
+                }
+                else if (args.length === 2) {
+                    args[0] = this.stripQuotes(args[0], true);
+                    args[1] = this.stripQuotes(args[1], true).toLowerCase();
+                    const keys = this.client.profiles.keys;
+                    let k = 0;
+                    const kl = keys.length;
+                    if (kl === 0) return 0;
+                    //have to check each profile as the client only caches enabled items for speed
+                    for (; k < kl; k++) {
+                        switch (args[1]) {
+                            case 'alias':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                                sides = sides.find(i => {
+                                    return i.pattern === args[0];
+                                });
+                                if (sides) return 1;
+                            case 'event':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                sides = sides.find(i => {
+                                    return i.type === TriggerType.Event && (i.pattern === args[0] || i.name === args[0]);
+                                });
+                                if (sides) return 1;
+                            case 'trigger':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].triggers);
+                                sides = sides.find(i => {
+                                    return i.pattern === args[0] || i.name === args[0];
+                                });
+                                if (sides) return 1;
+                            case 'macro':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].macros);
+                                sides = sides.find(i => {
+                                    return MacroDisplay(i).toLowerCase() === args[0].toLowerCase() || i.name === args[0];
+                                });
+                                if (sides) return 1;
+                            case 'button':
+                                sides = SortItemArrayByPriority(this.client.profiles.items[keys[k]].aliases);
+                                sides = sides.find(i => {
+                                    return i.caption === args[0] || i.name === args[0]
+                                });
+                                if (sides) return 1;
+                            //case 'variable':
+                            //case 'path':
+                            //case 'status':
+                            //case 'class':
+                            //case 'menu':                        
+                            //case 'module':
+                        }
+                    }
+                    if (args[1] === 'variable')
+                        return this.client.variables.hasOwnProperty(args[0]);
+                }
+                else
+                    throw new Error('Too many arguments for defined');
                 return 0;
             case 'escape':
                 args = this.stripQuotes(this.parseInline(res[2]));

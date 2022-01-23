@@ -284,6 +284,10 @@ ansi(*style*,fore,8back*)
 isdefined(name)
 >Returns 1 if a variable is defined, 0 if undefined
 
+defined(name,*type*)
+>Returns 1 if item is defined, 0 if undefined, if type is omitted will search all supported items
+>>Types: alias, event, trigger, macro, button, variable
+
 alarm("name|pattern")<br>
 alarm("name|pattern", *"profile"*)<br>
 alarm("name|pattern", *setTime*)<br>
