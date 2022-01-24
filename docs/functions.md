@@ -246,19 +246,14 @@ stripansi(string)
 [time(format)](functions/time.md)
 >Display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]
 
-color(fore,*back*,*bold*)
->returns color code in string format of fore,back or just fore
-
-  - `fore` the foreground color or bold, if bold it returns bold white
-  - `back` the background color, if bold returns bold fore
-  - `bold` ansi bold color, if bold returns bold fore
-  - Colors: red, blue, orange, yellow, green, black, white, cyan, magenta, gray
+[color(fore,*back*,*bold*)](functions/color.md)
+>Returns color code in string format of fore,back or just fore
 
 zcolor(code)
 > converts a zmud/cmud color code into a code supported by jiMUD
 >>Example: ${zcolor(1)} would return 370 for bold white
 
-ansi(*style*,fore,8back*)
+ansi(*style*,fore,*back*)
 >insert ansi control characters into string same as ${esc}[CODESm<br>
 
   - `style` the styles to apply, *optional*

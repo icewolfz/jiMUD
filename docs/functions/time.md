@@ -3,7 +3,7 @@
 ### **Syntax:** time(format)
 > Display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]
 
-#### **Arguments:**
+### **Arguments:**
 
 - format - The format to display the time as
   - `YYYY` 4 or 2 digit year
