@@ -87,7 +87,8 @@
             },
             {
                 text: 'Functions',
-                id: 'functions'
+                id: 'functions',
+                nodes:[]
             },
             {
                 text: 'Preferences',
@@ -275,6 +276,18 @@
                     _data[5].nodes.push({
                         text: '#' + path.basename(files[i], '.md'),
                         id: 'commands/' + path.basename(files[i], '.md')
+                    });
+                }
+            }
+
+            p = path.join(__dirname, '..', 'docs', 'functions');
+            files = fs.readdirSync(p);
+            for (var i = 0; i < files.length; i++) {
+                if (path.basename(files[i], '.md') === 'nnn') continue;
+                if (path.extname(files[i]) === '.md') {
+                    _data[6].nodes.push({
+                        text: path.basename(files[i], '.md'),
+                        id: 'functions/' + path.basename(files[i], '.md')
                     });
                 }
             }
