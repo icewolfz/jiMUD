@@ -1765,6 +1765,8 @@ export class Input extends EventEmitter {
                     default:
                         throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'resu\x1b[0;-11;-12mme id \x1b[3mprofile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'resu\x1b[0;-11;-12mme');
                 }
+            case 'action':
+            case 'ac':
             case 'trigger':
             case 'tr':
                 //#region trigger
@@ -4680,6 +4682,10 @@ export class Input extends EventEmitter {
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sendp\x1b[0;-11;-12mrompt text');
                 this.client.sendRaw(args.join(' '));
+                return null;
+            case 'character':
+            case 'char':
+                this.client.sendRaw(window.$character || '');
                 return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {

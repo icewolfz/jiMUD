@@ -147,6 +147,9 @@ Display text to the screen, and the display text will not fire triggers
 
 ## **Triggers**
 
+<u>#AC</u>TION *name* {pattern} *{commands} options<sup>1</sup> profile*
+>Same as #TRIGGER, see #trigger for more details
+
 [<u>#ALA</u>RM](commands/ALARM.md) *name* {time pattern} {commands} *profile*
 >Create or alter an alarm trigger
 
@@ -198,6 +201,9 @@ Display text to the screen, and the display text will not fire triggers
 
 <u>#CH</u>AT text
 >Send text to chat window and append a new line
+
+<u>#CHAR</u>ACTER
+>Send current character name to the mud, without echoing to the screen
 
 #CR
 >Send a blank line to the mud
