@@ -4650,8 +4650,12 @@ export class Input extends EventEmitter {
                         this.client.sendBackground(p + line + i);
                     });
                 }
-                else
-                    this.client.sendBackground(this.stripQuotes(args.join(' ')));
+                else {
+                    args = args.join(' ');
+                    if (args.length === 0)
+                        throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd file \x1b[3mprefix suffix\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd text');
+                    this.client.sendBackground(this.stripQuotes(args));
+                }
                 return null
             case 'sendraw':
                 if (args.length === 0)
@@ -4672,6 +4676,8 @@ export class Input extends EventEmitter {
                 }
                 else {
                     args = args.join(' ');
+                    if (args.length === 0)
+                        throw new Error('Invalid syntax use ' + cmdChar + 'sendraw text or ' + cmdChar + 'sendraw file \x1b[3mprefix suffix\x1b[0;-11;-12m');
                     if (!args.endsWith('\n'))
                         args = args + '\n';
                     this.client.sendRaw(args);
@@ -4681,11 +4687,39 @@ export class Input extends EventEmitter {
             case 'sendp':
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sendp\x1b[0;-11;-12mrompt text');
-                this.client.sendRaw(args.join(' '));
+                args = args.join(' ');
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sendp\x1b[0;-11;-12mrompt text');
+                this.client.sendRaw(args);
                 return null;
             case 'character':
             case 'char':
                 this.client.sendRaw(window.$character || '');
+                return null;
+            case 'speak':
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'speak text');
+                args = args.join(' ');
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'speak text');
+                args = this.stripQuotes(this.parseInline(args));
+                if (args.length !== 0)
+                    window.speechSynthesis.speak(new SpeechSynthesisUtterance(args));
+                return null;
+            case 'speakstop':
+                if (args.length !== 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'speakstop');
+                window.speechSynthesis.cancel();
+                return null;
+            case 'speakpause':
+                if (args.length !== 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'speakpause');
+                window.speechSynthesis.pause();
+                return null;
+            case 'speakresume':
+                if (args.length !== 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'speakresume');
+                window.speechSynthesis.resume();
                 return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {

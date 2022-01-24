@@ -15,6 +15,10 @@
   - Add [#UNVAR name](docs/commands.md#createmodify-profile-or-items) Delete variable
   - Add [#ACTION](docs/commands.md#triggers) same as [#TRIGGER](docs/commands.md#triggers)
   - Add [#CHARACTER](docs/commands.md#miscellaneous) send current character to the mud, without echoing to the screen
+  - Add [#SPEAK text](docs/commands.md#sounds) speak text using text to speech systems
+  - Add [#SPEAKSTOP](docs/commands.md#sounds) stop speak and clear all queued
+  - Add [#SPEAKPAUSE](docs/commands.md#sounds) pause speaking
+  - Add [#SPEAKRESUME](docs/commands.md#sounds) resume speaking
   - Add [%state("name|pattern", "profile")](docs/functions.md#miscellaneous) Returns the current trigger state of the trigger given by the name or pattern, if no profile it will search all enabled profiles until match found
   - Add [%defined(name,type)](docs/functions.md#miscellaneous) is item defined, similar to isdefined
   - Add [%isnull(value)](docs/functions.md#string) return if value is null or not if value omitted returns null

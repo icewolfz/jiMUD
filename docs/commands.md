@@ -107,6 +107,18 @@ Display text to the screen, and the display text will not fire triggers
 #SOUNDINFO
 >display currently playing sound effect, current position, and total length
 
+#SPEAK text
+>Speak text using the text to speech system
+
+#SPEAKSTOP
+>Stop all speaking and clear queue
+
+#SPEAKPAUSE
+>Pause speaking
+
+#SPEAKRESUME
+>Resume speaking
+
 <u>#STOPA</u>LLSOUND
 >stop all sound effects and background music
 
