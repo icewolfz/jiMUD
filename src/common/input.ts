@@ -6016,7 +6016,7 @@ export class Input extends EventEmitter {
         switch (res[1]) {
             case 'time':
                 if (res[2] && res[2].length > 0)
-                    return moment().format(res[2]);
+                    return moment().format(this.stripQuotes(this.parseInline(res[2])));
                 return moment().format();
             case 'lower':
                 return this.stripQuotes(this.parseInline(res[2]).toLowerCase());

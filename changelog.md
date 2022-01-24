@@ -30,8 +30,8 @@
 - **Fixed:**
   - Profile manager:
     - Profiles are now sorted according to the [Profile manager sort order](docs/preferences.md#advanced--profile-manager) and [Profile manager sort direction](docs/preferences.md#advanced--profile-manager) settings like items
-    - Fix context menu editor icon sample width
-  - Fix [#TRIGGER](docs/commands.md#triggers) name syntax not working
+    - Fixed context menu editor icon sample width
+  - Fixed [#TRIGGER](docs/commands.md#triggers) name syntax not working
   - Fixed [#UNTRIGGER](docs/commands.md#triggers) failing when trying to remove when only 1 profile exist
   - Fixed extra new lines being added when parsing text in the middle of triggers
   - Fixed temporary triggers and [#UNTRIGGER](docs/commands.md#triggers) some times removing trigger from wrong profile
@@ -41,7 +41,8 @@
   - Fixed auto connect when loading same character again
   - Fix profile loading issues for [#TRIGGER](docs/commands.md#triggers), [#UNTRIGGER](docs/commands.md#triggers), [#EVENT](docs/commands.md#triggers), [#UNEVENT](docs/commands.md#triggers), [#BUTTON](docs/commands.md#createmodify-profile-or-items), [#UNBUTTON](docs/commands.md#createmodify-profile-or-items), [#ALARM](docs/commands.md#riggers), [#ALIAS](docs/commands.md#createmodify-profile-or-items), [#UNALIAS](docs/commands.md#createmodify-profile-or-items)
   - Fix parsing of some arguments for [#TRIGGER](docs/commands.md#triggers), [#UNTRIGGER](docs/commands.md#triggers), [#EVENT](docs/commands.md#triggers), [#BUTTON](docs/commands.md#createmodify-profile-or-items)
-  - Fix [%ansi(style,fore,back)](docs/functions.md#miscellaneous) for bold,color making it backgroound instead of bold fore color
+  - Fixed [%ansi(style,fore,back)](docs/functions.md#miscellaneous) for bold,color making it backgroound instead of bold fore color
+  - Fixed [%time(format)](docs/functions.md#miscellaneous) not being parsed
 - **Changed:**
   - Display: split bar highlights when mouse over and when being moved
   - [#TRIGGER](docs/commands.md#triggers) add/update message no longer contains name or pattern to prevent trigger from accidentally triggering
