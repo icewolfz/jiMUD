@@ -698,6 +698,65 @@ export class Input extends EventEmitter {
                     throw new Error('Too many arguments for len');
                 return math.evaluate(args[0].toString(), scope).toString().length;
             },
+            stripansi: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for len');
+                if (args.length !== 1)
+                    throw new Error('Too many arguments for len');
+                const ansiRegex = new RegExp('[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))', 'g')
+                return math.evaluate(args[0].toString(), scope).toString().replace(ansiRegex, '');
+            },
+            ansi: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for ansi');
+                args = args.map(a =>
+                    getAnsiCode(a.toString()) === -1 && a.toString() !== 'current' ? a.compile().evaluate(scope).toString() : a.toString()
+                );
+                const c = args.length;
+                let mod = [];
+                let min: any = {};
+                let sides;
+                let max;
+                for (sides = 0; sides < c; sides++) {
+                    if (args[sides].trim() === 'current')
+                        mod.push(args[sides].trim());
+                    else {
+                        max = getAnsiCode(args[sides].trim());
+                        if (max === -1)
+                            throw new Error('Invalid color or style for ansi');
+                        //style
+                        if (max >= 0 && max < 30)
+                            min[max] = 1;
+                        //color
+                        else
+                            mod.push(args[sides]);
+                    }
+                }
+                // fore,back
+                if (mod.length > 2)
+                    throw new Error('Too many colors for ansi');
+                if (mod.length > 1) {
+                    if (mod[1] === 'current')
+                        mod[1] = '';
+                    else
+                        mod[1] = getAnsiCode(mod[1], true);
+                }
+                if (mod.length > 0) {
+                    if (min[1] && mod[0] === 'white')
+                        mod[0] = '';
+                    else if (mod[0] === 'current')
+                        mod[0] = '';
+                    else
+                        mod[0] = getAnsiCode(mod[0]);
+                }
+
+                min = [...Object.keys(min), ...mod]
+                if (!min.length)
+                    throw new Error('Invalid colors or styles for ansi');
+                //remove any current flags
+                min = min.filter(f => f !== '');
+                return `\x1b[${min.join(';')}m`;
+            },
             case: (args, math, scope) => {
                 if (args.length === 0)
                     throw new Error('Missing arguments for case');
@@ -6194,38 +6253,38 @@ export class Input extends EventEmitter {
                 mod = [];
                 min = {};
                 for (sides = 0; sides < c; sides++) {
-                    max = getAnsiCode(args[sides].trim());
-                    if (max === -1)
-                        throw new Error('Invalid color or style for ansi');
-                    //style
-                    if (max >= 0 && max < 30)
-                        min[max] = 1;
-                    //color
+                    if (args[sides].trim() === 'current')
+                        mod.push(args[sides].trim());
+                    else {
+                        max = getAnsiCode(args[sides].trim());
+                        if (max === -1)
+                            throw new Error('Invalid color or style for ansi');
+                        //style
+                        if (max >= 0 && max < 30)
+                            min[max] = 1;
+                        //color
+                        else
+                            mod.push(args[sides]);
+                    }
+                }
+                // fore,back
+                if (mod.length > 2)
+                    throw new Error('Too many colors for ansi');
+                if (mod.length > 1) {
+                    if (mod[1] === 'current')
+                        mod[1] = '';
                     else
-                        mod.push(args[sides]);
+                        mod[1] = getAnsiCode(mod[1], true);
                 }
-                //bold,back
-                if (mod.length === 1 && min[1]) {
-                    mod[0] = getAnsiCode(mod[0], true);
-                    mod.unshift('37');
+                if (mod.length > 0) {
+                    if (min[1] && mod[0] === 'white')
+                        mod[0] = '';
+                    else if (mod[0] === 'current')
+                        mod[0] = '';
+                    else
+                        mod[0] = getAnsiCode(mod[0]);
                 }
-                //else fore,back
-                else {
-                    if (mod.length > 2)
-                        throw new Error('Too many colors for ansi');
-                    if (mod.length > 1) {
-                        if (mod[1] === 'current')
-                            mod = '';
-                        else
-                            mod[1] = getAnsiCode(mod[1], true);
-                    }
-                    if (mod.length > 0) {
-                        if (mod[1] === 'current')
-                            mod[0] = '';
-                        else
-                            mod[0] = getAnsiCode(mod[0]);
-                    }
-                }
+
                 min = [...Object.keys(min), ...mod]
                 if (!min.length)
                     throw new Error('Invalid colors or styles for ansi');
@@ -6305,6 +6364,9 @@ export class Input extends EventEmitter {
                 return this.stripQuotes(args[0]).endsWith(this.stripQuotes(args[1]));
             case 'len'://(string)` returns the length of string
                 return this.stripQuotes(this.parseInline(res[2])).length;
+            case 'stripansi':
+                const ansiRegex = new RegExp('[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))', 'g')
+                return this.stripQuotes(this.parseInline(res[2])).replace(ansiRegex, '');
             case 'pos'://(pattern,string)` returns the position pattern in string on 1 index scale, 0 if not found
                 args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length < 2)

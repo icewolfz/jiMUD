@@ -22,6 +22,7 @@
   - Add [%state("name|pattern", "profile")](docs/functions.md#miscellaneous) Returns the current trigger state of the trigger given by the name or pattern, if no profile it will search all enabled profiles until match found
   - Add [%defined(name,type)](docs/functions.md#miscellaneous) is item defined, similar to isdefined
   - Add [%isnull(value)](docs/functions.md#string) return if value is null or not if value omitted returns null
+  - Add [%stripansi(string)](docs/functions.md#string) Strip all ansi codes from strip
   - Mapper: Add `Edit > Reset map` to allow users to delete and create a fresh map file
   - Profile Manager: Parse style now has basic code folding
   - Multi State triggers - Allows you to create multi line or conditional triggers
@@ -40,6 +41,7 @@
   - Fixed auto connect when loading same character again
   - Fix profile loading issues for [#TRIGGER](docs/commands.md#triggers), [#UNTRIGGER](docs/commands.md#triggers), [#EVENT](docs/commands.md#triggers), [#UNEVENT](docs/commands.md#triggers), [#BUTTON](docs/commands.md#createmodify-profile-or-items), [#UNBUTTON](docs/commands.md#createmodify-profile-or-items), [#ALARM](docs/commands.md#riggers), [#ALIAS](docs/commands.md#createmodify-profile-or-items), [#UNALIAS](docs/commands.md#createmodify-profile-or-items)
   - Fix parsing of some arguments for [#TRIGGER](docs/commands.md#triggers), [#UNTRIGGER](docs/commands.md#triggers), [#EVENT](docs/commands.md#triggers), [#BUTTON](docs/commands.md#createmodify-profile-or-items)
+  - Fix [%ansi(style,fore,back)](docs/functions.md#miscellaneous) for bold,color making it backgroound instead of bold fore color
 - **Changed:**
   - Display: split bar highlights when mouse over and when being moved
   - [#TRIGGER](docs/commands.md#triggers) add/update message no longer contains name or pattern to prevent trigger from accidentally triggering

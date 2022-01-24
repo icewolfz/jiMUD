@@ -238,6 +238,9 @@ escape(string)
 unescape(string)
 >Returns a string with all escapes based on what is enabled in scripting settings removed
 
+stripansi(string)
+>Strip all ansi codes from strip
+
 ### **Miscellaneous**
 
 [time(format)](functions/time.md)
