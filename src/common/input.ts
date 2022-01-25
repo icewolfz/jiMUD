@@ -141,9 +141,11 @@ enum ParseState {
     pathEscape = 18,
     functionEscape = 19,
     comment = 20,
-    inlineComment = 21,
-    blockComment = 22,
-    blockCommentEnd = 23
+    inlineCommentStart = 21,
+    inlineComment = 22,
+    blockCommentStart = 23,
+    blockComment = 24,
+    blockCommentEnd = 25
 }
 
 /**
@@ -4911,8 +4913,14 @@ export class Input extends EventEmitter {
         const eNParam: boolean = this.client.options.enableNParameters;
         const eEval: boolean = this.client.options.allowEval;
         const iEval: boolean = this.client.options.ignoreEvalUndefined;
-        const iComments: boolean = this.client.options.allowInlineComments;
-        const bComments: boolean = this.client.options.allowBlockComments;
+        const iComments: boolean = this.client.options.enableInlineComments;
+        const bComments: boolean = this.client.options.enableBlockComments;
+        const iCommentsStr: string[] = this.client.options.inlineCommentString.split('');
+        const bCommentsStr: string[] = this.client.options.blockCommentString.split('');
+        if (iCommentsStr.length === 1)
+            iCommentsStr.push(iCommentsStr[0]);
+        if (bCommentsStr.length === 1)
+            bCommentsStr.push(bCommentsStr[0]);
         let args = [];
         let arg: any = '';
         let findAlias: boolean = true;
@@ -5577,16 +5585,40 @@ export class Input extends EventEmitter {
                     }
                     break;
                 case ParseState.comment:
-                    if (iComments && c === '/')
+                    if (iComments && c === iCommentsStr[1])
                         state = ParseState.inlineComment;
-                    else if (bComments && c === '*')
+                    else if (bComments && c === bCommentsStr[1])
+                        state = ParseState.blockComment;
+                    else {
+                        state = ParseState.none;
+                        if (eAlias && findAlias)
+                            alias += iCommentsStr[0];
+                        else
+                            str += iCommentsStr[0];
+                        idx--;
+                    }
+                    break;
+                case ParseState.inlineCommentStart:
+                    if (c === iCommentsStr[1])
+                        state = ParseState.inlineComment;
+                    else {
+                        state = ParseState.none;
+                        if (eAlias && findAlias)
+                            alias += iCommentsStr[0];
+                        else
+                            str += iCommentsStr[0];
+                        idx--;
+                    }
+                    break;
+                case ParseState.blockCommentStart:
+                    if (bComments && c === bCommentsStr[1])
                         state = ParseState.blockCommentEnd;
                     else {
                         state = ParseState.none;
                         if (eAlias && findAlias)
-                            alias += '/';
+                            alias += bCommentsStr[0];
                         else
-                            str += '/';
+                            str += bCommentsStr[0];
                         idx--;
                     }
                     break;
@@ -5604,18 +5636,26 @@ export class Input extends EventEmitter {
                     }
                     break;
                 case ParseState.blockComment:
-                    if (c === '*')
+                    if (c === bCommentsStr[1])
                         state = ParseState.blockCommentEnd;
                     break;
                 case ParseState.blockCommentEnd:
-                    if (c === '/')
+                    if (c === bCommentsStr[0])
                         state = ParseState.none;
                     else
                         state = ParseState.blockComment;
                     break;
                 default:
-                    if ((iComments || bComments) && c === '/') {
+                    if ((iComments || bComments) && c === iCommentsStr[0] && c === bCommentsStr[0]) {
                         state = ParseState.comment;
+                        continue;
+                    }
+                    else if (iComments && c === iCommentsStr[0]) {
+                        state = ParseState.inlineCommentStart;
+                        continue;
+                    }
+                    else if (bComments && c === bCommentsStr[0]) {
+                        state = ParseState.blockCommentStart;
                         continue;
                     }
                     else if (eEscape && c === escChar) {

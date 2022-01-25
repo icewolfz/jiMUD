@@ -168,34 +168,39 @@ Controls what is captured into the chat window
 - `Prepend triggered line` Disable the fix to prepend the triggered line as %0,$0, or %{0} to return to previous usage
 - `Enable Double Parameter Escaping` Enable doubling up of the parameter character `%` to escape as well as using escape character
 - `Ignore Eval Undefined` When enabled will make undefined results blank, else it will display the word undefined
-- `Allow Inline Comments` Allow using // inline style comments, anything following // will be ignored until newline
-- `Allow Block Comments` Allow using /* \*/ block style comments, anything between /* and \*/ will be ignored
 
 ## Scripting > Special characters
 
 - `Command Stacking`
-  - `Character` The character to use when repeating command into multiple commands.
+  - `Character` The character to use when repeating command into multiple commands, Default: `;`
   - `Enable` This will enable command stacking systems and use the command stacking character to know where to break a command into a list commands.
 - `Speedpaths`
-  - `Character` The character that is used to determine if the command is a speedpath to expand, default is !
+  - `Character` The character that is used to determine if the command is a speedpath to expand, Default: `!`
   - `Enable` Whether or not to expand speedpaths, if disabled the line is parsed as normal command
   - `Parse` Parse each command as if it was sent from the command line, if disabled each command is sent to the mud as is.
 - `Command`
-  - `Character` The character to use with build in client commands
+  - `Character` The character to use with build in client commands, Default: `#`
   - `Enable` This will enable or disable command systems
 - `Escape`
-  - `Character` The character to use when escaping $%"'{ or special characters
+  - `Character` The character to use when escaping $%"'{ or special characters, Default: `\`
   - `Enable` Enable escaping of characters
 - `Verbatim`
-  - `Character` The character used at the start of a line to signify the line should be sent as is starting after the verbatim character
+  - `Character` The character used at the start of a line to signify the line should be sent as is starting after the verbatim character, Default: `
   - `Enabled` Enable or disable verbatim system
 - `Parameter`
-  - `Character` The character used for inline variables and functions and trigger/alias parameters %#, see [functions](functions.md) for more details
+  - `Character` The character used for inline variables and functions and trigger/alias parameters %#, see [functions](functions.md) for more details, Default: `%`
   - `Enabled` Enable or disable parameters
 - `N Parameter`
-  - `Character` Similar to Parameter but allows full name symbols when possible for user variables and named parameters, eg $name, see [functions](functions.md) for more details
+  - `Character` Similar to Parameter but allows full name symbols when possible for user variables and named parameters, eg $name, see [functions](functions.md) for more details, Default: `\$`
   - `Enabled` Enable or disable N Parameter system
-## Advanced
+- `Inline Comment`
+  - `String` The 2 character string for inline comments, if only 1 character it will be doubled, Default: `//`
+  - `Enabled` Enable or disable inline comments
+- `Block Comment`
+  - `String` The 2 character string for block comments, closing block comment is the string reversed, if only 1 character it will be doubled, Default: `/*`
+  - `Enabled` Enable or disable block comments
+
+  ## Advanced
 
 - `Enable gamepads` Enable gamepad support to allow creating macros using gamepad axes or buttons. **Experimental**
 - `Enable GMCP Ping for lag meter` When text received from mud send back a GMCP ping if enabled to get a better time for the lag meter.
