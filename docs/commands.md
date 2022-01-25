@@ -24,7 +24,7 @@
 >Scroll lock the display, if state is omitted it will toggle the scroll lock, if state is 0 or false it will disable scroll lock, if state is anything else it will lock the scroll back
 
 <u>#HI</u>GHLIGHT *pattern*
->make last line or lined with matching pattern bold or brighter color if already bold, or
+>make last line or line with matching pattern bold or brighter color if already bold, or makes the color brighter
 
 #PCOL fore,back,bold *XStart XEnd YStart YEnd*
 >Color position, will assume full line if position is not supplied, if XEnd omitted will assume end of line, if xEnd -1 it will assume end of line, if YEnd omitted will assume current line, YStart and YEnd are relative to the current line, 0 current, 1 previous, ...
@@ -52,7 +52,7 @@ Display text to the screen, and the display text will not fire triggers
 
 ## **Conditionals**
 
-<u>#CA</u>SE index {command 1}*{command n}*
+<u>#CA</u>SE index {command 1} *{command n}*
 >return command from list based on the value of index
 
 #IF {expression} {true-command} *{false-command}*
@@ -107,6 +107,18 @@ Display text to the screen, and the display text will not fire triggers
 #SOUNDINFO
 >display currently playing sound effect, current position, and total length
 
+#SPEAK text
+>Speak text using the text to speech system
+
+#SPEAKSTOP
+>Stop all speaking and clear queue
+
+#SPEAKPAUSE
+>Pause speaking
+
+#SPEAKRESUME
+>Resume speaking
+
 <u>#STOPA</u>LLSOUND
 >stop all sound effects and background music
 
@@ -146,6 +158,9 @@ Display text to the screen, and the display text will not fire triggers
 >Delete variable
 
 ## **Triggers**
+
+<u>#AC</u>TION *name* {pattern} *{commands} options<sup>1</sup> profile*
+>Same as #TRIGGER, see #trigger for more details
 
 [<u>#ALA</u>RM](commands/ALARM.md) *name* {time pattern} {commands} *profile*
 >Create or alter an alarm trigger
@@ -199,11 +214,17 @@ Display text to the screen, and the display text will not fire triggers
 <u>#CH</u>AT text
 >Send text to chat window and append a new line
 
+<u>#CHATP</u>ROMPT text
+>same as #chat but does not append a new line
+
+<u>#CHAR</u>ACTER
+>Send current character name to the mud, without echoing to the screen
+
 #CR
 >Send a blank line to the mud
 
-<u>#CHATP</u>ROMPT text
->same as #chat but does not append a new line
+<u>#COMM</u>ENT
+>Does nothing, allows commenting scripts
 
 <u>#CONNECT</u>TIME
 >display time since connected
@@ -223,8 +244,26 @@ Display text to the screen, and the display text will not fire triggers
 <u>#MAT</u>H name value
 >Set value to variable named name
 
+<u>#NO</u>OP
+>Does nothing, but will expand arguments
+
 <u>#NOT</u>IFY title message *{icon}*
 >display a notification popup with no sound, use [client.notify](scriptind.md#basic-function-list) to turn off silent option or #playsound
+
+<u>#SE</u>ND file *prefix suffix*
+>Send file to mud line by line pre-pending and appending supplied prefix and suffix to each line as if sent from command input
+
+<u>#SE</u>ND text
+>Send text to mud as if sent from command line
+
+#SENDRAW file *prefix suffix*
+>Send file to mud line by line pre-pending and appending supplied prefix and suffix to each line with out parsing or echoing to the screen
+
+#SENDRAW text
+>Send raw text directly to mud with out parsing or echoing to the screen appending a newline if needed
+
+<u>#SENDP</u>ROMPT text
+>Send raw text directly to mud with out parsing or echoing to the screen with no appended newline
 
 <u>#SETS</u>ETTING name value
 >alter a setting value see: [Keys and value types](faq.md#setting-keys-value-type-and-default-value)

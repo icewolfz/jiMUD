@@ -48,6 +48,10 @@ let _verbatim = '`';
 let _variable = '@';
 let _profileLoadExpand = true;
 let _profileLoadSelect = 'default';
+let _iComments = true;
+let _bComments = true;
+let _iCommentsStr = ['/', '/'];
+let _bCommentsStr = ['/', '*'];
 
 
 const _controllers = {};
@@ -2874,6 +2878,10 @@ function loadOptions() {
     _speed = options.speedpathsChar;
     _verbatim = options.verbatimChar;
     _variable = options.variableChar;
+    _iComments = options.enableInlineComments;
+    _bComments = options.enableBlockComments;
+    _iCommentsStr = options.inlineCommentString.split('');
+    _bCommentsStr = options.blockCommentString.split('');
     _profileLoadExpand = options.profiles.profileExpandSelected;
     _profileLoadSelect = options.profiles.profileSelected;
     if (!profiles.contains(_profileLoadSelect))
@@ -4236,6 +4244,28 @@ function setParseSyntax(editor) {
         var rules = session.$mode.$highlightRules.getRules();
         //console.log(rules);
         if (Object.prototype.hasOwnProperty.call(rules, 'start')) {
+            var b = rules['start'].pop();
+            if (!_iComments) {
+                rules['start'].pop();
+                rules['start'].pop();
+            }
+            else {
+                if (_iCommentsStr.length === 1) {
+                    rules['start'][rules['start'].length - 2].regex = `\\${_iCommentsStr[0]}$`;
+                    rules['start'][rules['start'].length - 1].regex = `\\${_iCommentsStr[0]}`;
+                }
+                else {
+                    rules['start'][rules['start'].length - 2].regex = `\\${_iCommentsStr[0]}\\${_iCommentsStr[1]}$`;
+                    rules['start'][rules['start'].length - 1].regex = `\\${_iCommentsStr[0]}\\${_iCommentsStr[1]}`;
+                }
+            }
+            if (_bComments) {
+                if (_iCommentsStr.length === 1)
+                    b.regex = `\\${_bCommentsStr[0]}`;
+                else
+                    b.regex = `\\${_bCommentsStr[0]}\\${_bCommentsStr[1]}`;
+                rules['start'].push(b);
+            }
             rules['start'][3].token = _stacking;
             rules['start'][3].regex = _stacking;
             rules['start'][5].regex = _parameter + rules['start'][5].regex.substr(1);
@@ -4312,6 +4342,12 @@ function setParseSyntax(editor) {
 7: {token: 'constant.numeric', regex: '[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b', onMatch: null}
 8: {token: 'text', regex: '\\s+', next: 'start', onMatch: null}      
             */
+        }
+        if (_bComments && Object.prototype.hasOwnProperty.call(rules, 'comment')) {
+            if (_bCommentsStr.length === 1)
+                rules['comment'][0].regex = `\\${_bCommentsStr[0]}`;
+            else
+                rules['comment'][0].regex = `\\${_bCommentsStr[1]}\\${_bCommentsStr[0]}`;
         }
         //console.log(rules);
         // force recreation of tokenizer

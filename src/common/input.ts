@@ -140,18 +140,24 @@ enum ParseState {
     aliasArgumentsEscape = 17,
     pathEscape = 18,
     functionEscape = 19,
-    variable = 20,
-    variableBlock = 21,
-    variableAssign = 22,
-    variableAssignValue = 23,
-    variableKey = 24,
-    variableKeyAssign = 25,
-    variableKeyAssignValue = 26,
-    variableBlockKey = 27,
-    variableBlockKey2 = 28,
-    variableBlockKeyAssign = 29,
-    variableBlockKeyAssignValue = 30,
-    variableBlockAssign = 31
+    comment = 20,
+    inlineCommentStart = 21,
+    inlineComment = 22,
+    blockCommentStart = 23,
+    blockComment = 24,
+    blockCommentEnd = 25,
+    variable = 26,
+    variableBlock = 27,
+    variableAssign = 28,
+    variableAssignValue = 29,
+    variableKey = 30,
+    variableKeyAssign = 31,
+    variableKeyAssignValue = 32,
+    variableBlockKey = 33,
+    variableBlockKey2 = 34,
+    variableBlockKeyAssign = 35,
+    variableBlockKeyAssignValue = 36,
+    variableBlockAssign = 37
 }
 
 /**
@@ -717,6 +723,65 @@ export class Input extends EventEmitter {
                     throw new Error('Too many arguments for len');
                 return math.evaluate(args[0].toString(), scope).toString().length;
             },
+            stripansi: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for len');
+                if (args.length !== 1)
+                    throw new Error('Too many arguments for len');
+                const ansiRegex = new RegExp('[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))', 'g')
+                return math.evaluate(args[0].toString(), scope).toString().replace(ansiRegex, '');
+            },
+            ansi: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for ansi');
+                args = args.map(a =>
+                    getAnsiCode(a.toString()) === -1 && a.toString() !== 'current' ? a.compile().evaluate(scope).toString() : a.toString()
+                );
+                const c = args.length;
+                let mod = [];
+                let min: any = {};
+                let sides;
+                let max;
+                for (sides = 0; sides < c; sides++) {
+                    if (args[sides].trim() === 'current')
+                        mod.push(args[sides].trim());
+                    else {
+                        max = getAnsiCode(args[sides].trim());
+                        if (max === -1)
+                            throw new Error('Invalid color or style for ansi');
+                        //style
+                        if (max >= 0 && max < 30)
+                            min[max] = 1;
+                        //color
+                        else
+                            mod.push(args[sides]);
+                    }
+                }
+                // fore,back
+                if (mod.length > 2)
+                    throw new Error('Too many colors for ansi');
+                if (mod.length > 1) {
+                    if (mod[1] === 'current')
+                        mod[1] = '';
+                    else
+                        mod[1] = getAnsiCode(mod[1], true);
+                }
+                if (mod.length > 0) {
+                    if (min[1] && mod[0] === 'white')
+                        mod[0] = '';
+                    else if (mod[0] === 'current')
+                        mod[0] = '';
+                    else
+                        mod[0] = getAnsiCode(mod[0]);
+                }
+
+                min = [...Object.keys(min), ...mod]
+                if (!min.length)
+                    throw new Error('Invalid colors or styles for ansi');
+                //remove any current flags
+                min = min.filter(f => f !== '');
+                return `\x1b[${min.join(';')}m`;
+            },
             case: (args, math, scope) => {
                 if (args.length === 0)
                     throw new Error('Missing arguments for case');
@@ -1101,7 +1166,7 @@ export class Input extends EventEmitter {
                     return trigger.triggers && trigger.triggers.length ? trigger.state : 0;
                 throw new Error('Trigger not found');
             },
-            null: (args, math, scope) => {
+            isnull: (args, math, scope) => {
                 if (args.length === 0)
                     return null;
                 if (args.length !== 1)
@@ -1784,6 +1849,8 @@ export class Input extends EventEmitter {
                     default:
                         throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'resu\x1b[0;-11;-12mme id \x1b[3mprofile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'resu\x1b[0;-11;-12mme');
                 }
+            case 'action':
+            case 'ac':
             case 'trigger':
             case 'tr':
                 //#region trigger
@@ -2147,13 +2214,8 @@ export class Input extends EventEmitter {
                     items = SortItemArrayByPriority(profile.triggers.filter(t => t.type === TriggerType.Event));
                     n = this.stripQuotes(n);
                     tmp = n;
-                    for (i = 0, al = items.length; i < al; i++) {
-                        if (items[i].name === n || items[i]['pattern'] === n) {
-                            n = i;
-                            f = true;
-                            break;
-                        }
-                    }
+                    n = items.findIndex(i => i.pattern === n || i.name === n);
+                    f = n !== -1;
                     if (!f)
                         this.client.echo('Event \'' + tmp + '\' not found.', -7, -8, true, true);
                     else {
@@ -2437,13 +2499,8 @@ export class Input extends EventEmitter {
                     }
                     else {
                         n = this.stripQuotes(n);
-                        for (i = 0, al = items.length; i < al; i++) {
-                            if (items[i].name === n || items[i]['caption'] === n) {
-                                n = i;
-                                f = true;
-                                break;
-                            }
-                        }
+                        n = items.findIndex(i => i.name === n || i.caption === n);
+                        f = n !== -1;
                     }
                     if (!f)
                         this.client.echo('Button \'' + tmp + '\' not found.', -7, -8, true, true);
@@ -3053,13 +3110,8 @@ export class Input extends EventEmitter {
                     }
                     else {
                         tmp = n;
-                        for (i = 0, al = items.length; i < al; i++) {
-                            if (items[i]['pattern'] === n) {
-                                n = i;
-                                f = true;
-                                break;
-                            }
-                        }
+                        n = items.findIndex(i => i.pattern === n);
+                        f = n !== -1;
                     }
                     if (!f)
                         this.client.echo('Alias \'' + tmp + '\' not found.', -7, -8, true, true);
@@ -3904,6 +3956,8 @@ export class Input extends EventEmitter {
                 if (args[0].match(/^\{[\s\S]*\}$/g))
                     args[0] = args[0].substr(1, args[0].length - 2);
                 n = this.evaluate(this.parseInline(args[0]));
+                if (typeof n !== 'number')
+                    return null;
                 if (n > 0 && n < args.length) {
                     if (args[n].match(/^\{[\s\S]*\}$/g))
                         args[n] = args[n].substr(1, args[n].length - 2);
@@ -3967,6 +4021,8 @@ export class Input extends EventEmitter {
                 if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
                 i = this.evaluate(this.parseInline(i));
+                if (typeof i !== 'number')
+                    throw new Error('Arguments must be a number');
                 args = args.join(' ');
                 if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
@@ -4169,7 +4225,10 @@ export class Input extends EventEmitter {
                 args = args.join(' ');
                 if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
-                this.client.setVariable(i, n + this.evaluate(this.parseInline(args)));
+                args = this.evaluate(this.parseInline(args));
+                if (typeof args !== 'number')
+                    throw new Error('Value is not a number for add');
+                this.client.setVariable(i, n + args);
                 return null;
             case 'math':
             case 'mat':
@@ -4184,13 +4243,20 @@ export class Input extends EventEmitter {
                 args = args.join(' ');
                 if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
-                this.client.setVariable(i, this.evaluate(this.parseInline(args)));
+                args = this.evaluate(this.parseInline(args));
+                if (typeof args !== 'number')
+                    throw new Error('Value is not a number for add');
+                this.client.setVariable(i, args);
                 return null;
             case 'evaluate':
             case 'eva':
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'eva\x1b[0;-11;-12mluate expression');
-                args = '' + this.evaluate(this.parseInline(args.join(' ')));
+                args = this.evaluate(this.parseInline(args.join(' ')));
+                if (this.client.options.ignoreEvalUndefined && typeof args === 'undefined')
+                    args = '';
+                else
+                    args = '' + args;
                 if (this.client.telnet.prompt)
                     this.client.print('\n' + args + '\x1b[0m\n', false);
                 else
@@ -4717,7 +4783,103 @@ export class Input extends EventEmitter {
             case 'cr':
                 this.client.sendBackground('\n');
                 return null;
-
+            case 'send':
+            case 'se':
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd file \x1b[3mprefix suffix\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd text');
+                tmp = this.stripQuotes(this.parseInline(args[0]));
+                if (isFileSync(tmp)) {
+                    p = '';
+                    i = '';
+                    if (args.length > 1)
+                        p = this.stripQuotes(this.parseInline(args[1]));
+                    if (args.length > 2)
+                        i = this.stripQuotes(this.parseInline(args[2]));
+                    //handle \n and \r\n for windows and linux files
+                    items = fs.readFileSync(f, 'utf8').split(/\r?\n/);
+                    items.forEach(line => {
+                        this.client.sendBackground(p + line + i);
+                    });
+                }
+                else {
+                    args = args.join(' ');
+                    if (args.length === 0)
+                        throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd file \x1b[3mprefix suffix\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd text');
+                    this.client.sendBackground(this.stripQuotes(args));
+                }
+                return null
+            case 'sendraw':
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'sendraw text or ' + cmdChar + 'sendraw file \x1b[3mprefix suffix\x1b[0;-11;-12m');
+                tmp = this.stripQuotes(this.parseInline(args[0]));
+                if (isFileSync(tmp)) {
+                    p = '';
+                    i = '';
+                    if (args.length > 1)
+                        p = this.stripQuotes(this.parseInline(args[1]));
+                    if (args.length > 2)
+                        i = this.stripQuotes(this.parseInline(args[2]));
+                    //handle \n and \r\n for windows and linux files
+                    items = fs.readFileSync(f, 'utf8').split(/\r?\n/);
+                    items.forEach(line => {
+                        this.client.sendRaw(p + line + i + '\n');
+                    });
+                }
+                else {
+                    args = args.join(' ');
+                    if (args.length === 0)
+                        throw new Error('Invalid syntax use ' + cmdChar + 'sendraw text or ' + cmdChar + 'sendraw file \x1b[3mprefix suffix\x1b[0;-11;-12m');
+                    if (!args.endsWith('\n'))
+                        args = args + '\n';
+                    this.client.sendRaw(args);
+                }
+                return null;
+            case 'sendprompt':
+            case 'sendp':
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sendp\x1b[0;-11;-12mrompt text');
+                args = args.join(' ');
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sendp\x1b[0;-11;-12mrompt text');
+                this.client.sendRaw(args);
+                return null;
+            case 'character':
+            case 'char':
+                this.client.sendRaw(window.$character || '');
+                return null;
+            case 'speak':
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'speak text');
+                args = args.join(' ');
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'speak text');
+                args = this.stripQuotes(this.parseInline(args));
+                if (args.length !== 0)
+                    window.speechSynthesis.speak(new SpeechSynthesisUtterance(args));
+                return null;
+            case 'speakstop':
+                if (args.length !== 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'speakstop');
+                window.speechSynthesis.cancel();
+                return null;
+            case 'speakpause':
+                if (args.length !== 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'speakpause');
+                window.speechSynthesis.pause();
+                return null;
+            case 'speakresume':
+                if (args.length !== 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'speakresume');
+                window.speechSynthesis.resume();
+                return null;
+            case 'comment':
+            case 'comm':
+                return null;
+            case 'noop':
+            case 'no':
+                if (args.length)
+                    this.parseInline(args.join(' '));
+                return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
             i = parseInt(fun, 10);
@@ -4824,6 +4986,11 @@ export class Input extends EventEmitter {
         const varChar: string = this.client.options.variableChar;
         const eVar: boolean = this.client.options.enableVariable;
         const eEval: boolean = this.client.options.allowEval;
+        const iEval: boolean = this.client.options.ignoreEvalUndefined;
+        const iComments: boolean = this.client.options.enableInlineComments;
+        const bComments: boolean = this.client.options.enableBlockComments;
+        const iCommentsStr: string[] = this.client.options.inlineCommentString.split('');
+        const bCommentsStr: string[] = this.client.options.blockCommentString.split('');
         let args = [];
         let arg: any = '';
         let findAlias: boolean = true;
@@ -5257,7 +5424,11 @@ export class Input extends EventEmitter {
                                 if (tmp != null)
                                     tmp2 = tmp;
                                 else if (eEval) {
-                                    tmp2 = '' + this.evaluate(this.parseInline(arg));
+                                    tmp2 = this.evaluate(this.parseInline(arg));
+                                    if (iEval && typeof tmp2 === 'undefined')
+                                        tmp2 = null;
+                                    else
+                                        tmp2 = '' + tmp2;
                                 }
                                 else {
                                     tmp2 += paramChar;
@@ -5425,8 +5596,13 @@ export class Input extends EventEmitter {
                                 c = this.parseVariable(arg);
                                 if (c != null)
                                     tmp2 = c;
-                                else if (eEval)
-                                    tmp2 = '' + this.evaluate(this.parseInline(arg));
+                                else if (eEval) {
+                                    tmp2 = this.evaluate(this.parseInline(arg));
+                                    if (iEval && typeof tmp2 === 'undefined')
+                                        tmp2 = null;
+                                    else
+                                        tmp2 = '' + tmp2;
+                                }
                                 else {
                                     tmp2 = nParamChar;
                                     idx = idx - arg.length - 2;
@@ -5453,6 +5629,8 @@ export class Input extends EventEmitter {
                     break;
                 case ParseState.escape:
                     if (c === escChar || (stacking && c === stackingChar) || (eVerbatim && c === verbatimChar) || (ePaths && c === spChar) || (eCmd && c === cmdChar) || (eParamEscape && c === paramChar) || (eNParam && c === nParamChar))
+                        tmp2 = c;
+                    else if ((iComments || bComments) && c === '/')
                         tmp2 = c;
                     else if ('"\'{'.indexOf(c) !== -1)
                         tmp2 = c;
@@ -5699,9 +5877,96 @@ export class Input extends EventEmitter {
                     }
                     else
                         tmp += c;
+                case ParseState.comment:
+                    if (iComments && c === iCommentsStr[1])
+                        state = ParseState.inlineComment;
+                    else if (bComments && c === bCommentsStr[1])
+                        state = ParseState.blockComment;
+                    else {
+                        state = ParseState.none;
+                        if (eAlias && findAlias)
+                            alias += iCommentsStr[0];
+                        else
+                            str += iCommentsStr[0];
+                        idx--;
+                    }
+                    break;
+                case ParseState.inlineCommentStart:
+                    if (c === iCommentsStr[1])
+                        state = ParseState.inlineComment;
+                    else {
+                        state = ParseState.none;
+                        if (eAlias && findAlias)
+                            alias += iCommentsStr[0];
+                        else
+                            str += iCommentsStr[0];
+                        idx--;
+                    }
+                    break;
+                case ParseState.blockCommentStart:
+                    if (bComments && c === bCommentsStr[1])
+                        state = ParseState.blockCommentEnd;
+                    else {
+                        state = ParseState.none;
+                        if (eAlias && findAlias)
+                            alias += bCommentsStr[0];
+                        else
+                            str += bCommentsStr[0];
+                        idx--;
+                    }
+                    break;
+                case ParseState.inlineComment:
+                    if (c === '\n') {
+                        state = ParseState.none;
+                        if (!start)
+                            idx--;
+                        else {
+                            alias = '';
+                            //new line so need to check for aliases again
+                            findAlias = true;
+                            start = true;
+                        }
+                    }
+                    break;
+                case ParseState.blockComment:
+                    if (bCommentsStr.length === 1) {
+                        if (c === bCommentsStr[0])
+                            state = ParseState.none;
+                    }
+                    else if (c === bCommentsStr[1])
+                        state = ParseState.blockCommentEnd;
+                    break;
+                case ParseState.blockCommentEnd:
+                    if (c === bCommentsStr[0])
+                        state = ParseState.none;
+                    else
+                        state = ParseState.blockComment;
                     break;
                 default:
-                    if (eEscape && c === escChar) {
+                    if ((iComments || bComments) && c === iCommentsStr[0] && c === bCommentsStr[0]) {
+                        if (iComments && iCommentsStr.length === 1)
+                            state = ParseState.inlineComment;
+                        else if (bComments && bCommentsStr.length === 1)
+                            state = ParseState.blockComment;
+                        else
+                            state = ParseState.comment;
+                        continue;
+                    }
+                    else if (iComments && c === iCommentsStr[0]) {
+                        if (iCommentsStr.length === 1)
+                            state = ParseState.inlineComment;
+                        else
+                            state = ParseState.inlineCommentStart;
+                        continue;
+                    }
+                    else if (bComments && c === bCommentsStr[0]) {
+                        if (bCommentsStr.length === 1)
+                            state = ParseState.blockComment;
+                        else
+                            state = ParseState.blockCommentStart;
+                        continue;
+                    }
+                    else if (eEscape && c === escChar) {
                         state = ParseState.escape;
                         start = false;
                         continue;
@@ -5974,6 +6239,19 @@ export class Input extends EventEmitter {
                 if (arg != null) str += arg;
             }
         }
+        else if (state === ParseState.comment) {
+            str += iCommentsStr[0];
+            idx--;
+        }
+        else if (state === ParseState.inlineCommentStart) {
+            str += iCommentsStr[0];
+            idx--;
+        }
+        else if (state === ParseState.blockCommentStart) {
+            str += bCommentsStr[0];
+            idx--;
+        }
+
         if (!noFunctions && state === ParseState.function) {
             str = this.executeScript(cmdChar + str);
             if (typeof str === 'number') {
@@ -6237,7 +6515,7 @@ export class Input extends EventEmitter {
         switch (res[1]) {
             case 'time':
                 if (res[2] && res[2].length > 0)
-                    return moment().format(res[2]);
+                    return moment().format(this.stripQuotes(this.parseInline(res[2])));
                 return moment().format();
             case 'lower':
                 return this.stripQuotes(this.parseInline(res[2]).toLowerCase());
@@ -6246,7 +6524,10 @@ export class Input extends EventEmitter {
             case 'proper':
                 return ProperCase(this.stripQuotes(this.parseInline(res[2])));
             case 'eval':
-                return '' + this.evaluate(this.parseInline(res[2]));
+                args = this.evaluate(this.parseInline(res[2]));
+                if (this.client.options.ignoreEvalUndefined && typeof args === 'undefined')
+                    return null;
+                return '' + args;
             case 'dice':
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid dice');
@@ -6474,38 +6755,38 @@ export class Input extends EventEmitter {
                 mod = [];
                 min = {};
                 for (sides = 0; sides < c; sides++) {
-                    max = getAnsiCode(args[sides].trim());
-                    if (max === -1)
-                        throw new Error('Invalid color or style for ansi');
-                    //style
-                    if (max >= 0 && max < 30)
-                        min[max] = 1;
-                    //color
+                    if (args[sides].trim() === 'current')
+                        mod.push(args[sides].trim());
+                    else {
+                        max = getAnsiCode(args[sides].trim());
+                        if (max === -1)
+                            throw new Error('Invalid color or style for ansi');
+                        //style
+                        if (max >= 0 && max < 30)
+                            min[max] = 1;
+                        //color
+                        else
+                            mod.push(args[sides]);
+                    }
+                }
+                // fore,back
+                if (mod.length > 2)
+                    throw new Error('Too many colors for ansi');
+                if (mod.length > 1) {
+                    if (mod[1] === 'current')
+                        mod[1] = '';
                     else
-                        mod.push(args[sides]);
+                        mod[1] = getAnsiCode(mod[1], true);
                 }
-                //bold,back
-                if (mod.length === 1 && min[1]) {
-                    mod[0] = getAnsiCode(mod[0], true);
-                    mod.unshift('37');
+                if (mod.length > 0) {
+                    if (min[1] && mod[0] === 'white')
+                        mod[0] = '';
+                    else if (mod[0] === 'current')
+                        mod[0] = '';
+                    else
+                        mod[0] = getAnsiCode(mod[0]);
                 }
-                //else fore,back
-                else {
-                    if (mod.length > 2)
-                        throw new Error('Too many colors for ansi');
-                    if (mod.length > 1) {
-                        if (mod[1] === 'current')
-                            mod = '';
-                        else
-                            mod[1] = getAnsiCode(mod[1], true);
-                    }
-                    if (mod.length > 0) {
-                        if (mod[1] === 'current')
-                            mod[0] = '';
-                        else
-                            mod[0] = getAnsiCode(mod[0]);
-                    }
-                }
+
                 min = [...Object.keys(min), ...mod]
                 if (!min.length)
                     throw new Error('Invalid colors or styles for ansi');
@@ -6526,6 +6807,8 @@ export class Input extends EventEmitter {
                 if (args.length === 0)
                     throw new Error('Missing arguments for case');
                 c = this.evaluate(this.parseInline(args[0]));
+                if (typeof c !== 'number')
+                    return '';
                 if (c > 0 && c < args.length)
                     return this.stripQuotes(args[c]);
                 return '';
@@ -6585,6 +6868,9 @@ export class Input extends EventEmitter {
                 return this.stripQuotes(args[0]).endsWith(this.stripQuotes(args[1]));
             case 'len'://(string)` returns the length of string
                 return this.stripQuotes(this.parseInline(res[2])).length;
+            case 'stripansi':
+                const ansiRegex = new RegExp('[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))', 'g')
+                return this.stripQuotes(this.parseInline(res[2])).replace(ansiRegex, '');
             case 'pos'://(pattern,string)` returns the position pattern in string on 1 index scale, 0 if not found
                 args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length < 2)
@@ -7071,7 +7357,7 @@ export class Input extends EventEmitter {
                 if (sides)
                     return sides.triggers && sides.triggers.length ? sides.state : 0;
                 throw new Error('Trigger not found');
-            case 'null':
+            case 'isnull':
                 args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0)
                     return null;

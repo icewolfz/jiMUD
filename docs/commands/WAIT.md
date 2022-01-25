@@ -5,7 +5,7 @@
 ### **Syntax:** #WA amount
 > Pause current block for a number of milliseconds
 
-#### **Arguments:**
+### **Arguments:**
 - amount - The amount of time to wait in milliseconds
 
 ### **Examples:**

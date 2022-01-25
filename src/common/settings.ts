@@ -472,6 +472,12 @@ export class Settings {
     public onProfileDeleted: OnProfileDeleted = OnProfileDeleted.Nothing;
     public enableDoubleParameterEscaping = false;
 
+    public ignoreEvalUndefined: boolean = true;
+    public enableInlineComments: boolean = true;
+    public enableBlockComments: boolean = true;
+    public inlineCommentString: string = '//';
+    public blockCommentString: string = '/*';
+
     public windows = {};
     public buttons = {
         connect: true,

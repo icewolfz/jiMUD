@@ -238,36 +238,22 @@ escape(string)
 unescape(string)
 >Returns a string with all escapes based on what is enabled in scripting settings removed
 
+stripansi(string)
+>Strip all ansi codes from strip
+
 ### **Miscellaneous**
 
-time(format)
->display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]
+[time(format)](functions/time.md)
+>Display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]
 
-  - `YYYY` 4 or 2 digit year
-  - `YY` 2 digit year
-  - `Y` Year with any number of digits and sign
-  - `Q` Quarter of year. Sets month to first month in quarter.
-  - `M MM` Month number
-  - `MMM MMMM` Month name in locale set by moment.locale()
-  - `D DD` Day of month
-  - `Do` Day of month with ordinal
-  - `DDD DDDD` Day of year
-  - `X` Unix timestamp
-  - `x` Unix ms timestamp
-
-color(fore,*back*,*bold*)
->returns color code in string format of fore,back or just fore
-
-  - `fore` the foreground color or bold, if bold it returns bold white
-  - `back` the background color, if bold returns bold fore
-  - `bold` ansi bold color, if bold returns bold fore
-  - Colors: red, blue, orange, yellow, green, black, white, cyan, magenta, gray
+[color(fore,*back*,*bold*)](functions/color.md)
+>Returns color code in string format of fore,back or just fore
 
 zcolor(code)
 > converts a zmud/cmud color code into a code supported by jiMUD
 >>Example: ${zcolor(1)} would return 370 for bold white
 
-ansi(*style*,fore,8back*)
+ansi(*style*,fore,*back*)
 >insert ansi control characters into string same as ${esc}[CODESm<br>
 
   - `style` the styles to apply, *optional*
@@ -297,5 +283,5 @@ alarm("name|pattern", *setTime*, *"profile"*)
 state("name|pattern", *"profile"*)
 >Returns the current trigger state of the trigger given by the name or pattern, if no profile it will search all enabled profiles until match found
 
-null(*value*)
+isnull(*value*)
 >Returns 1 if value null, 0 if not null, if value omitted returns null

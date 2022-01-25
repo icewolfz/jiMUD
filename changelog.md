@@ -1,6 +1,21 @@
 # Changelog
 
-## v0.17.6
+## v0.17.7
+
+- **New:**
+  - Add [#COMMENT](docs/commands.md#miscellaneous) does nothing, used to create quick comments in scripts
+  - Add [#NOOP](docs/commands.md#miscellaneous) does nothing, will expand arguments and execute any functions but return nothing to the screen
+  - [Preferences](docs/preferences.md):
+    - Add [Ignore Eval Undefined](docs/preferences.md#scripting) Will cause undefined results to be ignored if enabled, else it will be converted to a string and the word undefined displayed
+    - [Inline Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for inline comments
+    - [Enable Inline Comment](docs/preferences.md#scripting--special-characters) disable inline comment support
+    - [Block Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for block comments, ending block comment is string reversed
+    - [Block Inline Comment](docs/preferences.md#scripting--special-characters) disable block comment support    
+- **Fixed:**
+  - Added type checks to [#ADD](docs/commands.md#miscellaneous) and [#MATH](docs/commands.md#miscellaneous) to ensure the resulting value is a number
+  - Added type check to [#CASE](docs/commands.md#conditionals) and [#REPEAT](docs/commands.md#repeating-and-loops) to ensure the value is a number
+
+## v0.17.6 2022-01-24
 
 - **New:**
   - Add [%alarm("name|pattern", setTime, "profile")](docs/functions.md#miscellaneous) return or set the time for alarm with name or matching pattern
@@ -9,10 +24,20 @@
   - Add [#SET name|pattern state value profile](docs/commands.md#triggers) Set the fired state of a trigger
   - Add [#CONDITION name|pattern {pattern} {commands} options profile](docs/commands.md#triggers) create a new trigger sub state, if name or pattern is omitted state will be added to last created trigger
   - Add [#CR](docs/commands.md#miscellaneous) Send a blank line to the mud
+  - Add [#SEND](docs/commands.md#miscellaneous) Send file to mud line by line pre-pending and appending supplied prefix and suffix to each line as if sent from command input, if not a valid file sent as text if from command input
+  - Add [#SENDRAW](docs/commands.md#miscellaneous) Send raw text or file directly to mud with out parsing or echoing to the screen appending a newline if needed
+  - Add [#SENDPROMPT](docs/commands.md#miscellaneous) Send raw text directly to mud with out parsing or echoing to the screen with no appended newline
   - Add [#UNVAR name](docs/commands.md#createmodify-profile-or-items) Delete variable
+  - Add [#ACTION](docs/commands.md#triggers) same as [#TRIGGER](docs/commands.md#triggers)
+  - Add [#CHARACTER](docs/commands.md#miscellaneous) send current character to the mud, without echoing to the screen
+  - Add [#SPEAK text](docs/commands.md#sounds) speak text using text to speech systems
+  - Add [#SPEAKSTOP](docs/commands.md#sounds) stop speak and clear all queued
+  - Add [#SPEAKPAUSE](docs/commands.md#sounds) pause speaking
+  - Add [#SPEAKRESUME](docs/commands.md#sounds) resume speaking
   - Add [%state("name|pattern", "profile")](docs/functions.md#miscellaneous) Returns the current trigger state of the trigger given by the name or pattern, if no profile it will search all enabled profiles until match found
   - Add [%defined(name,type)](docs/functions.md#miscellaneous) is item defined, similar to isdefined
-  - Add [%null(value)](docs/functions.md#string) return if value is null or not if value omitted returns null
+  - Add [%isnull(value)](docs/functions.md#string) return if value is null or not if value omitted returns null
+  - Add [%stripansi(string)](docs/functions.md#string) Strip all ansi codes from strip
   - Mapper: Add `Edit > Reset map` to allow users to delete and create a fresh map file
   - Profile Manager: Parse style now has basic code folding
   - Multi State triggers - Allows you to create multi line or conditional triggers
@@ -20,8 +45,8 @@
 - **Fixed:**
   - Profile manager:
     - Profiles are now sorted according to the [Profile manager sort order](docs/preferences.md#advanced--profile-manager) and [Profile manager sort direction](docs/preferences.md#advanced--profile-manager) settings like items
-    - Fix context menu editor icon sample width
-  - Fix [#TRIGGER](docs/commands.md#triggers) name syntax not working
+    - Fixed context menu editor icon sample width
+  - Fixed [#TRIGGER](docs/commands.md#triggers) name syntax not working
   - Fixed [#UNTRIGGER](docs/commands.md#triggers) failing when trying to remove when only 1 profile exist
   - Fixed extra new lines being added when parsing text in the middle of triggers
   - Fixed temporary triggers and [#UNTRIGGER](docs/commands.md#triggers) some times removing trigger from wrong profile
@@ -31,6 +56,8 @@
   - Fixed auto connect when loading same character again
   - Fix profile loading issues for [#TRIGGER](docs/commands.md#triggers), [#UNTRIGGER](docs/commands.md#triggers), [#EVENT](docs/commands.md#triggers), [#UNEVENT](docs/commands.md#triggers), [#BUTTON](docs/commands.md#createmodify-profile-or-items), [#UNBUTTON](docs/commands.md#createmodify-profile-or-items), [#ALARM](docs/commands.md#riggers), [#ALIAS](docs/commands.md#createmodify-profile-or-items), [#UNALIAS](docs/commands.md#createmodify-profile-or-items)
   - Fix parsing of some arguments for [#TRIGGER](docs/commands.md#triggers), [#UNTRIGGER](docs/commands.md#triggers), [#EVENT](docs/commands.md#triggers), [#BUTTON](docs/commands.md#createmodify-profile-or-items)
+  - Fixed [%ansi(style,fore,back)](docs/functions.md#miscellaneous) for bold,color making it backgroound instead of bold fore color
+  - Fixed [%time(format)](docs/functions.md#miscellaneous) not being parsed
 - **Changed:**
   - Display: split bar highlights when mouse over and when being moved
   - [#TRIGGER](docs/commands.md#triggers) add/update message no longer contains name or pattern to prevent trigger from accidentally triggering

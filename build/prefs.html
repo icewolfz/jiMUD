@@ -255,7 +255,7 @@
                         ops.push('<option value="', path.basename(files[i], '.json').toLowerCase(), '">', path.basename(files[i], '.json'), '</option>');
                     }
                 }
-                
+
                 el = $('#profiles-profileSelected');
                 el.append(ops.join(''));
                 el.selectpicker('refresh');
@@ -2612,6 +2612,30 @@
                         </div>
                         <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;padding-left:15px;">WARNING: Disabling parameters or n parameters could break triggers, aliases, and other items that uses argument access</span>
                     </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Inline Comment
+                            <div class="input-group" style="width: 40px">
+                                <input type="text" id="inlineCommentString" class="input-sm form-control" style="width: 40px" size="1" maxlength="2" />
+                                <div class="input-group-addon">
+                                    <label>
+                                        <input type="checkbox" id="enableInlineComments" /> Enable</label>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Block Comment
+                            <div class="input-group" style="width: 40px">
+                                <input type="text" id="blockCommentString" class="input-sm form-control" style="width: 40px" size="1" maxlength="2" />
+                                <div class="input-group-addon">
+                                    <label>
+                                        <input type="checkbox" id="enableBlockComments" /> Enable</label>
+                                </div>
+                            </div>
+                        </label>
+                    </div>  
                 </div>
             </div>
         </div>
