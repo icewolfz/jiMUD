@@ -24,7 +24,7 @@
 >Scroll lock the display, if state is omitted it will toggle the scroll lock, if state is 0 or false it will disable scroll lock, if state is anything else it will lock the scroll back
 
 <u>#HI</u>GHLIGHT *pattern*
->make last line or lined with matching pattern bold or brighter color if already bold, or
+>make last line or line with matching pattern bold or brighter color if already bold, or makes the color brighter
 
 #PCOL fore,back,bold *XStart XEnd YStart YEnd*
 >Color position, will assume full line if position is not supplied, if XEnd omitted will assume end of line, if xEnd -1 it will assume end of line, if YEnd omitted will assume current line, YStart and YEnd are relative to the current line, 0 current, 1 previous, ...
@@ -52,7 +52,7 @@ Display text to the screen, and the display text will not fire triggers
 
 ## **Conditionals**
 
-<u>#CA</u>SE index {command 1}*{command n}*
+<u>#CA</u>SE index {command 1} *{command n}*
 >return command from list based on the value of index
 
 #IF {expression} {true-command} *{false-command}*
@@ -214,14 +214,14 @@ Display text to the screen, and the display text will not fire triggers
 <u>#CH</u>AT text
 >Send text to chat window and append a new line
 
+<u>#CHATP</u>ROMPT text
+>same as #chat but does not append a new line
+
 <u>#CHAR</u>ACTER
 >Send current character name to the mud, without echoing to the screen
 
 #CR
 >Send a blank line to the mud
-
-<u>#CHATP</u>ROMPT text
->same as #chat but does not append a new line
 
 <u>#COMM</u>ENT
 >Does nothing, allows commenting scripts
