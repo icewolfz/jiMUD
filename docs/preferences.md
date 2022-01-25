@@ -169,7 +169,7 @@ Controls what is captured into the chat window
 - `Enable Double Parameter Escaping` Enable doubling up of the parameter character `%` to escape as well as using escape character
 - `Ignore Eval Undefined` When enabled will make undefined results blank, else it will display the word undefined
 - `Allow Inline Comments` Allow using // inline style comments, anything following // will be ignored until newline
-- `Allow Block Comments` Allow using /* */ block style comments, anything between /* and */ will be ignored
+- `Allow Block Comments` Allow using /* \*/ block style comments, anything between /* and \*/ will be ignored
 
 ## Scripting > Special characters
 
