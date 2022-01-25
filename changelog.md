@@ -5,6 +5,11 @@
 - **New:**
   - Add [#COMMENT](docs/commands.md#miscellaneous) does nothing, used to create quick comments in scripts
   - Add [#NOOP](docs/commands.md#miscellaneous) does nothing, will expand arguments and execute any functions but return nothing to the screen
+  - [Preferences](docs/preferences.md):
+    - Add [Ignore Eval Undefined](docs/preferences.md#scripting) Will cause undefined results to be ignored if enabled, else it will be converted to a string and the word undefined displayed
+- **Fixed:**
+  - Added type checks to [#ADD](docs/commands.md#miscellaneous) and [#MATH](docs/commands.md#miscellaneous) to ensure the resulting value is a number
+  - Added type check to [#CASE](docs/commands.md#conditionals) and [#REPEAT](docs/commands.md#repeating-and-loops) to ensure the value is a number
 
 ## v0.17.6 2022-01-24
 

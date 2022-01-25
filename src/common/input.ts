@@ -3931,6 +3931,8 @@ export class Input extends EventEmitter {
                 if (args[0].match(/^\{[\s\S]*\}$/g))
                     args[0] = args[0].substr(1, args[0].length - 2);
                 n = this.evaluate(this.parseInline(args[0]));
+                if (typeof n !== 'number')
+                    return null;
                 if (n > 0 && n < args.length) {
                     if (args[n].match(/^\{[\s\S]*\}$/g))
                         args[n] = args[n].substr(1, args[n].length - 2);
@@ -3994,6 +3996,8 @@ export class Input extends EventEmitter {
                 if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
                 i = this.evaluate(this.parseInline(i));
+                if (typeof i !== 'number')
+                    throw new Error('Arguments must be a number');
                 args = args.join(' ');
                 if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
@@ -4145,7 +4149,10 @@ export class Input extends EventEmitter {
                 args = args.join(' ');
                 if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
-                this.client.variables[i] += this.evaluate(this.parseInline(args));
+                args = this.evaluate(this.parseInline(args));
+                if (typeof args !== 'number')
+                    throw new Error('Value is not a number for add');
+                this.client.variables[i] += args;
                 return null;
             case 'math':
             case 'mat':
@@ -4158,13 +4165,20 @@ export class Input extends EventEmitter {
                 args = args.join(' ');
                 if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
-                this.client.variables[i] = this.evaluate(this.parseInline(args));
+                args = this.evaluate(this.parseInline(args));
+                if (typeof args !== 'number')
+                    throw new Error('Value is not a number for add');
+                this.client.variables[i] = args;
                 return null;
             case 'evaluate':
             case 'eva':
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'eva\x1b[0;-11;-12mluate expression');
-                args = '' + this.evaluate(this.parseInline(args.join(' ')));
+                args = this.evaluate(this.parseInline(args.join(' ')));
+                if (this.client.options.ignoreEvalUndefined && typeof args === 'undefined')
+                    args = '';
+                else
+                    args = '' + args;
                 if (this.client.telnet.prompt)
                     this.client.print('\n' + args + '\x1b[0m\n', false);
                 else
@@ -4892,6 +4906,7 @@ export class Input extends EventEmitter {
         const nParamChar: string = this.client.options.nParametersChar;
         const eNParam: boolean = this.client.options.enableNParameters;
         const eEval: boolean = this.client.options.allowEval;
+        const iEval: boolean = this.client.options.ignoreEvalUndefined;
         let args = [];
         let arg: any = '';
         let findAlias: boolean = true;
@@ -5325,7 +5340,11 @@ export class Input extends EventEmitter {
                                 if (tmp != null)
                                     tmp2 = tmp;
                                 else if (eEval) {
-                                    tmp2 = '' + this.evaluate(this.parseInline(arg));
+                                    tmp2 = this.evaluate(this.parseInline(arg));
+                                    if (iEval && typeof tmp2 === 'undefined')
+                                        tmp2 = '';
+                                    else
+                                        tmp2 = '' + tmp2;
                                 }
                                 else {
                                     tmp2 += paramChar;
@@ -5493,8 +5512,13 @@ export class Input extends EventEmitter {
                                 c = this.parseVariable(arg);
                                 if (c != null)
                                     tmp2 = c;
-                                else if (eEval)
-                                    tmp2 = '' + this.evaluate(this.parseInline(arg));
+                                else if (eEval) {
+                                    tmp2 = this.evaluate(this.parseInline(arg));
+                                    if (iEval && typeof tmp2 === 'undefined')
+                                        tmp2 = '';
+                                    else
+                                        tmp2 = '' + tmp2;
+                                }
                                 else {
                                     tmp2 = nParamChar;
                                     idx = idx - arg.length - 2;
@@ -6033,7 +6057,10 @@ export class Input extends EventEmitter {
             case 'proper':
                 return ProperCase(this.stripQuotes(this.parseInline(res[2])));
             case 'eval':
-                return '' + this.evaluate(this.parseInline(res[2]));
+                args = this.evaluate(this.parseInline(res[2]));
+                if (this.client.options.ignoreEvalUndefined && typeof args === 'undefined')
+                    return '';
+                return '' + args;
             case 'dice':
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid dice');
@@ -6313,6 +6340,8 @@ export class Input extends EventEmitter {
                 if (args.length === 0)
                     throw new Error('Missing arguments for case');
                 c = this.evaluate(this.parseInline(args[0]));
+                if (typeof c !== 'number')
+                    return '';
                 if (c > 0 && c < args.length)
                     return this.stripQuotes(args[c]);
                 return '';

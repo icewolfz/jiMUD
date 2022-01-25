@@ -167,6 +167,7 @@ Controls what is captured into the chat window
 - `Disable trigger on error` Disable a trigger if an error happens when executing a trigger
 - `Prepend triggered line` Disable the fix to prepend the triggered line as %0,$0, or %{0} to return to previous usage
 - `Enable Double Parameter Escaping` Enable doubling up of the parameter character `%` to escape as well as using escape character
+- `Ignore Eval Undefined` When enabled will make undefined results blank, else it will display the word undefined
 
 ## Scripting > Special characters
 

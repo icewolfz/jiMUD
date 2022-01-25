@@ -468,6 +468,8 @@ export class Settings {
     public onProfileDeleted: OnProfileDeleted = OnProfileDeleted.Nothing;
     public enableDoubleParameterEscaping = false;
 
+    public ignoreEvalUndefined: boolean = true;
+
     public windows = {};
     public buttons = {
         connect: true,
