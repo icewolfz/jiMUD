@@ -255,7 +255,7 @@
                         ops.push('<option value="', path.basename(files[i], '.json').toLowerCase(), '">', path.basename(files[i], '.json'), '</option>');
                     }
                 }
-                
+
                 el = $('#profiles-profileSelected');
                 el.append(ops.join(''));
                 el.selectpicker('refresh');
@@ -2224,7 +2224,12 @@
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="ignoreEvalUndefined" /> Ignore Eval Undefined
+                            <input type="checkbox" id="allowInlineComments" /> Allow // style Inline Comments
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="allowBlockComments" /> Allow /* */ style Block Comments
                         </label>
                     </div>
                 </div>

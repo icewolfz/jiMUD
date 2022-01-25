@@ -469,6 +469,8 @@ export class Settings {
     public enableDoubleParameterEscaping = false;
 
     public ignoreEvalUndefined: boolean = true;
+    public allowInlineComments: boolean = true;
+    public allowBlockComments: boolean = true;
 
     public windows = {};
     public buttons = {

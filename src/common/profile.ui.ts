@@ -47,6 +47,8 @@ let _speed = '!';
 let _verbatim = '`';
 let _profileLoadExpand = true;
 let _profileLoadSelect = 'default';
+let _iComments = true;
+let _bComments = true;
 
 
 const _controllers = {};
@@ -2701,6 +2703,8 @@ function loadOptions() {
     _stacking = options.commandStackingChar;
     _speed = options.speedpathsChar;
     _verbatim = options.verbatimChar;
+    _iComments = options.allowInlineComments;
+    _bComments = options.allowBlockComments;
     _profileLoadExpand = options.profiles.profileExpandSelected;
     _profileLoadSelect = options.profiles.profileSelected;
     if (!profiles.contains(_profileLoadSelect))
@@ -3998,6 +4002,14 @@ function setParseSyntax(editor) {
         var rules = session.$mode.$highlightRules.getRules();
         //console.log(rules);
         if (Object.prototype.hasOwnProperty.call(rules, 'start')) {
+            var b = rules['start'].pop();
+            if(!_iComments)
+            {
+                rules['start'].pop();
+                rules['start'].pop();
+            }   
+            if(_bComments)
+                rules['start'].push(b);
             rules['start'][3].token = _stacking;
             rules['start'][3].regex = _stacking;
             rules['start'][5].regex = _parameter + rules['start'][5].regex.substr(1);
