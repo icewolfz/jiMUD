@@ -5342,7 +5342,7 @@ export class Input extends EventEmitter {
                                 else if (eEval) {
                                     tmp2 = this.evaluate(this.parseInline(arg));
                                     if (iEval && typeof tmp2 === 'undefined')
-                                        tmp2 = '';
+                                        tmp2 = null;
                                     else
                                         tmp2 = '' + tmp2;
                                 }
@@ -5515,7 +5515,7 @@ export class Input extends EventEmitter {
                                 else if (eEval) {
                                     tmp2 = this.evaluate(this.parseInline(arg));
                                     if (iEval && typeof tmp2 === 'undefined')
-                                        tmp2 = '';
+                                        tmp2 = null;
                                     else
                                         tmp2 = '' + tmp2;
                                 }
@@ -6059,7 +6059,7 @@ export class Input extends EventEmitter {
             case 'eval':
                 args = this.evaluate(this.parseInline(res[2]));
                 if (this.client.options.ignoreEvalUndefined && typeof args === 'undefined')
-                    return '';
+                    return null;
                 return '' + args;
             case 'dice':
                 args = this.parseInline(res[2]).split(',');
