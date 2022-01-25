@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.17.6
+## v0.17.6 2022-01-24
 
 - **New:**
   - Add [%alarm("name|pattern", setTime, "profile")](docs/functions.md#miscellaneous) return or set the time for alarm with name or matching pattern
