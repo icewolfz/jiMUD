@@ -2709,10 +2709,6 @@ function loadOptions() {
     _bComments = options.enableBlockComments;
     _iCommentsStr = options.inlineCommentString.split('');
     _bCommentsStr = options.blockCommentString.split('');
-    if (_iCommentsStr.length === 1)
-        _iCommentsStr.push(_iCommentsStr[0]);
-    if (_bCommentsStr.length === 1)
-        _bCommentsStr.push(_bCommentsStr[0]);
     _profileLoadExpand = options.profiles.profileExpandSelected;
     _profileLoadSelect = options.profiles.profileSelected;
     if (!profiles.contains(_profileLoadSelect))
@@ -4016,11 +4012,20 @@ function setParseSyntax(editor) {
                 rules['start'].pop();
             }
             else {
-                rules['start'][rules['start'].length - 2].regex = `\\${_iCommentsStr[0]}\\${_iCommentsStr[1]}$`;
-                rules['start'][rules['start'].length - 1].regex = `\\${_iCommentsStr[0]}\\${_iCommentsStr[1]}`;
+                if (_iCommentsStr.length === 1) {
+                    rules['start'][rules['start'].length - 2].regex = `\\${_iCommentsStr[0]}$`;
+                    rules['start'][rules['start'].length - 1].regex = `\\${_iCommentsStr[0]}`;
+                }
+                else {
+                    rules['start'][rules['start'].length - 2].regex = `\\${_iCommentsStr[0]}\\${_iCommentsStr[1]}$`;
+                    rules['start'][rules['start'].length - 1].regex = `\\${_iCommentsStr[0]}\\${_iCommentsStr[1]}`;
+                }
             }
             if (_bComments) {
-                b.regex = `\\${_bCommentsStr[0]}\\${_bCommentsStr[1]}`;
+                if (_iCommentsStr.length === 1)
+                    b.regex = `\\${_bCommentsStr[0]}`;
+                else
+                    b.regex = `\\${_bCommentsStr[0]}\\${_bCommentsStr[1]}`;
                 rules['start'].push(b);
             }
             rules['start'][3].token = _stacking;
@@ -4099,7 +4104,10 @@ function setParseSyntax(editor) {
             */
         }
         if (_bComments && Object.prototype.hasOwnProperty.call(rules, 'comment')) {
-            rules['comment'][0].regex = `\\${_bCommentsStr[1]}\\${_bCommentsStr[0]}`;
+            if (_bCommentsStr.length === 1)
+                rules['comment'][0].regex = `\\${_bCommentsStr[0]}`;
+            else
+                rules['comment'][0].regex = `\\${_bCommentsStr[1]}\\${_bCommentsStr[0]}`;
         }
         //console.log(rules);
         // force recreation of tokenizer

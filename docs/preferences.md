@@ -194,10 +194,10 @@ Controls what is captured into the chat window
   - `Character` Similar to Parameter but allows full name symbols when possible for user variables and named parameters, eg $name, see [functions](functions.md) for more details, Default: `\$`
   - `Enabled` Enable or disable N Parameter system
 - `Inline Comment`
-  - `String` The 2 character string for inline comments, if only 1 character it will be doubled, Default: `//`
+  - `String` The 1 or 2 character string for inline comments, Default: `//`
   - `Enabled` Enable or disable inline comments
 - `Block Comment`
-  - `String` The 2 character string for block comments, closing block comment is the string reversed, if only 1 character it will be doubled, Default: `/*`
+  - `String` The 1 or 2 character string for block comments, closing block comment is the string reversed, Default: `/*`
   - `Enabled` Enable or disable block comments
 
   ## Advanced

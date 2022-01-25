@@ -4917,10 +4917,6 @@ export class Input extends EventEmitter {
         const bComments: boolean = this.client.options.enableBlockComments;
         const iCommentsStr: string[] = this.client.options.inlineCommentString.split('');
         const bCommentsStr: string[] = this.client.options.blockCommentString.split('');
-        if (iCommentsStr.length === 1)
-            iCommentsStr.push(iCommentsStr[0]);
-        if (bCommentsStr.length === 1)
-            bCommentsStr.push(bCommentsStr[0]);
         let args = [];
         let arg: any = '';
         let findAlias: boolean = true;
@@ -5636,7 +5632,11 @@ export class Input extends EventEmitter {
                     }
                     break;
                 case ParseState.blockComment:
-                    if (c === bCommentsStr[1])
+                    if (bCommentsStr.length === 1) {
+                        if (c === bCommentsStr[0])
+                            state = ParseState.none;
+                    }
+                    else if (c === bCommentsStr[1])
                         state = ParseState.blockCommentEnd;
                     break;
                 case ParseState.blockCommentEnd:
@@ -5647,15 +5647,26 @@ export class Input extends EventEmitter {
                     break;
                 default:
                     if ((iComments || bComments) && c === iCommentsStr[0] && c === bCommentsStr[0]) {
-                        state = ParseState.comment;
+                        if (iComments && iCommentsStr.length === 1)
+                            state = ParseState.inlineComment;
+                        else if (bComments && bCommentsStr.length === 1)
+                            state = ParseState.blockComment;
+                        else
+                            state = ParseState.comment;
                         continue;
                     }
                     else if (iComments && c === iCommentsStr[0]) {
-                        state = ParseState.inlineCommentStart;
+                        if (iCommentsStr.length === 1)
+                            state = ParseState.inlineComment;
+                        else
+                            state = ParseState.inlineCommentStart;
                         continue;
                     }
                     else if (bComments && c === bCommentsStr[0]) {
-                        state = ParseState.blockCommentStart;
+                        if (bCommentsStr.length === 1)
+                            state = ParseState.blockComment;
+                        else
+                            state = ParseState.blockCommentStart;
                         continue;
                     }
                     else if (eEscape && c === escChar) {
@@ -5874,6 +5885,19 @@ export class Input extends EventEmitter {
             if (str !== null) out += str;
             str = '';
         }
+        else if (state === ParseState.comment) {
+            str += iCommentsStr[0];
+            idx--;
+        }
+        else if (state === ParseState.inlineCommentStart) {
+            str += iCommentsStr[0];
+            idx--;
+        }
+        else if (state === ParseState.blockCommentStart) {
+            str += bCommentsStr[0];
+            idx--;
+        }
+
         if (!noFunctions && state === ParseState.function) {
             str = this.executeScript(cmdChar + str);
             if (typeof str === 'number') {
