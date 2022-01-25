@@ -5044,6 +5044,10 @@ export class Input extends EventEmitter {
                     state = ParseState.aliasArguments;
                     if (c === escChar || (stacking && c === stackingChar) || (eVerbatim && c === verbatimChar) || (ePaths && c === spChar) || (eCmd && c === cmdChar) || (eParamEscape && c === paramChar) || (eNParam && c === nParamChar))
                         arg += c;
+                    else if (iComments && c == iCommentsStr[0])
+                        tmp2 = c;
+                    else if (bComments && c == bCommentsStr[0])
+                        tmp2 = c;
                     else if ('"\'{'.indexOf(c) !== -1)
                         arg += c;
                     else
@@ -5079,6 +5083,10 @@ export class Input extends EventEmitter {
                     state = ParseState.path;
                     if (c === escChar || (stacking && c === stackingChar) || (eVerbatim && c === verbatimChar) || (ePaths && c === spChar) || (eCmd && c === cmdChar) || (eParamEscape && c === paramChar) || (eNParam && c === nParamChar))
                         str += c;
+                    else if (iComments && c == iCommentsStr[0])
+                        tmp2 = c;
+                    else if (bComments && c == bCommentsStr[0])
+                        tmp2 = c;
                     else if ('"\'{'.indexOf(c) !== -1)
                         str += c;
                     else
@@ -5556,7 +5564,9 @@ export class Input extends EventEmitter {
                 case ParseState.escape:
                     if (c === escChar || (stacking && c === stackingChar) || (eVerbatim && c === verbatimChar) || (ePaths && c === spChar) || (eCmd && c === cmdChar) || (eParamEscape && c === paramChar) || (eNParam && c === nParamChar))
                         tmp2 = c;
-                    else if ((iComments || bComments) && c === '/')
+                    else if (iComments && c == iCommentsStr[0])
+                        tmp2 = c;
+                    else if (bComments && c == bCommentsStr[0])
                         tmp2 = c;
                     else if ('"\'{'.indexOf(c) !== -1)
                         tmp2 = c;
