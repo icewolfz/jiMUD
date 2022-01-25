@@ -4780,6 +4780,14 @@ export class Input extends EventEmitter {
                     throw new Error('Invalid syntax use ' + cmdChar + 'speakresume');
                 window.speechSynthesis.resume();
                 return null;
+            case 'comment':
+            case 'comm':
+                return null;
+            case 'noop':
+            case 'no':
+                if (args.length)
+                    this.parseInline(args.join(' '));
+                return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
             i = parseInt(fun, 10);

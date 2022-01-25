@@ -223,6 +223,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#CHATP</u>ROMPT text
 >same as #chat but does not append a new line
 
+<u>#COMM</u>ENT
+>Does nothing, allows commenting scripts
+
 <u>#CONNECT</u>TIME
 >display time since connected
 
@@ -241,6 +244,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#MAT</u>H name value
 >Set value to variable named name
 
+<u>#NO</u>OP
+>Does nothing, but will expand arguments
+
 <u>#NOT</u>IFY title message *{icon}*
 >display a notification popup with no sound, use [client.notify](scriptind.md#basic-function-list) to turn off silent option or #playsound
 
@@ -256,7 +262,7 @@ Display text to the screen, and the display text will not fire triggers
 #SENDRAW text
 >Send raw text directly to mud with out parsing or echoing to the screen appending a newline if needed
 
-<u>SENDP</u>ROMPT text
+<u>#SENDP</u>ROMPT text
 >Send raw text directly to mud with out parsing or echoing to the screen with no appended newline
 
 <u>#SETS</u>ETTING name value

@@ -2,6 +2,10 @@
 
 ## v0.17.7
 
+- **New:**
+  - Add [#COMMENT](docs/commands.md#miscellaneous) does nothing, used to create quick comments in scripts
+  - Add [#NOOP](docs/commands.md#miscellaneous) does nothing, will expand arguments and execute any functions but return nothing to the screen
+
 ## v0.17.6 2022-01-24
 
 - **New:**
