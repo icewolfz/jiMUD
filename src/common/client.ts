@@ -1286,7 +1286,7 @@ export class Client extends EventEmitter {
         }
     }
 
-    public sendCommand(txt?: string, noEcho?: boolean) {
+    public sendCommand(txt?: string, noEcho?: boolean, comments?: boolean) {
         if (txt == null) {
             txt = this.commandInput.val();
             if (!this.telnet.echo)
@@ -1298,7 +1298,7 @@ export class Client extends EventEmitter {
         txt = '' + txt;
         if (!txt.endsWith('\n'))
             txt = txt + '\n';
-        const data = { value: txt, handled: false };
+        const data = { value: txt, handled: false, comments: comments };
         this.emit('parse-command', data);
         if (data == null || typeof data === 'undefined') return;
         if (data.handled || data.value == null || typeof data.value === 'undefined') return;
@@ -1310,7 +1310,7 @@ export class Client extends EventEmitter {
             this.commandInput.val('');
     }
 
-    public sendBackground(txt: string, noEcho?: boolean) {
+    public sendBackground(txt: string, noEcho?: boolean, comments?: boolean) {
         if (txt == null) {
             txt = this.commandInput.val();
             if (!this.telnet.echo)
@@ -1322,7 +1322,7 @@ export class Client extends EventEmitter {
         txt = '' + txt;
         if (!txt.endsWith('\n'))
             txt = txt + '\n';
-        const data = { value: txt, handled: false };
+        const data = { value: txt, handled: false, comments: comments };
         this.emit('parse-command', data);
         if (data == null || typeof data === 'undefined') return;
         if (data.value == null || typeof data.value === 'undefined') return;

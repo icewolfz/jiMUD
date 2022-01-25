@@ -1959,14 +1959,14 @@ function openEditor(file, remote, remoteEdit) {
     }
 }
 
-ipcMain.on('send-background', (event, command, noEcho) => {
+ipcMain.on('send-background', (event, command, noEcho, comments) => {
     if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send-background', command, noEcho);
+        win.webContents.send('send-background', command, noEcho, comments);
 });
 
-ipcMain.on('send-command', (event, command, noEcho) => {
+ipcMain.on('send-command', (event, command, noEcho, comments) => {
     if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send-command', command, noEcho);
+        win.webContents.send('send-command', command, noEcho, comments);
 });
 
 ipcMain.on('send-gmcp', (event, data) => {

@@ -1177,7 +1177,7 @@ export class Input extends EventEmitter {
 
         this.client.on('parse-command', (data) => {
             if (this.client.options.parseCommands)
-                data.value = this.parseOutgoing(data.value);
+                data.value = this.parseOutgoing(data.value, null, null, null, null, !data.comments);
         });
 
         this.client.on('add-line', (data) => {
@@ -1274,7 +1274,7 @@ export class Input extends EventEmitter {
                             break;
                     }
                     event.preventDefault();
-                    this.client.sendCommand();
+                    this.client.sendCommand(null, null, this.client.options.allowCommentsFromCommand);
                     break;
             }
         }).keypress((event) => {
@@ -1626,7 +1626,7 @@ export class Input extends EventEmitter {
                 n = this.client.options.enableCommands;
                 this.client.options.enableCommands = true;
                 i = new Date().getTime();
-                this.client.sendCommand(tmp);
+                this.client.sendCommand(tmp, null, this.client.options.allowCommentsFromCommand);
                 p = new Date().getTime();
                 this.client.options.enableCommands = n;
                 this.client.print(`Time: ${p - i}\n`, true);
@@ -1646,7 +1646,7 @@ export class Input extends EventEmitter {
                 min = 0;
                 for (i = 0; i < 10; i++) {
                     const start = new Date().getTime();
-                    this.client.sendCommand(tmp);
+                    this.client.sendCommand(tmp, null, this.client.options.allowCommentsFromCommand);
                     const end = new Date().getTime();
                     p = end - start;
                     avg += p;
@@ -4726,14 +4726,14 @@ export class Input extends EventEmitter {
                     //handle \n and \r\n for windows and linux files
                     items = fs.readFileSync(f, 'utf8').split(/\r?\n/);
                     items.forEach(line => {
-                        this.client.sendBackground(p + line + i);
+                        this.client.sendBackground(p + line + i, null, this.client.options.allowCommentsFromCommand);
                     });
                 }
                 else {
                     args = args.join(' ');
                     if (args.length === 0)
                         throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd file \x1b[3mprefix suffix\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd text');
-                    this.client.sendBackground(this.stripQuotes(args));
+                    this.client.sendBackground(this.stripQuotes(args), this.client.options.allowCommentsFromCommand);
                 }
                 return null
             case 'sendraw':
@@ -4887,7 +4887,7 @@ export class Input extends EventEmitter {
         return this.parseOutgoing(text, false, null, false, true);
     }
 
-    public parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean, append?: boolean, noFunctions?: boolean) {
+    public parseOutgoing(text: string, eAlias?: boolean, stacking?: boolean, append?: boolean, noFunctions?: boolean, noComments?: boolean) {
         const tl = text.length;
         if (!this.enableParsing || text == null || tl === 0)
             return text;
@@ -4913,8 +4913,8 @@ export class Input extends EventEmitter {
         const eNParam: boolean = this.client.options.enableNParameters;
         const eEval: boolean = this.client.options.allowEval;
         const iEval: boolean = this.client.options.ignoreEvalUndefined;
-        const iComments: boolean = this.client.options.enableInlineComments;
-        const bComments: boolean = this.client.options.enableBlockComments;
+        const iComments: boolean = this.client.options.enableInlineComments && !noComments;
+        const bComments: boolean = this.client.options.enableBlockComments && !noComments;
         const iCommentsStr: string[] = this.client.options.inlineCommentString.split('');
         const bCommentsStr: string[] = this.client.options.blockCommentString.split('');
         let args = [];
@@ -5000,7 +5000,7 @@ export class Input extends EventEmitter {
                             str = this.ExecuteAlias(AliasesCached[a], args);
                             if (typeof str === 'number') {
                                 if (str >= 0)
-                                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions, noComments);
                                 if (out.length === 0) return null;
                                 return out;
                             }
@@ -5112,7 +5112,7 @@ export class Input extends EventEmitter {
                         str = this.executeScript(cmdChar + str);
                         if (typeof str === 'number') {
                             if (str >= 0)
-                                this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                                this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions, noComments);
                             if (out.length === 0) return null;
                             return out;
                         }
@@ -5762,7 +5762,7 @@ export class Input extends EventEmitter {
                                     str = this.ExecuteAlias(AliasesCached[a], args);
                                     if (typeof str === 'number') {
                                         if (str >= 0)
-                                            this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                                            this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions, noComments);
                                         if (out.length === 0) return null;
                                         return out;
                                     }
@@ -5783,7 +5783,7 @@ export class Input extends EventEmitter {
                                 str = this.ExecuteTriggers(TriggerTypes.CommandInputRegular | TriggerTypes.CommandInputPattern, alias, alias, false, true);
                                 if (typeof str === 'number') {
                                     if (str >= 0)
-                                        this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                                        this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions, noComments);
                                     if (out.length === 0) return null;
                                     return out;
                                 }
@@ -5797,7 +5797,7 @@ export class Input extends EventEmitter {
                             str = this.ExecuteTriggers(TriggerTypes.CommandInputRegular | TriggerTypes.CommandInputPattern, str, str, false, true);
                             if (typeof str === 'number') {
                                 if (str >= 0)
-                                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions, noComments);
                                 if (out.length === 0) return null;
                                 return out;
                             }
@@ -5912,7 +5912,7 @@ export class Input extends EventEmitter {
             str = this.executeScript(cmdChar + str);
             if (typeof str === 'number') {
                 if (str >= 0)
-                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions, noComments);
                 if (out.length === 0) return null;
                 return out;
             }
@@ -5986,7 +5986,7 @@ export class Input extends EventEmitter {
                     str = this.ExecuteAlias(AliasesCached[a], args);
                     if (typeof str === 'number') {
                         if (str >= 0)
-                            this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                            this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions, noComments);
                         if (out.length === 0) return null;
                         return out;
                     }
@@ -6003,7 +6003,7 @@ export class Input extends EventEmitter {
                 str = this.ExecuteTriggers(TriggerTypes.CommandInputRegular | TriggerTypes.CommandInputPattern, alias, alias, false, true);
                 if (typeof str === 'number') {
                     if (str >= 0)
-                        this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                        this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions, noComments);
                     if (out.length === 0) return null;
                     return out;
                 }
@@ -6021,7 +6021,7 @@ export class Input extends EventEmitter {
             str = this.ExecuteTriggers(TriggerTypes.CommandInputRegular | TriggerTypes.CommandInputPattern, alias, alias, false, true);
             if (typeof str === 'number') {
                 if (str >= 0)
-                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions, noComments);
                 if (out.length === 0) return null;
                 return out;
             }
@@ -6053,7 +6053,7 @@ export class Input extends EventEmitter {
             str = this.ExecuteTriggers(TriggerTypes.CommandInputRegular | TriggerTypes.CommandInputPattern, str, str, false, true);
             if (typeof str === 'number') {
                 if (str >= 0)
-                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions);
+                    this.executeWait(text.substr(idx + 1), str, eAlias, stacking, append, noFunctions, noComments);
                 if (out.length === 0) return null;
                 return out;
             }
@@ -7159,7 +7159,7 @@ export class Input extends EventEmitter {
                 ret += '\n';
             if (macro.chain && this.client.commandInput.val().endsWith(' ')) {
                 this.client.commandInput.val(this.client.commandInput.val() + ret);
-                this.client.sendCommand();
+                this.client.sendCommand(null, null, this.client.options.allowCommentsFromCommand);
             }
             else
                 this.client.send(ret, true);
@@ -7617,7 +7617,7 @@ export class Input extends EventEmitter {
         }
     }
 
-    public executeWait(text, delay: number, eAlias?: boolean, stacking?: boolean, append?: boolean, noFunctions?: boolean) {
+    public executeWait(text, delay: number, eAlias?: boolean, stacking?: boolean, append?: boolean, noFunctions?: boolean, noComments?: boolean) {
         if (!text || text.length === 0) return;
         const s = { loops: this.loops.splice(0), args: 0, named: 0, used: this.stack.used, append: this.stack.append };
         if (this.stack.args)
@@ -7629,7 +7629,7 @@ export class Input extends EventEmitter {
             delay = 0;
         setTimeout(() => {
             this._stack.push(s);
-            let ret = this.parseOutgoing(text, eAlias, stacking, append, noFunctions);
+            let ret = this.parseOutgoing(text, eAlias, stacking, append, noFunctions, noComments);
             this._stack.pop();
             if (ret == null || typeof ret === 'undefined' || ret.length === 0) return;
             if (!ret.endsWith('\n'))

@@ -7,10 +7,11 @@
   - Add [#NOOP](docs/commands.md#miscellaneous) does nothing, will expand arguments and execute any functions but return nothing to the screen
   - [Preferences](docs/preferences.md):
     - Add [Ignore Eval Undefined](docs/preferences.md#scripting) Will cause undefined results to be ignored if enabled, else it will be converted to a string and the word undefined displayed
-    - [Inline Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for inline comments
-    - [Enable Inline Comment](docs/preferences.md#scripting--special-characters) disable inline comment support
-    - [Block Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for block comments, ending block comment is string reversed
-    - [Block Inline Comment](docs/preferences.md#scripting--special-characters) disable block comment support    
+    - Add [Allow Comments From Command](docs/preferences.md#scripting) Allow inline and block comments from the command input
+    - Add [Inline Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for inline comments
+    - Add [Enable Inline Comment](docs/preferences.md#scripting--special-characters) disable inline comment support
+    - Add [Block Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for block comments, ending block comment is string reversed
+    - Add [Block Inline Comment](docs/preferences.md#scripting--special-characters) disable block comment support    
 - **Fixed:**
   - Added type checks to [#ADD](docs/commands.md#miscellaneous) and [#MATH](docs/commands.md#miscellaneous) to ensure the resulting value is a number
   - Added type check to [#CASE](docs/commands.md#conditionals) and [#REPEAT](docs/commands.md#repeating-and-loops) to ensure the value is a number
