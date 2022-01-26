@@ -9,7 +9,7 @@ import { MacroModifiers, MacroDisplay } from './profile';
 import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier } from './library';
 import { Client } from './client';
 import { Tests } from './test';
-import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, convertPattern } from './profile';
+import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerTypes, convertPattern } from './profile';
 import { NewLineType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
@@ -7396,7 +7396,7 @@ export class Input extends EventEmitter {
         this.scrollLock = !this.scrollLock;
     }
 
-    private hasTriggerType(types: TriggerTypes, type: TriggerType): boolean {
+    private hasTriggerType(types: TriggerTypes | SubTriggerTypes, type: TriggerType | SubTriggerTypes): boolean {
         if (type === TriggerType.Alarm && (types & TriggerTypes.Alarm) == TriggerTypes.Alarm)
             return true;
         if (type === TriggerType.CommandInputPattern && (types & TriggerTypes.CommandInputPattern) == TriggerTypes.CommandInputPattern)
@@ -7413,7 +7413,7 @@ export class Input extends EventEmitter {
 
     }
 
-    private getTriggerType(type: TriggerType) {
+    private getTriggerType(type: TriggerType | SubTriggerTypes) {
         if (type === TriggerType.Regular)
             return TriggerTypes.Regular;
         if (type === TriggerType.Alarm)
@@ -8039,6 +8039,24 @@ export class Input extends EventEmitter {
             case 'ALARM':
             case 'COMMAND':
             case 'COMMANDINPUTPATTERN':
+            case 'SKIP':
+            case '512':
+            case 'WAIT':
+            case '1024':
+            case 'LOOPPATTERN':
+            case '2048':
+            case 'LOOPLINES':
+            case '4096':
+            case 'LOOPEXP':
+            case '8192':
+            case 'DURATION':
+            case '16384':
+            case 'WITHINLINES':
+            case '32768':
+            case 'MANUAL':
+            case '65536':
+            case 'REPARSE':
+            case '131072':
                 return true;
         }
         return false;
@@ -8060,6 +8078,26 @@ export class Input extends EventEmitter {
             case 'COMMAND':
             case 'COMMANDINPUTPATTERN':
                 return TriggerType[type];
+            case '512':
+            case '1024':
+            case '2048':
+            case '4096':
+            case '8192':
+            case '16384':
+            case '32768':
+            case '65536':
+            case '131072':
+                return SubTriggerTypes[parseInt(type, 10)];
+            case 'SKIP':
+            case 'WAIT':
+            case 'LOOPPATTERN':
+            case 'LOOPLINES':
+            case 'LOOPEXP':
+            case 'DURATION':
+            case 'WITHINLINES':
+            case 'MANUAL':
+            case 'REPARSE':
+                return SubTriggerTypes[type];
         }
         throw new Error('Invalid trigger type');
     }
