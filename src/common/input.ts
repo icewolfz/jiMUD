@@ -354,7 +354,6 @@ export class Input extends EventEmitter {
             throw new Error('Invalid client!');
         this.client = client;
 
-        //@TODO add color, zcolor, ansi,  escape, unescape functions
         const funs = {
             esc: '\x1b',
             cr: '\n',
@@ -685,14 +684,14 @@ export class Input extends EventEmitter {
                 if (args.length > 1)
                     throw new Error('Too many arguments for time');
                 if (args.length)
-                    return moment().format(math.evaluate(args[0].toString(), scope));
+                    return moment().format(args[0].compile().evaluate(scope));
                 return moment().format();
             },
             clip: (args, math, scope) => {
                 if (args.length > 1)
                     throw new Error('Too many arguments for clip');
-                if (args.length){
-                    (<any>this.client).writeClipboard(math.evaluate(args[0].toString(), scope));
+                if (args.length) {
+                    (<any>this.client).writeClipboard(args[0].compile().evaluate(scope));
                     return;
                 }
                 return (<any>this.client).readClipboard();
@@ -702,16 +701,17 @@ export class Input extends EventEmitter {
                     throw new Error('Missing arguments for if');
                 if (args.length !== 3)
                     throw new Error('Too many arguments for if');
-                if (math.evaluate(args[0].toString(), scope))
-                    return math.evaluate(args[1].toString(), scope);
-                return math.evaluate(args[2].toString(), scope);
+
+                if (args[0].compile().evaluate(scope))
+                    return args[1].compile().evaluate(scope);
+                return args[2].compile().evaluate(scope);
             },
             len: (args, math, scope) => {
                 if (args.length === 0)
                     throw new Error('Missing arguments for len');
                 if (args.length !== 1)
                     throw new Error('Too many arguments for len');
-                return math.evaluate(args[0].toString(), scope).toString().length;
+                return args[0].compile().evaluate(scope).toString().length;
             },
             stripansi: (args, math, scope) => {
                 if (args.length === 0)
@@ -719,7 +719,7 @@ export class Input extends EventEmitter {
                 if (args.length !== 1)
                     throw new Error('Too many arguments for len');
                 const ansiRegex = new RegExp('[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))', 'g')
-                return math.evaluate(args[0].toString(), scope).toString().replace(ansiRegex, '');
+                return args[0].compile().evaluate(scope).toString().replace(ansiRegex, '');
             },
             ansi: (args, math, scope) => {
                 if (args.length === 0)
@@ -772,12 +772,69 @@ export class Input extends EventEmitter {
                 min = min.filter(f => f !== '');
                 return `\x1b[${min.join(';')}m`;
             },
+            color: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for color');
+                args = args.map(a =>
+                    getAnsiCode(a.toString()) === -1 && a.toString() !== 'current' ? a.compile().evaluate(scope).toString() : a.toString()
+                );
+                let c;
+                let sides;
+                if (args.length === 1) {
+                    if (args[0] === 'bold')
+                        return '370';
+                    c = getAnsiColorCode(args[0]);
+                    if (c === -1)
+                        throw new Error('Invalid fore color');
+                    return c.toString();
+                }
+                else if (args.length === 2) {
+                    if (args[0] === 'bold')
+                        c = 370;
+                    else {
+                        c = getAnsiColorCode(args[0]);
+                        if (c === -1)
+                            throw new Error('Invalid fore color');
+                        if (args[1] === 'bold')
+                            return (c * 10).toString();
+                    }
+                    sides = c.toString();
+                    c = getAnsiColorCode(args[1], true);
+                    if (c === -1)
+                        throw new Error('Invalid back color');
+                    return sides + ',' + c.toString();
+                }
+                else if (args.length === 3) {
+                    if (args[0] === 'bold') {
+                        args.shift();
+                        args.push('bold');
+                    }
+                    if (args[2] !== 'bold')
+                        throw new Error('Only bold is supported as third argument for color');
+                    c = getAnsiColorCode(args[0]);
+                    if (c === -1)
+                        throw new Error('Invalid fore color');
+                    sides = (c * 10).toString();
+                    c = getAnsiColorCode(args[1], true);
+                    if (c === -1)
+                        throw new Error('Invalid back color');
+                    return sides + ',' + c.toString();
+                }
+                throw new Error('Too many arguments');
+            },
+            zcolor: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for zcolor');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for zcolor');
+                return getColorCode(parseInt(args[0].compile().evaluate(scope), 10));
+            },
             case: (args, math, scope) => {
                 if (args.length === 0)
                     throw new Error('Missing arguments for case');
-                let i = math.evaluate(args[0].toString(), scope);
+                let i = args[0].compile().evaluate(scope);
                 if (i > 0 && i < args.length)
-                    return math.evaluate(args[i].toString(), scope);
+                    return args[i].compile().evaluate(scope);
                 return null;
             },
             switch: (args, math, scope) => {
@@ -787,8 +844,8 @@ export class Input extends EventEmitter {
                     throw new Error('All expressions must have a value for switch');
                 let i = args.length
                 for (let c = 0; c < i; c += 2) {
-                    if (math.evaluate(args[c].toString(), scope))
-                        return math.evaluate(args[c + 1].toString(), scope);
+                    if (args[c].compile().evaluate(scope))
+                        return args[c + 1].compile().evaluate(scope);
                 }
                 return null;
             },
@@ -945,7 +1002,6 @@ export class Input extends EventEmitter {
                 if (args[0].match(/^\s*?[-|+]?\d+\s*?$/) || args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
                     return 1;
                 return 0;
-
             },
             tostring: (args, math, scope) => {
                 if (args.length === 0)
@@ -1161,7 +1217,73 @@ export class Input extends EventEmitter {
                     return null;
                 if (args.length !== 1)
                     throw new Error('Too many arguments for null');
-                return math.evaluate(args[0].toString(), scope) ? 1 : 0;
+                return args[0].compile().evaluate(scope) ? 1 : 0;
+            },
+            escape: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for unescape');
+                if (args.length !== 1)
+                    throw new Error('Too many arguments for unescape');
+                let c;
+                args[0] = args[0].compile().evaluate(scope).toString();
+                if (this.client.options.allowEscape) {
+                    const escape = this.client.options.allowEscape ? this.client.options.escapeChar : '';
+                    c = escape;
+                    if (escape === '\\')
+                        c += escape;
+                    if (this.client.options.parseDoubleQuotes)
+                        c += '"';
+                    if (this.client.options.parseSingleQuotes)
+                        c += '\'';
+                    if (this.client.options.commandStacking)
+                        c += this.client.options.commandStackingChar;
+                    if (this.client.options.enableSpeedpaths)
+                        c += this.client.options.speedpathsChar;
+                    if (this.client.options.enableCommands)
+                        c += this.client.options.commandChar;
+                    if (this.client.options.enableVerbatim)
+                        c += this.client.options.verbatimChar;
+                    if (this.client.options.enableDoubleParameterEscaping)
+                        c += this.client.options.parametersChar;
+                    if (this.client.options.enableNParameters)
+                        c += this.client.options.nParametersChar;
+                    return args.replace(new RegExp(`[${c}]`, 'g'), escape + '$&');
+                }
+                return args.replace(/[\\"']/g, '\$&');
+            },
+            unescape: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for unescape');
+                if (args.length !== 1)
+                    throw new Error('Too many arguments for unescape');
+                let c;
+                args[0] = args[0].compile().evaluate(scope).toString();
+                if (this.client.options.allowEscape) {
+                    const escape = this.client.options.allowEscape ? this.client.options.escapeChar : '';
+                    c = escape;
+                    if (escape === '\\')
+                        c += escape;
+                    if (this.client.options.parseDoubleQuotes)
+                        c += '"';
+                    if (this.client.options.parseSingleQuotes)
+                        c += '\'';
+                    if (this.client.options.commandStacking)
+                        c += this.client.options.commandStackingChar;
+                    if (this.client.options.enableSpeedpaths)
+                        c += this.client.options.speedpathsChar;
+                    if (this.client.options.enableCommands)
+                        c += this.client.options.commandChar;
+                    if (this.client.options.enableVerbatim)
+                        c += this.client.options.verbatimChar;
+                    if (this.client.options.enableDoubleParameterEscaping)
+                        c += this.client.options.parametersChar;
+                    if (this.client.options.enableNParameters)
+                        c += this.client.options.nParametersChar;
+                    if (escape === '\\')
+                        return args[0].replace(new RegExp(`\\\\[${c}]`, 'g'), (m) => m.substr(1));
+                    return args[0].replace(new RegExp(`${escape}[${c}]`, 'g'), (m) => m.substr(1));
+                }
+                return args[0].replace(/\\[\\"']/g, (m) => m.substr(1));
             }
         };
         for (let fun in funs) {
