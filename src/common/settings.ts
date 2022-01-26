@@ -478,6 +478,8 @@ export class Settings {
     public inlineCommentString: string = '//';
     public blockCommentString: string = '/*';
 
+    public allowCommentsFromCommand: boolean = false;
+
     public windows = {};
     public buttons = {
         connect: true,

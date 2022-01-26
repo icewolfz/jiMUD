@@ -645,7 +645,7 @@
                 var lst = '';
                 var l = client.commandHistory.length;
                 for (var i = 0; i < l; i++) {
-                    lst += `<li><a class="truncate" href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd);client.sendCommand(cmd);" title="${client.commandHistory[i]}">${client.commandHistory[i]}</a></li>`;
+                    lst += `<li><a class="truncate" href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd,);client.sendCommand(cmd, null, client.options.allowCommentsFromCommand);" title="${client.commandHistory[i]}">${client.commandHistory[i]}</a></li>`;
                 }
                 if (l === 0)
                     lst = '<li><a href="#">No history</a></li><li role="separator" class="divider"></li>';
@@ -2200,7 +2200,7 @@
                     ret += '\n';
                 if (item.chain && client.commandInput.val().endsWith(' ')) {
                     client.commandInput.val(client.commandInput.val() + ret);
-                    client.sendCommand();
+                    client.sendCommand(null, null, client.options.allowCommentsFromCommand);
                 }
                 else
                     client.send(ret, true);
@@ -2257,7 +2257,7 @@
                     ret += '\n';
                 if (button.chain && client.commandInput.val().endsWith(' ')) {
                     client.commandInput.val(client.commandInput.val() + ret);
-                    client.sendCommand();
+                    client.sendCommand(null, null, client.options.allowCommentsFromCommand);
                 }
                 else
                     client.send(ret, true);
@@ -2517,12 +2517,12 @@
             }
         });
 
-        ipcRenderer.on('send-background', (event, command, noEcho) => {
-            client.sendBackground(command, noEcho);
+        ipcRenderer.on('send-background', (event, command, noEcho, comments) => {
+            client.sendBackground(command, noEcho, comments);
         });
 
-        ipcRenderer.on('send-command', (event, command, noEcho) => {
-            client.sendCommand(command, noEcho);
+        ipcRenderer.on('send-command', (event, command, noEcho, comments) => {
+            client.sendCommand(command, noEcho, comments);
         });
 
         ipcRenderer.on('send-gmcp', (event, data) => {

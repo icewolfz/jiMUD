@@ -243,6 +243,9 @@ stripansi(string)
 
 ### **Miscellaneous**
 
+clip(string)
+>Return or set text to the clipboard
+
 [time(format)](functions/time.md)
 >Display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]
 
