@@ -180,8 +180,22 @@ export function getColorCode(code) {
     let f = -1;
     let b = -1;
     let bold = false;
+    //rev            1024
+    if (code - 1024 >= 0) {
+        code -= 1024;
+    }
+    //blink            512  
+    if (code - 512 >= 0) {
+        code -= 512;
+    }
+    //under            256    
+    if (code - 256 >= 0) {
+        code -= 256;
+    }
+    //bold            128    
     if (code - 128 >= 0) {
         code -= 128;
+        bold = true;
     }
     if (code - 112 >= 0) {
         code -= 112
@@ -367,7 +381,7 @@ export function getAnsiCode(str, back?: boolean) {
             return back ? 42 : 32;
         /** @desc yellow foreground */
         case 'yellow':
-            return back ? 43: 33;
+            return back ? 43 : 33;
         /** @desc blue foreground */
         case 'blue':
             return back ? 44 : 34;
@@ -428,25 +442,25 @@ export function getAnsiCode(str, back?: boolean) {
             return back ? 100 : 90;
         /** @desc set foreground color to red */
         case 'xred':
-            return back ? 101 :91;
+            return back ? 101 : 91;
         /** @desc set foreground color to green */
         case 'xgreen':
-            return back ? 102 :92;
+            return back ? 102 : 92;
         /** @desc set foreground color to yellow */
         case 'xyellow':
-            return back ? 103 :93;
+            return back ? 103 : 93;
         /** @desc set foreground color to blue */
         case 'xblue':
-            return back ? 104 :94;
+            return back ? 104 : 94;
         /** @desc set foreground color to magenta */
         case 'xmagenta':
-            return back ? 105 :95;
+            return back ? 105 : 95;
         /** @desc set foreground color to cyan */
         case 'xcyan':
-            return back ? 106 :96;
+            return back ? 106 : 96;
         /** @desc set foreground color to white */
         case 'xwhite':
-            return back ? 107 :97;
+            return back ? 107 : 97;
         /** @desc set background color to black */
         case 'xblackbackground':
             return 100;
