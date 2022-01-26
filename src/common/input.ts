@@ -688,6 +688,13 @@ export class Input extends EventEmitter {
                     return moment().format(math.evaluate(args[0].toString(), scope));
                 return moment().format();
             },
+            clip: (args, math, scope) => {
+                if (args.length > 1)
+                    throw new Error('Too many arguments for clip');
+                if (args.length)
+                    return (<any>this.client).writeClipboard(math.evaluate(args[0].toString(), scope));
+                return (<any>this.client).readClipboard();
+            },
             if: (args, math, scope) => {
                 if (args.length < 3)
                     throw new Error('Missing arguments for if');
@@ -6173,6 +6180,10 @@ export class Input extends EventEmitter {
                 if (res[2] && res[2].length > 0)
                     return moment().format(this.stripQuotes(this.parseInline(res[2])));
                 return moment().format();
+            case 'clip':
+                if (res[2] && res[2].length > 0)
+                    return (<any>this.client).writeClipboard(this.stripQuotes(this.parseInline(res[2])));
+                return (<any>this.client).readClipboard();
             case 'lower':
                 return this.stripQuotes(this.parseInline(res[2]).toLowerCase());
             case 'upper':
