@@ -149,6 +149,15 @@ enum ParseState {
 }
 
 /**
+ * Type of trigger ot test for
+ */
+enum TriggerTypeFilter {
+    Main = 1,
+    Sub = 2,
+    All = 3
+}
+
+/**
  * Command input parser
  * 
  * @class Input
@@ -2027,7 +2036,7 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
-                                            if (!this.isTriggerType(tmp[1]))
+                                            if (!this.isTriggerType(tmp[1], TriggerTypeFilter.Main))
                                                 throw new Error('Invalid trigger type');
                                             item.options['type'] = tmp[1];
                                         }
@@ -2076,7 +2085,7 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
-                                            if (!this.isTriggerType(tmp[1]))
+                                            if (!this.isTriggerType(tmp[1], TriggerTypeFilter.Main))
                                                 throw new Error('Invalid trigger type');
 
                                             item.options['type'] = tmp[1];
@@ -4761,7 +4770,7 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
-                                            if (!this.isTriggerType(tmp[1], true))
+                                            if (!this.isTriggerType(tmp[1]))
                                                 throw new Error('Invalid trigger type');
                                             item.options['type'] = tmp[1];
                                         }
@@ -4810,7 +4819,7 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
-                                            if (!this.isTriggerType(tmp[1], 0))
+                                            if (!this.isTriggerType(tmp[1]))
                                                 throw new Error('Invalid trigger type');
 
                                             item.options['type'] = tmp[1];
@@ -7957,7 +7966,7 @@ export class Input extends EventEmitter {
                 if (options.params)
                     sTrigger.params = options.params;
                 if (options.type) {
-                    if (this.isTriggerType(options.type, true))
+                    if (this.isTriggerType(options.type))
                         sTrigger.type = this.convertTriggerType(options.type);
                     else
                         throw new Error('Invalid trigger type');
@@ -8005,7 +8014,7 @@ export class Input extends EventEmitter {
                 if (options.params)
                     trigger.params = options.params;
                 if (options.type) {
-                    if (this.isTriggerType(options.type))
+                    if (this.isTriggerType(options.type, TriggerTypeFilter.Main))
                         trigger.type = this.convertTriggerType(options.type);
                     else
                         throw new Error('Invalid trigger type');
@@ -8025,7 +8034,8 @@ export class Input extends EventEmitter {
         profile = null;
     }
 
-    private isTriggerType(type, subOnly?) {
+    private isTriggerType(type, filter?: TriggerTypeFilter) {
+        if (!filter) filter = TriggerTypeFilter.All;
         switch (type.replace(/ /g, '').toUpperCase()) {
             case '0':
             case '1':
@@ -8039,6 +8049,7 @@ export class Input extends EventEmitter {
             case 'ALARM':
             case 'COMMAND':
             case 'COMMANDINPUTPATTERN':
+                return (filter & TriggerTypeFilter.Main) === TriggerTypeFilter.Main ? true : false;
             case 'SKIP':
             case '512':
             case 'WAIT':
@@ -8057,7 +8068,7 @@ export class Input extends EventEmitter {
             case '65536':
             case 'REPARSE':
             case '131072':
-                return true;
+                return (filter & TriggerTypeFilter.Sub) === TriggerTypeFilter.Sub ? true : false;
         }
         return false;
     }
