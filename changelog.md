@@ -23,6 +23,7 @@
   - Fixed bug in multi state triggers when sub trigger is disabled
   - Fixed issue where temp triggers or re-parse type triggers would be double executed if the pattern was in trigger value
   - Fixed issue with temp alarms and re-parse issues with [#SET](docs/commands.md#triggers) fire state setting
+  - Fixed disableTriggerOnError when a sub trigger errors
 - **Changed:**
   - [Triggers](docs/profiles.md#triggers), [Buttons](docs/profiles.md#buttons), [Macros](docs/profiles.md#macros), [Context](docs/profiles.md#context), and [Aliases](docs/profiles.md#aliases) values will now be ignored if empty, thus not creating blank lines, you can use a value of ${cr} to send a blank line
 
