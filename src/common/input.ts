@@ -4309,7 +4309,7 @@ export class Input extends EventEmitter {
                 if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
                 i = this.parseInline(i);
-                if (typeof this.client.variables[i] !== 'number')
+                if (this.client.variables.hasOwnProperty(i) && typeof this.client.variables[i] !== 'number')
                     throw new Error(i + ' is not a number for add');
                 args = args.join(' ');
                 if (args.match(/^\{[\s\S]*\}$/g))
@@ -4317,7 +4317,10 @@ export class Input extends EventEmitter {
                 args = this.evaluate(this.parseInline(args));
                 if (typeof args !== 'number')
                     throw new Error('Value is not a number for add');
-                this.client.variables[i] += args;
+                if(!this.client.variables.hasOwnProperty(i))
+                    this.client.variables[i] = args;
+                else
+                    this.client.variables[i] += args;
                 return null;
             case 'math':
             case 'mat':
