@@ -393,12 +393,23 @@ Explain what each argument does and if it is optional
 - `raw` raw trigger, invalid for events, invalid for events
 - `params=value` param setting for trigger types that support it, invalid for events
 - `type=#|value` the trigger type, this overrides `cmd` option if set, invalid for events
-    - 0 or regularexpression - create regular expression trigger
-    - 1 or commandinputregularexpression - create command in put regular expression trigger
+    - 0 or regular - create regular expression trigger
+    - 1 or commandinputregular - create command in put regular expression trigger
     - 2 or event - create event
     - 3 or alarm - create alarm
     - 8 or command - create command
-    - 16 or commandinputpattern  - create command input pattern
+    - 16 or commandinputpattern - create command input pattern
+    - 65536 or manual - create manual type, sub triggers only
+    - 131072 or reparse - create reparse type, sub triggers only
+    - 262144 or reparsepattern - reate reparsepattern type, sub triggers only
+- `pattern` create pattern trigger, may be used instead of type=
+- `regular` create regular trigger, may be used instead of type=
+- `alarm` create alarm trigger, may be used instead of type=
+- `event` create event, may be used instead of type=
+- `cmdpattern` create cmmand input pattern trigger, may be used instead of type=
+- `reparse` create reparse trigger, sub triggers only, may be used instead of type=
+- `reparsepattern` create reparse pattern trigger, sub triggers only, may be used instead of type=
+- `manual` create manual trigger, sub triggers only,  may be used instead of type=
 
 2.Button options
 

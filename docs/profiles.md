@@ -137,9 +137,14 @@
     - `&nn` matches exactly nn characters (fixed width pattern)
     - `&VarName` assigns the matched string to the given variable
     - `%/regex/%` matches the given Regular Expression
+  - Sub triggers Only types:
+    - `Manual` Manual state that is only fired using #set when fired set
+    - `ReParse` Re-parse the last line using the new regular expression patterns, if pattern matches executes normally, if does not match it advances to next state
+    - `ReParse Pattern` Re-parse the last line using the new zmud pattern, if pattern matches executes normally, if does not match it advances to next state
 - `Name` a unique name to identify the trigger, if more then one trigger exist with the name, the one with the highest priority is used first
 - `Priority` the sort order of triggers, if multi state trigger only the 0 state supports Priority
 - `State` if multi state trigger this sets the current state to begin triggering
+- `Params` parameters for the selected trigger type if supported
 - `Verbatim` the text is compared exactly how it is, including case
 - `Temporary` the trigger will be deleted on first execution
 - `Case sensitive` causes trigger to make sure letter cases are matched, eg A equal A and not a, off A equal a or A

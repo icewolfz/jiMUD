@@ -29,17 +29,34 @@ export enum TriggerType {
     Event = 2,
     Alarm = 3,
     Pattern = 8,
-    CommandInputPattern = 16
+    CommandInputPattern = 16,
+    Expression = 1 << 6,
+    LoopExpression = 1 << 7
 }
 
 export enum TriggerTypes {
     None = 0,
-    Regular = 4,
     CommandInputRegular = 1,
     Event = 2,
-    Alarm = 32,
+    Regular = 4,
     Pattern = 8,
-    CommandInputPattern = 16
+    CommandInputPattern = 16,
+    Alarm = 32,
+    Expression = 1 << 6,
+    LoopExpression = 1 << 7
+}
+
+export enum SubTriggerTypes {
+    Skip = 1 << 9,
+    Wait = 1 << 10,
+    Loop = 1 << 11,
+    LoopPattern = 1 << 12,
+    LoopLines = 1 << 13,
+    Duration = 1 << 14,
+    WithinLines = 1 << 15,
+    Manual = 1 << 16,
+    ReParse = 1 << 17,
+    ReParsePattern = 1 << 18
 }
 
 export enum VariableType {
@@ -209,7 +226,7 @@ export class Alarm {
                 if (parts[1][0] === '*') {
                     t.minutesWildcard = true;
                     parts[1] = parts[1].substr(1);
-                } 
+                }
                 else
                     t.minutesWildcard = false;
                 tmp = parseInt(parts[1], 10);
@@ -371,7 +388,7 @@ export class Trigger extends Item {
     public verbatim: boolean = false;
     public triggerNewline: boolean = true;
     public triggerPrompt: boolean = false;
-    public type: TriggerType = TriggerType.Regular;
+    public type: TriggerType | SubTriggerTypes = TriggerType.Regular;
     public temp: boolean = false;
     public caseSensitive: boolean = false;
     public raw: boolean = false;

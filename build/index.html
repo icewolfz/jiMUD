@@ -2159,40 +2159,41 @@
                 $selectedurl: _selurl,
                 $selectedline: _selline
             });
-            switch (item.style) {
-                case 1:
-                    try {
-                        ret = client.parseOutgoing(item.value);
-                    }
-                    catch (e) {
-                        throw e;
-                    }
-                    finally {
-                        client._input._stack.pop();
+            if (item.value.length)
+                switch (item.style) {
+                    case 1:
+                        try {
+                            ret = client.parseOutgoing(item.value);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                            client._input.vStackPop();
+                        }
+                        break;
+                    case 2:
+                        /*jslint evil: true */
+                        var f = new Function('try { ' + item.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        try {
+                            ret = f.apply(client);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                            client._input.vStackPop();
+                        }
+                        if (ret)
+                            ret = client.parseOutgoing(ret);
+                        break;
+                    default:
+                        ret = item.value;
                         client._input.vStackPop();
-                    }
-                    break;
-                case 2:
-                    /*jslint evil: true */
-                    var f = new Function('try { ' + item.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    try {
-                        ret = f.apply(client);
-                    }
-                    catch (e) {
-                        throw e;
-                    }
-                    finally {
-                        client._input._stack.pop();
-                        client._input.vStackPop();
-                    }
-                    if (ret)
-                        ret = client.parseOutgoing(ret);
-                    break;
-                default:
-                    ret = item.value;
-                    client._input.vStackPop();
-                    break;
-            }
+                        break;
+                }
             if (ret == null)
                 return true;
             if (item.send) {
@@ -2217,39 +2218,40 @@
             button = client.buttons[idx];
             if (!button.enabled) return false;
             var ret;// = '';
-            switch (button.style) {
-                case 1:
-                    client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
-                    try {
-                        ret = client.parseOutgoing(button.value);
-                    }
-                    catch (e) {
-                        throw e;
-                    }
-                    finally {
-                        client._input._stack.pop();
-                    }
-                    break;
-                case 2:
-                    /*jslint evil: true */
-                    var f = new Function('try { ' + button.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
-                    try {
-                        ret = f.apply(client);
-                    }
-                    catch (e) {
-                        throw e;
-                    }
-                    finally {
-                        client._input._stack.pop();
-                    }
-                    if (typeof ret === 'string')
-                        ret = client.parseOutgoing(ret);
-                    break;
-                default:
-                    ret = button.value;
-                    break;
-            }
+            if (button.value.length)
+                switch (button.style) {
+                    case 1:
+                        client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                        try {
+                            ret = client.parseOutgoing(button.value);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                        }
+                        break;
+                    case 2:
+                        /*jslint evil: true */
+                        var f = new Function('try { ' + button.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                        try {
+                            ret = f.apply(client);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                        }
+                        if (typeof ret === 'string')
+                            ret = client.parseOutgoing(ret);
+                        break;
+                    default:
+                        ret = button.value;
+                        break;
+                }
             if (ret == null)
                 return true;
             if (button.send) {
@@ -2441,7 +2443,7 @@
                 _skipDisconnect = 1;
                 client.close();
             }
-            if(same)
+            if (same)
                 autoConnect();
         });
 
@@ -2454,7 +2456,7 @@
             _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
             if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect'))
                 client.close();
-            if(same)
+            if (same)
                 autoConnect();
         });
 

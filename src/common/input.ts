@@ -9,7 +9,7 @@ import { MacroModifiers, MacroDisplay } from './profile';
 import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, parseValue } from './library';
 import { Client } from './client';
 import { Tests } from './test';
-import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, convertPattern } from './profile';
+import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerTypes, convertPattern } from './profile';
 import { NewLineType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
@@ -158,6 +158,15 @@ enum ParseState {
     variableBlockKeyAssign = 35,
     variableBlockKeyAssignValue = 36,
     variableBlockAssign = 37
+}
+
+/**
+ * Type of trigger ot test for
+ */
+enum TriggerTypeFilter {
+    Main = 1,
+    Sub = 2,
+    All = 3
 }
 
 /**
@@ -365,7 +374,6 @@ export class Input extends EventEmitter {
             throw new Error('Invalid client!');
         this.client = client;
 
-        //@TODO add color, zcolor, ansi,  escape, unescape functions
         const funs = {
             esc: '\x1b',
             cr: '\n',
@@ -704,14 +712,14 @@ export class Input extends EventEmitter {
                 if (args.length > 1)
                     throw new Error('Too many arguments for time');
                 if (args.length)
-                    return moment().format(math.evaluate(args[0].toString(), scope));
+                    return moment().format(args[0].compile().evaluate(scope));
                 return moment().format();
             },
             clip: (args, math, scope) => {
                 if (args.length > 1)
                     throw new Error('Too many arguments for clip');
-                if (args.length){
-                    (<any>this.client).writeClipboard(math.evaluate(args[0].toString(), scope));
+                if (args.length) {
+                    (<any>this.client).writeClipboard(args[0].compile().evaluate(scope));
                     return;
                 }
                 return (<any>this.client).readClipboard();
@@ -721,16 +729,17 @@ export class Input extends EventEmitter {
                     throw new Error('Missing arguments for if');
                 if (args.length !== 3)
                     throw new Error('Too many arguments for if');
-                if (math.evaluate(args[0].toString(), scope))
-                    return math.evaluate(args[1].toString(), scope);
-                return math.evaluate(args[2].toString(), scope);
+
+                if (args[0].compile().evaluate(scope))
+                    return args[1].compile().evaluate(scope);
+                return args[2].compile().evaluate(scope);
             },
             len: (args, math, scope) => {
                 if (args.length === 0)
                     throw new Error('Missing arguments for len');
                 if (args.length !== 1)
                     throw new Error('Too many arguments for len');
-                return math.evaluate(args[0].toString(), scope).toString().length;
+                return args[0].compile().evaluate(scope).toString().length;
             },
             stripansi: (args, math, scope) => {
                 if (args.length === 0)
@@ -738,7 +747,7 @@ export class Input extends EventEmitter {
                 if (args.length !== 1)
                     throw new Error('Too many arguments for len');
                 const ansiRegex = new RegExp('[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))', 'g')
-                return math.evaluate(args[0].toString(), scope).toString().replace(ansiRegex, '');
+                return args[0].compile().evaluate(scope).toString().replace(ansiRegex, '');
             },
             ansi: (args, math, scope) => {
                 if (args.length === 0)
@@ -791,12 +800,69 @@ export class Input extends EventEmitter {
                 min = min.filter(f => f !== '');
                 return `\x1b[${min.join(';')}m`;
             },
+            color: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for color');
+                args = args.map(a =>
+                    getAnsiCode(a.toString()) === -1 && a.toString() !== 'current' ? a.compile().evaluate(scope).toString() : a.toString()
+                );
+                let c;
+                let sides;
+                if (args.length === 1) {
+                    if (args[0] === 'bold')
+                        return '370';
+                    c = getAnsiColorCode(args[0]);
+                    if (c === -1)
+                        throw new Error('Invalid fore color');
+                    return c.toString();
+                }
+                else if (args.length === 2) {
+                    if (args[0] === 'bold')
+                        c = 370;
+                    else {
+                        c = getAnsiColorCode(args[0]);
+                        if (c === -1)
+                            throw new Error('Invalid fore color');
+                        if (args[1] === 'bold')
+                            return (c * 10).toString();
+                    }
+                    sides = c.toString();
+                    c = getAnsiColorCode(args[1], true);
+                    if (c === -1)
+                        throw new Error('Invalid back color');
+                    return sides + ',' + c.toString();
+                }
+                else if (args.length === 3) {
+                    if (args[0] === 'bold') {
+                        args.shift();
+                        args.push('bold');
+                    }
+                    if (args[2] !== 'bold')
+                        throw new Error('Only bold is supported as third argument for color');
+                    c = getAnsiColorCode(args[0]);
+                    if (c === -1)
+                        throw new Error('Invalid fore color');
+                    sides = (c * 10).toString();
+                    c = getAnsiColorCode(args[1], true);
+                    if (c === -1)
+                        throw new Error('Invalid back color');
+                    return sides + ',' + c.toString();
+                }
+                throw new Error('Too many arguments');
+            },
+            zcolor: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for zcolor');
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for zcolor');
+                return getColorCode(parseInt(args[0].compile().evaluate(scope), 10));
+            },
             case: (args, math, scope) => {
                 if (args.length === 0)
                     throw new Error('Missing arguments for case');
-                let i = math.evaluate(args[0].toString(), scope);
+                let i = args[0].compile().evaluate(scope);
                 if (i > 0 && i < args.length)
-                    return math.evaluate(args[i].toString(), scope);
+                    return args[i].compile().evaluate(scope);
                 return null;
             },
             switch: (args, math, scope) => {
@@ -806,8 +872,8 @@ export class Input extends EventEmitter {
                     throw new Error('All expressions must have a value for switch');
                 let i = args.length
                 for (let c = 0; c < i; c += 2) {
-                    if (math.evaluate(args[c].toString(), scope))
-                        return math.evaluate(args[c + 1].toString(), scope);
+                    if (args[c].compile().evaluate(scope))
+                        return args[c + 1].compile().evaluate(scope);
                 }
                 return null;
             },
@@ -964,7 +1030,6 @@ export class Input extends EventEmitter {
                 if (args[0].match(/^\s*?[-|+]?\d+\s*?$/) || args[0].match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
                     return 1;
                 return 0;
-
             },
             tostring: (args, math, scope) => {
                 if (args.length === 0)
@@ -1180,7 +1245,73 @@ export class Input extends EventEmitter {
                     return null;
                 if (args.length !== 1)
                     throw new Error('Too many arguments for null');
-                return math.evaluate(args[0].toString(), scope) ? 1 : 0;
+                return args[0].compile().evaluate(scope) ? 1 : 0;
+            },
+            escape: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for unescape');
+                if (args.length !== 1)
+                    throw new Error('Too many arguments for unescape');
+                let c;
+                args[0] = args[0].compile().evaluate(scope).toString();
+                if (this.client.options.allowEscape) {
+                    const escape = this.client.options.allowEscape ? this.client.options.escapeChar : '';
+                    c = escape;
+                    if (escape === '\\')
+                        c += escape;
+                    if (this.client.options.parseDoubleQuotes)
+                        c += '"';
+                    if (this.client.options.parseSingleQuotes)
+                        c += '\'';
+                    if (this.client.options.commandStacking)
+                        c += this.client.options.commandStackingChar;
+                    if (this.client.options.enableSpeedpaths)
+                        c += this.client.options.speedpathsChar;
+                    if (this.client.options.enableCommands)
+                        c += this.client.options.commandChar;
+                    if (this.client.options.enableVerbatim)
+                        c += this.client.options.verbatimChar;
+                    if (this.client.options.enableDoubleParameterEscaping)
+                        c += this.client.options.parametersChar;
+                    if (this.client.options.enableNParameters)
+                        c += this.client.options.nParametersChar;
+                    return args.replace(new RegExp(`[${c}]`, 'g'), escape + '$&');
+                }
+                return args.replace(/[\\"']/g, '\$&');
+            },
+            unescape: (args, math, scope) => {
+                if (args.length === 0)
+                    throw new Error('Missing arguments for unescape');
+                if (args.length !== 1)
+                    throw new Error('Too many arguments for unescape');
+                let c;
+                args[0] = args[0].compile().evaluate(scope).toString();
+                if (this.client.options.allowEscape) {
+                    const escape = this.client.options.allowEscape ? this.client.options.escapeChar : '';
+                    c = escape;
+                    if (escape === '\\')
+                        c += escape;
+                    if (this.client.options.parseDoubleQuotes)
+                        c += '"';
+                    if (this.client.options.parseSingleQuotes)
+                        c += '\'';
+                    if (this.client.options.commandStacking)
+                        c += this.client.options.commandStackingChar;
+                    if (this.client.options.enableSpeedpaths)
+                        c += this.client.options.speedpathsChar;
+                    if (this.client.options.enableCommands)
+                        c += this.client.options.commandChar;
+                    if (this.client.options.enableVerbatim)
+                        c += this.client.options.verbatimChar;
+                    if (this.client.options.enableDoubleParameterEscaping)
+                        c += this.client.options.parametersChar;
+                    if (this.client.options.enableNParameters)
+                        c += this.client.options.nParametersChar;
+                    if (escape === '\\')
+                        return args[0].replace(new RegExp(`\\\\[${c}]`, 'g'), (m) => m.substr(1));
+                    return args[0].replace(new RegExp(`${escape}[${c}]`, 'g'), (m) => m.substr(1));
+                }
+                return args[0].replace(/\\[\\"']/g, (m) => m.substr(1));
             }
         };
         for (let fun in funs) {
@@ -1419,10 +1550,19 @@ export class Input extends EventEmitter {
             requestAnimationFrame(() => { this.updatePads(); });
     }
 
-    private adjustLastLine(n) {
+    private adjustLastLine(n, raw?) {
         if (!this.client.display.lines || this.client.display.lines.length === 0)
             return 0;
-        if (n === this.client.display.lines.length) {
+        if (raw) {
+            if (n === this.client.display.lines.length) {
+                n--;
+                if (this.client.display.lines[n].length === 0 && this.client.display.rawLines[n].length)
+                    n--;
+            }
+            else if (n === this.client.display.lines.length - 1 && this.client.display.lines[n].length === 0 && this.client.display.rawLines[n].length)
+                n--;
+        }
+        else if (n === this.client.display.lines.length) {
             n--;
             if (this.client.display.lines[n].length === 0)
                 n--;
@@ -1911,6 +2051,11 @@ export class Input extends EventEmitter {
                                     case 'cmd':
                                     case 'temporary':
                                     case 'raw':
+                                    case 'pattern':
+                                    case 'regular':
+                                    case 'alarm':
+                                    case 'event':
+                                    case 'cmdpattern':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -1924,7 +2069,7 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
-                                            if (!this.isTriggerType(tmp[1]))
+                                            if (!this.isTriggerType(tmp[1], TriggerTypeFilter.Main))
                                                 throw new Error('Invalid trigger type');
                                             item.options['type'] = tmp[1];
                                         }
@@ -1960,6 +2105,11 @@ export class Input extends EventEmitter {
                                     case 'cmd':
                                     case 'temporary':
                                     case 'raw':
+                                    case 'pattern':
+                                    case 'regular':
+                                    case 'alarm':
+                                    case 'event':
+                                    case 'cmdpattern':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -1973,7 +2123,7 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
-                                            if (!this.isTriggerType(tmp[1]))
+                                            if (!this.isTriggerType(tmp[1], TriggerTypeFilter.Main))
                                                 throw new Error('Invalid trigger type');
 
                                             item.options['type'] = tmp[1];
@@ -4228,16 +4378,21 @@ export class Input extends EventEmitter {
                 if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
                 i = this.parseInline(i);
-                n = this.client.getVariable(i);
-                if (typeof n !== 'number')
-                    throw new Error(i + ' is not a number for add');
+                if(this.client.hasVariable(i)) {
+                    n = this.client.getVariable(i);
+                    if (typeof n !== 'number')
+                        throw new Error(i + ' is not a number for add');
+                }
                 args = args.join(' ');
                 if (args.match(/^\{[\s\S]*\}$/g))
                     args = args.substr(1, args.length - 2);
                 args = this.evaluate(this.parseInline(args));
                 if (typeof args !== 'number')
                     throw new Error('Value is not a number for add');
-                this.client.setVariable(i, n + args);
+                if(this.client.hasVariable(i))
+                    this.client.setVariable(i, n + args);
+                else
+                    this.client.setVariable(i, args);
                 return null;
             case 'math':
             case 'mat':
@@ -4649,8 +4804,12 @@ export class Input extends EventEmitter {
                 this.client.emit('item-updated', 'trigger', trigger.profile.name, trigger.profile.triggers.indexOf(trigger), trigger);
                 if (n === 0)
                     this.client.echo('Trigger state 0 fired state set to ' + trigger.fired + '.', -7, -8, true, true);
-                else
+                else {
                     this.client.echo('Trigger state ' + n + ' fired state set to ' + trigger.triggers[n - 1].fired + '.', -7, -8, true, true);
+                    //manual trigger fire it using set type
+                    if (trigger.enabled && trigger.triggers[n - 1].enabled && trigger.triggers[n - 1].type === SubTriggerTypes.Manual)
+                        this.ExecuteTrigger(trigger, [], false, this._TriggerCache.indexOf(trigger), 0, 0, trigger);
+                }
                 return null;
             case 'condition':
             case 'cond':
@@ -4703,15 +4862,28 @@ export class Input extends EventEmitter {
                                     case 'cmd':
                                     case 'temporary':
                                     case 'raw':
-                                    case 'type':
+                                    case 'pattern':
+                                    case 'regular':
+                                    case 'alarm':
+                                    case 'event':
+                                    case 'cmdpattern':
+                                    case 'reparse':
+                                    case 'reparsepattern':
+                                    case 'manual':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('type=')) {
+                                        if (o.trim().startsWith('params=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                            item.options['params'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('type=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
-                                            if (!this.isTriggerType(tmp[1], true))
+                                            if (!this.isTriggerType(tmp[1]))
                                                 throw new Error('Invalid trigger type');
                                             item.options['type'] = tmp[1];
                                         }
@@ -4747,6 +4919,14 @@ export class Input extends EventEmitter {
                                     case 'cmd':
                                     case 'temporary':
                                     case 'raw':
+                                    case 'pattern':
+                                    case 'regular':
+                                    case 'alarm':
+                                    case 'event':
+                                    case 'cmdpattern':
+                                    case 'reparse':
+                                    case 'reparsepattern':
+                                    case 'manual':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -4760,7 +4940,7 @@ export class Input extends EventEmitter {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
-                                            if (!this.isTriggerType(tmp[1], 0))
+                                            if (!this.isTriggerType(tmp[1]))
                                                 throw new Error('Invalid trigger type');
 
                                             item.options['type'] = tmp[1];
@@ -7426,37 +7606,38 @@ export class Input extends EventEmitter {
     public ExecuteAlias(alias, args) {
         if (!alias.enabled) return;
         let ret; // = '';
-        switch (alias.style) {
-            case 1:
-                this._stack.push({ loops: [], args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
-                ret = this.parseOutgoing(alias.value, null, null, true);
-                this._stack.pop();
-                break;
-            case 2:
-                /*jslint evil: true */
-                const named = this.GetNamedArguments(alias.params, args);
-                if (named)
-                    ret = Object.keys(named).map(v => `let ${v} = this._input.stack.named["${v}"];`).join('') + '\n';
-                else
-                    ret = '';
-                const f = new Function('try { ' + ret + alias.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                this._stack.push({ loops: [], args: args, named: named, append: alias.append, used: 0 });
-                try {
-                    ret = f.apply(this.client, args);
-                }
-                catch (e) {
-                    throw e;
-                }
-                finally {
+        if (alias.value.length)
+            switch (alias.style) {
+                case 1:
+                    this._stack.push({ loops: [], args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
+                    ret = this.parseOutgoing(alias.value, null, null, true);
                     this._stack.pop();
-                }
-                if (typeof ret === 'string')
-                    ret = this.parseOutgoing(ret, null, null, true);
-                break;
-            default:
-                ret = alias.value;
-                break;
-        }
+                    break;
+                case 2:
+                    /*jslint evil: true */
+                    const named = this.GetNamedArguments(alias.params, args);
+                    if (named)
+                        ret = Object.keys(named).map(v => `let ${v} = this._input.stack.named["${v}"];`).join('') + '\n';
+                    else
+                        ret = '';
+                    const f = new Function('try { ' + ret + alias.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    this._stack.push({ loops: [], args: args, named: named, append: alias.append, used: 0 });
+                    try {
+                        ret = f.apply(this.client, args);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        this._stack.pop();
+                    }
+                    if (typeof ret === 'string')
+                        ret = this.parseOutgoing(ret, null, null, true);
+                    break;
+                default:
+                    ret = alias.value;
+                    break;
+            }
         if (ret == null || ret === undefined)
             return null;
         ret = this.ExecuteTriggers(TriggerTypes.CommandInputRegular | TriggerTypes.CommandInputPattern, ret, ret, false, true);
@@ -7499,37 +7680,38 @@ export class Input extends EventEmitter {
     public ExecuteMacro(macro) {
         if (!macro.enabled) return false;
         let ret; // = '';
-        switch (macro.style) {
-            case 1:
-                this._stack.push({ loops: [], args: 0, named: 0, used: 0 });
-                try {
-                    ret = this.parseOutgoing(macro.value);
-                }
-                catch (e) {
-                    throw e;
-                }
-                finally {
-                    this._stack.pop();
-                }
-                break;
-            case 2:
-                /*jslint evil: true */
-                const f = new Function('try { ' + macro.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                this._stack.push({ loops: [], args: 0, named: 0, used: 0 });
-                try {
-                    ret = f.apply(this.client);
-                }
-                catch (e) {
-                    throw e;
-                }
-                finally {
-                    this._stack.pop();
-                }
-                break;
-            default:
-                ret = macro.value;
-                break;
-        }
+        if (macro.value.length)
+            switch (macro.style) {
+                case 1:
+                    this._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                    try {
+                        ret = this.parseOutgoing(macro.value);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        this._stack.pop();
+                    }
+                    break;
+                case 2:
+                    /*jslint evil: true */
+                    const f = new Function('try { ' + macro.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    this._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                    try {
+                        ret = f.apply(this.client);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        this._stack.pop();
+                    }
+                    break;
+                default:
+                    ret = macro.value;
+                    break;
+            }
         if (ret == null || ret === undefined)
             return true;
         //Convert to string
@@ -7640,7 +7822,7 @@ export class Input extends EventEmitter {
         this.scrollLock = !this.scrollLock;
     }
 
-    private hasTriggerType(types: TriggerTypes, type: TriggerType): boolean {
+    private hasTriggerType(types: TriggerTypes | SubTriggerTypes, type: TriggerType | SubTriggerTypes): boolean {
         if (type === TriggerType.Alarm && (types & TriggerTypes.Alarm) == TriggerTypes.Alarm)
             return true;
         if (type === TriggerType.CommandInputPattern && (types & TriggerTypes.CommandInputPattern) == TriggerTypes.CommandInputPattern)
@@ -7654,10 +7836,33 @@ export class Input extends EventEmitter {
         if (type === TriggerType.Regular && (types & TriggerTypes.Regular) == TriggerTypes.Regular)
             return true;
         return false;
-
     }
 
-    private getTriggerType(type: TriggerType) {
+    private isSubTriggerType(type) {
+        if ((type & SubTriggerTypes.Skip) == SubTriggerTypes.Skip)
+            return true;
+        if ((type & SubTriggerTypes.Wait) == SubTriggerTypes.Wait)
+            return true;
+        if ((type & SubTriggerTypes.Loop) == SubTriggerTypes.Loop)
+            return true;
+        if ((type & SubTriggerTypes.LoopPattern) == SubTriggerTypes.LoopPattern)
+            return true;
+        if ((type & SubTriggerTypes.LoopLines) == SubTriggerTypes.LoopLines)
+            return true;
+        if ((type & SubTriggerTypes.Duration) == SubTriggerTypes.Duration)
+            return true;
+        if ((type & SubTriggerTypes.WithinLines) == SubTriggerTypes.WithinLines)
+            return true;
+        if ((type & SubTriggerTypes.Manual) == SubTriggerTypes.Manual)
+            return true;
+        if ((type & SubTriggerTypes.ReParse) == SubTriggerTypes.ReParse)
+            return true;
+        if ((type & SubTriggerTypes.ReParsePattern) == SubTriggerTypes.ReParsePattern)
+            return true;
+        return false;
+    }
+
+    private getTriggerType(type: TriggerType | SubTriggerTypes) {
         if (type === TriggerType.Regular)
             return TriggerTypes.Regular;
         if (type === TriggerType.Alarm)
@@ -7685,11 +7890,11 @@ export class Input extends EventEmitter {
             //extra check in case error disabled it and do not want to keep triggering the error
             if (!trigger.enabled) continue;
             //safety check in case a state was deleted
-            if (trigger.state > trigger.triggers.length)
-                trigger.state = 0;
-            if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
+            if (trigger.state > parent.triggers.length)
+                parent.state = 0;
+            if (trigger.state !== 0 && parent.triggers && parent.triggers.length) {
                 //trigger states are 1 based as 0 is parent trigger
-                trigger = trigger.triggers[trigger.state - 1];
+                trigger = parent.triggers[trigger.state - 1];
                 //skip disabled states
                 while (!trigger.enabled && parent.state !== 0) {
                     //advance state
@@ -7698,12 +7903,12 @@ export class Input extends EventEmitter {
                     if (parent.state > parent.triggers.length) {
                         parent.state = 0;
                         //reset to first state
-                        trigger = trigger.triggers[parent.state - 1];
+                        trigger = parent;
                         //stop checking
                         break;
                     }
                     if (parent.state)
-                        trigger = trigger.triggers[parent.state - 1];
+                        trigger = parent.triggers[parent.state - 1];
                     else
                         trigger = parent;
                     changed = true;
@@ -7716,19 +7921,44 @@ export class Input extends EventEmitter {
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
             }
-            if (trigger.type !== undefined && (type & this.getTriggerType(trigger.type)) !== this.getTriggerType(trigger.type)) continue;
+            if (trigger.type !== undefined && (type & this.getTriggerType(trigger.type)) !== this.getTriggerType(trigger.type) && !this.isSubTriggerType(trigger.type))
+                continue;
+            //if not reg/pattern types use last line            
+            if ((trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) !== type) {
+                val = this.adjustLastLine(this.client.display.lines.length, true);
+                line = this.client.display.lines[val];
+                raw = this.client.display.rawLines[val] || line;
+                //last line so a fragment
+                frag = val === this.client.display.lines.length - 1;
+            }
+            //manual can only be fired with #set
+            if (trigger.type === SubTriggerTypes.Manual) continue;
             if (frag && !trigger.triggerPrompt) continue;
             if (!frag && !trigger.triggerNewline && (trigger.triggerNewline !== undefined))
                 continue;
             try {
                 if (trigger.verbatim) {
-                    if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) continue;
-                    else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) continue;
+                    if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) {
+                        //if reparse and if failed advance anyways
+                        if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) === type) {
+                            this.advanceTrigger(trigger, parent, t);
+                            t = this.cleanUpTriggerState(t);
+                        }
+                        continue;
+                    }
+                    else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) {
+                        //if reparse and if failed advance anyways
+                        if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) === type) {
+                            this.advanceTrigger(trigger, parent, t);
+                            t = this.cleanUpTriggerState(t);
+                        }
+                        continue;
+                    }
                     val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], ret, t, [(trigger.raw ? raw : line)], 0, parent);
                 }
                 else {
                     let re;
-                    if (trigger.type === TriggerType.Pattern || trigger.type === TriggerType.CommandInputPattern)
+                    if (trigger.type === TriggerType.Pattern || trigger.type === TriggerType.CommandInputPattern || trigger.type === SubTriggerTypes.ReParsePattern)
                         pattern = convertPattern(trigger.pattern, this.client);
                     else
                         pattern = trigger.pattern;
@@ -7739,7 +7969,14 @@ export class Input extends EventEmitter {
                     //reset from last use always
                     re.lastIndex = 0;
                     const res = re.exec(trigger.raw ? raw : line);
-                    if (!res || !res.length) continue;
+                    if (!res || !res.length) {
+                        //if reparse and if failed advance anyways
+                        if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) === type) {
+                            this.advanceTrigger(trigger, parent, t);
+                            t = this.cleanUpTriggerState(t);
+                        }
+                        continue;
+                    }
                     let args;
                     if ((trigger.raw ? raw : line) === res[0] || !this.client.options.prependTriggeredLine)
                         args = res;
@@ -7752,8 +7989,8 @@ export class Input extends EventEmitter {
                     val = this.ExecuteTrigger(trigger, args, ret, t, [trigger.raw ? raw : line, re], res.groups, parent);
                 }
                 if (this._TriggerStates[t] && this._TriggerStates[t].reParse) {
-                    t--;
                     delete this._TriggerStates[t];
+                    t--;
                 }
                 else if (ret) return val;
             }
@@ -7761,8 +7998,8 @@ export class Input extends EventEmitter {
                 if (this.client.options.disableTriggerOnError) {
                     trigger.enabled = false;
                     setTimeout(() => {
-                        this.client.saveProfile(trigger.profile.name);
-                        this.emit('item-updated', 'trigger', trigger.profile, trigger.profile.triggers.indexOf(trigger), trigger);
+                        this.client.saveProfile(parent.profile.name);
+                        this.emit('item-updated', 'trigger', parent.profile, parent.profile.triggers.indexOf(parent), parent);
                     });
                 }
                 if (this.client.options.showScriptErrors)
@@ -7779,63 +8016,13 @@ export class Input extends EventEmitter {
         if (!trigger.enabled) return '';
         if (trigger.fired) {
             trigger.fired = false;
-            parent.state++;
-            //1 based
-            if (parent.state > parent.triggers.length)
-                parent.state = 0;
+            this.advanceTrigger(trigger, parent, idx);
             this._TriggerStates[idx] = { reParse: true };
-            this.client.saveProfile(parent.profile.name, true);
-            this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
             return '';
         }
         this._LastTrigger = trigger;
         let ret; // = '';
-        switch (trigger.style) {
-            case 1:
-                this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex });
-                try {
-                    ret = this.parseOutgoing(trigger.value);
-                }
-                catch (e) {
-                    throw e;
-                }
-                finally {
-                    this._stack.pop();
-                }
-                break;
-            case 2:
-                //do not cache temp triggers
-                if (trigger.temp) {
-                    ret = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    ret = ret.apply(this.client, args);
-                }
-                else {
-                    if (!this._TriggerFunctionCache[idx]) {
-                        if (named)
-                            ret = Object.keys(named).map(v => `let ${v} = this.getVariable("${v}");`).join('') + '\n';
-                        else
-                            ret = '';
-                        /*jslint evil: true */
-                        this._TriggerFunctionCache[idx] = new Function('try { ' + ret + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    }
-                    this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex, indices: args.indices });
-                    try {
-                        ret = this._TriggerFunctionCache[idx].apply(this.client, args);
-                    }
-                    catch (e) {
-                        throw e;
-                    }
-                    finally {
-                        this._stack.pop();
-                    }
-                }
-                if (typeof ret === 'string')
-                    ret = this.parseOutgoing(ret);
-                break;
-            default:
-                ret = trigger.value;
-                break;
-        }
+        //remove temp and advance state before executing value in case it does a trigger on trigger to avoid double triggering
         if (trigger.temp) {
             if (parent.triggers.length) {
                 if (parent.state === 0) {
@@ -7871,15 +8058,55 @@ export class Input extends EventEmitter {
                 this.client.removeTrigger(parent);
             }
         }
-        else if (parent.triggers.length) {
-            parent.state++;
-            //1 based
-            if (parent.state > parent.triggers.length)
-                parent.state = 0;
-            //changed state save
-            this.client.saveProfile(parent.profile.name, true);
-            this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
-        }
+        else if (parent.triggers.length)
+            this.advanceTrigger(trigger, parent, idx);
+        if (trigger.value.length)
+            switch (trigger.style) {
+                case 1:
+                    this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex });
+                    try {
+                        ret = this.parseOutgoing(trigger.value);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        this._stack.pop();
+                    }
+                    break;
+                case 2:
+                    //do not cache temp triggers
+                    if (trigger.temp) {
+                        ret = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        ret = ret.apply(this.client, args);
+                    }
+                    else {
+                        if (!this._TriggerFunctionCache[idx]) {
+                            if (named)
+                                ret = Object.keys(named).map(v => `let ${v} = this.getVariable("${v}");`).join('') + '\n';
+                            else
+                                ret = '';
+                            /*jslint evil: true */
+                            this._TriggerFunctionCache[idx] = new Function('try { ' + ret + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        }
+                        this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex, indices: args.indices });
+                        try {
+                            ret = this._TriggerFunctionCache[idx].apply(this.client, args);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            this._stack.pop();
+                        }
+                    }
+                    if (typeof ret === 'string')
+                        ret = this.parseOutgoing(ret);
+                    break;
+                default:
+                    ret = trigger.value;
+                    break;
+            }
         if (ret == null || ret === undefined)
             return null;
         if (r)
@@ -7899,8 +8126,32 @@ export class Input extends EventEmitter {
         }
     }
 
+    private advanceTrigger(trigger, parent, idx) {
+        parent.state++;
+        //1 based
+        if (parent.state > parent.triggers.length)
+            parent.state = 0;
+        //changed state save
+        this.client.saveProfile(parent.profile.name, true);
+        this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
+        //is new subtype a reparse? if so reparse using current trigger instant
+        if (parent.state !== 0 && (parent.triggers[parent.state - 1].type === SubTriggerTypes.ReParse || parent.triggers[parent.state - 1].type === SubTriggerTypes.ReParsePattern))
+            this._TriggerStates[idx] = { reParse: true };
+    }
+
     public getTriggerState(idx) {
         return this._TriggerStates[idx];
+    }
+
+    public cleanUpTriggerState(idx) {
+        if (this._TriggerStates[idx] && this._TriggerStates[idx].reParse) {
+            delete this._TriggerStates[idx];
+            if (idx < 0)
+                idx++;
+            else
+                idx--;
+        }
+        return idx;
     }
 
     public clearTriggerState(idx) {
@@ -7956,11 +8207,11 @@ export class Input extends EventEmitter {
             //in case it got disabled by something
             if (!trigger.enabled) continue;
             //safety check in case a state was deleted
-            if (trigger.state > trigger.triggers.length)
+            if (trigger.state > parent.triggers.length)
                 trigger.state = 0;
-            if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
+            if (trigger.state !== 0 && parent.triggers && parent.triggers.length) {
                 //trigger states are 1 based as 0 is parent trigger
-                trigger = trigger.triggers[trigger.state - 1];
+                trigger = parent.triggers[trigger.state - 1];
                 //skip disabled states
                 while (!trigger.enabled && parent.state !== 0) {
                     //advance state
@@ -7969,12 +8220,12 @@ export class Input extends EventEmitter {
                     if (parent.state > parent.triggers.length) {
                         parent.state = 0;
                         //reset to first state
-                        trigger = trigger.triggers[parent.state - 1];
+                        trigger = parent;
                         //stop checking
                         break;
                     }
                     if (parent.state)
-                        trigger = trigger.triggers[parent.state - 1];
+                        trigger = parent.triggers[parent.state - 1];
                     else
                         trigger = parent;
                     changed = true;
@@ -7991,10 +8242,7 @@ export class Input extends EventEmitter {
             if (trigger.caseSensitive && event !== trigger.pattern) continue;
             if (!trigger.caseSensitive && event.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
             this.ExecuteTrigger(trigger, args, false, t, 0, 0, parent);
-            if (this._TriggerStates[t] && this._TriggerStates[t].reParse) {
-                t--;
-                delete this._TriggerStates[t];
-            }
+            t = this.cleanUpTriggerState(t);
         }
     }
 
@@ -8181,7 +8429,25 @@ export class Input extends EventEmitter {
                 sTrigger.value = commands;
             if (options) {
                 if (options.cmd)
-                    sTrigger.type = TriggerType.CommandInputRegular | TriggerType.CommandInputPattern;
+                    sTrigger.type = TriggerType.CommandInputRegular;
+
+                if (options.pattern)
+                    sTrigger.type = TriggerType.Pattern;
+                if (options.regular)
+                    sTrigger.type = TriggerType.Regular;
+                if (options.alarm)
+                    sTrigger.type = TriggerType.Alarm;
+                if (options.event)
+                    sTrigger.type = TriggerType.Event;
+                if (options.cmdpattern)
+                    sTrigger.type = TriggerType.CommandInputPattern;
+                if (options.reparse)
+                    sTrigger.type = SubTriggerTypes.ReParse;
+                if (options.reparsepattern)
+                    sTrigger.type = SubTriggerTypes.ReParsePattern;
+                if (options.manual)
+                    sTrigger.type = SubTriggerTypes.Manual;
+
                 if (options.prompt)
                     sTrigger.triggerPrompt = true;
                 if (options.nocr)
@@ -8201,7 +8467,7 @@ export class Input extends EventEmitter {
                 if (options.params)
                     sTrigger.params = options.params;
                 if (options.type) {
-                    if (this.isTriggerType(options.type, true))
+                    if (this.isTriggerType(options.type))
                         sTrigger.type = this.convertTriggerType(options.type);
                     else
                         throw new Error('Invalid trigger type');
@@ -8229,7 +8495,18 @@ export class Input extends EventEmitter {
                 trigger.value = commands;
             if (options) {
                 if (options.cmd)
-                    trigger.type = TriggerType.CommandInputRegular | TriggerType.CommandInputPattern;
+                    trigger.type = TriggerType.CommandInputRegular;
+                if (options.pattern)
+                    sTrigger.type = TriggerType.Pattern;
+                if (options.regular)
+                    sTrigger.type = TriggerType.Regular;
+                if (options.alarm)
+                    sTrigger.type = TriggerType.Alarm;
+                if (options.event)
+                    sTrigger.type = TriggerType.Event;
+                if (options.cmdpattern)
+                    sTrigger.type = TriggerType.CommandInputPattern;
+
                 if (options.prompt)
                     trigger.triggerPrompt = true;
                 if (options.nocr)
@@ -8249,7 +8526,7 @@ export class Input extends EventEmitter {
                 if (options.params)
                     trigger.params = options.params;
                 if (options.type) {
-                    if (this.isTriggerType(options.type))
+                    if (this.isTriggerType(options.type, TriggerTypeFilter.Main))
                         trigger.type = this.convertTriggerType(options.type);
                     else
                         throw new Error('Invalid trigger type');
@@ -8269,27 +8546,54 @@ export class Input extends EventEmitter {
         profile = null;
     }
 
-    private isTriggerType(type, subOnly?) {
+    private isTriggerType(type, filter?: TriggerTypeFilter) {
+        if (!filter) filter = TriggerTypeFilter.All;
         switch (type.replace(/ /g, '').toUpperCase()) {
+            case 'REGULAREXPRESSION':
+            case 'COMMANDINPUTREGULAREXPRESSION':
+                return (filter & TriggerTypeFilter.Main) === TriggerTypeFilter.Main ? true : false;
             case '0':
             case '1':
             case '2':
             case '3':
             case '8':
             case '16':
-            case 'REGULAREXPRESSION':
-            case 'COMMANDINPUTREGULAREXPRESSION':
+            case 'REGULAR':
+            case 'COMMANDINPUTREGULAR':
             case 'EVENT':
             case 'ALARM':
             case 'COMMAND':
             case 'COMMANDINPUTPATTERN':
-                return true;
+                return (filter & TriggerTypeFilter.Main) === TriggerTypeFilter.Main ? true : false;
+            case 'SKIP':
+            case '512':
+            case 'WAIT':
+            case '1024':
+            case 'LOOPPATTERN':
+            case '2048':
+            case 'LOOPLINES':
+            case '4096':
+            case 'DURATION':
+            case '16384':
+            case 'WITHINLINES':
+            case '32768':
+            case 'MANUAL':
+            case '65536':
+            case 'REPARSE':
+            case '131072':
+            case 'REPARSEPATTERN':
+            case '262144':
+                return (filter & TriggerTypeFilter.Sub) === TriggerTypeFilter.Sub ? true : false;
         }
         return false;
     }
 
     private convertTriggerType(type) {
         switch (type.replace(/ /g, '').toUpperCase()) {
+            case 'REGULAREXPRESSION':
+                return TriggerType.Regular;
+            case 'COMMANDINPUTREGULAREXPRESSION':
+                return TriggerType.CommandInputRegular;
             case '0':
             case '1':
             case '2':
@@ -8297,13 +8601,34 @@ export class Input extends EventEmitter {
             case '8':
             case '16':
                 return TriggerType[parseInt(type, 10)];
-            case 'REGULAREXPRESSION':
-            case 'COMMANDINPUTREGULAREXPRESSION':
+            case 'REGULAR':
+            case 'COMMANDINPUTREGULAR':
             case 'EVENT':
             case 'ALARM':
             case 'COMMAND':
             case 'COMMANDINPUTPATTERN':
                 return TriggerType[type];
+            case '512':
+            case '1024':
+            case '2048':
+            case '4096':
+            case '8192':
+            case '16384':
+            case '32768':
+            case '65536':
+            case '131072':
+            case '262144':
+                return SubTriggerTypes[parseInt(type, 10)];
+            case 'SKIP':
+            case 'WAIT':
+            case 'LOOPPATTERN':
+            case 'LOOPLINES':
+            case 'DURATION':
+            case 'WITHINLINES':
+            case 'MANUAL':
+            case 'REPARSE':
+            case 'REPARSEPATTERN':
+                return SubTriggerTypes[type];
         }
         throw new Error('Invalid trigger type');
     }

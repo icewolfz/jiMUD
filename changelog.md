@@ -13,9 +13,20 @@
     - Add [Enable Inline Comment](docs/preferences.md#scripting--special-characters) disable inline comment support
     - Add [Block Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for block comments, ending block comment is string reversed
     - Add [Block Inline Comment](docs/preferences.md#scripting--special-characters) disable block comment support    
+  - [Triggers](docs/profiles.md#triggers)
+    - Add `ReParse` and `ReParse Pattern` sub type triggers
+    - Add `Manual` sub type, can only be fired using [#SET](docs/commands.md#triggers) command
+  - Add [#TRIGGER](docs/commands.md#triggers) and [#CONDITION](docs/commands.md#triggers) short options for type=value
 - **Fixed:**
   - Added type checks to [#ADD](docs/commands.md#miscellaneous) and [#MATH](docs/commands.md#miscellaneous) to ensure the resulting value is a number
   - Added type check to [#CASE](docs/commands.md#conditionals) and [#REPEAT](docs/commands.md#repeating-and-loops) to ensure the value is a number
+  - Fixed bug in multi state triggers when sub trigger is disabled
+  - Fixed issue where temp triggers or re-parse type triggers would be double executed if the pattern was in trigger value
+  - Fixed issue with temp alarms and re-parse issues with [#SET](docs/commands.md#triggers) fire state setting
+  - Fixed disableTriggerOnError when a sub trigger errors
+- **Changed:**
+  - [Triggers](docs/profiles.md#triggers), [Buttons](docs/profiles.md#buttons), [Macros](docs/profiles.md#macros), [Context](docs/profiles.md#context), and [Aliases](docs/profiles.md#aliases) values will now be ignored if empty, thus not creating blank lines, you can use a value of ${cr} to send a blank line
+  - [#ADD](docs/commands.md#miscellaneous) will default to 0 if variable is not defined and define variable
 
 ## v0.17.6 2022-01-24
 

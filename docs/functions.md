@@ -254,7 +254,7 @@ clip(string)
 
 zcolor(code)
 > converts a zmud/cmud color code into a code supported by jiMUD
->>Example: ${zcolor(1)} would return 370 for bold white
+>>Example: ${zcolor(84)} would return 31,45 for red foreground and magenta background
 
 ansi(*style*,fore,*back*)
 >insert ansi control characters into string same as ${esc}[CODESm<br>
