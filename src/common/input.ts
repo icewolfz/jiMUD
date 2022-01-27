@@ -4545,7 +4545,9 @@ export class Input extends EventEmitter {
                     trigger.state = n;
                     throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
                 }
+                i = trigger.fired;
                 trigger.fired = false;
+                this.resetTriggerState(this._TriggerCache.indexOf(trigger), n, i);
                 this.client.restartAlarmState(trigger, n, trigger.state);
                 this.client.saveProfile(trigger.profile.name, true);
                 this.client.emit('item-updated', 'trigger', trigger.profile.name, trigger.profile.triggers.indexOf(trigger), trigger);
@@ -4553,7 +4555,6 @@ export class Input extends EventEmitter {
                 return null;
             case 'set':
                 //#SET pattern|name state value profile
-                //@TODO add fire support if type is manual fire it if not fired when manual sub type added
                 //setup args for easy use
                 args = args.map(m => {
                     if (!m || !m.length)
@@ -4563,6 +4564,7 @@ export class Input extends EventEmitter {
                     return this.parseInline(this.stripQuotes(m));
                 })
                 n = 0;
+                i = false;
                 switch (args.length) {
                     case 0: //state - set fired to true for last trigger
                         throw new Error('Invalid syntax use ' + cmdChar + 'set \x1b[3mname|pattern\x1b[0;-11;-12m state \x1b[3mvalue profile\x1b[0;-11;-12m');
@@ -4575,10 +4577,14 @@ export class Input extends EventEmitter {
                             n = parseInt(args[0], 10)
                             if (n < 0 || n > trigger.triggers.length)
                                 throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
-                            if (n === 0)
+                            if (n === 0) {
+                                i = trigger.fired;
                                 trigger.fired = true;
-                            else
+                            }
+                            else {
+                                i = trigger.triggers[n - 1].fired;
                                 trigger.triggers[n - 1].fired = true;
+                            }
                         }
                         else
                             throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
@@ -4594,10 +4600,14 @@ export class Input extends EventEmitter {
                                 throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
                             if (args[1] !== "0" && args[1] !== "1" && args[1] !== "true" && args[1] !== "false")
                                 throw new Error("Value must be 0, 1, true, or false");
-                            if (n === 0)
+                            if (n === 0) {
+                                i = trigger.fired;
                                 trigger.fired = args[1] === "1" || args[1] === "true";
-                            else
+                            }
+                            else {
+                                i = trigger.triggers[n - 1].fired;
                                 trigger.triggers[n - 1].fired = args[1] === "1" || args[1] === "true";
+                            }
                         }
                         //pattern|name state - set trigger state fired to true
                         else {
@@ -4631,10 +4641,14 @@ export class Input extends EventEmitter {
                             n = parseInt(args[1], 10)
                             if (n < 0 || n > trigger.triggers.length)
                                 throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
-                            if (n === 0)
+                            if (n === 0) {
+                                i = trigger.fired;
                                 trigger.fired = true;
-                            else
+                            }
+                            else {
+                                i = trigger.triggers[n - 1].fired;
                                 trigger.triggers[n - 1].fired = true;
+                            }
                         }
                         break;
                     case 3:
@@ -4657,10 +4671,14 @@ export class Input extends EventEmitter {
                             n = parseInt(args[1], 10)
                             if (n < 0 || n > trigger.triggers.length)
                                 throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
-                            if (n === 0)
+                            if (n === 0) {
+                                i = trigger.fired;
                                 trigger.fired = true;
-                            else
+                            }
+                            else {
+                                i = trigger.triggers[n - 1].fired;
                                 trigger.triggers[n - 1].fired = true;
+                            }
                         }
                         //pattern|name state value - set trigger state fired to value          
                         else {
@@ -4694,10 +4712,14 @@ export class Input extends EventEmitter {
                             n = parseInt(args[1], 10)
                             if (n < 0 || n > trigger.triggers.length)
                                 throw new Error("Trigger state must be greater than or equal to 0 or less than or equal to " + trigger.triggers.length);
-                            if (n === 0)
+                            if (n === 0) {
+                                i = trigger.fired;
                                 trigger.fired = args[2] === "1" || args[2] === "true";
-                            else
+                            }
+                            else {
+                                i = trigger.triggers[n - 1].fired;
                                 trigger.triggers[n - 1].fired = args[2] === "1" || args[2] === "true";
+                            }
                         }
                         break;
                     case 4:
@@ -4718,16 +4740,21 @@ export class Input extends EventEmitter {
                             throw new Error("Trigger not found: " + args[0] + " in profile: " + profile.name);
                         if (args[2] !== "0" && args[2] !== "1" && args[2] !== "true" && args[2] !== "false")
                             throw new Error("Value must be 0, 1, true, or false");
-                        if (n === 0)
+                        if (n === 0) {
+                            i = trigger.fired;
                             trigger.fired = args[2] === "1" || args[2] === "true";
-                        else
+                        }
+                        else {
+                            i = trigger.triggers[n - 1].fired;
                             trigger.triggers[n - 1].fired = args[2] === "1" || args[2] === "true";
+                        }
                         break;
                     default:
                         throw new Error('Invalid syntax use ' + cmdChar + 'set \x1b[3mname|pattern\x1b[0;-11;-12m state \x1b[3mvalue profile\x1b[0;-11;-12m');
                 }
                 this.client.saveProfile(trigger.profile.name, true);
                 this.client.emit('item-updated', 'trigger', trigger.profile.name, trigger.profile.triggers.indexOf(trigger), trigger);
+                this.resetTriggerState(this._TriggerCache.indexOf(trigger), n, i);
                 if (n === 0)
                     this.client.echo('Trigger state 0 fired state set to ' + trigger.fired + '.', -7, -8, true, true);
                 else {
@@ -7919,6 +7946,96 @@ export class Input extends EventEmitter {
     }
 
     public clearTriggerCache() { this._TriggerCache = null; this._TriggerStates = {}; this._TriggerFunctionCache = {}; this._TriggerRegExCache = {}; }
+
+    public resetTriggerState(idx, oldState, oldFire?) {
+        if (idx === -1) return;
+        if (idx < 0 || idx >= this._TriggerCache.length) return;
+        let trigger = this._TriggerCache[idx];
+        let oTrigger;
+        const parent = trigger;
+        let params;
+        let reParse = false;
+        if (parent.state !== 0)
+            trigger = parent.triggers[parent.state - 1];
+        if (oldState === 0)
+            oTrigger = parent;
+        else
+            oTrigger = parent.triggers[oldState - 1];
+        if (oldState === parent.state) {
+            if (this._TriggerStates[idx]) {
+                if (!trigger.fired) {
+                    switch (this._TriggerStates[idx].type) {
+                        case SubTriggerTypes.Wait:
+                        case SubTriggerTypes.Duration:
+                            params = parent.triggers[parent.state - 1].params;
+                            if (params && params.length) {
+                                params = parseInt(params, 10);
+                                if (isNaN(params))
+                                    params = 0;
+                            }
+                            else
+                                params = 0;
+                            this._TriggerStates[idx].time = Date.now() + params;
+                            break;
+                    }
+                }
+                else {
+                    this.clearTriggerState(idx);
+                }
+            }
+            else {
+                if (!trigger.fired) {
+                    switch (this._TriggerStates[idx].type) {
+                        case SubTriggerTypes.Wait:
+                        case SubTriggerTypes.Duration:
+                            params = parent.triggers[parent.state - 1].params;
+                            if (params && params.length) {
+                                params = parseInt(params, 10);
+                                if (isNaN(params))
+                                    params = 0;
+                            }
+                            else
+                                params = 0;
+                            this._TriggerStates[idx] = { time: Date.now() + params };
+                            break;
+                    }
+                }
+            }
+        }
+        else {
+            if (this._TriggerStates[idx]) {
+                if (!this._TriggerStates[idx].type || (this._TriggerStates[idx].type !== SubTriggerTypes.ReParsePattern && this._TriggerStates[idx].type !== SubTriggerTypes.ReParse))
+                    reParse = this._TriggerStates[idx].reParse;
+            }
+            this.clearTriggerState(idx);
+            if (!trigger.fired) {
+                switch (trigger.type) {
+                    case SubTriggerTypes.Wait:
+                    case SubTriggerTypes.Duration:
+                        params = parent.triggers[parent.state - 1].params;
+                        if (params && params.length) {
+                            params = parseInt(params, 10);
+                            if (isNaN(params))
+                                params = 0;
+                        }
+                        else
+                            params = 0;
+                        this._TriggerStates[idx] = { time: Date.now() + params };
+                        break;
+                    case SubTriggerTypes.ReParse:
+                    case SubTriggerTypes.ReParsePattern:
+                        this._TriggerStates[idx] = { reParse: true };
+                        break;
+                }
+                if (this._TriggerStates[idx])
+                    this._TriggerStates[idx].type = parent.triggers[parent.state - 1].type;
+            }
+            if (reParse && this._TriggerStates[idx])
+                this._TriggerStates[idx].reParse = reParse;
+            else
+                this._TriggerStates[idx] = { reParse: true };
+        }
+    }
 
     public buildTriggerCache() {
         if (this._TriggerCache == null) {
