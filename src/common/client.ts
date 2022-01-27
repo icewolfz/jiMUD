@@ -725,11 +725,7 @@ export class Client extends EventEmitter {
                 this._input.ExecuteTrigger(trigger, [alarm.pattern], false, -a, null, null, parent);
                 if (state !== parent.state)
                     alarm.restart = Date.now();
-                const tState = this._input.getTriggerState(-a);
-                if (tState && tState.reParse) {
-                    a--;
-                    this._input.clearTriggerState(-a);
-                }
+                a = -this._input.cleanUpTriggerState(-a);
                 if (alarm.temp) {
                     //has sub state so only remove the temp alarm state
                     if (parent.triggers.length) {

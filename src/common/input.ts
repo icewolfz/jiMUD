@@ -7637,14 +7637,6 @@ export class Input extends EventEmitter {
         return line;
     }
 
-    private cleanUpTriggerState(idx) {
-        if (this._TriggerStates[idx] && this._TriggerStates[idx].reParse) {
-            delete this._TriggerStates[idx];
-            idx--;
-        }
-        return idx;
-    }
-
     public ExecuteTrigger(trigger, args, r: boolean, idx, regex?, named?, parent?: Trigger) {
         if (r == null) r = false;
         if (!trigger.enabled) return '';
@@ -7777,6 +7769,17 @@ export class Input extends EventEmitter {
         return this._TriggerStates[idx];
     }
 
+    public cleanUpTriggerState(idx) {
+        if (this._TriggerStates[idx] && this._TriggerStates[idx].reParse) {
+            delete this._TriggerStates[idx];
+            if(idx < 0)
+                idx++;
+            else
+                idx--; 
+        }
+        return idx;
+    }
+
     public clearTriggerState(idx) {
         delete this._TriggerStates[idx];
     }
@@ -7865,10 +7868,7 @@ export class Input extends EventEmitter {
             if (trigger.caseSensitive && event !== trigger.pattern) continue;
             if (!trigger.caseSensitive && event.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
             this.ExecuteTrigger(trigger, args, false, t, 0, 0, parent);
-            if (this._TriggerStates[t] && this._TriggerStates[t].reParse) {
-                delete this._TriggerStates[t];
-                t--;
-            }
+            t = this.cleanUpTriggerState(t);
         }
     }
 
