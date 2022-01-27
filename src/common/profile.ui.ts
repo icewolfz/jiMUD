@@ -540,6 +540,7 @@ function clearTriggerTester() {
     $('#trigger-test-text').val('');
     $('#trigger-test-results').val('');
     $('.nav-tabs a[href="#tab-trigger-value"]').tab('show');
+    $('#trigger-type').trigger('change');
 }
 
 export function AddTriggerState() {
@@ -2938,6 +2939,18 @@ export function init() {
     });
     $('#macro-key').on('blur', () => {
         _macro = false;
+    });
+
+    $('#trigger-type').on('change', function () {
+        switch($(this).val()) {
+            case '1024':
+            case '16384':
+                $('td[data-row="triggers-params"]').css('display', '');
+                break;
+            default:
+                $('td[data-row="triggers-params"]').css('display', 'none');
+                break;
+        }
     });
 
     $('.btn-adv').on('click', function () {
