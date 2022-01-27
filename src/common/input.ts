@@ -7571,12 +7571,14 @@ export class Input extends EventEmitter {
                         //if reparse and if failed advance anyways
                         if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) === type)
                             this.advanceTrigger(trigger, parent, t);
+                        t = this.cleanUpTriggerState(t);
                         continue;
                     }
                     else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) {
                         //if reparse and if failed advance anyways
                         if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) === type)
                             this.advanceTrigger(trigger, parent, t);
+                        t = this.cleanUpTriggerState(t);
                         continue;
                     }
                     val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], ret, t, [(trigger.raw ? raw : line)], 0, parent);
@@ -7598,6 +7600,7 @@ export class Input extends EventEmitter {
                         //if reparse and if failed advance anyways
                         if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) === type)
                             this.advanceTrigger(trigger, parent, t);
+                        t = this.cleanUpTriggerState(t);
                         continue;
                     }
                     let args;
@@ -7632,6 +7635,14 @@ export class Input extends EventEmitter {
             }
         }
         return line;
+    }
+
+    private cleanUpTriggerState(idx) {
+        if (this._TriggerStates[idx] && this._TriggerStates[idx].reParse) {
+            delete this._TriggerStates[idx];
+            idx--;
+        }
+        return idx;
     }
 
     public ExecuteTrigger(trigger, args, r: boolean, idx, regex?, named?, parent?: Trigger) {
