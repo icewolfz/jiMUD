@@ -138,6 +138,8 @@
     - `&VarName` assigns the matched string to the given variable
     - `%/regex/%` matches the given Regular Expression
   - Sub triggers Only types:
+    - `Wait` Waits a set amount of milliseconds before trigger will fire on matched pattern, set params to # of milliseconds to wait
+    - `Duration` Will only fire if matched line arrives in the amount of time between the last state fired and the duration, set params to # of milliseconds
     - `Manual` Manual state that is only fired using #set when fired set
     - `ReParse` Re-parse the last line using the new regular expression patterns, if pattern matches executes normally, if does not match it advances to next state
     - `ReParse Pattern` Re-parse the last line using the new zmud pattern, if pattern matches executes normally, if does not match it advances to next state

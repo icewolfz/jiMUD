@@ -1321,7 +1321,7 @@ export class Input extends EventEmitter {
         });
 
         this.client.on('add-line', (data) => {
-            this.ExecuteTriggers(TriggerTypes.Regular | TriggerTypes.Pattern, data.line, data.raw, data.fragment, false);
+            this.ExecuteTriggers(TriggerTypes.Regular | TriggerTypes.Pattern, data.line, data.raw, data.fragment, false, true);
             if (this._gag > 0 && !data.fragment) {
                 data.gagged = true;
                 this._gag--;
@@ -1531,7 +1531,7 @@ export class Input extends EventEmitter {
             requestAnimationFrame(() => { this.updatePads(); });
     }
 
-    private adjustLastLine(n, raw?) {
+    public adjustLastLine(n, raw?) {
         if (!this.client.display.lines || this.client.display.lines.length === 0)
             return 0;
         if (raw) {
@@ -4317,7 +4317,7 @@ export class Input extends EventEmitter {
                 args = this.evaluate(this.parseInline(args));
                 if (typeof args !== 'number')
                     throw new Error('Value is not a number for add');
-                if(!this.client.variables.hasOwnProperty(i))
+                if (!this.client.variables.hasOwnProperty(i))
                     this.client.variables[i] = args;
                 else
                     this.client.variables[i] += args;
@@ -7502,7 +7502,7 @@ export class Input extends EventEmitter {
         return type;
     }
 
-    public ExecuteTriggers(type: TriggerTypes, line?, raw?, frag?: boolean, ret?: boolean) {
+    public ExecuteTriggers(type: TriggerTypes, line?, raw?, frag?: boolean, ret?: boolean, subtypes?: boolean) {
         if (!this.enableTriggers || line == null) return line;
         if (ret == null) ret = false;
         if (frag == null) frag = false;
@@ -7553,26 +7553,42 @@ export class Input extends EventEmitter {
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
             }
-            if (trigger.type !== undefined && (type & this.getTriggerType(trigger.type)) !== this.getTriggerType(trigger.type) && !this.isSubTriggerType(trigger.type))
-                continue;
-            //if not reg/pattern types use last line            
-            if ((trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) !== type) {
-                val = this.adjustLastLine(this.client.display.lines.length, true);
-                line = this.client.display.lines[val];
-                raw = this.client.display.rawLines[val] || line;
-                //last line so a fragment
-                frag = val === this.client.display.lines.length - 1;
+            if (trigger.type !== undefined && (type & this.getTriggerType(trigger.type)) !== this.getTriggerType(trigger.type)) {
+                if (!subtypes || (subtypes && !this.isSubTriggerType(trigger.type)))
+                    continue;
             }
             //manual can only be fired with #set
             if (trigger.type === SubTriggerTypes.Manual) continue;
             if (frag && !trigger.triggerPrompt) continue;
             if (!frag && !trigger.triggerNewline && (trigger.triggerNewline !== undefined))
                 continue;
+            if (this._TriggerStates[t]) {
+                if (this._TriggerStates[t].type === SubTriggerTypes.Wait) {
+                    //time still has not passed
+                    if (this._TriggerStates[t].time > Date.now())
+                        continue;
+                    delete this._TriggerStates[t];
+                }
+                else if (this._TriggerStates[t].type === SubTriggerTypes.Duration) {
+                    //trigger time has pased, delete it and advance
+                    if (this._TriggerStates[t].time < Date.now()) {
+                        delete this._TriggerStates[t];
+                        this.advanceTrigger(trigger, parent, t);
+                        //need to reparse as the state is no longer valie and the next state might be
+                        if (!this._TriggerStates[t])
+                            this._TriggerStates[t] = { reParse: true };
+                        else
+                            this._TriggerStates[t].reParse = true;
+                        t = this.cleanUpTriggerState(t);
+                        continue;
+                    }
+                }
+            }
             try {
                 if (trigger.verbatim) {
                     if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) {
                         //if reparse and if failed advance anyways
-                        if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) === type) {
+                        if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern)) {
                             this.advanceTrigger(trigger, parent, t);
                             t = this.cleanUpTriggerState(t);
                         }
@@ -7580,7 +7596,7 @@ export class Input extends EventEmitter {
                     }
                     else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) {
                         //if reparse and if failed advance anyways
-                        if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) === type) {
+                        if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern)) {
                             this.advanceTrigger(trigger, parent, t);
                             t = this.cleanUpTriggerState(t);
                         }
@@ -7603,7 +7619,7 @@ export class Input extends EventEmitter {
                     const res = re.exec(trigger.raw ? raw : line);
                     if (!res || !res.length) {
                         //if reparse and if failed advance anyways
-                        if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) === type) {
+                        if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern)) {
                             this.advanceTrigger(trigger, parent, t);
                             t = this.cleanUpTriggerState(t);
                         }
@@ -7621,7 +7637,10 @@ export class Input extends EventEmitter {
                     val = this.ExecuteTrigger(trigger, args, ret, t, [trigger.raw ? raw : line, re], res.groups, parent);
                 }
                 if (this._TriggerStates[t] && this._TriggerStates[t].reParse) {
-                    delete this._TriggerStates[t];
+                    if (!this._TriggerStates[t].type || this._TriggerStates[t].type === SubTriggerTypes.ReParse || this._TriggerStates[t].type === SubTriggerTypes.ReParsePattern)
+                        delete this._TriggerStates[t];
+                    else
+                        delete this._TriggerStates[t].reParse;
                     t--;
                 }
                 else if (ret) return val;
@@ -7643,13 +7662,91 @@ export class Input extends EventEmitter {
         return line;
     }
 
+    public TestTriggger(trigger, parent, t, line?, raw?, frag?: boolean) {
+        let val;
+        let pattern;
+        try {
+            if (trigger.verbatim) {
+                if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) {
+                    //if reparse and if failed advance anyways
+                    if (!this._TriggerStates[t]) {
+                        this.advanceTrigger(trigger, parent, t);
+                        t = this.cleanUpTriggerState(t);
+                    }
+                    return t;
+                }
+                else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) {
+                    //if reparse and if failed advance anyways
+                    if (!this._TriggerStates[t]) {
+                        this.advanceTrigger(trigger, parent, t);
+                        t = this.cleanUpTriggerState(t);
+                    }
+                    return t;
+                }
+                val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t, [(trigger.raw ? raw : line)], 0, parent);
+            }
+            else {
+                let re;
+                if (trigger.type === TriggerType.Pattern || trigger.type === TriggerType.CommandInputPattern || trigger.type === SubTriggerTypes.ReParsePattern)
+                    pattern = convertPattern(trigger.pattern, this.client);
+                else
+                    pattern = trigger.pattern;
+                if (trigger.caseSensitive)
+                    re = this._TriggerRegExCache['g' + pattern] || (this._TriggerRegExCache['g' + pattern] = new RegExp(pattern, 'gd'));
+                else
+                    re = this._TriggerRegExCache['gi' + pattern] || (this._TriggerRegExCache['gi' + pattern] = new RegExp(pattern, 'gid'));
+                //reset from last use always
+                re.lastIndex = 0;
+                const res = re.exec(trigger.raw ? raw : line);
+                if (!res || !res.length) {
+                    //if reparse and if failed advance anyways
+                    if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern)) {
+                        this.advanceTrigger(trigger, parent, t);
+                        t = this.cleanUpTriggerState(t);
+                    }
+                    return t;
+                }
+                let args;
+                if ((trigger.raw ? raw : line) === res[0] || !this.client.options.prependTriggeredLine)
+                    args = res;
+                else {
+                    args = [(trigger.raw ? raw : line), ...res];
+                    args.indices = [[0, args[0].length], ...res.indices];
+                }
+                if (res.groups)
+                    Object.keys(res.groups).map(v => this.client.variables[v] = res.groups[v]);
+                val = this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups, parent);
+            }
+            t = this.cleanUpTriggerState(t);
+        }
+        catch (e) {
+            if (this.client.options.disableTriggerOnError) {
+                trigger.enabled = false;
+                setTimeout(() => {
+                    this.client.saveProfile(parent.profile.name);
+                    this.emit('item-updated', 'trigger', parent.profile, parent.profile.triggers.indexOf(parent), parent);
+                });
+            }
+            if (this.client.options.showScriptErrors)
+                this.client.error(e);
+            else
+                this.client.debug(e);
+        }
+        return t;
+    }
+
     public ExecuteTrigger(trigger, args, r: boolean, idx, regex?, named?, parent?: Trigger) {
         if (r == null) r = false;
         if (!trigger.enabled) return '';
+        if (this._TriggerStates[idx] && this._TriggerStates[idx].type === SubTriggerTypes.Duration)
+            delete this._TriggerStates[idx];
         if (trigger.fired) {
             trigger.fired = false;
             this.advanceTrigger(trigger, parent, idx);
-            this._TriggerStates[idx] = { reParse: true };
+            if (this._TriggerStates[idx])
+                this._TriggerStates[idx].reParse = true;
+            else
+                this._TriggerStates[idx] = { reParse: true };
             return '';
         }
         this._LastTrigger = trigger;
@@ -7687,6 +7784,8 @@ export class Input extends EventEmitter {
             else {
                 if (idx >= 0)
                     this._TriggerCache.splice(idx, 1);
+                if (this._TriggerStates[idx])
+                    this.clearTriggerState(idx);
                 this.client.removeTrigger(parent);
             }
         }
@@ -7767,8 +7866,29 @@ export class Input extends EventEmitter {
         this.client.saveProfile(parent.profile.name, true);
         this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
         //is new subtype a reparse? if so reparse using current trigger instant
-        if (parent.state !== 0 && (parent.triggers[parent.state - 1].type === SubTriggerTypes.ReParse || parent.triggers[parent.state - 1].type === SubTriggerTypes.ReParsePattern))
-            this._TriggerStates[idx] = { reParse: true };
+        if (parent.state !== 0) {
+            let params;
+            switch (parent.triggers[parent.state - 1].type) {
+                case SubTriggerTypes.ReParse:
+                case SubTriggerTypes.ReParsePattern:
+                    this._TriggerStates[idx] = { reParse: true };
+                    break;
+                case SubTriggerTypes.Duration:
+                case SubTriggerTypes.Wait:
+                    params = parent.triggers[parent.state - 1].params;
+                    if (params && params.length) {
+                        params = parseInt(params, 10);
+                        if (isNaN(params))
+                            params = 0;
+                    }
+                    else
+                        params = 0;
+                    this._TriggerStates[idx] = { time: Date.now() + params };
+                    break;
+            }
+            if (this._TriggerStates[idx])
+                this._TriggerStates[idx].type = parent.triggers[parent.state - 1].type;
+        }
     }
 
     public getTriggerState(idx) {
@@ -7777,7 +7897,11 @@ export class Input extends EventEmitter {
 
     public cleanUpTriggerState(idx) {
         if (this._TriggerStates[idx] && this._TriggerStates[idx].reParse) {
-            delete this._TriggerStates[idx];
+            //remove only if reparse type of no type defined, else remove just the rePrase flag
+            if (!this._TriggerStates[idx].type || this._TriggerStates[idx].type === SubTriggerTypes.ReParse || this._TriggerStates[idx].type === SubTriggerTypes.ReParsePattern)
+                delete this._TriggerStates[idx];
+            else
+                delete this._TriggerStates[idx].reParse;
             if (idx < 0)
                 idx++;
             else
@@ -7869,6 +7993,12 @@ export class Input extends EventEmitter {
                 }
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
+            }
+            if (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) {
+                const val = this.adjustLastLine(this.client.display.lines.length, true);
+                const line = this.client.display.lines[val];
+                t = this.TestTriggger(trigger, parent, t, line, this.client.display.rawLines[val] || line, val === this.client.display.lines.length - 1);
+                continue;
             }
             if (trigger.type !== TriggerType.Event) continue;
             if (trigger.caseSensitive && event !== trigger.pattern) continue;
