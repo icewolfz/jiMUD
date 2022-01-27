@@ -7235,37 +7235,38 @@ export class Input extends EventEmitter {
     public ExecuteAlias(alias, args) {
         if (!alias.enabled) return;
         let ret; // = '';
-        switch (alias.style) {
-            case 1:
-                this._stack.push({ loops: [], args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
-                ret = this.parseOutgoing(alias.value, null, null, true);
-                this._stack.pop();
-                break;
-            case 2:
-                /*jslint evil: true */
-                const named = this.GetNamedArguments(alias.params, args);
-                if (named)
-                    ret = Object.keys(named).map(v => `let ${v} = this._input.stack.named["${v}"];`).join('') + '\n';
-                else
-                    ret = '';
-                const f = new Function('try { ' + ret + alias.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                this._stack.push({ loops: [], args: args, named: named, append: alias.append, used: 0 });
-                try {
-                    ret = f.apply(this.client, args);
-                }
-                catch (e) {
-                    throw e;
-                }
-                finally {
+        if (alias.value.length)
+            switch (alias.style) {
+                case 1:
+                    this._stack.push({ loops: [], args: args, named: this.GetNamedArguments(alias.params, args), append: alias.append, used: 0 });
+                    ret = this.parseOutgoing(alias.value, null, null, true);
                     this._stack.pop();
-                }
-                if (typeof ret === 'string')
-                    ret = this.parseOutgoing(ret, null, null, true);
-                break;
-            default:
-                ret = alias.value;
-                break;
-        }
+                    break;
+                case 2:
+                    /*jslint evil: true */
+                    const named = this.GetNamedArguments(alias.params, args);
+                    if (named)
+                        ret = Object.keys(named).map(v => `let ${v} = this._input.stack.named["${v}"];`).join('') + '\n';
+                    else
+                        ret = '';
+                    const f = new Function('try { ' + ret + alias.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    this._stack.push({ loops: [], args: args, named: named, append: alias.append, used: 0 });
+                    try {
+                        ret = f.apply(this.client, args);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        this._stack.pop();
+                    }
+                    if (typeof ret === 'string')
+                        ret = this.parseOutgoing(ret, null, null, true);
+                    break;
+                default:
+                    ret = alias.value;
+                    break;
+            }
         if (ret == null || ret === undefined)
             return null;
         ret = this.ExecuteTriggers(TriggerTypes.CommandInputRegular | TriggerTypes.CommandInputPattern, ret, ret, false, true);
@@ -7308,37 +7309,38 @@ export class Input extends EventEmitter {
     public ExecuteMacro(macro) {
         if (!macro.enabled) return false;
         let ret; // = '';
-        switch (macro.style) {
-            case 1:
-                this._stack.push({ loops: [], args: 0, named: 0, used: 0 });
-                try {
-                    ret = this.parseOutgoing(macro.value);
-                }
-                catch (e) {
-                    throw e;
-                }
-                finally {
-                    this._stack.pop();
-                }
-                break;
-            case 2:
-                /*jslint evil: true */
-                const f = new Function('try { ' + macro.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                this._stack.push({ loops: [], args: 0, named: 0, used: 0 });
-                try {
-                    ret = f.apply(this.client);
-                }
-                catch (e) {
-                    throw e;
-                }
-                finally {
-                    this._stack.pop();
-                }
-                break;
-            default:
-                ret = macro.value;
-                break;
-        }
+        if (macro.value.length)
+            switch (macro.style) {
+                case 1:
+                    this._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                    try {
+                        ret = this.parseOutgoing(macro.value);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        this._stack.pop();
+                    }
+                    break;
+                case 2:
+                    /*jslint evil: true */
+                    const f = new Function('try { ' + macro.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    this._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                    try {
+                        ret = f.apply(this.client);
+                    }
+                    catch (e) {
+                        throw e;
+                    }
+                    finally {
+                        this._stack.pop();
+                    }
+                    break;
+                default:
+                    ret = macro.value;
+                    break;
+            }
         if (ret == null || ret === undefined)
             return true;
         //Convert to string
@@ -7681,37 +7683,12 @@ export class Input extends EventEmitter {
         }
         else if (parent.triggers.length)
             this.advanceTrigger(trigger, parent, idx);
-        switch (trigger.style) {
-            case 1:
-                this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex });
-                try {
-                    ret = this.parseOutgoing(trigger.value);
-                }
-                catch (e) {
-                    throw e;
-                }
-                finally {
-                    this._stack.pop();
-                }
-                break;
-            case 2:
-                //do not cache temp triggers
-                if (trigger.temp) {
-                    ret = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    ret = ret.apply(this.client, args);
-                }
-                else {
-                    if (!this._TriggerFunctionCache[idx]) {
-                        if (named)
-                            ret = Object.keys(named).map(v => `let ${v} = this.variables["${v}"];`).join('') + '\n';
-                        else
-                            ret = '';
-                        /*jslint evil: true */
-                        this._TriggerFunctionCache[idx] = new Function('try { ' + ret + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    }
-                    this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex, indices: args.indices });
+        if (trigger.value.length)
+            switch (trigger.style) {
+                case 1:
+                    this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex });
                     try {
-                        ret = this._TriggerFunctionCache[idx].apply(this.client, args);
+                        ret = this.parseOutgoing(trigger.value);
                     }
                     catch (e) {
                         throw e;
@@ -7719,14 +7696,40 @@ export class Input extends EventEmitter {
                     finally {
                         this._stack.pop();
                     }
-                }
-                if (typeof ret === 'string')
-                    ret = this.parseOutgoing(ret);
-                break;
-            default:
-                ret = trigger.value;
-                break;
-        }
+                    break;
+                case 2:
+                    //do not cache temp triggers
+                    if (trigger.temp) {
+                        ret = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        ret = ret.apply(this.client, args);
+                    }
+                    else {
+                        if (!this._TriggerFunctionCache[idx]) {
+                            if (named)
+                                ret = Object.keys(named).map(v => `let ${v} = this.variables["${v}"];`).join('') + '\n';
+                            else
+                                ret = '';
+                            /*jslint evil: true */
+                            this._TriggerFunctionCache[idx] = new Function('try { ' + ret + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        }
+                        this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex, indices: args.indices });
+                        try {
+                            ret = this._TriggerFunctionCache[idx].apply(this.client, args);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            this._stack.pop();
+                        }
+                    }
+                    if (typeof ret === 'string')
+                        ret = this.parseOutgoing(ret);
+                    break;
+                default:
+                    ret = trigger.value;
+                    break;
+            }
         if (ret == null || ret === undefined)
             return null;
         if (r)
