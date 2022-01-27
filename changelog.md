@@ -15,11 +15,12 @@
     - Add [Block Inline Comment](docs/preferences.md#scripting--special-characters) disable block comment support    
   - [Triggers](docs/profiles.md#triggers)
     - Add `ReParse` and `ReParse Pattern` sub type triggers
+    - Add `Manual` sub type, can only be fired using [#SET](docs/commands.md#triggers) command
 - **Fixed:**
   - Added type checks to [#ADD](docs/commands.md#miscellaneous) and [#MATH](docs/commands.md#miscellaneous) to ensure the resulting value is a number
   - Added type check to [#CASE](docs/commands.md#conditionals) and [#REPEAT](docs/commands.md#repeating-and-loops) to ensure the value is a number
   - Fixed bug in multi state triggers when sub trigger is disabled
-  - Fixed issue where temp triggers or reparse type triggers would be double executed if the pattern was in trigger value
+  - Fixed issue where temp triggers or re-parse type triggers would be double executed if the pattern was in trigger value
 
 ## v0.17.6 2022-01-24
 

@@ -4717,8 +4717,12 @@ export class Input extends EventEmitter {
                 this.client.emit('item-updated', 'trigger', trigger.profile.name, trigger.profile.triggers.indexOf(trigger), trigger);
                 if (n === 0)
                     this.client.echo('Trigger state 0 fired state set to ' + trigger.fired + '.', -7, -8, true, true);
-                else
+                else {
                     this.client.echo('Trigger state ' + n + ' fired state set to ' + trigger.triggers[n - 1].fired + '.', -7, -8, true, true);
+                    //manual trigger fire it using set type
+                    if(trigger.enabled && trigger.triggers[n - 1].enabled && trigger.triggers[n - 1].type === SubTriggerTypes.Manual)
+                        this.ExecuteTrigger(trigger, [], false, this._TriggerCache.indexOf(trigger), 0, 0, trigger);
+                }                
                 return null;
             case 'condition':
             case 'cond':
@@ -7523,6 +7527,8 @@ export class Input extends EventEmitter {
                 //last line so a fragment
                 frag = val === this.client.display.lines.length - 1;
             }
+            //manual can only be fired with #set
+            if (trigger.type === SubTriggerTypes.Manual) continue;
             if (frag && !trigger.triggerPrompt) continue;
             if (!frag && !trigger.triggerNewline && (trigger.triggerNewline !== undefined))
                 continue;
