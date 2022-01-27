@@ -16,6 +16,7 @@
   - [Triggers](docs/profiles.md#triggers)
     - Add `ReParse` and `ReParse Pattern` sub type triggers
     - Add `Manual` sub type, can only be fired using [#SET](docs/commands.md#triggers) command
+  - Add [#TRIGGER](docs/commands.md#triggers) and [#CONDITION](docs/commands.md#triggers) short options for type=value
 - **Fixed:**
   - Added type checks to [#ADD](docs/commands.md#miscellaneous) and [#MATH](docs/commands.md#miscellaneous) to ensure the resulting value is a number
   - Added type check to [#CASE](docs/commands.md#conditionals) and [#REPEAT](docs/commands.md#repeating-and-loops) to ensure the value is a number

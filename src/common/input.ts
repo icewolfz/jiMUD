@@ -2032,6 +2032,11 @@ export class Input extends EventEmitter {
                                     case 'cmd':
                                     case 'temporary':
                                     case 'raw':
+                                    case 'pattern':
+                                    case 'regular':
+                                    case 'alarm':
+                                    case 'event':
+                                    case 'cmdpattern':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -2081,6 +2086,11 @@ export class Input extends EventEmitter {
                                     case 'cmd':
                                     case 'temporary':
                                     case 'raw':
+                                    case 'pattern':
+                                    case 'regular':
+                                    case 'alarm':
+                                    case 'event':
+                                    case 'cmdpattern':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -4720,9 +4730,9 @@ export class Input extends EventEmitter {
                 else {
                     this.client.echo('Trigger state ' + n + ' fired state set to ' + trigger.triggers[n - 1].fired + '.', -7, -8, true, true);
                     //manual trigger fire it using set type
-                    if(trigger.enabled && trigger.triggers[n - 1].enabled && trigger.triggers[n - 1].type === SubTriggerTypes.Manual)
+                    if (trigger.enabled && trigger.triggers[n - 1].enabled && trigger.triggers[n - 1].type === SubTriggerTypes.Manual)
                         this.ExecuteTrigger(trigger, [], false, this._TriggerCache.indexOf(trigger), 0, 0, trigger);
-                }                
+                }
                 return null;
             case 'condition':
             case 'cond':
@@ -4775,11 +4785,24 @@ export class Input extends EventEmitter {
                                     case 'cmd':
                                     case 'temporary':
                                     case 'raw':
-                                    case 'type':
+                                    case 'pattern':
+                                    case 'regular':
+                                    case 'alarm':
+                                    case 'event':
+                                    case 'cmdpattern':
+                                    case 'reparse':
+                                    case 'reparsepattern':
+                                    case 'manual':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('type=')) {
+                                        if (o.trim().startsWith('params=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                            item.options['params'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('type=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
                                                 throw new Error(`Invalid trigger type option '${o.trim()}'`);
@@ -4819,6 +4842,14 @@ export class Input extends EventEmitter {
                                     case 'cmd':
                                     case 'temporary':
                                     case 'raw':
+                                    case 'pattern':
+                                    case 'regular':
+                                    case 'alarm':
+                                    case 'event':
+                                    case 'cmdpattern':
+                                    case 'reparse':
+                                    case 'reparsepattern':
+                                    case 'manual':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -8010,7 +8041,25 @@ export class Input extends EventEmitter {
                 sTrigger.value = commands;
             if (options) {
                 if (options.cmd)
-                    sTrigger.type = TriggerType.CommandInputRegular | TriggerType.CommandInputPattern;
+                    sTrigger.type = TriggerType.CommandInputRegular;
+
+                if (options.pattern)
+                    sTrigger.type = TriggerType.Pattern;
+                if (options.regular)
+                    sTrigger.type = TriggerType.Regular;
+                if (options.alarm)
+                    sTrigger.type = TriggerType.Alarm;
+                if (options.event)
+                    sTrigger.type = TriggerType.Event;
+                if (options.cmdpattern)
+                    sTrigger.type = TriggerType.CommandInputPattern;
+                if (options.reparse)
+                    sTrigger.type = SubTriggerTypes.ReParse;
+                if (options.reparsepattern)
+                    sTrigger.type = SubTriggerTypes.ReParsePattern;
+                if (options.manual)
+                    sTrigger.type = SubTriggerTypes.Manual;
+
                 if (options.prompt)
                     sTrigger.triggerPrompt = true;
                 if (options.nocr)
@@ -8058,7 +8107,18 @@ export class Input extends EventEmitter {
                 trigger.value = commands;
             if (options) {
                 if (options.cmd)
-                    trigger.type = TriggerType.CommandInputRegular | TriggerType.CommandInputPattern;
+                    trigger.type = TriggerType.CommandInputRegular;
+                if (options.pattern)
+                    sTrigger.type = TriggerType.Pattern;
+                if (options.regular)
+                    sTrigger.type = TriggerType.Regular;
+                if (options.alarm)
+                    sTrigger.type = TriggerType.Alarm;
+                if (options.event)
+                    sTrigger.type = TriggerType.Event;
+                if (options.cmdpattern)
+                    sTrigger.type = TriggerType.CommandInputPattern;
+
                 if (options.prompt)
                     trigger.triggerPrompt = true;
                 if (options.nocr)
