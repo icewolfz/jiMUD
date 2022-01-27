@@ -30,7 +30,8 @@ export enum TriggerType {
     Alarm = 3,
     Pattern = 8,
     CommandInputPattern = 16,
-    Expression = 1 << 6
+    Expression = 1 << 6,
+    LoopExpression = 1 << 7
 }
 
 export enum TriggerTypes {
@@ -41,19 +42,21 @@ export enum TriggerTypes {
     Pattern = 8,
     CommandInputPattern = 16,
     Alarm = 32,
-    Expression = 1 << 6
+    Expression = 1 << 6,
+    LoopExpression = 1 << 7
 }
 
 export enum SubTriggerTypes {
     Skip = 1 << 9,
     Wait = 1 << 10,
-    LoopPattern = 1 << 11,
-    LoopLines = 1 << 12,
-    LoopExp = 1 << 13,
+    Loop = 1 << 11,
+    LoopPattern = 1 << 12,
+    LoopLines = 1 << 13,
     Duration = 1 << 14,
     WithinLines = 1 << 15,
     Manual = 1 << 16,
-    ReParse = 1 << 17
+    ReParse = 1 << 17,
+    ReParsePattern = 1 << 18
 }
 
 export enum VariableType {

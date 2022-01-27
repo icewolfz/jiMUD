@@ -531,6 +531,8 @@ function initTriggerEditor(item) {
     $('#trigger-state').parent().css('display', item.triggers && item.triggers.length ? '' : 'none');
     $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? '' : 'none');
     $('#triggers-name').css('display', '');
+    $('option[data-type="sub"]').prop('hidden', true);
+    $('#trigger-type').selectpicker('refresh').selectpicker('render');
     $(window).trigger('resize');
 }
 
@@ -572,6 +574,8 @@ export function SelectTriggerState(state, noUpdate?) {
     $('#trigger-state').parent().css('display', state === 0 ? '' : 'none');
     $('#trigger-state').parent().prev().css('display', state === 0 ? '' : 'none');
     $('#triggers-name').css('display', state === 0 ? '' : 'none');
+    $('option[data-type="sub"]').prop('hidden', state === 0);
+    $('#trigger-type').selectpicker('refresh').selectpicker('render');
 }
 
 export function DeleteTriggerState() {
@@ -601,6 +605,10 @@ function removeTriggerState(state, profile, idx, update, customUndo?) {
         item.priority = profile.triggers[idx].priority;
         item.name = profile.triggers[idx].name;
         item.triggers = items;
+        if (item.type === 262144)
+            item.type = 8;
+        else if (item.type > 16)
+            item.type = 0;
         profile.triggers[idx] = item;
         UpdateItemNode(profile.triggers[idx]);
         if (update)
@@ -642,6 +650,10 @@ function removeTriggerState(state, profile, idx, update, customUndo?) {
     $('#trigger-state').parent().css('display', item.triggers && item.triggers.length ? (state === 0 ? '' : 'none') : 'none');
     $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? (state === 0 ? '' : 'none') : 'none');
     $('#triggers-name').css('display', !(item.triggers && item.triggers.length) || state === 0 ? '' : 'none');
+    if (state === 0) {
+        $('#trigger-type').val(item.type);
+        $('#trigger-type').selectpicker('val', item.type);
+    }
     SelectTriggerState(state, true);
 }
 
@@ -662,6 +674,10 @@ function swapTriggerState(oldState, newState, profile, idx, update, customUndo?)
     if (newState == 0) {
         o = items.shift();
         o.triggers = items;
+        if (o.type === 262144)
+            o.type = 8;
+        else if (o.type > 16)
+            o.type = 0;
         n = item;
         n.triggers = [];
         o.state = n.state;
@@ -678,12 +694,18 @@ function swapTriggerState(oldState, newState, profile, idx, update, customUndo?)
             $('#trigger-state').parent().css('display', '');
             $('#trigger-state').parent().prev().css('display', '');
             $('#triggers-name').css('display', '');
+            $('#trigger-type').val(n.type);
+            $('#trigger-type').selectpicker('val', n.type);
         }
     }
     //main trigger becomes first state
     else if (oldState === 0) {
         n = items.shift();
         n.triggers = items;
+        if (n.type === 262144)
+            n.type = 8;
+        else if (n.type > 16)
+            n.type = 0;
         o = item;
         o.triggers = [];
         n.state = o.state;

@@ -1531,10 +1531,19 @@ export class Input extends EventEmitter {
             requestAnimationFrame(() => { this.updatePads(); });
     }
 
-    private adjustLastLine(n) {
+    private adjustLastLine(n, raw?) {
         if (!this.client.display.lines || this.client.display.lines.length === 0)
             return 0;
-        if (n === this.client.display.lines.length) {
+        if (raw) {
+            if (n === this.client.display.lines.length) {
+                n--;
+                if (this.client.display.lines[n].length === 0 && this.client.display.rawLines[n].length)
+                    n--;
+            }
+            else if (n === this.client.display.lines.length - 1 && this.client.display.lines[n].length === 0 && this.client.display.rawLines[n].length)
+                n--;
+        }
+        else if (n === this.client.display.lines.length) {
             n--;
             if (this.client.display.lines[n].length === 0)
                 n--;
@@ -7419,7 +7428,30 @@ export class Input extends EventEmitter {
         if (type === TriggerType.Regular && (types & TriggerTypes.Regular) == TriggerTypes.Regular)
             return true;
         return false;
+    }
 
+    private isSubTriggerType(type) {
+        if ((type & SubTriggerTypes.Skip) == SubTriggerTypes.Skip)
+            return true;
+        if ((type & SubTriggerTypes.Wait) == SubTriggerTypes.Wait)
+            return true;
+        if ((type & SubTriggerTypes.Loop) == SubTriggerTypes.Loop)
+            return true;
+        if ((type & SubTriggerTypes.LoopPattern) == SubTriggerTypes.LoopPattern)
+            return true;
+        if ((type & SubTriggerTypes.LoopLines) == SubTriggerTypes.LoopLines)
+            return true;
+        if ((type & SubTriggerTypes.Duration) == SubTriggerTypes.Duration)
+            return true;
+        if ((type & SubTriggerTypes.WithinLines) == SubTriggerTypes.WithinLines)
+            return true;
+        if ((type & SubTriggerTypes.Manual) == SubTriggerTypes.Manual)
+            return true;
+        if ((type & SubTriggerTypes.ReParse) == SubTriggerTypes.ReParse)
+            return true;
+        if ((type & SubTriggerTypes.ReParsePattern) == SubTriggerTypes.ReParsePattern)
+            return true;
+        return false;
     }
 
     private getTriggerType(type: TriggerType | SubTriggerTypes) {
@@ -7450,11 +7482,11 @@ export class Input extends EventEmitter {
             //extra check in case error disabled it and do not want to keep triggering the error
             if (!trigger.enabled) continue;
             //safety check in case a state was deleted
-            if (trigger.state > trigger.triggers.length)
-                trigger.state = 0;
-            if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
+            if (trigger.state > parent.triggers.length)
+                parent.state = 0;
+            if (trigger.state !== 0 && parent.triggers && parent.triggers.length) {
                 //trigger states are 1 based as 0 is parent trigger
-                trigger = trigger.triggers[trigger.state - 1];
+                trigger = parent.triggers[trigger.state - 1];
                 //skip disabled states
                 while (!trigger.enabled && parent.state !== 0) {
                     //advance state
@@ -7463,12 +7495,12 @@ export class Input extends EventEmitter {
                     if (parent.state > parent.triggers.length) {
                         parent.state = 0;
                         //reset to first state
-                        trigger = trigger.triggers[parent.state - 1];
+                        trigger = parent;
                         //stop checking
                         break;
                     }
                     if (parent.state)
-                        trigger = trigger.triggers[parent.state - 1];
+                        trigger = parent.triggers[parent.state - 1];
                     else
                         trigger = parent;
                     changed = true;
@@ -7481,19 +7513,38 @@ export class Input extends EventEmitter {
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
             }
-            if (trigger.type !== undefined && (type & this.getTriggerType(trigger.type)) !== this.getTriggerType(trigger.type)) continue;
+            if (trigger.type !== undefined && (type & this.getTriggerType(trigger.type)) !== this.getTriggerType(trigger.type) && !this.isSubTriggerType(trigger.type))
+                continue;
+            //if not reg/pattern types use last line            
+            if ((trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) !== type) {
+                val = this.adjustLastLine(this.client.display.lines.length, true);
+                line = this.client.display.lines[val];
+                raw = this.client.display.rawLines[val] || line;
+                //last line so a fragment
+                frag = val === this.client.display.lines.length - 1;
+            }
             if (frag && !trigger.triggerPrompt) continue;
             if (!frag && !trigger.triggerNewline && (trigger.triggerNewline !== undefined))
                 continue;
             try {
                 if (trigger.verbatim) {
-                    if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) continue;
-                    else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) continue;
+                    if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) {
+                        //if reparse and if failed advance anyways
+                        if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) === type)
+                            this.advanceTrigger(trigger, parent, t);
+                        continue;
+                    }
+                    else if (trigger.caseSensitive && (trigger.raw ? raw : line) !== trigger.pattern) {
+                        //if reparse and if failed advance anyways
+                        if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) === type)
+                            this.advanceTrigger(trigger, parent, t);
+                        continue;
+                    }
                     val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], ret, t, [(trigger.raw ? raw : line)], 0, parent);
                 }
                 else {
                     let re;
-                    if (trigger.type === TriggerType.Pattern || trigger.type === TriggerType.CommandInputPattern)
+                    if (trigger.type === TriggerType.Pattern || trigger.type === TriggerType.CommandInputPattern || trigger.type === SubTriggerTypes.ReParsePattern)
                         pattern = convertPattern(trigger.pattern, this.client);
                     else
                         pattern = trigger.pattern;
@@ -7504,7 +7555,12 @@ export class Input extends EventEmitter {
                     //reset from last use always
                     re.lastIndex = 0;
                     const res = re.exec(trigger.raw ? raw : line);
-                    if (!res || !res.length) continue;
+                    if (!res || !res.length) {
+                        //if reparse and if failed advance anyways
+                        if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) && ((TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.CommandInputPattern | TriggerTypes.CommandInputRegular) & type) === type)
+                            this.advanceTrigger(trigger, parent, t);
+                        continue;
+                    }
                     let args;
                     if ((trigger.raw ? raw : line) === res[0] || !this.client.options.prependTriggeredLine)
                         args = res;
@@ -7517,8 +7573,8 @@ export class Input extends EventEmitter {
                     val = this.ExecuteTrigger(trigger, args, ret, t, [trigger.raw ? raw : line, re], res.groups, parent);
                 }
                 if (this._TriggerStates[t] && this._TriggerStates[t].reParse) {
-                    t--;
                     delete this._TriggerStates[t];
+                    t--;
                 }
                 else if (ret) return val;
             }
@@ -7544,17 +7600,50 @@ export class Input extends EventEmitter {
         if (!trigger.enabled) return '';
         if (trigger.fired) {
             trigger.fired = false;
-            parent.state++;
-            //1 based
-            if (parent.state > parent.triggers.length)
-                parent.state = 0;
+            this.advanceTrigger(trigger, parent, idx);
             this._TriggerStates[idx] = { reParse: true };
-            this.client.saveProfile(parent.profile.name, true);
-            this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
             return '';
         }
         this._LastTrigger = trigger;
         let ret; // = '';
+        //remove temp and advance state before executing value in case it does a trigger on trigger to avoid double triggering
+        if (trigger.temp) {
+            if (parent.triggers.length) {
+                if (parent.state === 0) {
+                    //main trigger temp, replace with first state
+                    const item = parent.triggers.shift();
+                    item.triggers = parent.triggers;
+                    item.state = parent.state;
+                    item.name = parent.name;
+                    item.profile = parent.profile;
+                    //if removed temp shift state adjust
+                    if (item.state > item.triggers.length)
+                        item.state = 0;
+                    if (idx >= 0)
+                        this._TriggerCache[idx] = item;
+                    this.client.saveProfile(parent.profile.name);
+                    const pIdx = parent.profile.triggers.indexOf(parent);
+                    parent.profile.triggers[pIdx] = item;
+                    this.client.emit('item-updated', 'trigger', parent.profile.name, pIdx, item);
+                }
+                else {
+                    //remove only temp sub state
+                    parent.triggers.splice(parent.state - 1, 1);
+                    //if removed temp shift state adjust
+                    if (parent.state > parent.triggers.length)
+                        parent.state = 0;
+                    this.client.saveProfile(parent.profile.name);
+                    this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
+                }
+            }
+            else {
+                if (idx >= 0)
+                    this._TriggerCache.splice(idx, 1);
+                this.client.removeTrigger(parent);
+            }
+        }
+        else if (parent.triggers.length)
+            this.advanceTrigger(trigger, parent, idx);
         switch (trigger.style) {
             case 1:
                 this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex });
@@ -7601,50 +7690,6 @@ export class Input extends EventEmitter {
                 ret = trigger.value;
                 break;
         }
-        if (trigger.temp) {
-            if (parent.triggers.length) {
-                if (parent.state === 0) {
-                    //main trigger temp, replace with first state
-                    const item = parent.triggers.shift();
-                    item.triggers = parent.triggers;
-                    item.state = parent.state;
-                    item.name = parent.name;
-                    item.profile = parent.profile;
-                    //if removed temp shift state adjust
-                    if (item.state > item.triggers.length)
-                        item.state = 0;
-                    if (idx >= 0)
-                        this._TriggerCache[idx] = item;
-                    this.client.saveProfile(parent.profile.name);
-                    const pIdx = parent.profile.triggers.indexOf(parent);
-                    parent.profile.triggers[pIdx] = item;
-                    this.client.emit('item-updated', 'trigger', parent.profile.name, pIdx, item);
-                }
-                else {
-                    //remove only temp sub state
-                    parent.triggers.splice(parent.state - 1, 1);
-                    //if removed temp shift state adjust
-                    if (parent.state > parent.triggers.length)
-                        parent.state = 0;
-                    this.client.saveProfile(parent.profile.name);
-                    this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
-                }
-            }
-            else {
-                if (idx >= 0)
-                    this._TriggerCache.splice(idx, 1);
-                this.client.removeTrigger(parent);
-            }
-        }
-        else if (parent.triggers.length) {
-            parent.state++;
-            //1 based
-            if (parent.state > parent.triggers.length)
-                parent.state = 0;
-            //changed state save
-            this.client.saveProfile(parent.profile.name, true);
-            this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
-        }
         if (ret == null || ret === undefined)
             return null;
         if (r)
@@ -7662,6 +7707,19 @@ export class Input extends EventEmitter {
             };
             setTimeout(delay, 1);
         }
+    }
+
+    private advanceTrigger(trigger, parent, idx) {
+        parent.state++;
+        //1 based
+        if (parent.state > parent.triggers.length)
+            parent.state = 0;
+        //changed state save
+        this.client.saveProfile(parent.profile.name, true);
+        this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
+        //is new subtype a reparse? if so reparse using current trigger instant
+        if (parent.state !== 0 && (parent.triggers[parent.state - 1].type === SubTriggerTypes.ReParse || parent.triggers[parent.state - 1].type === SubTriggerTypes.ReParsePattern))
+            this._TriggerStates[idx] = { reParse: true };
     }
 
     public getTriggerState(idx) {
@@ -7721,11 +7779,11 @@ export class Input extends EventEmitter {
             //in case it got disabled by something
             if (!trigger.enabled) continue;
             //safety check in case a state was deleted
-            if (trigger.state > trigger.triggers.length)
+            if (trigger.state > parent.triggers.length)
                 trigger.state = 0;
-            if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
+            if (trigger.state !== 0 && parent.triggers && parent.triggers.length) {
                 //trigger states are 1 based as 0 is parent trigger
-                trigger = trigger.triggers[trigger.state - 1];
+                trigger = parent.triggers[trigger.state - 1];
                 //skip disabled states
                 while (!trigger.enabled && parent.state !== 0) {
                     //advance state
@@ -7734,12 +7792,12 @@ export class Input extends EventEmitter {
                     if (parent.state > parent.triggers.length) {
                         parent.state = 0;
                         //reset to first state
-                        trigger = trigger.triggers[parent.state - 1];
+                        trigger = parent;
                         //stop checking
                         break;
                     }
                     if (parent.state)
-                        trigger = trigger.triggers[parent.state - 1];
+                        trigger = parent.triggers[parent.state - 1];
                     else
                         trigger = parent;
                     changed = true;
@@ -7757,8 +7815,8 @@ export class Input extends EventEmitter {
             if (!trigger.caseSensitive && event.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
             this.ExecuteTrigger(trigger, args, false, t, 0, 0, parent);
             if (this._TriggerStates[t] && this._TriggerStates[t].reParse) {
-                t--;
                 delete this._TriggerStates[t];
+                t--;
             }
         }
     }
@@ -8037,14 +8095,17 @@ export class Input extends EventEmitter {
     private isTriggerType(type, filter?: TriggerTypeFilter) {
         if (!filter) filter = TriggerTypeFilter.All;
         switch (type.replace(/ /g, '').toUpperCase()) {
+            case 'REGULAREXPRESSION':
+            case 'COMMANDINPUTREGULAREXPRESSION':
+                return (filter & TriggerTypeFilter.Main) === TriggerTypeFilter.Main ? true : false;
             case '0':
             case '1':
             case '2':
             case '3':
             case '8':
             case '16':
-            case 'REGULAREXPRESSION':
-            case 'COMMANDINPUTREGULAREXPRESSION':
+            case 'REGULAR':
+            case 'COMMANDINPUTREGULAR':
             case 'EVENT':
             case 'ALARM':
             case 'COMMAND':
@@ -8058,8 +8119,6 @@ export class Input extends EventEmitter {
             case '2048':
             case 'LOOPLINES':
             case '4096':
-            case 'LOOPEXP':
-            case '8192':
             case 'DURATION':
             case '16384':
             case 'WITHINLINES':
@@ -8068,6 +8127,8 @@ export class Input extends EventEmitter {
             case '65536':
             case 'REPARSE':
             case '131072':
+            case 'REPARSEPATTERN':
+            case '262144':
                 return (filter & TriggerTypeFilter.Sub) === TriggerTypeFilter.Sub ? true : false;
         }
         return false;
@@ -8075,6 +8136,10 @@ export class Input extends EventEmitter {
 
     private convertTriggerType(type) {
         switch (type.replace(/ /g, '').toUpperCase()) {
+            case 'REGULAREXPRESSION':
+                return TriggerType.Regular;
+            case 'COMMANDINPUTREGULAREXPRESSION':
+                return TriggerType.CommandInputRegular;
             case '0':
             case '1':
             case '2':
@@ -8082,8 +8147,8 @@ export class Input extends EventEmitter {
             case '8':
             case '16':
                 return TriggerType[parseInt(type, 10)];
-            case 'REGULAREXPRESSION':
-            case 'COMMANDINPUTREGULAREXPRESSION':
+            case 'REGULAR':
+            case 'COMMANDINPUTREGULAR':
             case 'EVENT':
             case 'ALARM':
             case 'COMMAND':
@@ -8098,16 +8163,17 @@ export class Input extends EventEmitter {
             case '32768':
             case '65536':
             case '131072':
+            case '262144':
                 return SubTriggerTypes[parseInt(type, 10)];
             case 'SKIP':
             case 'WAIT':
             case 'LOOPPATTERN':
             case 'LOOPLINES':
-            case 'LOOPEXP':
             case 'DURATION':
             case 'WITHINLINES':
             case 'MANUAL':
             case 'REPARSE':
+            case 'REPARSEPATTERN':
                 return SubTriggerTypes[type];
         }
         throw new Error('Invalid trigger type');

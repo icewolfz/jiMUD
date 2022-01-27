@@ -137,6 +137,9 @@
     - `&nn` matches exactly nn characters (fixed width pattern)
     - `&VarName` assigns the matched string to the given variable
     - `%/regex/%` matches the given Regular Expression
+  - Sub triggers Only types:
+    - `ReParse` Re-parse the last line using the new regular expression patterns, if pattern matches executes normally, if does not match it advances to next state
+    - `ReParse Pattern` Re-parse the last line using the new zmud pattern, if pattern matches executes normally, if does not match it advances to next state
 - `Name` a unique name to identify the trigger, if more then one trigger exist with the name, the one with the highest priority is used first
 - `Priority` the sort order of triggers, if multi state trigger only the 0 state supports Priority
 - `State` if multi state trigger this sets the current state to begin triggering
