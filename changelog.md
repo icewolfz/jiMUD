@@ -33,6 +33,8 @@
 - **Changed:**
   - [Triggers](docs/profiles.md#triggers), [Buttons](docs/profiles.md#buttons), [Macros](docs/profiles.md#macros), [Context](docs/profiles.md#context), and [Aliases](docs/profiles.md#aliases) values will now be ignored if empty, thus not creating blank lines, you can use a value of ${cr} to send a blank line
   - [#ADD](docs/commands.md#miscellaneous) will default to 0 if variable is not defined and define variable
+  - Update electron 16.0.7 to 16.0.8
+  - Update @electron/remote 2.0.1 to 2.0.4
 
 ## v0.17.6 2022-01-24
 
