@@ -137,6 +137,7 @@
     - `&nn` matches exactly nn characters (fixed width pattern)
     - `&VarName` assigns the matched string to the given variable
     - `%/regex/%` matches the given Regular Expression
+  - `Loop Expression` execute every line as long as expression is true, setting param to # will set the max number of lines allowed to loop, **WARNING** It is very easy to get stuck in an infinite loop if the trigger returns or displays text to the screen, if you use a param you will have to reset the trigger state using [#STATE](commands.md#triggers) if not a multi state trigger
   - Sub triggers Only types:
     - `Skip` Skip N lines before trigger will fire, set param to # of lines to skip
     - `Wait` Waits a set amount of milliseconds before trigger will fire on matched pattern, set param to # of milliseconds to wait
@@ -144,7 +145,7 @@
     - `Loop Lines` Fire trigger within N # of lines of all matching lines, after N # lines advance state
     - `Duration` Will only fire if matched line arrives in the amount of time between the last state fired and the duration, set param to # of milliseconds
     - `Within Lines` Fire trigger with in N # of lines, if not triggered after N lines state advances to next state, set param to # of lines to match with in
-    - `Manual` Manual state that is only fired using #set when fired set
+    - `Manual` Manual state that is only fired using [#SET](commands.md#triggers) command
     - `ReParse` Re-parse the last line using the new regular expression patterns, if pattern matches executes normally, if does not match it advances to next state
     - `ReParse Pattern` Re-parse the last line using the new zmud pattern, if pattern matches executes normally, if does not match it advances to next state
 - `Name` a unique name to identify the trigger, if more then one trigger exist with the name, the one with the highest priority is used first

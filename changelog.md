@@ -5,6 +5,7 @@
 - **New:**
   - Add [#COMMENT](docs/commands.md#miscellaneous) does nothing, used to create quick comments in scripts
   - Add [#NOOP](docs/commands.md#miscellaneous) does nothing, will expand arguments and execute any functions but return nothing to the screen
+  - Add [#UNACTION](docs/commands.md#triggers) same as [#UNTRIGGER](docs/commands.md#triggers)
   - Add [%clip(string)](docs/functions.md#miscellaneous) return or set text on clipboard
   - [Preferences](docs/preferences.md):
     - Add [Ignore Eval Undefined](docs/preferences.md#scripting) Will cause undefined results to be ignored if enabled, else it will be converted to a string and the word undefined displayed
@@ -14,6 +15,7 @@
     - Add [Block Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for block comments, ending block comment is string reversed
     - Add [Block Inline Comment](docs/preferences.md#scripting--special-characters) disable block comment support    
   - [Triggers](docs/profiles.md#triggers)
+    - Add `Loop Expression` trigger type
     - Add `ReParse` and `ReParse Pattern` sub type triggers
     - Add `Manual` sub type, can only be fired using [#SET](docs/commands.md#triggers) command
     - Add `Wait` sub type trigger

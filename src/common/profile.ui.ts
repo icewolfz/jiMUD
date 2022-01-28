@@ -2949,6 +2949,7 @@ export function init() {
                 $('#triggers-params-suffix').parent().addClass('input-group');
                 $('#triggers-params-suffix').css('display', '');
                 break;
+            case '128':
             case '512': //skip            
             case '4096': //LoopPattern
             case '8192': //LoopLines

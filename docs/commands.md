@@ -200,6 +200,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#TR</u>IGGER name options<sup>1</sup> *profile*
 >Update options<sup>1</sup> for a trigger
 
+#UNACTION {name\|pattern} *profile*
+>Same as #UNTRIGGER, see #UNTRIGGER for more details
+
 <u>#UNT</u>RIGGER {name\|pattern} *profile*
 >remove a trigger
 
