@@ -327,10 +327,13 @@
                         </tr>
                         <tr class="panel-adv-body">
                             <td data-row="triggers-params">
-                                <label class="control-label" for="trigger-params">Params</label>
+                                <label class="control-label" for="trigger-params">Param</label>
                             </td>
                             <td colspan="6" data-row="triggers-params">
-                                <input class="form-control" style="width: 100%" type="text" id="trigger-params">
+                                <div style="width:100%">
+                                    <input class="form-control" style="width: 100%" type="number" id="trigger-params">
+                                    <div id="triggers-params-suffix" class="input-group-addon" style="display: none;width: 40px;">ms</div>
+                                </div>                                
                             </td>
                         </tr>
                         <tr class="panel-adv-body">
