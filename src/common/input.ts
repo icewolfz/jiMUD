@@ -7893,28 +7893,56 @@ export class Input extends EventEmitter {
         this.client.saveProfile(parent.profile.name, true);
         this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
         //is new subtype a reparse? if so reparse using current trigger instant
-        if (parent.state !== 0) {
-            let params;
-            switch (parent.triggers[parent.state - 1].type) {
-                case SubTriggerTypes.ReParse:
-                case SubTriggerTypes.ReParsePattern:
-                    this._TriggerStates[idx] = { reParse: true };
-                    break;
-                case SubTriggerTypes.Duration:
-                case SubTriggerTypes.Wait:
-                    params = parent.triggers[parent.state - 1].params;
-                    if (params && params.length) {
-                        params = parseInt(params, 10);
-                        if (isNaN(params))
-                            params = 0;
-                    }
-                    else
+        if (parent.state !== 0)
+            this._TriggerStates[idx] = this.createTriggerState(parent.triggers[parent.state - 1]);
+    }
+
+    public createTriggerState(trigger, reparse?) {
+        let params;
+        let state;
+        switch (trigger.type) {
+            case SubTriggerTypes.ReParse:
+            case SubTriggerTypes.ReParsePattern:
+                state = { reParse: true };
+                break;
+            case SubTriggerTypes.Duration:
+            case SubTriggerTypes.Wait:
+                params = trigger.params;
+                if (params && params.length) {
+                    params = parseInt(params, 10);
+                    if (isNaN(params))
                         params = 0;
-                    this._TriggerStates[idx] = { time: Date.now() + params };
-                    break;
-            }
-            if (this._TriggerStates[idx])
-                this._TriggerStates[idx].type = parent.triggers[parent.state - 1].type;
+                }
+                else
+                    params = 0;
+                state = { time: Date.now() + params };
+                break;
+        }
+        if (state)
+            state.type = trigger.type;
+        if (!state && reparse)
+            return { reParse: true };
+        else if (reparse)
+            state.reparse = true;
+        return state;
+    }
+
+    public updateTriggerState(trigger, idx) {
+        if (!this._TriggerStates[idx]) return;
+        let params;
+        switch (this._TriggerStates[idx].type) {
+            case SubTriggerTypes.Wait:
+            case SubTriggerTypes.Duration:
+                params = trigger.params;
+                if (params && params.length) {
+                    params = parseInt(params, 10);
+                    if (isNaN(params))
+                        params = 0;
+                }
+                else
+                    params = 0;
+                this._TriggerStates[idx].time = Date.now() + params;
+                break;
         }
     }
 
@@ -7963,43 +7991,14 @@ export class Input extends EventEmitter {
             oTrigger = parent.triggers[oldState - 1];
         if (oldState === parent.state) {
             if (this._TriggerStates[idx]) {
-                if (!trigger.fired) {
-                    switch (this._TriggerStates[idx].type) {
-                        case SubTriggerTypes.Wait:
-                        case SubTriggerTypes.Duration:
-                            params = parent.triggers[parent.state - 1].params;
-                            if (params && params.length) {
-                                params = parseInt(params, 10);
-                                if (isNaN(params))
-                                    params = 0;
-                            }
-                            else
-                                params = 0;
-                            this._TriggerStates[idx].time = Date.now() + params;
-                            break;
-                    }
-                }
-                else {
+                if (!trigger.fired)
+                    this.updateTriggerState(trigger, idx);
+                else
                     this.clearTriggerState(idx);
-                }
             }
             else {
-                if (!trigger.fired) {
-                    switch (this._TriggerStates[idx].type) {
-                        case SubTriggerTypes.Wait:
-                        case SubTriggerTypes.Duration:
-                            params = parent.triggers[parent.state - 1].params;
-                            if (params && params.length) {
-                                params = parseInt(params, 10);
-                                if (isNaN(params))
-                                    params = 0;
-                            }
-                            else
-                                params = 0;
-                            this._TriggerStates[idx] = { time: Date.now() + params };
-                            break;
-                    }
-                }
+                if (!trigger.fired)
+                    this.updateTriggerState(trigger, idx);
             }
         }
         else {
@@ -8008,28 +8007,8 @@ export class Input extends EventEmitter {
                     reParse = this._TriggerStates[idx].reParse;
             }
             this.clearTriggerState(idx);
-            if (!trigger.fired) {
-                switch (trigger.type) {
-                    case SubTriggerTypes.Wait:
-                    case SubTriggerTypes.Duration:
-                        params = parent.triggers[parent.state - 1].params;
-                        if (params && params.length) {
-                            params = parseInt(params, 10);
-                            if (isNaN(params))
-                                params = 0;
-                        }
-                        else
-                            params = 0;
-                        this._TriggerStates[idx] = { time: Date.now() + params };
-                        break;
-                    case SubTriggerTypes.ReParse:
-                    case SubTriggerTypes.ReParsePattern:
-                        this._TriggerStates[idx] = { reParse: true };
-                        break;
-                }
-                if (this._TriggerStates[idx])
-                    this._TriggerStates[idx].type = parent.triggers[parent.state - 1].type;
-            }
+            if (!trigger.fired)
+                this._TriggerStates[idx] = this.createTriggerState(parent.triggers[parent.state - 1]);
             if (reParse && this._TriggerStates[idx])
                 this._TriggerStates[idx].reParse = reParse;
             else
