@@ -2049,10 +2049,10 @@ export class Input extends EventEmitter {
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('params=')) {
+                                        if (o.trim().startsWith('param=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
-                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                                throw new Error(`Invalid trigger param option '${o.trim()}'`);
                                             item.options['params'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('type=')) {
@@ -2104,10 +2104,10 @@ export class Input extends EventEmitter {
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('params=')) {
+                                        if (o.trim().startsWith('param=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
-                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                                throw new Error(`Invalid trigger param option '${o.trim()}'`);
                                             item.options['params'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('type=')) {
@@ -4843,10 +4843,10 @@ export class Input extends EventEmitter {
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('params=')) {
+                                        if (o.trim().startsWith('param=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
-                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                                throw new Error(`Invalid trigger param option '${o.trim()}'`);
                                             item.options['params'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('type=')) {
@@ -4907,10 +4907,10 @@ export class Input extends EventEmitter {
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('params=')) {
+                                        if (o.trim().startsWith('param=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
-                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                                throw new Error(`Invalid trigger param option '${o.trim()}'`);
                                             item.options['params'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('type=')) {
