@@ -8008,9 +8008,7 @@ export class Input extends EventEmitter {
             }
             this.clearTriggerState(idx);
             if (!trigger.fired)
-                this._TriggerStates[idx] = this.createTriggerState(parent.triggers[parent.state - 1]);
-            if (reParse && this._TriggerStates[idx])
-                this._TriggerStates[idx].reParse = reParse;
+                this._TriggerStates[idx] = this.createTriggerState(trigger, reParse);
             else
                 this._TriggerStates[idx] = { reParse: true };
         }
