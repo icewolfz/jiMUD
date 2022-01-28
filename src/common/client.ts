@@ -40,6 +40,7 @@ export class Client extends EventEmitter {
     private _input: Input;
     public errored: boolean = false;
     private _settingsFile: string = parseTemplate(path.join('{data}', 'settings.json'));
+    private _firstLoad = false;
     private _itemCache: ItemCache = {
         triggers: null,
         aliases: null,
@@ -513,7 +514,7 @@ export class Client extends EventEmitter {
     public initDefaultVariables(profile?) {
         let vl = this.variables.length;
         while (vl-- > 0) {
-            if(profile && profile != this.variables[vl].profile) continue;
+            if (profile && profile != this.variables[vl].profile) continue;
             if (this.variables[vl].useDefault)
                 this.variables[vl].rawValue = this.variables[vl].defaultValue;
         }
@@ -562,6 +563,10 @@ export class Client extends EventEmitter {
             this.profiles.add(Profile.Default);
             this.clearCache();
             this.startAlarms();
+            //only init if first load
+            if (!this._firstLoad)
+                this.initDefaultVariables();
+            this._firstLoad = true;
             this.emit('profiles-loaded');
             return;
         }
@@ -581,6 +586,10 @@ export class Client extends EventEmitter {
             this.profiles.add(Profile.Default);
         this.clearCache();
         this.startAlarms();
+        //only init if first load
+        if (!this._firstLoad)
+            this.initDefaultVariables();
+        this._firstLoad = true;
         this.emit('profiles-loaded');
     }
 
@@ -589,11 +598,14 @@ export class Client extends EventEmitter {
         const p = path.join(parseTemplate('{data}'), 'profiles');
         if (!existsSync(p))
             return;
+        let loaded = this.profiles.contains(profile);
         this.profiles.remove(profile);
         this.profiles.load(profile, p);
         this.clearCache();
         this.startAlarms();
-        this.initDefaultVariables(this.profiles.items[profile.toLowerCase()]);
+        //if was never loaded init variables
+        if (!loaded)
+            this.initDefaultVariables(this.profiles.items[profile.toLowerCase()]);
         this.emit('profile-loaded', profile);
     }
 
@@ -873,7 +885,7 @@ export class Client extends EventEmitter {
                 const line = this.display.lines[val];
                 a = this._input.TestTrigger(trigger, parent, a, line, this.display.rawLines[val] || line, val === this.display.lines.length - 1);
                 continue;
-            }            
+            }
             //not an alarm either has sub alarms or was updated
             if (trigger.type !== TriggerType.Alarm) continue;
             let alarm = patterns[a];

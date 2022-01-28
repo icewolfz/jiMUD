@@ -667,8 +667,8 @@ export class Variable extends Item {
             }
         }
         this.profile = profile;
-        if (this.useDefault)
-            this.rawValue = this.defaultValue;
+        //if (this.useDefault)
+            //this.rawValue = this.defaultValue;
     }
 
     public clone() {
