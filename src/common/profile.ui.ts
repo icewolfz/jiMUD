@@ -2942,8 +2942,12 @@ export function init() {
     });
 
     $('#trigger-type').on('change', function () {
-        switch($(this).val()) {
+        switch ($(this).val()) {
+            case '512':
             case '1024':
+            case '4096':
+            case '8192':
+            case '32768':
             case '16384':
                 $('td[data-row="triggers-params"]').css('display', '');
                 break;

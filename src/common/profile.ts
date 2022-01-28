@@ -42,14 +42,13 @@ export enum TriggerTypes {
     Pattern = 8,
     CommandInputPattern = 16,
     Alarm = 32,
-    Expression = 1 << 6,
-    LoopExpression = 1 << 7
+    //Expression = 1 << 6,
 }
 
 export enum SubTriggerTypes {
     Skip = 1 << 9,
     Wait = 1 << 10,
-    Loop = 1 << 11,
+    //LoopExpression = 1 << 11,
     LoopPattern = 1 << 12,
     LoopLines = 1 << 13,
     Duration = 1 << 14,

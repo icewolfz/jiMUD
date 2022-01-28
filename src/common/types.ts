@@ -150,6 +150,7 @@ export interface ParserLine {
   fragment: boolean;
   gagged: boolean;
   formats: LineFormat[];
+  remote: boolean;
 }
 
 export interface ParserOptions {

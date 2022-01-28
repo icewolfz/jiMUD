@@ -1326,6 +1326,14 @@ export class Input extends EventEmitter {
                 data.gagged = true;
                 this._gag--;
             }
+            //if not fragment and not gagged count
+            if (!data.fragment && !data.gagged)
+                for (let state in this._TriggerStates) {
+                    if (this._TriggerStates[state].lineCount)
+                        this._TriggerStates[state].lineCount--;
+                    if (data.remote && this._TriggerStates[state].remoteCount)
+                        this._TriggerStates[state].remoteCount--;
+                }
         });
 
         this.client.on('options-loaded', () => {
@@ -2037,6 +2045,7 @@ export class Input extends EventEmitter {
                                     case 'alarm':
                                     case 'event':
                                     case 'cmdpattern':
+                                        //case 'expression':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -2091,6 +2100,7 @@ export class Input extends EventEmitter {
                                     case 'alarm':
                                     case 'event':
                                     case 'cmdpattern':
+                                        //case 'expression':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -4820,9 +4830,16 @@ export class Input extends EventEmitter {
                                     case 'alarm':
                                     case 'event':
                                     case 'cmdpattern':
+                                    //case 'expression':
                                     case 'reparse':
                                     case 'reparsepattern':
                                     case 'manual':
+                                    case 'skip':
+                                    case 'looplines':
+                                    case 'looppattern':
+                                    case 'wait':
+                                    case 'duration':
+                                    case 'withinlines':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -4877,9 +4894,16 @@ export class Input extends EventEmitter {
                                     case 'alarm':
                                     case 'event':
                                     case 'cmdpattern':
+                                    //case 'expression':
                                     case 'reparse':
                                     case 'reparsepattern':
                                     case 'manual':
+                                    case 'skip':
+                                    case 'looplines':
+                                    case 'looppattern':
+                                    case 'wait':
+                                    case 'duration':
+                                    case 'withinlines':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -7494,6 +7518,8 @@ export class Input extends EventEmitter {
             return true;
         if (type === TriggerType.Regular && (types & TriggerTypes.Regular) == TriggerTypes.Regular)
             return true;
+        //if (type === TriggerType.Expression && (types & TriggerTypes.Expression) == TriggerTypes.Expression)
+        //return true;            
         return false;
     }
 
@@ -7502,8 +7528,8 @@ export class Input extends EventEmitter {
             return true;
         if ((type & SubTriggerTypes.Wait) == SubTriggerTypes.Wait)
             return true;
-        if ((type & SubTriggerTypes.Loop) == SubTriggerTypes.Loop)
-            return true;
+        //if ((type & SubTriggerTypes.LoopExpression) == SubTriggerTypes.LoopExpression)
+        //return true;
         if ((type & SubTriggerTypes.LoopPattern) == SubTriggerTypes.LoopPattern)
             return true;
         if ((type & SubTriggerTypes.LoopLines) == SubTriggerTypes.LoopLines)
@@ -7604,6 +7630,37 @@ export class Input extends EventEmitter {
                         //need to reparse as the state is no longer valie and the next state might be
                         if (!this._TriggerStates[t])
                             this._TriggerStates[t] = { reParse: true };
+                        else
+                            this._TriggerStates[t].reParse = true;
+                        t = this.cleanUpTriggerState(t);
+                        continue;
+                    }
+                }
+                else if (this._TriggerStates[t].type === SubTriggerTypes.Skip) {
+                    //skip until that many lines have passed
+                    if (this._TriggerStates[t].lineCount > 0)
+                        continue;
+                    delete this._TriggerStates[t];
+                }
+                else if (this._TriggerStates[t].type === SubTriggerTypes.LoopLines) {
+                    //move on after line count
+                    if (this._TriggerStates[t].lineCount < 1) {
+                        this.advanceTrigger(trigger, parent, t);
+                        //reparse as new state may be valid
+                        if (!this._TriggerStates[t])
+                            this._TriggerStates[t] = { reParse: true }
+                        else
+                            this._TriggerStates[t].reParse = true;
+                        t = this.cleanUpTriggerState(t);
+                        continue;
+                    }
+                }
+                else if (this._TriggerStates[t].type === SubTriggerTypes.WithinLines) {
+                    if (this._TriggerStates[t].lineCount < 1) {
+                        this.advanceTrigger(trigger, parent, t);
+                        //reparse as new state may be valid
+                        if (!this._TriggerStates[t])
+                            this._TriggerStates[t] = { reParse: true }
                         else
                             this._TriggerStates[t].reParse = true;
                         t = this.cleanUpTriggerState(t);
@@ -7885,6 +7942,24 @@ export class Input extends EventEmitter {
     }
 
     private advanceTrigger(trigger, parent, idx) {
+        if (this._TriggerStates[idx]) {
+            if (this._TriggerStates[idx].type === SubTriggerTypes.LoopPattern) {
+                this._TriggerStates[idx].loop--;
+                //stay on this state until loop is done
+                if (this._TriggerStates[idx].loop > 0)
+                    return;
+                this.clearTriggerState(idx);
+            }
+            //match within the # of lines so clear state and move on
+            else if (this._TriggerStates[idx].type === SubTriggerTypes.LoopLines) {
+                //keep matching until loop is over
+                if (this._TriggerStates[idx].lineCount > 0)
+                    return;
+                this.clearTriggerState(idx);
+            }
+            else if (this._TriggerStates[idx].type === SubTriggerTypes.WithinLines)
+                this.clearTriggerState(idx);
+        }
         parent.state++;
         //1 based
         if (parent.state > parent.triggers.length)
@@ -7917,6 +7992,43 @@ export class Input extends EventEmitter {
                     params = 0;
                 state = { time: Date.now() + params };
                 break;
+            case SubTriggerTypes.WithinLines:
+            case SubTriggerTypes.LoopLines:
+            case SubTriggerTypes.Skip:
+                params = trigger.params;
+                if (params && params.length) {
+                    params = parseInt(params, 10);
+                    if (isNaN(params))
+                        params = 1;
+                }
+                else
+                    params = 1;
+                state = { lineCount: params + 1 };
+                break;
+            /*          
+                params = trigger.params;
+                if (params && params.length) {
+                    params = parseInt(params, 10);
+                    if (isNaN(params))
+                        params = 1;
+                }
+                else
+                    params = 1;
+                state = { remoteCount: params + 1 };
+                break;
+            */
+            //case SubTriggerTypes.LoopExpression:
+            case SubTriggerTypes.LoopPattern:
+                params = trigger.params;
+                if (params && params.length) {
+                    params = parseInt(params, 10);
+                    if (isNaN(params))
+                        params = 0;
+                }
+                else
+                    params = 0;
+                state = { loop: params };
+                break;
         }
         if (state)
             state.type = trigger.type;
@@ -7942,6 +8054,43 @@ export class Input extends EventEmitter {
                 else
                     params = 0;
                 this._TriggerStates[idx].time = Date.now() + params;
+                break;
+            case SubTriggerTypes.WithinLines:
+            case SubTriggerTypes.Skip:
+            case SubTriggerTypes.LoopLines:
+                params = trigger.params;
+                if (params && params.length) {
+                    params = parseInt(params, 10);
+                    if (isNaN(params))
+                        params = 0;
+                }
+                else
+                    params = 0;
+                this._TriggerStates[idx].lineCount = params;
+                break;
+            /*
+                            params = trigger.params;
+                            if (params && params.length) {
+                                params = parseInt(params, 10);
+                                if (isNaN(params))
+                                    params = 0;
+                            }
+                            else
+                                params = 0;
+                            this._TriggerStates[idx].remoteCount = params;
+                            break;
+            */
+            //case SubTriggerTypes.LoopExpression:
+            case SubTriggerTypes.LoopPattern:
+                params = trigger.params;
+                if (params && params.length) {
+                    params = parseInt(params, 10);
+                    if (isNaN(params))
+                        params = 0;
+                }
+                else
+                    params = 0;
+                this._TriggerStates[idx].loop = params;
                 break;
         }
     }
@@ -8297,12 +8446,26 @@ export class Input extends EventEmitter {
                     sTrigger.type = TriggerType.Event;
                 if (options.cmdpattern)
                     sTrigger.type = TriggerType.CommandInputPattern;
+                //if(options.expression)
+                //trigger.type = TriggerType.Expression;                    
                 if (options.reparse)
                     sTrigger.type = SubTriggerTypes.ReParse;
                 if (options.reparsepattern)
                     sTrigger.type = SubTriggerTypes.ReParsePattern;
                 if (options.manual)
                     sTrigger.type = SubTriggerTypes.Manual;
+                if (options.skip)
+                    sTrigger.type = SubTriggerTypes.Skip;
+                if (options.looplines)
+                    sTrigger.type = SubTriggerTypes.LoopLines;
+                if (options.looppattern)
+                    sTrigger.type = SubTriggerTypes.LoopPattern;
+                if (options.wait)
+                    sTrigger.type = SubTriggerTypes.Wait;
+                if (options.duration)
+                    sTrigger.type = SubTriggerTypes.Duration;
+                if (options.withinlines)
+                    sTrigger.type = SubTriggerTypes.WithinLines;
 
                 if (options.prompt)
                     sTrigger.triggerPrompt = true;
@@ -8353,15 +8516,17 @@ export class Input extends EventEmitter {
                 if (options.cmd)
                     trigger.type = TriggerType.CommandInputRegular;
                 if (options.pattern)
-                    sTrigger.type = TriggerType.Pattern;
+                    trigger.type = TriggerType.Pattern;
                 if (options.regular)
-                    sTrigger.type = TriggerType.Regular;
+                    trigger.type = TriggerType.Regular;
                 if (options.alarm)
-                    sTrigger.type = TriggerType.Alarm;
+                    trigger.type = TriggerType.Alarm;
                 if (options.event)
-                    sTrigger.type = TriggerType.Event;
+                    trigger.type = TriggerType.Event;
                 if (options.cmdpattern)
-                    sTrigger.type = TriggerType.CommandInputPattern;
+                    trigger.type = TriggerType.CommandInputPattern;
+                //if(options.expression)
+                //trigger.type = TriggerType.Expression;
 
                 if (options.prompt)
                     trigger.triggerPrompt = true;
@@ -8425,10 +8590,12 @@ export class Input extends EventEmitter {
             case '512':
             case 'WAIT':
             case '1024':
+            //case 'LOOPEXPRSSION':
+            //case '2048':
             case 'LOOPPATTERN':
-            case '2048':
-            case 'LOOPLINES':
             case '4096':
+            case 'LOOPLINES':
+            case '8192':
             case 'DURATION':
             case '16384':
             case 'WITHINLINES':
@@ -8466,7 +8633,7 @@ export class Input extends EventEmitter {
                 return TriggerType[type];
             case '512':
             case '1024':
-            case '2048':
+            //case '2048':
             case '4096':
             case '8192':
             case '16384':
@@ -8484,6 +8651,7 @@ export class Input extends EventEmitter {
             case 'MANUAL':
             case 'REPARSE':
             case 'REPARSEPATTERN':
+                //case 'LOOPEXPRSSION':
                 return SubTriggerTypes[type];
         }
         throw new Error('Invalid trigger type');

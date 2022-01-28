@@ -18,6 +18,10 @@
     - Add `Manual` sub type, can only be fired using [#SET](docs/commands.md#triggers) command
     - Add `Wait` sub type trigger
     - Add `Duration` sub type trigger
+    - Add `Skip` sub type trigger
+    - Add `Loop Lines` sub type trigger
+    - Add `Loop Pattern` sub type trigger
+    - Add `Within Lines` sub type trigger
   - Add [#TRIGGER](docs/commands.md#triggers) and [#CONDITION](docs/commands.md#triggers) short options for type=value
 - **Fixed:**
   - Added type checks to [#ADD](docs/commands.md#miscellaneous) and [#MATH](docs/commands.md#miscellaneous) to ensure the resulting value is a number
