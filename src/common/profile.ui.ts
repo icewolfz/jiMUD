@@ -3123,13 +3123,20 @@ export function init() {
 
     $('#trigger-type').on('change', function () {
         switch ($(this).val()) {
-            case '512':
-            case '1024':
-            case '4096':
-            case '8192':
-            case '32768':
-            case '16384':
+            case '1024': //wait
+            case '16384': //Duration
                 $('td[data-row="triggers-params"]').css('display', '');
+                $('#triggers-params-suffix').parent().addClass('input-group');
+                $('#triggers-params-suffix').css('display', '');
+                break;
+            case '128':
+            case '512': //skip            
+            case '4096': //LoopPattern
+            case '8192': //LoopLines
+            case '32768': //WithinLines            
+                $('td[data-row="triggers-params"]').css('display', '');
+                $('#triggers-params-suffix').css('display', 'none');
+                $('#triggers-params-suffix').parent().removeClass('input-group');
                 break;
             default:
                 $('td[data-row="triggers-params"]').css('display', 'none');

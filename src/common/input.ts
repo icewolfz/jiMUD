@@ -1340,7 +1340,7 @@ export class Input extends EventEmitter {
         });
 
         this.client.on('add-line', (data) => {
-            this.ExecuteTriggers(TriggerTypes.Regular | TriggerTypes.Pattern, data.line, data.raw, data.fragment, false, true);
+            this.ExecuteTriggers(TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.LoopExpression, data.line, data.raw, data.fragment, false, true);
             if (this._gag > 0 && !data.fragment) {
                 data.gagged = true;
                 this._gag--;
@@ -1877,7 +1877,8 @@ export class Input extends EventEmitter {
                 if ((<any>this.client).sendChat)
                     (<any>this.client).sendChat(args);
                 return null;
-            //spell-checker:ignore untrigger
+            //spell-checker:ignore untrigger unaction
+            case 'unaction':
             case 'untrigger':
             case 'unt':
                 profile = null;
@@ -2064,14 +2065,15 @@ export class Input extends EventEmitter {
                                     case 'alarm':
                                     case 'event':
                                     case 'cmdpattern':
+                                    case 'loopexpression':
                                         //case 'expression':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('params=')) {
+                                        if (o.trim().startsWith('param=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
-                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                                throw new Error(`Invalid trigger param option '${o.trim()}'`);
                                             item.options['params'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('type=')) {
@@ -2119,14 +2121,15 @@ export class Input extends EventEmitter {
                                     case 'alarm':
                                     case 'event':
                                     case 'cmdpattern':
+                                    case 'loopexpression':
                                         //case 'expression':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('params=')) {
+                                        if (o.trim().startsWith('param=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
-                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                                throw new Error(`Invalid trigger param option '${o.trim()}'`);
                                             item.options['params'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('type=')) {
@@ -4490,7 +4493,7 @@ export class Input extends EventEmitter {
                 return null;
             case 'fire':
                 args = this.parseInline(args.join(' ') + '\n');
-                this.ExecuteTriggers(TriggerTypes.Regular | TriggerTypes.Pattern, args, args, false, false);
+                this.ExecuteTriggers(TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.LoopExpression, args, args, false, false);
                 return null;
             case 'state': //#STATE id state profile
             case 'sta':
@@ -4904,6 +4907,7 @@ export class Input extends EventEmitter {
                                     case 'alarm':
                                     case 'event':
                                     case 'cmdpattern':
+                                    case 'loopexpression':
                                     //case 'expression':
                                     case 'reparse':
                                     case 'reparsepattern':
@@ -4917,10 +4921,10 @@ export class Input extends EventEmitter {
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('params=')) {
+                                        if (o.trim().startsWith('param=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
-                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                                throw new Error(`Invalid trigger param option '${o.trim()}'`);
                                             item.options['params'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('type=')) {
@@ -4968,6 +4972,7 @@ export class Input extends EventEmitter {
                                     case 'alarm':
                                     case 'event':
                                     case 'cmdpattern':
+                                    case 'loopexpression':
                                     //case 'expression':
                                     case 'reparse':
                                     case 'reparsepattern':
@@ -4981,10 +4986,10 @@ export class Input extends EventEmitter {
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
-                                        if (o.trim().startsWith('params=')) {
+                                        if (o.trim().startsWith('param=')) {
                                             tmp = o.trim().split('=');
                                             if (tmp.length !== 2)
-                                                throw new Error(`Invalid trigger params option '${o.trim()}'`);
+                                                throw new Error(`Invalid trigger param option '${o.trim()}'`);
                                             item.options['params'] = tmp[1];
                                         }
                                         else if (o.trim().startsWith('type=')) {
@@ -7886,6 +7891,8 @@ export class Input extends EventEmitter {
             return true;
         if (type === TriggerType.Regular && (types & TriggerTypes.Regular) == TriggerTypes.Regular)
             return true;
+        if (type === TriggerType.LoopExpression && (types & TriggerTypes.LoopExpression) == TriggerTypes.LoopExpression)
+            return true;
         //if (type === TriggerType.Expression && (types & TriggerTypes.Expression) == TriggerTypes.Expression)
         //return true;            
         return false;
@@ -7896,8 +7903,6 @@ export class Input extends EventEmitter {
             return true;
         if ((type & SubTriggerTypes.Wait) == SubTriggerTypes.Wait)
             return true;
-        //if ((type & SubTriggerTypes.LoopExpression) == SubTriggerTypes.LoopExpression)
-        //return true;
         if ((type & SubTriggerTypes.LoopPattern) == SubTriggerTypes.LoopPattern)
             return true;
         if ((type & SubTriggerTypes.LoopLines) == SubTriggerTypes.LoopLines)
@@ -8035,9 +8040,38 @@ export class Input extends EventEmitter {
                         continue;
                     }
                 }
+                /*
+                else if (this._TriggerStates[t].type === TriggerType.LoopExpression) {
+                    //move on after line count
+                    if (this._TriggerStates[t].loop != -1 && this._TriggerStates[t].lineCount < 1) {
+                        this.advanceTrigger(trigger, parent, t);
+                        //reparse as new state may be valid
+                        if (!this._TriggerStates[t])
+                            this._TriggerStates[t] = { reParse: true }
+                        else
+                            this._TriggerStates[t].reParse = true;
+                        t = this.cleanUpTriggerState(t);
+                        continue;
+                    }
+                }
+                */
             }
             try {
-                if (trigger.verbatim) {
+                if (trigger.type === TriggerType.LoopExpression) {
+                    if (this.evaluate(trigger.pattern)) {
+                        if (!this._TriggerStates[t])
+                            this._TriggerStates[t] = this.createTriggerState(trigger, false, parent);
+                        else if (this._TriggerStates[t].loop !== -1 && this._TriggerStates[t].lineCount < 1)
+                            continue;
+                        val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], ret, t, [(trigger.raw ? raw : line)], 0, parent);
+                    }
+                    else {
+                        //this.updateTriggerState(trigger, t);
+                        this.advanceTrigger(trigger, parent, t);
+                        continue;
+                    }
+                }
+                else if (trigger.verbatim) {
                     if (!trigger.caseSensitive && (trigger.raw ? raw : line).toLowerCase() !== trigger.pattern.toLowerCase()) {
                         //if reparse and if failed advance anyways
                         if (!this._TriggerStates[t] && (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern)) {
@@ -8114,7 +8148,7 @@ export class Input extends EventEmitter {
         return line;
     }
 
-    public TestTriggger(trigger, parent, t, line?, raw?, frag?: boolean) {
+    public TestTrigger(trigger, parent, t, line?, raw?, frag?: boolean) {
         let val;
         let pattern;
         try {
@@ -8327,6 +8361,14 @@ export class Input extends EventEmitter {
             }
             else if (this._TriggerStates[idx].type === SubTriggerTypes.WithinLines)
                 this.clearTriggerState(idx);
+            else if (this._TriggerStates[idx].type === TriggerType.LoopExpression) {
+                //infintate until expression is false
+                if (this._TriggerStates[idx].loop === -1)
+                    return;
+                //else if uses a line count
+                if (this._TriggerStates[idx].lineCount > 0)
+                    return;
+            }
         }
         parent.state++;
         //1 based
@@ -8340,7 +8382,7 @@ export class Input extends EventEmitter {
             this._TriggerStates[idx] = this.createTriggerState(parent.triggers[parent.state - 1]);
     }
 
-    public createTriggerState(trigger, reparse?) {
+    public createTriggerState(trigger, reparse?, parent?) {
         let params;
         let state;
         switch (trigger.type) {
@@ -8385,7 +8427,6 @@ export class Input extends EventEmitter {
                 state = { remoteCount: params + 1 };
                 break;
             */
-            //case SubTriggerTypes.LoopExpression:
             case SubTriggerTypes.LoopPattern:
                 params = trigger.params;
                 if (params && params.length) {
@@ -8396,6 +8437,20 @@ export class Input extends EventEmitter {
                 else
                     params = 0;
                 state = { loop: params };
+                break;
+            case TriggerType.LoopExpression:
+                params = trigger.params;
+                if (params && params.length) {
+                    params = parseInt(params, 10);
+                    if (isNaN(params))
+                        params = 1;
+                    if(parent === trigger)
+                        state = { lineCount: params - 1};
+                    else
+                        state = { lineCount: params };
+                }
+                else
+                    state = { loop: -1 };
                 break;
         }
         if (state)
@@ -8448,7 +8503,6 @@ export class Input extends EventEmitter {
                             this._TriggerStates[idx].remoteCount = params;
                             break;
             */
-            //case SubTriggerTypes.LoopExpression:
             case SubTriggerTypes.LoopPattern:
                 params = trigger.params;
                 if (params && params.length) {
@@ -8459,6 +8513,17 @@ export class Input extends EventEmitter {
                 else
                     params = 0;
                 this._TriggerStates[idx].loop = params;
+                break;
+            case TriggerType.LoopExpression:
+                params = trigger.params;
+                if (params && params.length) {
+                    params = parseInt(params, 10);
+                    if (isNaN(params))
+                        params = 1;
+                    this._TriggerStates[idx].lineCount = params + 1;
+                }
+                else
+                    this._TriggerStates[idx].loop = -1;
                 break;
         }
     }
@@ -8608,7 +8673,7 @@ export class Input extends EventEmitter {
             if (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) {
                 const val = this.adjustLastLine(this.client.display.lines.length, true);
                 const line = this.client.display.lines[val];
-                t = this.TestTriggger(trigger, parent, t, line, this.client.display.rawLines[val] || line, val === this.client.display.lines.length - 1);
+                t = this.TestTrigger(trigger, parent, t, line, this.client.display.rawLines[val] || line, val === this.client.display.lines.length - 1);
                 continue;
             }
             if (trigger.type !== TriggerType.Event) continue;
@@ -8814,8 +8879,10 @@ export class Input extends EventEmitter {
                     sTrigger.type = TriggerType.Event;
                 if (options.cmdpattern)
                     sTrigger.type = TriggerType.CommandInputPattern;
+                if (options.loopexpression)
+                    sTrigger.type = TriggerType.LoopExpression;
                 //if(options.expression)
-                //trigger.type = TriggerType.Expression;                    
+                //sTrigger.type = TriggerType.Expression;                    
                 if (options.reparse)
                     sTrigger.type = SubTriggerTypes.ReParse;
                 if (options.reparsepattern)
@@ -8893,6 +8960,8 @@ export class Input extends EventEmitter {
                     trigger.type = TriggerType.Event;
                 if (options.cmdpattern)
                     trigger.type = TriggerType.CommandInputPattern;
+                if (options.loopexpression)
+                    sTrigger.type = TriggerType.LoopExpression;
                 //if(options.expression)
                 //trigger.type = TriggerType.Expression;
 
