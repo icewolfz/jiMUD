@@ -8,7 +8,7 @@ import { AnsiColorCode } from './ansi';
 import { parseTemplate, SortItemArrayByPriority, existsSync } from './library';
 import { Settings } from './settings';
 import { Input } from './input';
-import { ProfileCollection, Alias, Trigger, Alarm, Macro, Profile, Button, Context, TriggerType, Variable, VariableType } from './profile';
+import { ProfileCollection, Alias, Trigger, Alarm, Macro, Profile, Button, Context, TriggerType, SubTriggerTypes, Variable, VariableType } from './profile';
 import { MSP } from './msp';
 import { Display } from './display';
 const { version } = require('../../package.json');
@@ -867,6 +867,13 @@ export class Client extends EventEmitter {
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
             }
+            //reparse type
+            if (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) {
+                const val = this._input.adjustLastLine(this.display.lines.length, true);
+                const line = this.display.lines[val];
+                a = this._input.TestTriggger(trigger, parent, a, line, this.display.rawLines[val] || line, val === this.display.lines.length - 1);
+                continue;
+            }            
             //not an alarm either has sub alarms or was updated
             if (trigger.type !== TriggerType.Alarm) continue;
             let alarm = patterns[a];
@@ -940,8 +947,10 @@ export class Client extends EventEmitter {
                             this.emit('item-updated', 'trigger', parent.profile.name, idx, parent);
                         }
                     }
-                    else
+                    else {
+                        this._input.clearTriggerState(a);
                         this.removeTrigger(parent);
+                    }
                 }
                 //remove after temp as temp requires old index
                 a = -this._input.cleanUpTriggerState(-a);

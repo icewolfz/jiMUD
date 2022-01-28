@@ -289,6 +289,12 @@
                                                 <option value="3">Alarm</option>
                                                 <option value="8">Pattern</option>
                                                 <option value="16">Command Input Pattern</option>
+                                                <option value="512" data-type="sub" hidden>Skip</option>
+                                                <option value="1024" data-type="sub" hidden>Wait</option>
+                                                <option value="4096" data-type="sub" hidden>Loop Pattern</option>
+                                                <option value="8192" data-type="sub" hidden>Loop Lines</option>
+                                                <option value="16384" data-type="sub" hidden>Duration</option>
+                                                <option value="32768" data-type="sub" hidden>Within Lines</option>                                                
                                                 <option value="65536" data-type="sub" hidden>Manual</option>
                                                 <option value="131072" data-type="sub" hidden>ReParse</option>
                                                 <option value="262144" data-type="sub" hidden>ReParse Pattern</option>
@@ -325,10 +331,10 @@
                             </td>
                         </tr>
                         <tr class="panel-adv-body">
-                            <td>
+                            <td data-row="triggers-params">
                                 <label class="control-label" for="trigger-params">Params</label>
                             </td>
-                            <td colspan="6">
+                            <td colspan="6" data-row="triggers-params">
                                 <input class="form-control" style="width: 100%" type="text" id="trigger-params">
                             </td>
                         </tr>
