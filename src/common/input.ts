@@ -7746,7 +7746,7 @@ export class Input extends EventEmitter {
         return line;
     }
 
-    public TestTriggger(trigger, parent, t, line?, raw?, frag?: boolean) {
+    public TestTrigger(trigger, parent, t, line?, raw?, frag?: boolean) {
         let val;
         let pattern;
         try {
@@ -8240,7 +8240,7 @@ export class Input extends EventEmitter {
             if (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) {
                 const val = this.adjustLastLine(this.client.display.lines.length, true);
                 const line = this.client.display.lines[val];
-                t = this.TestTriggger(trigger, parent, t, line, this.client.display.rawLines[val] || line, val === this.client.display.lines.length - 1);
+                t = this.TestTrigger(trigger, parent, t, line, this.client.display.rawLines[val] || line, val === this.client.display.lines.length - 1);
                 continue;
             }
             if (trigger.type !== TriggerType.Event) continue;

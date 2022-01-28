@@ -690,7 +690,7 @@ export class Client extends EventEmitter {
             if (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) {
                 const val = this._input.adjustLastLine(this.display.lines.length, true);
                 const line = this.display.lines[val];
-                a = this._input.TestTriggger(trigger, parent, a, line, this.display.rawLines[val] || line, val === this.display.lines.length - 1);
+                a = this._input.TestTrigger(trigger, parent, a, line, this.display.rawLines[val] || line, val === this.display.lines.length - 1);
                 continue;
             }            
             //not an alarm either has sub alarms or was updated
