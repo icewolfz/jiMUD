@@ -1327,12 +1327,12 @@ export class Input extends EventEmitter {
                 this._gag--;
             }
             //if not fragment and not gagged count
-            if (!data.fragment && !data.gagged)
+            if (!data.fragment)
                 for (let state in this._TriggerStates) {
                     if (this._TriggerStates[state].lineCount)
                         this._TriggerStates[state].lineCount--;
-                    if (data.remote && this._TriggerStates[state].remoteCount)
-                        this._TriggerStates[state].remoteCount--;
+                    //if (data.remote && this._TriggerStates[state].remoteCount)
+                    //this._TriggerStates[state].remoteCount--;
                 }
         });
 
