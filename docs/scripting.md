@@ -16,14 +16,18 @@ To use scripting you just have to select script as the type from the type dropdo
 - `$selurl` same as $selected url
 - `$contextMenu` access to the context menu item array, manipulating this will effect the displayed context menu, **WARNING** this could break the context menu, if broken you can refresh by causing a profile to be re-saved
 
-## User variables
+## [User variables](variables.md)
 
-You can access them scripting using client.getVariable('NAME', 'SUBKEY') and client.setVariable('NAME'', 'SUBKEY', value). Some variables may not be accessible to the parser: i and repeatnum are special variables and are used i loops and are not accessible in parse style, named arguments in parse style will be used instead of any user defined of the same name, **variables lost when client is closed**
+You can access them scripting from using client.getVariable('NAME', 'SUBKEY') and client.setVariable('NAME'', 'SUBKEY', value). Some variables may not be accessible to the parser: i and repeatnum are special variables and are used in loops and are not accessible in scripting style, named arguments in scripting style will be used instead of any user defined of the same name
 
 Example:
 ```javascript
+//set the variable named test to 5
 this.setVariable('test', 5);
 client.setVariable('test', 5);
+//get the value of test
+var test = this.getVariable('test');
+var test = client.getVariable('test');
 ```
 
 Set or created variables can be access in the expression system by name eg ${test + 5} would be 10 based from example
