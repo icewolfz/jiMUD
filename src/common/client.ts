@@ -420,6 +420,7 @@ export class Client extends EventEmitter {
 
     public setVariable(name: string, key, value?, profile?) {
         let va: Variable;
+        let session = false;
         if (value === undefined) {
             value = key;
             key = undefined;
@@ -463,6 +464,13 @@ export class Client extends EventEmitter {
         else
             va.rawValue = value;
         this.saveProfile(va.profile.name);
+    }
+
+    public setVariableSession(name, session) {
+        if (!this.variables.hasOwnProperty(name))
+            return;
+        this.variables[name].session = session;
+        this.saveProfile(this.variables[name].profile.name);
     }
 
     public hasVariable(name) {

@@ -4319,6 +4319,30 @@ export class Input extends EventEmitter {
                     tmp |= 1;
                 this.client.setVariable(i, parseValue(this.parseInline(args), tmp));
                 return null;
+            case 'tempvar':
+            case 'tempv':
+                if (args.length === 0) 
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'tempv\x1b[0;-11;-12mar name value');
+                i = args.shift();
+                if (i.match(/^\{.*\}$/g))
+                    i = i.substr(1, i.length - 2);
+                i = this.parseInline(i);
+                if (!isValidIdentifier(i))
+                    throw new Error("Invalid variable name");
+                if (args.length === 0)
+                    return this.client.getVariable(i)?.toString();
+                args = args.join(' ');
+                if (args.match(/^\{[\s\S]*\}$/g))
+                    args = args.substr(1, args.length - 2);
+                //respect the quote settings
+                tmp = 0;
+                if (this.client.options.parseDoubleQuotes)
+                    tmp |= 2;
+                if (this.client.options.parseSingleQuotes)
+                    tmp |= 1;
+                this.client.setVariable(i, parseValue(this.parseInline(args), tmp));
+                this.client.setVariableSession(i, true);
+                return null;
             case 'unvar':
             case 'unv':
                 if (args.length === 0)
@@ -4391,7 +4415,7 @@ export class Input extends EventEmitter {
                 if (i.match(/^\{[\s\S]*\}$/g))
                     i = i.substr(1, i.length - 2);
                 i = this.parseInline(i);
-                if(this.client.hasVariable(i)) {
+                if (this.client.hasVariable(i)) {
                     n = this.client.getVariable(i);
                     if (typeof n !== 'number')
                         throw new Error(i + ' is not a number for add');
@@ -4402,7 +4426,7 @@ export class Input extends EventEmitter {
                 args = this.evaluate(this.parseInline(args));
                 if (typeof args !== 'number')
                     throw new Error('Value is not a number for add');
-                if(this.client.hasVariable(i))
+                if (this.client.hasVariable(i))
                     this.client.setVariable(i, n + args);
                 else
                     this.client.setVariable(i, args);
@@ -5910,10 +5934,10 @@ export class Input extends EventEmitter {
                     }
                     break;
                 case ParseState.variable:
-                    if (c === '{')
+                    if (args.length === 0 && c === '{')
                         state = ParseState.variableBlock;
                     //invalid start character
-                    else if (arg.length == 0 && c.match(/[^a-zA-Z_$]/g)) {
+                    else if (arg.length === 0 && c.match(/[^a-zA-Z_$]/g)) {
                         if (eAlias && findAlias)
                             alias += varChar;
                         else
@@ -8444,8 +8468,8 @@ export class Input extends EventEmitter {
                     params = parseInt(params, 10);
                     if (isNaN(params))
                         params = 1;
-                    if(parent === trigger)
-                        state = { lineCount: params - 1};
+                    if (parent === trigger)
+                        state = { lineCount: params - 1 };
                     else
                         state = { lineCount: params };
                 }
