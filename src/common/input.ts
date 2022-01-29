@@ -2040,6 +2040,7 @@ export class Input extends EventEmitter {
                                     case 'enable':
                                     case 'cmd':
                                     case 'temporary':
+                                    case 'temp':
                                     case 'raw':
                                     case 'pattern':
                                     case 'regular':
@@ -2096,6 +2097,7 @@ export class Input extends EventEmitter {
                                     case 'enable':
                                     case 'cmd':
                                     case 'temporary':
+                                    case 'temp':
                                     case 'raw':
                                     case 'pattern':
                                     case 'regular':
@@ -2187,6 +2189,7 @@ export class Input extends EventEmitter {
                                 case 'verbatim':
                                 case 'disable':
                                 case 'temporary':
+                                case 'temp':
                                     item.options[o.trim()] = true;
                                     break;
                                 default:
@@ -2219,6 +2222,7 @@ export class Input extends EventEmitter {
                                 case 'verbatim':
                                 case 'disable':
                                 case 'temporary':
+                                case 'temp':
                                     item.options[o.trim()] = true;
                                     break;
                                 default:
@@ -2316,7 +2320,7 @@ export class Input extends EventEmitter {
                     trigger.enabled = false;
                 else if (item.options.enable)
                     trigger.enabled = true;
-                if (item.options.temporary)
+                if (item.options.temporary || item.options.temp)
                     trigger.temp = true;
                 trigger.priority = item.options.priority;
                 profile.save(p);
@@ -4827,6 +4831,7 @@ export class Input extends EventEmitter {
                                     case 'enable':
                                     case 'cmd':
                                     case 'temporary':
+                                    case 'temp':
                                     case 'raw':
                                     case 'pattern':
                                     case 'regular':
@@ -4892,6 +4897,7 @@ export class Input extends EventEmitter {
                                     case 'enable':
                                     case 'cmd':
                                     case 'temporary':
+                                    case 'temp':
                                     case 'raw':
                                     case 'pattern':
                                     case 'regular':
@@ -5050,6 +5056,160 @@ export class Input extends EventEmitter {
             case 'no':
                 if (args.length)
                     this.parseInline(args.join(' '));
+                return null;
+            case 'temp':
+                //#region temp
+                item = {
+                    profile: null,
+                    name: null,
+                    pattern: null,
+                    commands: null,
+                    options: { priority: 0 }
+                };
+                p = path.join(parseTemplate('{data}'), 'profiles');
+                if (args.length < 2 || args.length > 5)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'temp name {pattern} {commands} \x1b[3moptions profile\x1b[0;-11;-12m or ' + cmdChar + 'temp {pattern} {commands} \x1b[3m{options} profile\x1b[0;-11;-12m');
+                if (args[0].length === 0)
+                    throw new Error('Invalid temporary trigger or pattern');
+
+                if (args[0].match(/^\{.*\}$/g)) {
+                    item.pattern = args.shift();
+                    item.pattern = this.parseInline(item.pattern.substr(1, item.pattern.length - 2));
+                }
+                else {
+                    item.name = this.parseInline(this.stripQuotes(args.shift()));
+                    if (!item.name || item.name.length === 0)
+                        throw new Error('Invalid temporary trigger name');
+                    if (args[0].match(/^\{.*\}$/g)) {
+                        item.pattern = args.shift();
+                        item.pattern = this.parseInline(item.pattern.substr(1, item.pattern.length - 2));
+                    }
+                }
+                if (args.length !== 0) {
+                    if (args[0].match(/^\{[\s\S]*\}$/g)) {
+                        item.commands = args.shift();
+                        item.commands = item.commands.substr(1, item.commands.length - 2);
+                    }
+                    if (args.length === 1) {
+                        if (args[0].match(/^\{[\s\S]*\}$/g))
+                            args[0] = args[0].substr(1, args[0].length - 2);
+                        else
+                            args[0] = this.stripQuotes(args[0]);
+                        if (args[0].length !== 0) {
+                            this.parseInline(args[0]).split(',').forEach(o => {
+                                switch (o.trim()) {
+                                    case 'nocr':
+                                    case 'prompt':
+                                    case 'case':
+                                    case 'verbatim':
+                                    case 'disable':
+                                    case 'enable':
+                                    case 'cmd':
+                                    case 'raw':
+                                    case 'pattern':
+                                    case 'regular':
+                                    case 'alarm':
+                                    case 'event':
+                                    case 'cmdpattern':
+                                    case 'loopexpression':
+                                        //case 'expression':
+                                        item.options[o.trim()] = true;
+                                        break;
+                                    default:
+                                        if (o.trim().startsWith('param=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid temporary trigger param option '${o.trim()}'`);
+                                            item.options['params'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('type=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid temporary trigger type option '${o.trim()}'`);
+                                            if (!this.isTriggerType(tmp[1], TriggerTypeFilter.Main))
+                                                throw new Error('Invalid temporary trigger type');
+                                            item.options['type'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid temporary trigger priority option '${o.trim()}'`);
+                                            i = parseInt(tmp[1], 10);
+                                            if (isNaN(i))
+                                                throw new Error('Invalid temporary trigger priority value \'' + tmp[1] + '\' must be a number');
+                                            item.options['priority'] = i;
+                                        }
+                                        else
+                                            throw new Error(`Invalid temporary trigger option '${o.trim()}'`);
+                                }
+                            });
+                        }
+                        else
+                            throw new Error('Invalid temporary trigger options');
+                    }
+                    else if (args.length === 2) {
+                        if (args[0].match(/^\{[\s\S]*\}$/g))
+                            args[0] = args[0].substr(1, args[0].length - 2);
+                        if (args[0].length !== 0) {
+                            this.parseInline(args[0]).split(',').forEach(o => {
+                                switch (o.trim()) {
+                                    case 'nocr':
+                                    case 'prompt':
+                                    case 'case':
+                                    case 'verbatim':
+                                    case 'disable':
+                                    case 'enable':
+                                    case 'cmd':
+                                    case 'raw':
+                                    case 'pattern':
+                                    case 'regular':
+                                    case 'alarm':
+                                    case 'event':
+                                    case 'cmdpattern':
+                                    case 'loopexpression':
+                                        //case 'expression':
+                                        item.options[o.trim()] = true;
+                                        break;
+                                    default:
+                                        if (o.trim().startsWith('param=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid temporary trigger param option '${o.trim()}'`);
+                                            item.options['params'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('type=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid temporary trigger type option '${o.trim()}'`);
+                                            if (!this.isTriggerType(tmp[1], TriggerTypeFilter.Main))
+                                                throw new Error('Invalid temporary trigger type');
+
+                                            item.options['type'] = tmp[1];
+                                        }
+                                        else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
+                                            tmp = o.trim().split('=');
+                                            if (tmp.length !== 2)
+                                                throw new Error(`Invalid temporary trigger priority option '${o.trim()}'`);
+                                            i = parseInt(tmp[1], 10);
+                                            if (isNaN(i))
+                                                throw new Error('Invalid temporary trigger priority value \'' + tmp[1] + '\' must be a number');
+                                            item.options['priority'] = i;
+                                        }
+                                        else
+                                            throw new Error(`Invalid temporary trigger option '${o.trim()}'`);
+                                }
+                            });
+                        }
+                        else
+                            throw new Error('Invalid temporary trigger options');
+                        item.profile = this.stripQuotes(args[1]);
+                        if (item.profile.length !== 0)
+                            item.profile = this.parseInline(item.profile);
+                    }
+                }
+                item.options.temporary = true;
+                this.createTrigger(item.pattern, item.commands, item.profile, item.options, item.name);
+                //#endregion
                 return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
@@ -8076,8 +8236,8 @@ export class Input extends EventEmitter {
                     params = parseInt(params, 10);
                     if (isNaN(params))
                         params = 1;
-                    if(parent === trigger)
-                        state = { lineCount: params - 1};
+                    if (parent === trigger)
+                        state = { lineCount: params - 1 };
                     else
                         state = { lineCount: params };
                 }
@@ -8548,7 +8708,7 @@ export class Input extends EventEmitter {
                     sTrigger.enabled = false;
                 else if (options.enable)
                     sTrigger.enabled = true;
-                if (options.temporary)
+                if (options.temporary || options.temp)
                     sTrigger.temp = true;
                 if (options.params)
                     sTrigger.params = options.params;
@@ -8611,7 +8771,7 @@ export class Input extends EventEmitter {
                     trigger.enabled = false;
                 else if (options.enable)
                     trigger.enabled = true;
-                if (options.temporary)
+                if (options.temporary || options.temp)
                     trigger.temp = true;
                 if (options.params)
                     trigger.params = options.params;
