@@ -199,3 +199,42 @@ Temporary states will be removed from the trigger after being executed and shift
 - `Append to Command` append value to the end of the command input
 - `Daisy Chain` this will append the value to the command line if it ends with a space then send the command line to the mud, if no space it will be handled as a standard macro and send the value.
 - `Parse caption` parse the caption using the command parser to allow predefined variables,functions or expressions if allowed
+
+## Variables
+
+- `Name` The name of the variable when accessing it, only the highest priority variable with this name can be accessed directly, variable name can only start with a-z, A-Z, 0-9, $ or _ and not be a javascript keyword
+- `Enable` Enable/disable variable
+- `Value` The value of the variable, formatted based on variable type
+- `Type` The type of variable
+  - `Auto` Will attempt to assign type based on parsed value
+  - `Integer` a while number
+  - `String Expanded` a string value that will be expanded by the parser when the value is gotten
+  - `String Literal` a string returned as is
+  - `String List` a string list, this is an array of strings seprated by a |
+  - `Record` a key value array 
+  - `Float` floating point number
+  - `Array` an array of data
+  - `JSON` a variable that is converted to and from json as needed
+- `Style` how the value is processed
+  - `Text` send value as is
+  - `Parse` do standard parsing
+  - `Script` the value is javascript, it will evaluate and any thing returned will be sent to the mud. the value is wrapped as a function and any matched patterns are passed as arguments, use standard arguments[#] to access.
+- `Priority` the sort order of variables, only the highest priority will be used if more then one variable exist with the same name
+- `Use Default` Reset the variable on first time profile is loaded to default value
+- `Session only` Delete when mud client is closed
+- `Default value` the default value to use when the containing profile is first loaded
+
+Raw variable values are stored in certain formats and converted to final variables based on text parsing
+- Auto type will attempt to test the value based on several rules and formats and convert the value into a usable variable or leave it as a basic string
+- Integer will force convert value into a number, if not a value number will be set to 0
+- String expanded and string literal are left as is and handled as gotten
+- String List is a formatted string of values separated by a | that is treated as an array allowing you to use indexes as a key to access values, if you want a | in a value quote the string, eg "value with a |"|another
+- Record is a key value formatted comma delimited key=value or key:value format, with optional [] or {} blocking if you want a comma or = in value encase in quotes
+  - Examples:
+    - "name":"icewolfz","class":"rogue","level":100
+    - "name"="icewolfz","class"="rogue","level"=100
+- Float is a floating point number
+- Array is like a string list but is formatted using a comma delimited string with optional [] blocking, if you want a comma in value encase in quotes
+  - Example: icewolfz,rogue
+- JSON is a valid json formatting that will be converted to a real object
+  - Example: {"name":"icewolfz", "class":"rogue", "level":100}
