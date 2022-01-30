@@ -7853,7 +7853,11 @@ export class Input extends EventEmitter {
                 if (trigger.type === TriggerType.LoopExpression) {
                     if (this.evaluate(trigger.pattern)) {
                         if (!this._TriggerStates[t])
-                            this._TriggerStates[t] = this.createTriggerState(trigger, false, parent);
+                        {
+                            const state = this.createTriggerState(trigger, false, parent);
+                            if(state)
+                                this._TriggerStates[t] = state;
+                        }
                         else if (this._TriggerStates[t].loop !== -1 && this._TriggerStates[t].lineCount < 1)
                             continue;
                         val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], ret, t, [(trigger.raw ? raw : line)], 0, parent);
@@ -8172,8 +8176,11 @@ export class Input extends EventEmitter {
             this.client.saveProfile(parent.profile.name, true);
         this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
         //is new subtype a reparse? if so reparse using current trigger instant
-        if (parent.state !== 0)
-            this._TriggerStates[idx] = this.createTriggerState(parent.triggers[parent.state - 1]);
+        if (parent.state !== 0) {
+            const state = this.createTriggerState(parent.triggers[parent.state - 1]);
+            if (state)
+                this._TriggerStates[idx] = state;
+        }
     }
 
     public createTriggerState(trigger, reparse?, parent?) {
@@ -8383,8 +8390,11 @@ export class Input extends EventEmitter {
                     reParse = this._TriggerStates[idx].reParse;
             }
             this.clearTriggerState(idx);
-            if (!trigger.fired)
-                this._TriggerStates[idx] = this.createTriggerState(trigger, reParse);
+            if (!trigger.fired) {
+                const state = this.createTriggerState(trigger, reParse);
+                if (state)
+                    this._TriggerStates[idx] = state;
+            }
             else
                 this._TriggerStates[idx] = { reParse: true };
         }
