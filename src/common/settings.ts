@@ -475,6 +475,7 @@ export class Settings {
     public blockCommentString: string = '/*';
 
     public allowCommentsFromCommand: boolean = false;
+    public saveTriggerStateChanges: boolean = true;
 
     public windows = {};
     public buttons = {

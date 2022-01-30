@@ -680,7 +680,8 @@ export class Client extends EventEmitter {
                     changed = true;
                 }
                 if (changed) {
-                    this.saveProfile(parent.profile.name, true);
+                    if (this.options.saveTriggerStateChanges)
+                        this.saveProfile(parent.profile.name, true);
                     this.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
                 }
                 //last check to be 100% sure enabled
@@ -692,7 +693,7 @@ export class Client extends EventEmitter {
                 const line = this.display.lines[val];
                 a = this._input.TestTrigger(trigger, parent, a, line, this.display.rawLines[val] || line, val === this.display.lines.length - 1);
                 continue;
-            }            
+            }
             //not an alarm either has sub alarms or was updated
             if (trigger.type !== TriggerType.Alarm) continue;
             let alarm = patterns[a];

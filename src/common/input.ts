@@ -7765,7 +7765,8 @@ export class Input extends EventEmitter {
                 }
                 //changed state save
                 if (changed) {
-                    this.client.saveProfile(parent.profile.name, true);
+                    if (this.client.options.saveTriggerStateChanges)
+                        this.client.saveProfile(parent.profile.name, true);
                     this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
                 }
                 //last check to be 100% sure enabled
@@ -8167,7 +8168,8 @@ export class Input extends EventEmitter {
         if (parent.state > parent.triggers.length)
             parent.state = 0;
         //changed state save
-        this.client.saveProfile(parent.profile.name, true);
+        if (this.client.options.saveTriggerStateChanges)
+            this.client.saveProfile(parent.profile.name, true);
         this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
         //is new subtype a reparse? if so reparse using current trigger instant
         if (parent.state !== 0)
@@ -8456,7 +8458,8 @@ export class Input extends EventEmitter {
                 }
                 //changed state save
                 if (changed) {
-                    this.client.saveProfile(parent.profile.name, true);
+                    if (this.client.options.saveTriggerStateChanges)
+                        this.client.saveProfile(parent.profile.name, true);
                     this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
                 }
                 //last check to be 100% sure enabled

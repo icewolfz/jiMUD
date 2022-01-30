@@ -169,6 +169,7 @@ Controls what is captured into the chat window
 - `Enable Double Parameter Escaping` Enable doubling up of the parameter character `%` to escape as well as using escape character
 - `Ignore Eval Undefined` When enabled will make undefined results blank, else it will display the word undefined
 - `Allow Comments From Command` Allow inline and block comments from the command input
+- `Save Trigger State Changes` When a trigger state changes save profile
 
 ## Scripting > Special characters
 
@@ -217,17 +218,6 @@ Controls what is captured into the chat window
 - `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character
 - `Open 'Who is on' in web browser` Open the 'Who is on?' in a web browser, if disabled will open in a child window of jiMUD
 - `Open ShadowMUD help in web browser` Open the ShadowMUD help in a web browser, if disabled will open in a child window of jiMUD
-- `Watch for profile changes` when enabled will watch for profile changes
-- `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
-  - `Nothing` Do nothing
-  - `Reload` Force reload of profiles, this may cause profile changes to be lost
-  - `Ask` Ask you if you want to reload or do nothing
-  - `Warn` Display a warning to the mud window
-- `On profile deleted do` what to do when a profile is deleted when `Watch for profile changes` enabled
-  - `Nothing` Do nothing
-  - `Remove` Force remove of profiles, this may cause profile changes to be lost
-  - `Ask` Ask you if you want to remove or do nothing
-  - `Warn` Display a warning to the mud window  
 
 ## Advanced > Backup
 
@@ -241,6 +231,21 @@ Controls what is captured into the chat window
 - `Enable Keep alive` Enable socket keep alive
 - `Keep alive delay` The number of seconds for initial keep alive delay
 - `Enable allow Half Open sockets` Indicates whether half-opened TCP connections are allowed
+
+## Advanced > Profiles
+
+- `Save Trigger State Changes` Save profile every time a trigger state changes
+- `Watch for profile changes` when enabled will watch for profile changes
+- `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
+  - `Nothing` Do nothing
+  - `Reload` Force reload of profiles, this may cause profile changes to be lost
+  - `Ask` Ask you if you want to reload or do nothing
+  - `Warn` Display a warning to the mud window
+- `On profile deleted do` what to do when a profile is deleted when `Watch for profile changes` enabled
+  - `Nothing` Do nothing
+  - `Remove` Force remove of profiles, this may cause profile changes to be lost
+  - `Ask` Ask you if you want to remove or do nothing
+  - `Warn` Display a warning to the mud window  
 
 ## Advanced > Profile manager
 

@@ -15,6 +15,8 @@
     - Add [Enable Inline Comment](docs/preferences.md#scripting--special-characters) disable inline comment support
     - Add [Block Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for block comments, ending block comment is string reversed
     - Add [Block Inline Comment](docs/preferences.md#scripting--special-characters) disable block comment support    
+    - Add [Save Trigger State Changes](docs/preferences.md#advanced--profiles) Add option to control if state changes are saved every time they change
+    - New Advanced sub page for all profile related preferences.
   - [Triggers](docs/profiles.md#triggers)
     - Add `Loop Expression` trigger type
     - Add `ReParse` and `ReParse Pattern` sub type triggers
