@@ -234,7 +234,7 @@ Controls what is captured into the chat window
 
 ## Advanced > Profiles
 
-- `Save Trigger State Changes` Save profile every time a trigger state changes
+- `Save trigger state changes` Save profile every time a trigger state changes
 - `Watch for profile changes` when enabled will watch for profile changes
 - `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
   - `Nothing` Do nothing
@@ -246,6 +246,10 @@ Controls what is captured into the chat window
   - `Remove` Force remove of profiles, this may cause profile changes to be lost
   - `Ask` Ask you if you want to remove or do nothing
   - `Warn` Display a warning to the mud window  
+- `Group profile saves` Group profile saves
+  - **WARNING:** Enabling profile group saving could cause sync issues and loss of data when preferences saved or profile manager saves, as when saved it will flush all in memory changes and reload
+- `Group profile save delay` How often between save profiles when group saves are enabled
+
 
 ## Advanced > Profile manager
 
