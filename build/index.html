@@ -2460,8 +2460,10 @@
                 autoConnect();
         });
 
-        ipcRenderer.on('change-options', () => {
+        ipcRenderer.on('change-options', (event, file, firstLoad) => {
             _skipDisconnect = 0;
+            if (firstLoad)
+                client.resetFirstLoad();
             client.settingsFile = ipcRenderer.sendSync('get-global', 'settingsFile');
             autoConnect();
         });

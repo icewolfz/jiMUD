@@ -222,7 +222,7 @@ Temporary states will be removed from the trigger after being executed and shift
 - `Priority` the sort order of variables, only the highest priority will be used if more then one variable exist with the same name
 - `Use Default` Reset the variable on first time profile is loaded to default value
 - `Session only` Delete when mud client is closed
-- `Default value` the default value to use when the containing profile is first loaded
+- `Default value` the default value to use when the containing profile is first loaded or when character is changed
 
 Raw variable values are stored in certain formats and converted to final variables based on text parsing
 - Auto type will attempt to test the value based on several rules and formats and convert the value into a usable variable or leave it as a basic string

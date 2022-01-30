@@ -1393,6 +1393,10 @@ export class Client extends EventEmitter {
         this.emit('options-saved');
     }
 
+    public resetFirstLoad() {
+        this._firstLoad = false;
+    }
+
     public setOption(name, value) {
         if (name === -1 || name === '-1')
             return;

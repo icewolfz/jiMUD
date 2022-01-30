@@ -4871,7 +4871,7 @@ ipcRenderer.on('reload-options', (event) => {
         sortTree(true);
 });
 
-ipcRenderer.on('change-options', (event, file) => {
+ipcRenderer.on('change-options', (event, file, firstLoad) => {
     const so = _sort;
     const sd = _sortDir;
     loadOptions();

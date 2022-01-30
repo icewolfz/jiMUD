@@ -1667,7 +1667,7 @@ ipcMain.on('load-default', () => {
         cWin.close();
     }
     if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('change-options', global.settingsFile);
+        win.webContents.send('change-options', global.settingsFile, true);
 
     if (set.showMapper)
         showMapper(true);
@@ -1750,7 +1750,7 @@ ipcMain.on('load-char', (event, char) => {
         winCode = null;
     }
     if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('change-options', global.settingsFile);
+        win.webContents.send('change-options', global.settingsFile, true);
 
     if (set.showMapper)
         showMapper(true);
