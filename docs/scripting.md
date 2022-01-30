@@ -181,3 +181,55 @@ for(var c = 0; c < oldStr.length;c++)
 this.sendCommand(line + ' ' + str);
 //End mono grayscale example
 ```
+
+### Rainbow 256 color say alias
+
+```javascript
+/*
+Start Rainbow 256 example
+
+syntax: rs [text]
+
+to use this alias, create a new alias named rs, set the style to Script
+and ensure append arguments is checked and past this in the value
+*/
+//the string to send to the mud
+var out = '';
+//counter variable for looping
+var i;
+//build table once and store to speed up
+if(!window.forecolors256)
+{
+  //initialize color table
+   window.forecolors256 = [];
+   for(i=0; i<30; i++)
+      window.forecolors256.push([0,0,0]); //set each color to [R,G,B] array for manipulation
+   //build rainbow colors
+   for(i=0; i<5; i++)
+   {
+      /*0-4*/ window.forecolors256[i][0]+=5; window.forecolors256[i][1]+=i+1;
+      /*5-9*/ window.forecolors256[i+5][0]+=4-i; window.forecolors256[i+5][1]+=5;
+      /*10-14*/ window.forecolors256[i+10][1]+=5; window.forecolors256[i+10][2]+=i+1;
+      /*15-19*/ window.forecolors256[i+15][1]+=4-i; window.forecolors256[i+15][2]+=5;
+      /*20-24*/ window.forecolors256[i+20][2]+=5; window.forecolors256[i+20][0]+=i+1;
+      /*25-29*/ window.forecolors256[i+25][0]+=5; window.forecolors256[i+25][2]+=4-i;
+   }
+   //Build final color codes using the R,G,B array
+   window.forecolors256 = window.forecolors256.map(c => `%^RGB${c[0]}${c[1]}${c[2]}%^`);
+}
+//random color offset
+var offset=Math.ceil(Math.random()*1000);
+//build the string, this ensures all arguments are gotten
+var args = Array.prototype.slice.call(arguments);
+//start at the first argument as 0 is the alias + arguments, and convert to an array
+var str = [...args.slice(1).join(' ')];
+//store length for a little extra speed
+var l = str.length;
+//loop array and build new string inserting color codes
+for(i=0; i<l; i++)
+{
+   var i2= (i+offset) % window.forecolors256.length;
+   out += window.forecolors256[i2]+str[i];
+}
+client.sendCommand("'%^RESET%^"+out+"%^DEFAULT%^");
+```
