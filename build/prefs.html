@@ -186,6 +186,7 @@
                         nodes: [
                             { text: 'Backup' },
                             { text: 'Connection' },
+                            { text: 'Profiles' },
                             { text: 'Profile manager' },
                             { text: 'Tray' }
                         ]
@@ -2236,7 +2237,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="allowCommentsFromCommand" /> Allow Comments From Command
                         </label>
-                    </div>                                                           
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="advanced">
                     <div class="col-sm-6 form-group">
@@ -2305,47 +2306,7 @@
                             <input type="checkbox" id="externalHelp" /> Open ShadowMUD help in web browser
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="watchForProfilesChanges" /> Watch for profile changes
-                        </label>
-                    </div>
-                    <div class="col-sm-12 form-group">
-                        <div class="col-sm-6 form-group">
-                            <label class="control-label">On profile change do:</label>
-                            <div class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileChange" id="onProfileChange-0"> Nothing
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileChange" id="onProfileChange-1"> Reload
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileChange" id="onProfileChange-2"> Ask
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileChange" id="onProfileChange-4"> Warn
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 form-group">
-                            <label class="control-label">On profile deleted do:</label>
-                            <div class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-0"> Nothing
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-1"> Remove
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-2"> Ask
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-4"> Warn
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
                 <div role="tabpanel" class="pref-pane" id="backup">
                     <div class="col-sm-12 form-group" style="padding: 0px;">
@@ -2650,7 +2611,72 @@
                                 </div>
                             </div>
                         </label>
-                    </div>  
+                    </div>
+                </div>
+                <div role="tabpanel" class="pref-pane" id="profiles">
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="saveTriggerStateChanges" /> Save trigger state changes
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="watchForProfilesChanges" /> Watch for profile changes
+                        </label>
+                    </div>
+                    <div class="col-sm-12 form-group">
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">On profile change do:</label>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-0"> Nothing
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-1"> Reload
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-2"> Ask
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-4"> Warn
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">On profile deleted do:</label>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-0"> Nothing
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-1"> Remove
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-2"> Ask
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-4"> Warn
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 form-group">
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">
+                                <input type="checkbox" id="groupProfileSaves" /> Group profile saves
+                            </label>
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">
+                                Group profile save delay
+                                <div class="input-group">
+                                    <input type="number" id="groupProfileSaveDelay" class="input-sm form-control" min="500" />
+                                    <div class="input-group-addon">ms</div>
+                                </div>
+                            </label>
+                        </div>
+                        <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;padding-left:15px;">WARNING: Enabling profile group saving could cause sync issues and loss of data when saving preferences or profiles</span>
+                    </div>
                 </div>
             </div>
         </div>

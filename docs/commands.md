@@ -197,6 +197,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#SUS</u>PEND *name|pattern*
 >disable an alarm, id arguments omitted will attempt to suspend last added alarm
 
+#TEMP *name* {pattern} *{commands} options<sup>1</sup> profile*
+>Create temporary trigger
+
 <u>#TR</u>IGGER *name* {pattern} *{commands} options<sup>1</sup> profile*
 >create or update trigger
 

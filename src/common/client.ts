@@ -53,6 +53,8 @@ export class Client extends EventEmitter {
         variables: null
     };
     private _alarm: NodeJS.Timer;
+    private _profileSaves = {}; //store profile to save/change flag
+    private _profileSaveTimeout: NodeJS.Timer = null; //track timeout
 
     public MSP: MSP;
 
@@ -564,6 +566,8 @@ export class Client extends EventEmitter {
     }
 
     public loadProfiles() {
+        //reloaded before save done, clear state
+        this.clearProfileSaves();
         const p = path.join(parseTemplate('{data}'), 'profiles');
         //clear out all current profiles
         this.profiles = new ProfileCollection();
@@ -603,6 +607,9 @@ export class Client extends EventEmitter {
 
     public loadProfile(profile) {
         if (!profile) return;
+        //profile was marked ot be save but reload so remove save
+        if (this._profileSaves[profile.toLowerCase()])
+            delete this._profileSaves[profile.toLowerCase()];
         const p = path.join(parseTemplate('{data}'), 'profiles');
         if (!existsSync(p))
             return;
@@ -626,6 +633,7 @@ export class Client extends EventEmitter {
     }
 
     public saveProfiles(noChanges?: boolean) {
+        this.clearProfileSaves();
         const p = path.join(parseTemplate('{data}'), 'profiles');
         if (!existsSync(p))
             fs.mkdirSync(p);
@@ -645,13 +653,44 @@ export class Client extends EventEmitter {
         const p = path.join(parseTemplate('{data}'), 'profiles');
         if (!existsSync(p))
             fs.mkdirSync(p);
-        this.profiles.items[profile].save(p);
-        //minor update that does not effect caching
-        if (!noChanges) {
-            this.clearCache();
-            this.startAlarms();
+        //if group add to  save tracker and store change flag
+        if (this.options.groupProfileSaves) {
+            //minor update that does not effect caching
+            if (!noChanges) {
+                this.clearCache();
+                this.startAlarms();
+            }
+            this._profileSaves[profile.toLowerCase()] = this._profileSaves[profile.toLowerCase()] || noChanges;
+            this.doProfileSave();
         }
-        this.emit('profile-updated', profile, noChanges);
+        else {
+            this.profiles.items[profile].save(p);
+            //minor update that does not effect caching
+            if (!noChanges) {
+                this.clearCache();
+                this.startAlarms();
+            }
+            this.emit('profile-updated', profile, noChanges);
+        }
+    }
+
+    private doProfileSave() {
+        if (this._profileSaveTimeout) return;
+        this._profileSaveTimeout = setTimeout(() => {
+            for (const profile in this._profileSaves) {
+                this.profiles.items[profile].save(profile);
+                this.emit('profile-updated', profile, this._profileSaves[profile]);
+            }
+            this._profileSaves = {};
+            this._profileSaveTimeout = null;
+        }, this.options.groupProfileSaveDelay);
+    }
+
+    public clearProfileSaves() {
+        if (this._profileSaveTimeout) {
+            clearInterval(this._profileSaveTimeout);
+            this._profileSaveTimeout = null;
+        }
     }
 
     public toggleProfile(profile: string) {
@@ -881,7 +920,8 @@ export class Client extends EventEmitter {
                     changed = true;
                 }
                 if (changed) {
-                    this.saveProfile(parent.profile.name, true);
+                    if (this.options.saveTriggerStateChanges)
+                        this.saveProfile(parent.profile.name, true);
                     this.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
                 }
                 //last check to be 100% sure enabled

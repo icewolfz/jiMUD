@@ -6,6 +6,7 @@
   - Add [#COMMENT](docs/commands.md#miscellaneous) does nothing, used to create quick comments in scripts
   - Add [#NOOP](docs/commands.md#miscellaneous) does nothing, will expand arguments and execute any functions but return nothing to the screen
   - Add [#UNACTION](docs/commands.md#triggers) same as [#UNTRIGGER](docs/commands.md#triggers)
+  - Add [#TEMP](docs/commands.md#triggers) create a temporary trigger
   - Add [%clip(string)](docs/functions.md#miscellaneous) return or set text on clipboard
   - [Preferences](docs/preferences.md):
     - Add [Ignore Eval Undefined](docs/preferences.md#scripting) Will cause undefined results to be ignored if enabled, else it will be converted to a string and the word undefined displayed
@@ -14,6 +15,9 @@
     - Add [Enable Inline Comment](docs/preferences.md#scripting--special-characters) disable inline comment support
     - Add [Block Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for block comments, ending block comment is string reversed
     - Add [Block Inline Comment](docs/preferences.md#scripting--special-characters) disable block comment support    
+    - Add [Save Trigger State Changes](docs/preferences.md#advanced--profiles) Add option to control if state changes are saved every time they change
+    - New Advanced sub page for all profile related preferences.
+    - Add [Group profile saves](docs/preferences.md#advanced--profiles) and [Group profile save delay](docs/preferences.md#advanced--profiles) to allow grouping of profile saves
   - [Triggers](docs/profiles.md#triggers)
     - Add `Loop Expression` trigger type
     - Add `ReParse` and `ReParse Pattern` sub type triggers

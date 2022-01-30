@@ -479,6 +479,9 @@ export class Settings {
     public blockCommentString: string = '/*';
 
     public allowCommentsFromCommand: boolean = false;
+    public saveTriggerStateChanges: boolean = true;
+    public groupProfileSaves: boolean = false;
+    public groupProfileSaveDelay: number = 20000;
 
     public windows = {};
     public buttons = {
