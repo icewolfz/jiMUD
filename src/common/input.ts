@@ -7851,7 +7851,7 @@ export class Input extends EventEmitter {
             }
             try {
                 if (trigger.type === TriggerType.LoopExpression) {
-                    if (this.evaluate(trigger.pattern)) {
+                    if (this.evaluate(this.parseInline(trigger.pattern))) {
                         if (!this._TriggerStates[t])
                         {
                             const state = this.createTriggerState(trigger, false, parent);
