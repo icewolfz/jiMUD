@@ -8821,19 +8821,21 @@ export class Input extends EventEmitter {
             case '3':
             case '8':
             case '16':
+            case '64':
+            case '128':
             case 'REGULAR':
             case 'COMMANDINPUTREGULAR':
             case 'EVENT':
             case 'ALARM':
             case 'COMMAND':
             case 'COMMANDINPUTPATTERN':
+            case 'LOOPEXPRSSION':
+            //case 'EXPRESSION':
                 return (filter & TriggerTypeFilter.Main) === TriggerTypeFilter.Main ? true : false;
             case 'SKIP':
             case '512':
             case 'WAIT':
             case '1024':
-            //case 'LOOPEXPRSSION':
-            //case '2048':
             case 'LOOPPATTERN':
             case '4096':
             case 'LOOPLINES':
@@ -8865,6 +8867,8 @@ export class Input extends EventEmitter {
             case '3':
             case '8':
             case '16':
+            case '128':
+            //case '64':
                 return TriggerType[parseInt(type, 10)];
             case 'REGULAR':
             case 'COMMANDINPUTREGULAR':
@@ -8872,10 +8876,11 @@ export class Input extends EventEmitter {
             case 'ALARM':
             case 'COMMAND':
             case 'COMMANDINPUTPATTERN':
+            case 'LOOPEXPRSSION':
+            //case 'EXPRESSION':
                 return TriggerType[type];
             case '512':
             case '1024':
-            //case '2048':
             case '4096':
             case '8192':
             case '16384':
@@ -8893,7 +8898,6 @@ export class Input extends EventEmitter {
             case 'MANUAL':
             case 'REPARSE':
             case 'REPARSEPATTERN':
-                //case 'LOOPEXPRSSION':
                 return SubTriggerTypes[type];
         }
         throw new Error('Invalid trigger type');
