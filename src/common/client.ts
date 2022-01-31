@@ -5,7 +5,7 @@ import EventEmitter = require('events');
 import { Telnet, TelnetOption } from './telnet';
 import { ParserLine } from './types';
 import { AnsiColorCode } from './ansi';
-import { parseTemplate, SortItemArrayByPriority, existsSync } from './library';
+import { parseTemplate, SortItemArrayByPriority, existsSync, isEqual } from './library';
 import { Settings } from './settings';
 import { Input } from './input';
 import { ProfileCollection, Alias, Trigger, Alarm, Macro, Profile, Button, Context, TriggerType, SubTriggerTypes, Variable, VariableType } from './profile';
@@ -457,21 +457,18 @@ export class Client extends EventEmitter {
                 }
                 else if (typeof key !== 'number')
                     throw new Error("Index must be a number");
-                if (!va.rawValue[key] || va.rawValue[key] !== value)
-                    _changed = true;
+                _changed = !va.rawValue[key] || !isEqual(va.rawValue[key], value);
                 va.rawValue[key] = value;
             }
             else if (va.type === VariableType.Record || (va.type === VariableType.Auto && typeof va.rawValue === 'object')) {
-                if (!va.rawValue[key] || va.rawValue[key] !== value)
-                    _changed = true;
+                _changed = !va.rawValue[key] || !isEqual(va.rawValue[key], value);
                 va.rawValue[key] = value;
             }
             else
                 throw new Error(`${name} is not an array or record`);
         }
         else {
-            if (va.rawValue !== value)
-                _changed = true;
+            _changed = !isEqual(va.rawValue, value);
             va.rawValue = value;
         }
         //only save if changed
@@ -536,21 +533,18 @@ export class Client extends EventEmitter {
                     }
                     else if (typeof key !== 'number')
                         throw new Error("Index must be a number");
-                    if (!va.rawValue[key] || va.rawValue[key] !== value)
-                        _changed = true;
+                    _changed = !va.rawValue[key] || !isEqual(va.rawValue[key], value);
                     va.rawValue[key] = value;
                 }
                 else if (va.type === VariableType.Record || (va.type === VariableType.Auto && typeof va.rawValue === 'object')) {
-                    if (!va.rawValue[key] || va.rawValue[key] !== value)
-                        _changed = true;
+                    _changed = !va.rawValue[key] || !isEqual(va.rawValue[key], value);
                     va.rawValue[key] = value;
                 }
                 else
                     throw new Error(`${name} is not an array or record`);
             }
             else {
-                if (va.rawValue !== value)
-                    _changed = true;
+                _changed = !isEqual(va.rawValue, value);
                 va.rawValue = value;
             }
             //only update profile if changed, better performance
