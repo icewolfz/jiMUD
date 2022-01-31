@@ -186,6 +186,7 @@
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
         const { parseTemplate, setSelectionRange, isFileSync, decrypt } = require('./js/library.js');
+        const { ProfileSaveType } = require('./js/types.js');
         //    const fs = require('fs');
         const path = require('path');
         const { version } = require('../package.json');
@@ -978,12 +979,17 @@
             client.on('initialized', () => {
                 autoConnect();
             });
-            client.on('profile-updated', (profile, noChanges) => {
+            client.on('profile-updated', (profile, noChanges, type) => {
                 if (!noChanges) {
                     ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
-                    doUpdate(24);
+                    //only update if buttons changed
+                    if(!type || (type & ProfileSaveType.Button) === ProfileSaveType.Button)
+                        doUpdate(8);
+                    //update if context or variables have changed
+                    if(!type || (type & ProfileSaveType.Context) === ProfileSaveType.Context || (type & ProfileSaveType.Variable) === ProfileSaveType.Variable)
+                        doUpdate(16);
                 }
-                ipcRenderer.send('profile-updated', profile, noChanges);
+                ipcRenderer.send('profile-updated', profile, noChanges, type);
             });
 
             client.on('profile-toggled', (profile, enabled) => {

@@ -4632,7 +4632,7 @@ ipcRenderer.on('profile-item-removed', (event, type, profile, idx) => {
     $('#btn-refresh').addClass('btn-warning');
 });
 
-ipcRenderer.on('profile-updated', (event, profile, noChanges) => {
+ipcRenderer.on('profile-updated', (event, profile, noChanges, type) => {
     //filesChanged = true;
     //$('#btn-refresh').addClass('btn-warning');
 });
