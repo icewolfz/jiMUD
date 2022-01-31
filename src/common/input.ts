@@ -9235,7 +9235,7 @@ export class Input extends EventEmitter {
                 if (options.cmdpattern)
                     trigger.type = TriggerType.CommandInputPattern;
                 if (options.loopexpression)
-                    sTrigger.type = TriggerType.LoopExpression;
+                    trigger.type = TriggerType.LoopExpression;
                 if (options.expression)
                     trigger.type = TriggerType.Expression;
                 if (options.prompt)
