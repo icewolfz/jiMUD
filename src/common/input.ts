@@ -8821,7 +8821,7 @@ export class Input extends EventEmitter {
             case '3':
             case '8':
             case '16':
-            case '64':
+            //case '64':
             case '128':
             case 'REGULAR':
             case 'COMMANDINPUTREGULAR':
