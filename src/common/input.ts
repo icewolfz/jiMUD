@@ -10,7 +10,7 @@ import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, par
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerTypes, convertPattern } from './profile';
-import { NewLineType } from './types';
+import { NewLineType, ProfileSaveType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
 import { create, all, factory } from 'mathjs';
@@ -4671,7 +4671,7 @@ export class Input extends EventEmitter {
                 trigger.fired = false;
                 this.resetTriggerState(this._TriggerCache.indexOf(trigger), n, i);
                 this.client.restartAlarmState(trigger, n, trigger.state);
-                this.client.saveProfile(trigger.profile.name, true);
+                this.client.saveProfile(trigger.profile.name, true, ProfileSaveType.Trigger);
                 this.client.emit('item-updated', 'trigger', trigger.profile.name, trigger.profile.triggers.indexOf(trigger), trigger);
                 this.client.echo('Trigger state set to ' + trigger.state + '.', -7, -8, true, true);
                 return null;
@@ -4874,7 +4874,7 @@ export class Input extends EventEmitter {
                     default:
                         throw new Error('Invalid syntax use ' + cmdChar + 'set \x1b[3mname|pattern\x1b[0;-11;-12m state \x1b[3mvalue profile\x1b[0;-11;-12m');
                 }
-                this.client.saveProfile(trigger.profile.name, true);
+                this.client.saveProfile(trigger.profile.name, true, ProfileSaveType.Trigger);
                 this.client.emit('item-updated', 'trigger', trigger.profile.name, trigger.profile.triggers.indexOf(trigger), trigger);
                 this.resetTriggerState(this._TriggerCache.indexOf(trigger), n, i);
                 if (n === 0)
@@ -8165,7 +8165,7 @@ export class Input extends EventEmitter {
                 //changed state save
                 if (changed) {
                     if (this.client.options.saveTriggerStateChanges)
-                        this.client.saveProfile(parent.profile.name, true);
+                        this.client.saveProfile(parent.profile.name, true, ProfileSaveType.Trigger);
                     this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
                 }
                 //last check to be 100% sure enabled
@@ -8250,7 +8250,7 @@ export class Input extends EventEmitter {
             }
             try {
                 if (trigger.type === TriggerType.LoopExpression) {
-                    if (this.evaluate(trigger.pattern)) {
+                    if (this.evaluate(this.parseInline(trigger.pattern))) {
                         if (!this._TriggerStates[t]) {
                             const state = this.createTriggerState(trigger, false, parent);
                             if (state)
@@ -8330,7 +8330,7 @@ export class Input extends EventEmitter {
                 if (this.client.options.disableTriggerOnError) {
                     trigger.enabled = false;
                     setTimeout(() => {
-                        this.client.saveProfile(parent.profile.name);
+                        this.client.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
                         this.emit('item-updated', 'trigger', parent.profile, parent.profile.triggers.indexOf(parent), parent);
                     });
                 }
@@ -8404,7 +8404,7 @@ export class Input extends EventEmitter {
             if (this.client.options.disableTriggerOnError) {
                 trigger.enabled = false;
                 setTimeout(() => {
-                    this.client.saveProfile(parent.profile.name);
+                    this.client.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
                     this.emit('item-updated', 'trigger', parent.profile, parent.profile.triggers.indexOf(parent), parent);
                 });
             }
@@ -8447,7 +8447,7 @@ export class Input extends EventEmitter {
                         item.state = 0;
                     if (idx >= 0)
                         this._TriggerCache[idx] = item;
-                    this.client.saveProfile(parent.profile.name);
+                    this.client.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
                     const pIdx = parent.profile.triggers.indexOf(parent);
                     parent.profile.triggers[pIdx] = item;
                     this.client.emit('item-updated', 'trigger', parent.profile.name, pIdx, item);
@@ -8458,7 +8458,7 @@ export class Input extends EventEmitter {
                     //if removed temp shift state adjust
                     if (parent.state > parent.triggers.length)
                         parent.state = 0;
-                    this.client.saveProfile(parent.profile.name);
+                    this.client.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
                     this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
                 }
             }
@@ -8571,7 +8571,7 @@ export class Input extends EventEmitter {
             parent.state = 0;
         //changed state save
         if (this.client.options.saveTriggerStateChanges)
-            this.client.saveProfile(parent.profile.name, true);
+            this.client.saveProfile(parent.profile.name, true, ProfileSaveType.Trigger);
         this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
         //is new subtype a reparse? if so reparse using current trigger instant
         if (parent.state !== 0) {
@@ -8868,7 +8868,7 @@ export class Input extends EventEmitter {
                 //changed state save
                 if (changed) {
                     if (this.client.options.saveTriggerStateChanges)
-                        this.client.saveProfile(parent.profile.name, true);
+                        this.client.saveProfile(parent.profile.name, true, ProfileSaveType.Trigger);
                     this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
                 }
                 //last check to be 100% sure enabled
@@ -8939,10 +8939,10 @@ export class Input extends EventEmitter {
                 continue;
             }
             if (trigger.type !== TriggerType.Expression) continue;
-            if(!this._ExpressionCache[`${t}-${parent.state}`])
+            if (!this._ExpressionCache[`${t}-${parent.state}`])
                 this._ExpressionCache[`${t}-${parent.state}`] = [...(trigger.pattern.replace(/"(.*)"/, "").matchAll(/\b([a-zA-Z_$][a-zA-Z_$0-9]*)\b/g))].map(v => v[0]);
             //no changes skip
-            if(!vars.some(i => this._ExpressionCache[`${t}-${parent.state}`].indexOf(i) !== -1))
+            if (!vars.some(i => this._ExpressionCache[`${t}-${parent.state}`].indexOf(i) !== -1))
                 continue;
             if (this.evaluate(this.parseInline(trigger.pattern))) {
                 if (!this._TriggerStates[t]) {
@@ -8954,7 +8954,7 @@ export class Input extends EventEmitter {
                     continue;
                 this.ExecuteTrigger(trigger, [trigger.pattern], false, t, [trigger.pattern], 0, parent);
                 t = this.cleanUpTriggerState(t);
-            }            
+            }
         }
     }
 

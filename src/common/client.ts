@@ -3,7 +3,7 @@
 
 import EventEmitter = require('events');
 import { Telnet, TelnetOption } from './telnet';
-import { ParserLine } from './types';
+import { ParserLine, ProfileSaveType } from './types';
 import { AnsiColorCode } from './ansi';
 import { parseTemplate, SortItemArrayByPriority, existsSync, isEqual } from './library';
 import { Settings } from './settings';
@@ -235,7 +235,7 @@ export class Client extends EventEmitter {
                 this._itemCache.alarmPatterns.splice(idx, 1);
             }
         }
-        this.saveProfile(keys[k]);
+        this.saveProfile(keys[k], false, ProfileSaveType.Trigger);
         this.emit('item-removed', 'trigger', keys[k], idx);
     }
 
@@ -761,7 +761,7 @@ export class Client extends EventEmitter {
         this.emit('profiles-updated', noChanges);
     }
 
-    public saveProfile(profile: string, noChanges?: boolean) {
+    public saveProfile(profile: string, noChanges?: boolean, type?: ProfileSaveType) {
         profile = profile.toLowerCase();
         //is not loaded so no reason to even save it
         if (!this.profiles.contains(profile))
@@ -776,7 +776,12 @@ export class Client extends EventEmitter {
                 this.clearCache();
                 this.startAlarms();
             }
-            this._profileSaves[profile.toLowerCase()] = this._profileSaves[profile.toLowerCase()] || noChanges;
+            if (this._profileSaves[profile.toLowerCase()]) {
+                this._profileSaves[profile.toLowerCase()].noChanges = this._profileSaves[profile.toLowerCase()].nochanges || noChanges;
+                this._profileSaves[profile.toLowerCase()].type |= type;
+            }
+            else
+                this._profileSaves[profile.toLowerCase()] = { noChanges: noChanges, type: type }
             this.doProfileSave();
         }
         else {
@@ -786,7 +791,7 @@ export class Client extends EventEmitter {
                 this.clearCache();
                 this.startAlarms();
             }
-            this.emit('profile-updated', profile, noChanges);
+            this.emit('profile-updated', profile, noChanges, type);
         }
     }
 
@@ -795,7 +800,7 @@ export class Client extends EventEmitter {
         this._profileSaveTimeout = setTimeout(() => {
             for (const profile in this._profileSaves) {
                 this.profiles.items[profile].save(profile);
-                this.emit('profile-updated', profile, this._profileSaves[profile]);
+                this.emit('profile-updated', profile, this._profileSaves[profile].noChanges, this._profileSaves[profile].type);
             }
             this._profileSaves = {};
             this._profileSaveTimeout = null;
@@ -1037,7 +1042,7 @@ export class Client extends EventEmitter {
                 }
                 if (changed) {
                     if (this.options.saveTriggerStateChanges)
-                        this.saveProfile(parent.profile.name, true);
+                        this.saveProfile(parent.profile.name, true, ProfileSaveType.Trigger);
                     this.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
                 }
                 //last check to be 100% sure enabled
@@ -1105,7 +1110,7 @@ export class Client extends EventEmitter {
                             item.triggers = parent.triggers;
                             alarms[a] = item;
                             patterns[a] = null;
-                            this.saveProfile(parent.profile.name);
+                            this.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
                             const idx = parent.profile.triggers.indexOf(parent)
                             parent.profile.triggers[idx] = item;
                             this.emit('item-updated', 'trigger', parent.profile.name, idx, item);
@@ -1118,7 +1123,7 @@ export class Client extends EventEmitter {
                             //if removed temp shift state adjust
                             if (parent.state > parent.triggers.length)
                                 parent.state = 0;
-                            this.saveProfile(parent.profile.name);
+                            this.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
                             const idx = parent.profile.triggers.indexOf(parent);
                             this.emit('item-updated', 'trigger', parent.profile.name, idx, parent);
                         }

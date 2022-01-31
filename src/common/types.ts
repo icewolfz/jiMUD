@@ -289,3 +289,13 @@ export enum MailFolders {
   sent = 2,
   trash = 3
 }
+
+export enum ProfileSaveType {
+  Any = 0,
+  Trigger = 1,
+  Button = 2,
+  Macro = 4,
+  Alias = 8,
+  Context = 16,
+  Variable = 32
+}
