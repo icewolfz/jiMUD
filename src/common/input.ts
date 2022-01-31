@@ -182,6 +182,7 @@ export class Input extends EventEmitter {
     private _locked: number = 0;
     private _tests: Tests;
     private _TriggerCache: Trigger[] = null;
+    private _ExpressionCache = {};
     private _TriggerStates = {};
     private _TriggerFunctionCache = {};
     private _TriggerRegExCache = {};
@@ -2073,7 +2074,7 @@ export class Input extends EventEmitter {
                                     case 'event':
                                     case 'cmdpattern':
                                     case 'loopexpression':
-                                        //case 'expression':
+                                    case 'expression':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -2130,7 +2131,7 @@ export class Input extends EventEmitter {
                                     case 'event':
                                     case 'cmdpattern':
                                     case 'loopexpression':
-                                        //case 'expression':
+                                    case 'expression':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -4943,7 +4944,7 @@ export class Input extends EventEmitter {
                                     case 'event':
                                     case 'cmdpattern':
                                     case 'loopexpression':
-                                    //case 'expression':
+                                    case 'expression':
                                     case 'reparse':
                                     case 'reparsepattern':
                                     case 'manual':
@@ -5009,7 +5010,7 @@ export class Input extends EventEmitter {
                                     case 'event':
                                     case 'cmdpattern':
                                     case 'loopexpression':
-                                    //case 'expression':
+                                    case 'expression':
                                     case 'reparse':
                                     case 'reparsepattern':
                                     case 'manual':
@@ -5216,7 +5217,7 @@ export class Input extends EventEmitter {
                                     case 'event':
                                     case 'cmdpattern':
                                     case 'loopexpression':
-                                        //case 'expression':
+                                    case 'expression':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -5271,7 +5272,7 @@ export class Input extends EventEmitter {
                                     case 'event':
                                     case 'cmdpattern':
                                     case 'loopexpression':
-                                        //case 'expression':
+                                    case 'expression':
                                         item.options[o.trim()] = true;
                                         break;
                                     default:
@@ -8083,8 +8084,8 @@ export class Input extends EventEmitter {
             return true;
         if (type === TriggerType.LoopExpression && (types & TriggerTypes.LoopExpression) == TriggerTypes.LoopExpression)
             return true;
-        //if (type === TriggerType.Expression && (types & TriggerTypes.Expression) == TriggerTypes.Expression)
-        //return true;            
+        if (type === TriggerType.Expression && (types & TriggerTypes.Expression) == TriggerTypes.Expression)
+            return true;
         return false;
     }
 
@@ -8753,7 +8754,7 @@ export class Input extends EventEmitter {
         this._TriggerStates[idx] = data;
     }
 
-    public clearTriggerCache() { this._TriggerCache = null; this._TriggerStates = {}; this._TriggerFunctionCache = {}; this._TriggerRegExCache = {}; }
+    public clearTriggerCache() { this._TriggerCache = null; this._ExpressionCache = {}; this._TriggerStates = {}; this._TriggerFunctionCache = {}; this._TriggerRegExCache = {}; }
 
     public resetTriggerState(idx, oldState, oldFire?) {
         if (idx === -1) return;
@@ -8815,6 +8816,7 @@ export class Input extends EventEmitter {
 
     public clearCaches() {
         this._TriggerCache = null;
+        this._ExpressionCache = {};
         this._TriggerStates = {};
         this._TriggerFunctionCache = {};
         this._gamepadCaches = null;
@@ -8883,6 +8885,76 @@ export class Input extends EventEmitter {
             if (!trigger.caseSensitive && event.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
             this.ExecuteTrigger(trigger, args, false, t, 0, 0, parent);
             t = this.cleanUpTriggerState(t);
+        }
+    }
+
+    public triggerExpression(vars: string[]) {
+        if (!this.enableTriggers) return;
+        this.buildTriggerCache();
+        let t = 0;
+        const tl = this._TriggerCache.length;
+        for (; t < tl; t++) {
+            let trigger = this._TriggerCache[t];
+            const parent = trigger;
+            let changed = false;
+            //in case it got disabled by something
+            if (!trigger.enabled) continue;
+            //safety check in case a state was deleted
+            if (trigger.state > parent.triggers.length)
+                trigger.state = 0;
+            if (trigger.state !== 0 && parent.triggers && parent.triggers.length) {
+                //trigger states are 1 based as 0 is parent trigger
+                trigger = parent.triggers[trigger.state - 1];
+                //skip disabled states
+                while (!trigger.enabled && parent.state !== 0) {
+                    //advance state
+                    parent.state++;
+                    //if no more states start over and stop
+                    if (parent.state > parent.triggers.length) {
+                        parent.state = 0;
+                        //reset to first state
+                        trigger = parent;
+                        //stop checking
+                        break;
+                    }
+                    if (parent.state)
+                        trigger = parent.triggers[parent.state - 1];
+                    else
+                        trigger = parent;
+                    changed = true;
+                }
+                //changed state save
+                if (changed) {
+                    if (this.client.options.saveTriggerStateChanges)
+                        this.client.saveProfile(parent.profile.name, true);
+                    this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
+                }
+                //last check to be 100% sure enabled
+                if (!trigger.enabled) continue;
+            }
+            if (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) {
+                const val = this.adjustLastLine(this.client.display.lines.length, true);
+                const line = this.client.display.lines[val];
+                t = this.TestTrigger(trigger, parent, t, line, this.client.display.rawLines[val] || line, val === this.client.display.lines.length - 1);
+                continue;
+            }
+            if (trigger.type !== TriggerType.Expression) continue;
+            if(!this._ExpressionCache[`${t}-${parent.state}`])
+                this._ExpressionCache[`${t}-${parent.state}`] = [...(trigger.pattern.replace(/"(.*)"/, "").matchAll(/\b([a-zA-Z_$][a-zA-Z_$0-9]*)\b/g))].map(v => v[0]);
+            //no changes skip
+            if(!vars.some(i => this._ExpressionCache[`${t}-${parent.state}`].indexOf(i) !== -1))
+                continue;
+            if (this.evaluate(trigger.pattern)) {
+                if (!this._TriggerStates[t]) {
+                    const state = this.createTriggerState(trigger, false, parent);
+                    if (state)
+                        this._TriggerStates[t] = state;
+                }
+                else if (this._TriggerStates[t].loop !== -1 && this._TriggerStates[t].lineCount < 1)
+                    continue;
+                this.ExecuteTrigger(trigger, [trigger.pattern], false, t, [trigger.pattern], 0, parent);
+                t = this.cleanUpTriggerState(t);
+            }            
         }
     }
 
@@ -9083,8 +9155,8 @@ export class Input extends EventEmitter {
                     sTrigger.type = TriggerType.CommandInputPattern;
                 if (options.loopexpression)
                     sTrigger.type = TriggerType.LoopExpression;
-                //if(options.expression)
-                //sTrigger.type = TriggerType.Expression;                    
+                if (options.expression)
+                    sTrigger.type = TriggerType.Expression;
                 if (options.reparse)
                     sTrigger.type = SubTriggerTypes.ReParse;
                 if (options.reparsepattern)
@@ -9164,9 +9236,8 @@ export class Input extends EventEmitter {
                     trigger.type = TriggerType.CommandInputPattern;
                 if (options.loopexpression)
                     sTrigger.type = TriggerType.LoopExpression;
-                //if(options.expression)
-                //trigger.type = TriggerType.Expression;
-
+                if (options.expression)
+                    trigger.type = TriggerType.Expression;
                 if (options.prompt)
                     trigger.triggerPrompt = true;
                 if (options.nocr)
@@ -9218,7 +9289,7 @@ export class Input extends EventEmitter {
             case '3':
             case '8':
             case '16':
-            //case '64':
+            case '64':
             case '128':
             case 'REGULAR':
             case 'COMMANDINPUTREGULAR':
@@ -9227,7 +9298,7 @@ export class Input extends EventEmitter {
             case 'COMMAND':
             case 'COMMANDINPUTPATTERN':
             case 'LOOPEXPRSSION':
-                //case 'EXPRESSION':
+            case 'EXPRESSION':
                 return (filter & TriggerTypeFilter.Main) === TriggerTypeFilter.Main ? true : false;
             case 'SKIP':
             case '512':
@@ -9265,7 +9336,7 @@ export class Input extends EventEmitter {
             case '8':
             case '16':
             case '128':
-                //case '64':
+            case '64':
                 return TriggerType[parseInt(type, 10)];
             case 'REGULAR':
             case 'COMMANDINPUTREGULAR':
@@ -9274,7 +9345,7 @@ export class Input extends EventEmitter {
             case 'COMMAND':
             case 'COMMANDINPUTPATTERN':
             case 'LOOPEXPRSSION':
-                //case 'EXPRESSION':
+            case 'EXPRESSION':
                 return TriggerType[type];
             case '512':
             case '1024':

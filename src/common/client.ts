@@ -473,7 +473,7 @@ export class Client extends EventEmitter {
         }
         //only save if changed
         if (_changed) {
-            //execute expression triggers here
+            this._input.triggerExpression([name]);
             this.saveProfile(va.profile.name);
         }
     }
@@ -554,7 +554,7 @@ export class Client extends EventEmitter {
             changed = changed || _changed;
         }
         if (changed) {
-            //execute expression triggers here
+            this._input.triggerExpression(names);
             //batch save to increase performance
             for (profile in _profiles)
                 this.saveProfile(profile);
