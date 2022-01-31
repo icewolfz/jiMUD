@@ -149,7 +149,7 @@ Display text to the screen, and the display text will not fire triggers
 >remove a button, if index it is the position in order of buttons in profile manager
 
 <u>#TEMPV</i>AR name value
->Set or get a session only variable that will be removed when client closed
+>Set or get a session only variable that will be removed when client closed or character switched
 
 <u>#VA</u>RIABLE *name value*
 >Set, get, or display all user set variables

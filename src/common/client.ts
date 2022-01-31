@@ -342,7 +342,7 @@ export class Client extends EventEmitter {
         return this._itemCache.defaultContext;
     }
 
-    get variables(): any {
+    get variables(): Object {
         if (this._itemCache.variables)
             return this._itemCache.variables;
         const keys = this.profiles.keys;
@@ -596,31 +596,44 @@ export class Client extends EventEmitter {
         let idx = va.profile.variables.indexOf(va);
         if (idx === -1)
             return;
-        va.profile.triggers.splice(idx, 1);
+        va.profile.variables.splice(idx, 1);
         this._itemCache.variables = null;
         this.saveProfile(va.profile.name);
         this.emit('item-removed', 'variable', va.profile.name, idx);
     }
 
-    public clearSessionVariables() {
-        let vl = this.variables.length;
+    public clearSessionVariables(profile?) {
+        const vars = Object.keys(this.variables);
+        let vl = vars.length;
         let c = 0;
+        const _profiles = {};
         while (vl-- > 0) {
-            if (this.variables[vl].session) {
-                this.removeVariable(this.variables[vl]);
+            const va: Variable = this.variables[vars[vl]];
+            if (profile && profile != va.profile) continue;
+            if (va.session) {
+                const idx = va.profile.variables.indexOf(va);
+                if (idx === -1)
+                    continue;
+                _profiles[va.profile.name] = 1;
+                this.emit('item-removed', 'variable', va.profile.name, idx);
                 c++;
             }
         }
-        if (c)
-            this.saveProfiles();
+        if (c) {
+            this._itemCache.variables = null;
+            //batch save to improve performance
+            for (profile in _profiles)
+                this.saveProfile(profile);
+        }
     }
 
     public initDefaultVariables(profile?) {
-        let vl = this.variables.length;
+        const vars = Object.keys(this.variables);
+        let vl = vars.length;
         while (vl-- > 0) {
-            if (profile && profile != this.variables[vl].profile) continue;
-            if (this.variables[vl].useDefault)
-                this.variables[vl].rawValue = this.variables[vl].defaultValue;
+            if (profile && profile != this.variables[vars[vl]].profile) continue;
+            if (this.variables[vars[vl]].useDefault)
+                this.variables[vars[vl]].rawValue = this.variables[vars[vl]].defaultValue;
         }
     }
 
@@ -670,8 +683,11 @@ export class Client extends EventEmitter {
             this.clearCache();
             this.startAlarms();
             //only init if first load
-            if (!this._firstLoad)
+            if (!this._firstLoad) {
                 this.initDefaultVariables();
+                //clear out any old session variables that may not have been cleaned
+                this.clearSessionVariables();
+            }
             this._firstLoad = true;
             this.emit('profiles-loaded');
             return;
@@ -693,8 +709,11 @@ export class Client extends EventEmitter {
         this.clearCache();
         this.startAlarms();
         //only init if first load
-        if (!this._firstLoad)
+        if (!this._firstLoad) {
             this.initDefaultVariables();
+            //clear out any old session variables that may not have been cleaned
+            this.clearSessionVariables();
+        }
         this._firstLoad = true;
         this.emit('profiles-loaded');
     }
@@ -713,8 +732,11 @@ export class Client extends EventEmitter {
         this.clearCache();
         this.startAlarms();
         //if was never loaded init variables
-        if (!loaded)
+        if (!loaded) {
             this.initDefaultVariables(this.profiles.items[profile.toLowerCase()]);
+            //clear out any old session variables that may not have been cleaned
+            this.clearSessionVariables(this.profiles.items[profile.toLowerCase()]);
+        }
         this.emit('profile-loaded', profile);
     }
 
