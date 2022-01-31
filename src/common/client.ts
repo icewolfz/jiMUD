@@ -488,9 +488,10 @@ export class Client extends EventEmitter {
         let value;
         let key;
         let name;
-        let _changed = false;
+        let changed = false;
         for (let n = 0; n < nl; n++) {
             name = names[n];
+            let _changed = false;
             if (typeof variables[name] === 'object') {
                 value = variables[name].value;
                 key = variables[name].key;
@@ -550,8 +551,9 @@ export class Client extends EventEmitter {
             //only update profile if changed, better performance
             if (_changed)
                 _profiles[va.profile.name] = 1;
+            changed = changed || _changed;
         }
-        if (_changed) {
+        if (changed) {
             //execute expression triggers here
             //batch save to increase performance
             for (profile in _profiles)
