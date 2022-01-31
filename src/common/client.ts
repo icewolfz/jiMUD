@@ -457,18 +457,18 @@ export class Client extends EventEmitter {
                 }
                 else if (typeof key !== 'number')
                     throw new Error("Index must be a number");
-                _changed = !va.rawValue[key] || !isEqual(va.rawValue[key], value);
+                _changed = _changed || !va.rawValue[key] || !isEqual(va.rawValue[key], value);
                 va.rawValue[key] = value;
             }
             else if (va.type === VariableType.Record || (va.type === VariableType.Auto && typeof va.rawValue === 'object')) {
-                _changed = !va.rawValue[key] || !isEqual(va.rawValue[key], value);
+                _changed = _changed || !va.rawValue[key] || !isEqual(va.rawValue[key], value);
                 va.rawValue[key] = value;
             }
             else
                 throw new Error(`${name} is not an array or record`);
         }
         else {
-            _changed = !isEqual(va.rawValue, value);
+            _changed = _changed || !va.isEqual(value);
             va.rawValue = value;
         }
         //only save if changed

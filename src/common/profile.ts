@@ -1,5 +1,5 @@
 //spell-checker:ignore displaytype, submenu, triggernewline, triggerprompt, stringlist
-import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority, splitQuoted, isValidIdentifier, parseValue } from './library';
+import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority, splitQuoted, isValidIdentifier, parseValue, isEqual } from './library';
 const path = require('path');
 const fs = require('fs');
 
@@ -556,6 +556,7 @@ export class Variable extends Item {
                     //attempt to parse with json
                     try {
                         value = JSON.parse(value);
+                        _type = typeof value;
                     }
                     catch {
                         let tmp;
@@ -668,7 +669,7 @@ export class Variable extends Item {
         }
         this.profile = profile;
         //if (this.useDefault)
-            //this.rawValue = this.defaultValue;
+        //this.rawValue = this.defaultValue;
     }
 
     public clone() {
@@ -704,6 +705,115 @@ export class Variable extends Item {
                 break;
         }
         return value?.toString();
+    }
+
+    public isEqual(value) {
+        switch (this.type) {
+            case VariableType.Integer:
+                //attempt to parse the number from string
+                if (typeof value === 'string') {
+                    value = parseInt(value, 10);
+                    if (isNaN(value))
+                        value = 0;
+                }//boolean is 0 or 1 as a number
+                else if (typeof value === 'boolean')
+                    value = value ? 1 : 0;
+                break;
+            case VariableType.Float:
+                //attempt to parse float from string
+                if (typeof value === 'string') {
+                    value = parseFloat(value);
+                    if (isNaN(value))
+                        value = 0.0;
+                }//boolean is 0 or 1 as a number, force as a float using .0
+                else if (typeof value === 'boolean')
+                    value = value ? 1.0 : 0.0;
+                break;
+            case VariableType.StringList:
+                //a string array that converts to a | delimited string as needed
+                if (typeof value === 'string') {
+                    //strip quotes
+                    if (value.match(/^".*"$/g))
+                        value = splitQuoted(this.value.substr(1, this.value.length - 2), '|').map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
+                    //split by quotes in case a | has been quoted, parse the values striping quotes
+                    value = splitQuoted(value, "|").map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
+                }
+                //not a string but need to be an array
+                else if (!Array.isArray(value))
+                    value = [value];
+                break;
+            case VariableType.Array:
+                //an array is a list of , delimited values with strings optionally quoted
+                //if string and [] brackets convert to array
+                if (typeof value === 'string' && value.match(/^\[.*\]$/g)) {
+                    //strip []
+                    value = value.substring(1, value.length - 2);
+                    //split with quotes in mind and convert values as needed
+                    value = splitQuoted(value, ",").map(v => parseValue(v, 2, false));
+                }
+                else if (!Array.isArray(value))
+                    value = [value];
+                break;
+            case VariableType.Record:
+                //an associative array of key:value pairs
+                if (typeof value === 'string') {
+                    //attempt json convert even if change it may fail
+                    try {
+                        value = JSON.parse(value);
+                    }
+                    catch {
+                        const tmp = {};
+                        //strip [] or {}
+                        if (value.match(/^\[.*\]$/g) || value.match(/^\{.*\}$/g))
+                            value.substring(1, value.length - 2)
+                        //split by quoted strings and , delimiter like an array
+                        splitQuoted(value, ",").map(v => {
+                            //each value should be in the format key:value or key=value, split with quotes in mind
+                            const d = splitQuoted(v, "=:");
+                            //strip any quotes and convert values as needed
+                            tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], 2) : 0;
+                        });
+                        value = tmp;
+                    }
+                }
+                break;
+            case VariableType.JSON:
+                //json should convert and throw errors if invalid
+                if (typeof value === 'string')
+                    value = JSON.parse(value);
+                break;
+            case VariableType.Auto:
+                //attempt to find value type
+                if (typeof value === 'string')
+                    //attempt to parse with json
+                    try {
+                        value = JSON.parse(value);
+                    }
+                    catch {
+                        let tmp;
+                        //an array
+                        if (value.match(/^\[.*\]$/g))
+                            value = splitQuoted(value.substring(1, value.length - 2), ",").map(v => parseValue(v, 2, false));
+                        //record/object
+                        else if (value.match(/^\{.*\}$/g)) {
+                            tmp = {};
+                            splitQuoted(value.substring(1, value.length - 2), ",").map(v => {
+                                const d = splitQuoted(v, "=:");
+                                tmp[d[0].replace(/^"(.+(?="$))?"$/, '$1')] = d.length > 1 ? parseValue(d[1], 2) : 0;
+                            });
+                            value = tmp;
+                        }
+                        //string list
+                        else if (value.indexOf('|') !== -1) {
+                            //strip quotes
+                            if (value.match(/^".*"$/g))
+                                value = splitQuoted(this.value.substr(1, this.value.length - 2), '|').map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
+                            value = splitQuoted(value, "|").map(v => v.match(/^".*"$/g) ? v.substr(1, v.length - 2) : v);
+                        }
+                    }
+                break;
+        }
+        return isEqual(value, this.value);
     }
 }
 

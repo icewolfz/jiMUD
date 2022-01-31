@@ -8944,7 +8944,7 @@ export class Input extends EventEmitter {
             //no changes skip
             if(!vars.some(i => this._ExpressionCache[`${t}-${parent.state}`].indexOf(i) !== -1))
                 continue;
-            if (this.evaluate(trigger.pattern)) {
+            if (this.evaluate(this.parseInline(trigger.pattern))) {
                 if (!this._TriggerStates[t]) {
                     const state = this.createTriggerState(trigger, false, parent);
                     if (state)
