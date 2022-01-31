@@ -2101,7 +2101,7 @@ export function isArrayEqual(a, b): boolean {
 
     for (var i = 0, l = a.length; i < l; i++) {
         // Check if we have nested arrays
-        if (a[i] instanceof Array && b[i] instanceof Array) {
+        if (Array.isArray(a[i]) && Array.isArray(b[i])) {
             // recurse into the nested arrays
             if (!isArrayEqual(a[i], b[i]))
                 return false;
@@ -2152,7 +2152,7 @@ export function isObjectEqual(a, b): boolean {
         //Now the detail check and recursion
 
         //This returns the script back to the array comparing
-        if (a[propName] instanceof Array && b[propName] instanceof Array) {
+        if (Array.isArray(a[propName]) && Array.isArray(b[propName])) {
             // recurse into the nested arrays
             if (!isArrayEqual(a[propName], b[propName]))
                 return false;
@@ -2169,4 +2169,12 @@ export function isObjectEqual(a, b): boolean {
     }
     //If everything passed, let's say YES
     return true;
+}
+
+export function isEqual(a, b): boolean {
+    if (Array.isArray(a) && Array.isArray(b))
+        return isArrayEqual(a, b);
+    else if (a instanceof Object && b instanceof Object)
+        return isObjectEqual(a, b);
+    return a === b;
 }
