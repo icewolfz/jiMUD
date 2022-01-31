@@ -233,6 +233,8 @@ export class Input extends EventEmitter {
 
     public setScope(scope) {
         const ll = this.loops.length;
+        const vars = {};
+        let _update = false;
         for (const name in scope) {
             //not a property, i or repeatnum
             if (!Object.prototype.hasOwnProperty.call(scope, name) || name === 'i' || name === 'repeatnum')
@@ -265,8 +267,12 @@ export class Input extends EventEmitter {
             if (this.stack.named && Object.prototype.hasOwnProperty.call(this.stack.named, name))
                 continue;
             //update/add new variables
-            this.client.setVariable(name, scope[name]);
+            vars[name] = { value: scope[name] };
+            _update = true;
         }
+        //batch update
+        if (_update)
+            this.client.setVariables(vars);
     }
 
     public evaluate(expression) {
@@ -4325,7 +4331,7 @@ export class Input extends EventEmitter {
                 return null;
             case 'tempvar':
             case 'tempv':
-                if (args.length === 0) 
+                if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'tempv\x1b[0;-11;-12mar name value');
                 i = args.shift();
                 if (i.match(/^\{.*\}$/g))
@@ -8244,10 +8250,9 @@ export class Input extends EventEmitter {
             try {
                 if (trigger.type === TriggerType.LoopExpression) {
                     if (this.evaluate(trigger.pattern)) {
-                        if (!this._TriggerStates[t])
-                        {
+                        if (!this._TriggerStates[t]) {
                             const state = this.createTriggerState(trigger, false, parent);
-                            if(state)
+                            if (state)
                                 this._TriggerStates[t] = state;
                         }
                         else if (this._TriggerStates[t].loop !== -1 && this._TriggerStates[t].lineCount < 1)
@@ -9222,7 +9227,7 @@ export class Input extends EventEmitter {
             case 'COMMAND':
             case 'COMMANDINPUTPATTERN':
             case 'LOOPEXPRSSION':
-            //case 'EXPRESSION':
+                //case 'EXPRESSION':
                 return (filter & TriggerTypeFilter.Main) === TriggerTypeFilter.Main ? true : false;
             case 'SKIP':
             case '512':
@@ -9260,7 +9265,7 @@ export class Input extends EventEmitter {
             case '8':
             case '16':
             case '128':
-            //case '64':
+                //case '64':
                 return TriggerType[parseInt(type, 10)];
             case 'REGULAR':
             case 'COMMANDINPUTREGULAR':
@@ -9269,7 +9274,7 @@ export class Input extends EventEmitter {
             case 'COMMAND':
             case 'COMMANDINPUTPATTERN':
             case 'LOOPEXPRSSION':
-            //case 'EXPRESSION':
+                //case 'EXPRESSION':
                 return TriggerType[type];
             case '512':
             case '1024':

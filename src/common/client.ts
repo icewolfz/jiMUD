@@ -422,10 +422,10 @@ export class Client extends EventEmitter {
 
     public setVariable(name: string, key, value?, profile?) {
         let va: Variable;
-        let session = false;
+        let _changed = false;
         if (value === undefined) {
             value = key;
-            key = undefined;
+            key = null;
         }
         if (this.variables.hasOwnProperty(name))
             va = this.variables[name];
@@ -439,14 +439,15 @@ export class Client extends EventEmitter {
             va = new Variable({ name: name }, profile);
             profile.variables.push(va);
             this._itemCache.variables = null;
-            if (key) {
+            if (key != null) {
                 if (key.trim().match((/^[-|+]?\d+$/g)))
                     va.rawValue = [];
                 else
                     va.rawValue = {};
             }
+            _changed = true;
         }
-        if (key) {
+        if (key != null) {
             if (va.type === VariableType.StringList || va.type === VariableType.Array || (va.type === VariableType.Auto && Array.isArray(va.rawValue))) {
                 if (typeof key === 'string') {
                     if (key.trim().match((/^[-|+]?\d+$/g)))
@@ -456,23 +457,120 @@ export class Client extends EventEmitter {
                 }
                 else if (typeof key !== 'number')
                     throw new Error("Index must be a number");
+                if (!va.rawValue[key] || va.rawValue[key] !== value)
+                    _changed = true;
                 va.rawValue[key] = value;
             }
-            else if (va.type === VariableType.Record || (va.type === VariableType.Auto && typeof va.rawValue === 'object'))
+            else if (va.type === VariableType.Record || (va.type === VariableType.Auto && typeof va.rawValue === 'object')) {
+                if (!va.rawValue[key] || va.rawValue[key] !== value)
+                    _changed = true;
                 va.rawValue[key] = value;
+            }
             else
                 throw new Error(`${name} is not an array or record`);
         }
-        else
+        else {
+            if (va.rawValue !== value)
+                _changed = true;
             va.rawValue = value;
-        this.saveProfile(va.profile.name);
+        }
+        //only save if changed
+        if (_changed) {
+            //execute expression triggers here
+            this.saveProfile(va.profile.name);
+        }
+    }
+
+    public setVariables(variables) {
+        const names = Object.keys(variables);
+        if (names.length === 0) return;
+        const _profiles = {};
+        const nl = names.length;
+        let va: Variable;
+        let profile;
+        let value;
+        let key;
+        let name;
+        let _changed = false;
+        for (let n = 0; n < nl; n++) {
+            name = names[n];
+            if (typeof variables[name] === 'object') {
+                value = variables[name].value;
+                key = variables[name].key;
+                profile = variables[name].profile;
+            }
+            else {
+                value = variables[name];
+                key = null;
+                profile = null;
+            }
+            if (this.variables.hasOwnProperty(name))
+                va = this.variables[name];
+            else {
+                if (!profile)
+                    profile = this.activeProfile;
+                else if (typeof profile === 'string')
+                    profile = this.profiles.items[profile];
+                if (!profile || !profile.variables)
+                    profile = this.activeProfile;
+                va = new Variable({ name: name }, profile);
+                profile.variables.push(va);
+                this._itemCache.variables = null;
+                //test for null as key could be 0, and 0 will return false
+                if (key != null) {
+                    if (key.trim().match((/^[-|+]?\d+$/g)))
+                        va.rawValue = [];
+                    else
+                        va.rawValue = {};
+                }
+                _changed = true;
+            }
+            //test for null as key could be 0, and 0 will return false
+            if (key != null) {
+                if (va.type === VariableType.StringList || va.type === VariableType.Array || (va.type === VariableType.Auto && Array.isArray(va.rawValue))) {
+                    if (typeof key === 'string') {
+                        if (key.trim().match((/^[-|+]?\d+$/g)))
+                            key = parseInt(key, 10);
+                        else
+                            throw new Error("Index must be a number");
+                    }
+                    else if (typeof key !== 'number')
+                        throw new Error("Index must be a number");
+                    if (!va.rawValue[key] || va.rawValue[key] !== value)
+                        _changed = true;
+                    va.rawValue[key] = value;
+                }
+                else if (va.type === VariableType.Record || (va.type === VariableType.Auto && typeof va.rawValue === 'object')) {
+                    if (!va.rawValue[key] || va.rawValue[key] !== value)
+                        _changed = true;
+                    va.rawValue[key] = value;
+                }
+                else
+                    throw new Error(`${name} is not an array or record`);
+            }
+            else {
+                if (va.rawValue !== value)
+                    _changed = true;
+                va.rawValue = value;
+            }
+            //only update profile if changed, better performance
+            if (_changed)
+                _profiles[va.profile.name] = 1;
+        }
+        if (_changed) {
+            //execute expression triggers here
+            //batch save to increase performance
+            for (profile in _profiles)
+                this.saveProfile(profile);
+        }
     }
 
     public setVariableSession(name, session) {
         if (!this.variables.hasOwnProperty(name))
             return;
         this.variables[name].session = session;
-        this.saveProfile(this.variables[name].profile.name);
+        //set no change flag as session does not effect anything important
+        this.saveProfile(this.variables[name].profile.name, true);
     }
 
     public hasVariable(name) {
