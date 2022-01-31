@@ -137,6 +137,7 @@
     - `&nn` matches exactly nn characters (fixed width pattern)
     - `&VarName` assigns the matched string to the given variable
     - `%/regex/%` matches the given Regular Expression
+  - `Expression` Execute every time expression is true, triggered only when a variable within the expression is changed
   - `Loop Expression` execute every line as long as expression is true, setting param to # will set the max number of lines allowed to loop, **WARNING** It is very easy to get stuck in an infinite loop if the trigger returns or displays text to the screen, if you use a param you will have to reset the trigger state using [#STATE](commands.md#triggers) if not a multi state trigger
   - Sub triggers Only types:
     - `Skip` Skip N lines before trigger will fire, set param to # of lines to skip
