@@ -750,10 +750,10 @@ String.prototype.splitQuote = function (this: string, sep: string, type?, escape
                         break;
                     }
                     else if (s === pS) {
-                        str.push('');       
+                        str.push('');
                         pS = s + 1;
                         break;
-                    }             
+                    }
                     else if (s === tl - 1)
                         str.push('');
                 }
@@ -1373,10 +1373,10 @@ export function splitQuoted(str, sep, t?, e?, ec?) {
                         break;
                     }
                     else if (s === ps) {
-                        strings.push('');       
+                        strings.push('');
                         ps = s + 1;
                         break;
-                    }                    
+                    }
                     else if (s === (sl - 1))
                         strings.push('');
                 }
@@ -2088,4 +2088,85 @@ export function isValidIdentifier(str: string): boolean {
         return false;
     //not a keyword
     return ['break', 'case', 'catch', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof', 'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'class', 'const', 'enum', 'export', 'extends', 'import', 'super', 'implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static', 'yield', 'null', 'true', 'false', 'NaN', 'Infinity', 'undefined', 'eval', 'arguments'].indexOf(str) === -1;
+}
+
+export function isArrayEqual(a, b): boolean {
+    // if the other array is a falsy value, return
+    if (!a || !b)
+        return false;
+
+    // compare lengths - can save a lot of time 
+    if (a.length != b.length)
+        return false;
+
+    for (var i = 0, l = a.length; i < l; i++) {
+        // Check if we have nested arrays
+        if (a[i] instanceof Array && b[i] instanceof Array) {
+            // recurse into the nested arrays
+            if (!isArrayEqual(a[i], b[i]))
+                return false;
+        }
+        else if (a[i] instanceof Object && b[i] instanceof Object) {
+            // recurse into another objects
+            if (!isObjectEqual(a[i], b[i]))
+                return false;
+        }
+        else if (a[i] !== b[i]) {
+            // Warning - two different object instances will never be equal: {x:20} != {x:20}
+            return false;
+        }
+    }
+    return true;
+}
+
+export function isObjectEqual(a, b): boolean {
+    let propName;
+    //For the first loop, we only check for types
+    for (propName in a) {
+        //Check for inherited methods and properties - like .equals itself
+        //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty
+        //Return false if the return value is different
+        if (a.hasOwnProperty(propName) != b.hasOwnProperty(propName)) {
+            return false;
+        }
+        //Check instance type
+        else if (typeof a[propName] != typeof b[propName]) {
+            //Different types => not equal
+            return false;
+        }
+    }
+    //Now a deeper check using other objects property names
+    for (propName in b) {
+        //We must check instances anyway, there may be a property that only exists in object2
+        //I wonder, if remembering the checked values from the first loop would be faster or not 
+        if (a.hasOwnProperty(propName) != b.hasOwnProperty(propName)) {
+            return false;
+        }
+        else if (typeof a[propName] != typeof b[propName]) {
+            return false;
+        }
+        //If the property is inherited, do not check any more (it must be equal if both objects inherit it)
+        if (!a.hasOwnProperty(propName))
+            continue;
+
+        //Now the detail check and recursion
+
+        //This returns the script back to the array comparing
+        if (a[propName] instanceof Array && b[propName] instanceof Array) {
+            // recurse into the nested arrays
+            if (!isArrayEqual(a[propName], b[propName]))
+                return false;
+        }
+        else if (a[propName] instanceof Object && b[propName] instanceof Object) {
+            // recurse into another objects
+            if (!isObjectEqual(a[propName], b[propName]))
+                return false;
+        }
+        //Normal value comparison for strings and numbers
+        else if (a[propName] !== b[propName]) {
+            return false;
+        }
+    }
+    //If everything passed, let's say YES
+    return true;
 }
