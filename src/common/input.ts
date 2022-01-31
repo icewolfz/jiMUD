@@ -8926,7 +8926,7 @@ export class Input extends EventEmitter {
                 //changed state save
                 if (changed) {
                     if (this.client.options.saveTriggerStateChanges)
-                        this.client.saveProfile(parent.profile.name, true);
+                        this.client.saveProfile(parent.profile.name, true, ProfileSaveType.Trigger);
                     this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
                 }
                 //last check to be 100% sure enabled

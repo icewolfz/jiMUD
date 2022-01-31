@@ -474,7 +474,7 @@ export class Client extends EventEmitter {
         //only save if changed
         if (_changed) {
             this._input.triggerExpression([name]);
-            this.saveProfile(va.profile.name);
+            this.saveProfile(va.profile.name, false, ProfileSaveType.Variable);
         }
     }
 
@@ -557,7 +557,7 @@ export class Client extends EventEmitter {
             this._input.triggerExpression(names);
             //batch save to increase performance
             for (profile in _profiles)
-                this.saveProfile(profile);
+                this.saveProfile(profile, false, ProfileSaveType.Variable);
         }
     }
 
@@ -566,7 +566,7 @@ export class Client extends EventEmitter {
             return;
         this.variables[name].session = session;
         //set no change flag as session does not effect anything important
-        this.saveProfile(this.variables[name].profile.name, true);
+        this.saveProfile(this.variables[name].profile.name, true, ProfileSaveType.Variable);
     }
 
     public hasVariable(name) {
@@ -598,7 +598,7 @@ export class Client extends EventEmitter {
             return;
         va.profile.variables.splice(idx, 1);
         this._itemCache.variables = null;
-        this.saveProfile(va.profile.name);
+        this.saveProfile(va.profile.name, false, ProfileSaveType.Variable);
         this.emit('item-removed', 'variable', va.profile.name, idx);
     }
 
@@ -623,7 +623,7 @@ export class Client extends EventEmitter {
             this._itemCache.variables = null;
             //batch save to improve performance
             for (profile in _profiles)
-                this.saveProfile(profile);
+                this.saveProfile(profile, false, ProfileSaveType.Variable);
         }
     }
 
