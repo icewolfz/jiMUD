@@ -1,5 +1,14 @@
 # Changelog
 
+- **New:**
+  - Add proper variable system to the command parsing system
+    - Multiple variable types editable from profile manager
+    - Session only variables
+    - Preference to enable/set character
+    - Assign values as a single line
+  - Add [#TEMPVAR](docs/commands.md#createmodify-profile-or-item) to create session only variables
+  - Add `Expression` trigger type that will execute when variable values have changed
+
 ## v0.17.7
 
 - **New:**
