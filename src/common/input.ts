@@ -2854,10 +2854,10 @@ export class Input extends EventEmitter {
             case 'ga':
                 //#region gag
                 if (args.length === 0) {
-                    if (this._gags.length) {
-                        this._gags[this._gags.length - 1] == this.client.display.lines.length;
+                    //if one exist for this line remove it and replace it with new one
+                    if (this._gags.length && this._gags[this._gags.length - 1] == this.client.display.lines.length) {
                         this._gag = 0;
-                        return null;
+                        this._gags.pop();
                     }
                     this._gags.push(this.client.display.lines.length);
                     this._gagID.push(setTimeout(() => {
@@ -2881,8 +2881,7 @@ export class Input extends EventEmitter {
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\'');
                 //if one exist for this line remove it and replace it with new one
-                if (this._gags.length) {
-                    this._gags[this._gags.length - 1] == this.client.display.lines.length;
+                if (this._gags.length && this._gags[this._gags.length - 1] == this.client.display.lines.length) {
                     this._gag = 0;
                     this._gags.pop();
                 }
@@ -7852,10 +7851,9 @@ export class Input extends EventEmitter {
             try {
                 if (trigger.type === TriggerType.LoopExpression) {
                     if (this.evaluate(this.parseInline(trigger.pattern))) {
-                        if (!this._TriggerStates[t])
-                        {
+                        if (!this._TriggerStates[t]) {
                             const state = this.createTriggerState(trigger, false, parent);
-                            if(state)
+                            if (state)
                                 this._TriggerStates[t] = state;
                         }
                         else if (this._TriggerStates[t].loop !== -1 && this._TriggerStates[t].lineCount < 1)
@@ -8830,7 +8828,7 @@ export class Input extends EventEmitter {
             case 'COMMAND':
             case 'COMMANDINPUTPATTERN':
             case 'LOOPEXPRSSION':
-            //case 'EXPRESSION':
+                //case 'EXPRESSION':
                 return (filter & TriggerTypeFilter.Main) === TriggerTypeFilter.Main ? true : false;
             case 'SKIP':
             case '512':
@@ -8868,7 +8866,7 @@ export class Input extends EventEmitter {
             case '8':
             case '16':
             case '128':
-            //case '64':
+                //case '64':
                 return TriggerType[parseInt(type, 10)];
             case 'REGULAR':
             case 'COMMANDINPUTREGULAR':
@@ -8877,7 +8875,7 @@ export class Input extends EventEmitter {
             case 'COMMAND':
             case 'COMMANDINPUTPATTERN':
             case 'LOOPEXPRSSION':
-            //case 'EXPRESSION':
+                //case 'EXPRESSION':
                 return TriggerType[type];
             case '512':
             case '1024':
