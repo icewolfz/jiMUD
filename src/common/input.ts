@@ -2880,10 +2880,10 @@ export class Input extends EventEmitter {
             case 'ga':
                 //#region gag
                 if (args.length === 0) {
-                    if (this._gags.length) {
-                        this._gags[this._gags.length - 1] == this.client.display.lines.length;
+                    //if one exist for this line remove it and replace it with new one
+                    if (this._gags.length && this._gags[this._gags.length - 1] == this.client.display.lines.length) {
                         this._gag = 0;
-                        return null;
+                        this._gags.pop();
                     }
                     this._gags.push(this.client.display.lines.length);
                     this._gagID.push(setTimeout(() => {
@@ -2907,8 +2907,7 @@ export class Input extends EventEmitter {
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\'');
                 //if one exist for this line remove it and replace it with new one
-                if (this._gags.length) {
-                    this._gags[this._gags.length - 1] == this.client.display.lines.length;
+                if (this._gags.length && this._gags[this._gags.length - 1] == this.client.display.lines.length) {
                     this._gag = 0;
                     this._gags.pop();
                 }
