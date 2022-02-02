@@ -35,7 +35,7 @@
   - Fixed bug in multi state triggers when sub trigger is disabled
   - Fixed issue where temp triggers or re-parse type triggers would be double executed if the pattern was in trigger value
   - Fixed issue with temp alarms and re-parse issues with [#SET](docs/commands.md#triggers) fire state setting
-  - Fixed disableTriggerOnError when a sub trigger errors
+  - Fixed [Disable trigger on error](docs/preferences.md#scripting) when a sub trigger errors
   - Only update button bar is buttons have been changed
   - Only update context menus when menus have been changed
   - Fixed bugs in [#GAG](docs/commands.md#display)
