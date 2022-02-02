@@ -62,7 +62,7 @@
     "electron-rebuild": "^3.2.7",
     "eslint": "^8.8.0",
     "eslint-plugin-html": "^6.2.0",
-    "sass": "^1.49.0"
+    "sass": "^1.49.7"
   },
   "build": {
     "appId": "jiMUD",
