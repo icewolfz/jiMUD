@@ -2290,6 +2290,10 @@
                 }
             if (ret == null)
                 return true;
+            if (typeof ret !== 'string')
+                ret = ret.toString();
+            if (ret.length === 0 && !client.options.returnNewlineOnEmptyValue)
+                return true;
             if (item.send) {
                 if (!ret.endsWith('\n'))
                     ret += '\n';
@@ -2347,6 +2351,15 @@
                         break;
                 }
             if (ret == null) {
+                setTimeout(() => {
+                    if (client.options.CommandonClick)
+                        client.commandInput[0].focus();
+                }, 0);
+                return true;
+            }
+            if (typeof ret !== 'string')
+                ret = ret.toString();
+            if (ret.length === 0 && !client.options.returnNewlineOnEmptyValue) {
                 setTimeout(() => {
                     if (client.options.CommandonClick)
                         client.commandInput[0].focus();

@@ -18,6 +18,7 @@
     - Add [Save Trigger State Changes](docs/preferences.md#advanced--profiles) Add option to control if state changes are saved every time they change
     - New Advanced sub page for all profile related preferences.
     - Add [Group profile saves](docs/preferences.md#advanced--profiles) and [Group profile save delay](docs/preferences.md#advanced--profiles) to allow grouping of profile saves
+    - Add [Return newline on empty value](docs/preferences.md#advanced--profiles) Return new line if processed item value is empty
   - [Triggers](docs/profiles.md#triggers)
     - Add `Loop Expression` trigger type
     - Add `ReParse` and `ReParse Pattern` sub type triggers

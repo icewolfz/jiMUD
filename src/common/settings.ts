@@ -478,6 +478,7 @@ export class Settings {
     public saveTriggerStateChanges: boolean = true;
     public groupProfileSaves: boolean = false;
     public groupProfileSaveDelay: number = 20000;
+    public returnNewlineOnEmptyValue: boolean = false;
 
     public windows = {};
     public buttons = {
