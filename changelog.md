@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.17.7
+## v0.17.7 2022-02-02
 
 - **New:**
   - Add [#COMMENT](docs/commands.md#miscellaneous) does nothing, used to create quick comments in scripts
