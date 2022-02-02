@@ -40,6 +40,7 @@
   - Only update context menus when menus have been changed
   - Fixed bugs in [#GAG](docs/commands.md#display)
   - When context menu item, button from bar, or url is clicked focus on command input if [Focus to command input on click](docs/preferences.md#display) enabled
+  - Profile manager: Add new functions and commands to editor highlight and documents
 - **Changed:**
   - [Triggers](docs/profiles.md#triggers), [Buttons](docs/profiles.md#buttons), [Macros](docs/profiles.md#macros), [Context](docs/profiles.md#context), and [Aliases](docs/profiles.md#aliases) values will now be ignored if empty, thus not creating blank lines, you can use a value of ${cr} to send a blank line
   - [#ADD](docs/commands.md#miscellaneous) will default to 0 if variable is not defined and define variable
