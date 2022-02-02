@@ -39,8 +39,7 @@
   - Only update button bar is buttons have been changed
   - Only update context menus when menus have been changed
   - Fixed bugs in [#GAG](docs/commands.md#display)
-  - When context menu item is clicked if [Focus to command input on click](docs/preferences.md#display) enabled
-  - When button bar clicked foucs on command if [Focus to command input on click](docs/preferences.md#display) enabled
+  - When context menu item, button from bar, or url is clicked focus on command input if [Focus to command input on click](docs/preferences.md#display) enabled
 - **Changed:**
   - [Triggers](docs/profiles.md#triggers), [Buttons](docs/profiles.md#buttons), [Macros](docs/profiles.md#macros), [Context](docs/profiles.md#context), and [Aliases](docs/profiles.md#aliases) values will now be ignored if empty, thus not creating blank lines, you can use a value of ${cr} to send a blank line
   - [#ADD](docs/commands.md#miscellaneous) will default to 0 if variable is not defined and define variable

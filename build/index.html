@@ -259,6 +259,10 @@
                     defaultId: 1
                 }) === 0)
                 shell.openExternal(encodeURI(url));
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -274,6 +278,10 @@
                     defaultId: 1
                 }) === 0)
                 shell.openExternal(encodeURI(url.replace('&text;', $(el).text())));
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         function doMXPSend(e, el, url, pmt, tt) {
@@ -318,6 +326,10 @@
             }
             else
                 client.send(url.replace('&text;', $(el).text()) + extra + '\n', true);
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         function MXPMenuHandler(cmd, pmt) {
@@ -327,6 +339,10 @@
             }
             else
                 client.send(cmd, true);
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         // eslint-disable-next-line no-unused-vars
