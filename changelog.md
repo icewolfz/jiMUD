@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.18.9
+## v0.18.0
 
 - **Changed:**
   - Update electron 16.0.8 to 17.0.0
