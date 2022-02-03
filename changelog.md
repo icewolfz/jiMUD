@@ -4,6 +4,7 @@
 
 - **Fixed:**
   - Try to make sure window size is sent to the mud more accurately
+  - Optimize debounce system so it is cleaner and runs less
 - **Changed:**
   - Update electron 16.0.8 to 17.0.0
 

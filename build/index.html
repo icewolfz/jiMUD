@@ -684,25 +684,17 @@
                 $('.command-history ul').html(lst);
             });
             remote.getCurrentWindow().on('restore', () => {
-                setTimeout(() => {
-                    client.display.updateScrollbars();
-                    client.display.updateView();
-                    client.UpdateWindow();
-                }, 1);
+                doUpdate(256);
             });
             remote.getCurrentWindow().on('maximize', () => {
-                setTimeout(() => {
-                    client.display.updateScrollbars();
-                    client.display.updateView();
-                    client.UpdateWindow();
-                }, 1);
+                doUpdate(256);
             });
             remote.getCurrentWindow().on('unmaximize', () => {
-                setTimeout(() => {
-                    client.display.updateScrollbars();
-                    client.display.updateView();
-                    client.UpdateWindow();
-                }, 1);
+                doUpdate(256);
+            });
+
+            remote.getCurrentWindow().on('resized', () => {
+                doUpdate(384);
             });
 
             ipcRenderer.send('set-overlay', 0);
@@ -720,13 +712,9 @@
                 $('#commandinput').focus();
             });
             window.addEventListener('resize', function () {
-                client.UpdateWindow();
-                doUpdate(128);
+                //client.UpdateWindow();
+                doUpdate(384);
             });
-            window.addEventListener('resized', function () {
-                client.UpdateWindow();
-                doUpdate(128);
-            });            
             document.getElementById('buttonbar').addEventListener('wheel', (e) => {
                 if (e.deltaY >= 0)
                     document.getElementById('buttonbar').scrollTop += document.getElementById('buttonbar').clientWidth;
@@ -1723,12 +1711,7 @@
             _status.on('split-moved', value => {
                 if (value === client.options.statusWidth) return;
                 client.options.statusWidth = value;
-                setTimeout(() => {
-                    client.display.updateScrollbars();
-                    client.display.updateView();
-                    client.UpdateWindow();
-                }, 1);
-                doUpdate(32);
+                doUpdate(32 | 256);
             });
             _status.on('leave combat', () => {
                 if (_nextClear <= Date.now()) {
@@ -3003,10 +2986,11 @@
         });
 
         var $updating = 0;
+        var _rTimeout = 0;
         function doUpdate(type) {
             $updating |= type;
-            if ($updating == 0) return;
-            window.requestAnimationFrame(() => {
+            if ($updating == 0 || _rTimeout) return;
+            _rTimeout = window.requestAnimationFrame(() => {
                 if (($updating & 1) === 1) {
                     updateInterface();
                     $updating &= ~1;
@@ -3041,6 +3025,15 @@
                     updateButtonBar();
                     $updating &= ~128;
                 }
+                if (($updating & 256) === 256) {
+                    setTimeout(() => {
+                        client.display.updateScrollbars();
+                        client.display.updateView();
+                        client.UpdateWindow();
+                    }, 1);
+                    $updating &= ~256;
+                }
+                _rTimeout = 0;
                 this.doUpdate($updating);
             });
         }
