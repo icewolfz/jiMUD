@@ -684,19 +684,25 @@
                 $('.command-history ul').html(lst);
             });
             remote.getCurrentWindow().on('restore', () => {
-                client.display.updateScrollbars();
-                client.display.updateView();
-                client.UpdateWindow();
+                setTimeout(() => {
+                    client.display.updateScrollbars();
+                    client.display.updateView();
+                    client.UpdateWindow();
+                }, 1);
             });
             remote.getCurrentWindow().on('maximize', () => {
-                client.display.updateScrollbars();
-                client.display.updateView();
-                client.UpdateWindow();
+                setTimeout(() => {
+                    client.display.updateScrollbars();
+                    client.display.updateView();
+                    client.UpdateWindow();
+                }, 1);
             });
             remote.getCurrentWindow().on('unmaximize', () => {
-                client.display.updateScrollbars();
-                client.display.updateView();
-                client.UpdateWindow();
+                setTimeout(() => {
+                    client.display.updateScrollbars();
+                    client.display.updateView();
+                    client.UpdateWindow();
+                }, 1);
             });
 
             ipcRenderer.send('set-overlay', 0);
@@ -717,6 +723,10 @@
                 client.UpdateWindow();
                 doUpdate(128);
             });
+            window.addEventListener('resized', function () {
+                client.UpdateWindow();
+                doUpdate(128);
+            });            
             document.getElementById('buttonbar').addEventListener('wheel', (e) => {
                 if (e.deltaY >= 0)
                     document.getElementById('buttonbar').scrollTop += document.getElementById('buttonbar').clientWidth;

@@ -2,6 +2,8 @@
 
 ## v0.18.0
 
+- **Fixed:**
+  - Try to make sure window size is sent to the mud more accurately
 - **Changed:**
   - Update electron 16.0.8 to 17.0.0
 

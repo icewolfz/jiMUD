@@ -1178,7 +1178,12 @@ function createWindow() {
         protocol: 'file:',
         slashes: true
     }));
-
+    /*
+    if(s.maximized) {
+        let wSize = screen.getPrimaryDisplay().workAreaSize;
+        win.setContentSize(wSize.width, wSize.height);
+    }
+    */
     //win.setOverlayIcon(path.join(__dirname, '/../assets/icons/jimud.png'), 'Connected');
 
     // Open the DevTools.
@@ -1380,6 +1385,7 @@ function createWindow() {
         }
         loadWindowScripts(win, 'user');
         await executeScript('loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');updateInterface();', win);
+        //win.setContentSize(s.width, s.height);
         restoreWindowState(win, s, true);
         if (set.showMapper)
             showMapper(true);
