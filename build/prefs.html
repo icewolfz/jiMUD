@@ -2570,18 +2570,6 @@
                             </div>
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            Variable
-                            <div class="input-group" style="width: 40px">
-                                <input type="text" id="variableChar" class="input-sm form-control" style="width: 40px" size="1" maxlength="1" />
-                                <div class="input-group-addon">
-                                    <label>
-                                        <input type="checkbox" id="enableVariable" /> Enable</label>
-                                </div>
-                            </div>
-                        </label>
-                    </div>                    
                     <div class="col-sm-12 form-group" style="padding: 0px;">
                         <div class="col-sm-4 form-group">
                             <label class="control-label">
@@ -2607,8 +2595,21 @@
                                 </div>
                             </label>
                         </div>
+                        <div class="col-sm-4 form-group">
+                            <label class="control-label">
+                                Variable
+                                <div class="input-group" style="width: 40px">
+                                    <input type="text" id="variableChar" class="input-sm form-control" style="width: 40px" size="1" maxlength="1" />
+                                    <div class="input-group-addon">
+                                        <label>
+                                            <input type="checkbox" id="enableVariable" /> Enable</label>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
                         <span class="help-block" style="float:left;font-size: 0.8em;margin:0;padding:0;padding-left:15px;">WARNING: Disabling parameters or n parameters could break triggers, aliases, and other items that uses argument access</span>
                     </div>
+
                     <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Inline Comment
