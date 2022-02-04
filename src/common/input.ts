@@ -199,6 +199,9 @@ export class Input extends EventEmitter {
     private _lastSuspend = -1;
     private _MacroCache = {};
     private _loops: number[] = [];
+    private _pathQueue = [];
+    private _pathTimeout: NodeJS.Timer = null;
+    private _pathPaused: boolean = false;
 
     public client: Client = null;
     public enableParsing: boolean = true;
@@ -7984,8 +7987,7 @@ export class Input extends EventEmitter {
     public ProcessPath(str) {
         if (str.length === 0)
             return '';
-        const pPaths: boolean = this.client.options.parseSpeedpaths;
-        let out: string = '';
+        let out: string[] = [];
 
         let state = 0;
         let cmd: string = '';
@@ -7995,6 +7997,7 @@ export class Input extends EventEmitter {
         let i: number;
         let t;
         let p;
+        let n = 0;
         const tl: number = str.length;
 
         for (; idx < tl; idx++) {
@@ -8020,6 +8023,28 @@ export class Input extends EventEmitter {
                     }
                     state = 0;
                     break;
+                case 3:
+                    if (n === 0 && c === ')')
+                        state = 0;
+                    else {
+                        if (c === '(')
+                            n++;
+                        else if (c === ')')
+                            n--;
+                        cmd += c;
+                    }
+                    break;
+                case 4:
+                    if (n === 0 && c === '}')
+                        state = 0;
+                    else {
+                        if (c === '{')
+                            n++;
+                        else if (c === '}')
+                            n--;
+                        cmd += c;
+                    }
+                    break;
                 default:
                     if (i > 47 && i < 58) {
                         if (cmd.length > 0) {
@@ -8027,19 +8052,20 @@ export class Input extends EventEmitter {
                                 t = 1;
                             else
                                 t = parseInt(num, 10);
-                            for (p = 0; p < t; p++) {
-                                if (pPaths) {
-                                    num = this.parseOutgoing(cmd);
-                                    if (num && num.length > 0)
-                                        out += num + '\n';
-                                }
-                                else
-                                    out += cmd + '\n';
-                            }
+                            for (p = 0; p < t; p++)
+                                out.push(cmd);
                             cmd = '';
                         }
                         state = 1;
                         num = c;
+                    }
+                    else if (c === '(') {
+                        state = 3;
+                        n = 0;
+                    }
+                    else if (c === '{') {
+                        state = 4;
+                        n = 0;
                     }
                     else if (c === '\\')
                         state = 2;
@@ -8054,17 +8080,54 @@ export class Input extends EventEmitter {
                 t = 1;
             else
                 t = parseInt(num, 10);
-            for (p = 0; p < t; p++) {
-                if (pPaths) {
-                    num = this.parseOutgoing(cmd);
-                    if (num && num.length > 0)
-                        out += num + '\n';
-                }
-                else
-                    out += cmd + '\n';
-            }
+            for (p = 0; p < t; p++)
+                out.push(cmd);
         }
-        return out;
+        this._pathQueue.push({
+            id: str,
+            current: out,
+            previous: []
+        });
+        this.ExecutePath();
+        return null;
+    }
+
+    public ExecutePath() {
+        //if already running or no queue bail
+        if (this._pathTimeout || !this._pathQueue.length || this._pathPaused) return;
+        let delay = this.client.options.pathDelay;
+        if (delay < 0) delay = 0;
+        //being processing query
+        this._pathTimeout = setTimeout(() => {
+            const pPath = this.client.options.parseSpeedpaths;
+            const ePath = this.client.options.echoSpeedpaths;
+            let cnt = this.client.options.pathDelayCount;
+            if (cnt < 1) cnt = 1;
+            const current = this._pathQueue[0];
+            /*
+            if (!current.previous.length) {
+                if (this.client.telnet.echo && this.client.options.commandEcho)
+                    this.client.echo(this.client.options.speedpathsChar + current.id);
+                else
+                    this.client.echo('\n');
+            }
+            */
+            while (cnt--) {
+                let cmd = current.current.shift();
+                current.previous.push(cmd);
+                if (pPath)
+                    this.client.sendBackground(cmd + '\n', !ePath);
+                else
+                    this.client.send(cmd + '\n', !ePath);
+                if (!current.current.length) break;
+            }
+            //if at the end remove
+            if (!current.current.length)
+                this._pathQueue.shift();
+            this._pathTimeout = null;
+            //process next paths
+            this.ExecutePath();
+        }, delay);
     }
 
     public toggleScrollLock() {

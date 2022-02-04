@@ -170,6 +170,8 @@ Controls what is captured into the chat window
 - `Ignore Eval Undefined` When enabled will make undefined results blank, else it will display the word undefined
 - `Allow Comments From Command` Allow inline and block comments from the command input
 - `Save Trigger State Changes` When a trigger state changes save profile
+- `Delay between path commands` The amount of milliseconds between sending of path commands for speed paths.
+- `Amount of path commands to send` the # of commands to send between speed path delay
 
 ## Scripting > Special characters
 
@@ -180,6 +182,7 @@ Controls what is captured into the chat window
   - `Character` The character that is used to determine if the command is a speedpath to expand, Default: `!`
   - `Enable` Whether or not to expand speedpaths, if disabled the line is parsed as normal command
   - `Parse` Parse each command as if it was sent from the command line, if disabled each command is sent to the mud as is.
+  - `Echo` Echo each command to the screen as they are sent
 - `Command`
   - `Character` The character to use with build in client commands, Default: `#`
   - `Enable` This will enable or disable command systems

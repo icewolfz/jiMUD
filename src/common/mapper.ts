@@ -2282,7 +2282,8 @@ export class Mapper extends EventEmitter {
 
     public SendCommands(cmds) {
         let tmp;
-        const cnt = this.commandDelayCount;
+        let cnt = this.commandDelayCount;
+        if(cnt < 0) cnt = 1;
         if (cmds.length > cnt) {
             tmp = cmds.slice(cnt);
             cmds = cmds.slice(0, cnt);
