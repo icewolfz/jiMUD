@@ -249,7 +249,7 @@ Controls what is captured into the chat window
 - `Group profile saves` Group profile saves
   - **WARNING:** Enabling profile group saving could cause sync issues and loss of data when preferences saved or profile manager saves, as when saved it will flush all in memory changes and reload
 - `Group profile save delay` How often between save profiles when group saves are enabled
-
+- `Return newline on empty value` Return new line if processed item value is empty
 
 ## Advanced > Profile manager
 

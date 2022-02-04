@@ -232,7 +232,7 @@ Display text to the screen, and the display text will not fire triggers
 #CR
 >Send a blank line to the mud
 
-<u>#COMM</u>ENT
+<u>#COMM</u>ENT *text*
 >Does nothing, allows commenting scripts
 
 <u>#CONNECT</u>TIME
@@ -253,7 +253,7 @@ Display text to the screen, and the display text will not fire triggers
 <u>#MAT</u>H name value
 >Set value to variable named name
 
-<u>#NO</u>OP
+<u>#NO</u>OP *text*
 >Does nothing, but will expand arguments
 
 <u>#NOT</u>IFY title message *{icon}*

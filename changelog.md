@@ -9,7 +9,15 @@
   - Add [#TEMPVAR](docs/commands.md#createmodify-profile-or-item) to create session only variables
   - Add `Expression` trigger type that will execute when variable values have changed
 
-## v0.17.7
+## v0.18.0
+
+- **Fixed:**
+  - Try to make sure window size is sent to the mud more accurately
+  - Optimize debounce system so it is cleaner and runs less
+- **Changed:**
+  - Update electron 16.0.8 to 17.0.0
+
+## v0.17.7 2022-02-02
 
 - **New:**
   - Add [#COMMENT](docs/commands.md#miscellaneous) does nothing, used to create quick comments in scripts
@@ -27,6 +35,7 @@
     - Add [Save Trigger State Changes](docs/preferences.md#advanced--profiles) Add option to control if state changes are saved every time they change
     - New Advanced sub page for all profile related preferences.
     - Add [Group profile saves](docs/preferences.md#advanced--profiles) and [Group profile save delay](docs/preferences.md#advanced--profiles) to allow grouping of profile saves
+    - Add [Return newline on empty value](docs/preferences.md#advanced--profiles) Return new line if processed item value is empty
   - [Triggers](docs/profiles.md#triggers)
     - Add `Loop Expression` trigger type
     - Add `ReParse` and `ReParse Pattern` sub type triggers
@@ -44,16 +53,18 @@
   - Fixed bug in multi state triggers when sub trigger is disabled
   - Fixed issue where temp triggers or re-parse type triggers would be double executed if the pattern was in trigger value
   - Fixed issue with temp alarms and re-parse issues with [#SET](docs/commands.md#triggers) fire state setting
-  - Fixed disableTriggerOnError when a sub trigger errors
+  - Fixed [Disable trigger on error](docs/preferences.md#scripting) when a sub trigger errors
   - Only update button bar is buttons have been changed
   - Only update context menus when menus have been changed
   - Fixed bugs in [#GAG](docs/commands.md#display)
   - When context menu item, button from bar, or url is clicked focus on command input if [Focus to command input on click](docs/preferences.md#display) enabled
+  - Profile manager: Add new functions and commands to editor highlight and documents
 - **Changed:**
   - [Triggers](docs/profiles.md#triggers), [Buttons](docs/profiles.md#buttons), [Macros](docs/profiles.md#macros), [Context](docs/profiles.md#context), and [Aliases](docs/profiles.md#aliases) values will now be ignored if empty, thus not creating blank lines, you can use a value of ${cr} to send a blank line
   - [#ADD](docs/commands.md#miscellaneous) will default to 0 if variable is not defined and define variable
   - Update electron 16.0.7 to 16.0.8
   - Update @electron/remote 2.0.1 to 2.0.4
+  - Update mathjs 10.1.0 to 10.1.1
 
 ## v0.17.6 2022-01-24
 

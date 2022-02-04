@@ -251,11 +251,15 @@ export class Status extends EventEmitter {
             const b = Math.abs(parseInt($('#status-drag-bar').css('left'), 10)) + $('#status-drag-bar').outerWidth();
             this._spitterDistance = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
         }
-        $('#display').css('right', this._spitterDistance);
-        $('#status').css('width', this._spitterDistance - p);
-        $('#status-border').css('width', this._spitterDistance);
-        $('#display-border').css('right', this._spitterDistance);
-        $('#command').css('right', this._spitterDistance);
+        if (!this.client.options.showStatus)
+            this.updateInterface();
+        else {
+            $('#display').css('right', this._spitterDistance);
+            $('#status').css('width', this._spitterDistance - p);
+            $('#status-border').css('width', this._spitterDistance);
+            $('#display-border').css('right', this._spitterDistance);
+            $('#command').css('right', this._spitterDistance);
+        }
         this.emit('split-moved', this._spitterDistance);
     }
 
@@ -738,6 +742,7 @@ export class Status extends EventEmitter {
                 r = 2;
             if (r < 0) r = t;
             command.css('right', r + 'px');
+            this.emit('updated-interface');
             return;
         }
 

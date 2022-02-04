@@ -7892,7 +7892,8 @@ export class Input extends EventEmitter {
         //Convert to string
         if (typeof ret !== 'string')
             ret = ret.toString();
-
+        if (ret.length === 0 && !this.client.options.returnNewlineOnEmptyValue)
+            return null;
         if (ret.endsWith('\n'))
             return ret;
         return ret + '\n';
@@ -7963,6 +7964,8 @@ export class Input extends EventEmitter {
         //Convert to string
         if (typeof ret !== 'string')
             ret = ret.toString();
+        if (ret.length === 0 && !this.client.options.returnNewlineOnEmptyValue)
+            return null;
         if (macro.send) {
             if (!ret.endsWith('\n'))
                 ret += '\n';
@@ -8173,7 +8176,7 @@ export class Input extends EventEmitter {
                 //last check to be 100% sure enabled
                 if (!trigger.enabled) continue;
             }
-            tType = this.getTriggerType(trigger.type); 
+            tType = this.getTriggerType(trigger.type);
             if (trigger.type !== undefined && (type & tType) !== tType) {
                 if (!subtypes || (subtypes && !this.isSubTriggerType(trigger.type)))
                     continue;
@@ -8529,6 +8532,8 @@ export class Input extends EventEmitter {
         //Convert to string
         if (typeof ret !== 'string')
             ret = ret.toString();
+        if (ret.length === 0 && !this.client.options.returnNewlineOnEmptyValue)
+            return null;
         if (!ret.endsWith('\n'))
             ret += '\n';
         if (this.client.connected)
