@@ -7598,6 +7598,7 @@ export class Input extends EventEmitter {
         let i: number;
         let t;
         let p;
+        let n = 0;
         const tl: number = str.length;
 
         for (; idx < tl; idx++) {
@@ -7623,6 +7624,28 @@ export class Input extends EventEmitter {
                     }
                     state = 0;
                     break;
+                case 3:
+                    if (n === 0 && c === ')')
+                        state = 0;
+                    else {
+                        if (c === '(')
+                            n++;
+                        else if (c === ')')
+                            n--;
+                        cmd += c;
+                    }
+                    break;
+                case 4:
+                    if (n === 0 && c === '}')
+                        state = 0;
+                    else {
+                        if (c === '{')
+                            n++;
+                        else if (c === '}')
+                            n--;
+                        cmd += c;
+                    }
+                    break;
                 default:
                     if (i > 47 && i < 58) {
                         if (cmd.length > 0) {
@@ -7636,6 +7659,14 @@ export class Input extends EventEmitter {
                         }
                         state = 1;
                         num = c;
+                    }
+                    else if (c === '(') {
+                        state = 3;
+                        n = 0;
+                    }
+                    else if (c === '{') {
+                        state = 4;
+                        n = 0;
                     }
                     else if (c === '\\')
                         state = 2;
