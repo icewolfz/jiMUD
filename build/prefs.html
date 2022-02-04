@@ -1930,7 +1930,7 @@
                             <label class="control-label">
                                 Delay between directions
                                 <div class="input-group">
-                                    <input type="number" id="commandDelay" class="input-sm form-control" />
+                                    <input type="number" id="commandDelay" class="input-sm form-control" min="0" />
                                     <div class="input-group-addon">ms</div>
                                 </div>
                             </label>
@@ -1938,7 +1938,7 @@
                         <div class="col-sm-6 form-group">
                             <label class="control-label">
                                 Directions to send
-                                <input type="number" id="commandDelayCount" class="input-sm form-control" />
+                                <input type="number" id="commandDelayCount" class="input-sm form-control" min="1" />
                             </label>
                         </div>
                     </div>
@@ -2238,6 +2238,23 @@
                             <input type="checkbox" id="allowCommentsFromCommand" /> Allow Comments From Command
                         </label>
                     </div>
+                    <div class="col-sm-12 form-group" style="margin:0;padding:0">
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">
+                                Delay between path commands
+                                <div class="input-group">
+                                    <input type="number" id="pathDelay" class="input-sm form-control" min="0" />
+                                    <div class="input-group-addon">ms</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">
+                                Amount of path commands to send
+                                <input type="number" id="pathDelayCount" class="input-sm form-control" min="1" />
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="advanced">
                     <div class="col-sm-6 form-group">
@@ -2482,7 +2499,7 @@
                     </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="special-characters">
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Command stacking
                             <div class="input-group" style="width: 40px">
@@ -2495,7 +2512,7 @@
                         </label>
                     </div>
 
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-7 form-group">
                         <label class="control-label">
                             Speedpaths
                             <div class="input-group" style="width: 40px">
@@ -2508,11 +2525,15 @@
                                     <label>
                                         <input type="checkbox" id="parseSpeedpaths" /> Parse</label>
                                 </div>
+                                <div class="input-group-addon">
+                                    <label>
+                                        <input type="checkbox" id="echoSpeedpaths" /> Echo</label>
+                                </div>
                             </div>
                         </label>
                     </div>
 
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Command
                             <div class="input-group" style="width: 40px">
@@ -2525,7 +2546,7 @@
                         </label>
                     </div>
 
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Escape
                             <div class="input-group" style="width: 40px">
@@ -2537,7 +2558,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Verbatim
                             <div class="input-group" style="width: 40px">
@@ -2550,7 +2571,7 @@
                         </label>
                     </div>
                     <div class="col-sm-12 form-group" style="padding: 0px;">
-                        <div class="col-sm-6 form-group">
+                        <div class="col-sm-4 form-group">
                             <label class="control-label">
                                 Parameters
                                 <div class="input-group" style="width: 40px">
@@ -2562,7 +2583,7 @@
                                 </div>
                             </label>
                         </div>
-                        <div class="col-sm-6 form-group">
+                        <div class="col-sm-4 form-group">
                             <label class="control-label">
                                 N Parameters
                                 <div class="input-group" style="width: 40px">
@@ -2574,9 +2595,9 @@
                                 </div>
                             </label>
                         </div>
-                        <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;padding-left:15px;">WARNING: Disabling parameters or n parameters could break triggers, aliases, and other items that uses argument access</span>
+                        <span class="help-block" style="float:left;font-size: 0.8em;margin:0;padding:0;padding-left:15px;">WARNING: Disabling parameters or n parameters could break triggers, aliases, and other items that uses argument access</span>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Inline Comment
                             <div class="input-group" style="width: 40px">
@@ -2588,7 +2609,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Block Comment
                             <div class="input-group" style="width: 40px">

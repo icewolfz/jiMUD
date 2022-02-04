@@ -480,6 +480,11 @@ export class Settings {
     public groupProfileSaveDelay: number = 20000;
     public returnNewlineOnEmptyValue: boolean = false;
 
+    public pathDelay: number = 0;
+    public pathDelayCount: number = 1;
+    public echoSpeedpaths: boolean = false;
+    
+
     public windows = {};
     public buttons = {
         connect: true,

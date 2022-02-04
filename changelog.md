@@ -2,9 +2,16 @@
 
 ## v0.18.0
 
+- **New:**
+- New speed path system, adds option to group by amount of commands, and the delay between each group
+ - [Preferences](docs/preferences.md):
+  - [Delay between path commands](docs/preferences.md#scripting) The amount of milliseconds between sending of path commands for speed paths.
+  - [Amount of path commands to send](docs/preferences.md#scripting) the # of commands to send between speed path delay
+  - Speedpaths [Echo](docs/preferences.md#scripting-characters) echo each command to the screen as they are sent
 - **Fixed:**
   - Try to make sure window size is sent to the mud more accurately
   - Optimize debounce system so it is cleaner and runs less
+  - Mapper: Default to 1 if [Directions to send](docs/preferences.md#mapper) is ever less then 1 so speed walk path sent always
 - **Changed:**
   - Update electron 16.0.8 to 17.0.0
 
@@ -50,7 +57,6 @@
   - Fixed bugs in [#GAG](docs/commands.md#display)
   - When context menu item, button from bar, or url is clicked focus on command input if [Focus to command input on click](docs/preferences.md#display) enabled
   - Profile manager: Add new functions and commands to editor highlight and documents
-  - Mapper: Default to 1 if [Directions to send](docs/preferences.md#mapper) is ever less then 1 so speed walk path sent always
 - **Changed:**
   - [Triggers](docs/profiles.md#triggers), [Buttons](docs/profiles.md#buttons), [Macros](docs/profiles.md#macros), [Context](docs/profiles.md#context), and [Aliases](docs/profiles.md#aliases) values will now be ignored if empty, thus not creating blank lines, you can use a value of ${cr} to send a blank line
   - [#ADD](docs/commands.md#miscellaneous) will default to 0 if variable is not defined and define variable
