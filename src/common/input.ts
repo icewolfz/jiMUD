@@ -7585,7 +7585,7 @@ export class Input extends EventEmitter {
         return true;
     }
 
-    public ProcessPath(str) {
+    public ProcessPath(str, replace?: boolean) {
         if (str.length === 0)
             return '';
         let out: string[] = [];
@@ -7684,11 +7684,19 @@ export class Input extends EventEmitter {
             for (p = 0; p < t; p++)
                 out.push(cmd);
         }
-        this._pathQueue.push({
-            id: str,
-            current: out,
-            previous: []
-        });
+        if (replace && this._pathQueue.length) {
+            this._pathQueue[0] = {
+                id: str,
+                current: out,
+                previous: []
+            };
+        }
+        else
+            this._pathQueue.push({
+                id: str,
+                current: out,
+                previous: []
+            });
         this.ExecutePath();
         return null;
     }
@@ -7726,6 +7734,9 @@ export class Input extends EventEmitter {
             if (!current.current.length)
                 this._pathQueue.shift();
             this._pathTimeout = null;
+            //step manually so do not call next block, allows commands to handle steeping instead of auto moving to next one
+            if(this._pathQueue.length && this._pathQueue[0].manual)
+                return;
             //process next paths
             this.ExecutePath();
         }, delay);
