@@ -14,6 +14,7 @@
   - Try to make sure window size is sent to the mud more accurately
   - Optimize debounce system so it is cleaner and runs less
   - Mapper: Default to 1 if [Directions to send](docs/preferences.md#mapper) is ever less then 1 so speed walk path sent always
+  - Remove extra `Enable Double Parameter Escaping` from preferences dialog.
 - **Changed:**
   - Update electron 16.0.8 to 17.0.0
 
