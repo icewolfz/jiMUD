@@ -17,6 +17,7 @@
   - Remove extra `Enable Double Parameter Escaping` from preferences dialog.
 - **Changed:**
   - Update electron 16.0.8 to 17.0.0
+  - Update monaco-editor 0.31.1 to 0.32.1  
 
 ## v0.17.7 2022-02-02
 
