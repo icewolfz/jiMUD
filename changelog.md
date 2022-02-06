@@ -15,6 +15,7 @@
   - Optimize debounce system so it is cleaner and runs less
   - Mapper: Default to 1 if [Directions to send](docs/preferences.md#mapper) is ever less then 1 so speed walk path sent always
   - Remove extra `Enable Double Parameter Escaping` from preferences dialog.
+  - Immortal tools: fix minor bug in remote drag and drop download
 - **Changed:**
   - Update electron 16.0.8 to 17.0.0
   - Update monaco-editor 0.31.1 to 0.32.1  
