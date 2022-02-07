@@ -17,6 +17,7 @@
   - Mapper: Default to 1 if [Directions to send](docs/preferences.md#mapper) is ever less then 1 so speed walk path sent always
   - Remove extra `Enable Double Parameter Escaping` from preferences dialog.
   - Immortal tools: fix minor bug in remote drag and drop download
+  - Profile manager: Fixed issue when sub item group was selected and profile option changed that would cause treeview to replace sub item with profile
 - **Changed:**
   - Update electron 16.0.8 to 17.0.0
   - Update monaco-editor 0.31.1 to 0.32.1  

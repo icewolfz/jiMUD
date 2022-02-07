@@ -1501,6 +1501,8 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
     let p;
     const selected = currentNode.state.selected;
     const expanded = currentNode.state.expanded;
+    const currentID = currentNode.id;
+    const type = currentNode.dataAttr.type;
     if (currentProfile.priority !== parseInt(<string>$('#profile-priority').val(), 10)) {
         data.priority = currentProfile.priority;
         changed++;
@@ -1524,30 +1526,58 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
             _enabled = _enabled.filter((a) => { return a !== currentProfile.name.toLowerCase(); });
             _enabled.push(val.toLowerCase());
         }
+        let node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(currentProfile.name) + '$', 'id'])[0];
         currentProfile.name = val;
         profiles.add(currentProfile);
         $('#editor-title').text('Profile: ' + currentProfile.name);
-        let node = $('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id'])[0];
         $('#profile-tree').treeview('updateNode', [node, newProfileNode()]);
-        node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
-        if (selected) {
-            $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
-            currentNode = node;
+        if (type !== 'profile') {
+            const parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
+            node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + type + '$', 'id']);
+            if (expanded || selected)
+                $('#profile-tree').treeview('expandNode', [parent]);
+            if (expanded)
+                $('#profile-tree').treeview('expandNode', [node]);
+            if (selected) {
+                $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
+                currentNode = node;
+            }
         }
-        if (expanded)
-            $('#profile-tree').treeview('expandNode', [node]);
+        else {
+            node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
+            if (selected) {
+                $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
+                currentNode = node;
+            }
+            if (expanded)
+                $('#profile-tree').treeview('expandNode', [node]);
+        }
         p = sortTree();
     }
     else if (changed) {
-        let node = $('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id'])[0];
+        let node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
         $('#profile-tree').treeview('updateNode', [node, newProfileNode()]);
-        node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
-        if (selected) {
-            $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
-            currentNode = node;
+        if (type !== 'profile') {
+            const parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
+            node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + type + '$', 'id']);
+            if (expanded || selected)
+                $('#profile-tree').treeview('expandNode', [parent]);
+            if (expanded)
+                $('#profile-tree').treeview('expandNode', [node]);
+            if (selected) {
+                $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
+                currentNode = node;
+            }
         }
-        if (expanded)
-            $('#profile-tree').treeview('expandNode', [node]);
+        else {
+            node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
+            if (selected) {
+                $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
+                currentNode = node;
+            }
+            if (expanded)
+                $('#profile-tree').treeview('expandNode', [node]);
+        }
         p = sortTree();
     }
 
