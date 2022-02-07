@@ -4,7 +4,7 @@
 
 - **New:**
 - New speed path system, adds option to group by amount of commands, and the delay between each group
- - [Preferences](docs/preferences.md):
+- [Preferences](docs/preferences.md):
   - [Delay between path commands](docs/preferences.md#scripting) The amount of milliseconds between sending of path commands for speed paths.
   - [Amount of path commands to send](docs/preferences.md#scripting) the # of commands to send between speed path delay
   - Speedpaths:
