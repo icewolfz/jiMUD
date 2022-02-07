@@ -3,13 +3,14 @@
 ## v0.18.0
 
 - **New:**
-- New speed path system, adds option to group by amount of commands, and the delay between each group
-- [Preferences](docs/preferences.md):
-  - [Delay between path commands](docs/preferences.md#scripting) The amount of milliseconds between sending of path commands for speed paths.
-  - [Amount of path commands to send](docs/preferences.md#scripting) the # of commands to send between speed path delay
-  - Speedpaths:
-    - [Echo](docs/preferences.md#scripting-characters) echo each command to the screen as they are sent
-    - Parsing of speed paths now allows you to use ( ) or { } to group a command, eg !2(n;w) would send n;w twice
+  - New speed path system, adds option to group by amount of commands, and the delay between each group
+  - [Preferences](docs/preferences.md):
+    - [Delay between path commands](docs/preferences.md#scripting) The amount of milliseconds between sending of path commands for speed paths.
+    - [Amount of path commands to send](docs/preferences.md#scripting) the # of commands to send between speed path delay
+    - Speedpaths:
+      - [Echo](docs/preferences.md#scripting-characters) echo each command to the screen as they are sent
+      - Parsing of speed paths now allows you to use ( ) or { } to group a command, eg !2(n;w) would send n;w twice
+  - Character manager: Notes field has been added to allow you to add notes that can be edited, they are saved directly to a file in character folder named character.notes, by saving directly to file it avoids keeping large amounts of text loaded into memory 
 - **Fixed:**
   - Try to make sure window size is sent to the mud more accurately
   - Optimize debounce system so it is cleaner and runs less

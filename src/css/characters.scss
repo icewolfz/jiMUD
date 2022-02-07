@@ -90,8 +90,19 @@ body {
 }
 
 #character-editor {
-    overflow: auto;
     position: absolute;
     top: 41px;
-    bottom: 0;    
+    bottom: 0;
+    right: 0;
+    left: 0;    
+}
+
+#notes {
+    position: absolute;
+    left: 15px;
+    right: 15px;
+    bottom: 15px;
+    top: 15px;
+    resize: none;
+    width: initial;
 }
