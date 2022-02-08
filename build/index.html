@@ -809,6 +809,10 @@
                 shell.beep();
             });
 
+            client.display.on('resize', () => {
+                doUpdate(256);
+            });
+
             client.display.on('selection-done', () => {
                 if (client.options.AutoCopySelectedToClipboard && client.display.hasSelection) {
                     window.writeClipboard(client.display.selection, client.display.selectionAsHTML);
