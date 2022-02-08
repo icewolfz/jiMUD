@@ -961,6 +961,18 @@ export function isFileSync(aPath) {
     }
 }
 
+export function fileSizeSync(file) {
+    try {
+        return fs.statSync(file).size;
+    } catch (e) {
+        if (e.code === 'ENOENT') {
+            return 0;
+        } else {
+            throw e;
+        }
+    }
+}
+
 export function encrypt(text, key, iv, algorithm, input_encoding, output_encoding) {
     let cipher;
     let encrypted;
