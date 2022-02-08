@@ -839,6 +839,7 @@ export class Display extends EventEmitter {
                 this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
                 if (this.split) this.split.dirty = true;
                 this.doUpdate(UpdateType.view);
+                this.emit('resize');
             }
         });
         this.$resizeObserver.observe(this._el);
@@ -848,6 +849,7 @@ export class Display extends EventEmitter {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                     if (this.split) this.split.dirty = true;
                     this.doUpdate(UpdateType.scrollbars | UpdateType.update | UpdateType.view | UpdateType.layout);
+                    this.emit('resize');
                 }
             }
         });

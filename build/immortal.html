@@ -2318,7 +2318,7 @@
                         if (_remote[path.basename(_remoteDrag[f])].size === -2)
                             downloadPath(_remoteDrag[f], options.local);
                         else
-                            _ied.download(_remoteDrag[f], options.local);
+                            _ied.download(_remoteDrag[f]);
                     }
                     _ied.end();
                     _remoteDrag = 0;
