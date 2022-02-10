@@ -494,6 +494,22 @@
                 }
                 else
                     fs.renameSync(f, sf);
+                f = path.join(parseTemplate('{data}'), 'characters', oldName + '.notes');
+                sf = path.join(parseTemplate('{data}'), 'characters', name + '.notes');
+                if (isFileSync(sf)) {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                        type: 'warning',
+                        title: 'File exists',
+                        message: 'Notes file for ' + name + ' exist, replace?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                    });
+                    if (response === 0) {
+                        fs.renameSync(f, sf);
+                    }
+                }
+                else
+                    fs.renameSync(f, sf);
                 f = parseTemplate(characters.characters[oldName].map);
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf)) {
@@ -510,6 +526,7 @@
                 }
                 else
                     fs.renameSync(f, sf);
+
                 changed++;
                 delete characters.characters[oldName];
                 $('#character-' + sanitizeID(oldName)).remove();
