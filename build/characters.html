@@ -573,8 +573,26 @@
                     if (response === 0)
                         copyFile(f, sf);
                 }
-                else
+                else if (isFileSync(f))
                     copyFile(f, sf);
+
+                f = path.join(parseTemplate('{data}'), 'characters', oldName + '.notes');
+                sf = path.join(parseTemplate('{data}'), 'characters', name + '.notes');
+                if (isFileSync(sf)) {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                        type: 'warning',
+                        title: 'File exists',
+                        message: 'Notes file for ' + name + ' exist, replace?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                    });
+                    if (response === 0) {
+                        copyFile(f, sf);
+                    }
+                }
+                else if (isFileSync(f))
+                    copyFile(f, sf);
+
                 f = parseTemplate(characters.characters[oldName].map);
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf)) {
