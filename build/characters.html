@@ -639,6 +639,9 @@
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf))
                     ipcRenderer.send('trash-item', sf);
+                sf = path.join(parseTemplate('{data}'), 'characters', name + '.notes');
+                if (isFileSync(sf))
+                    ipcRenderer.send('trash-item', sf);
                 if (characters.load === name)
                     characters.load = 0;
                 delete characters.characters[name];
