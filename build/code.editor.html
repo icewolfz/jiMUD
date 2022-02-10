@@ -8772,7 +8772,9 @@
                         if (!icon) return;
                         manager.setPanelIcon(icon, p);
                     });
-                p.editor.options = options.modelOptions;
+                //check in case errored above
+                if(p.editor)
+                    p.editor.options = options.modelOptions;
             }
             /*
             if (!_watched[data.file]) {

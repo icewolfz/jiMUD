@@ -775,7 +775,9 @@ export class MonacoCodeEditor extends EditorBase {
                     //monaco.editor.setModelLanguage(this.$model, 'lpc');
                     break;
                 default:
-                    const found = monaco.languages.getLanguages().filter(l => { return l.extensions.indexOf(ext) !== -1; });
+                    const found = monaco.languages.getLanguages().filter(l => { 
+                        return l.extensions ? l.extensions.indexOf(ext) !== -1 : false; 
+                    });
                     if (found.length > 0)
                         monaco.editor.setModelLanguage(this.$model, found.slice(-1)[0].id);
                     else
