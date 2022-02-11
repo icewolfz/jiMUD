@@ -288,3 +288,9 @@ state("name|pattern", *"profile"*)
 
 isnull(*value*)
 >Returns 1 if value null, 0 if not null, if value omitted returns null
+
+charcomment(*text*)
+>Returns or sets the current character's notes, text not supplied current notes returned, if text is blank, "", it will clear the notes field, else text is applied as a new line to the notes, **note** this reads and writes directly to file to avoid loading large amounts of text into memory, this also only works if you have loaded a character from the character manager
+
+charnotes(*text*)
+>Returns or sets the current character's notes, text not supplied current notes returned else all notes are replaced with text, **note** this reads and writes directly to file to avoid loading large amounts of text into memory, this also only works if you have loaded a character from the character manager

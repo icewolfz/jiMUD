@@ -20,6 +20,8 @@
       - [Echo](docs/preferences.md#scripting-characters) echo each command to the screen as they are sent
       - Parsing of speed paths now allows you to use ( ) or { } to group a command, eg !2(n;w) would send n;w twice
   - Character manager: Notes field has been added to allow you to add notes that can be edited, they are saved directly to a file in character folder named character.notes, by saving directly to file it avoids keeping large amounts of text loaded into memory 
+  - Add [%charcomment(text)](docs/functions.md#miscellaneous) to allow appending comments to character notes or getting notes field
+  - Add [%charnotes](docs/functions.md#miscellaneous) to allow setting notes or getting notes field
 - **Fixed:**
   - Try to make sure window size is sent to the mud more accurately
   - Optimize debounce system so it is cleaner and runs less

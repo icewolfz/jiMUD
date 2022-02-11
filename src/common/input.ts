@@ -6,7 +6,7 @@
 //spell-checker:ignore bitand bitnot bitor bitshift bittest bitnum bitxor isfloat isnumber
 import EventEmitter = require('events');
 import { MacroModifiers, MacroDisplay } from './profile';
-import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, parseValue } from './library';
+import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, fileSizeSync, parseValue } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerTypes, convertPattern } from './profile';
@@ -1322,6 +1322,51 @@ export class Input extends EventEmitter {
                     return args[0].replace(new RegExp(`${escape}[${c}]`, 'g'), (m) => m.substr(1));
                 }
                 return args[0].replace(/\\[\\"']/g, (m) => m.substr(1));
+            },
+            charcomment: (args, math, scope) => {
+                let notes;
+                let c
+                if (args.length === 0) {
+                    c = ipcRenderer.sendSync('get-global', 'character') || '';
+                    if (!c || !c.length) return '';
+                    notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                    if (isFileSync(notes))
+                        return fs.readFileSync(notes, 'utf-8');
+                    return '';
+                }
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for charcomment');
+                c = ipcRenderer.sendSync('get-global', 'character') || '';
+                if (!c || !c.length) return;
+                args[0] = args[0].compile().evaluate(scope).toString();
+                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                if (args[0].length === 0 || !isFileSync(notes))
+                    fs.writeFileSync(notes, '');
+                else if (!fileSizeSync(notes))
+                    fs.appendFileSync(notes, args[0]);
+                else
+                    fs.appendFileSync(notes, '\n' + args[0]);
+                return;
+            },
+            charnotes: (args, math, scope) => {
+                let notes;
+                let c;
+                if (args.length === 0) {
+                    c = ipcRenderer.sendSync('get-global', 'character') || '';
+                    if (!c || !c.length) return '';
+                    notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                    if (isFileSync(notes))
+                        return fs.readFileSync(notes, 'utf-8');
+                    return '';
+                }
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for charnotes');
+                c = ipcRenderer.sendSync('get-global', 'character') || '';
+                if (!c || !c.length) return;
+                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                args[0] = args[0].compile().evaluate(scope).toString();
+                fs.writeFileSync(notes, args[0]);
+                return;
             }
         };
         for (let fun in funs) {
@@ -6881,6 +6926,8 @@ export class Input extends EventEmitter {
     }
 
     public parseVariable(text) {
+        let notes;
+        let c;
         switch (text) {
             case 'esc':
                 return '\x1b';
@@ -6944,6 +6991,14 @@ export class Input extends EventEmitter {
                 return ProperCase(this.vStack['$' + text.substr(0, text.length - 7)] || window['$' + text.substr(0, text.length - 7)]);
             case 'random':
                 return mathjs.randomInt(0, 100);
+            case 'charcomment':
+            case 'charnotes':
+                c = ipcRenderer.sendSync('get-global', 'character') || '';
+                if (!c || !c.length) return '';
+                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                if (isFileSync(notes))
+                    return fs.readFileSync(notes, 'utf-8');
+                return '';
         }
         if (this.loops.length && text.length === 1) {
             let i = text.charCodeAt(0) - 105;
@@ -6953,7 +7008,6 @@ export class Input extends EventEmitter {
         const re = new RegExp('^([a-zA-Z]+)\\((.*)\\)$', 'g');
         let res = re.exec(text);
         if (!res || !res.length) return null;
-        let c;
         let sides;
         let mod;
         let args;
@@ -7818,6 +7872,49 @@ export class Input extends EventEmitter {
                 if (args.length !== 1)
                     throw new Error('Too many arguments for null');
                 return this.evaluate(args[0]) === null ? 1 : 0;
+            case 'charcomment':
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
+                if (args.length === 0) {
+                    c = ipcRenderer.sendSync('get-global', 'character') || '';
+                    if (!c || !c.length) return '';
+                    notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                    if (isFileSync(notes))
+                        return fs.readFileSync(notes, 'utf-8');
+                    return '';
+                }
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for charcomment');
+                if(this.client.options.allowEval) return null;
+                    c = ipcRenderer.sendSync('get-global', 'character') || '';
+                if (!c || !c.length) return null;
+                args[0] = this.stripQuotes(args[0], true);
+                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                if (args[0].length === 0 || !isFileSync(notes))
+                    fs.writeFileSync(notes, '');
+                else if (!fileSizeSync(notes))
+                    fs.appendFileSync(notes, args[0]);
+                else
+                    fs.appendFileSync(notes, '\n' + args[0]);
+                return null;
+            case 'charnotes':
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
+                if (args.length === 0) {
+                    c = ipcRenderer.sendSync('get-global', 'character') || '';
+                    if (!c || !c.length) return '';
+                    notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                    if (isFileSync(notes))
+                        return fs.readFileSync(notes, 'utf-8');
+                    return '';
+                }
+                else if (args.length > 1)
+                    throw new Error('Too many arguments for charnotes');
+                if(this.client.options.allowEval) return null;
+                c = ipcRenderer.sendSync('get-global', 'character') || '';
+                if (!c || !c.length) return null;
+                args[0] = this.stripQuotes(args[0], true);
+                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                fs.writeFileSync(notes, args[0]);
+                return null;
         }
         return null;
     }
@@ -8134,7 +8231,7 @@ export class Input extends EventEmitter {
                 this._pathQueue.shift();
             this._pathTimeout = null;
             //step manually so do not call next block, allows commands to handle steeping instead of auto moving to next one
-            if(this._pathQueue.length && this._pathQueue[0].manual)
+            if (this._pathQueue.length && this._pathQueue[0].manual)
                 return;
             //process next paths
             this.ExecutePath();
