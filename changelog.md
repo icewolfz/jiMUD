@@ -13,6 +13,7 @@
   - Character manager: Notes field has been added to allow you to add notes that can be edited, they are saved directly to a file in character folder named character.notes, by saving directly to file it avoids keeping large amounts of text loaded into memory 
   - Add [%charcomment(text)](docs/functions.md#miscellaneous) to allow appending comments to character notes or getting notes field
   - Add [%charnotes](docs/functions.md#miscellaneous) to allow setting notes or getting notes field
+  - Profile manager: double clicking an item in treeview will now toggle expand or collapse state
 - **Fixed:**
   - Try to make sure window size is sent to the mud more accurately
   - Optimize debounce system so it is cleaner and runs less
@@ -21,6 +22,7 @@
   - Immortal tools: fix minor bug in remote drag and drop download
   - Profile manager: Fixed issue when sub item group was selected and profile option changed that would cause treeview to replace sub item with profile
 - **Changed:**
+  - Profile manager: sort profiles by priority sort set, then alpha always
   - Update electron 16.0.8 to 17.0.0
   - Update monaco-editor 0.31.1 to 0.32.1  
   - Update fswin 2.21.1015 to 3.22.106
