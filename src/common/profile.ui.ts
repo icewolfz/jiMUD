@@ -1372,6 +1372,16 @@ function sortNodes(a, b) {
     return 0;
 }
 
+function sortProfileNodes(a, b) {
+    if ((_sort & 4) === 4) {
+        if (a.dataAttr.priority > b.dataAttr.priority)
+            return -1 * _sortDir;
+        if (a.dataAttr.priority < b.dataAttr.priority)
+            return 1 * _sortDir;
+    }
+    return a.text.localeCompare(b.text) * _sortDir;
+}
+
 function sortNodeChildren(node) {
     if (!node)
         return;
@@ -2909,7 +2919,7 @@ function getProfileData() {
         data.push(newProfileNode(profile));
     }
     //data.sort((a, b) => { return a.text.localeCompare(b.text); });
-    data.sort(sortNodes);
+    data.sort(sortProfileNodes);
     return data;
 }
 
@@ -3678,6 +3688,11 @@ export function init() {
         }
         c.popup({ window: remote.getCurrentWindow() });
     });
+    $('#profile-tree').on('dblclick', (event: JQueryEventObject) => {
+        if (!event.target || event.target.nodeName !== 'LI' || !event.target.classList.contains('list-group-item')) return;
+        let n = $('#profile-tree').treeview('findNodes', ['^' + event.target.id + '$', 'id']);
+        $('#profile-tree').treeview('toggleNodeExpanded', [n, { levels: 1, silent: false }]);
+    });
 }
 
 function startWatcher(p: string) {
@@ -3731,12 +3746,12 @@ export function sortTree(s?: boolean) {
             for (c = 0; c < cl; c++) {
                 if (!n.nodes[c].nodes || n.nodes[c].nodes.length === 0)
                     continue;
-                n.nodes[c].nodes = n.nodes[c].nodes.sort(sortNodes);
+                n.nodes[c].nodes = n.nodes[c].nodes.sort(sortProfileNodes);
             }
         }
         data.push(n);
     }
-    data.sort(sortNodes);
+    data.sort(sortProfileNodes);
     /*
     n = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
     if (n.length > 0) {
