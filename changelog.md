@@ -23,7 +23,7 @@
   - Profile manager: Fixed issue when sub item group was selected and profile option changed that would cause treeview to replace sub item with profile
 - **Changed:**
   - Profile manager: sort profiles by priority sort set, then alpha always
-  - Update electron 16.0.8 to 17.0.0
+  - Update electron 16.0.8 to 17.0.1
   - Update monaco-editor 0.31.1 to 0.32.1  
   - Update fswin 2.21.1015 to 3.22.106
   - Update electron-updater 4.6.1 to 4.6.5
