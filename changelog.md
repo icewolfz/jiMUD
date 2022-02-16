@@ -16,13 +16,13 @@
   - Profile manager: double clicking an item in treeview will now toggle expand or collapse state
 - **Fixed:**
   - Try to make sure window size is sent to the mud more accurately
-  - Optimize debounce system so it is cleaner and runs less
-  - Mapper: Default to 1 if [Directions to send](docs/preferences.md#mapper) is ever less then 1 so speed walk path sent always
+  - Optimize debounce systems so it is cleaner and runs less
+  - Mapper: Default to 1 if [Directions to send](docs/preferences.md#mapper) is ever less then 1 so auto walk path sent always
   - Remove extra `Enable Double Parameter Escaping` from preferences dialog.
   - Immortal tools: fix minor bug in remote drag and drop download
   - Profile manager: Fixed issue when sub item group was selected and profile option changed that would cause treeview to replace sub item with profile
 - **Changed:**
-  - Profile manager: sort profiles by priority sort set, then alpha always
+  - Profile manager: sort profiles by priority sort if set, then alpha always, ignore index as profiles are stored by name
   - Update electron 16.0.8 to 17.0.1
   - Update monaco-editor 0.31.1 to 0.32.1  
   - Update fswin 2.21.1015 to 3.22.106
