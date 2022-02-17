@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.18.0
+## v0.18.0 2022-02-16
 
 - **New:**
   - New speed path system, adds option to group by amount of commands, and the delay between each group
