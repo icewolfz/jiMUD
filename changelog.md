@@ -2,6 +2,12 @@
 
 ## v0.18.1
 
+- **Changed:**
+  - Update electron 17.0.1 to 17.1.0
+  - Update @electron/remote 2.0.4 to 2.0.5
+  - Update fs-extra 10.0.0 to 10.0.1
+  - Update yargs-parser 21.0.0 to 21.0.1
+
 ## v0.18.0 2022-02-16
 
 - **New:**
