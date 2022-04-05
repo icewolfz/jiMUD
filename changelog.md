@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.18.1
+## v0.18.1 2022-04-04
 
 - **Fixed:**
   - Character manager: Fix name list not scrolling
