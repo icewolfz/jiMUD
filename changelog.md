@@ -11,6 +11,7 @@
   - Update yargs-parser 21.0.0 to 21.0.1
   - Update mathjs 10.1.1 to 10.4.2
   - Update monaco-editor 0.32.1 to 0.33.0
+  - Update moment 2.29.1 to 2.29.2
 
 ## v0.18.0 2022-02-16
 
