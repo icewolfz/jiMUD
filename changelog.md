@@ -2,6 +2,8 @@
 
 ## v0.18.1
 
+- **Fixed:**
+  - Character manager: Fix name list not scrolling
 - **Changed:**
   - Update electron 17.0.1 to 17.3.1
   - Update @electron/remote 2.0.4 to 2.0.8
