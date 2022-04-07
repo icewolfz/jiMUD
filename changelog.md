@@ -3,7 +3,7 @@
 ## 0.19.0
 
 - **Changed:**
-  - Update electron 17.3.1 to 18.0.1
+  - Update electron 17.3.1 to 18.0.2
 
 ## v0.18.1 2022-04-04
 
