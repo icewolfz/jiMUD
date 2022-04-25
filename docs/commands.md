@@ -254,7 +254,7 @@ Display text to the screen, and the display text will not fire triggers
 >Does nothing, but will expand arguments
 
 <u>#NOT</u>IFY title message *{icon}*
->display a notification popup with no sound, use [client.notify](scriptind.md#basic-function-list) to turn off silent option or #playsound
+>display a notification popup with no sound, use [client.notify](scripting.md#basic-function-list) to turn off silent option or #playsound
 
 <u>#SE</u>ND file *prefix suffix*
 >Send file to mud line by line pre-pending and appending supplied prefix and suffix to each line as if sent from command input
