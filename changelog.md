@@ -3,11 +3,11 @@
 ## 0.19.0
 
 - **Changed:**
-  - Update electron 17.3.1 to 19.0.1
+  - Update electron 17.3.1 to 19.0.2
   - Update electron-updater 4.6.5 to 5.0.1
   - Update better-sqlite3 7.5.0 to 7.5.3
   - Update moment 2.29.2 to 2.29.3
-  - Update mathjs 10.4.2 to 10.6.0
+  - Update mathjs 10.4.2 to 10.6.1
   - Update markdown-it 12.3.2 to 13.0.1
   - Update fs-extra 10.0.1 to 10.1.0
 
