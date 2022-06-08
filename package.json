@@ -55,14 +55,14 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.14",
-    "@types/node": "^17.0.38",
+    "@types/node": "^17.0.41",
     "babel-minify": "^0.5.2",
-    "electron": "^19.0.2",
+    "electron": "^19.0.3",
     "electron-builder": "^23.0.3",
     "electron-rebuild": "^3.2.7",
-    "eslint": "^8.16.0",
+    "eslint": "^8.17.0",
     "eslint-plugin-html": "^6.2.0",
-    "sass": "^1.52.1"
+    "sass": "^1.52.2"
   },
   "build": {
     "appId": "jiMUD",
