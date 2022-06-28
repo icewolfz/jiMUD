@@ -2,6 +2,11 @@
 
 ## 0.19.0
 
+- **Fixed:**
+  - Code editor: Virtual area editor:
+      - Fixed infinite loop when building terrain and state data
+
+
 - **Changed:**
   - Update electron 17.3.1 to 19.0.3
   - Update electron-updater 4.6.5 to 5.0.1

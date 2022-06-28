@@ -8232,7 +8232,7 @@ export class VirtualEditor extends EditorBase {
                 if (y < 1 || y >= lines.length) return;
                 line = lines[y].split(' ');
                 while (line.length < this.$mapSize.width)
-                    lines.push('');
+                    line.push('');
                 if (x < 0 || x >= line.length) return;
                 line[x] = leadingZeros(room.state, 3, '0');
                 lines[y] = line.join(' ');
@@ -8255,7 +8255,7 @@ export class VirtualEditor extends EditorBase {
                 if (y < 1 || y >= lines.length) return;
                 line = lines[y].split(' ');
                 while (line.length < this.$mapSize.width)
-                    lines.push('');
+                    line.push('');
                 if (x < 0 || x >= line.length) return;
                 line[x] = leadingZeros(room.terrain, 2, '0');
                 if (s || nl.length > 0) {
@@ -8286,7 +8286,7 @@ export class VirtualEditor extends EditorBase {
             if (y < 1 || y >= lines.length) return;
             line = lines[y].split(' ');
             while (line.length < this.$mapSize.width)
-                lines.push('');
+                line.push('');
             if (x < 0 || x >= line.length) return;
             line[x] = leadingZeros(room.exits, 3, '0');
             if (s || nl.length > 0)
