@@ -70,11 +70,11 @@
                 c.push({ label: 'Add empty', click: "addEmpty()" });
                 if (item !== undefined) {
                     c.push({ type: 'separator' });
-                    c.push({ label: 'Rename', click: `rename(${item})` });
-                    c.push({ label: 'Copy', click: `copy(${item})` });
-                    c.push({ label: 'Delete', click: `remove(${item})` });
+                    c.push({ label: 'Rename', click: `rename('${item}')` });
+                    c.push({ label: 'Copy', click: `copy('${item}')` });
+                    c.push({ label: 'Delete', click: `remove('${item})'` });
                     c.push({ type: 'separator' });
-                    c.push({ label: 'Load', click: `load(${item})` });
+                    c.push({ label: 'Load', click: `load('${item})'` });
                 }
                 ipcRenderer.invoke('show-context', c);
             });

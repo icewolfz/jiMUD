@@ -1,6 +1,10 @@
 # Changelog
 
 ## 0.19.1
+
+- **Fixed:**
+  - Character manager: Fix context menu items not working
+
 ## 0.19.0 2022-07-04
 
 - **Fixed:**
