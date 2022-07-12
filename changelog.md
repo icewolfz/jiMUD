@@ -4,6 +4,10 @@
 
 - **Fixed:**
   - Character manager: Fix context menu items not working
+- **Changed:**
+  - Update better-sqlite3 7.5.3 to 7.6.0
+  - Update moment 2.29.3 to 2.29.4
+  - Update electron 19.0.7 to 19.0.8
 
 ## 0.19.0 2022-07-04
 
