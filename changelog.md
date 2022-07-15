@@ -4,6 +4,8 @@
 
 - **Fixed:**
   - Character manager: Fix context menu items not working
+  - Code editor: Virtual area editor:
+      - Resize did not correctly shift external exit coordinates based on anchor settings
 - **Changed:**
   - Update better-sqlite3 7.5.3 to 7.6.1
   - Update moment 2.29.3 to 2.29.4

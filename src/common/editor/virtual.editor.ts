@@ -7134,7 +7134,7 @@ export class VirtualEditor extends EditorBase {
         let r;
         let xl;
         let yl;
-        if (!this.$mapContext)  {
+        if (!this.$mapContext) {
             this.doUpdate(UpdateType.drawMap);
             return;
         }
@@ -7317,7 +7317,7 @@ export class VirtualEditor extends EditorBase {
             if ((this._updating & UpdateType.drawMap) === UpdateType.drawMap) {
                 this._updating &= ~UpdateType.drawMap;
                 this.DrawMap();
-            }            
+            }
             this.doUpdate(this._updating);
         });
     }
@@ -9362,7 +9362,8 @@ export class VirtualEditor extends EditorBase {
         const zl = this.$mapSize.depth;
         const xl = this.$mapSize.width;
         const yl = this.$mapSize.height;
-        const exits = [];
+        let exits = [];
+        let ee = false;
         let nExits = this.$exits;
         const exl = nExits.length;
         this.$mapSize.width += width;
@@ -9406,6 +9407,18 @@ export class VirtualEditor extends EditorBase {
                         if (this.$focusedRoom && this.$focusedRoom.at(x, y, z))
                             this.$focusedRoom = rooms[room.z][room.y][room.x];
                         if (room.exits) this.$roomCount++;
+                        if (room.ee) {
+                            let ex = this.$exits.filter(ex => ex.x === x && ex.y === y && ex.z === z);
+                            nExits = nExits.filter(ex => ex.x !== x || ex.y !== y || ex.z !== z);
+                            ex = ex.map(d => {
+                                d.x = room.x;
+                                d.y = room.y;
+                                d.z = room.z;
+                                return d;
+                            });
+                            nExits.push(...ex);
+                            ee = true;
+                        }
                     }
                     else {
                         if (room.exits) {
@@ -9415,8 +9428,9 @@ export class VirtualEditor extends EditorBase {
                             this.deleteRoom(room, true);
                         }
                         if (room.ee) {
-                            exits.push(...this.$exits.filter(ex => ex.x === room.x && ex.y === room.y && ex.z === room.z));
-                            nExits = nExits.filter(ex => ex.x !== room.x || ex.y !== room.y || ex.z !== room.z);
+                            exits.push(...this.$exits.filter(ex => ex.x === x && ex.y === y && ex.z === z));
+                            nExits = nExits.filter(ex => ex.x !== x || ex.y !== y || ex.z !== z);
+                            ee = true;
                         }
                         idx = this.$selectedRooms.indexOf(this.$rooms[z][y][x]);
                         if (idx !== -1)
@@ -9466,8 +9480,10 @@ export class VirtualEditor extends EditorBase {
         this.doUpdate(UpdateType.drawMap);
         if (!noUndo) {
             this.pushUndo(undoAction.edit, undoType.resize, { width: width, height: height, depth: depth, shift: shift });
-            if (nExits.length !== exl) {
-                this.pushUndo(undoAction.delete, undoType.exits, { index: exits.map(x => this.$exits.indexOf(x)), exits: exits });
+            //exits changed update
+            if (ee) {
+                if (nExits.length !== exl)
+                    this.pushUndo(undoAction.delete, undoType.exits, { index: exits.map(x => this.$exits.indexOf(x)), exits: exits });
                 this.$exits = nExits;
                 this.$exitGrid = this.$exits;
                 if (this.$mapSize.depth > 1)
