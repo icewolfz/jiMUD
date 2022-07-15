@@ -9753,7 +9753,6 @@ export class VirtualEditor extends EditorBase {
         this.$map.width = this.$mapSize.right;
         this.$map.height = this.$mapSize.bottom;
         this.BuildAxises();
-        this.emit('rebuild-buttons');
         this.emit('flip-map');
         Timer.end('Flip time');
         this.roomsChanged(this.$mapSize.width, this.$mapSize.height, this.$mapSize.depth);
