@@ -8932,6 +8932,13 @@
                 if (p !== manager.active) return;
                 menubar.updateItem(menu, options);
             });
+            p.editor.on('rebuild-menu', (menu) => {
+                if (p !== manager.active) return;
+                if(menu === 'edit')
+                    updateMenu('edit', 12);
+                else if(menu === 'view')
+                    updateMenu('view', 9);                
+            });            
             p.editor.on('rebuild-buttons', () => {
                 if (p !== manager.active) return;
                 var buttons = document.getElementById('editor-buttons');

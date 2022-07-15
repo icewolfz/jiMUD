@@ -40,6 +40,12 @@ export enum shiftType {
     down = 64
 }
 
+export enum flipType {
+    horizontal = 1,
+    vertical = 2,
+    depth = 4,
+}
+
 export enum UpdateType { none = 0, drawMap = 1, buildRooms = 2, buildMap = 4, resize = 8, status = 16, refreshItems = 32, refreshDescriptions = 64, refreshExits = 128 }
 
 export enum DescriptionOnDelete { leave = 0, end = 1, endPlusOne = 2, start = 3 }
@@ -189,7 +195,7 @@ export interface MousePosition {
 
 const Timer = new DebugTimer();
 
-enum undoType { room, description, item, resize, reduce, raw, rawText, exits, revert, maxTerrain }
+enum undoType { room, description, item, resize, reduce, raw, rawText, exits, exit, revert, maxTerrain, flip }
 enum undoAction { add, delete, edit }
 enum undoReduce { items = 1, descriptions = 2, all = items | descriptions }
 
@@ -1629,7 +1635,7 @@ export class VirtualEditor extends EditorBase {
         });
         this.$exitGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
             this.startUndoGroup();
-            this.pushUndo(undoAction.edit, undoType.exits, { index: dataIndex, value: oldValue });
+            this.pushUndo(undoAction.edit, undoType.exit, { index: dataIndex, value: oldValue });
             if (this.$mapSize.depth > 1)
                 this.updateRaw(this.$externalRaw, dataIndex, [(newValue.enabled ? '' : '#') + newValue.x + ',' + newValue.y + ',' + newValue.z + ':' + newValue.exit + ':' + newValue.dest]);
             else
@@ -5283,6 +5289,10 @@ export class VirtualEditor extends EditorBase {
                         this._resizeMap(-undo.data.width, -undo.data.height, -undo.data.depth, undo.data.shift, true);
                         this.pushRedo(undo);
                         break;
+                    case undoType.flip:
+                        this._flipMap(undo.data.type, true);
+                        this.pushRedo(undo);
+                        break;
                     case undoType.room:
                         l = undo.data.values.length;
                         values = [];
@@ -5305,11 +5315,22 @@ export class VirtualEditor extends EditorBase {
                         undo.data.values = values;
                         this.pushRedo(undo);
                         break;
-                    case undoType.exits:
-                        //this.pushUndo(undoAction.edit, undoType.exits, { index: dataIndex, value: oldValue });
+                    case undoType.exit:
+                        //this.pushUndo(undoAction.edit, undoType.exit, { index: dataIndex, value: oldValue });
                         value = this.$exits[undo.data.index];
                         this.$exits[undo.data.index] = undo.data.value;
                         undo.data.value = value;
+                        this.pushRedo(undo);
+                        this.doUpdate(UpdateType.refreshExits);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.exits:
+                        //this.pushUndo(undoAction.edit, undoType.exits, { exits: exits, room: [x,y,z] });
+                        value = this.$exits.filter(ex => ex.x === undo.data.room[0] && ex.y === undo.data.room[1] && ex.z === undo.data.room[2])
+                        this.$exits = this.$exits.filter(ex => ex.x !== undo.data.room[0] || ex.y !== undo.data.room[1] || ex.z !== undo.data.room[2]);
+                        this.$exits.push(...undo.data.exits);
+                        undo.data.exits = value;
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshExits);
                         this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
@@ -5539,6 +5560,10 @@ export class VirtualEditor extends EditorBase {
                         this._resizeMap(undo.data.width, undo.data.height, undo.data.depth, undo.data.shift, true);
                         this.pushUndoObject(undo);
                         break;
+                    case undoType.flip:
+                        this._flipMap(undo.data.type, true);
+                        this.pushUndoObject(undo);
+                        break;
                     case undoType.room:
                         l = undo.data.values.length;
                         const values = [];
@@ -5561,11 +5586,22 @@ export class VirtualEditor extends EditorBase {
                         undo.data.values = values;
                         this.pushUndoObject(undo);
                         break;
-                    case undoType.exits:
-                        //this.pushUndo(undoAction.edit, undoType.exits, { index: dataIndex, value: oldValue });
+                    case undoType.exit:
+                        //this.pushUndo(undoAction.edit, undoType.exit, { index: dataIndex, value: oldValue });
                         value = this.$exits[undo.data.index];
                         this.$exits[undo.data.index] = undo.data.value;
                         undo.data.value = value;
+                        this.pushUndoObject(undo);
+                        this.doUpdate(UpdateType.refreshExits);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.exits:
+                        //this.pushUndo(undoAction.edit, undoType.exits, { exits: exits, room: [x,y,z] });
+                        value = this.$exits.filter(ex => ex.x === undo.data.room[0] && ex.y === undo.data.room[1] && ex.z === undo.data.room[2])
+                        this.$exits = this.$exits.filter(ex => ex.x !== undo.data.room[0] || ex.y !== undo.data.room[1] || ex.z !== undo.data.room[2]);
+                        this.$exits.push(...undo.data.exits);
+                        undo.data.exits = value;
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshExits);
                         this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
@@ -5710,6 +5746,7 @@ export class VirtualEditor extends EditorBase {
                 return this.$view === View.map || this.$view === View.terrains || this.$view === View.items || this.$view === View.exits;
             case 'buttons':
             case 'menu|view':
+            case 'menu|edit':
             case 'upload':
             case 'upload-as':
             case 'selectall':
@@ -5902,6 +5939,22 @@ export class VirtualEditor extends EditorBase {
         frag.appendChild(this.createButton('Resize map', 'arrows', () => {
             this.emit('show-resize', this.$mapSize);
         }, false, this.$view !== View.map));
+
+        group = document.createElement('div');
+        group.classList.add('btn-group');
+        group.setAttribute('role', 'group');
+        group.appendChild(this.createButton('Flip horizontally', 'shield fa-rotate-180', () => {
+            this.flipMap(flipType.horizontal);
+        }, false, this.$view !== View.map));
+        group.appendChild(this.createButton('Flip vertically', 'shield fa-rotate-90', () => {
+            this.flipMap(flipType.vertical);
+        }, false, this.$view !== View.map));
+        if (this.$mapSize.depth > 1)
+            group.appendChild(this.createButton('Flip depth', 'exchange fa-rotate-90', () => {
+                this.flipMap(flipType.depth);
+            }, false, this.$view !== View.map));
+        frag.appendChild(group);
+
         if (this.$mapSize.depth > 1) {
             el = document.createElement('label');
             el.setAttribute('for', this.parent.id + '-level');
@@ -6094,8 +6147,31 @@ export class VirtualEditor extends EditorBase {
                     click: () => {
                         this.emit('show-resize', this.$mapSize);
                     }
+                },
+                { type: 'separator' },
+                {
+                    label: 'Flip horizontally',
+                    click: () => {
+                        this.flipMap(flipType.horizontal);
+                    }
+                },
+                {
+                    label: 'Flip vertically',
+                    click: () => {
+                        this.flipMap(flipType.vertical);
+                    }
                 }
+
             ];
+            if (this.$mapSize.depth > 1)
+                m.push(
+                    {
+                        label: 'Flip depth',
+                        click: () => {
+                            this.flipMap(flipType.depth);
+                        }
+                    }
+                )
         }
         return m;
     }
@@ -6659,8 +6735,14 @@ export class VirtualEditor extends EditorBase {
         this.emit('menu-update', 'view|show colors', { enabled: view === View.map });
         this.emit('menu-update', 'edit|allow resize walk', { enabled: view === View.map });
         this.emit('menu-update', 'edit|resize map', { enabled: view === View.map });
+        this.emit('menu-update', 'edit|flip horizontally', { enabled: view === View.map });
+        this.emit('menu-update', 'edit|flip vertically', { enabled: view === View.map });
+        this.emit('menu-update', 'edit|flip depth', { enabled: view === View.map });
         this.setButtonDisabled('allow resize walk', view !== View.map);
         this.setButtonDisabled('resize map', view !== View.map);
+        this.setButtonDisabled('flip horizontally', view !== View.map);
+        this.setButtonDisabled('flip vertically', view !== View.map);
+        this.setButtonDisabled('flip depth', view !== View.map);
         this.setButtonDisabled('room editor', view !== View.map);
         this.setButtonDisabled('room preview', view !== View.map);
         this.setButtonDisabled('terrain', view !== View.map);
@@ -9410,6 +9492,8 @@ export class VirtualEditor extends EditorBase {
                         if (room.ee) {
                             let ex = this.$exits.filter(ex => ex.x === x && ex.y === y && ex.z === z);
                             nExits = nExits.filter(ex => ex.x !== x || ex.y !== y || ex.z !== z);
+                            if (!noUndo)
+                                this.pushUndo(undoAction.edit, undoType.exits, { exits: ex, room: [x, y, z] });                            
                             ex = ex.map(d => {
                                 d.x = room.x;
                                 d.y = room.y;
@@ -9473,6 +9557,7 @@ export class VirtualEditor extends EditorBase {
                 visible: true
             });
         }
+        this.emit('rebuild-menu', 'edit');
         this.emit('rebuild-buttons');
         this.emit('resize-map');
         Timer.end('Resize time');
@@ -9485,7 +9570,7 @@ export class VirtualEditor extends EditorBase {
                 if (nExits.length !== exl)
                     this.pushUndo(undoAction.delete, undoType.exits, { index: exits.map(x => this.$exits.indexOf(x)), exits: exits });
                 this.$exits = nExits;
-                this.$exitGrid = this.$exits;
+                this.$exitGrid.rows = this.$exits;
                 if (this.$mapSize.depth > 1)
                     nExits = nExits.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
                 else
@@ -9494,6 +9579,197 @@ export class VirtualEditor extends EditorBase {
                 this.updateRaw(this.$externalRaw, 0, nExits);
                 resetCursor(this.$externalRaw);
             }
+        }
+    }
+
+    public flipMap(type: flipType) {
+        this.startUndoGroup();
+        this._flipMap(type);
+        this.stopUndoGroup();
+    }
+
+    private _flipMap(type: flipType, noUndo?) {
+        Timer.start();
+        //flip x: map.width - x - 1 = new x
+        //flip y: map.height - y - 1 = new y     
+        Timer.start();
+        const zl = this.$mapSize.depth;
+        const xl = this.$mapSize.width;
+        const yl = this.$mapSize.height;
+        let ee = false;
+        const exits = [];
+        let nExits = this.$exits;
+        const exl = nExits.length;
+        const rooms = Array.from(Array(this.$mapSize.depth),
+            (v, z) => Array.from(Array(this.$mapSize.height),
+                (v2, y) => Array.from(Array(this.$mapSize.width),
+                    (v3, x) => new Room(x, y, z, 0, 0, 0))
+            ));
+
+        this.$roomCount = 0;
+        for (let z = 0; z < zl; z++) {
+            for (let y = 0; y < yl; y++) {
+                for (let x = 0; x < xl; x++) {
+                    const room = this.$rooms[z][y][x];
+                    let idx;
+                    let ex = [];
+                    if (!room) continue;
+                    if ((type & flipType.horizontal) === flipType.horizontal) {
+                        room.x = xl - room.x - 1;
+                        if ((room.exits & RoomExit.West) == RoomExit.West && (room.exits & RoomExit.East) != RoomExit.East) {
+                            room.exits |= RoomExit.East;
+                            room.exits &= ~RoomExit.West;
+                        }
+                        else if ((room.exits & RoomExit.East) == RoomExit.East && (room.exits & RoomExit.West) != RoomExit.West) {
+                            room.exits |= RoomExit.West;
+                            room.exits &= ~RoomExit.East;
+                        }
+
+                        if ((room.exits & RoomExit.NorthWest) == RoomExit.NorthWest && (room.exits & RoomExit.NorthEast) != RoomExit.NorthEast) {
+                            room.exits |= RoomExit.NorthEast;
+                            room.exits &= ~RoomExit.NorthWest;
+                        }
+                        else if ((room.exits & RoomExit.NorthEast) == RoomExit.NorthEast && (room.exits & RoomExit.NorthWest) != RoomExit.NorthWest) {
+                            room.exits |= RoomExit.NorthWest;
+                            room.exits &= ~RoomExit.NorthEast;
+                        }
+                        if ((room.exits & RoomExit.SouthWest) == RoomExit.SouthWest && (room.exits & RoomExit.SouthEast) != RoomExit.SouthEast) {
+                            room.exits |= RoomExit.SouthEast;
+                            room.exits &= ~RoomExit.SouthWest;
+                        }
+                        else if ((room.exits & RoomExit.SouthEast) == RoomExit.SouthEast && (room.exits & RoomExit.SouthWest) != RoomExit.SouthWest) {
+                            room.exits |= RoomExit.SouthWest;
+                            room.exits &= ~RoomExit.SouthEast;
+                        }
+                    }
+                    if ((type & flipType.vertical) === flipType.vertical) {
+                        room.y = yl - room.y - 1;
+                        if ((room.exits & RoomExit.North) == RoomExit.North && (room.exits & RoomExit.South) != RoomExit.South) {
+                            room.exits |= RoomExit.South;
+                            room.exits &= ~RoomExit.North;
+                        }
+                        else if ((room.exits & RoomExit.South) == RoomExit.South && (room.exits & RoomExit.North) != RoomExit.North) {
+                            room.exits |= RoomExit.North;
+                            room.exits &= ~RoomExit.South;
+                        }
+
+                        if ((room.exits & RoomExit.NorthWest) == RoomExit.NorthWest && (room.exits & RoomExit.SouthWest) != RoomExit.SouthWest) {
+                            room.exits |= RoomExit.SouthWest;
+                            room.exits &= ~RoomExit.NorthWest;
+                        }
+                        else if ((room.exits & RoomExit.SouthWest) == RoomExit.SouthWest && (room.exits & RoomExit.NorthWest) != RoomExit.NorthWest) {
+                            room.exits |= RoomExit.NorthWest;
+                            room.exits &= ~RoomExit.SouthWest;
+                        }
+                        if ((room.exits & RoomExit.NorthEast) == RoomExit.NorthEast && (room.exits & RoomExit.SouthEast) != RoomExit.SouthEast) {
+                            room.exits |= RoomExit.SouthEast;
+                            room.exits &= ~RoomExit.NorthEast;
+                        }
+                        else if ((room.exits & RoomExit.SouthEast) == RoomExit.SouthEast && (room.exits & RoomExit.NorthEast) != RoomExit.NorthEast) {
+                            room.exits |= RoomExit.NorthEast;
+                            room.exits &= ~RoomExit.SouthEast;
+                        }
+                    }
+                    if ((type & flipType.depth) === flipType.depth) {
+                        room.z += zl - room.z - 1;
+                        if ((room.exits & RoomExit.Up) == RoomExit.Up && (room.exits & RoomExit.Down) != RoomExit.Down) {
+                            room.exits |= RoomExit.Down;
+                            room.exits &= ~RoomExit.Up;
+                        }
+                        else if ((room.exits & RoomExit.Down) == RoomExit.Down && (room.exits & RoomExit.Up) != RoomExit.Up) {
+                            room.exits |= RoomExit.Up;
+                            room.exits &= ~RoomExit.Down;
+                        }
+                    }
+                    if (room.ee) {
+                        let ex = this.$exits.filter(ex => ex.x === x && ex.y === y && ex.z === z);
+                        nExits = nExits.filter(ex => ex.x !== x || ex.y !== y || ex.z !== z);
+                        //if (!noUndo)
+                            //this.pushUndo(undoAction.edit, undoType.exits, { exits: ex, room: [x, y, z] });
+                        ex = ex.map(d => {
+                            d.x = room.x;
+                            d.y = room.y;
+                            d.z = room.z;
+                            if ((type & flipType.horizontal) === flipType.horizontal) {
+                                if (d.exit == 'east')
+                                    d.exit = 'west';
+                                else if (d.exit == 'west')
+                                    d.exit = 'east';
+                                else if (d.exit == 'northwest')
+                                    d.exit = 'northeast';
+                                else if (d.exit == 'northeast')
+                                    d.exit = 'northwest';
+                                else if (d.exit == 'southwest')
+                                    d.exit = 'southeast';
+                                else if (d.exit == 'southeast')
+                                    d.exit = 'southwest';
+                            }
+                            if ((type & flipType.vertical) === flipType.vertical) {
+                                if (d.exit == 'south')
+                                    d.exit = 'north';
+                                else if (d.exit == 'north')
+                                    d.exit = 'south';
+                                else if (d.exit == 'northwest')
+                                    d.exit = 'southwest';
+                                else if (d.exit == 'northeast')
+                                    d.exit = 'southeast';
+                                else if (d.exit == 'southwest')
+                                    d.exit = 'northwest';
+                                else if (d.exit == 'southeast')
+                                    d.exit = 'northeast';
+                            }
+                            if ((type & flipType.depth) === flipType.depth) {
+                                if (d.exit == 'down')
+                                    d.exit = 'up';
+                                else if (d.exit == 'up')
+                                    d.exit = 'down';
+                            }
+                            return d;
+                        });
+                        nExits.push(...ex);
+                        ee = true;
+                        ex = ex.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0);
+                        if (ex.length > 0)
+                            room.ee = ex.reduce((a, c) => a | c);
+                        else
+                            room.ee = 0;
+                    }
+                    rooms[room.z][room.y][room.x] = room;
+                    idx = this.$selectedRooms.indexOf(this.$rooms[z][y][x]);
+                    if (idx !== -1)
+                        this.$selectedRooms[idx] = rooms[room.z][room.y][room.x];
+                    if (this.$focusedRoom && this.$focusedRoom.at(x, y, z))
+                        this.$focusedRoom = rooms[room.z][room.y][room.x];
+                    if (room.exits) this.$roomCount++;
+                }
+            }
+        }
+
+        this.$rooms = rooms;
+        this.UpdateEditor(this.$selectedRooms);
+        this.UpdatePreview(this.selectedFocusedRoom);
+        if (this.$depth >= this.$mapSize.depth)
+            this.$depth = this.$mapSize.depth - 1;
+        this.$map.width = this.$mapSize.right;
+        this.$map.height = this.$mapSize.bottom;
+        this.BuildAxises();
+        this.emit('rebuild-buttons');
+        this.emit('flip-map');
+        Timer.end('Flip time');
+        this.roomsChanged(this.$mapSize.width, this.$mapSize.height, this.$mapSize.depth);
+        this.doUpdate(UpdateType.drawMap);
+        if (!noUndo)
+            this.pushUndo(undoAction.edit, undoType.flip, { type: type });
+        if (ee) {
+            this.$exits = nExits;
+            this.$exitGrid.rows = this.$exits;
+            if (this.$mapSize.depth > 1)
+                nExits = nExits.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+            else
+                nExits = nExits.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+            this.$externalRaw.value = '';
+            this.updateRaw(this.$externalRaw, 0, nExits, false, false, noUndo);
+            resetCursor(this.$externalRaw);
         }
     }
 }
