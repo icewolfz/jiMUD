@@ -520,7 +520,7 @@ export class PropertyGrid extends EventEmitter {
 
     public beginEdit(property: string, openAdvanced?: boolean) {
         if (!property) return;
-        const e = <HTMLElement>this.$el.querySelector('div.property-grid-item-value[data-prop="' + property.toLowerCase() + '"]');
+        const e = <HTMLElement>this.$el.querySelector('div.property-grid-item-value[data-prop="' + property + '"]');
         if (!e) return;
         e.focus();
         e.click();

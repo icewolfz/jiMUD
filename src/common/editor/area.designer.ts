@@ -12,7 +12,7 @@ const { clipboard, ipcRenderer } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
 import { Wizard, WizardPage, WizardDataGridPage } from '../wizard';
-import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit } from './virtual.editor';
+import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit, flipType } from './virtual.editor';
 
 declare global {
     interface Window {
@@ -121,7 +121,7 @@ export const MonsterTypes = [
     { value: 'MONTYPE_WEAPON_REPAIR', display: 'Weapon Repair', group: 'Standard' }
 ];
 
-export enum UpdateType { none = 0, drawMap = 1, buildMap = 2, resize = 4, status = 8 }
+export enum UpdateType { none = 0, drawMap = 1, buildMap = 2, resize = 4, status = 8, flip = 16 }
 
 interface ObjectInfo {
     id: number;
@@ -416,6 +416,21 @@ export class Room {
         if (this.exitsDetails[RoomExit[exit].toLowerCase()].hidden)
             this.hidden |= exit;
     }
+
+    public switchExits(exit1, exit2) {
+        let e1 = this.exitsDetails[RoomExit[exit1].toLowerCase()];
+        let e2 = this.exitsDetails[RoomExit[exit2].toLowerCase()];
+        this.removeExit(exit1);
+        this.removeExit(exit2);
+        if (e1) {
+            e1.exit = RoomExit[exit2].toLowerCase();
+            this.addExit(exit2, e1);
+        }
+        if (e2) {
+            e2.exit = RoomExit[exit1].toLowerCase();
+            this.addExit(exit1, e2);
+        }
+    }
 }
 
 enum View {
@@ -425,7 +440,7 @@ enum View {
     properties
 }
 
-enum undoType { room, monster, object, roomsAll, settings, resize, area, properties }
+enum undoType { room, monster, object, roomsAll, settings, resize, area, properties, flip }
 enum undoAction { add, delete, edit }
 
 const Timer = new DebugTimer();
@@ -8890,6 +8905,10 @@ export class AreaDesigner extends EditorBase {
                         this.resizeMap(-undo.data.width, -undo.data.height, -undo.data.depth, undo.data.shift, true);
                         this.pushRedo(undo);
                         break;
+                    case undoType.flip:
+                        this.flipMap(undo.data.type, true);
+                        this.pushRedo(undo);
+                        break;
                     case undoType.room:
                         l = undo.data.values.length;
                         const values = [];
@@ -9087,6 +9106,10 @@ export class AreaDesigner extends EditorBase {
                         this.resizeMap(undo.data.width, undo.data.height, undo.data.depth, undo.data.shift, true);
                         this.pushUndoObject(undo);
                         break;
+                    case undoType.flip:
+                        this.flipMap(undo.data.type, true);
+                        this.pushUndoObject(undo);
+                        break;
                     case undoType.room:
                         l = undo.data.values.length;
                         const values = [];
@@ -9242,6 +9265,22 @@ export class AreaDesigner extends EditorBase {
         frag.appendChild(this.createButton('Resize map', 'arrows', () => {
             this.emit('show-resize', this.$area.size);
         }, false, this.$view !== View.map));
+
+        group = document.createElement('div');
+        group.classList.add('btn-group');
+        group.setAttribute('role', 'group');
+        group.appendChild(this.createButton('Flip horizontally', 'shield fa-rotate-180', () => {
+            this.flipMap(flipType.horizontal);
+        }, false, this.$view !== View.map));
+        group.appendChild(this.createButton('Flip vertically', 'shield fa-rotate-90', () => {
+            this.flipMap(flipType.vertical);
+        }, false, this.$view !== View.map));
+        if (this.$area.size.depth > 1)
+            group.appendChild(this.createButton('Flip depth', 'exchange fa-rotate-90', () => {
+                this.flipMap(flipType.depth);
+            }, false, this.$view !== View.map));
+        frag.appendChild(group);
+
         frag.appendChild(this.createButton('Generate area', 'bolt', () => {
             this.emit('show-area', {
                 title: 'Generate area...', name: path.basename(this.file, '.design'), ok: (local, data) => {
@@ -9376,6 +9415,30 @@ export class AreaDesigner extends EditorBase {
                 },
                 { type: 'separator' },
                 {
+                    label: 'Flip horizontally',
+                    click: () => {
+                        this.flipMap(flipType.horizontal);
+                    }
+                },
+                {
+                    label: 'Flip vertically',
+                    click: () => {
+                        this.flipMap(flipType.vertical);
+                    }
+                }
+
+            ];
+            if (this.$area.size.depth > 1)
+                m.push(
+                    {
+                        label: 'Flip depth',
+                        click: () => {
+                            this.flipMap(flipType.depth);
+                        }
+                    }
+                )
+            m.push({ type: 'separator' },
+                {
                     label: 'Generate area',
                     click: () => {
                         this.emit('show-area', {
@@ -9384,8 +9447,7 @@ export class AreaDesigner extends EditorBase {
                             }
                         });
                     }
-                }
-            ];
+                });
         }
         return m;
     }
@@ -14013,11 +14075,70 @@ export class AreaDesigner extends EditorBase {
             });
         }
         this.emit('rebuild-buttons');
+        this.emit('rebuild-menu', 'edit');
         this.emit('resize-map');
         Timer.end('Resize time');
         this.doUpdate(UpdateType.drawMap);
+        this.changed = true;
         if (!noUndo)
             this.pushUndo(undoAction.edit, undoType.resize, { width: width, height: height, depth: depth, shift: shift });
+    }
+
+    public flipMap(type: flipType, noUndo?) {
+        Timer.start();
+        const zl = this.$area.size.depth;
+        const xl = this.$area.size.width;
+        const yl = this.$area.size.height;
+        const rooms = Array.from(Array(zl),
+            (v, z) => Array.from(Array(xl),
+                (v2, y) => Array.from(Array(yl),
+                    (v3, x) => new Room(x, y, z, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom))
+            ));
+
+        this.$roomCount = 0;
+        for (let z = 0; z < zl; z++) {
+            for (let y = 0; y < yl; y++) {
+                for (let x = 0; x < xl; x++) {
+                    const room = this.$area.rooms[z][y][x];
+                    let idx;
+                    if (!room) continue;
+                    if ((type & flipType.horizontal) === flipType.horizontal) {
+                        room.x = xl - room.x - 1;
+                        room.switchExits(RoomExit.West, RoomExit.East);
+                        room.switchExits(RoomExit.NorthWest, RoomExit.NorthEast);
+                        room.switchExits(RoomExit.SouthWest, RoomExit.SouthEast);
+                    }
+                    if ((type & flipType.vertical) === flipType.vertical) {
+                        room.y = yl - room.y - 1;
+                        room.switchExits(RoomExit.North, RoomExit.South);
+                        room.switchExits(RoomExit.NorthWest, RoomExit.SouthWest);
+                        room.switchExits(RoomExit.NorthEast, RoomExit.SouthEast);
+                    }
+                    if ((type & flipType.depth) === flipType.depth) {
+                        room.z = zl - room.z - 1;
+                        room.switchExits(RoomExit.Down, RoomExit.Up);
+                    }
+                    rooms[room.z][room.y][room.x] = room;
+                    idx = this.$selectedRooms.indexOf(this.$area.rooms[z][y][x]);
+                    if (idx !== -1)
+                        this.$selectedRooms[idx] = rooms[room.z][room.y][room.x];
+                    if (this.$focusedRoom && this.$focusedRoom.at(x, y, z))
+                        this.$focusedRoom = rooms[room.z][room.y][room.x];
+                    const base = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom];
+                    if (!room.empty && !room.equals(base, true)) this.$roomCount++;
+                }
+            }
+        }
+        this.$area.rooms = rooms;
+        this.UpdateEditor(this.$selectedRooms);
+        this.UpdatePreview(this.selectedFocusedRoom);
+        this.BuildAxises();
+        this.emit('flip-map');
+        Timer.end('Flip time');
+        this.doUpdate(UpdateType.drawMap);
+        this.changed = true;
+        if (!noUndo)
+            this.pushUndo(undoAction.edit, undoType.flip, { type: type });
     }
 
     private loadTypes() {

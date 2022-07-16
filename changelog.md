@@ -3,15 +3,22 @@
 ## 0.19.1
 
 - **New:**
-  - Code editor: Virtual area editor:
-    - Add flip area horizontally, vertically, or by depth
+  - Code editor:
+    - Virtual area editor:
+      - Add flip area horizontally, vertically, or by depth
+    - Area designer:
+      - Add flip area horizontally, vertically, or by depth
 - **Fixed:**
   - Character manager: Fix context menu items not working
-  - Code editor: Virtual area editor:
+  - Code editor:
+    - Virtual area editor:
       - Resize did not correctly shift external exit coordinates based on anchor settings
       - Fix edit menu items not being added
       - Fix resizing breaking external exit table editor
       - Fix undo for external exits set by room editor
+    - Area designer:
+      - Fix edit exit context menu item not opening exit editor dialog
+      - Fix not marking map as changed when resized
 - **Changed:**
   - Update better-sqlite3 7.5.3 to 7.6.1
   - Update moment 2.29.3 to 2.29.4

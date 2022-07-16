@@ -9671,7 +9671,7 @@ export class VirtualEditor extends EditorBase {
                         }
                     }
                     if ((type & flipType.depth) === flipType.depth) {
-                        room.z += zl - room.z - 1;
+                        room.z = zl - room.z - 1;
                         if ((room.exits & RoomExit.Up) == RoomExit.Up && (room.exits & RoomExit.Down) != RoomExit.Down) {
                             room.exits |= RoomExit.Down;
                             room.exits &= ~RoomExit.Up;
