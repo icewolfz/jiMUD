@@ -20,7 +20,7 @@
       - Fix edit exit context menu item not opening exit editor dialog
       - Fix not marking map as changed when resized
 - **Changed:**
-  - Update better-sqlite3 7.5.3 to 7.6.1
+  - Update better-sqlite3 7.5.3 to 7.6.2
   - Update moment 2.29.3 to 2.29.4
   - Update electron 19.0.7 to 19.0.8
 
