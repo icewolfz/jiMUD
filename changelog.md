@@ -30,6 +30,7 @@
   - Code editor: Virtual area editor:
       - Fixed infinite loop when building terrain and state data
 - **Changed:**
+  - Linux 32bit is no longer supported
   - Update electron 17.3.1 to 19.0.7
   - Update electron-updater 4.6.5 to 5.0.5
   - Update better-sqlite3 7.5.0 to 7.5.3
