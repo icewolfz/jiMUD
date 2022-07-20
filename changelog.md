@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.19.1
+## 0.19.1 2022-07-20
 
 - **New:**
   - Code editor:
