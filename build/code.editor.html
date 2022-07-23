@@ -117,6 +117,9 @@
                     if (manager.active && manager.active.editor)
                         setViewState(manager.active.editor, editor);
                 });
+                editor._standaloneKeybindingService.addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
+                editor._standaloneKeybindingService.addDynamicKeybinding(`-actions.find`, undefined, () => { });
+                editor._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });
             }
             else {
                 let m = monaco.editor.createModel('', 'lpc');
@@ -157,6 +160,14 @@
                 editor.getModifiedEditor().onDidChangeModelDecorations(() => {
 
                 });
+
+                editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
+                editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.find`, undefined, () => { });
+                editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });
+                
+                editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
+                editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.find`, undefined, () => { });
+                editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });                
             }
 
             if (options && options.editorOptions)
@@ -300,7 +311,7 @@
                 autoIndent: true,
                 rulers: [80],
                 contextmenu: false,
-                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
+                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
                 model: null,
             }, {
                 /*
@@ -370,7 +381,7 @@
                 autoIndent: true,
                 rulers: [80],
                 contextmenu: false,
-                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
+                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
                 model: null,
             })];
             window.$dNavs = [
@@ -2440,7 +2451,7 @@
             autoIndent: true,
             rulers: [80],
             contextmenu: false,
-            theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
+            theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
             model: null
         });
         initEditor(editor);
@@ -2453,7 +2464,7 @@
             autoIndent: true,
             rulers: [80],
             contextmenu: false,
-            theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
+            theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
             model: null
         });
         initEditor(editor, 1);
@@ -8773,7 +8784,7 @@
                         manager.setPanelIcon(icon, p);
                     });
                 //check in case errored above
-                if(p.editor)
+                if (p.editor)
                     p.editor.options = options.modelOptions;
             }
             /*
@@ -8934,11 +8945,11 @@
             });
             p.editor.on('rebuild-menu', (menu) => {
                 if (p !== manager.active) return;
-                if(menu === 'edit')
+                if (menu === 'edit')
                     updateMenu('edit', 12);
-                else if(menu === 'view')
-                    updateMenu('view', 9);                
-            });            
+                else if (menu === 'view')
+                    updateMenu('view', 9);
+            });
             p.editor.on('rebuild-buttons', () => {
                 if (p !== manager.active) return;
                 var buttons = document.getElementById('editor-buttons');

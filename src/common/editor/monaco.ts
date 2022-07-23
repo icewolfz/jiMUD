@@ -934,15 +934,34 @@ export class MonacoCodeEditor extends EditorBase {
     public set spellcheck(value: boolean) { /**/ }
     public find() {
         if (this.$oEditor && this.$oEditor.hasTextFocus())
-            this.$oEditor.getAction('findWithSelection').run();
+        {
+            if(this.selected.length > 0)
+                this.$oEditor.getAction('actions.findWithSelection').run();
+            else
+                this.$oEditor.getAction('actions.find').run();                
+        }
         else if (this.$editor)
-            this.$editor.getAction('findWithSelection').run();
+        {
+            if(this.selected.length > 0)
+                this.$editor.getAction('actions.findWithSelection').run();
+            else
+                this.$editor.getAction('actions.find').run();
+        }
     }
     public replace() {
         if (this.$oEditor && this.$oEditor.hasTextFocus())
-            this.$oEditor.getAction('findWithSelection').run();
+        {
+            if(this.selected.length > 0)
+                this.$oEditor.getAction('actions.findWithSelection').run();
+            else
+                this.$oEditor.getAction('actions.find').run();                
+        }
         else if (this.$editor)
+        {
+            if(this.selected.length > 0)
+                this.$editor.getAction('actions.findWithSelection').run();            
             this.$editor.getAction('editor.action.startFindReplaceAction').run();
+        }
     }
     public supports(what) {
         switch (what) {
