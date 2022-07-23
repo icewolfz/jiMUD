@@ -934,13 +934,13 @@ export class MonacoCodeEditor extends EditorBase {
     public set spellcheck(value: boolean) { /**/ }
     public find() {
         if (this.$oEditor && this.$oEditor.hasTextFocus())
-            this.$oEditor.getAction('actions.find').run();
+            this.$oEditor.getAction('findWithSelection').run();
         else if (this.$editor)
-            this.$editor.getAction('actions.find').run();
+            this.$editor.getAction('findWithSelection').run();
     }
     public replace() {
         if (this.$oEditor && this.$oEditor.hasTextFocus())
-            this.$oEditor.getAction('editor.action.find').run();
+            this.$oEditor.getAction('findWithSelection').run();
         else if (this.$editor)
             this.$editor.getAction('editor.action.startFindReplaceAction').run();
     }

@@ -5,6 +5,7 @@
 - **Fixed:**
   - Code editor: Virtual area editor: Used state data instead of terrain data when updating terrain data
 - **Changed:**
+  - Code editor: Find will now update to current selection when using shortcut or menu items
   - Update electron 19.0.8 to 19.0.9
   - Update mathjs 10.6.4 to 11.0.0
 
