@@ -2,6 +2,9 @@
 
 ## 0.19.2
 
+- **Fixed:**
+  - Code editor: Virtual area editor: Used state data instead of terrain data when updating terrain data
+
 ## 0.19.1 2022-07-20
 
 - **New:**

@@ -8412,7 +8412,7 @@ export class VirtualEditor extends EditorBase {
                 sLines.push('');
         }
         if (this.$files['virtual.terrain']) {
-            tLines = this.$stateRaw.value.split('\n');
+            tLines = this.$terrainRaw.value.split('\n');
             while (tLines.length < maxLines)
                 tLines.push('');
         }
