@@ -723,7 +723,7 @@ export class MonacoCodeEditor extends EditorBase {
         }
         this.$model.onDidChangeContent((e) => {
             this.changed = true;
-            this.emit('changed', this.$model.getValueLength());
+            this.emit('changed', this.$model.getValueLength(), this.$model.getLineCount());
             if (this.decorations && this.decorations.length) {
                 this.$model.deltaDecorations(this.decorations, []);
                 this.decorations = null;
@@ -842,7 +842,7 @@ export class MonacoCodeEditor extends EditorBase {
             const old = this.changed;
             this.changed = keep;
             if (keep && !old)
-                this.emit('changed', this.$model.getValueLength());
+                this.emit('changed', this.$model.getValueLength(), this.$model.getLineCount());
         }
     }
 
@@ -1393,6 +1393,8 @@ export class MonacoCodeEditor extends EditorBase {
         return [this.$editor.getPosition().column, this.$editor.getPosition().lineNumber];
     }
     public get length() { return this.$model.getValueLength(); }
+
+    public get lineCount() { return this.$model.getLineCount(); }
 
     public get model() { return this.model; }
 

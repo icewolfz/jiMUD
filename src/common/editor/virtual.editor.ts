@@ -6352,6 +6352,7 @@ export class VirtualEditor extends EditorBase {
     public insert(text) { /**/ }
     public get location() { return [-1, -1]; }
     public get length() { return 0; }
+    public get lineCount() { return 0; }
 
     public activate() { /**/ }
     public deactivate() { /**/ }

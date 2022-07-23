@@ -9564,6 +9564,8 @@ export class AreaDesigner extends EditorBase {
 
     public get length() { return 0; }
 
+    public get lineCount() { return 0; }
+
     public activate() { /**/ }
 
     public deactivate() { /**/ }

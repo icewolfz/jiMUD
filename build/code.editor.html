@@ -2781,7 +2781,7 @@
             buttons.append(...manager.active.editor.buttons);
         updateMenu('edit', 12);
         updateMenu('view', 9);
-        sbSize.textContent = enabled ? ('Length: ' + manager.active.editor.length.toLocaleString()) : '';
+        sbSize.textContent = enabled ? (`Length: ${manager.active.editor.length.toLocaleString()}, Lines ${manager.active.editor.lineCount.toLocaleString()}`) : '';
         sbMessage.textContent = '';
         sbName.textContent = enabled ? (manager.active.editor.source === Source.local ? manager.active.editor.file : manager.active.editor.remote) : '';
         sbName.title = enabled ? (manager.active.editor.source === Source.local ? manager.active.editor.file : manager.active.editor.remote) : '';
@@ -8895,14 +8895,14 @@
                 if (p !== manager.active) return;
                 doUpdate(2);
             });
-            p.editor.on('changed', (length) => {
+            p.editor.on('changed', (length, lines) => {
                 updatePanel(p);
                 if (p !== manager.active) return;
                 doUpdate(2);
                 if (length === -1)
                     sbSize.textContent = '';
                 else
-                    sbSize.textContent = 'Length: ' + length.toLocaleString();
+                    sbSize.textContent = `Length: ${length.toLocaleString()}, Lines: ${lines.toLocaleString()}`;
             });
             p.editor.on('saved', () => {
                 updatePanel(p);

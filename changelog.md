@@ -2,6 +2,8 @@
 
 ## 0.19.2
 
+- **New:**
+  - Code editor: Line count is now displayed in the status bar after file length
 - **Fixed:**
   - Code editor: Virtual area editor: Used state data instead of terrain data when updating terrain data
 - **Changed:**
