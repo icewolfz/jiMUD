@@ -8901,6 +8901,8 @@
                 doUpdate(2);
                 if (length === -1)
                     sbSize.textContent = '';
+                else if(lines === -1)
+                    sbSize.textContent = `Length: ${length.toLocaleString()}`;
                 else
                     sbSize.textContent = `Length: ${length.toLocaleString()}, Lines: ${lines.toLocaleString()}`;
             });

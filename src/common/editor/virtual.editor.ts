@@ -554,7 +554,7 @@ export class VirtualEditor extends EditorBase {
     set changed(value: boolean) {
         if (value !== super.changed) {
             super.changed = value;
-            this.emit('changed', value);
+            this.emit('changed', -1, -1);
         }
     }
 
@@ -4058,7 +4058,7 @@ export class VirtualEditor extends EditorBase {
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
             if (this.$view === view)
-                this.emit('changed', el.value.length);
+                this.emit('changed', el.value.length, -1);
         });
         el.addEventListener('input', (e) => {
             if (this.$rawUndo.el && this.$rawUndo.el !== el) {
@@ -4078,7 +4078,7 @@ export class VirtualEditor extends EditorBase {
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
             if (this.$view === view)
-                this.emit('changed', el.value.length);
+                this.emit('changed', el.value.length, -1);
         });
         el.addEventListener('paste', (e) => {
             this.pushUndo(undoAction.edit, undoType.rawText, { el: el, value: el.value });
@@ -4086,7 +4086,7 @@ export class VirtualEditor extends EditorBase {
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
             if (this.$view === view)
-                this.emit('changed', el.value.length);
+                this.emit('changed', el.value.length, -1);
         });
         el.addEventListener('cut', (e) => {
             this.pushUndo(undoAction.edit, undoType.rawText, { el: el, value: el.value });
@@ -4094,7 +4094,7 @@ export class VirtualEditor extends EditorBase {
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
             if (this.$view === view)
-                this.emit('changed', el.value.length);
+                this.emit('changed', el.value.length, -1);
         });
 
         el.addEventListener('keydown', (e) => {
@@ -6762,43 +6762,43 @@ export class VirtualEditor extends EditorBase {
         switch (this.$view) {
             case View.map:
                 this.emit('location-changed', (this.$mouse.rx), this.$mouse.ry);
-                this.emit('changed', -1);
+                this.emit('changed', -1, -1);
                 break;
             case View.terrains:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$descriptions.length);
+                this.emit('changed', this.$descriptions.length, -1);
                 break;
             case View.items:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$items.length);
+                this.emit('changed', this.$items.length, -1);
                 break;
             case View.exits:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$exits.length);
+                this.emit('changed', this.$exits.length, -1);
                 break;
             case View.mapRaw:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$mapRaw.value.length);
+                this.emit('changed', this.$mapRaw.value.length, -1);
                 break;
             case View.terrainsRaw:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$terrainRaw.value.length);
+                this.emit('changed', this.$terrainRaw.value.length, -1);
                 break;
             case View.descriptionsRaw:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$descriptionRaw.value.length);
+                this.emit('changed', this.$descriptionRaw.value.length, -1);
                 break;
             case View.itemsRaw:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$itemRaw.value.length);
+                this.emit('changed', this.$itemRaw.value.length, -1);
                 break;
             case View.stateRaw:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$stateRaw.value.length);
+                this.emit('changed', this.$stateRaw.value.length, -1);
                 break;
             case View.exitsRaw:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$externalRaw.value.length);
+                this.emit('changed', this.$externalRaw.value.length, -1);
                 break;
         }
         this.doUpdate(UpdateType.status);

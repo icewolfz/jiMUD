@@ -1143,7 +1143,7 @@ export class AreaDesigner extends EditorBase {
     set changed(value: boolean) {
         if (value !== super.changed) {
             super.changed = value;
-            this.emit('changed', value);
+            this.emit('changed', -1, -1);
         }
     }
 
@@ -9733,7 +9733,7 @@ export class AreaDesigner extends EditorBase {
         switch (this.$view) {
             case View.map:
                 this.emit('location-changed', (this.$mouse.rx), this.$mouse.ry);
-                this.emit('changed', -1);
+                this.emit('changed', -1, -1);
                 break;
             case View.properties:
                 this.emit('location-changed', -1, -1);
