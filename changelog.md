@@ -5,7 +5,14 @@
 - **New:**
   - Code editor: Line count is now displayed in the status bar after file length
 - **Fixed:**
-  - Code editor: Virtual area editor: Used state data instead of terrain data when updating terrain data
+  - Code editor: 
+    - Virtual area editor:
+      - Used state data instead of terrain data when updating terrain data
+      - Fixed room editor not updating after changing terrain or item indexes
+      - Fixed undo/redo when multiple rooms are changed at one time
+      - Fixed undo/redo not changing synced item index with terrain index
+    - Area designer:
+      - Fixed undo/redo when multiple rooms are changed at one time
 - **Changed:**
   - Code editor: Find will now update to current selection when using shortcut or menu items
   - Update electron 19.0.8 to 19.0.9

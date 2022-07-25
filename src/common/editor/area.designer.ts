@@ -8776,7 +8776,7 @@ export class AreaDesigner extends EditorBase {
                         this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
                         undo.data = room;
                         this.pushRedo(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -8841,7 +8841,7 @@ export class AreaDesigner extends EditorBase {
                             this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data = values;
                         this.pushRedo(undo);
@@ -8854,7 +8854,7 @@ export class AreaDesigner extends EditorBase {
                         this.doUpdate(UpdateType.buildMap);
                         this.switchView(undo.view, true);
                         this.changed = true;
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -8915,7 +8915,7 @@ export class AreaDesigner extends EditorBase {
                         const mx = this.$mouse.rx;
                         const my = this.$mouse.ry;
                         while (l--) {
-                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[2]);
+                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[l][2]);
                             values[l] = room[undo.data.property];
                             room[undo.data.property] = undo.data.values[l];
                             this.RoomChanged(room);
@@ -8926,7 +8926,7 @@ export class AreaDesigner extends EditorBase {
                             this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data.values = values;
                         this.pushRedo(undo);
@@ -8997,7 +8997,7 @@ export class AreaDesigner extends EditorBase {
                         this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
                         undo.data = room;
                         this.pushUndoObject(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -9054,7 +9054,7 @@ export class AreaDesigner extends EditorBase {
                             this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data = values;
                         this.pushUndoObject(undo);
@@ -9067,7 +9067,7 @@ export class AreaDesigner extends EditorBase {
                         this.doUpdate(UpdateType.buildMap);
                         this.switchView(undo.view, true);
                         this.changed = true;
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -9116,7 +9116,7 @@ export class AreaDesigner extends EditorBase {
                         const mx = this.$mouse.rx;
                         const my = this.$mouse.ry;
                         while (l--) {
-                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[2]);
+                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[l][2]);
                             values[l] = room[undo.data.property];
                             room[undo.data.property] = undo.data.values[l];
                             this.RoomChanged(room);
@@ -9127,7 +9127,7 @@ export class AreaDesigner extends EditorBase {
                             this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data.values = values;
                         this.pushUndoObject(undo);

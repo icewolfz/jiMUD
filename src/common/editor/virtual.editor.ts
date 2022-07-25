@@ -3601,6 +3601,7 @@ export class VirtualEditor extends EditorBase {
             let sl = selected.length;
             const first = selected[0];
             let oldValues = [];
+            let i = 0;
             const mx = this.$mouse.rx;
             const my = this.$mouse.ry;
             this.startUndoGroup();
@@ -3722,14 +3723,16 @@ export class VirtualEditor extends EditorBase {
                         resetCursor(this.$descriptionRaw);
                         break items;
                     case 'terrain':
-                        if (first.item === oldValue)
+                        if (first.item === oldValue) {
                             curr.item = newValue;
+                            i++;
+                        }
                         curr[prop] = newValue;
                         //new high terrain, clear cache and redraw whole map as colors should have shifted
                         if (newValue > this.$maxTerrain)
                             this.updateMaxTerrain(newValue);
-                        else //else just redraw the current room
-                            this.DrawRoom(this.$mapContext, curr, true, curr.at(mx, my));
+                        //else //else just redraw the current room
+                        // this.DrawRoom(this.$mapContext, curr, true, curr.at(mx, my));
                         this.RoomChanged(curr, old, true);
                         if (curr.item === newValue)
                             old.item = newValue;
@@ -3739,16 +3742,20 @@ export class VirtualEditor extends EditorBase {
                     default:
                         oldValues[sl] = old[prop];
                         curr[prop] = newValue;
-                        this.DrawRoom(this.$mapContext, curr, true, curr.at(mx, my));
+                        //this.DrawRoom(this.$mapContext, curr, true, curr.at(mx, my));
                         this.RoomChanged(curr, old, true);
                         old[prop] = newValue;
                         break;
                 }
+                this.setRoom(curr, true);
             }
-            if (oldValues.length > 0)
+            if (oldValues.length > 0) {
                 this.pushUndo(undoAction.edit, undoType.room, { property: prop === 'external' ? 'ee' : prop, values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
+                if (i)
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'item', values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
+            }
             this.stopUndoGroup();
-            //setTimeout(() => this.UpdateEditor(this.$selectedRooms));
+            this.UpdateEditor(selected);
             this.UpdatePreview(this.selectedFocusedRoom);
         });
         this.$roomEditor.setPropertyOptions([
@@ -5142,7 +5149,7 @@ export class VirtualEditor extends EditorBase {
                         this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
                         undo.data = room;
                         this.pushRedo(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.exits:
@@ -5150,7 +5157,7 @@ export class VirtualEditor extends EditorBase {
                         this.$exits.splice(undo.data.oldLength, undo.data.exits.length);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshExits);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.raw:
@@ -5164,7 +5171,7 @@ export class VirtualEditor extends EditorBase {
                         this.$descriptions.splice(undo.data.index, 1);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshDescriptions);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
@@ -5174,7 +5181,7 @@ export class VirtualEditor extends EditorBase {
                         this.$items.splice(undo.data.index, 1);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshItems);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -5205,7 +5212,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data = values;
                         this.pushRedo(undo);
@@ -5217,7 +5224,7 @@ export class VirtualEditor extends EditorBase {
                             this.$exits.splice(undo.data.index[l], 0, undo.data.exits[l]);
                         this.doUpdate(UpdateType.refreshExits);
                         this.pushRedo(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.raw:
@@ -5263,7 +5270,7 @@ export class VirtualEditor extends EditorBase {
                         this.$descriptions.splice(undo.data.index, 0, undo.data.data);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshDescriptions);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
@@ -5271,7 +5278,7 @@ export class VirtualEditor extends EditorBase {
                         this.$items.splice(undo.data.index, 0, undo.data.items);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshItems);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -5299,7 +5306,7 @@ export class VirtualEditor extends EditorBase {
                         const mx = this.$mouse.rx;
                         const my = this.$mouse.ry;
                         while (l--) {
-                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[2]);
+                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[l][2]);
                             values[l] = room[undo.data.property];
                             room[undo.data.property] = undo.data.values[l];
                             this.RoomChanged(room);
@@ -5310,7 +5317,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data.values = values;
                         this.pushRedo(undo);
@@ -5322,7 +5329,7 @@ export class VirtualEditor extends EditorBase {
                         undo.data.value = value;
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshExits);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.exits:
@@ -5333,7 +5340,7 @@ export class VirtualEditor extends EditorBase {
                         undo.data.exits = value;
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshExits);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.raw:
@@ -5348,7 +5355,7 @@ export class VirtualEditor extends EditorBase {
                         if ((undo.data.what & undoReduce.descriptions) === undoReduce.descriptions)
                             this.increaseIdx(this.$descriptions, undo.data.index);
                         this.pushRedo(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.maxTerrain:
@@ -5364,7 +5371,7 @@ export class VirtualEditor extends EditorBase {
                         undo.data.value = value;
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshDescriptions);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
@@ -5376,7 +5383,7 @@ export class VirtualEditor extends EditorBase {
                         undo.data.items = value;
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshItems);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -5416,7 +5423,7 @@ export class VirtualEditor extends EditorBase {
                         this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
                         undo.data = room;
                         this.pushUndoObject(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.exits:
@@ -5424,7 +5431,7 @@ export class VirtualEditor extends EditorBase {
                         this.$exits.push(...undo.data.exits);
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshExits);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.raw:
@@ -5437,7 +5444,7 @@ export class VirtualEditor extends EditorBase {
                         this.$descriptions.splice(undo.data.index, 0, undo.data.value);
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshDescriptions);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
@@ -5445,7 +5452,7 @@ export class VirtualEditor extends EditorBase {
                         this.$items.splice(undo.data.index, 0, this.$items[undo.data.index]);
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshItems);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -5476,7 +5483,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data = values;
                         this.pushUndoObject(undo);
@@ -5488,7 +5495,7 @@ export class VirtualEditor extends EditorBase {
                             this.$exits.splice(undo.data.index[l], 1);
                         this.doUpdate(UpdateType.refreshExits);
                         this.pushUndoObject(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.raw:
@@ -5534,7 +5541,7 @@ export class VirtualEditor extends EditorBase {
                         this.$descriptions.splice(undo.data.index, 1);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshDescriptions);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
@@ -5542,7 +5549,7 @@ export class VirtualEditor extends EditorBase {
                         this.$items.splice(undo.data.index, 1);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshItems);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -5570,7 +5577,7 @@ export class VirtualEditor extends EditorBase {
                         const mx = this.$mouse.rx;
                         const my = this.$mouse.ry;
                         while (l--) {
-                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[2]);
+                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[l][2]);
                             values[l] = room[undo.data.property];
                             room[undo.data.property] = undo.data.values[l];
                             this.RoomChanged(room);
@@ -5581,7 +5588,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data.values = values;
                         this.pushUndoObject(undo);
@@ -5593,7 +5600,7 @@ export class VirtualEditor extends EditorBase {
                         undo.data.value = value;
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshExits);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.exits:
@@ -5604,7 +5611,7 @@ export class VirtualEditor extends EditorBase {
                         undo.data.exits = value;
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshExits);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.raw:
@@ -5619,7 +5626,7 @@ export class VirtualEditor extends EditorBase {
                         if ((undo.data.what & undoReduce.descriptions) === undoReduce.descriptions)
                             this.reduceIdx(this.$descriptions, undo.data.index);
                         this.pushUndoObject(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.maxTerrain:
@@ -5635,7 +5642,7 @@ export class VirtualEditor extends EditorBase {
                         undo.data.value = value;
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshDescriptions);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
@@ -5647,7 +5654,7 @@ export class VirtualEditor extends EditorBase {
                         undo.data.items = value;
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshItems);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -6872,7 +6879,7 @@ export class VirtualEditor extends EditorBase {
         return this.$rooms[z][y][x];
     }
 
-    private setRoom(r) {
+    private setRoom(r, silentUpdate?) {
         if (!r)
             return;
         if (r.x < 0 || r.y < 0)
@@ -6889,8 +6896,10 @@ export class VirtualEditor extends EditorBase {
         //if selected update the selected system to point to new room object
         if (idx !== -1) {
             this.$selectedRooms[idx] = this.$rooms[r.z][r.y][r.x];
-            this.UpdateEditor(this.$selectedRooms);
-            this.UpdatePreview(r);
+            if (!silentUpdate) {
+                this.UpdateEditor(this.$selectedRooms);
+                this.UpdatePreview(r);
+            }
         }
         //was the old room focused? if so point ot new room object
         if (this.$focusedRoom && this.$focusedRoom.at(r.x, r.y, r.z))
@@ -9494,7 +9503,7 @@ export class VirtualEditor extends EditorBase {
                             let ex = this.$exits.filter(ex => ex.x === x && ex.y === y && ex.z === z);
                             nExits = nExits.filter(ex => ex.x !== x || ex.y !== y || ex.z !== z);
                             if (!noUndo)
-                                this.pushUndo(undoAction.edit, undoType.exits, { exits: ex, room: [x, y, z] });                            
+                                this.pushUndo(undoAction.edit, undoType.exits, { exits: ex, room: [x, y, z] });
                             ex = ex.map(d => {
                                 d.x = room.x;
                                 d.y = room.y;
@@ -9686,7 +9695,7 @@ export class VirtualEditor extends EditorBase {
                         let ex = this.$exits.filter(ex => ex.x === x && ex.y === y && ex.z === z);
                         nExits = nExits.filter(ex => ex.x !== x || ex.y !== y || ex.z !== z);
                         //if (!noUndo)
-                            //this.pushUndo(undoAction.edit, undoType.exits, { exits: ex, room: [x, y, z] });
+                        //this.pushUndo(undoAction.edit, undoType.exits, { exits: ex, room: [x, y, z] });
                         ex = ex.map(d => {
                             d.x = room.x;
                             d.y = room.y;
