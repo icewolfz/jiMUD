@@ -11150,9 +11150,32 @@ export class AreaDesigner extends EditorBase {
                         files[`${x},${y},${z}`] = name + counts[name];
                         Object.values<Exit>(r.exitsDetails).forEach(e => {
                             if (!e.dest || e.dest.length === 0 || files[e.dest]) return;
-                            if (e.dest.match(/^\d+\s*,\s*\d+\s*,\s*\d+$/) || e.dest.match(/^\d+\s*,\s*\d+$/))
+                            if (e.dest.match(/^\d+\s*,\s*\d+\s*,\s*\d+$/) || e.dest.match(/^\d+\s*,\s*\d+$/) || e.dest.match(/^\$\{(rms|mon|std|cmds|obj)\}/i))
                                 return;
                             ec++;
+                            //if path exist see if any match to avoid more redefines
+                            if (data.path) {
+                                if (e.dest.startsWith(data.path + '/mon/')) {
+                                    files[e.dest] = `MON + "${e.dest.substring(data.path.length + 5)}"`;
+                                    return;
+                                }
+                                if (e.dest.startsWith(data.path + '/std/')) {
+                                    files[e.dest] = `STD + "${e.dest.substring(data.path.length + 5)}"`;
+                                    return;
+                                }
+                                if (e.dest.startsWith(data.path + '/obj/')) {
+                                    files[e.dest] = `OBJ + "${e.dest.substring(data.path.length + 5)}"`;
+                                    return;
+                                }
+                                if (e.dest.startsWith(data.path + '/cmds/')) {
+                                    files[e.dest] = `CMDS + "${e.dest.substring(data.path.length + 6)}"`;
+                                    return;
+                                }
+                                if (e.dest.startsWith(data.path + '/')) {
+                                    files[e.dest] = `RMS + "${e.dest.substring(data.path.length + 1)}"`;
+                                    return;
+                                }
+                            }
                             const parts = path.dirname(e.dest).split('/');
                             let dest;
                             if (parts.length === 1)
@@ -11837,7 +11860,7 @@ export class AreaDesigner extends EditorBase {
                 else if (files[i.dest])
                     tmp2 = `${files[i.dest]}`;
                 else
-                    tmp2 = `"${i.dest}"`;
+                    tmp2 = this.parseFilePath(i.dest);
             }
             else {
                 tmp3 = this.getExitId(i.exit, room.x, room.y, room.z);
@@ -11876,7 +11899,7 @@ export class AreaDesigner extends EditorBase {
                 else if (files[i.dest])
                     tmp2.push(`"dest" : ${files[i.dest]}`);
                 else
-                    tmp2.push(`"dest" : "${i.dest}"`);
+                    tmp2.push(`"dest" : "${this.parseFilePath(i.dest)}"`);
             }
             else {
                 tmp3 = this.getExitId(i.exit, room.x, room.y, room.z);
@@ -11908,7 +11931,7 @@ export class AreaDesigner extends EditorBase {
                 else if (files[tmp])
                     tmp = `${files[tmp]}`;
                 else
-                    tmp = `"${tmp}"`;
+                    tmp = this.parseFilePath(tmp);
             }
             else {
                 tmp3 = this.getExitId(d.exit, room.x, room.y, room.z);
@@ -13981,6 +14004,20 @@ export class AreaDesigner extends EditorBase {
                 template = template.replace(new RegExp('{' + d + '}', 'g'), data[d]);
         }
         return template;
+    }
+
+    private parseFilePath(path: string) {
+        if (path.toLowerCase().startsWith('${rms}'))
+            return `RMS + "${path.substring(6)}"`;
+        if (path.toLowerCase().startsWith('${mon}'))
+            return `MON + "${path.substring(6)}"`;
+        if (path.toLowerCase().startsWith('${std}'))
+            return `STD + "${path.substring(6)}"`;
+        if (path.toLowerCase().startsWith('${obj}'))
+            return `OBJ + "${path.substring(6)}"`;
+        if (path.toLowerCase().startsWith('${cmds}'))
+            return `CMDS + "${path.substring(7)}"`;
+        return `"${path}"`;
     }
 
     public resizeMap(width, height, depth, shift: shiftType, noUndo?) {

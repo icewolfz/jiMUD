@@ -3,7 +3,9 @@
 ## 0.19.2
 
 - **New:**
-  - Code editor: Line count is now displayed in the status bar after file length
+  - Code editor: 
+    - Line count is now displayed in the status bar after file length
+    - Area designer: Add \${rms}, \${mon}, \${std}, \${obj}, \${cmds} variables for exit destinations
 - **Fixed:**
   - Code editor: 
     - Virtual area editor:
@@ -13,6 +15,7 @@
       - Fixed undo/redo not changing synced item index with terrain index
     - Area designer:
       - Fixed undo/redo when multiple rooms are changed at one time
+      - Fixed exit paths when using the area path, std, mon, cmds, obj paths to reduce duplicate defines
 - **Changed:**
   - Code editor: Find will now update to current selection when using shortcut or menu items
   - Update electron 19.0.8 to 19.0.9
