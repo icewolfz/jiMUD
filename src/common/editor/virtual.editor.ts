@@ -3663,8 +3663,10 @@ export class VirtualEditor extends EditorBase {
                         selected.forEach((r, i) => {
                             oldValues[i] = r.terrain;
                             const o = this.getRoom(r.x, r.y, r.z);
-                            if (first.terrain === first.item)
+                            if (first.terrain === first.item) {
                                 r.item = first.item;
+                                i++;
+                            }
                             r.terrain = first.terrain;
                             this.RoomChanged(r, o, true);
                             if (first.terrain === first.item)
@@ -3672,6 +3674,8 @@ export class VirtualEditor extends EditorBase {
                             o.terrain = first.terrain;
                         });
                         this.pushUndo(undoAction.edit, undoType.room, { property: 'terrain', values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
+                        if (i)
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'item', values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
                         oldValues = [];
                         break items;
                     case 'terrainType':
@@ -3685,8 +3689,10 @@ export class VirtualEditor extends EditorBase {
                         selected.forEach((r, i) => {
                             oldValues.push(r.terrain);
                             const o = this.getRoom(r.x, r.y, r.z);
-                            if (first.terrain === first.item)
+                            if (first.terrain === first.item) {
                                 r.item = first.item;
+                                i++;
+                            }
                             r.terrain = first.terrain;
                             this.RoomChanged(r, o, true);
                             if (first.terrain === first.item)
@@ -3694,6 +3700,8 @@ export class VirtualEditor extends EditorBase {
                             o.terrain = first.terrain;
                         });
                         this.pushUndo(undoAction.edit, undoType.room, { property: 'terrain', values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
+                        if (i)
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'item', values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
                         oldValues = [];
                         //invalid index
                         if (first.terrain < 0) break items;
