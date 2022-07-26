@@ -2233,6 +2233,12 @@ ipcMain.on('set-overlay', (event, args) => {
             else
                 win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received data');
             break;
+        case 'code':
+            if (process.platform === 'linux')
+                win.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
+            else
+                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/code.png'), 'Received data');
+            break;
         default:
             if (process.platform === 'linux')
                 win.setIcon(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
@@ -4340,6 +4346,10 @@ function createCodeEditor(show, loading, loaded) {
         if (global.editorOnly) {
             updateJumpList();
             checkForUpdates();
+            if (process.platform === 'linux')
+                winCode.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
+            else
+                winCode.setOverlayIcon(path.join(__dirname, '../assets/icons/png/code.png'), 'Received data');
         }
     });
 

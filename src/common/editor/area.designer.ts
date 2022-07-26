@@ -3196,7 +3196,7 @@ export class AreaDesigner extends EditorBase {
             }
             //this.UpdateEditor(selected);
             this.refreshEditor();
-            this.UpdatePreview(this.selectedFocusedRoom);
+            this.UpdatePreview(selected[0]);
         });
         this.$roomEditor.setPropertyOptions([
             {
@@ -10816,8 +10816,10 @@ export class AreaDesigner extends EditorBase {
                 this.$roomPreview.living.style.display = '';
                 this.$roomPreview.living.innerHTML = '<br>' + stripPinkfish(items.map(v => capitalize(consolidate(counts[v], v), true)).join('<br>'));
             }
-            else
+            else {
                 this.$roomPreview.living.style.display = 'none';
+                this.$roomPreview.living.innerHTML = '';
+            }
 
             counts = {};
             room.objects.forEach(i => {
@@ -10846,6 +10848,10 @@ export class AreaDesigner extends EditorBase {
                     this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(items[0])) + ' is here.';
                 else if (counts[items[0]] > 1)
                     this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(consolidate(counts[items[0]], items[0]))) + ' are here.';
+                else {
+                    this.$roomPreview.objects.style.display = 'none';
+                    this.$roomPreview.objects.innerHTML = '';
+                }
             }
             else if (items.length > 0) {
                 this.$roomPreview.objects.style.display = '';
@@ -10854,8 +10860,10 @@ export class AreaDesigner extends EditorBase {
                 str += ' and ' + items.pop();
                 this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(str)) + ' are here.';
             }
-            else
+            else {
                 this.$roomPreview.objects.style.display = 'none';
+                this.$roomPreview.objects.innerHTML = '';
+            }
         }
     }
 
