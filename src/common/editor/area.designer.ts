@@ -3194,7 +3194,8 @@ export class AreaDesigner extends EditorBase {
                 }
                 this.pushUndo(undoAction.edit, undoType.room, { property: prop, values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
             }
-            //setTimeout(() => this.UpdateEditor(this.$selectedRooms));
+            //this.UpdateEditor(selected);
+            this.refreshEditor();
             this.UpdatePreview(this.selectedFocusedRoom);
         });
         this.$roomEditor.setPropertyOptions([
@@ -10602,6 +10603,22 @@ export class AreaDesigner extends EditorBase {
         this.$roomEditor.defaults.type = 'base';
         this.$roomEditor.defaults.exitsDetails = Object.values(this.$roomEditor.defaults.exitsDetails);
         this.$roomEditor.objects = objects;
+    }
+
+    private refreshEditor() {
+        if (this.selectedFocusedRoom)
+            this.$depthToolbar.value = '' + this.selectedFocusedRoom.z;
+        const objects = [];
+        let type;
+        const rooms = this.$roomEditor.objects;
+        if (rooms && rooms.length !== 0 && rooms[0])
+            type = rooms[0].type || 'base';
+        else
+            type = this.$area.defaultRoom || 'base';
+        this.$roomEditor.defaults = this.$area.baseRooms[type] ? this.$area.baseRooms[type].clone() : new Room(0, 0, 0);
+        this.$roomEditor.defaults.type = 'base';
+        this.$roomEditor.defaults.exitsDetails = Object.values(this.$roomEditor.defaults.exitsDetails);
+        this.$roomEditor.refresh();
     }
 
     private UpdatePreview(room) {

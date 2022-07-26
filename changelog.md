@@ -16,10 +16,11 @@
     - Area designer:
       - Fixed undo/redo when multiple rooms are changed at one time
       - Fixed exit paths when using the area path, std, mon, cmds, obj paths to reduce duplicate defines
+      - Fixed room editor not updating after changes
 - **Changed:**
   - Code editor: Find will now update to current selection when using shortcut or menu items
   - Update electron 19.0.8 to 19.0.9
-  - Update mathjs 10.6.4 to 11.0.0
+  - Update mathjs 10.6.4 to 11.0.1
 
 ## 0.19.1 2022-07-20
 
