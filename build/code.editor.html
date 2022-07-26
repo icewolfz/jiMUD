@@ -6543,10 +6543,14 @@
 
                             if ($dialogs.monster.options && $dialogs.monster.options.groups) {
                                 var groups = Object.keys($dialogs.monster.options.groups);
+                                Array.prototype.forEach.call( e.page.querySelectorAll('optgroup[data-types=moncustom]'), function( node ) {
+                                    node.parentNode.removeChild( node );
+                                });
                                 groups.forEach(g => {
                                     var el = document.createElement('optgroup');
                                     el.label = g;
                                     el.id = g.replace(/ /g, '');
+                                    el.dataset.types = 'moncustom'
                                     el.innerHTML = $dialogs.monster.options.groups[g].map(r => `<option value="${r.value || r.display}">${r.display || r.value}</option>`).join('');
                                     aTypes.parentNode.insertBefore(el, aTypes.nextSibling);
                                 });
@@ -9002,12 +9006,14 @@
                 if (p.editor.supports('find'))
                     temp.push({
                         label: 'Find',
-                        click: doFind
+                        click: doFind,
+                        accelerator: 'CmdOrCtrl+F'
                     });
                 if (p.editor.supports('replace'))
                     temp.push({
                         label: 'Replace',
-                        click: doReplace
+                        click: doReplace,
+                        accelerator: 'CmdOrCtrl+H'
                     });
 
                 if (p.editor.supports('menu|context')) {

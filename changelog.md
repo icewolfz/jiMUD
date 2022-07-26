@@ -7,7 +7,9 @@
     - Line count is now displayed in the status bar after file length
     - Area designer: Add \${rms}, \${mon}, \${std}, \${obj}, \${cmds} variables for exit destinations
 - **Fixed:**
-  - Code editor: 
+  - Code editor:
+    - Fixed text color for select dropdowns for selected items being hard to read 
+    - Monster wizard: Fixed not correctly clearing out monster type list
     - Virtual area editor:
       - Used state data instead of terrain data when updating terrain data
       - Fixed room editor not updating after changing terrain or item indexes
