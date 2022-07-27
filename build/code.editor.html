@@ -9104,12 +9104,14 @@
                 if (p.editor.supports('find'))
                     temp.push({
                         label: 'Find',
-                        click: doFind
+                        click: doFind,
+                        accelerator: 'CmdOrCtrl+F'
                     });
                 if (p.editor.supports('replace'))
                     temp.push({
                         label: 'Replace',
-                        click: doReplace
+                        click: doReplace,
+                        accelerator: 'CmdOrCtrl+H'
                     });
 
                 if (p.editor.supports('menu|context')) {
