@@ -2237,7 +2237,7 @@ ipcMain.on('set-overlay', (event, args) => {
             if (process.platform === 'linux')
                 win.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
             else
-                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/code.png'), 'Received data');
+                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Received data');
             break;
         default:
             if (process.platform === 'linux')
@@ -4349,7 +4349,7 @@ function createCodeEditor(show, loading, loaded) {
             if (process.platform === 'linux')
                 winCode.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
             else
-                winCode.setOverlayIcon(path.join(__dirname, '../assets/icons/png/code.png'), 'Received data');
+                winCode.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Received data');
         }
     });
 

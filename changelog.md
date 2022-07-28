@@ -6,6 +6,7 @@
   - Code editor: 
     - Line count is now displayed in the status bar after file length
     - Area designer: Add \${rms}, \${mon}, \${std}, \${obj}, \${cmds} variables for exit destinations
+    - New code overlay icon for editor only when used on windows
 - **Fixed:**
   - Code editor:
     - Fixed text color for select dropdowns for selected items being hard to read 
