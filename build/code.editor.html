@@ -3696,6 +3696,7 @@
             manager.active.editor.resizeMap(w, h, d, sf);
         }
         document.getElementById('map-resize').close();
+        setTimeout( () => {if (manager.active && manager.active.editor) manager.active.editor.focus(); }, 10);
     }
 
     // eslint-disable-next-line no-unused-vars
