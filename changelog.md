@@ -16,12 +16,16 @@
       - Fixed room editor not updating after changing terrain or item indexes
       - Fixed undo/redo when multiple rooms are changed at one time
       - Fixed undo/redo not changing synced item index with terrain index
+      - Fixed undo/redo when map is shrunk and rooms deleted
+      - Fixed resize map issues when odd numbered dimensions and center
     - Area designer:
       - Fixed undo/redo when multiple rooms are changed at one time
       - Fixed exit paths when using the area path, std, mon, cmds, obj paths to reduce duplicate defines
       - Fixed room editor not updating after changes
       - Fixed room preview not updating when some items changed
       - Fixed room preview object line not clearing when 1 item and set to 0 after being set to 1
+      - Fixed undo/redo when map is shrunk and rooms deleted
+      - Fixed resize map issues when odd numbered dimensions and center
 - **Changed:**
   - Code editor:
     - Find will now update to current selection when using shortcut or menu items

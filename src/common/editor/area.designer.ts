@@ -440,7 +440,7 @@ enum View {
     properties
 }
 
-enum undoType { room, monster, object, roomsAll, settings, resize, area, properties, flip }
+enum undoType { room, monster, object, settings, resize, area, properties, flip }
 enum undoAction { add, delete, edit }
 
 const Timer = new DebugTimer();
@@ -14066,24 +14066,25 @@ export class AreaDesigner extends EditorBase {
             ));
 
         this.$roomCount = 0;
+        const dRooms = [];
         for (let z = 0; z < zl; z++) {
             for (let y = 0; y < yl; y++) {
                 for (let x = 0; x < xl; x++) {
-                    const room = this.$area.rooms[z][y][x];
+                    const room = this.$area.rooms[z][y][x].clone();
                     let idx;
                     if (!room) continue;
                     if ((shift & shiftType.right) === shiftType.right)
                         room.x += width;
                     else if ((shift & shiftType.left) !== shiftType.left)
-                        room.x += Math.floor(width / 2);
+                        room.x += width < 0 ? Math.floor(width / 2) : Math.ceil(width / 2);
                     if ((shift & shiftType.bottom) === shiftType.bottom)
                         room.y += height;
                     else if ((shift & shiftType.top) !== shiftType.top)
-                        room.y += Math.floor(height / 2);
+                        room.y += height < 0 ? Math.floor(height / 2) : Math.ceil(height / 2);
                     if ((shift & shiftType.up) === shiftType.up)
                         room.z += depth;
                     else if ((shift & shiftType.down) !== shiftType.down)
-                        room.z += Math.floor(depth / 2);
+                        room.z += depth < 0 ? Math.floor(depth / 2) : Math.ceil(depth / 2);
                     if (room.z >= 0 && room.z < zl2 && room.x >= 0 && room.x < xl2 && room.y >= 0 && room.y < yl2) {
                         rooms[room.z][room.y][room.x] = room;
                         idx = this.$selectedRooms.indexOf(this.$area.rooms[z][y][x]);
@@ -14095,11 +14096,11 @@ export class AreaDesigner extends EditorBase {
                         if (!room.empty && !room.equals(base, true)) this.$roomCount++;
                     }
                     else {
-                        if (room.exits) {
+                        if (!room.empty) {
                             room.x = x;
                             room.y = y;
                             room.z = z;
-                            this.deleteRoom(room, true);
+                            dRooms.push(room);
                         }
                         idx = this.$selectedRooms.indexOf(this.$area.rooms[z][y][x]);
                         if (idx !== -1)
@@ -14110,6 +14111,14 @@ export class AreaDesigner extends EditorBase {
                 }
             }
         }
+        if (!noUndo) {
+            this.startUndoGroup();            
+            this.pushUndo(undoAction.delete, undoType.room, dRooms);
+        }
+        let dl = dRooms.length;
+        while(dl--)
+            if (dRooms[dl].exits)
+                this.deleteRoom(dRooms[dl], noUndo);     
         this.$area.rooms = rooms;
         this.UpdateEditor(this.$selectedRooms);
         this.UpdatePreview(this.selectedFocusedRoom);
@@ -14144,8 +14153,10 @@ export class AreaDesigner extends EditorBase {
         Timer.end('Resize time');
         this.doUpdate(UpdateType.drawMap);
         this.changed = true;
-        if (!noUndo)
+        if (!noUndo) {           
             this.pushUndo(undoAction.edit, undoType.resize, { width: width, height: height, depth: depth, shift: shift });
+            this.stopUndoGroup();
+        }
     }
 
     public flipMap(type: flipType, noUndo?) {

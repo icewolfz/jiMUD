@@ -170,6 +170,18 @@ export class Room {
         if (this.z !== z) return false;
         return true;
     }
+
+    get empty() {
+        if (this.exits !== 0) return true;
+        if (this.exits !== 0) return true;
+        if (this.exits !== 0) return true;
+        if (this.exits !== 0) return true;
+        if (this.exits !== 0) return true;
+        if (this.ef) return true;
+        if (this.climbs !== 0) return true;
+        if (this.external) return true;
+        return false;
+    }
 }
 
 enum View {
@@ -9479,26 +9491,26 @@ export class VirtualEditor extends EditorBase {
                 (v2, y) => Array.from(Array(this.$mapSize.width),
                     (v3, x) => new Room(x, y, z, 0, 0, 0))
             ));
-
+        const dRooms = [];
         this.$roomCount = 0;
         for (let z = 0; z < zl; z++) {
             for (let y = 0; y < yl; y++) {
                 for (let x = 0; x < xl; x++) {
-                    const room = this.$rooms[z][y][x];
+                    const room = this.$rooms[z][y][x].clone();
                     let idx;
                     if (!room) continue;
                     if ((shift & shiftType.right) === shiftType.right)
                         room.x += width;
                     else if ((shift & shiftType.left) !== shiftType.left)
-                        room.x += Math.floor(width / 2);
+                        room.x += width < 0 ? Math.floor(width / 2) : Math.ceil(width / 2);
                     if ((shift & shiftType.bottom) === shiftType.bottom)
                         room.y += height;
                     else if ((shift & shiftType.top) !== shiftType.top)
-                        room.y += Math.floor(height / 2);
+                        room.y += height < 0 ? Math.floor(height / 2) : Math.ceil(height / 2);
                     if ((shift & shiftType.up) === shiftType.up)
                         room.z += depth;
                     else if ((shift & shiftType.down) !== shiftType.down)
-                        room.z += Math.floor(depth / 2);
+                        room.z += depth < 0 ? Math.floor(depth / 2) : Math.ceil(depth / 2);
                     if (room.z >= 0 && room.z < zl2 && room.x >= 0 && room.x < xl2 && room.y >= 0 && room.y < yl2) {
                         rooms[room.z][room.y][room.x] = room;
                         idx = this.$selectedRooms.indexOf(this.$rooms[z][y][x]);
@@ -9523,11 +9535,11 @@ export class VirtualEditor extends EditorBase {
                         }
                     }
                     else {
-                        if (room.exits) {
+                        if (!room.empty) {
                             room.x = x;
                             room.y = y;
                             room.z = z;
-                            this.deleteRoom(room, true);
+                            dRooms.push(room);
                         }
                         if (room.ee) {
                             exits.push(...this.$exits.filter(ex => ex.x === x && ex.y === y && ex.z === z));
@@ -9543,7 +9555,12 @@ export class VirtualEditor extends EditorBase {
                 }
             }
         }
-
+        if (!noUndo)
+            this.pushUndo(undoAction.delete, undoType.room, dRooms);
+        let dl = dRooms.length;
+        while(dl--)
+            if (dRooms[dl].exits)
+                this.deleteRoom(dRooms[dl], noUndo);     
         this.$rooms = rooms;
         this.UpdateEditor(this.$selectedRooms);
         this.UpdatePreview(this.selectedFocusedRoom);
