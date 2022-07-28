@@ -10,6 +10,7 @@
   - Code editor:
     - Fixed text color for select dropdowns for selected items being hard to read 
     - Monster wizard: Fixed not correctly clearing out monster type list
+    - Datagrid: Fix some editor width issues being cut off by buttons
     - Virtual area editor:
       - Used state data instead of terrain data when updating terrain data
       - Fixed room editor not updating after changing terrain or item indexes

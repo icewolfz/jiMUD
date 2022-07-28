@@ -835,6 +835,10 @@ select.property-grid-editor {
     outline: none;
 }
 
+.datagrid .property-grid-editor-dropdown input {
+    padding-right: 20px !important;
+}
+
 .datagrid .property-grid-editor-collection input {
     bottom: initial;
     padding: 1px 3px;
@@ -863,6 +867,8 @@ input[type=checkbox].property-grid-editor {
     white-space: nowrap;
     text-overflow: ellipsis;
 }
+
+
 
 .property-grid-editor-collection input,
 .property-grid-editor-dropdown input,
