@@ -32,7 +32,7 @@
   - Code editor:
     - Find will now update to current selection when using shortcut or menu items
     - Editor only mode window icon will now have a code icon overlay on windows, and set the icon to code icon on linux
-  - Update electron 19.0.8 to 19.0.9
+  - Update electron 19.0.8 to 19.0.10
   - Update mathjs 10.6.4 to 11.0.1
 
 ## 0.19.1 2022-07-20
