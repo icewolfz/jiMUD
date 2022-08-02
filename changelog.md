@@ -34,6 +34,7 @@
     - Editor only mode window icon will now have a code icon overlay on windows, and set the icon to code icon on linux
   - Update electron 19.0.8 to 19.0.10
   - Update mathjs 10.6.4 to 11.0.1
+  - Update electron-updater 5.0.5 to 5.2.1
 
 ## 0.19.1 2022-07-20
 
