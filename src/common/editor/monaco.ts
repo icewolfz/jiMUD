@@ -666,7 +666,8 @@ export class MonacoCodeEditor extends EditorBase {
         tabSize: 3,
         insertSpaces: true,
         trimAutoWhitespace: true,
-        bracketColorization: true
+        bracketColorization: true,
+        independentColorPoolPerBracketType: false
     };
 
     public decorations;
@@ -686,7 +687,8 @@ export class MonacoCodeEditor extends EditorBase {
                 tabSize: 3,
                 insertSpaces: true,
                 trimAutoWhitespace: true,
-                bracketColorization: true
+                bracketColorization: true,
+                independentColorPoolPerBracketType: false
             };
     }
 
@@ -709,14 +711,20 @@ export class MonacoCodeEditor extends EditorBase {
                 tabSize: this.$options.hasOwnProperty('tabSize') ? this.$options.tabSize : 3,
                 insertSpaces: this.$options.hasOwnProperty('insertSpaces') ? this.$options.insertSpaces : true,
                 trimAutoWhitespace: this.$options.hasOwnProperty('trimAutoWhitespace') ? this.$options.trimAutoWhitespace : true,
-                bracketColorizationOptions: { enabled: this.$options.hasOwnProperty('bracketColorization') ? this.$options.bracketColorization : true }
+                bracketColorizationOptions: {
+                    enabled: this.$options.hasOwnProperty('bracketColorization') ? this.$options.bracketColorization : true,
+                    independentColorPoolPerBracketType: value.hasOwnProperty('independentColorPoolPerBracketType') ? this.$options.independentColorPoolPerBracketType : false
+                }
             });
         else
             this.$model.updateOptions({
                 tabSize: 3,
                 insertSpaces: true,
                 trimAutoWhitespace: true,
-                bracketColorizationOptions: { enabled: true }
+                bracketColorizationOptions: {
+                    enabled: true,
+                    independentColorPoolPerBracketType: false
+                }
             });
         if (this.rawDecorations && this.rawDecorations.length !== 0) {
             this.$model.deltaDecorations([], this.rawDecorations);
@@ -775,8 +783,8 @@ export class MonacoCodeEditor extends EditorBase {
                     //monaco.editor.setModelLanguage(this.$model, 'lpc');
                     break;
                 default:
-                    const found = monaco.languages.getLanguages().filter(l => { 
-                        return l.extensions ? l.extensions.indexOf(ext) !== -1 : false; 
+                    const found = monaco.languages.getLanguages().filter(l => {
+                        return l.extensions ? l.extensions.indexOf(ext) !== -1 : false;
                     });
                     if (found.length > 0)
                         monaco.editor.setModelLanguage(this.$model, found.slice(-1)[0].id);
@@ -933,33 +941,29 @@ export class MonacoCodeEditor extends EditorBase {
     }
     public set spellcheck(value: boolean) { /**/ }
     public find() {
-        if (this.$oEditor && this.$oEditor.hasTextFocus())
-        {
-            if(this.selected.length > 0)
+        if (this.$oEditor && this.$oEditor.hasTextFocus()) {
+            if (this.selected.length > 0)
                 this.$oEditor.getAction('actions.findWithSelection').run();
             else
-                this.$oEditor.getAction('actions.find').run();                
+                this.$oEditor.getAction('actions.find').run();
         }
-        else if (this.$editor)
-        {
-            if(this.selected.length > 0)
+        else if (this.$editor) {
+            if (this.selected.length > 0)
                 this.$editor.getAction('actions.findWithSelection').run();
             else
                 this.$editor.getAction('actions.find').run();
         }
     }
     public replace() {
-        if (this.$oEditor && this.$oEditor.hasTextFocus())
-        {
-            if(this.selected.length > 0)
+        if (this.$oEditor && this.$oEditor.hasTextFocus()) {
+            if (this.selected.length > 0)
                 this.$oEditor.getAction('actions.findWithSelection').run();
             else
-                this.$oEditor.getAction('actions.find').run();                
+                this.$oEditor.getAction('actions.find').run();
         }
-        else if (this.$editor)
-        {
-            if(this.selected.length > 0)
-                this.$editor.getAction('actions.findWithSelection').run();            
+        else if (this.$editor) {
+            if (this.selected.length > 0)
+                this.$editor.getAction('actions.findWithSelection').run();
             this.$editor.getAction('editor.action.startFindReplaceAction').run();
         }
     }
@@ -1014,7 +1018,10 @@ export class MonacoCodeEditor extends EditorBase {
             tabSize: value.hasOwnProperty('tabSize') ? value.tabSize : 3,
             insertSpaces: value.hasOwnProperty('insertSpaces') ? value.insertSpaces : true,
             trimAutoWhitespace: value.hasOwnProperty('trimAutoWhitespace') ? value.trimAutoWhitespace : true,
-            bracketColorizationOptions: { enabled: value.hasOwnProperty('bracketColorization') ? value.bracketColorization : true }
+            bracketColorizationOptions: {
+                enabled: value.hasOwnProperty('bracketColorization') ? value.bracketColorization : true,
+                independentColorPoolPerBracketType: value.hasOwnProperty('independentColorPoolPerBracketType') ? value.independentColorPoolPerBracketType : false
+            }
         });
     }
     public get options() { return this.$options; }
