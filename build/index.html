@@ -443,6 +443,7 @@
         }
 
         function updateInterface() {
+            if(!client || !client.options) return;
             loadTheme(client.options.theme);
             $('#display').css('left', '');
             $('#display-border').css('left', '');

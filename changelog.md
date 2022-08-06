@@ -56,6 +56,7 @@
     - Area designer:
       - Fix edit exit context menu item not opening exit editor dialog
       - Fix not marking map as changed when resized
+  - Fixed a minor error when trying to update interface before client has finished loading
 - **Changed:**
   - Update better-sqlite3 7.5.3 to 7.6.2
   - Update moment 2.29.3 to 2.29.4
