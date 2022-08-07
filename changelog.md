@@ -36,6 +36,7 @@
   - Update mathjs 10.6.4 to 11.0.1
   - Update electron-updater 5.0.5 to 5.2.1
   - Update monaco-editor 0.33.0 to 0.34.0
+  - Update yargs-parser 21.0.1 to 21.1.1
 
 ## 0.19.1 2022-07-20
 
