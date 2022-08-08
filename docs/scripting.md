@@ -191,7 +191,7 @@ Start Rainbow 256 example
 syntax: rs [text]
 
 to use this alias, create a new alias named rs, set the style to Script
-and ensure append arguments is checked and past this in the value
+and ensure append arguments is checked and paste this in the value
 */
 //the string to send to the mud
 var out = '';
@@ -232,4 +232,57 @@ for(i=0; i<l; i++)
    out += window.forecolors256[i2]+str[i];
 }
 client.sendCommand("'%^RESET%^"+out+"%^DEFAULT%^");
+```
+
+### Status display dots
+
+```javascript
+/*
+Status display dots
+
+syntax:
+  statuschange id color - change a status dot color
+  statuschange reset - reset all dots to default
+
+to use this alias, create a new alias named statuschange, set the style to Script
+and ensure append arguments is checked and paste this in the value
+*/
+//add a reset option
+if(arguments.length === 2 && arguments[1] === 'reset')
+   $('#dot-status').remove();
+//create status display
+if($('#dot-status').length === 0){
+   //first try web client
+   var body = $('#phil');
+   //# of columns, change this if you add more then 6 dots to allow better formatting
+   var columns = 1;
+   //if not found use jimud
+   if(body.length === 0) {
+      body = $('#limbs');
+	  body.append('<span id="dot-status" class="dot-container" style="display: inline-block;bottom: 70px;position: absolute;left: 0;width:'+(columns * 20)+'px;">');
+   } //position based on phill
+   else
+      body.append('<span id="dot-status" class="dot-container" style="display: inline-block;bottom: 0;position: absolute;width:'+(columns * 20)+'px;left: -25px;">');
+   //get container
+   body = $('#dot-status');
+   //easy build of status
+   var cStatus = function(id) {
+      return '<span class="dot" id="'+id+'" style="height: 10px;width: 10px;background-color: white;border-radius: 50%;display: inline-block;margin-left: 5px;"></span>';
+   }
+   //create status dots
+   //create a dog named stat, use statuschange stat [color] to change its collor
+   body.append(cStatus('stat'));
+   //create as many other dots with unique ids as you want, if you add more then 6 add more columns above
+   /*
+   body.append(cStatus('test1'));
+   body.append(cStatus('test2'));
+   body.append(cStatus('test3'));
+   body.append(cStatus('test4'));
+   body.append(cStatus('test5'));
+   */
+}
+if(arguments.length === 3)
+   $('#' + (arguments[1] || 'stat')).css('background', arguments[2] || 'white');
+else
+   $('#' + ('stat')).css('background', arguments[1] || 'white');
 ```
