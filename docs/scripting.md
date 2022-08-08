@@ -243,6 +243,7 @@ Status display dots
 syntax:
   statuschange id color - change a status dot color
   statuschange reset - reset all dots to default
+  statuschange remove - remove all dots
 
 to use this alias, create a new alias named statuschange, set the style to Script
 and ensure append arguments is checked and paste this in the value
@@ -250,6 +251,11 @@ and ensure append arguments is checked and paste this in the value
 //add a reset option
 if(arguments.length === 2 && arguments[1] === 'reset')
    $('#dot-status').remove();
+//remove dots
+if(arguments.length === 2 && arguments[1] === 'remove') {
+   $('#dot-status').remove();
+   return;
+}
 //create status display
 if($('#dot-status').length === 0){
    //first try web client
