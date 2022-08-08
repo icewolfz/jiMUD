@@ -276,16 +276,14 @@ if($('#dot-status').length === 0){
       return '<span class="dot" id="'+id+'" style="height: 10px;width: 10px;background-color: white;border-radius: 50%;display: inline-block;margin-left: 5px;"></span>';
    }
    //create status dots
-   //create a dog named stat, use statuschange stat [color] to change its collor
-   body.append(cStatus('stat'));
-   //create as many other dots with unique ids as you want, if you add more then 6 add more columns above
-   /*
-   body.append(cStatus('test1'));
-   body.append(cStatus('test2'));
-   body.append(cStatus('test3'));
-   body.append(cStatus('test4'));
-   body.append(cStatus('test5'));
-   */
+   //create a dot named stat, use statuschange stat [color] to change its color
+   body.append(cStatus('stat')); //copy this line and change stat to a unique name, then use statuschange [name] [color]
+   //create as many other dots with unique ids as you want, if you add more then 6 add more columns above, remove // from below to add these dots
+   //body.append(cStatus('buffer'));
+   //body.append(cStatus('mantle'));
+   //body.append(cStatus('quicken'));
+   //body.append(cStatus('poison'));
+   //body.append(cStatus('wbreathing'));
 }
 if(arguments.length === 3)
    $('#' + (arguments[1] || 'stat')).css('background', arguments[2] || 'white');
