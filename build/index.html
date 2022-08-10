@@ -1734,8 +1734,9 @@
 
             _status.ac = client.options.showArmor;
             _status.on('set-title', (title) => {
+                //TODO Add setting to control empty/defaults
                 if (client.options.autoCreateCharacter)
-                    ipcRenderer.send('change-char', title);
+                    ipcRenderer.send('change-char', title, true);
                 _logger.postMessage({ action: 'name', args: title });
                 ipcRenderer.send('set-title', title);
             });

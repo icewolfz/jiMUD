@@ -1696,7 +1696,82 @@ ipcMain.on('load-default', () => {
         createCodeEditor();
 });
 
+ipcMain.on('change-char', (event, char, create, empty) => {
+    if (create && !characters.characters[char]) {
+        var wins = BrowserWindow.getAllWindows();
+        var current = BrowserWindow.fromWebContents(event.sender);
+        //TODO add a setting to enable this
+        /*
+        for (var w = 0, wl = wins.length; w < wl; w++) {
+            if (wins[w].getTitle().startsWith('Character manager') && wins[w].getParentWindow() === current) {
+                wins[w].webContents.send('add-char', char, empty, null, true);
+                return;
+            }
+        }
+        */
+        characters.characters[char] = { name: char.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', char + '.json'), map: path.join('{characters}', char + '.map') };
+        var sf = parseTemplate(characters.characters[char].settings);
+        var response;
+        var d;
+        if (isFileSync(sf)) {
+            //TODO add a setting to control how the setting file is handled
+            /*
+            response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                type: 'warning',
+                title: 'File exists',
+                message: 'Setting file for ' + char + ' exist, replace?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+            });
+            if (response === 0) {
+                d = Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
+                d.save(sf);
+            }
+            */
+        }
+        else {
+            if (empty)
+                d = new Settings();
+            else
+                d = Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
+            d.save(sf);
+        }
+        sf = parseTemplate(characters.characters[char].map);
+        if (isFileSync(sf)) {
+            //TODO add setting to control what to do if map exist
+            /*
+            response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                type: 'warning',
+                title: 'File exists',
+                message: 'Map file for ' + char + ' exist, replace?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+            });
+            if (response === 0) {
+                if (isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
+                    copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
+                else
+                    fs.closeSync(fs.openSync(sf, 'w'));
+            }
+            */
+        }
+        else if (!empty && isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
+            copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
+        else
+            fs.closeSync(fs.openSync(sf, 'w'));
+        for (var w = 0, wl = wins.length; w < wl; w++) {
+            wins[w].webContents.send('add-char', char, empty, characters.characters[char]);
+        }
+    }
+    if (characters.characters[char])
+        changeCharacter(char);
+});
+
 ipcMain.on('load-char', (event, char) => {
+    changeCharacter(char);
+});
+
+function changeCharacter(char) {
     var name;
     //already loaded so no need to switch
     if (char === global.character) {
@@ -1737,6 +1812,13 @@ ipcMain.on('load-char', (event, char) => {
     set = settings.Settings.load(global.settingsFile);
     if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('load-char', char);
+    if (winMap)
+        winMap.webContents.send('load-char', char);
+    for (name in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
+            continue;
+        windows[name].window.webContents.send('load-char', char);
+    }
 
     if (winMap) {
         executeScript('closeWindow()', winMap);
@@ -1796,7 +1878,7 @@ ipcMain.on('load-char', (event, char) => {
         }
     }
     set.save(global.settingsFile);
-});
+}
 
 ipcMain.on('options-changed', () => {
     set = settings.Settings.load(global.settingsFile);
@@ -2858,7 +2940,7 @@ ipcMain.on('window-info', (event, info, ...args) => {
         for (var w = 0, wl = wins.length; w < wl; w++) {
             if (wins[w] === current || !wins[w].isVisible())
                 continue;
-            if (v[w].getTitle().startsWith(args[0]) && v[w].getParentWindow() === current) {
+            if (wins[w].getTitle().startsWith(args[0]) && wins[w].getParentWindow() === current) {
                 event.returnValue = 1;
                 return;
             }

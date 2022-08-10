@@ -5,7 +5,7 @@ Reset - Resetting will revert all settings back to default values
 ## General
 
 - `Auto connect onload` This will cause the client to try and connect as soon as the client has finished loading.
-- `Auto create character` When connecting to mud and if it returns a character name, create/load character
+- `Auto create character` When connecting to mud and if it returns a character name, create/load character, if character manager open will open add dialog instead of creating data
 - `Auto login` Attempt to auto login using character and supplied password from character manager
 - `Auto takeover login` Automatically issue yes to takeover character after login
 - `Show character manager onload` open the character manager when the client first loads.

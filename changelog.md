@@ -28,6 +28,8 @@
       - Fixed room preview object line not clearing when 1 item and set to 0 after being set to 1
       - Fixed undo/redo when map is shrunk and rooms deleted
       - Fixed resize map issues when odd numbered dimensions and center
+  - Fix Auto create character system
+  - Fix sub windows not getting load-char event when loading a new character
 - **Changed:**
   - Code editor:
     - Find will now update to current selection when using shortcut or menu items
