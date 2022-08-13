@@ -30,6 +30,7 @@
       - Fixed resize map issues when odd numbered dimensions and center
   - Fix Auto create character system
   - Fix sub windows not getting load-char event when loading a new character
+  - Fix issue with about dialog and memory display for non window systems
 - **Changed:**
   - Code editor:
     - Find will now update to current selection when using shortcut or menu items

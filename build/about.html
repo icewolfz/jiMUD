@@ -183,6 +183,8 @@
         });
 
         function formatMemory(amt) {
+            if(!amt)
+                return '0K';
             if (amt > 1024)
                 return (amt / 1024).toLocaleString(0, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + 'M';
             return amt.toLocaleString(0, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + 'K';
