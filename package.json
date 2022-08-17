@@ -57,7 +57,7 @@
     "@types/jquery": "^3.5.14",
     "@types/node": "^18.7.6",
     "babel-minify": "^0.5.2",
-    "electron": "^19.0.12",
+    "electron": "^19.0.13",
     "electron-builder": "^23.3.3",
     "electron-rebuild": "^3.2.9",
     "eslint": "^8.22.0",
