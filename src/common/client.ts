@@ -743,14 +743,29 @@ export class Client extends EventEmitter {
             let alarm = patterns[a];
             //not found build cache
             if (!alarm) {
-                patterns[a] = {};
-                if (trigger.type === TriggerType.Alarm)
-                    patterns[a][0] = Alarm.parse(trigger);
-                for (let s = 0, sl = trigger.triggers.length; s < sl; s++) {
-                    if (trigger.triggers[s].type === TriggerType.Alarm)
-                        patterns[a][s] = Alarm.parse(trigger.triggers[s]);
+                try {
+                    patterns[a] = {};
+                    if (trigger.type === TriggerType.Alarm)
+                        patterns[a][0] = Alarm.parse(trigger);
+                    for (let s = 0, sl = trigger.triggers.length; s < sl; s++) {
+                        if (trigger.triggers[s].type === TriggerType.Alarm)
+                            patterns[a][s] = Alarm.parse(trigger.triggers[s]);
+                    }
+                }
+                catch (e) {
+                    patterns[a] = null;
+                    if (this.options.disableTriggerOnError) {
+                        trigger.enabled = false;
+                        setTimeout(() => {
+                            this.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
+                            this.emit('item-updated', 'trigger', parent.profile, parent.profile.triggers.indexOf(parent), parent);
+                        });
+                    }                    
+                    throw e;
                 }
                 alarm = patterns[a];
+                //what ever reason the alarm failed to create so move on to next alarm
+                if (!alarm) continue;
             }
             //we want to sub state pattern
             alarm = alarm[trigger.state];
