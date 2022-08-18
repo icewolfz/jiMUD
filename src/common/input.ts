@@ -1879,7 +1879,7 @@ export class Input extends EventEmitter {
                 min = 0;
                 for (i = 0; i < 10; i++) {
                     const start = new Date().getTime();
-                    this.client.telnet.receivedData(Buffer.from(tmp), true);
+                    this.client.telnet.receivedData(Buffer.from(tmp), true, true);
                     const end = new Date().getTime();
                     p = end - start;
                     avg += p;
@@ -3150,13 +3150,13 @@ export class Input extends EventEmitter {
             case 'showprompt': f
             case 'showp':
                 args = this.parseInline(args.join(' '));
-                this.client.telnet.receivedData(Buffer.from(args), true);
+                this.client.telnet.receivedData(Buffer.from(args), true, true);
                 this.client.telnet.prompt = true;
                 return null;
             case 'show':
             case 'sh':
                 args = this.parseInline(args.join(' ') + '\n');
-                this.client.telnet.receivedData(Buffer.from(args), true);
+                this.client.telnet.receivedData(Buffer.from(args), true, true);
                 return null;
             case 'sayprompt':
             case 'sayp':

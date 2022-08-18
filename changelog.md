@@ -7,6 +7,7 @@
   - Fixed alarm error invalid formats to use disableTriggerOnError when enabled
   - Profile manager: Fix trigger tester failing on multi group optional triggers
   - Fixed %x# variables when multi group optional trigger pattern used
+  - Fixed #show and #showprompt breaking telnet ops when split buffer happens
 
 ## 0.19.2 2022-08-17
 
