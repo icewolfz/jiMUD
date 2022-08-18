@@ -2537,12 +2537,12 @@ export class Parser extends EventEmitter {
     }
 
     public get parseQueueEndOfLine() {
-        if(this.parsing.length)
+        if (this.parsing.length)
             return this.parsing[this.parsing.length - 1][0].endsWith('\n');
         return false;
     }
 
-    public parse(text: string, remote?: boolean, force?: boolean) {
+    public parse(text: string, remote?: boolean, force?: boolean, prependSplit?: boolean) {
         if (text == null || text.length === 0)
             return text;
         if (remote == null) remote = false;
@@ -2572,7 +2572,10 @@ export class Parser extends EventEmitter {
         this.parsing.unshift([text, remote]);
         let format;
         if (this._SplitBuffer.length > 0) {
-            text = this._SplitBuffer + text;
+            if (prependSplit)
+                text = text + this._SplitBuffer;
+            else
+                text = this._SplitBuffer + text;
             this._SplitBuffer = '';
         }
         //not end of line but text, so fragment, re-get and re-parse to ensure proper triggering

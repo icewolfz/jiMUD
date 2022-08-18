@@ -1246,11 +1246,11 @@ export class Client extends EventEmitter {
     }
 
     public parse(txt: string) {
-        this.parseInternal(txt, false);
+        this.parseInternal(txt, false, false, true);
     }
 
-    private parseInternal(txt: string, remote: boolean, force?: boolean) {
-        this.display.append(txt, remote, force);
+    private parseInternal(txt: string, remote: boolean, force?: boolean, prependSplit?: boolean) {
+        this.display.append(txt, remote, force, prependSplit);
     }
 
     public error(err: any) {
@@ -1308,16 +1308,16 @@ export class Client extends EventEmitter {
     }
 
     public print(txt: string, newline?: boolean) {
-        this.printInternal(txt, newline, false);
+        this.printInternal(txt, newline, false, true);
     }
 
-    private printInternal(txt: string, newline?: boolean, remote?: boolean) {
+    private printInternal(txt: string, newline?: boolean, remote?: boolean, prependSplit?: boolean) {
         if (txt == null || typeof txt === 'undefined') return;
         if (newline == null) newline = false;
         if (remote == null) remote = false;
         if (newline && this.display.textLength > 0 && !this.display.EndOfLine && this.display.EndOfLineLength !== 0 && !this.telnet.prompt && !this.display.parseQueueEndOfLine)
             txt = '\n' + txt;
-        this.parseInternal(txt, remote);
+        this.parseInternal(txt, remote, false, prependSplit);
     }
 
     public send(data, echo?: boolean) {

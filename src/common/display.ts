@@ -1096,8 +1096,8 @@ export class Display extends EventEmitter {
         this.emit('debug', msg);
     }
 
-    public append(txt: string, remote?: boolean, force?: boolean) {
-        this._parser.parse(txt, remote || false, force || false);
+    public append(txt: string, remote?: boolean, force?: boolean, prependSplit?: boolean) {
+        this._parser.parse(txt, remote || false, force || false, prependSplit || false);
     }
 
     public CurrentAnsiCode() {
