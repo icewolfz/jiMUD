@@ -2548,7 +2548,7 @@ export class Parser extends EventEmitter {
         if (remote == null) remote = false;
         //query data in case already parsing
         if (this.parsing.length > 0 && !force) {
-            this.parsing.push([text, remote]);
+            this.parsing.push([text, remote, prependSplit]);
             return;
         }
         let _TermTitle = '';
@@ -2569,7 +2569,7 @@ export class Parser extends EventEmitter {
         let _MXPArgs;
         let skip = false;
         this.busy = true;
-        this.parsing.unshift([text, remote]);
+        this.parsing.unshift([text, remote, prependSplit]);
         let format;
         if (this._SplitBuffer.length > 0) {
             if (prependSplit)
@@ -4071,7 +4071,7 @@ export class Parser extends EventEmitter {
 
     private parseNext() {
         const iTmp = this.parsing.shift();
-        return () => { this.parse(iTmp[0], iTmp[1], true); };
+        return () => { this.parse(iTmp[0], iTmp[1], true, iTmp[2]); };
     }
 
     public updateWindow(width, height) {
