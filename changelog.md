@@ -5,6 +5,8 @@
 - **Fixed:**
   - Fixed alarm wildcard patterns that have no # eg *:*:30 would fire every 30 seconds but errors as it fails to parse the *:*: right, *:*:30 should be the same as just 30
   - Fixed alarm error invalid formats to use disableTriggerOnError when enabled
+  - Profile manager: Fix trigger tester failing on multi group optional triggers
+  - Fixed %x# variables when multi group optional trigger pattern used
 
 ## 0.19.2 2022-08-17
 

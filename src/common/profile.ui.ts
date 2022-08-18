@@ -477,7 +477,10 @@ export function RunTester() {
                 let i;
                 for (i = 0; i < res.length; i++) {
                     r += _parameter + (i + m) + ' : ' + res[i] + '\n';
-                    r += `${_parameter}x${i + m} : ${res.indices[i][0]} ${res.indices[i][1]}\n`;
+                    if(!res[i])
+                        r += `${_parameter}x${i + m} : 0 0\n`;
+                    else
+                        r += `${_parameter}x${i + m} : ${res.indices[i][0]} ${res.indices[i][1]}\n`;
                 }
                 if (res.groups) {
                     let g = Object.keys(res.groups);

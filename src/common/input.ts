@@ -5665,9 +5665,9 @@ export class Input extends EventEmitter {
                                 tmp = parseInt(arg, 10);
                                 if (_pos) {
                                     if (_neg && this.stack.args.indices && tmp < this.stack.args.length)
-                                        tmp = this.stack.indices.slice(tmp).map(v => v[0] + ' ' + v[1]).join(' ');
+                                        tmp = this.stack.indices.slice(tmp).map(v => v ? (v[0] + ' ' + v[1]) : '0 0').join(' ');
                                     else if (this.stack.args.indices && tmp < this.stack.args.length)
-                                        tmp = this.stack.args.indices[tmp][0] + ' ' + this.stack.args.indices[tmp][1];
+                                        tmp = this.stack.args.indices[tmp] ? (this.stack.args.indices[tmp][0] + ' ' + this.stack.args.indices[tmp][1]) : '0 0';
                                     else if (_neg)
                                         tmp = paramChar + 'x-' + tmp;
                                     else
@@ -5794,10 +5794,10 @@ export class Input extends EventEmitter {
                                         idx = idx - tmp.length - 2;
                                     }
                                     else
-                                        tmp2 = this.stack.indices.slice(tmp).map(v => v[0] + ' ' + v[1]).join(' ');
+                                        tmp2 = this.stack.indices.slice(tmp).map(v => v ? (v[0] + ' ' + v[1]) : '0 0').join(' ');
                                 }
                                 else if (tmp < this.stack.args.length)
-                                    tmp2 = this.stack.args.indices[tmp][0] + ' ' + this.stack.args.indices[tmp][1];
+                                    tmp2 = this.stack.args.indices[tmp] ? (this.stack.args.indices[tmp][0] + ' ' + this.stack.args.indices[tmp][1]) : '0 0';
                                 else {
                                     tmp2 = paramChar;
                                     idx = idx - arg.length - 2;
@@ -5967,10 +5967,10 @@ export class Input extends EventEmitter {
                                         idx = idx - arg.length - 2;
                                     }
                                     else
-                                        tmp2 = this.stack.indices.slice(tmp).map(v => v[0] + ' ' + v[1]).join(' ');
+                                        tmp2 = this.stack.indices.slice(tmp).map(v => v ? (v[0] + ' ' + v[1]) : '0 0').join(' ');
                                 }
                                 else if (tmp < this.stack.args.length)
-                                    tmp2 = this.stack.args.indices[tmp][0] + ' ' + this.stack.args.indices[tmp][1];
+                                    tmp2 = this.stack.args.indices[tmp] ? (this.stack.args.indices[tmp][0] + ' ' + this.stack.args.indices[tmp][1]) : '0 0';
                                 else {
                                     tmp2 = nParamChar;
                                     idx = idx - arg.length - 2;
@@ -6291,7 +6291,7 @@ export class Input extends EventEmitter {
             if (this.stack.args) {
                 arg = parseInt(arg, 10);
                 if (_pos && this.stack.args.indices && arg < this.stack.args.length)
-                    str += this.stack.args.indices[arg][0] + ' ' + this.stack.args.indices[arg][1];
+                    str += this.stack.args.indices[arg] ? (this.stack.args.indices[arg][0] + ' ' + this.stack.args.indices[arg][1]) : '0 0';
                 else {
                     if (_neg && arg < this.stack.args.length)
                         str += this.stack.args.slice(arg).join(' ');
@@ -7026,6 +7026,8 @@ export class Input extends EventEmitter {
                     if (args.length)
                         this.client.variables[this.stripQuotes(this.parseInline(args[0]))] = c[0].length;
                 }
+                if (!c.indices[0])
+                    return 1;
                 return c.indices[0][0] + 1;
             case 'trim':
                 return this.stripQuotes(this.parseInline(res[2])).trim();
@@ -7485,8 +7487,8 @@ export class Input extends EventEmitter {
                 }
                 else if (args.length > 1)
                     throw new Error('Too many arguments for charcomment');
-                if(this.client.options.allowEval) return null;
-                    c = ipcRenderer.sendSync('get-global', 'character') || '';
+                if (this.client.options.allowEval) return null;
+                c = ipcRenderer.sendSync('get-global', 'character') || '';
                 if (!c || !c.length) return null;
                 args[0] = this.stripQuotes(args[0], true);
                 notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
@@ -7509,7 +7511,7 @@ export class Input extends EventEmitter {
                 }
                 else if (args.length > 1)
                     throw new Error('Too many arguments for charnotes');
-                if(this.client.options.allowEval) return null;
+                if (this.client.options.allowEval) return null;
                 c = ipcRenderer.sendSync('get-global', 'character') || '';
                 if (!c || !c.length) return null;
                 args[0] = this.stripQuotes(args[0], true);
