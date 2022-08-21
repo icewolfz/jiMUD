@@ -2121,7 +2121,7 @@
                 const { selectionText, isEditable } = params;
                 if (isEditable) {
                     input = document.elementFromPoint(params.x, params.y);
-                    if (input.id === 'commandinput') {
+                    if (input && input.id === 'commandinput') {
                         //e.preventDefault();
                         $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
                         $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
