@@ -14,6 +14,9 @@
   - [Preferences](docs/preferences.md):
     - Fixed reset not working
     - Fixed log viewer window options not being saved always
+- **Changed:**
+  - Update electron 19.0.13 to 19.0.14
+  - Update mathjs 11.0.1 to 11.1.0
 
 ## 0.19.2 2022-08-17
 
