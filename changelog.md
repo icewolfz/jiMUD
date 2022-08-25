@@ -11,6 +11,9 @@
   - Fixed Linux icon not being correctly set in built packages, use mac icns file instead to generate all the correct files, fixes AppImage icons and others
   - Fixed ansi parsing when remote data is split and appending local text to prevent split ansi codes
   - Added an error check to context menu if unable to determine focused control to fall back to default context menu
+  - [Preferences](docs/preferences.md):
+    - Fixed reset not working
+    - Fixed log viewer window options not being saved always
 
 ## 0.19.2 2022-08-17
 
