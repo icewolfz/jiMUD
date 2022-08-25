@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.20.0
+## 0.19.3
 
 - **Fixed:**
   - Fixed alarm wildcard patterns that have no # eg *:*:30 would fire every 30 seconds but errors as it fails to parse the *:*: right, *:*:30 should be the same as just 30
