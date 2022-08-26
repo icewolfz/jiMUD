@@ -22,9 +22,9 @@ interface MSPData {
     file?: string;
     url?: string;
     volume?: number;
-    repeat?: number; 
-    priority?: number; 
-    type?: string; 
+    repeat?: number;
+    priority?: number;
+    type?: string;
     continue?: boolean;
 }
 
@@ -33,12 +33,15 @@ class SoundState extends EventEmitter {
     private _repeats: number = 1;
     private _volume: number = 100;
     private _priority: number = 50;
+    private _retries: number = 0;
 
     public current: number = 0;
     public sound = null;
     public playing: boolean = false;
     public url: string = '';
     public continue: boolean = true;
+    public retryOnError: boolean = false;
+    public maxErrorRetries: number = 1;
 
     set file(file: string) {
         if (!this.continue)
@@ -119,6 +122,8 @@ class SoundState extends EventEmitter {
         this.sound = new buzz.sound(this.url + this._file);
         this.sound.bind('loadeddata', (e) => {
             this.emit('playing', { file: this._file, sound: this.sound, state: this, duration: buzz.toTimer(this.sound.getDuration()) });
+            //reset to 0 as it was successful in prep of next sound
+            this._retries = 0;
         });
         this.sound.bind('error', (e) => {
             if (e && e.currentTarget && e.currentTarget.error) {
@@ -141,6 +146,16 @@ class SoundState extends EventEmitter {
                 this.emit('error', new Error(`MSP - Source not found or unable to play: ${this.url}${this._file}`));
             else
                 this.emit('error', new Error('MSP - Unknown error'));
+            if (this.retryOnError) {
+                //only retry until reaches max error retries to prevent infinite looping
+                if (this._retries < this.maxErrorRetries) {
+                    this.open();
+                    this._retries++;
+                }
+                //if at max retries do nothing and reset to 0
+                else
+                    this._retries = 0;
+            }
         });
         this.emit('opened');
     }
@@ -189,6 +204,8 @@ export interface MSPOptions {
 export class MSP extends EventEmitter {
     private _enabled: boolean = true;
     private _enableSound: boolean = true;
+    private _retryOnError: boolean = false;
+    private _maxErrorRetries: number = 1;
     public server: boolean = false;
     public enableDebug: boolean = false;
 
@@ -230,6 +247,35 @@ export class MSP extends EventEmitter {
         this.MusicState.close();
         this.SoundState.close();
     }
+
+    /**
+     * try to reopen sound if error happens MSP
+     *
+     * @type {boolean}
+     * @memberof MSP
+     */
+    get retryOnError() { return this._retryOnError; }
+    set retryOnError(value) {
+        if (value === this._retryOnError) return;
+        this._retryOnError = value;
+        this.MusicState.retryOnError = value;
+        this.SoundState.retryOnError = value;
+    }
+
+    /**
+     * the number of retries to try before stopping when an error happens MSP
+     *
+     * @type {boolean}
+     * @memberof MSP
+     */
+    get maxErrorRetries() { return this._maxErrorRetries; }
+    set maxErrorRetries(value) {
+        if (value === this._maxErrorRetries) return;
+        this._maxErrorRetries = value;
+        this.MusicState.maxErrorRetries = value;
+        this.SoundState.maxErrorRetries = value;
+    }
+
 
     /**
      * enable or disable enableSound, allow processing of msp
