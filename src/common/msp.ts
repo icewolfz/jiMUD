@@ -91,73 +91,95 @@ class SoundState extends EventEmitter {
         if (this._repeats > 0 && this.current < this._repeats) {
             this.current++;
             this.close();
-            this.open();
-            this.sound.setVolume(this._volume).play();
-            if (this.current < this._repeats) {
-                this.sound.bind('ended abort', (e) => {
-                    this.play();
-                });
-            }
-            else
-                this.sound.bind('ended abort', (e) => {
+            this.open().then(() => {
+                //reset to 0 as it was successful in prep of next sound
+                this._retries = 0;
+                this.sound.setVolume(this._volume).play();
+                if (this.current < this._repeats) {
+                    this.sound.bind('ended abort', (e) => {
+                        this.play();
+                    });
+                }
+                else
+                    this.sound.bind('ended abort', (e) => {
+                        this.playing = false;
+                        this.emit('ended');
+                    });
+                if (this.sound.isEnded())
                     this.playing = false;
-                    this.emit('ended');
-                });
-            if (this.sound.isEnded())
-                this.playing = false;
+            }).catch(err => {
+                if (this.retryOnError) {
+                    //only retry until reaches max error retries to prevent infinite looping
+                    if (this._retries < this.maxErrorRetries) {
+                        //reduce current as failed to play
+                        this.current--;
+                        this.play();
+                        this._retries++;
+                    }
+                    //if at max retries do nothing and reset to 0
+                    else
+                        this._retries = 0;
+                }
+            });
         }
         else if (this._repeats === -1) {
             this.close();
-            this.open();
-            this.sound.setVolume(this._volume).loop().play();
-            if (this.sound.isEnded())
-                this.playing = false;
+            this.open().then(() => {
+                //reset to 0 as it was successful in prep of next sound
+                this._retries = 0;
+                this.sound.setVolume(this._volume).loop().play();
+                if (this.sound.isEnded())
+                    this.playing = false;
+            }).catch(err => {
+                if (this.retryOnError) {
+                    //only retry until reaches max error retries to prevent infinite looping
+                    if (this._retries < this.maxErrorRetries) {
+                        this.play();
+                        this._retries++;
+                    }
+                    //if at max retries do nothing and reset to 0
+                    else
+                        this._retries = 0;
+                }
+            });
         }
         else
             this.playing = false;
     }
 
-    public open() {
+    public async open() {
         this.close();
-        this.sound = new buzz.sound(this.url + this._file);
-        this.sound.bind('loadeddata', (e) => {
-            this.emit('playing', { file: this._file, sound: this.sound, state: this, duration: buzz.toTimer(this.sound.getDuration()) });
-            //reset to 0 as it was successful in prep of next sound
-            this._retries = 0;
-        });
-        this.sound.bind('error', (e) => {
-            if (e && e.currentTarget && e.currentTarget.error) {
-                switch (e.currentTarget.error.code) {
-                    case 1:
-                        this.emit('error', new Error(`MSP - Aborted: ${this.url}${this._file}`));
-                        break;
-                    case 2:
-                        this.emit('error', new Error(`MSP - Network error: ${this.url}${this._file}`));
-                        break;
-                    case 3:
-                        this.emit('error', new Error(`MSP - Could not decode: ${this.url}${this._file}`));
-                        break;
-                    case 4:
-                        this.emit('error', new Error(`MSP - Source not supported: ${this.url}${this._file}`));
-                        break;
+        return new Promise((resolve, reject) => {
+            this.sound = new buzz.sound(this.url + this._file);
+            this.sound.bind('loadeddata', (e) => {
+                this.emit('playing', { file: this._file, sound: this.sound, state: this, duration: buzz.toTimer(this.sound.getDuration()) });
+                resolve(1);
+            });
+            this.sound.bind('error', (e) => {
+                if (e && e.currentTarget && e.currentTarget.error) {
+                    switch (e.currentTarget.error.code) {
+                        case 1:
+                            this.emit('error', new Error(`MSP - Aborted: ${this.url}${this._file}`));
+                            break;
+                        case 2:
+                            this.emit('error', new Error(`MSP - Network error: ${this.url}${this._file}`));
+                            break;
+                        case 3:
+                            this.emit('error', new Error(`MSP - Could not decode: ${this.url}${this._file}`));
+                            break;
+                        case 4:
+                            this.emit('error', new Error(`MSP - Source not supported: ${this.url}${this._file}`));
+                            break;
+                    }
                 }
-            }
-            else if (e && e.currentTarget && e.currentTarget.networkState === 3)
-                this.emit('error', new Error(`MSP - Source not found or unable to play: ${this.url}${this._file}`));
-            else
-                this.emit('error', new Error('MSP - Unknown error'));
-            if (this.retryOnError) {
-                //only retry until reaches max error retries to prevent infinite looping
-                if (this._retries < this.maxErrorRetries) {
-                    this.open();
-                    this._retries++;
-                }
-                //if at max retries do nothing and reset to 0
+                else if (e && e.currentTarget && e.currentTarget.networkState === 3)
+                    this.emit('error', new Error(`MSP - Source not found or unable to play: ${this.url}${this._file}`));
                 else
-                    this._retries = 0;
-            }
+                    this.emit('error', new Error('MSP - Unknown error'));
+                reject();
+            });
+            this.emit('opened');
         });
-        this.emit('opened');
     }
 
     public close() {

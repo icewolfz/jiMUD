@@ -394,6 +394,9 @@ export class Settings {
     public showInTaskBar: boolean = true;
     public showLagInTitle: boolean = false;
 
+    public mspRetryOnError: boolean = false;
+    public mspMaxRetriesOnError: number = 1;
+
     public enableKeepAlive: boolean = false;
     public keepAliveDelay: number = 0;
     public allowHalfOpen: boolean = true;

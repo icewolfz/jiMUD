@@ -1190,6 +1190,8 @@ export class Client extends EventEmitter {
         this.MSP.enabled = this.options.enableMSP;
         this.MSP.enableSound = this.options.enableSound;
         this.MSP.savePath = parseTemplate(this.options.soundPath);
+        this.MSP.retryOnError = this.options.mspRetryOnError;
+        this.MSP.maxErrorRetries = this.options.mspMaxRetriesOnError;
 
         this._input.scrollLock = this.options.scrollLocked;
         this._input.enableParsing = this.options.enableParsing;

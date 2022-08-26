@@ -2,6 +2,10 @@
 
 ## 0.19.3
 
+- **New:**
+  - [Preferences](docs/preferences.md):
+    - Add `MSP: retry on error`, Retry sound if error when trying to play
+    - Add `MSP: max retries on error`, Amount of retries to attempt before stopping
 - **Fixed:**
   - Fixed alarm wildcard patterns that have no # eg *:*:30 would fire every 30 seconds but errors as it fails to parse the *:*: right, *:*:30 should be the same as just 30
   - Fixed alarm error invalid formats to use disableTriggerOnError when enabled
@@ -14,6 +18,7 @@
   - [Preferences](docs/preferences.md):
     - Fixed reset not working
     - Fixed log viewer window options not being saved always
+  - MSP: Fixed rare instant where volume or playing status would be wrong due to loading taking awhile from async loading of data
 - **Changed:**
   - Update electron 19.0.13 to 19.0.14
   - Update mathjs 11.0.1 to 11.1.0
