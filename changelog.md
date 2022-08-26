@@ -4,8 +4,7 @@
 
 - **New:**
   - [Preferences](docs/preferences.md):
-    - Add `MSP: retry on error`, Retry sound if error when trying to play
-    - Add `MSP: max retries on error`, Amount of retries to attempt before stopping
+    - Add `MSP: max retries on error`, Amount of retries to attempt play a file before stopping
 - **Fixed:**
   - Fixed alarm wildcard patterns that have no # eg *:*:30 would fire every 30 seconds but errors as it fails to parse the *:*: right, *:*:30 should be the same as just 30
   - Fixed alarm error invalid formats to use disableTriggerOnError when enabled

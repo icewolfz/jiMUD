@@ -95,8 +95,7 @@ Settings to control how to handle telnet options and emulation
 - `Echo` Disable or enables Echo option to display/hide text when server requests
 - `MUD Sound Protocol (MSP)` Disable or enable MSP
 - `Display Notification on MSP Play` Display a message when a file has started to play
-- `MSP: retry on error` Retry sound if error when trying to play
-- `MSP: max retries on error` Amount of retries to attempt before stopping
+- `MSP: max retries on error` Amount of retries to attempt play a file before stopping, 0 disables
 
 ## Mapper
 

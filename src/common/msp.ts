@@ -40,8 +40,7 @@ class SoundState extends EventEmitter {
     public playing: boolean = false;
     public url: string = '';
     public continue: boolean = true;
-    public retryOnError: boolean = false;
-    public maxErrorRetries: number = 1;
+    public maxErrorRetries: number = 0;
 
     set file(file: string) {
         if (!this.continue)
@@ -108,18 +107,16 @@ class SoundState extends EventEmitter {
                 if (this.sound.isEnded())
                     this.playing = false;
             }).catch(err => {
-                if (this.retryOnError) {
-                    //only retry until reaches max error retries to prevent infinite looping
-                    if (this._retries < this.maxErrorRetries) {
-                        //reduce current as failed to play
-                        this.current--;
-                        this.play();
-                        this._retries++;
-                    }
-                    //if at max retries do nothing and reset to 0
-                    else
-                        this._retries = 0;
+                //only retry until reaches max error retries to prevent infinite looping
+                if (this._retries < this.maxErrorRetries) {
+                    //reduce current as failed to play
+                    this.current--;
+                    this.play();
+                    this._retries++;
                 }
+                //if at max retries do nothing and reset to 0
+                else
+                    this._retries = 0;
             });
         }
         else if (this._repeats === -1) {
@@ -131,16 +128,14 @@ class SoundState extends EventEmitter {
                 if (this.sound.isEnded())
                     this.playing = false;
             }).catch(err => {
-                if (this.retryOnError) {
-                    //only retry until reaches max error retries to prevent infinite looping
-                    if (this._retries < this.maxErrorRetries) {
-                        this.play();
-                        this._retries++;
-                    }
-                    //if at max retries do nothing and reset to 0
-                    else
-                        this._retries = 0;
+                //only retry until reaches max error retries to prevent infinite looping
+                if (this._retries < this.maxErrorRetries) {
+                    this.play();
+                    this._retries++;
                 }
+                //if at max retries do nothing and reset to 0
+                else
+                    this._retries = 0;
             });
         }
         else
@@ -226,7 +221,6 @@ export interface MSPOptions {
 export class MSP extends EventEmitter {
     private _enabled: boolean = true;
     private _enableSound: boolean = true;
-    private _retryOnError: boolean = false;
     private _maxErrorRetries: number = 1;
     public server: boolean = false;
     public enableDebug: boolean = false;
@@ -268,20 +262,6 @@ export class MSP extends EventEmitter {
         this._enabled = value;
         this.MusicState.close();
         this.SoundState.close();
-    }
-
-    /**
-     * try to reopen sound if error happens MSP
-     *
-     * @type {boolean}
-     * @memberof MSP
-     */
-    get retryOnError() { return this._retryOnError; }
-    set retryOnError(value) {
-        if (value === this._retryOnError) return;
-        this._retryOnError = value;
-        this.MusicState.retryOnError = value;
-        this.SoundState.retryOnError = value;
     }
 
     /**
