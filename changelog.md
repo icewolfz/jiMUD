@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.19.3
+## 0.19.3 2022-08-27
 
 - **New:**
   - [Preferences](docs/preferences.md):
