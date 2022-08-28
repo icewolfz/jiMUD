@@ -2,6 +2,9 @@
 
 ## 0.19.4
 
+- **Fixed:**
+  - Auto update: close download dialog when error happens
+
 ## 0.19.3 2022-08-27
 
 - **New:**

@@ -4629,10 +4629,16 @@ function checkForUpdatesManual() {
     autoUpdater.autoDownload = false;
     autoUpdater.on('error', (error) => {
         dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
-        if (global.editorOnly)
+        if (global.editorOnly) {
             winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
-        else
+            winCode.setProgressBar(-1);
+            winCode.webContents.send('update-downloaded');
+        }
+        else {
             updateMenuItem({ menu: ['help', 'updater'], enabled: true });
+            win.setProgressBar(-1);
+            win.webContents.send('update-downloaded');
+        }
     });
 
     autoUpdater.on('update-available', () => {
