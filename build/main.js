@@ -2861,7 +2861,7 @@ ipcMain.on('parseTemplate', (event, str, data) => {
 
 ipcMain.handle('window', (event, action, ...args) => {
     var current = BrowserWindow.fromWebContents(event.sender);
-    if (!current) return;
+    if (!current || current.isDestroyed()) return;
     if (action === "focus")
         current.focus();
     else if (action === "hide")
@@ -2961,6 +2961,7 @@ ipcMain.on('window-info', (event, info, ...args) => {
                         continue;
                     executeScript('if(closing) closing();', windows[name].window);
                     executeScript('if(closed) closed();', windows[name].window);
+                    executeScript('if(closeHidden) closeHidden()', windows[name].window);
                     set.windows[name] = getWindowState(name, windows[name].window);
                     set.windows[name].options = copyWindowOptions(name);
                     windows[name].window = null;
@@ -4073,9 +4074,11 @@ function createNewWindow(name, options) {
     });
 
     windows[name].window.on('close', (e) => {
+        //something already closed the window
+        if(!windows[name]) return;
         set = settings.Settings.load(global.settingsFile);
         set.windows[name] = getWindowState(name, e.sender);
-        if (windows[name].window === e.sender)
+        if (windows[name] &&windows[name].window === e.sender)
             windows[name].show = false;
         set.windows[name].options = copyWindowOptions(name);
         set.save(global.settingsFile);
