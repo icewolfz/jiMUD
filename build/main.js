@@ -4305,10 +4305,10 @@ function createNewWindow(name, options) {
 
     windows[name].window.on('close', (e) => {
         //something already closed the window
-        if(!windows[name]) return;
+        if (!windows[name]) return;
         set = settings.Settings.load(global.settingsFile);
         set.windows[name] = getWindowState(name, e.sender);
-        if (windows[name] &&windows[name].window === e.sender)
+        if (windows[name] && windows[name].window === e.sender)
             windows[name].show = false;
         set.windows[name].options = copyWindowOptions(name);
         set.save(global.settingsFile);
@@ -5037,7 +5037,7 @@ async function executeScript(script, w, f) {
             reject();
             return;
         }
-        w.webContents.executeJavaScript(script).then(() => resolve()).catch(err => {
+        w.webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
             if (err)
                 logError(err);
             reject();
@@ -5054,7 +5054,7 @@ async function executeScriptContents(script, w) {
             reject();
             return;
         }
-        w.executeJavaScript(script).then(() => resolve()).catch(err => {
+        w.executeJavaScript(script).then(results => resolve(results)).catch(err => {
             if (err)
                 logError(err);
             reject();
