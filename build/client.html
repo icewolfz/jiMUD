@@ -444,7 +444,7 @@
         }
 
         function updateInterface() {
-            if(!client || !client.options) return;
+            if (!client || !client.options) return;
             loadTheme(client.options.theme);
             $('#display').css('left', '');
             $('#display-border').css('left', '');
@@ -684,19 +684,6 @@
                     lst += '<li role="separator" class="divider"></li><li><a href="#" onclick="client.clearCommandHistory();">Clear</a></li>';
                 lst += '<li><a href="#" onclick="showCommandHistory()">Show history window...</a></li>';
                 $('.command-history ul').html(lst);
-            });
-            remote.getCurrentWindow().on('restore', () => {
-                doUpdate(256);
-            });
-            remote.getCurrentWindow().on('maximize', () => {
-                doUpdate(256);
-            });
-            remote.getCurrentWindow().on('unmaximize', () => {
-                doUpdate(256);
-            });
-
-            remote.getCurrentWindow().on('resized', () => {
-                doUpdate(384);
             });
 
             ipcRenderer.send('set-overlay', 0);
@@ -2117,88 +2104,6 @@
                 c.popup({ window: remote.getCurrentWindow() });
             });
 
-            remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
-                var inputMenu, start, end, w, input;
-                const { selectionText, isEditable } = params;
-                if (isEditable) {
-                    input = document.elementFromPoint(params.x, params.y);
-                    if (input && input.id === 'commandinput') {
-                        //e.preventDefault();
-                        $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
-                        $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
-                        inputMenu = Menu.buildFromTemplate([
-                            { role: 'undo', accelerator: 'CmdOrCtrl+Z' },
-                            { role: 'redo', accelerator: 'CmdOrCtrl+Y' },
-                            { type: 'separator' },
-                            { role: 'cut', accelerator: 'CmdOrCtrl+X' },
-                            { role: 'copy', accelerator: 'CmdOrCtrl+C' },
-                            { label: 'Paste', accelerator: 'CmdOrCtrl+V', click: paste },
-                            { label: 'Paste special', accelerator: 'CmdOrCtrL+Shift+V', click: () => { pasteSpecial(); } },
-                            { type: 'separator' },
-                            { role: 'selectAll', accelerator: 'CmdOrCtrl+A' },
-                        ]);
-                        inputMenu.on('menu-will-show', () => {
-                            $('#commandinput').data('context', true);
-                        });
-                        inputMenu.on('menu-will-close', () => {
-                            setTimeout(() => $('#commandinput').data('context', false), 200);
-                        });
-                    }
-                    else
-                        inputMenu = Menu.buildFromTemplate([
-                            { role: 'undo' },
-                            { role: 'redo' },
-                            { type: 'separator' },
-                            { role: 'cut' },
-                            { role: 'copy' },
-                            { role: 'paste' },
-                            { type: 'separator' },
-                            { role: 'selectAll' },
-                        ]);
-                    if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
-                        inputMenu.append(new MenuItem({ type: 'separator' }));
-                        inputMenu.append(new MenuItem({
-                            label: 'Inspect', click: () => {
-                                ipcRenderer.send('inspect', params.x, params.y);
-                            }
-                        }));
-                    }
-                    if (client.options.spellchecking && params.dictionarySuggestions.length) {
-                        inputMenu.insert(0, new MenuItem({ type: 'separator' }));
-                        start = input.selectionStart + params.selectionText.indexOf(params.misspelledWord);
-                        end = start + params.misspelledWord.length;
-                        for (w = params.dictionarySuggestions.length - 1; w >= 0; w--) {
-                            inputMenu.insert(0, new MenuItem({
-                                label: params.dictionarySuggestions[w],
-                                start: start,
-                                end: end,
-                                sel: params.selectionText.length - params.misspelledWord.length,
-                                x: params.x,
-                                y: params.y,
-                                click: function (item) {
-                                    var el = $(document.elementFromPoint(item.x, item.y));
-                                    var value = el.val();
-                                    var start = el[0].selectionStart;
-                                    value = value.substring(0, item.start) + item.label + value.substring(item.end);
-                                    el.val(value);
-                                    el[0].selectionStart = start;
-                                    el[0].selectionEnd = start + item.label.length + item.sel;
-                                    el.blur();
-                                    el.focus();
-                                }
-                            }));
-                        }
-                    }
-                    inputMenu.popup({ window: remote.getCurrentWindow() });
-                } else if (selectionText && selectionText.trim() !== '') {
-                    Menu.buildFromTemplate([
-                        { role: 'copy' },
-                        { type: 'separator' },
-                        { role: 'selectAll' },
-                    ]).popup({ window: remote.getCurrentWindow() });
-                }
-            });
-
             client.display.on('word', () => {
                 client.options.find.word = client.display.MatchWord;
                 doUpdate(32);
@@ -2712,6 +2617,103 @@
         ipcRenderer.on('get-skills', (event, window) => {
             ipcRenderer.send('skills', _status.skills, window);
         });
+
+        ipcRenderer.on('context-menu', (event, params) => {
+            var inputMenu, start, end, w, input;
+            const { selectionText, isEditable } = params;
+            if (isEditable) {
+                input = document.elementFromPoint(params.x, params.y);
+                if (input && input.id === 'commandinput') {
+                    //e.preventDefault();
+                    $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
+                    $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
+                    inputMenu = Menu.buildFromTemplate([
+                        { role: 'undo', accelerator: 'CmdOrCtrl+Z' },
+                        { role: 'redo', accelerator: 'CmdOrCtrl+Y' },
+                        { type: 'separator' },
+                        { role: 'cut', accelerator: 'CmdOrCtrl+X' },
+                        { role: 'copy', accelerator: 'CmdOrCtrl+C' },
+                        { label: 'Paste', accelerator: 'CmdOrCtrl+V', click: paste },
+                        { label: 'Paste special', accelerator: 'CmdOrCtrL+Shift+V', click: () => { pasteSpecial(); } },
+                        { type: 'separator' },
+                        { role: 'selectAll', accelerator: 'CmdOrCtrl+A' },
+                    ]);
+                    inputMenu.on('menu-will-show', () => {
+                        $('#commandinput').data('context', true);
+                    });
+                    inputMenu.on('menu-will-close', () => {
+                        setTimeout(() => $('#commandinput').data('context', false), 200);
+                    });
+                }
+                else
+                    inputMenu = Menu.buildFromTemplate([
+                        { role: 'undo' },
+                        { role: 'redo' },
+                        { type: 'separator' },
+                        { role: 'cut' },
+                        { role: 'copy' },
+                        { role: 'paste' },
+                        { type: 'separator' },
+                        { role: 'selectAll' },
+                    ]);
+                if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
+                    inputMenu.append(new MenuItem({ type: 'separator' }));
+                    inputMenu.append(new MenuItem({
+                        label: 'Inspect', click: () => {
+                            ipcRenderer.send('inspect', params.x, params.y);
+                        }
+                    }));
+                }
+                if (client.options.spellchecking && params.dictionarySuggestions.length) {
+                    inputMenu.insert(0, new MenuItem({ type: 'separator' }));
+                    start = input.selectionStart + params.selectionText.indexOf(params.misspelledWord);
+                    end = start + params.misspelledWord.length;
+                    for (w = params.dictionarySuggestions.length - 1; w >= 0; w--) {
+                        inputMenu.insert(0, new MenuItem({
+                            label: params.dictionarySuggestions[w],
+                            start: start,
+                            end: end,
+                            sel: params.selectionText.length - params.misspelledWord.length,
+                            x: params.x,
+                            y: params.y,
+                            click: function (item) {
+                                var el = $(document.elementFromPoint(item.x, item.y));
+                                var value = el.val();
+                                var start = el[0].selectionStart;
+                                value = value.substring(0, item.start) + item.label + value.substring(item.end);
+                                el.val(value);
+                                el[0].selectionStart = start;
+                                el[0].selectionEnd = start + item.label.length + item.sel;
+                                el.blur();
+                                el.focus();
+                            }
+                        }));
+                    }
+                }
+                inputMenu.popup({ window: remote.getCurrentWindow() });
+            } else if (selectionText && selectionText.trim() !== '') {
+                Menu.buildFromTemplate([
+                    { role: 'copy' },
+                    { type: 'separator' },
+                    { role: 'selectAll' },
+                ]).popup({ window: remote.getCurrentWindow() });
+            }
+        })
+
+        ipcRenderer.on('restore', () => {
+            doUpdate(256);
+        });
+        ipcRenderer.on('maximize', () => {
+            doUpdate(256);
+        });
+        ipcRenderer.on('unmaximize', () => {
+            doUpdate(256);
+        });
+
+        ipcRenderer.on('resized', () => {
+            doUpdate(384);
+        });
+
 
         // eslint-disable-next-line no-unused-vars
         function childClosed(url, name) {

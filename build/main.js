@@ -1480,6 +1480,7 @@ function createWindow() {
         }
         set.save(global.settingsFile);
     });
+    addWindowEvents(win);
 }
 
 function resetProfiles() {
@@ -3091,6 +3092,9 @@ ipcMain.on('new-client', (event, id, focus, offset) => {
             backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
+    view.webContents.on('context-menu', (e, params) => {
+        view.webContents.send('context-menu', params);
+    });
     view.setAutoResize({
         width: true,
         height: true
@@ -3098,7 +3102,7 @@ ipcMain.on('new-client', (event, id, focus, offset) => {
     var bounds = BrowserWindow.fromWebContents(event.sender).getContentBounds();
     view.setBounds({
         x: 0,
-        y: offset,
+        y: 0 || offset,
         width: bounds.width,
         height: bounds.height - offset
     });
@@ -3106,8 +3110,8 @@ ipcMain.on('new-client', (event, id, focus, offset) => {
     require("@electron/remote/main").enable(view.webContents);
     clients[id] = { view: view };
     if (focus)
-        win.setBrowserView(view)
-    executeScript(`setId('${id}');`, clients[id].view);        
+        win.setBrowserView(view);
+    executeScript(`setId('${id}');`, clients[id].view);
     //clients[id].view.webContents.openDevTools();
     //win.setTopBrowserView(view)    
     //addBrowserView
@@ -3121,20 +3125,19 @@ ipcMain.on('switch-client', (event, id, offset) => {
             clients[id].view.webContents.focus();
         }
         else {
-            win.setBrowserView(clients[id].view);
-            clients[id].view.webContents.focus();
-        }
-        if (offset) {
             var bounds = BrowserWindow.fromWebContents(event.sender).getContentBounds();
             clients[id].view.setBounds({
                 x: 0,
-                y: offset,
+                y: 0 || offset,
                 width: bounds.width,
                 height: bounds.height - offset
             });
+            win.setBrowserView(clients[id].view);
+            clients[id].view.webContents.focus();
         }
     }
     //win.setTopBrowserView(clients[id])
+    //win.setBrowserView(clients[id].view);
 });
 
 ipcMain.on('remove-client', (event, id) => {
@@ -3181,7 +3184,6 @@ ipcMain.on('undock-client', (event, id) => {
             addInputContext(clients[id].window, global.editorOnly ? (edSet && edSet.spellchecking) : (set && set.spellchecking));
             restoreWindowState(clients[id].window, null, true, true);
             win.removeBrowserView(clients[id].view);
-            clients[id].window.setBrowserView(clients[id].view);
             var bounds = clients[id].window.getContentBounds();
             clients[id].view.setBounds({
                 x: 0,
@@ -3189,7 +3191,9 @@ ipcMain.on('undock-client', (event, id) => {
                 width: bounds.width,
                 height: bounds.height
             });
+            clients[id].window.setBrowserView(clients[id].view);
         });
+        addWindowEvents(clients[id].window);
     }
 });
 
@@ -3219,7 +3223,7 @@ ipcMain.on('update-client', (event, id, offset) => {
         var bounds = BrowserWindow.fromWebContents(event.sender).getContentBounds();
         clients[id].view.setBounds({
             x: 0,
-            y: offset,
+            y: 0 || offset,
             width: bounds.width,
             height: bounds.height - offset
         });
@@ -3249,6 +3253,23 @@ function removeClient(id, close) {
     clients[id].view.webContents.destroy();
     clients[id] = null;
     delete clients[id];
+}
+
+function addWindowEvents(window) {
+    window.on('restore', () => {
+        window.getBrowserView().webContents.send('restore');
+    });
+    window.on('maximize', () => {
+        window.getBrowserView().webContents.send('maximize');
+    });
+    window.on('unmaximize', () => {
+        window.getBrowserView().webContents.send('unmaximize');
+    });
+
+    window.on('resized', () => {
+        window.getBrowserView().webContents.send('resized');
+    });
+
 }
 
 function updateMenuItem(args) {

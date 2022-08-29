@@ -24,9 +24,9 @@
         var current = '0';
 
         function newClient() {
-            ipcRenderer.send('update-client', current, 32);
-            current = ''+clientID;
-            ipcRenderer.send('new-client', current, true, 32);
+            ipcRenderer.send('update-client', current, tabStrip.childNodes.length === 0 ? 0 : 32);
+            current = '' + clientID;
+            ipcRenderer.send('new-client', current, true, tabStrip.childNodes.length === 0 ? 0 : 32);
             clients.push(current);
             tabStrip.appendChild(createTab(current));
             tabStrip.style.display = 'inline-block';
@@ -34,10 +34,10 @@
         }
 
         function dockClient(id) {
-            if(clients.indexOf(id) !== -1) return;
+            if (clients.indexOf(id) !== -1) return;
             ipcRenderer.send('dock-client', id, 32);
             current = id;
-            ipcRenderer.send('switch-client', current);
+            ipcRenderer.send('switch-client', current, 32);
             tabStrip.appendChild(createTab(id));
             if (tabStrip.childNodes.length < 2)
                 tabStrip.style.display = 'none';
@@ -48,9 +48,9 @@
 
         function undockClient(id) {
             var idx = clients.indexOf(id);
-            if(clients.indexOf(id) === -1) return;
+            if (clients.indexOf(id) === -1) return;
             ipcRenderer.send('undock-client', id);
-            removeTab(id);            
+            removeTab(id);
             clients.splice(idx, 1);
             if (tabStrip.childNodes.length < 2)
                 tabStrip.style.display = 'none';
@@ -60,9 +60,10 @@
                 if (idx >= clients.length)
                     idx = clients.length - 1;
                 current = clients[idx];
-                ipcRenderer.send('switch-client', current);
+                ipcRenderer.send('switch-client', current, tabStrip.childNodes.length === 1 ? 0 : 32);
             }
-            ipcRenderer.send('update-client', current, tabStrip.childNodes.length === 1 ? 0 : 32);
+            else
+                ipcRenderer.send('update-client', current, tabStrip.childNodes.length === 1 ? 0 : 32);
         }
 
         function removeClient(id) {
@@ -106,7 +107,7 @@
             tab.addEventListener('click', (ev) => {
                 if (current === ev.currentTarget.dataset.clientID) return;
                 current = ev.currentTarget.dataset.clientID;
-                ipcRenderer.send('switch-client', current);
+                ipcRenderer.send('switch-client', current, tabStrip.childNodes.length === 1 ? 0 : 32);
             });
             return tab;
         }
