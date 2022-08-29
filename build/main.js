@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, shell, screen } = require('electron');
+const { app, BrowserWindow, BrowserView, shell, screen } = require('electron');
 const { Tray, dialog, Menu, MenuItem } = require('electron');
 const ipcMain = require('electron').ipcMain;
 const path = require('path');
@@ -172,11 +172,22 @@ var menuTemp = [
         id: 'file',
         submenu: [
             {
+                label: '&New connection',
+                id: 'connect',
+                accelerator: 'CmdOrCtrl+Shift+N',
+                click: (item, mWindow) => {
+                    executeScript('newClient()', win, true);
+                    win.webContents.focus();
+                    if (win.getBrowserView())
+                        win.getBrowserView().webContents.focus();
+                }
+            },
+            {
                 label: '&Connect',
                 id: 'connect',
                 accelerator: 'CmdOrCtrl+N',
-                click: () => {
-                    executeScript('client.connect()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('client.connect()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             {
@@ -184,8 +195,8 @@ var menuTemp = [
                 id: 'disconnect',
                 accelerator: 'CmdOrCtrl+D',
                 enabled: false,
-                click: () => {
-                    executeScript('client.close()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('client.close()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             {
@@ -196,8 +207,8 @@ var menuTemp = [
                 id: 'enableParsing',
                 type: 'checkbox',
                 checked: true,
-                click: () => {
-                    executeScript('toggleParsing()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('toggleParsing()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             {
@@ -205,8 +216,8 @@ var menuTemp = [
                 id: 'enableTriggers',
                 type: 'checkbox',
                 checked: true,
-                click: () => {
-                    executeScript('toggleTriggers()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('toggleTriggers()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             {
@@ -216,8 +227,8 @@ var menuTemp = [
                 label: 'Ch&aracters...',
                 id: 'characters',
                 accelerator: 'CmdOrCtrl+H',
-                click: () => {
-                    executeScript('showCharacters()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('showCharacters()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             { type: 'separator' },
@@ -226,14 +237,14 @@ var menuTemp = [
                 id: 'log',
                 type: 'checkbox',
                 checked: false,
-                click: () => {
-                    executeScript('toggleLogging()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('toggleLogging()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             {
                 label: '&View logs...',
-                click: () => {
-                    executeScript('showLogViewer()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('showLogViewer()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             {
@@ -279,22 +290,22 @@ var menuTemp = [
                 accelerator: 'CmdOrCtrl+Alt+C',
                 id: 'copyHTML',
                 enabled: false,
-                click: () => {
-                    executeScript('copyAsHTML();', win, true);
+                click: (item, mWindow) => {
+                    executeScript('copyAsHTML();', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             {
                 label: 'Paste',
                 accelerator: 'CmdOrCtrl+V',
-                click: () => {
-                    executeScript('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);paste()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);paste()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             {
                 label: 'Paste special',
                 accelerator: 'CmdOrCtrl+Shift+V',
-                click: () => {
-                    executeScript('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);pasteSpecial()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);pasteSpecial()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             /*
@@ -308,8 +319,8 @@ var menuTemp = [
             {
                 label: 'Select All',
                 accelerator: 'CmdOrCtrl+A',
-                click: () => {
-                    executeScript('selectAll()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('selectAll()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             {
@@ -317,17 +328,18 @@ var menuTemp = [
             },
             {
                 label: 'Clear',
-                click: () => {
-                    executeScript('client.clear()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('client.clear()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             { type: 'separator' },
             {
                 label: 'Find',
                 accelerator: 'CmdOrCtrl+F',
-                click: () => {
-                    win.webContents.focus();
-                    executeScript('client.display.showFind()', win, true);
+                click: (item, mWindow) => {
+                    mWindow.webContents.focus();
+                    mWindow.getBrowserView().webContents.focus();
+                    executeScript('client.display.showFind()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
         ]
@@ -348,15 +360,15 @@ var menuTemp = [
                 id: 'lock',
                 type: 'checkbox',
                 checked: false,
-                click: () => {
-                    executeScript('client.toggleScrollLock()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('client.toggleScrollLock()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             {
                 label: '&Who is on?...',
-                click: () => {
-                    executeScript('showWho()', win, true);
-                    win.webContents.focus();
+                click: (item, mWindow) => {
+                    executeScript('showWho()', mWindow.getBrowserView() || mWindow, true);
+                    (mWindow.getBrowserView() || mWindow).webContents.focus();
                 }
             },
             {
@@ -371,15 +383,15 @@ var menuTemp = [
                         id: 'statusvisible',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("status")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("status")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     {
                         label: '&Refresh',
                         id: 'refresh',
-                        click: () => {
-                            executeScript('client.sendGMCP(\'Core.Hello { "client": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('client.sendGMCP(\'Core.Hello { "client": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     { type: 'separator' },
@@ -388,8 +400,8 @@ var menuTemp = [
                         id: 'weather',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("weather")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("weather")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     {
@@ -401,8 +413,8 @@ var menuTemp = [
                                 id: 'limbs',
                                 type: 'checkbox',
                                 checked: true,
-                                click: () => {
-                                    executeScript('toggleView("limbs")', win, true);
+                                click: (item, mWindow) => {
+                                    executeScript('toggleView("limbs")', mWindow.getBrowserView() || mWindow, true);
                                 }
                             },
                             { type: 'separator' },
@@ -411,8 +423,8 @@ var menuTemp = [
                                 id: 'limbhealth',
                                 type: 'checkbox',
                                 checked: true,
-                                click: () => {
-                                    executeScript('toggleView("limbhealth")', win, true);
+                                click: (item, mWindow) => {
+                                    executeScript('toggleView("limbhealth")', mWindow.getBrowserView() || mWindow, true);
                                 }
                             },
                             {
@@ -420,8 +432,8 @@ var menuTemp = [
                                 id: 'limbarmor',
                                 type: 'checkbox',
                                 checked: true,
-                                click: () => {
-                                    executeScript('toggleView("limbarmor")', win, true);
+                                click: (item, mWindow) => {
+                                    executeScript('toggleView("limbarmor")', mWindow.getBrowserView() || mWindow, true);
                                 }
                             },
                         ]
@@ -431,8 +443,8 @@ var menuTemp = [
                         id: 'health',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("health")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("health")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     {
@@ -440,8 +452,8 @@ var menuTemp = [
                         id: 'experience',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("experience")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("experience")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     {
@@ -449,8 +461,8 @@ var menuTemp = [
                         id: 'partyhealth',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("partyhealth")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("partyhealth")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     {
@@ -458,8 +470,8 @@ var menuTemp = [
                         id: 'combathealth',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("combathealth")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("combathealth")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     {
@@ -467,8 +479,8 @@ var menuTemp = [
                         id: 'lagmeter',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("lagmeter")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("lagmeter")', mWindow.getBrowserView() || mWindow, true);
                         }
                     }
                 ]
@@ -479,8 +491,8 @@ var menuTemp = [
                 /*
                 type: 'checkbox',
                 checked: true,
-                click: () => {
-                  executeScript('toggleView("buttons")', win, true);
+                click: (item, mWindow) => {
+                  executeScript('toggleView("buttons")', mWindow.getBrowserView() || mWindow, true);
                 },
                 */
                 submenu: [
@@ -489,8 +501,8 @@ var menuTemp = [
                         id: 'buttonsvisible',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("buttons")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("buttons")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     { type: 'separator' },
@@ -499,8 +511,8 @@ var menuTemp = [
                         id: 'connectbutton',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.connect")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("button.connect")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     {
@@ -508,8 +520,8 @@ var menuTemp = [
                         id: 'charactersbutton',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.characters")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("button.characters")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     {
@@ -523,8 +535,8 @@ var menuTemp = [
                         id: 'preferencesbutton',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.preferences")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("button.preferences")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     {
@@ -532,8 +544,8 @@ var menuTemp = [
                         id: 'logbutton',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.log")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("button.log")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     {
@@ -541,8 +553,8 @@ var menuTemp = [
                         id: 'clearbutton',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.clear")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("button.clear")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     {
@@ -550,8 +562,8 @@ var menuTemp = [
                         id: 'lockbutton',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.lock")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("button.lock")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     {
@@ -559,8 +571,8 @@ var menuTemp = [
                         id: 'mapbutton',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.map")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("button.map")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                     /*
@@ -569,7 +581,7 @@ var menuTemp = [
                       id: "mailbutton",
                       type: 'checkbox',
                       checked: true,
-                      click: () => {
+                      click: (item, mWindow) => {
                         executeScript('toggleView("button.mail")', win, true);
                       }
                     },
@@ -578,7 +590,7 @@ var menuTemp = [
                       id: "composebutton",
                       type: 'checkbox',
                       checked: true,
-                      click: () => {
+                      click: (item, mWindow) => {
                         executeScript('toggleView("button.compose")', win, true);
                       }
                     },
@@ -588,8 +600,8 @@ var menuTemp = [
                         id: 'userbutton',
                         type: 'checkbox',
                         checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.user")', win, true);
+                        click: (item, mWindow) => {
+                            executeScript('toggleView("button.user")', mWindow.getBrowserView() || mWindow, true);
                         }
                     },
                 ]
@@ -599,12 +611,18 @@ var menuTemp = [
             },
             {
                 label: '&Toggle Developer Tools',
-                click: () => {
-                    if (win.webContents.isDevToolsOpened())
-                        win.webContents.closeDevTools();
+                click: (item, mWindow) => {
+
+                    if (mWindow.webContents.isDevToolsOpened())
+                        mWindow.webContents.closeDevTools();
                     else
-                        win.webContents.openDevTools();
-                    win.webContents.focus();
+                        mWindow.webContents.openDevTools();
+                    var view = mWindow.getBrowserView();
+                    if (view && view.webContents.isDevToolsOpened())
+                        view.webContents.closeDevTools();
+                    else if (view)
+                        view.webContents.openDevTools();
+                    (mWindow.getBrowserView() || mWindow).webContents.focus();
                 }
             },
             {
@@ -647,8 +665,8 @@ var menuTemp = [
             {
                 label: '&Immortal tools...',
                 id: 'immortal',
-                click: () => {
-                    executeScript('showImmortalTools()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('showImmortalTools()', mWindow.getBrowserView() || mWindow, true);
                 },
                 visible: false,
                 accelerator: 'CmdOrCtrl+I'
@@ -666,32 +684,32 @@ var menuTemp = [
             {
                 label: '&Skills...',
                 id: 'skills',
-                click: () => {
-                    executeScript('showSkills()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('showSkills()', mWindow.getBrowserView() || mWindow, true);
                 },
                 accelerator: 'CmdOrCtrl+S'
             },
             {
                 label: '&Command history...',
                 id: 'history',
-                click: () => {
-                    executeScript('showCommandHistory()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('showCommandHistory()', mWindow.getBrowserView() || mWindow, true);
                 },
                 accelerator: 'CmdOrCtrl+Shift+H'
             },
             /*
             {
               label: '&Mail...',
-              click: () => {
-                executeScript('showMail()', win, true);
+              click: (item, mWindow) => {
+                executeScript('showMail()', mWindow.getBrowserView() || mWindow, true);
               },
               visible: true,
               //accelerator: 'CmdOrCtrl+M'
             },
             {
               label: '&Compose mail...',
-              click: () => {
-                executeScript('showComposer()', win, true);
+              click: (item, mWindow) => {
+                executeScript('showComposer()', mWindow.getBrowserView() || mWindow, true);
               },
               visible: true,
               //accelerator: 'CmdOrCtrl+M'
@@ -708,21 +726,21 @@ var menuTemp = [
         submenu: [
             {
                 label: '&ShadowMUD...',
-                click: () => {
-                    executeScript('showSMHelp()', win, true);
+                click: (item, mWindow) => {
+                    executeScript('showSMHelp()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             {
                 label: '&jiMUD...',
                 click: () => {
-                    executeScript('showHelp()', win, true);
+                    executeScript('showHelp()', mWindow.getBrowserView() || mWindow, true);
                 }
             },
             {
                 label: '&jiMUD website...',
-                click: () => {
+                click: (item, mWindow) => {
                     shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
-                    win.webContents.focus();
+                    (mWindow.getBrowserView() || mWindow).webContents.focus();
                 }
             },
             { type: 'separator' },
@@ -734,7 +752,7 @@ var menuTemp = [
             { type: 'separator' },
             {
                 label: '&About...',
-                click: showAbout
+                click: (item, mWindow) => showAbout(mWindow)
             }
         ]
     }
@@ -893,7 +911,7 @@ function addInputContext(window, spellcheck) {
     });
 }
 
-function createMenu() {
+function createMenu(window) {
     var profiles;
     for (var m = 0; m < menuTemp.length; m++) {
         if (menuTemp[m].id === 'profiles') {
@@ -908,8 +926,8 @@ function createMenu() {
             type: 'checkbox',
             checked: false,
             id: 'default',
-            click: () => {
-                executeScript('client.toggleProfile("default")', win, true);
+            click: (item, mWindow) => {
+                executeScript('client.toggleProfile("default")', mWindow, true);
             }
         });
 
@@ -942,15 +960,19 @@ function createMenu() {
             accelerator: 'CmdOrCtrl+P'
 
         });
-    menubar = Menu.buildFromTemplate(menuTemp);
-    win.setMenu(menubar);
-    Menu.setApplicationMenu(menubar);
-    win.webContents.send('menu-reload');
+    if (!window) {
+        menubar = Menu.buildFromTemplate(menuTemp);
+        win.setMenu(menubar);
+        Menu.setApplicationMenu(menubar);
+        win.webContents.send('menu-reload');
+    }
+    else
+        return Menu.buildFromTemplate(menuTemp);
 }
 
-function profileToggle(menuItem) {
-    if (!win || !win.webContents) return;
-    executeScript('client.toggleProfile("' + menuItem.label.toLowerCase() + '")', win, true);
+function profileToggle(menuItem, mWindow) {
+    if (!mWindow || !mWindow.webContents) return;
+    executeScript('client.toggleProfile("' + menuItem.label.toLowerCase() + '")', mWindow, true);
 }
 
 function createTray() {
@@ -1384,9 +1406,12 @@ function createWindow() {
             });
         }
         loadWindowScripts(win, 'user');
-        await executeScript('loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');updateInterface();', win);
+        await executeScript('loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');updateInterface();', win).catch(err => {
+            console.log(err);
+        });
         //win.setContentSize(s.width, s.height);
         restoreWindowState(win, s, true);
+        /*
         if (set.showMapper)
             showMapper(true);
         else if (set.mapper.persistent || set.mapper.enabled)
@@ -1424,6 +1449,7 @@ function createWindow() {
             showCodeEditor(true);
         else if (!global.editorOnly && edSet.window.persistent)
             createCodeEditor();
+            */
         updateJumpList();
         checkForUpdates();
     });
@@ -1444,6 +1470,14 @@ function createWindow() {
         }
         if (winMap && !winMap.isDestroyed() && !winMap.isVisible())
             executeScript('closeHidden()', winMap);
+        for (client in clients) {
+            if (!Object.prototype.hasOwnProperty.call(clients, client) || !clients[client].view)
+                continue;
+            win.removeBrowserView(clients[client].view);
+            clients[client].view.webContents.destroy();
+            clients[client] = null;
+            delete clients[client];
+        }
         set.save(global.settingsFile);
     });
 }
@@ -3041,6 +3075,181 @@ ipcMain.on('window-info-by-title', (event, title, info) => {
 ipcMain.on('inspect', (event, x, y) => {
     event.sender.inspectElement(x || 0, y || 0);
 });
+
+var clients = {};
+
+ipcMain.on('new-client', (event, id, focus, offset) => {
+    const view = new BrowserView({
+        webPreferences: {
+            nodeIntegration: true,
+            nodeIntegrationInWorker: true,
+            webviewTag: false,
+            sandbox: false,
+            spellcheck: set ? set.spellchecking : false,
+            enableRemoteModule: true,
+            contextIsolation: false,
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true
+        }
+    });
+    view.setAutoResize({
+        width: true,
+        height: true
+    })
+    var bounds = BrowserWindow.fromWebContents(event.sender).getContentBounds();
+    view.setBounds({
+        x: 0,
+        y: offset,
+        width: bounds.width,
+        height: bounds.height - offset
+    });
+    view.webContents.loadFile("build/client.html");
+    require("@electron/remote/main").enable(view.webContents);
+    clients[id] = { view: view };
+    if (focus)
+        win.setBrowserView(view)
+    executeScript(`setId('${id}');`, clients[id].view);        
+    //clients[id].view.webContents.openDevTools();
+    //win.setTopBrowserView(view)    
+    //addBrowserView
+    //setBrowserView    
+});
+
+ipcMain.on('switch-client', (event, id, offset) => {
+    if (clients[id]) {
+        if (clients[id].window) {
+            clients[id].window.focus();
+            clients[id].view.webContents.focus();
+        }
+        else {
+            win.setBrowserView(clients[id].view);
+            clients[id].view.webContents.focus();
+        }
+        if (offset) {
+            var bounds = BrowserWindow.fromWebContents(event.sender).getContentBounds();
+            clients[id].view.setBounds({
+                x: 0,
+                y: offset,
+                width: bounds.width,
+                height: bounds.height - offset
+            });
+        }
+    }
+    //win.setTopBrowserView(clients[id])
+});
+
+ipcMain.on('remove-client', (event, id) => {
+    if (clients[id])
+        removeClient(id, true);
+});
+
+ipcMain.on('undock-client', (event, id) => {
+    if (clients[id] && !clients[id].window) {
+        // Create the browser window.
+        clients[id].window = new BrowserWindow({
+            title: 'jiMUD',
+            x: 0,
+            y: 0,
+            width: 800,
+            height: 600,
+            backgroundColor: '#000',
+            show: false,
+            icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
+            skipTaskbar: !set.showInTaskBar ? true : false,
+            webPreferences: {
+                nodeIntegration: true,
+                nodeIntegrationInWorker: true,
+                webviewTag: false,
+                sandbox: false,
+                spellcheck: set ? set.spellchecking : false,
+                enableRemoteModule: true,
+                contextIsolation: false,
+                backgroundThrottling: set ? set.enableBackgroundThrottling : true
+            }
+        });
+        clients[id].window.on('closed', (e) => {
+            if (e.sender === clients[id].window)
+                removeClient(id);
+        });
+        clients[id].window.loadURL(url.format({
+            pathname: path.join(__dirname, 'blank.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
+        require("@electron/remote/main").enable(clients[id].window.webContents);
+        clients[id].window.once('ready-to-show', () => {
+            loadWindowScripts(clients[id].window, 'user');
+            addInputContext(clients[id].window, global.editorOnly ? (edSet && edSet.spellchecking) : (set && set.spellchecking));
+            restoreWindowState(clients[id].window, null, true, true);
+            win.removeBrowserView(clients[id].view);
+            clients[id].window.setBrowserView(clients[id].view);
+            var bounds = clients[id].window.getContentBounds();
+            clients[id].view.setBounds({
+                x: 0,
+                y: 0,
+                width: bounds.width,
+                height: bounds.height
+            });
+        });
+    }
+});
+
+ipcMain.on('dock-client', (event, id, offset) => {
+    if (clients[id] && clients[id].window) {
+        clients[id].window.removeBrowserView(clients[id].view);
+        clients[id].window.close();
+        clients[id].window = null;
+        delete clients[id].window;
+        var bounds = BrowserWindow.fromWebContents(event.sender).getContentBounds();
+        clients[id].view.setBounds({
+            x: 0,
+            y: offset,
+            width: bounds.width,
+            height: bounds.height - offset
+        });
+    }
+});
+
+ipcMain.on('execute-client', (event, id, code) => {
+    if (clients[id])
+        executeScript(code, clients[id]);
+});
+
+ipcMain.on('update-client', (event, id, offset) => {
+    if (clients[id]) {
+        var bounds = BrowserWindow.fromWebContents(event.sender).getContentBounds();
+        clients[id].view.setBounds({
+            x: 0,
+            y: offset,
+            width: bounds.width,
+            height: bounds.height - offset
+        });
+    }
+});
+
+ipcMain.on('execute-main', (event, code) => {
+    executeScript(code, win);
+});
+
+ipcMain.on('dock-main', (event, id) => {
+    executeScript(`dockClient(${id})`, win);
+});
+
+function removeClient(id, close) {
+    if (clients[id].window) {
+        if (!clients[id].window.isDestroyed()) {
+            if (close)
+                clients[id].window.close();
+            clients[id].window.removeBrowserView(clients[id].view);
+        }
+        clients[id].window = null;
+        delete clients[id].window;
+    }
+    else
+        win.removeBrowserView(clients[id].view);
+    clients[id].view.webContents.destroy();
+    clients[id] = null;
+    delete clients[id];
+}
 
 function updateMenuItem(args) {
     var item, i = 0, items;
@@ -4720,16 +4929,13 @@ function checkForUpdatesManual() {
     autoUpdater.checkForUpdates();
 }
 
-function showAbout() {
+function showAbout(mWindow) {
     var b;
-
-    if (global.editorOnly)
-        b = winCode.getBounds();
-    else
-        b = win.getBounds();
+    mWindow = mWindow || getParentWindow();
+    b = mWindow.getBounds();
 
     let about = new BrowserWindow({
-        parent: getParentWindow(),
+        parent: mWindow,
         modal: false,
         x: Math.floor(b.x + b.width / 2 - 250),
         y: Math.floor(b.y + b.height / 2 - 280),

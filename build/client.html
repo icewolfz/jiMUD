@@ -1,0 +1,3438 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <title>jiMUD</title>
+    <link href="css/main.css" rel="stylesheet" type="text/css" />
+    <link href="css/ansi.css" rel="stylesheet" type="text/css" />
+    <link href="css/monsters.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/theme.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+
+    <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css" />
+    <script type="text/javascript">
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        //spell-checker:ignore ismap hellip selectall lagmeter repeatnum buttonvisible statusvisible limbsmenu partyhealth combathealth limb armor limbhealth
+        if (window.module) module = window.module;
+
+        ['repeatnum', 'i'].forEach((a) => {
+            Object.defineProperty(window, a, {
+                get: function () {
+                    if (!client) return undefined;
+                    return client.repeatnum;
+                },
+                configurable: true
+            });
+        });
+
+        Object.defineProperty(window, '$selected', {
+            get: function () {
+                if (!client) return '';
+                return client.display.selection;
+            },
+            configurable: true
+        });
+
+        Object.defineProperty(window, '$character', {
+            get: function () {
+                if (_status)
+                    return _status.name || _charName || ipcRenderer.sendSync('get-global', 'characterLogin') || '';
+                return _charName || ipcRenderer.sendSync('get-global', 'characterLogin') || '';
+            },
+            configurable: true
+        });
+
+        Object.defineProperty(window, '$copied', {
+            get: function () {
+                return clipboard.readText('selection') || '';
+            },
+            configurable: true
+        });
+
+        Object.defineProperty(window, '$selword', {
+            get: function () {
+                if (!client) return '';
+                return client._input.vStack['$selword'] || _selword || (lastMouse ? client.display.getWordFromPosition(client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY)) : '');
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selurl', {
+            get: function () {
+                if (!client) return '';
+                let value = client._input.vStack['$selurl'] || _selurl || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var parent = $(lastMouse.srcElement.parentNode);
+                if (parent && parent.hasClass('URLLink'))
+                    return parent.title;
+                else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
+                    return parent.data('href');
+                return '';
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selline', {
+            get: function () {
+                if (!client) return '';
+                let value = client._input.vStack['$selline'] || _selline || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
+                if (pos.y < 0 || pos.y >= client.display.lines.length)
+                    return '';
+                return client.display.lines[pos.y];
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selectedword', {
+            get: function () {
+                if (!client) return '';
+                return client._input.vStack['$selectedword'] || _selword || (lastMouse ? client.display.getWordFromPosition(client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY)) : '');
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selectedurl', {
+            get: function () {
+                if (!client) return '';
+                let value = client._input.vStack['$selectedurl'] || _selurl || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var parent = $(lastMouse.srcElement.parentNode);
+                if (parent && parent.hasClass('URLLink'))
+                    return parent.title;
+                else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
+                    return parent.data('href');
+                return '';
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selectedline', {
+            get: function () {
+                if (!client) return '';
+                let value = client._input.vStack['$selectedline'] || _selline || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
+                if (pos.y < 0 || pos.y >= client.display.lines.length)
+                    return '';
+                return client.display.lines[pos.y];
+            },
+            configurable: true
+        });
+
+        window.addEventListener('keydown', (event) => {
+            if ($('#disconnectDialog')[0].open) {
+                if (event.which === 81) {
+                    closeDisconnectDialog(true);
+                    window.close();
+                    event.preventDefault();
+                    event.cancelBubble = true;
+                }
+                else if (event.which === 82) {
+                    closeDisconnectDialog();
+                    client.connect();
+                    event.preventDefault();
+                    event.cancelBubble = true;
+                }
+                else if (event.which === 79) {
+                    closeDisconnectDialog(true);
+                    event.preventDefault();
+                    event.cancelBubble = true;
+                }
+                else if (event.which == 77) {
+                    closeDisconnectDialog(true);
+                    showCharacters();
+                    event.preventDefault();
+                    event.cancelBubble = true;
+                }
+                //67 - c
+                //68 - d
+            }
+            else if ($('#pasteSpecial')[0].open) {
+                if (event.which === 13) {
+                    var i;
+                    if (document.activeElement.id === 'pasteSpecial-replace') {
+                        if (!$('#pasteSpecial-prefix').prop('disabled'))
+                            i = document.getElementById('pasteSpecial-prefix');
+                        else if (!$('#pasteSpecial-postfix').prop('disabled'))
+                            i = document.getElementById('pasteSpecial-postfix');
+                    }
+                    else if (document.activeElement.id === 'pasteSpecial-prefix' && !$('#pasteSpecial-postfix').prop('disabled'))
+                        i = document.getElementById('pasteSpecial-postfix');
+                    if (i)
+                        i.focus();
+                    else
+                        $('#pasteSpecial-ok').trigger('click');
+                }
+            }
+            else if (event.which === 33) //page up
+                client.display.pageUp();
+            else if (event.which === 34) //page up
+                client.display.pageDown();
+
+        });
+        const Client = require('./js/client.js').Client;
+        const Status = require('./js/status.js').Status;
+        const Backup = require('./js/backup.js').Backup;
+        const { Settings } = require('./js/settings');
+        const { shell, clipboard, ipcRenderer, webFrame, nativeImage } = require('electron');
+        const remote = require('@electron/remote');
+        const { Menu, MenuItem } = remote;
+        const { parseTemplate, setSelectionRange, isFileSync, decrypt } = require('./js/library.js');
+        const { ProfileSaveType } = require('./js/types.js');
+        //    const fs = require('fs');
+        const path = require('path');
+        const { version } = require('../package.json');
+        var _id;
+        var autoConnectID;
+        var autoLoginCounter = 0;
+        var lastMouse;
+        var chatWin;
+        var _nextClear = Date.now() + 3600000;
+        var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+        loadTheme(set.theme);
+        delete set;
+
+        var client, _status, _backup;
+        var _logger;
+        var active = document.hasFocus();
+        var capture = 0, captureReview = 0;
+        var _captures = [], _captureReviews = [];
+        //var _captureComm = false;
+        var _noCapture = false;
+        var _noCaptureStore = 0;
+        var _cLoading = false;
+        var _context;
+        var $contextMenu;
+        var _selword = '';
+        var _selurl = '';
+        var _selline = '';
+        var _disconnectTimerID;
+        var _disconnectTimer = 0;
+        var _disconnectCounter = 0;
+        var _charName = 0;
+        var _skipDisconnect = 0;
+        var _watcher = null;
+
+        window.onerror = function (msg, url, line, col, error) {
+            if (client) {
+                if (error)
+                    client.error(error);
+                else if (msg.startsWith('Uncaught Error: '))
+                    client.error(`${msg.substr(16)}`);
+                else
+                    client.error(`${msg}`);
+                if (client.options.enableDebug) {
+                    client.error('Url: ' + url);
+                    client.error('Line: ' + line);
+                    client.error('Column: ' + col);
+                    client.error(error);
+                }
+            }
+            else {
+                console.error('Message: ' + msg);
+                console.error('Url: ' + url);
+                console.error('Line: ' + line);
+                console.error('Column: ' + col);
+                console.error(error);
+            }
+            return true;
+        };
+
+        window.onmousemove = function (e) {
+            lastMouse = e;
+        };
+
+        function doLink(url) {
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                {
+                    type: 'warning',
+                    title: 'Open?',
+                    message: 'Open \'' + url + '\'?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                }) === 0)
+                shell.openExternal(encodeURI(url));
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function doMXPLink(el, url) {
+            if (url.startsWith('OoMUD://') || url.startsWith('jiMUD://') || url.startsWith('client://'))
+                doMXPSend(0, el, url.substring(8));
+            else if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                {
+                    type: 'warning',
+                    title: 'Open?',
+                    message: 'Open \'' + url + '\'?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                }) === 0)
+                shell.openExternal(encodeURI(url.replace('&text;', $(el).text())));
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
+        }
+
+        function doMXPSend(e, el, url, pmt, tt) {
+            el = $(el);
+            var im = el.find('img[ismap]');
+            var extra = '';
+            if (im.length > 0) {
+                var offset = im.offset();
+                var x = Math.floor(e.clientX - offset.left);
+                var y = Math.floor(e.clientY - offset.top);
+                extra = '?' + x + ',' + y;
+            }
+
+            if (url.constructor === Array || url.__proto__.constructor === Array || Object.prototype.toString.call(url) === '[object Array]') {
+                var menu = new Menu();
+                var item;
+                for (var i = 0, il = url.length; i < il; i++) {
+                    url[i] = url[i].replace('&text;', $(el).text());
+                    if (i < tt.length) {
+                        item = new MenuItem({
+                            label: tt[i], click(item) {
+                                MXPMenuHandler(item.cmd, pmt);
+                            }
+                        });
+                    }
+                    else {
+                        item = new MenuItem({
+                            label: url[i], click(item) {
+                                MXPMenuHandler(item.cmd, pmt);
+                            }
+                        });
+                    }
+                    item.cmd = url[i] + extra;
+                    menu.append(item);
+                }
+                menu.popup({ window: remote.getCurrentWindow(), x: e.pageX, y: e.pageY });
+            }
+            else if (pmt) {
+                url = url.replace('&text;', $(el).text()) + extra;
+                client.commandInput.val(url);
+                setSelectionRange(client.commandInput[0], url.length, url.length);
+            }
+            else
+                client.send(url.replace('&text;', $(el).text()) + extra + '\n', true);
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
+        }
+
+        function MXPMenuHandler(cmd, pmt) {
+            if (pmt) {
+                client.commandInput.val(cmd);
+                setSelectionRange(client.commandInput[0], cmd.length, cmd.length);
+            }
+            else
+                client.send(cmd, true);
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function doMXPTooltip(el) {
+            el = $(el);
+            el.prop('title', el.prop('title').replace('&text;', el.text()));
+        }
+
+        function selectAll() {
+            client.display.selectAll();
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
+        }
+
+        function toggleView(view) {
+            switch (view) {
+                case 'button.connect':
+                case 'button.preferences':
+                case 'button.log':
+                case 'button.clear':
+                case 'button.lock':
+                case 'button.map':
+                case 'button.user':
+                case 'button.characters':
+                case 'button.mail':
+                case 'button.compose':
+                case 'button.codeEditor':
+                    view = view.split('.');
+                    client.options.buttons[view[1]] = !client.options.buttons[view[1]];
+                    doUpdate(33);
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', view[1] + 'button'], checked: client.options.buttons[view[1]] });
+                    break;
+                case 'buttons':
+                    client.options.showButtonBar = !client.options.showButtonBar;
+                    doUpdate(33);
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], checked: client.options.showButtonBar });
+                    break;
+                case 'status':
+                    client.options.showStatus = !client.options.showStatus;
+                    doUpdate(33);
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], checked: client.options.showStatus });
+                    break;
+                case 'lagmeter':
+                    client.options.lagMeter = !client.options.lagMeter;
+                    doUpdate(33);
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], checked: client.options.lagMeter });
+                    break;
+                case 'weather':
+                    client.options.showStatusWeather = !client.options.showStatusWeather;
+                    doUpdate(33);
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'weather'], checked: client.options.showStatusWeather });
+                    break;
+                case 'limbs':
+                    client.options.showStatusLimbs = !client.options.showStatusLimbs;
+                    doUpdate(33);
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: client.options.showStatusLimbs });
+                    break;
+                case 'health':
+                    client.options.showStatusHealth = !client.options.showStatusHealth;
+                    doUpdate(33);
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'health'], checked: client.options.showStatusHealth });
+                    break;
+                case 'experience':
+                    client.options.showStatusExperience = !client.options.showStatusExperience;
+                    doUpdate(33);
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'experience'], checked: client.options.showStatusExperience });
+                    break;
+                case 'partyhealth':
+                    client.options.showStatusPartyHealth = !client.options.showStatusPartyHealth;
+                    doUpdate(33);
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'partyhealth'], checked: client.options.showStatusPartyHealth });
+                    break;
+                case 'combathealth':
+                    client.options.showStatusCombatHealth = !client.options.showStatusCombatHealth;
+                    doUpdate(33);
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'combathealth'], checked: client.options.showStatusCombatHealth });
+                    break;
+                case 'limbhealth':
+                    _status.ac = false;
+                    break;
+                case 'limbarmor':
+                    _status.ac = true;
+                    break;
+            }
+        }
+
+        function loadTheme(theme, force) {
+            theme = parseTemplate(theme) + '.css';
+            if (!isFileSync(theme))
+                theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
+            var el = document.getElementById('theme');
+            if (el.getAttribute('href') !== theme || force)
+                el.setAttribute('href', theme);
+            if (client && client.display)
+                client.display.updateLayout();
+        }
+
+        function updateInterface() {
+            if(!client || !client.options) return;
+            loadTheme(client.options.theme);
+            $('#display').css('left', '');
+            $('#display-border').css('left', '');
+            $('#command').css('left', '');
+            if (!client.options.showButtonBar) {
+                $('#buttonbar').css('display', 'none');
+                var w = parseInt($('#buttonbar').css('left'), 10);
+                if (isNaN(w)) w = 0;
+                w += $('#buttonbar').outerWidth();
+
+                $('#display').css('left', $('#display').offset().left - w);
+                $('#display-border').css('left', $('#display-border').offset().left - w);
+                $('#command').css('left', $('#command').offset().left - w);
+            }
+            else {
+                $('#buttonbar').css('display', '');
+            }
+            if (client.options.scrollLocked) {
+                $('#lock').prop('title', 'Unlock display');
+                $('#lock i').removeClass('fa-lock');
+                $('#lock i').addClass('fa-unlock');
+                $('#lock').addClass('on');
+            }
+            else {
+                $('#lock').removeClass('on');
+                $('#lock').prop('title', 'Lock display');
+                $('#lock i').addClass('fa-lock');
+                $('#lock i').removeClass('fa-unlock');
+            }
+            if (!client.options.buttons.connect) {
+                $('#connect').css('display', 'none');
+                $('#disconnect').css('display', 'none');
+            }
+            else if (client.connecting || client.connected) {
+                $('#connect').css('display', 'none');
+                $('#disconnect').css('display', '');
+            }
+            else {
+                $('#connect').css('display', '');
+                $('#disconnect').css('display', 'none');
+            }
+            $('#characters').css('display', client.options.buttons.characters ? '' : 'none');
+            $('#preferences').css('display', client.options.buttons.preferences ? '' : 'none');
+            $('#log').css('display', client.options.buttons.log ? '' : 'none');
+            $('#clear').css('display', client.options.buttons.clear ? '' : 'none');
+            $('#lock').css('display', client.options.buttons.lock ? '' : 'none');
+            $('#map').css('display', client.options.buttons.map ? '' : 'none');
+            $('#mail').css('display', client.options.buttons.mail ? '' : 'none');
+            $('#compose').css('display', client.options.buttons.compose ? '' : 'none');
+            $('#codeEditor').css('display', client.options.buttons.codeEditor ? '' : 'none');
+            if (client.enableParsing)
+                $('#btnParsing').addClass('on');
+            else
+                $('#btnParsing').removeClass('on');
+            if (client.enableTriggers)
+                $('#btnTriggers').addClass('on');
+            else
+                $('#btnTriggers').removeClass('on');
+            buildButtons();
+            /*
+            client.display.update();
+            client.display.updateScrollbars();
+            client.UpdateWindow();
+            */
+            setTimeout(() => {
+                _status.resize();
+                _status.updateInterface();
+                client.display.update();
+                client.display.updateScrollbars();
+                client.UpdateWindow();
+            }, 1);
+            updateMenu();
+        }
+
+        function buildMenu(name, context) {
+            if (!name || context.length === 0)
+                return [];
+            var items = [];
+            for (var x = 0, xl = context.length; x < xl; x++) {
+                if (!context[x].enabled || context[x].parent != name) continue;
+                var menu;
+                if (context[x].caption === '-')
+                    menu = { type: 'separator' };
+                else {
+                    menu = {};
+                    menu.label = context[x].caption;
+                    if (context[x].parse)
+                        menu.caption = context[x].caption;
+                    menu.item = context[x];
+                    menu.click = (item) => {
+                        executeContext(item.item);
+                        setTimeout(() => {
+                            if (client.options.CommandonClick)
+                                client.commandInput[0].focus();
+                        }, 0);
+                    };
+                    var sub = buildMenu(context[x].name || x, context);
+                    if (sub.length > 0)
+                        menu.submenu = sub;
+                    if (context[x].icon && context[x].icon.length > 0)
+                        menu.icon = nativeImage.createFromPath(parseTemplate(context[x].icon)).resize({ width: 16, height: 16 });
+                }
+                items.push(new MenuItem(menu));
+            }
+            return items;
+        }
+        /*
+            function buildMenuItems(items) {
+              if (!items || items.length === 0)
+                return [];
+              var menuItems = [], item;
+              for (var x = 0, xl = items.length; x < xl; x++) {
+                if (!items[x].enabled) continue;
+                if (items[x].caption === '-')
+                  item = { type: 'separator' };
+                else {
+                  item = {
+                    label: items[x].caption,
+                    item: items[x],
+                    click: (item) => {
+                      executeContext(item.item);
+                    }
+                  };
+                  if (items[x].items) {
+                    var sub = buildMenuItems(items[x].items);
+                    if (sub.length > 0)
+                      item.submenu = sub;
+                  }
+                  if (items[x].icon && items[x].icon.length > 0)
+                    item.icon = nativeImage.createFromPath(parseTemplate(items[x].icon)).resize({ width: 16, height: 16 });
+                }
+                menuItems.push(new MenuItem(item));
+              }
+              return menuItems;
+            }
+        */
+        function buildContextMenu() {
+            _context = [];
+            $contextMenu = _context;
+            var context = client.contexts;
+            if (context.length > 0) {
+                var xl = context.length;
+                var x;
+                for (x = 0; x < xl; x++) {
+                    if (!context[x].enabled || context[x].parent) continue;
+                    var menu;
+                    if (context[x].caption === '-')
+                        menu = { type: 'separator' };
+                    else {
+                        menu = {};
+                        menu.label = context[x].caption;
+                        if (context[x].parse)
+                            menu.caption = context[x].caption;
+                        menu.item = context[x];
+                        menu.click = (item) => {
+                            executeContext(item.item);
+                            setTimeout(() => {
+                                if (client.options.CommandonClick)
+                                    client.commandInput[0].focus();
+                            }, 0);
+                        };
+                        var sub = buildMenu(context[x].name || x, context);
+                        //if (context[x].items)
+                        //sub.push.apply(sub, buildMenuItems(context[x].items));
+
+                        if (sub.length > 0)
+                            menu.submenu = sub;
+                        if (context[x].icon && context[x].icon.length > 0)
+                            menu.icon = nativeImage.createFromPath(parseTemplate(context[x].icon)).resize({ width: 16, height: 16 });
+                    }
+                    _context.push(new MenuItem(menu));
+                }
+            }
+        }
+
+        function updateButtonBar() {
+            const $bar = document.getElementById('buttonbar');
+            const $scrollUp = document.getElementById('bb-scroll-up');
+            const $scrollDown = document.getElementById('bb-scroll-down');
+            if ($bar.scrollHeight > $bar.clientHeight) {
+                $bar.classList.add('scroll');
+                $scrollUp.classList.remove('hidden');
+                $scrollDown.classList.remove('hidden');
+                if ($bar.scrollTop === 0) {
+                    $scrollUp.classList.add('disabled');
+                    $scrollUp.classList.add('hidden');
+                }
+                else {
+                    $scrollUp.classList.remove('disabled');
+                    $scrollUp.classList.remove('hidden');
+                }
+                if ($bar.scrollTop >= $bar.scrollHeight - $bar.clientHeight) {
+                    $scrollDown.classList.add('disabled');
+                    $scrollDown.classList.add('hidden');
+                }
+                else {
+                    $scrollDown.classList.remove('disabled');
+                    $scrollDown.classList.remove('hidden');
+                }
+            }
+            else {
+                $bar.classList.remove('scroll');
+                $scrollUp.classList.add('hidden');
+                $scrollDown.classList.add('hidden');
+            }
+        }
+
+        var _buttonTimer;
+        function scrollButtonBar(amt) {
+            _buttonTimer = setTimeout(() => {
+                const $bar = document.getElementById('buttonbar');
+                var _scroll = $bar.scrollTop + amt;
+                if (_scroll < 0)
+                    $bar.scrollTop = 0;
+                else if (_scroll > $bar.scrollHeight - $bar.clientHeight)
+                    $bar.scrollTop = $bar.scrollHeight - $bar.clientHeight;
+                else {
+                    $bar.scrollTop = _scroll;
+                    scrollButtonBar(amt);
+                }
+                doUpdate(128);
+            }, 100);
+        }
+
+        function init() {
+            $('.dropdown').on('show.bs.dropdown', () => {
+                $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
+                $('.command-history ul').css('max-width', ($('#command').outerWidth() - 100) + 'px');
+                var lst = '';
+                var l = client.commandHistory.length;
+                for (var i = 0; i < l; i++) {
+                    lst += `<li><a class="truncate" href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd,);client.sendCommand(cmd, null, client.options.allowCommentsFromCommand);" title="${client.commandHistory[i]}">${client.commandHistory[i]}</a></li>`;
+                }
+                if (l === 0)
+                    lst = '<li><a href="#">No history</a></li><li role="separator" class="divider"></li>';
+                else
+                    lst += '<li role="separator" class="divider"></li><li><a href="#" onclick="client.clearCommandHistory();">Clear</a></li>';
+                lst += '<li><a href="#" onclick="showCommandHistory()">Show history window...</a></li>';
+                $('.command-history ul').html(lst);
+            });
+            remote.getCurrentWindow().on('restore', () => {
+                doUpdate(256);
+            });
+            remote.getCurrentWindow().on('maximize', () => {
+                doUpdate(256);
+            });
+            remote.getCurrentWindow().on('unmaximize', () => {
+                doUpdate(256);
+            });
+
+            remote.getCurrentWindow().on('resized', () => {
+                doUpdate(384);
+            });
+
+            ipcRenderer.send('set-overlay', 0);
+            window.addEventListener('blur', function () {
+                active = false;
+                client.raise('blur');
+            });
+            window.addEventListener('focus', function () {
+                active = true;
+                if (client && client.connected)
+                    ipcRenderer.send('set-overlay', 1);
+                else if (client && !client.connecting)
+                    ipcRenderer.send('set-overlay', 0);
+                client.raise('focus');
+                $('#commandinput').focus();
+            });
+            window.addEventListener('resize', function () {
+                //client.UpdateWindow();
+                doUpdate(384);
+            });
+            document.getElementById('buttonbar').addEventListener('wheel', (e) => {
+                if (e.deltaY >= 0)
+                    document.getElementById('buttonbar').scrollTop += document.getElementById('buttonbar').clientWidth;
+                else
+                    document.getElementById('buttonbar').scrollTop -= document.getElementById('buttonbar').clientWidth;
+                doUpdate(128);
+            }, { passive: true });
+
+            document.getElementById('bb-scroll-up').onmousedown = (e) => {
+                if (e.button !== 0)
+                    return;
+                if (document.getElementById('buttonbar').scrollTop > 0)
+                    scrollButtonBar(-document.getElementById('buttonbar').clientWidth);
+                e.preventDefault();
+                e.cancelBubble = true;
+            };
+            document.getElementById('bb-scroll-up').onmouseup = () => {
+                clearTimeout(_buttonTimer);
+            };
+            document.getElementById('bb-scroll-up').onmouseleave = () => {
+                clearTimeout(_buttonTimer);
+            };
+
+            document.getElementById('bb-scroll-down').onmousedown = (e) => {
+                if (e.button !== 0)
+                    return;
+                const $bar = document.getElementById('buttonbar');
+                if ($bar.scrollTop < $bar.scrollHeight - $bar.clientHeight)
+                    scrollButtonBar(32);
+                e.preventDefault();
+                e.cancelBubble = true;
+            };
+            document.getElementById('bb-scroll-down').onmouseup = () => {
+                clearTimeout(_buttonTimer);
+            };
+            document.getElementById('bb-scroll-down').onmouseleave = () => {
+                clearTimeout(_buttonTimer);
+            };
+
+            _logger = new Worker('./js/logging.js');
+            _logger.onmessage = (e) => {
+                switch (e.data.event) {
+                    case 'started':
+                        $('#log').addClass('on');
+                        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: e.data.args });
+                        break;
+                    case 'stopped':
+                        $('#log').removeClass('on');
+                        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: e.data.args });
+                        break;
+                    case 'logging':
+                        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: e.data.args });
+                        break;
+                    case 'error':
+                        client.error(e.data.args);
+                        break;
+                    case 'debug':
+                        if (!client)
+                            console.log(e.data.args);
+                        if (client.options.enableDebug)
+                            client.debug(e.data.args);
+                        break;
+                    case 'toggled':
+                        if (client) {
+                            client.options.logEnabled = e.data.args;
+                            doUpdate(32);
+                        }
+                        break;
+                    case 'startInternal':
+                    case 'start':
+                        _logger.postMessage({ action: e.data.event, args: { lines: client.display.lines || [], raw: client.display.rawLines, formats: client.display.lineFormats, fragment: client.display.EndOfLine || client.telnet.prompt } });
+                        break;
+                }
+            };
+            _logger.onerror = (e) => {
+                if (!client)
+                    console.error(e);
+                else
+                    client.error(e);
+            };
+            client = new Client($('#display'), $('#commandinput'), ipcRenderer.sendSync('get-global', 'settingsFile'));
+
+            client.sendChat = updateChat;
+
+            //window.$selectedurl = '';
+            //window.$selectedline = '';
+
+            if (ipcRenderer.sendSync('get-global', 'profiles') && ipcRenderer.sendSync('get-global', 'profiles').length > 0)
+                client.enabledProfiles = ipcRenderer.sendSync('get-global', 'profiles');
+            client.display.enableBell = false;
+            client.display.on('bell', () => {
+                shell.beep();
+            });
+
+            client.display.on('resize', () => {
+                doUpdate(256);
+            });
+
+            client.display.on('selection-done', () => {
+                if (client.options.AutoCopySelectedToClipboard && client.display.hasSelection) {
+                    window.writeClipboard(client.display.selection, client.display.selectionAsHTML);
+                    client.display.clearSelection();
+                }
+                else
+                    ipcRenderer.send('update-menuitem', { menu: ['edit', 'copyHTML'], enabled: client.display.hasSelection });
+            });
+
+            client.display.on('context-menu', (e) => {
+                $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
+                $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
+                e.preventDefault();
+                var parent = $(e.srcElement.parentNode);
+                _selword = e.word;
+                _selurl = e.url;
+                _selline = e.line;
+                var c = new Menu();
+                if (!_context)
+                    buildContextMenu();
+                var iUrl = 0;
+                if (parent && (parent.hasClass('URLLink') || (parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)))
+                    iUrl = 1;
+                else if (parent && parent.hasClass('MXPLink'))
+                    iUrl = 2;
+                client.raise('context-pre-build', [iUrl]);
+                _context.forEach((item) => {
+                    if (item.caption && item.caption.length)
+                        item.label = client.parseInline(item.caption);
+                    c.append(item);
+                });
+
+                if (client.defaultContext) {
+                    if (c.items.length > 0)
+                        c.append(new MenuItem({ type: 'separator' }));
+                    if (e.srcElement.nodeName === 'IMG') {
+                        c.append(new MenuItem({
+                            label: 'Save image as...', click: () => {
+                                ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
+                                    title: 'Save image as...',
+                                    defaultPath: path.basename(e.srcElement.src),
+                                    filters: [
+                                        { name: 'Images (*.png)', extensions: ['png'] },
+                                        { name: 'All files (*.*)', extensions: ['*'] },
+                                    ]
+                                }).then(results => {
+                                    if (results.filePath === undefined || results.filePath.length === 0) {
+                                        return;
+                                    }
+                                    var canvas = document.createElement("canvas");
+                                    context = canvas.getContext('2d');
+                                    var base_image = new Image();
+                                    base_image.src = e.srcElement.src;
+                                    base_image.onload = function () {
+                                        canvas.width = base_image.width;
+                                        canvas.height = base_image.height;
+                                        context.globalCompositeOperation = "screen";
+                                        context.clearRect(0, 0, canvas.width, canvas.height);
+                                        context.drawImage(base_image, 0, 0);
+                                        require('fs').writeFile(results.filePath, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG(), err => {
+                                            if (err)
+                                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                                                    type: 'error',
+                                                    title: 'Error generating',
+                                                    message: 'Could not save image'
+                                                });
+                                            setTimeout(() => {
+                                                if (client.options.CommandonClick)
+                                                    client.commandInput[0].focus();
+                                            }, 0);
+                                        });
+                                    };
+                                });
+                            }
+                        }));
+                        c.append(new MenuItem({
+                            label: 'Copy image', click: () => {
+                                var canvas = document.createElement("canvas");
+                                context = canvas.getContext('2d');
+                                var base_image = new Image();
+                                base_image.src = e.srcElement.src;
+                                base_image.onload = function () {
+                                    canvas.width = base_image.width;
+                                    canvas.height = base_image.height;
+                                    context.globalCompositeOperation = "screen";
+                                    context.clearRect(0, 0, canvas.width, canvas.height);
+                                    context.drawImage(base_image, 0, 0);
+                                    clipboard.writeImage(nativeImage.createFromDataURL(canvas.toDataURL()));
+                                    setTimeout(() => {
+                                        if (client.options.CommandonClick)
+                                            client.commandInput[0].focus();
+                                    }, 0);
+                                };
+                            }
+                        }));
+                        c.append(new MenuItem({
+                            label: 'Copy image link', click: () => {
+                                window.writeClipboard(e.srcElement.src);
+                                setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
+                        c.append(new MenuItem({ type: 'separator' }));
+                    }
+                    if (parent && parent.hasClass('URLLink')) {
+                        c.append(new MenuItem({ label: 'Open url', click: () => { doLink(parent.attr('title')); } }));
+                        c.append(new MenuItem({
+                            label: 'Copy url', click: () => {
+                                window.writeClipboard(encodeURI(parent.attr('title'))); setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
+                        if (parent.text() !== parent.attr('title'))
+                            c.append(new MenuItem({
+                                label: 'Copy url text', click: () => {
+                                    window.writeClipboard(parent.text()); setTimeout(() => {
+                                        if (client.options.CommandonClick)
+                                            client.commandInput[0].focus();
+                                    }, 0);
+                                }
+                            }));
+                        c.append(new MenuItem({ type: 'separator' }));
+                        iUrl = 1;
+                    }
+                    else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0) {
+                        c.append(new MenuItem({ label: 'Open url', click: () => { parent.trigger('click'); } }));
+                        c.append(new MenuItem({
+                            label: 'Copy url', click: () => {
+                                window.writeClipboard(encodeURI(parent.data('href'))); setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
+                        if (parent.text() !== parent.attr('href'))
+                            c.append(new MenuItem({
+                                label: 'Copy url text', click: () => {
+                                    window.writeClipboard(parent.text()); setTimeout(() => {
+                                        if (client.options.CommandonClick)
+                                            client.commandInput[0].focus();
+                                    }, 0);
+                                }
+                            }));
+                        c.append(new MenuItem({ type: 'separator' }));
+                        iUrl = 1;
+                    }
+                    else if (parent && parent.hasClass('MXPLink')) {
+                        c.append(new MenuItem({ label: 'Open mxp url', click: () => { parent.trigger('click'); } }));
+                        c.append(new MenuItem({
+                            label: 'Copy mxp url text', click: () => {
+                                window.writeClipboard(parent.text()); setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
+                        c.append(new MenuItem({ type: 'separator' }));
+                        iUrl = 2;
+                    }
+
+                    if (client.display.hasSelection) {
+                        c.append(new MenuItem({ role: 'copy' }));
+                        c.append(new MenuItem({
+                            label: 'Copy as HTML', accelerator: 'CmdOrCtrl+Alt+C', click: () => {
+                                copyAsHTML();
+                                setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
+                    }
+                    if (window.$copied.length) {
+                        c.append(new MenuItem({ label: 'Paste', click: paste, accelerator: 'CmdOrCtrl+V' }));
+                        c.append(new MenuItem({ label: 'Paste special', click: () => { pasteSpecial(); }, accelerator: 'CmdOrCtrl+Shift+V' }));
+                    }
+                    c.append(new MenuItem({ label: 'Select All', click: selectAll, accelerator: 'CmdOrCtrl+A' }));
+                    c.append(new MenuItem({ type: 'separator' }));
+                    c.append(new MenuItem({
+                        label: 'Clear', click: () => {
+                            client.clear();
+                            setTimeout(() => {
+                                if (client.options.CommandonClick)
+                                    client.commandInput[0].focus();
+                            }, 0);
+                        }
+                    }));
+                    if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
+                        c.append(new MenuItem({ type: 'separator' }));
+                        c.append(new MenuItem({
+                            label: 'Inspect', click: () => {
+                                ipcRenderer.send('inspect', e.pageX, e.pageY);
+                            }
+                        }));
+                    }
+                }
+                if (c.items.length > 0) {
+                    client.raise('context-opened', [iUrl]);
+                    c.popup({
+                        window: remote.getCurrentWindow(), callback: () => {
+                            client.raise('context-closed', [iUrl]);
+                        }
+                    });
+                }
+            });
+
+            ['cut', 'copy'].forEach(function (event) {
+                document.addEventListener(event, function (e) {
+                    if ($('#commandinput').data('context'))
+                        return;
+                    if (client.display.hasSelection) {
+                        window.writeClipboard(client.display.selection, client.display.selectionAsHTML);
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    setTimeout(() => {
+                        if (client.options.CommandonClick)
+                            client.commandInput[0].focus();
+                    }, 0);
+                });
+            });
+            window.client = client;
+            window.OoMUD = client;
+            window.readClipboard = () => { return clipboard.readText('selection') || clipboard.readText() || ''; };
+            window.writeClipboard = (txt, html) => {
+                if (html) {
+                    clipboard.write({
+                        text: txt || '',
+                        html: html || ''
+                    });
+                    clipboard.write({
+                        text: txt || '',
+                        html: html || ''
+                    }, 'selection');
+                }
+                else {
+                    clipboard.writeText(txt || '');
+                    clipboard.writeText(txt || '', 'selection');
+                }
+            };
+            client.readClipboard = window.readClipboard;
+            client.writeClipboard = window.writeClipboard;
+
+            window.readClipboardHTML = () => { return clipboard.readHTML('selection') || clipboard.readHTML() || ''; };
+            client.readClipboardHTML = window.readClipboardHTML;
+
+            client.version = version;
+            client.host = 'www.shadowmud.com';
+            client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
+            client.telnet.GMCPSupports.push('Room 1');
+            client.telnet.GMCPSupports.push('IED 1');
+            client.telnet.GMCPSupports.push('Client.Media 1');
+            //client.telnet.GMCPSupports.push("Post 1");
+            //client.telnet.GMCPSupports.push('Comm 1');
+            client.on('initialized', () => {
+                autoConnect();
+            });
+            client.on('profile-updated', (profile, noChanges, type) => {
+                if (!noChanges) {
+                    ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
+                    //only update if buttons changed
+                    if (!type || (type & ProfileSaveType.Button) === ProfileSaveType.Button)
+                        doUpdate(8);
+                    //update if context or variables have changed
+                    if (!type || (type & ProfileSaveType.Context) === ProfileSaveType.Context || (type & ProfileSaveType.Variable) === ProfileSaveType.Variable)
+                        doUpdate(16);
+                }
+                ipcRenderer.send('profile-updated', profile, noChanges, type);
+            });
+
+            client.on('profile-toggled', (profile, enabled) => {
+                ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: enabled });
+                doUpdate(24);
+                ipcRenderer.send('profile-toggled', profile, enabled);
+            });
+
+            client.on('profiles-updated', (noChanges) => {
+                //nothing important changed so ignore
+                if (noChanges) return;
+                doUpdate(76);
+            });
+
+            client.on('profile-loaded', (profile, noChanges) => {
+                //nothing important changed so ignore
+                if (noChanges) return;
+                doUpdate(76);
+            });
+
+            client.on('profile-removed', profile => {
+                doUpdate(76);
+            });
+
+            client.on('command-history-changed', history => ipcRenderer.send('command-history', history));
+            client.on('add-line', (data) => {
+                var res, c, cl;
+                //no more then 3 tries
+                if (autoLoginCounter < 3 && client.options.autoLogin && _charName && _charName.length > 0) {
+                    //testchar doesn't exist here. To create a new character, please type <new> at the name prompt.
+                    if (data.line === _charName + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
+                        autoLoginCounter = 4;
+                    if (data.fragment && data.line === 'Enter your character\'s name (or \'new\' for a new character): ') {
+                        setTimeout(() => client.sendCommand(_charName), 100);
+                        autoLoginCounter++;
+                    }
+                    else if (data.fragment && data.line === 'Password: ') {
+                        var pass = ipcRenderer.sendSync('get-global', 'characterPass');
+                        if (pass && pass.length > 0) {
+                            pass = pass.split(':');
+                            pass = decrypt(pass[0], pass[1], pass[2]);
+                            client.send(pass + '\n');
+                        }
+                        //sent password skip future auto login checks
+                        autoLoginCounter = 4;
+                    }
+                }
+                if (client.options.autoTakeoverLogin && data.line === 'Do you want to take over this login? (y/n)' && data.fragment)
+                    client.send('y\n');
+                /*
+                if (_captureComm) {
+                  updateChat(data);
+                  data.gagged = client.options.chat.gag;
+                  return;
+                }
+                */
+                if (_captures.length === 0 || data.fragment) return;
+                //custom capture to ignore who list
+                res = /^(-*)\s*\[ (.*) matching (users|user) \]\s*(-*)$/.exec(data.line);
+                if (res && res.length > 0) {
+                    capture = 0;
+                    _noCapture = true;
+                    return;
+                }
+                //end capture blocking for who list
+                res = /^(-*)\s*\[ .* \]\s*(-*)$/.exec(data.line);
+                if (_noCapture && res && res.length > 0) {
+                    capture = 0;
+                    _noCapture = false;
+                    return;
+                }
+
+                if (data.line === 'Describers:' ||
+                    data.line === 'You supply a list of nouns so when your object is complete it can correctly build an id list to allow you to properly interact with it.' ||
+                    data.line === 'You supply a list of adjectives so when your object is complete it can correctly build an id list to allow you to properly interact with it.' ||
+                    data.line === 'Available sizes:' ||
+                    data.line === 'Available locations:' ||
+                    data.line === 'Available tattoos:' ||
+                    data.line === 'Available colors:'
+                ) {
+                    capture = 0;
+                    _noCapture = true;
+                    return;
+                }
+
+                if (_noCapture && (
+                    data.line.indexOf('Current name: ') === 0 ||
+                    data.line.indexOf('Enter up to 2 nouns, [#] to remove, \'f\' to finish, \'q\' to quit:') === 0 ||
+                    data.line.indexOf('Enter up to 3 adjectives, \'f\' to finish, \'q\' to quit:') === 0 ||
+                    data.line.indexOf('Enter selection ') === 0
+                )) {
+                    capture = 0;
+                    _noCapture = false;
+                    return;
+                }
+
+                //locker/store list start
+                res = /^ {2}# {2}Item.*$/.exec(data.line);
+                if (_noCaptureStore === 0 && res && res.length > 0) {
+                    capture = 0;
+                    _noCaptureStore = 1;
+                    return;
+                }
+                //locker/store list end
+                res = /^(-*)$/.exec(data.line);
+                if (_noCaptureStore > 0 && res && res.length > 0) {
+                    capture = 0;
+                    _noCaptureStore++;
+                }
+                if (_noCaptureStore > 2) {
+                    capture = 0;
+                    _noCaptureStore = 0;
+                }
+
+                if (_noCapture || _noCaptureStore > 0) return;
+
+                if (client.options.chat.CaptureOnlyOpen) {
+                    if (!chatWin || chatWin.isDestroyed()) {
+                        chatWin = remote.BrowserWindow.getAllWindows().filter(w => w.getTitle() === 'Chat');
+                        chatWin = chatWin.length !== 0 ? chatWin[0] : null;
+                    }
+                    if (!chatWin || !chatWin.isVisible() || chatWin.isMinimized())
+                        return;
+                }
+
+                //capture indented text
+                if (capture > 0 && data.line.startsWith('    ')) {
+                    updateChat(data);
+                    data.gagged = client.options.chat.gag;
+                    return;
+                }
+                //search capture review blocks
+                for (c = 0, cl = _captureReviews.length; c < cl; c++) {
+                    //re = new RegExp(_captureReviews[c], 'g');
+                    res = _captureReviews[c].exec(data.line);
+                    if (!res || res.length === 0)
+                        continue;
+                    captureReview = 1;
+                    updateChat(data);
+                    data.gagged = client.options.chat.gag;
+                    return;
+                }
+                //if in a review capture until end review
+                if (captureReview > 0) {
+                    updateChat(data);
+                    data.gagged = client.options.chat.gag;
+                    if (data.line == '-=-=- End Review -=-=-')
+                        captureReview = -1;
+                    /*
+                    res = /^-=-=- End Review -=-=-$/.exec(data.line);
+                    if (res && res.length > 0)
+                        captureReview = -1;
+                    */
+                    return;
+                }
+                //review requires 1 extra capture to get the current date/time
+                if (captureReview === -1) {
+                    updateChat(data);
+                    data.gagged = client.options.chat.gag;
+                    captureReview = 0;
+                    return;
+                }
+
+                //capture lines based on matching regex's
+                for (c = 0, cl = _captures.length; c < cl; c++) {
+                    //re = new RegExp(_captures[c], 'g');
+                    res = _captures[c].exec(data.line);
+                    if (!res || res.length === 0)
+                        continue;
+                    if (capture > 0)
+                        capture--;
+                    capture++;
+                    updateChat(data);
+                    data.gagged = client.options.chat.gag;
+                    return;
+                }
+                //no matching capture so if in capture mode reduce
+                if (capture > 0)
+                    capture--;
+            });
+
+            /*
+            client.on('MXP-tag-reply', (e) => {
+                if (client.options.autoLogin && e.tag === 'USER' && _charName && _charName.length > 0)
+                    client.send(_charName + '\r\n');
+                else if (client.options.autoLogin && e.tag === 'PASSWORD') {
+                    var pass = ipcRenderer.sendSync('get-global', 'characterPass');
+                    if (pass && pass.length > 0) {
+                    pass = pass.split(':');
+                    pass = decrypt(pass[0], pass[1], pass[2]);
+                    client.send(pass + '\r\n');
+                    }
+                }
+            });
+            */
+
+            client.on('cleared', () => {
+                _logger.postMessage({ action: 'flush', args: true });
+            });
+
+            client.on('show', () => {
+                ipcRenderer.send('show-window');
+            });
+
+            client.on('hide', () => {
+                if (client.options.hideOnMinimize)
+                    ipcRenderer.invoke('window', 'hide');
+                else
+                    ipcRenderer.invoke('window', 'minimize');
+            });
+
+            client.on('toggle', () => {
+                ipcRenderer.invoke('window', 'toggle', 'main');
+            });
+
+            client.on('notify', (title, message, options) => {
+                options = options || { silent: true };
+                if (!Object.prototype.hasOwnProperty.call(options, 'silent'))
+                    options.silent = true;
+                if (options.icon)
+                    options.icon = parseTemplate(options.icon);
+                else
+                    options.icon = parseTemplate('{assets}\\icons\\png\\128x128.png');
+                if (options.badge)
+                    options.badge = parseTemplate(options.badge);
+                if (options.image)
+                    options.image = parseTemplate(options.image);
+                if (message) {
+                    options.body = message;
+                    if (options.body.length > 127)
+                        options.body = options.body.substr(0, 127) + '...';
+                }
+                var notify = new window.Notification(title, options);
+                notify.onclick = () => {
+                    client.emit('notify-clicked', title, message);
+                    client.raise('notify-clicked', [title, message]);
+                };
+                notify.onclose = () => {
+                    client.emit('notify-closed', title, message);
+                    client.raise('notify-closed', [title, message]);
+                };
+            });
+
+            client.on('options-loaded', () => {
+                _backup.loadSelection = client.options.backupLoad;
+                _backup.saveSelection = client.options.backupSave;
+                _status.spitterDistance = client.options.statusWidth;
+                doUpdate(3);
+                client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
+                createWatcher();
+                if (_logger)
+                    _logger.postMessage({
+                        action: 'options', args: {
+                            path: parseTemplate(client.options.logPath),
+                            offline: client.options.logOffline,
+                            gagged: client.options.logGagged,
+                            enabled: client.options.logEnabled,
+                            unique: client.options.logUniqueOnConnect,
+                            prepend: client.options.logPrepend,
+                            what: client.options.logWhat,
+                            debug: client.options.enableDebug,
+                            format: client.options.logTimeFormat,
+                            colors: client.options.colors
+                        }
+                    });
+            });
+
+            client.on('scroll-lock', (lock) => {
+                ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: lock });
+                if (lock) {
+                    $('#lock').prop('title', 'Unlock display');
+                    $('#lock').addClass('on');
+                    $('#lock i').removeClass('fa-lock');
+                    $('#lock i').addClass('fa-unlock');
+                }
+                else {
+                    $('#lock').removeClass('on');
+                    $('#lock').prop('title', 'Lock display');
+                    $('#lock i').addClass('fa-lock');
+                    $('#lock i').removeClass('fa-unlock');
+                }
+                client.options.scrollLocked = lock;
+                doUpdate(32);
+            });
+
+            client.on('connecting', () => {
+                autoLoginCounter = 0;
+                if (client.options.buttons.connect) {
+                    $('#connect').css('display', 'none');
+                    $('#disconnect').css('display', '');
+                }
+                ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: false });
+                ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: true });
+                ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: false });
+                $('#immortal').css('display', 'none');
+                ipcRenderer.send('set-overlay', 1);
+                _logger.postMessage({ action: 'connected', args: client.connected });
+                _logger.postMessage({
+                    action: 'start', args: {
+                        lines: client.display.lines,
+                        raw: client.display.rawLines,
+                        formats: client.display.lineFormats,
+                        fragment: client.display.EndOfLine || client.telnet.prompt
+                    }
+                });
+            });
+
+            client.on('closed', () => {
+                if (client.options.buttons.connect) {
+                    $('#connect').css('display', '');
+                    $('#disconnect').css('display', 'none');
+                }
+                autoLoginCounter = 0;
+                ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: true });
+                ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: false });
+                ipcRenderer.send('set-overlay', 0);
+                ipcRenderer.send('closed');
+                _logger.postMessage({ action: 'connected', args: client.connected });
+                _logger.postMessage({ action: 'stop' });
+                if (_skipDisconnect) return;
+                switch (client.options.onDisconnect) {
+                    case 1: //reconnect
+                        autoConnect();
+                        break;
+                    case 2: //dialog
+                        if ($('#disconnectDialog')[0].open)
+                            return;
+                        if (_disconnectTimerID)
+                            clearTimeout(_disconnectTimerID);
+
+                        if (_disconnectCounter === 0)
+                            _disconnectTimer = 10;
+                        else if (_disconnectCounter === 10)
+                            _disconnectTimer = 30;
+                        else if (client.options.maxReconnectDelay > 0 && _disconnectCounter >= client.options.maxReconnectDelay)
+                            _disconnectTimer = client.options.maxReconnectDelay;
+                        else
+                            _disconnectTimer = _disconnectCounter * 2;
+                        _disconnectCounter = _disconnectTimer;
+                        _disconnectTimerID = setInterval(() => {
+                            _disconnectTimer--;
+                            if (_disconnectTimer <= 0) {
+                                client.connect();
+                                closeDisconnectDialog();
+                            }
+                            $('#disconnectTimer').text(_disconnectTimer);
+                        }, 1000);
+                        $('#disconnectTimer').text(_disconnectTimer);
+                        $('#disconnectDialog')[0].showModal();
+                        $('#disconnectDialogReconnect').focus();
+                        break;
+                    case 4: //character manger
+                        showCharacters();
+                        break;
+                    case 8: //close
+                        window.close();
+                        break;
+                }
+            });
+
+            client.on('connected', () => {
+                ipcRenderer.send('connected');
+                if (_disconnectTimerID) {
+                    clearTimeout(_disconnectTimerID);
+                    _disconnectTimerID = null;
+                }
+                if (autoConnectID) {
+                    clearTimeout(autoConnectID);
+                    autoConnectID = null;
+                }
+                _disconnectTimer = 0;
+                _disconnectCounter = 0;
+            });
+
+            client.on('reconnect', () => {
+                if (client.errored || client.connected)
+                    return;
+                switch (client.options.onDisconnect) {
+                    case 1: //reconnect
+                        autoConnect();
+                        break;
+                    case 2: //dialog
+                        if ($('#disconnectDialog')[0].open)
+                            return;
+                        if (_disconnectTimerID)
+                            clearTimeout(_disconnectTimerID);
+
+                        if (_disconnectCounter === 0)
+                            _disconnectTimer = 10;
+                        else if (_disconnectCounter === 10)
+                            _disconnectTimer = 30;
+                        else
+                            _disconnectTimer *= 2;
+                        _disconnectCounter = _disconnectTimer;
+                        _disconnectTimerID = setInterval(() => {
+                            _disconnectTimer--;
+                            if (_disconnectTimer <= 0) {
+                                client.connect();
+                                closeDisconnectDialog();
+                            }
+                            $('#disconnectTimer').text(_disconnectTimer);
+                        }, 1000);
+                        $('#disconnectTimer').text(_disconnectTimer);
+                        $('#disconnectDialog')[0].showModal();
+                        $('#disconnectDialogReconnect').focus();
+                        break;
+                    case 4: //character manger
+                        showCharacters();
+                        break;
+                    case 8: //close
+                        window.close();
+                        break;
+                }
+            });
+
+            client.on('add-line-done', (data) => {
+                _logger.postMessage({ action: 'add-line', args: data });
+            });
+
+            client.on('received-data', (data) => {
+                if (!active && client.connected && data.value.length > 0)
+                    ipcRenderer.send('set-overlay', 2);
+            });
+
+            client.on('parse-done', () => {
+                client.display.find(false);
+                //ipcRenderer.send('chat-done');
+            });
+
+            client.on('received-GMCP', (mod, obj) => {
+                switch (mod) {
+                    /*
+                    case 'Comm.Channel.Start':
+                      if (obj.match(/^tell .*$/) || obj === 'shout' || obj === 'tell' || obj === 'emoteto' || obj.match(/^emoteto .*$/))
+                        _captureComm = client.options.chat.captureTells;
+                      else if (obj === 'say' || obj.match(/^whisper .*$/) || obj === 'speak' || obj === 'whisper')
+                        _captureComm = client.options.chat.captureTalk;
+                      else if (client.options.chat.captureLines)
+                        _captureComm = client.options.chat.captureAllLines || client.options.chat.lines.indexOf(obj) !== -1;
+                      break;
+                    case 'Comm.Channel.End':
+                      setTimeout(() => { _captureComm = false; }, 0);
+                      break;
+                      */
+                    case 'IED.init':
+                        ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
+                        $('#immortal').css('display', 'block');
+                        break;
+                }
+                ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
+            });
+
+            client.on('item-added', (type, profile, item) => {
+                if (type === 'button')
+                    doUpdate(8);
+                ipcRenderer.send('profile-item-added', type, profile, item);
+            });
+
+            client.on('item-updated', (type, profile, idx, item) => {
+                if (type === 'button')
+                    doUpdate(8);
+                ipcRenderer.send('profile-item-updated', type, profile, idx, item);
+            });
+
+            client.on('item-removed', (type, profile, idx) => {
+                if (type === 'button')
+                    doUpdate(8);
+                ipcRenderer.send('profile-item-removed', type, profile, idx);
+            });
+
+            client.on('options-saved', () => {
+                if (client.enableParsing)
+                    $('#btnParsing').addClass('on');
+                else
+                    $('#btnParsing').removeClass('on');
+                if (client.enableTriggers)
+                    $('#btnTriggers').addClass('on');
+                else
+                    $('#btnTriggers').removeClass('on');
+                ipcRenderer.send('options-changed');
+            });
+
+            client.on('window', (window, args) => {
+                switch (window) {
+                    case 'mapper':
+                    case 'editor':
+                    case 'profiles':
+                    case 'chat':
+                    case 'about':
+                    case 'code-editor':
+                        ipcRenderer.send('show-window', window);
+                        break;
+                    case 'profiles-manager':
+                    case 'profile-manager':
+                    case 'manager':
+                        ipcRenderer.send('show-window', 'profiles');
+                        break;
+                    case 'prefs':
+                    case 'options':
+                    case 'preferences':
+                        ipcRenderer.send('show-window', 'prefs');
+                        break;
+                    case 'help':
+                        showHelp();
+                        break;
+                    case 'smhelp':
+                        showSMHelp();
+                        break;
+                    case 'immortals':
+                        showImmortalTools();
+                        break;
+                    case 'history':
+                    case 'command-history':
+                        showCommandHistory()
+                        break;
+                    case 'log-viewer':
+                    case 'logs':
+                        showLogViewer();
+                        break;
+                    case 'skills':
+                        showSkills();
+                        break;
+                    case 'who':
+                        showWho();
+                        break;
+                    default:
+                        throw new Error('Invalid window name must be: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills');
+                }
+            });
+
+            _backup = new Backup(client, ipcRenderer.sendSync('get-global', 'mapFile'));
+            _backup.loadSelection = client.options.backupLoad;
+            _backup.saveSelection = client.options.backupSave;
+
+            _backup.on('progress-start', (title) => {
+                ipcRenderer.send('set-progress', { value: 0 });
+                ipcRenderer.send('flush', title);
+                client.debug('Flushing map');
+                $('#Progressbar').html('<progress max="100"></progress>');
+                $('#ProgressTitle').html(title || 'Importing data&hellip;');
+                $('#Progress')[0].showModal();
+            });
+
+            _backup.on('error', (err) => {
+                if ($('#Progress')[0].open)
+                    $('#Progress')[0].close();
+                ipcRenderer.send('set-progress', { value: -1 });
+                client.error(err);
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    type: 'error',
+                    title: 'Import error',
+                    message: err || 'Error importing or exporting data.'
+                });
+                setTimeout(() => {
+                    ipcRenderer.invoke('window', 'focus');
+                }, 500);
+                $('#commandinput').focus();
+            });
+
+            _backup.on('abort', (err) => {
+                if ($('#Progress')[0].open)
+                    $('#Progress')[0].close();
+                ipcRenderer.send('set-progress', { value: -1 });
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    type: 'error',
+                    title: 'Aborted',
+                    message: err || 'Aborted importing or exporting data.'
+                });
+                setTimeout(() => {
+                    ipcRenderer.invoke('window', 'focus');
+                }, 500);
+                $('#commandinput').focus();
+            });
+
+            _backup.on('close', () => {
+                if ($('#Progress')[0].open)
+                    $('#Progress')[0].close();
+                $('#commandinput').focus();
+                setTimeout(() => {
+                    ipcRenderer.invoke('window', 'focus');
+                }, 500);
+                ipcRenderer.send('set-progress', { value: -1 });
+            });
+
+            _backup.on('progress', (value) => {
+                $('#Progress progress').val(value);
+                ipcRenderer.send('set-progress', { value: value / 100.0 });
+            });
+
+            _backup.on('import-map', (data) => {
+                ipcRenderer.send('import-map', data);
+            });
+
+            _backup.on('imported-profiles', () => {
+                ipcRenderer.send('reload-profiles');
+            });
+
+            _backup.on('imported-settings', () => {
+                doUpdate(3);
+            });
+
+            _backup.on('finish-load', () => {
+                client.raise('backup-loaded');
+            });
+
+            _backup.on('finish-save', () => {
+                client.raise('backup-saved');
+            });
+
+            _status = new Status(client);
+            _status.spitterDistance = client.options.statusWidth;
+            _status.on('display-changed', () => {
+                if (_status.ac) {
+                    $('#health').removeClass('on');
+                    $('#armor').addClass('on');
+                }
+                else {
+                    $('#health').addClass('on');
+                    $('#armor').removeClass('on');
+                }
+                if (client.options.showArmor != _status.ac) {
+                    client.options.showArmor = _status.ac;
+                    doUpdate(32);
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !client.options.showArmor });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: client.options.showArmor });
+                }
+            });
+            _status.on('split-moved', value => {
+                if (value === client.options.statusWidth) return;
+                client.options.statusWidth = value;
+                doUpdate(32 | 256);
+            });
+            _status.on('leave combat', () => {
+                if (_nextClear <= Date.now()) {
+                    doUpdate(64);
+                    //clear every ~hr
+                    _nextClear = Date.now() + 3600000;
+                }
+            });
+            _status.on('skill updated', (skill, data) => {
+                ipcRenderer.send('skill-updated', skill, data);
+            });
+            _status.on('skill init', (skill, data) => {
+                ipcRenderer.send('skills-reset');
+            });
+
+            _status.ac = client.options.showArmor;
+            _status.on('set-title', (title) => {
+                //TODO Add setting to control empty/defaults
+                if (client.options.autoCreateCharacter)
+                    ipcRenderer.send('change-char', title, true);
+                _logger.postMessage({ action: 'name', args: title });
+                ipcRenderer.send('set-title', title);
+            });
+            _charName = ipcRenderer.sendSync('get-global', 'characterLogin');
+            if (_charName && _charName.length > 0) {
+                _logger.postMessage({ action: 'name', args: _charName });
+                $('#character-name').text(_charName);
+            }
+            updateInterface();
+            doUpdate(7);
+            _logger.postMessage({
+                action: 'options', args: {
+                    path: parseTemplate(client.options.logPath),
+                    offline: client.options.logOffline,
+                    gagged: client.options.logGagged,
+                    enabled: client.options.logEnabled,
+                    unique: client.options.logUniqueOnConnect,
+                    prepend: client.options.logPrepend,
+                    what: client.options.logWhat,
+                    debug: client.options.enableDebug,
+                    format: client.options.logTimeFormat,
+                    colors: client.options.colors
+                }
+            });
+            let closeWindow = false;
+
+            window.onbeforeunload = function (evt) {
+                var choice, count = 0;
+                var windows;
+                var current;
+                if (ipcRenderer.sendSync('get-global', 'updating'))
+                    closeWindow = true;
+                if (!closeWindow && client.options.askonclose && client.connected) {
+                    evt.returnValue = false;
+                    setTimeout(() => {
+                        if (client.options.askonchildren) {
+                            if (ipcRenderer.sendSync('window-info', 'child-open', 'Code Editor')) {
+                                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                                    {
+                                        type: 'warning',
+                                        title: 'Code editor open',
+                                        message: 'Code editor open, will lose any unsaved work, close anyways?',
+                                        buttons: ['Yes', 'No', 'Never ask again'],
+                                        defaultId: 1
+                                    });
+                                if (choice === 2) {
+                                    client.options.askonchildren = false;
+                                    client.saveOptions();
+                                }
+                                if (choice === 1) {
+                                    evt.returnValue = false;
+                                    return 'no';
+                                }
+                            }
+                        }
+                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                            {
+                                type: 'warning',
+                                title: 'Connected',
+                                message: 'Closing will disconnect you from the mud, close anyway?',
+                                buttons: ['Yes', 'No', 'Never ask again'],
+                                defaultId: 1
+                            });
+                        if (choice === 2) {
+                            client.raise('closed');
+                            _logger.postMessage({ action: 'flush' });
+                            client.options.askonclose = false;
+                            client.saveOptions();
+                            closeWindow = true;
+                            clearWatcher();
+                            ipcRenderer.invoke('window', 'closeWindows');
+                            ipcRenderer.invoke('window', 'close');
+                            return;
+                        }
+                        if (choice !== 0) {
+                            evt.returnValue = false;
+                            return 'no';
+                        }
+                        client.raise('closed');
+                        _logger.postMessage({ action: 'flush' });
+                        closeWindow = true;
+                        clearWatcher();
+                        ipcRenderer.invoke('window', 'closeWindows');
+                        ipcRenderer.invoke('window', 'close');
+                    });
+                    return;
+                }
+                else if (!closeWindow && client.options.askonchildren) {
+                    evt.returnValue = false;
+                    setTimeout(() => {
+                        if (ipcRenderer.sendSync('window-info', 'child-close', 'Code Editor')) {
+                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                                {
+                                    type: 'warning',
+                                    title: 'Code editor open',
+                                    message: 'Code editor open, will lose any unsaved work, close anyways?',
+                                    buttons: ['Yes', 'No', 'Never ask again'],
+                                    defaultId: 1
+                                });
+                            if (choice === 2) {
+                                client.options.askonchildren = false;
+                                client.saveOptions();
+                            }
+                            else if (choice === 1) {
+                                evt.returnValue = false;
+                                return 'no';
+                            }
+                        }
+                        client.raise('closed');
+                        _logger.postMessage({ action: 'flush' });
+                        closeWindow = true;
+                        clearWatcher();
+                        ipcRenderer.invoke('window', 'closeWindows');
+                        ipcRenderer.invoke('window', 'close');
+                    });
+                    return;
+                }
+                else if (!closeWindow) {
+                    setTimeout(() => {
+                        for (var w = 0, wl = windows.length; w < wl; w++) {
+                            if (windows[w] === current || !windows[w].isVisible())
+                                continue;
+                            if (windows[w].getParentWindow() !== current)
+                                continue;
+                            windows[w].close();
+                        }
+                        client.raise('closed');
+                        _logger.postMessage({ action: 'flush' });
+                        closeWindow = true;
+                        clearWatcher();
+                        ipcRenderer.invoke('window', 'closeWindows');
+                        ipcRenderer.invoke('window', 'close');
+                    });
+                }
+                client.raise('closed');
+                _logger.postMessage({ action: 'flush' });
+                closeWindow = true;
+                clearWatcher();
+                ipcRenderer.invoke('window', 'closeWindows');
+                ipcRenderer.invoke('window', 'close');
+                return;
+            };
+            $('#status').on('contextmenu', (e) => {
+                e.preventDefault();
+                var c = new Menu();
+                c.append(new MenuItem({
+                    label: '&Visible',
+                    type: 'checkbox',
+                    checked: client.options.showStatus,
+                    click: () => {
+                        toggleView('status');
+                    }
+                }));
+                c.append(new MenuItem({
+                    label: '&Refresh',
+                    click: () => {
+                        client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
+                    }
+                }));
+                c.append(new MenuItem({ type: 'separator' }));
+                c.append(new MenuItem({
+                    label: '&Weather',
+                    type: 'checkbox',
+                    checked: client.options.showStatusWeather,
+                    click: () => {
+                        toggleView('weather');
+                    }
+                }));
+
+                c.append(new MenuItem({
+                    label: '&Limbs',
+                    submenu: [
+                        {
+                            label: '&Visible',
+                            type: 'checkbox',
+                            checked: client.options.showStatusLimbs,
+                            click: () => {
+                                toggleView('limbs');
+                            }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: '&Health',
+                            type: 'checkbox',
+                            checked: !client.options.showArmor,
+                            click: () => {
+                                toggleView('limbhealth');
+                            }
+                        },
+                        {
+                            label: '&Armor',
+                            type: 'checkbox',
+                            checked: client.options.showArmor,
+                            click: () => {
+                                toggleView('limbarmor');
+                            }
+                        },
+                    ]
+                }));
+                c.append(new MenuItem({
+                    label: '&Health',
+                    type: 'checkbox',
+                    checked: client.options.showStatusHealth,
+                    click: () => {
+                        toggleView('health');
+                    }
+                }));
+                c.append(new MenuItem({
+                    label: '&Experience',
+                    type: 'checkbox',
+                    checked: client.options.showStatusExperience,
+                    click: () => {
+                        toggleView('experience');
+                    }
+                }));
+                c.append(new MenuItem({
+                    label: '&Party Health',
+                    type: 'checkbox',
+                    checked: client.options.showStatusPartyHealth,
+                    click: () => {
+                        toggleView('partyhealth');
+                    }
+                }));
+                c.append(new MenuItem({
+                    label: '&Combat Health',
+                    type: 'checkbox',
+                    checked: client.options.showStatusCombatHealth,
+                    click: () => {
+                        toggleView('combathealth');
+                    }
+                }));
+                c.append(new MenuItem({
+                    label: '&Lag meter',
+                    type: 'checkbox',
+                    checked: client.options.lagMeter,
+                    click: () => {
+                        toggleView('lagmeter');
+                    }
+                }));
+                if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
+                    c.append(new MenuItem({ type: 'separator' }));
+                    c.append(new MenuItem({
+                        label: 'Inspect', click: () => {
+                            ipcRenderer.send('inspect', e.pageX, e.pageY);
+                        }
+                    }));
+                }
+                c.popup({ window: remote.getCurrentWindow() });
+            });
+
+            $('#buttonbar').on('contextmenu', (e) => {
+                e.preventDefault();
+                var c = new Menu();
+                c.append(new MenuItem({
+                    label: 'Visible',
+                    type: 'checkbox',
+                    checked: client.options.showButtonBar,
+                    click: () => {
+                        toggleView('buttons');
+                    }
+                }));
+                c.append(new MenuItem({ type: 'separator' }));
+                c.append(new MenuItem({
+                    label: 'Connect',
+                    type: 'checkbox',
+                    checked: client.options.buttons.connect,
+                    click: () => {
+                        toggleView('button.connect');
+                    }
+                }));
+                c.append(new MenuItem({
+                    label: 'Characters',
+                    type: 'checkbox',
+                    checked: client.options.buttons.characters,
+                    click: () => {
+                        toggleView('button.characters');
+                    }
+                }));
+                c.append(new MenuItem({
+                    label: 'Code Editor',
+                    type: 'checkbox',
+                    checked: client.options.buttons.codeEditor,
+                    click: () => {
+                        toggleView('button.codeEditor');
+                    }
+                }));
+                c.append(new MenuItem({
+                    label: 'Preferences',
+                    type: 'checkbox',
+                    checked: client.options.buttons.preferences,
+                    click: () => {
+                        toggleView('button.preferences');
+                    }
+                }));
+                c.append(new MenuItem({
+                    label: 'Log',
+                    type: 'checkbox',
+                    checked: client.options.buttons.log,
+                    click: () => {
+                        toggleView('button.log');
+                    }
+                }));
+                c.append(new MenuItem({
+                    label: 'Clear',
+                    type: 'checkbox',
+                    checked: client.options.buttons.clear,
+                    click: () => {
+                        toggleView('button.clear');
+                    }
+                }));
+                c.append(new MenuItem({
+                    label: 'Lock',
+                    type: 'checkbox',
+                    checked: client.options.buttons.lock,
+                    click: () => {
+                        toggleView('button.lock');
+                    }
+                }));
+                c.append(new MenuItem({
+                    label: 'Map',
+                    type: 'checkbox',
+                    checked: client.options.buttons.map,
+                    click: () => {
+                        toggleView('button.map');
+                    }
+                }));
+                /*
+                c.append(new MenuItem({
+                  label: 'Mail',
+                  type: 'checkbox',
+                  checked: client.options.buttons.mail,
+                  click: () => {
+                    toggleView("button.mail");
+                  }
+                }));
+                c.append(new MenuItem({
+                  label: 'Compose mail',
+                  type: 'checkbox',
+                  checked: client.options.buttons.compose,
+                  click: () => {
+                    toggleView("button.compose");
+                  }
+                }));
+                */
+                c.append(new MenuItem({
+                    label: 'User buttons',
+                    type: 'checkbox',
+                    checked: client.options.buttons.user,
+                    click: () => {
+                        toggleView('button.user');
+                    }
+                }));
+                var b;
+                if (e.target && e.target.tagName === 'IMG')
+                    b = e.target.parentElement;
+                else if (e.target && e.target.tagName === 'A')
+                    b = e.target;
+                if (b && b.dataset && b.dataset.profile && b.dataset.profile.length !== 0 && b.dataset.index !== '-1') {
+                    c.append(new MenuItem({ type: 'separator' }));
+                    c.append(new MenuItem({
+                        label: 'Edit button',
+                        profile: b.dataset.profile,
+                        bIndex: b.dataset.index,
+                        click: (item) => {
+                            ipcRenderer.send('profile-edit-item', item.profile, 'buttons', +item.bIndex);
+                        }
+                    }));
+                }
+                if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
+                    c.append(new MenuItem({ type: 'separator' }));
+                    c.append(new MenuItem({
+                        label: 'Inspect', click: () => {
+                            ipcRenderer.send('inspect', e.pageX, e.pageY);
+                        }
+                    }));
+                }
+                c.popup({ window: remote.getCurrentWindow() });
+            });
+
+            remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
+                var inputMenu, start, end, w, input;
+                const { selectionText, isEditable } = params;
+                if (isEditable) {
+                    input = document.elementFromPoint(params.x, params.y);
+                    if (input && input.id === 'commandinput') {
+                        //e.preventDefault();
+                        $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
+                        $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
+                        inputMenu = Menu.buildFromTemplate([
+                            { role: 'undo', accelerator: 'CmdOrCtrl+Z' },
+                            { role: 'redo', accelerator: 'CmdOrCtrl+Y' },
+                            { type: 'separator' },
+                            { role: 'cut', accelerator: 'CmdOrCtrl+X' },
+                            { role: 'copy', accelerator: 'CmdOrCtrl+C' },
+                            { label: 'Paste', accelerator: 'CmdOrCtrl+V', click: paste },
+                            { label: 'Paste special', accelerator: 'CmdOrCtrL+Shift+V', click: () => { pasteSpecial(); } },
+                            { type: 'separator' },
+                            { role: 'selectAll', accelerator: 'CmdOrCtrl+A' },
+                        ]);
+                        inputMenu.on('menu-will-show', () => {
+                            $('#commandinput').data('context', true);
+                        });
+                        inputMenu.on('menu-will-close', () => {
+                            setTimeout(() => $('#commandinput').data('context', false), 200);
+                        });
+                    }
+                    else
+                        inputMenu = Menu.buildFromTemplate([
+                            { role: 'undo' },
+                            { role: 'redo' },
+                            { type: 'separator' },
+                            { role: 'cut' },
+                            { role: 'copy' },
+                            { role: 'paste' },
+                            { type: 'separator' },
+                            { role: 'selectAll' },
+                        ]);
+                    if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
+                        inputMenu.append(new MenuItem({ type: 'separator' }));
+                        inputMenu.append(new MenuItem({
+                            label: 'Inspect', click: () => {
+                                ipcRenderer.send('inspect', params.x, params.y);
+                            }
+                        }));
+                    }
+                    if (client.options.spellchecking && params.dictionarySuggestions.length) {
+                        inputMenu.insert(0, new MenuItem({ type: 'separator' }));
+                        start = input.selectionStart + params.selectionText.indexOf(params.misspelledWord);
+                        end = start + params.misspelledWord.length;
+                        for (w = params.dictionarySuggestions.length - 1; w >= 0; w--) {
+                            inputMenu.insert(0, new MenuItem({
+                                label: params.dictionarySuggestions[w],
+                                start: start,
+                                end: end,
+                                sel: params.selectionText.length - params.misspelledWord.length,
+                                x: params.x,
+                                y: params.y,
+                                click: function (item) {
+                                    var el = $(document.elementFromPoint(item.x, item.y));
+                                    var value = el.val();
+                                    var start = el[0].selectionStart;
+                                    value = value.substring(0, item.start) + item.label + value.substring(item.end);
+                                    el.val(value);
+                                    el[0].selectionStart = start;
+                                    el[0].selectionEnd = start + item.label.length + item.sel;
+                                    el.blur();
+                                    el.focus();
+                                }
+                            }));
+                        }
+                    }
+                    inputMenu.popup({ window: remote.getCurrentWindow() });
+                } else if (selectionText && selectionText.trim() !== '') {
+                    Menu.buildFromTemplate([
+                        { role: 'copy' },
+                        { type: 'separator' },
+                        { role: 'selectAll' },
+                    ]).popup({ window: remote.getCurrentWindow() });
+                }
+            });
+
+            client.display.on('word', () => {
+                client.options.find.word = client.display.MatchWord;
+                doUpdate(32);
+            });
+            client.display.on('case', () => {
+                client.options.find.case = client.display.MatchCase;
+                doUpdate(32);
+
+            });
+            client.display.on('reverse', () => {
+                client.options.find.reverse = client.display.Reverse;
+                doUpdate(32);
+            });
+            client.display.on('regex', () => {
+                client.options.find.regex = client.display.RegularExpression;
+                doUpdate(32);
+            });
+
+            client.display.on('shown', () => {
+                client.options.find.show = true;
+                doUpdate(32);
+            });
+            client.display.on('closed', () => {
+                client.options.find.show = false;
+                doUpdate(32);
+            });
+
+            client.display.MatchCase = client.options.find.case;
+            client.display.MatchWord = client.options.find.word;
+            client.display.Reverse = client.options.find.reverse;
+            client.display.RegularExpression = client.options.find.regex;
+            if (client.options.find.show)
+                client.display.showFind();
+            if (client.options.showCharacterManager)
+                showCharacters();
+            createWatcher();
+            autoConnect();
+            doUpdate(64);
+            client.raise('opened');
+        }
+
+        function executeContext(item) {
+            if (!item) return;
+            if (!item.enabled) return false;
+            var ret;// = '';
+            client._input.vStackPush({
+                $repeatnum: window.repeatnum,
+                $selword: _selword,
+                $selurl: _selurl,
+                $selline: _selline,
+                $selectedword: _selword,
+                $selectedurl: _selurl,
+                $selectedline: _selline
+            });
+            if (item.value.length)
+                switch (item.style) {
+                    case 1:
+                        try {
+                            ret = client.parseOutgoing(item.value);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                            client._input.vStackPop();
+                        }
+                        break;
+                    case 2:
+                        /*jslint evil: true */
+                        var f = new Function('try { ' + item.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        try {
+                            ret = f.apply(client);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                            client._input.vStackPop();
+                        }
+                        if (ret)
+                            ret = client.parseOutgoing(ret);
+                        break;
+                    default:
+                        ret = item.value;
+                        client._input.vStackPop();
+                        break;
+                }
+            if (ret == null)
+                return true;
+            if (typeof ret !== 'string')
+                ret = ret.toString();
+            if (ret.length === 0 && !client.options.returnNewlineOnEmptyValue)
+                return true;
+            if (item.send) {
+                if (!ret.endsWith('\n'))
+                    ret += '\n';
+                if (item.chain && client.commandInput.val().endsWith(' ')) {
+                    client.commandInput.val(client.commandInput.val() + ret);
+                    client.sendCommand(null, null, client.options.allowCommentsFromCommand);
+                }
+                else
+                    client.send(ret, true);
+            }
+            else if (item.append)
+                client.commandInput.val(client.commandInput.val() + ret);
+            return true;
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function executeButton(idx) {
+            var button;
+            if (idx < 0 || idx >= client.buttons.length) return false;
+            button = client.buttons[idx];
+            if (!button.enabled) return false;
+            var ret;// = '';
+            if (button.value.length)
+                switch (button.style) {
+                    case 1:
+                        client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                        try {
+                            ret = client.parseOutgoing(button.value);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                        }
+                        break;
+                    case 2:
+                        /*jslint evil: true */
+                        var f = new Function('try { ' + button.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                        try {
+                            ret = f.apply(client);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                        }
+                        if (typeof ret === 'string')
+                            ret = client.parseOutgoing(ret);
+                        break;
+                    default:
+                        ret = button.value;
+                        break;
+                }
+            if (ret == null) {
+                setTimeout(() => {
+                    if (client.options.CommandonClick)
+                        client.commandInput[0].focus();
+                }, 0);
+                return true;
+            }
+            if (typeof ret !== 'string')
+                ret = ret.toString();
+            if (ret.length === 0 && !client.options.returnNewlineOnEmptyValue) {
+                setTimeout(() => {
+                    if (client.options.CommandonClick)
+                        client.commandInput[0].focus();
+                }, 0);
+                return true;
+            }
+            if (button.send) {
+                if (!ret.endsWith('\n'))
+                    ret += '\n';
+                if (button.chain && client.commandInput.val().endsWith(' ')) {
+                    client.commandInput.val(client.commandInput.val() + ret);
+                    client.sendCommand(null, null, client.options.allowCommentsFromCommand);
+                }
+                else
+                    client.send(ret, true);
+            }
+            else if (button.append)
+                client.commandInput.val(client.commandInput.val() + ret);
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
+            return true;
+        }
+
+        function buildButtons() {
+            var buttons = $('#user-buttons');
+            buttons.empty();
+            if (!client.options.buttons.user)
+                return;
+            var pButtons = client.buttons;
+            //pButtons.sort(SortArrayByPriority);
+            var bl = pButtons.length;
+            if (bl > 0) {
+                for (var b = 0; b < bl; b++) {
+                    var item = pButtons[b];
+                    if (!item.enabled) continue;
+                    var button;
+                    var p = '';
+                    if (item.profile) {
+                        p = ' data-profile="' + (item.profile ? item.profile.name : '') + '"';
+                        p += ' data-index="' + client.profiles.items[item.profile.name.toLowerCase()].buttons.indexOf(item) + '"';
+                    }
+                    if (item.name && item.name.length > 0)
+                        button = $('<a id="' + item.name + '" href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"' + p + '></a>');
+                    else
+                        button = $('<a href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"' + p + '></a>');
+                    if (item.stretch)
+                        button.addClass('button-stretch');
+                    if (item.parse)
+                        button.prop('title', item.caption);
+                    else
+                        button.prop('title', client.parseInline(item.caption));
+                    if (item.icon.startsWith('fa-'))
+                        button.html('<i class="fa ' + item.icon + '"></i>');
+                    else if (item.icon.startsWith('gi-'))
+                        button.html('<i class="glyphicon glyphicon-' + item.icon.substring(3) + '"></i>');
+                    else if (item.icon.startsWith('glyphicon-'))
+                        button.html('<i class="glyphicon ' + item.icon + '"></i>');
+                    else if (item.icon.startsWith('.'))
+                        button.html('<i class="fa button-icon ' + item.icon.substring(1) + '"></i>');
+                    else if (item.icon.length > 0)
+                        button.html('<img src="' + parseTemplate(item.icon) + '" /><div class="overlay"></div>');
+                    else
+                        button.html('<i class="fa fa-question"></i>');
+                    buttons.append(button);
+                }
+            }
+            doUpdate(192);
+        }
+
+        function updateMenu() {
+            doUpdate(16);
+            for (var profile in client.profiles.items)
+                ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
+
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], checked: client.options.showButtonBar });
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], checked: client.options.showStatus });
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], checked: client.options.lagMeter });
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: client.options.scrollLocked });
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: !client.connected });
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: client.connected });
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'connectbutton'], checked: client.options.buttons.connect });
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'preferencesbutton'], checked: client.options.buttons.preferences });
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'logbutton'], checked: client.options.buttons.log });
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'clearbutton'], checked: client.options.buttons.clear });
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'lockbutton'], checked: client.options.buttons.lock });
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'mapbutton'], checked: client.options.buttons.map });
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'mailbutton'], checked: client.options.buttons.mail });
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'composebutton'], checked: client.options.buttons.compose });
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'userbutton'], checked: client.options.buttons.user });
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableParsing'], checked: client.enableParsing });
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableTriggers'], checked: client.enableTriggers });
+            _logger.postMessage({ action: 'logging' });
+        }
+
+        /**
+         * Build capture array
+         *
+         * Builds an array of regular expressions to text lines against to know if they should be captured, built
+         * based on chat capture preferences
+        */
+        function buildCaptures() {
+            _captures = [];
+            _captureReviews = [];
+            if (client.options.chat.captureTells) {
+                _captures.push(new RegExp('^([a-zA-Z\'\\s_-]*) tells you:(.*)$'),
+                    new RegExp('^You tell ([a-zA-Z\'\\s_-]*):(.*)$'),
+                    new RegExp('^\\*([a-zA-Z\'\\s_-]*)(\\s?)(.*?)$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) is idle, and may not have been paying attention.$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) is in combat and may not have heard you.$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) is in edit and may not be in a position to respond.$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) is arrested and can not respond.$'),
+                    new RegExp('^\\*You emote to ([a-zA-Z\'\\s_-]*):(.*)$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) shouts in ([a-zA-Z\'\\s_-]*):(.*)$'),
+                    new RegExp('^You shout in ([a-zA-Z\'\\s_-]*):(.*)$')
+                );
+                if (client.options.chat.captureReviews)
+                    _captureReviews.push(new RegExp('^-=-=- Tell Review -=-=-$'));
+            }
+            if (client.options.chat.captureTalk) {
+                _captures.push(new RegExp('^([a-zA-Z\'\\s_-]*) says:(.*)$'),
+                    new RegExp('^You say:(.*)$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) whispers to you:(.*)$'),
+                    new RegExp('You whisper to ([a-zA-Z\'\\s_-]*):(.*)'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) yells:(.*)$'),
+                    new RegExp('^You yell:(.*)$'),
+                    new RegExp('You say in (.*):(.*)'),
+                    new RegExp('([a-zA-Z\'\\s_-]*) says something in (.*).'),
+                    new RegExp('([a-zA-Z\'\\s_-]*) says in (.*):(.*)'));
+                if (client.options.chat.captureReviews)
+                    _captureReviews.push(new RegExp('^-=-=- Say Review -=-=-$'));
+            }
+            if (client.options.chat.captureLines) {
+                if (client.options.chat.captureAllLines) {
+                    _captures.push(new RegExp('^\\[(.*)\\](.*)$'));
+                    if (client.options.chat.captureReviews)
+                        _captureReviews.push(new RegExp('^-=-=- ((?:(?!\\b(Say|Tell|End)\\b).)+) Review -=-=-$'));
+                }
+                else
+                    for (var l = 0, ll = client.options.chat.lines.length; l < ll; l++) {
+                        _captures.push(new RegExp('\\[' + client.options.chat.lines[l].trim() + '\\](.*)'));
+                        if (client.options.chat.captureReviews)
+                            _captureReviews.push(new RegExp('^-=-=- ' + client.options.chat.lines[l].trim() + ' Review -=-=-$'));
+                    }
+            }
+        }
+
+        ipcRenderer.on('update-progress', (event, progressObj) => {
+            if (!$('#update-progress')[0].open) {
+                $('#update-progress-title').html('Downloading update&hellip;');
+                $('#update-progress')[0].show();
+                client.commandInput[0].focus();
+            }
+            $('#update-progressbar').val(progressObj.percent);
+        });
+
+        ipcRenderer.on('update-downloaded', () => {
+            if ($('#update-progress')[0].open)
+                $('#update-progress')[0].close();
+        });
+
+        ipcRenderer.on('request-command-history', () => {
+            ipcRenderer.send('command-history', client.commandHistory);
+        });
+
+        ipcRenderer.on('change-command-history-index', (event, index) => {
+            client.setHistoryIndex(index);
+        });
+
+        ipcRenderer.on('clear-command-history', () => {
+            client.clearCommandHistory();
+        });
+
+        ipcRenderer.on('add-command-history', (event, cmd) => {
+            client.AddCommandToHistory(cmd);
+        });
+
+        ipcRenderer.on('flush-end', (event, sender) => {
+            client.debug('Finished map');
+            client.debug(sender);
+            if (sender === 'Saving data')
+                _backup.save(2);
+            else if (sender === 'Loading data')
+                _backup.getChunk();
+        });
+
+        ipcRenderer.on('load-char', (event, char, same) => {
+            _charName = ipcRenderer.sendSync('get-global', 'characterLogin');
+            if (!client.connected) {
+                _logger.postMessage({ action: 'name', args: _charName });
+                $('#character-name').text(_charName);
+            }
+            _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
+            client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
+            if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect')) {
+                _skipDisconnect = 1;
+                client.close();
+            }
+            if (same)
+                autoConnect();
+        });
+
+        ipcRenderer.on('load-default', (same) => {
+            _charName = 0;
+            if (!client.connected) {
+                _logger.postMessage({ action: 'name', args: '' });
+                $('#character-name').text('&nbsp;');
+            }
+            _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
+            if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect'))
+                client.close();
+            if (same)
+                autoConnect();
+        });
+
+        ipcRenderer.on('change-options', () => {
+            _skipDisconnect = 0;
+            client.settingsFile = ipcRenderer.sendSync('get-global', 'settingsFile');
+            autoConnect();
+        });
+
+        ipcRenderer.on('setting-changed', (event, data) => {
+            if (data.type === 'mapper') {
+                client.options.mapper[data.name] = data.value;
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+            else if (data.type === 'profiles') {
+                client.options.profiles[data.name] = data.value;
+                if (data.name === 'enabled')
+                    updateMenu();
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+            else if (data.type === 'chat') {
+                client.options.chat[data.name] = data.value;
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+            else if (data.type === 'extensions') {
+                client.options.extensions[data.name] = data.value;
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+            else if (data.type === 'windows') {
+                if (!client.options.windows[data.name])
+                    client.options.windows[data.name] = { options: {} };
+                else if (!client.options.windows[data.name].options)
+                    client.options.windows[data.name].options = {};
+                client.options.windows[data.name].options.alwaysOnTopClient = data.value.alwaysOnTopClient;
+                client.options.windows[data.name].options.persistent = data.value.persistent;
+                client.options.windows[data.name].options.alwaysOnTop = data.value.alwaysOnTop;
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+            else if (data.type === 'windowOptions') {
+                if (!client.options.windows[data.name])
+                    client.options.windows[data.name] = {};
+                client.options.windows[data.name].options = data.value;
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+            else if (data.type === 'window') {
+                client.options.windows[data.name] = data.value || {};
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+            else if (data.type === 'normal') {
+                client.options[data.name] = data.value;
+                if (!data.noSave)
+                    doUpdate(32);
+            }
+        });
+
+        ipcRenderer.on('send-background', (event, command, noEcho, comments) => {
+            client.sendBackground(command, noEcho, comments);
+        });
+
+        ipcRenderer.on('send-command', (event, command, noEcho, comments) => {
+            client.sendCommand(command, noEcho, comments);
+        });
+
+        ipcRenderer.on('send-gmcp', (event, data) => {
+            client.sendGMCP(data);
+        });
+
+        ipcRenderer.on('send-raw', (event, raw) => {
+            client.sendRaw(raw);
+        });
+
+        ipcRenderer.on('send', (event, raw, echo) => {
+            client.send(raw, echo);
+        });
+
+        ipcRenderer.on('menu-reload', () => {
+            if (!client) return;
+            doUpdate(4);
+        });
+
+        ipcRenderer.on('reload-profiles', () => {
+            //client.loadProfiles();
+            client.loadOptions();
+            _logger.postMessage({
+                action: 'options', args: {
+                    path: parseTemplate(client.options.logPath),
+                    offline: client.options.logOffline,
+                    gagged: client.options.logGagged,
+                    enabled: client.options.logEnabled,
+                    unique: client.options.logUniqueOnConnect,
+                    prepend: client.options.logPrepend,
+                    what: client.options.logWhat,
+                    debug: client.options.enableDebug,
+                    format: client.options.logTimeFormat,
+                    colors: client.options.colors
+                }
+            });
+            doUpdate(76);
+        });
+
+        ipcRenderer.on('reload-options', () => {
+            client.loadOptions();
+            _logger.postMessage({
+                action: 'options', args: {
+                    path: parseTemplate(client.options.logPath),
+                    offline: client.options.logOffline,
+                    gagged: client.options.logGagged,
+                    enabled: client.options.logEnabled,
+                    unique: client.options.logUniqueOnConnect,
+                    prepend: client.options.logPrepend,
+                    what: client.options.logWhat,
+                    debug: client.options.enableDebug,
+                    format: client.options.logTimeFormat,
+                    colors: client.options.colors
+                }
+            });
+            doUpdate(76);
+            client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
+        });
+
+        ipcRenderer.on('debug', (event, msg) => {
+            if (client.options.enableDebug)
+                client.debug(msg);
+        });
+
+        ipcRenderer.on('error', (event, err) => {
+            client.error(err);
+        });
+
+        ipcRenderer.on('get-skills', (event, window) => {
+            ipcRenderer.send('skills', _status.skills, window);
+        });
+
+        // eslint-disable-next-line no-unused-vars
+        function childClosed(url, name) {
+            if (path.basename(url) === 'characters.html')
+                _cLoading = false;
+        }
+
+        function showCharacters() {
+            if (_cLoading) return;
+            _cLoading = true;
+            window.open('characters.html', 'modal', 'backgroundColor=#fff,height=555,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function showImmortalTools() {
+            if (client.options.windows['immortal'] && client.options.windows['immortal'].options) {
+                client.options.windows['immortal'].options.show = true;
+                ipcRenderer.send('show-window', 'immortal', client.options.windows['immortal'].options);
+            }
+            else
+                ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function showCommandHistory() {
+            if (client.options.windows['history'] && client.options.windows['history'].options) {
+                client.options.windows['history'].options.show = true;
+                ipcRenderer.send('show-window', 'history', client.options.windows['history'].options);
+            }
+            else
+                ipcRenderer.send('show-window', 'history', { show: true, width: 400, height: 275, file: 'history.html', icon: 'history', alwaysOnTopClient: true });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function showHelp() {
+            if (client.options.windows['help'] && client.options.windows['help'].options) {
+                client.options.windows['help'].options.show = true;
+                ipcRenderer.send('show-window', 'help', client.options.windows['help'].options);
+            }
+            else
+                ipcRenderer.send('show-window', 'help', { show: true, file: 'help.html', icon: 'help', alwaysOnTopClient: true });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function showSMHelp() {
+            if (client.options.externalHelp)
+                shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
+            else {
+                if (client.options.windows['smhelp'] && client.options.windows['smhelp'].options) {
+                    client.options.windows['smhelp'].options.show = true;
+                    ipcRenderer.send('show-window', 'smhelp', client.options.windows['smhelp'].options);
+                }
+                else
+                    ipcRenderer.send('show-window', 'smhelp', { show: true, file: 'smhelp.html', icon: 'help', alwaysOnTopClient: true, width: 800, height: 600, x: window.screenTop + 100, y: window.screenLeft + 100 });
+            }
+            setTimeout(() => {
+                client.commandInput[0].blur();
+                client.commandInput[0].focus();
+            }, 0);
+        }
+
+        function showWho() {
+            if (client.options.externalWho)
+                shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
+            else {
+                if (client.options.windows['who'] && client.options.windows['who'].options) {
+                    client.options.windows['who'].options.show = true;
+                    ipcRenderer.send('show-window', 'who', client.options.windows['who'].options);
+                }
+                else
+                    ipcRenderer.send('show-window', 'who', { show: true, file: 'who.html', icon: 'user', alwaysOnTopClient: true, width: 800, height: 600, x: window.screenTop + 100, y: window.screenLeft + 100 });
+            }
+            setTimeout(() => {
+                client.commandInput[0].blur();
+                client.commandInput[0].focus();
+            }, 0);
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function showLogViewer() {
+            if (client.options.windows['log-viewer'] && client.options.windows['log-viewer'].options) {
+                client.options.windows['log-viewer'].options.show = true;
+                ipcRenderer.send('show-window', 'log-viewer', client.options.windows['log-viewer'].options);
+            }
+            else
+                ipcRenderer.send('show-window', 'log-viewer', { show: true, file: 'log.viewer.html', icon: 'log', alwaysOnTopClient: true });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function showCodeEditor() {
+            ipcRenderer.send('show-window', 'code-editor');
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function showMail() {
+            if (client.options.windows['mail'] && client.options.windows['mail'].options) {
+                client.options.windows['mail'].options.show = true;
+                ipcRenderer.send('show-window', 'mail', client.options.windows['mail'].options);
+            }
+            else
+                ipcRenderer.send('show-window', 'mail', { show: true, file: 'mail.html', icon: 'mail', alwaysOnTopClient: true });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function showComposer() {
+            if (client.options.windows['composer'] && client.options.windows['composer'].options) {
+                client.options.windows['composer'].options.show = true;
+                client.options.windows['composer'].options.persistent = false;
+                client.options.windows['composer'].options.noInput = true;
+                ipcRenderer.send('show-window', 'composer', client.options.windows['composer'].options);
+            }
+            else
+                ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'composer', alwaysOnTopClient: true, persistent: false, noInput: true });
+        }
+
+        function showSkills() {
+            if (client.options.windows['skills'] && client.options.windows['skills'].options) {
+                client.options.windows['skills'].options.show = true;
+                ipcRenderer.send('show-window', 'skills', client.options.windows['skills'].options);
+            }
+            else
+                ipcRenderer.send('show-window', 'skills', { show: true, file: 'skills.html', icon: 'skills', alwaysOnTopClient: true });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function toggleLogging() {
+            _logger.postMessage({ action: 'toggle' });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function toggleParsing() {
+            client.enableParsing = !client.enableParsing;
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableParsing'], checked: client.enableParsing });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function toggleTriggers() {
+            client.enableTriggers = !client.enableTriggers;
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableTriggers'], checked: client.enableTriggers });
+        }
+
+        function copyAsHTML() {
+            if (!client.display.hasSelection) return;
+            window.writeClipboard(client.display.selectionAsHTML);
+        }
+
+        function pasteSpecial(noDialog) {
+            if (clipboard.readText().length === 0)
+                return;
+            if (!noDialog) {
+                $('#pasteSpecial-prefix').prop('disabled', !client.options.pasteSpecialPrefixEnabled);
+                $('#pasteSpecial-postfix').prop('disabled', !client.options.pasteSpecialPostfixEnabled);
+                $('#pasteSpecial-prefix').val(client.options.pasteSpecialPrefix);
+                $('#pasteSpecial-postfix').val(client.options.pasteSpecialPostfix);
+                $('#pasteSpecial-prefix-enable').prop('checked', client.options.pasteSpecialPrefixEnabled);
+                $('#pasteSpecial-postfix-enable').prop('checked', client.options.pasteSpecialPostfixEnabled);
+
+                $('#pasteSpecial-replace').val(client.options.pasteSpecialReplace);
+                $('#pasteSpecial-replace').prop('disabled', !client.options.pasteSpecialReplaceEnabled);
+                $('#pasteSpecial-replace-enable').prop('checked', client.options.pasteSpecialReplaceEnabled);
+                if (!$('#pasteSpecial')[0].open)
+                    $('#pasteSpecial')[0].showModal();
+                if (!$('#pasteSpecial-replace').prop('disabled'))
+                    $('#pasteSpecial-replace').focus();
+                else if (!$('#pasteSpecial-prefix').prop('disabled'))
+                    $('#pasteSpecial-prefix').focus();
+                else if (!$('#pasteSpecial-postfix').prop('disabled'))
+                    $('#pasteSpecial-postfix').focus();
+                else
+                    $('#pasteSpecial-cancel').focus();
+
+            }
+            else
+                pasteSpecialOk(true);
+        }
+
+        function pasteSpecialOk(noDialog) {
+            if (!noDialog) {
+                client.options.pasteSpecialPrefix = $('#pasteSpecial-prefix').val();
+                client.options.pasteSpecialPostfix = $('#pasteSpecial-postfix').val();
+                client.options.pasteSpecialPrefixEnabled = $('#pasteSpecial-prefix-enable').prop('checked');
+                client.options.pasteSpecialPostfixEnabled = $('#pasteSpecial-postfix-enable').prop('checked');
+
+                client.options.pasteSpecialReplace = $('#pasteSpecial-replace').val();
+                client.options.pasteSpecialReplaceEnabled = $('#pasteSpecial-replace-enable').prop('checked');
+
+                doUpdate(32);
+                $('#pasteSpecial')[0].close();
+            }
+            var post = client.options.pasteSpecialPostfixEnabled ? client.options.pasteSpecialPostfix : 0;
+            var pre = client.options.pasteSpecialPrefixEnabled ? client.options.pasteSpecialPrefix : 0;
+            var replace = client.options.pasteSpecialReplaceEnabled ? client.options.pasteSpecialReplace : 0;
+
+            //changed while in dialog so bail
+            if (clipboard.readText().length === 0)
+                return;
+            var txt = clipboard.readText().replace(/\r/, '');
+
+            if (replace && replace.length)
+                txt = txt.replace(/\n/g, replace);
+
+            if (pre && pre.length && post && post.length)
+                txt = pre + txt.replace(/\n/g, `${post}\n${pre}`) + post;
+            else if (pre && pre.length)
+                txt = pre + txt.replace(/\n/g, `\n${pre}`);
+            else if (post && post.length)
+                txt = txt.replace(/\n/g, `${post}\n`) + post;
+            var startPos = client.commandInput.data('selStart');
+            var endPos = client.commandInput.data('selEnd');
+            client.commandInput[0].value = client.commandInput[0].value.substring(0, startPos)
+                + txt
+                + client.commandInput[0].value.substring(endPos, client.commandInput[0].value.length);
+            client.commandInput[0].selectionStart = startPos;
+            client.commandInput[0].selectionEnd = startPos + txt.length;
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
+        }
+
+        function paste() {
+            if (clipboard.readText().length === 0)
+                return;
+            var startPos = client.commandInput.data('selStart');
+            var endPos = client.commandInput.data('selEnd');
+            client.commandInput[0].value = client.commandInput[0].value.substring(0, startPos)
+                + clipboard.readText()
+                + client.commandInput[0].value.substring(endPos, client.commandInput[0].value.length);
+            client.commandInput[0].selectionStart = startPos;
+            client.commandInput[0].selectionEnd = startPos + clipboard.readText().length;
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
+        }
+
+        function autoConnect() {
+            if (!autoConnectID && client.options.autoConnect && !client.connected && !client.errored)
+                autoConnectID = setTimeout(function () { client.connect(); autoConnectID = null; }, client.options.autoConnectDelay);
+        }
+
+        function closeDisconnectDialog(resetTimers) {
+            if (_disconnectTimerID) {
+                clearTimeout(_disconnectTimerID);
+                _disconnectTimerID = null;
+            }
+            if (resetTimers) {
+                _disconnectTimer = 0;
+                _disconnectCounter = 0;
+            }
+            $('#disconnectDialog')[0].close();
+            $('#commandinput').focus();
+        }
+
+        function updateChat(data) {
+            ipcRenderer.send('chat', data);
+            /*
+            if (typeof data === 'string') {
+                display.append(data);
+                data = {
+                    line: data,
+                    formats: [{ formatType: 0 }],
+                    raw: data
+                };
+            }
+            else
+                display.addParserLine(data);
+            */
+        }
+
+        $(document).ready(init);
+
+        document.addEventListener('load', () => doUpdate(1));
+
+        document.addEventListener('visibilitychange', () => {
+            //fake minimize due ot bug in linux not supporting minimize event
+            if (document.visibilityState === 'hidden' && client && client.options && client.options.hideOnMinimize && process.platform === 'linux' && ipcRenderer.sendSync('window-info', 'isMinimized'))
+                ipcRenderer.invoke('window', 'hide');
+        });
+
+        var $updating = 0;
+        var _rTimeout = 0;
+        function doUpdate(type) {
+            $updating |= type;
+            if ($updating == 0 || _rTimeout) return;
+            _rTimeout = window.requestAnimationFrame(() => {
+                if (($updating & 1) === 1) {
+                    updateInterface();
+                    $updating &= ~1;
+                }
+                if (($updating & 2) === 2) {
+                    buildCaptures();
+                    $updating &= ~2;
+                }
+                if (($updating & 4) === 4) {
+                    updateMenu();
+                    $updating &= ~4;
+                }
+                if (($updating & 8) === 8) {
+                    buildButtons();
+                    $updating &= ~8;
+                }
+                if (($updating & 16) === 16) {
+                    buildContextMenu();
+                    $updating &= ~16;
+                }
+                if (($updating & 32) === 32) {
+                    client.saveOptions();
+                    $updating &= ~32;
+                }
+                if (($updating & 64) === 64) {
+                    client.saveOptions();
+                    ipcRenderer.invoke('window', 'clearCache').then(() => { if (client.options.enableDebug) console.log('Cache cleared'); });
+                    webFrame.clearCache();
+                    $updating &= ~64;
+                }
+                if (($updating & 128) === 128) {
+                    updateButtonBar();
+                    $updating &= ~128;
+                }
+                if (($updating & 256) === 256) {
+                    setTimeout(() => {
+                        client.display.updateScrollbars();
+                        client.display.updateView();
+                        client.UpdateWindow();
+                    }, 1);
+                    $updating &= ~256;
+                }
+                _rTimeout = 0;
+                this.doUpdate($updating);
+            });
+        }
+
+        function clearWatcher() {
+            if (_watcher)
+                _watcher.close();
+            _watcher = null;
+        }
+
+        function createWatcher() {
+            clearWatcher();
+            if (!client.options.watchForProfilesChanges)
+                return;
+            _watcher = require('chokidar').watch(path.join(parseTemplate('{data}'), 'profiles'), {
+                persistent: true,
+                depth: 0,
+                ignoreInitial: true
+            });
+            _watcher.on('change', file => {
+                if (path.extname(file) !== '.json')
+                    return;
+                const profile = path.basename(file, '.json');
+                switch (client.options.onProfileChange) {
+                    case 1: //reload
+                        client.loadProfile(profile);
+                        break;
+                    case 2: //ask
+                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                            {
+                                type: 'question',
+                                title: `Profile '${profile}' changed`,
+                                message: `Profile '${profile}' changed, what do you want to do?`,
+                                buttons: ['Nothing', 'Reload'],
+                                defaultId: 1
+                            });
+                        if (choice === 1)
+                            client.loadProfile(profile);
+                        break;
+                    case 4: //warn
+                        client.echo(`Profile '${profile}' changed`, -7, -8, true, true);
+                        break;
+                }
+            })
+                .on('add', file => {
+                    if (path.extname(file) !== '.json')
+                        return;
+                    const profile = path.basename(file, '.json');
+                    switch (client.options.onProfileChange) {
+                        case 1: //reload
+                            client.loadProfile(profile);
+                            break;
+                        case 2: //ask
+                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                                {
+                                    type: 'question',
+                                    title: `Profile '${profile}' added`,
+                                    message: `Profile '${profile}' added, what do you want to do?`,
+                                    buttons: ['Nothing', 'Load'],
+                                    defaultId: 1
+                                });
+                            if (choice === 1)
+                                client.loadProfile(profile);
+                            break;
+                        case 4: //warn
+                            client.echo(`Profile '${profile}' added`, -7, -8, true, true);
+                            break;
+                    }
+                })
+                .on('unlink', p => {
+                    if (path.extname(file) !== '.json')
+                        return;
+                    const profile = path.basename(file, '.json');
+                    switch (client.options.onProfileDeleted) {
+                        case 1:
+                            client.removeProfile(profile);
+                            break;
+                        case 2: //ask
+                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                                {
+                                    type: 'question',
+                                    title: `Profile '${profile}' deleted`,
+                                    message: `Profile '${profile}' deleted, what do you want to do?`,
+                                    buttons: ['Nothing', 'Remove'],
+                                    defaultId: 1
+                                });
+                            if (choice === 1)
+                                client.removeProfile(profile);
+                            break;
+                        case 4: //warn
+                            client.echo(`Profile '${profile}' deleted`, -7, -8, true, true);
+                            break;
+                    }
+                });
+        }
+
+        function createDialog(title, width, height, doOk, doReturn, doClose, body, footer) {
+            var dlg = window.open('dialog.html', 'modal', `width=${width || 800},height=${height || 600}`);
+            dlg.document.title = title;
+            dlg.doReturn = doReturn;
+            dlg.doClose = doClose;
+            dlg.doOk = doOk;
+            if (typeof footer === 'string')
+                dlg.document.getElementsByClassName('dialog-footer')[0].innerHTML = footer;
+            else if (footer && footer.nodeType)
+                dlg.document.getElementsByClassName('dialog-footer')[0].appendChild(footer);
+            if (typeof body === 'string')
+                dlg.document.getElementsByClassName('dialog-footer')[0].innerHTML = footer;
+            else if (body && body.nodeType)
+                dlg.document.getElementsByClassName('dialog-body')[0].appendChild(body);
+            return dlg;
+        }
+
+        function setId(id) {
+            _id = id;
+        }         
+    </script>
+</head>
+
+<body id="client">
+    <div id="display"></div>
+    <div id="display-border"></div>
+    <div id="command">
+        <div id="commandleft"></div>
+        <div id="commandright"></div>
+        <div id="commandbox">
+            <textarea type="text" id="commandinput" aria-live="polite" spellcheck="true" wrap="off" cols="20" rows="20"></textarea>
+        </div>
+        <div class="dropdown dropup command-history">
+            <a id="history-dropup" title="Show command history" class="button button-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" area-expanded="true">
+                <i class="fa fa-history"></i><span class="caret" style="margin: 0"></span>
+            </a>
+            <ul class="dropdown-menu pull-right dropdown-menu-right" data-container="body" aria-labelledby="history-dropdown"></ul>
+        </div>
+        <a href="javascript:void(0)" title="Toggle parsing" class="button button-sm" id="btnParsing" onclick="toggleParsing()">
+            <i class="fa fa-terminal"></i>
+        </a>
+        <a href="javascript:void(0)" title="Toggle triggers" class="button button-sm" id="btnTriggers" onclick="toggleTriggers()">
+            <i class="fa fa-bolt"></i>
+        </a>
+        <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="ipcRenderer.send('show-window', 'editor');">
+            <i class="fa fa-edit"></i>
+        </a>
+    </div>
+    <a href="javascript:void(0)" id="bb-scroll-up" class="hidden button"><i class="fa fa-chevron-up"></i></a>
+    <a href="javascript:void(0)" id="bb-scroll-down" class="hidden button"><i class="fa fa-chevron-down"></i></a>
+    <div id="buttonbar">
+        <a href="javascript:void(0)" title="Connect" id="connect" class="button" onclick="client.connect();">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="-0.6 -0.6 17 16">
+                <path d="M16 0c0 0.5 0 1.1 0 1.6 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0 0.7 0 0.8 0 0.2 0.1 0.6 0 0.8 0 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.6 0 0.8 -0.1 0.2 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.8 0-1.6 0-2.4 0 -0.1-0.2 0.1-0.7 0-0.8s-0.7 0.1-0.8 0 0.1-0.7 0-0.8c-0.1-0.1-0.8 0.1-0.8 0 0-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.2-0.1-0.6 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.2-0.1 0.6 0 0.8 0 0.2 0 0.6 0.1 0.8 0 0.3-0.1 0.5 0 0.8 0 0.1-0.2-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8 0.7 0.1 0.8 0c0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8 0.6 0.1 0.8 0C15.5 0 15.8 0 16 0z" />
+                <path d="M6.4 8c0.3 0 0.5 0 0.8 0 0.1 0 0.7-0.1 0.8 0 0.1 0.2-0.1 0.6 0 0.8 0.1 0.2-0.1 0.7 0 0.8 0 0 0.8 0 0.8 0 -0.1 0.2 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.8 0 0.8 -0.2 0.1-0.6 0-0.8 0 -0.3 0-0.5 0-0.8 0 -0.2 0-0.7-0.1-0.8 0 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.3 0-0.5 0-0.8 0 -0.1 0-0.7 0.1-0.8 0 -0.1-0.2 0.1-0.6 0-0.8 0.2-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8c0.1-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.1 0-0.7 0-0.8 0-0.3 0-0.5 0-0.8 0-0.2-0.1-0.6 0-0.8 0-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8s0.7 0.1 0.8 0 -0.1-0.6 0-0.8c0.3 0 0.5 0 0.8 0 0.1-0.2-0.1-0.6 0-0.8 0 0 0.8 0 0.8 0C6.6 7.4 6.3 7.9 6.4 8z" />
+            </svg>
+        </a>
+        <a href="javascript:void(0)" title="Disconnect" id="disconnect" class="button on" onclick="client.close();" style="display:none">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="-0.6 -0.6 17 17">
+                <path d="M16 0c0 0.5 0 1.1 0 1.6 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.8-0.1-0.8 0 -0.1 0.2 0 0.6 0 0.8 0 0.3 0 0.5 0 0.8 0 0.2 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.2 0.1-0.7-0.1-0.8 0s0.1 0.7 0 0.8c-0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.3 0-0.5 0-0.8 0 -0.1 0-0.7 0.1-0.8 0 -0.1-0.2 0.1-0.6 0-0.8 -0.2-0.1-0.6 0.1-0.8 0 -0.1-0.1 0.1-0.7 0-0.8 -0.1-0.1-0.7 0.1-0.8 0 -0.1-0.1 0-0.6 0-0.8 0-0.2 0-0.6 0-0.8 0-0.3 0-0.5 0-0.8 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.2-0.1 0.6 0 0.8 0 0.2 0 0.6 0.1 0.8 0 0.1 0-0.1-0.7 0-0.8 0.1-0.1 0.7 0 0.8 0 0.2 0 0.6 0.1 0.8 0 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.6 0.1 0.8 0C15.5 0 15.7 0 16 0z" class="a" />
+                <path d="M6.4 10.4c0.2 0.1 0.6-0.1 0.8 0 0.1 0.1 0 0.7 0 0.8 0 0.3 0 0.5 0 0.8 -0.2 0.1-0.6-0.1-0.8 0 -0.1 0.1 0 0.7 0 0.8 0 0.1 0.1 0.8 0 0.8 -0.1 0.1-0.7 0-0.8 0 -0.1 0-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.8 0 0.8 -0.2 0.1-0.6 0-0.8 0 -0.2 0-0.6-0.1-0.8 0 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.2 0.1-0.6-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7 0-0.8 0 -0.3 0-0.5 0-0.8 0 0-0.5 0-1.1 0-1.6 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0-0.3 0-0.5 0-0.8 0-0.2-0.1-0.6 0-0.8 0-0.1-0.1-0.7 0-0.8 0.1-0.1 0.8 0.1 0.8 0 0.1-0.2 0-0.6 0-0.8 0-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0.3 0 0.5 0 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.1 0 0.8 0 0.8 0 0.1 0.1-0.1 0.7 0 0.8 0.2 0.1 0.6-0.1 0.8 0 0.2 0.1 0.7-0.1 0.8 0C6.5 9.8 6.3 10.3 6.4 10.4z" class="a" />
+            </svg>
+        </a>
+        <a href="javascript:void(0)" title="Characters" id="characters" class="button" onclick="showCharacters();">
+            <i class="fa fa-user"></i>
+        </a>
+        <a href="javascript:void(0)" title="Immortal Tools" id="immortal" class="button" onclick="showImmortalTools()" style="display: none">
+            <i class="fa fa-code-fork"></i>
+        </a>
+        <a href="javascript:void(0)" title="Code Editor" id="codeEditor" class="button" onclick="showCodeEditor()">
+            <i class="fa fa-code"></i>
+        </a>
+        <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="ipcRenderer.send('show-window', 'prefs');">
+            <i class="fa fa-gears"></i>
+        </a>
+        <a href="javascript:void(0)" title="Toggle logging" id="log" class="button" onclick="toggleLogging();">
+            <i class="fa fa-file-text-o"></i>
+        </a>
+        <a href="javascript:void(0)" title="Clear display" id="clear" class="button" onclick="client.clear()">
+            <span class="fa-stack">
+                <i class="fa fa-file-o fa-stack-2x"></i>
+                <i class="fa fa-times fa-stack-1x"></i>
+            </span>
+        </a>
+        <a href="javascript:void(0)" title="Lock display" id="lock" class="button" onclick="client.toggleScrollLock()">
+            <i class="fa fa-lock"></i>
+        </a>
+        <a href="javascript:void(0)" title="Show mapper" id="map" class="button" onclick="ipcRenderer.send('show-window', 'mapper');">
+            <i class="fa fa-map"></i>
+        </a>
+        <!--
+    <a href="javascript:void(0)" title="Mail" id="mail" class="button" onclick="showMail();">
+      <i class="fa fa-envelope"></i>
+    </a>
+    <a href="javascript:void(0)" title="Compose new mail" id="compose" class="button" onclick="showComposer();">
+      <span class="fa-stack">
+        <i class="fa fa-envelope-open-o fa-stack-2x"></i>
+        <i class="fa fa-pencil fa-stack-1x" style="margin-top:-10px;margin-left:6px;"></i>
+      </span>
+    </a>
+    -->
+        <div id="user-buttons"></div>
+    </div>
+    <div id="status-border"></div>
+    <div id="status">
+        <div id="status-drag-bar"></div>
+        <div id="environment" class="day">
+            <div id="environmentleft"></div>
+            <div id="environmentcenter"></div>
+            <div id="environmentright"></div>
+            <div id="environmentweather"></div>
+        </div>
+        <div id="body">
+            <div id="limbs">
+                <a href="javascript:void(0)" id="health" title="Show limb health" class="button button-sm on" onclick="_status.ac = false" ;>
+                    <i class="fa fa-heart"></i>
+                </a>
+                <a href="javascript:void(0)" id="armor" class="button button-sm" title="Show limb armor protection" onclick="_status.ac = true" ;>
+                    <svg width="11" height="17" viewBox="-0.09 -0.88 11 17" preserveAspectRatio="xMidYMid">
+                        <path d="M5 0c0 0 1 0 1 0 1 0 2 1 3 1 1 1 1 2 1 3 0 2 0 5 0 8 -1 1-2 3-3 3 0-2 0-4 0-6 1-1 2-1 2-1C9 7 9 6 9 6 8 6 7 7 6 7 6 7 5 8 5 8 5 8 4 7 4 7 3 7 2 6 1 6 1 6 1 7 1 8c1 0 2 1 2 1 0 2 0 4 0 6 -1-1-2-1-3-2 0 0-1-1-1-1 0-1 0-1 0-2 0-1 0-1 0-2 0-1 0-3 0-4 0-1 1-2 2-2C3 1 4 0 5 0z" />
+                    </svg>
+                </a>
+                <div id="character-name">&nbsp;</div>
+                <svg id="fullbody" class="health-full" xmlns="http://www.w3.org/2000/svg" width="128" height="200" viewBox="-0.9 -0.8 179 297">
+                    <path id="rightwing" d="M140.5 0.1c7-0.8 8 6.4 7.7 11.8 -0.4 9.2-0.3 18.2 1.1 25.8 0.6 3.1 2 6 2 8.3 0.1 7.6-6.1 11.4-10 14.6 1.9 0.5 4.5 0.3 6 1.1 0.6 1.8 0.3 4.7 0 6.6 1.9 0.5 4.7 0.1 6 1.1 0.4 2.2-0.7 2.4-0.6 4 0.3 3 4.2 4.2 4.3 6.6 0.1 1.8-1.1 2.3-2 4 0.6 1.1 2.2 1.2 2.3 2.9 -2.3 2.3-4.2 4.2-1.4 6.9 5.8 5.6 20.4 8.8 21.8 18.6 -3.5 3.1-7.3-0.6-10-2.6 -3-2.2-5.1-5.5-7.7-7.7 -3.3-2.8-9.4-7.3-12.3-2 -0.3 1.6 0.9 1.8 0.6 3.4 -6-0.7-7.7 3-9.7 6.3 -4.9-0.5-6.6-5.4-12.3-4 -1.1-1-1.8-0.7-3.4-0.3 -0.3-1.5-1.6-2-3.2-2.3 -1.5-7.4-6.6-11.2-11.5-15.2 -1.3 5.8-4.9 9.5-11.8 9.8 -5.8-7.5-8.3-23-5.4-35.6 2-1.4 4.5-2.4 8-2.3C103.8 35.9 114.5 3 140.5 0.1zM138.2 6.1c3.6 0.1 5.2 2.3 4.6 6.6C146.3 8.9 141.8 0.5 138.2 6.1zM129.9 7.2c-7 3.1-12.1 10.6-15.5 18.4 1.6 0.2 2.8-2.6 4.6-4 1.4-1.1 3.6-1.8 4.9-3.2C126.7 15.3 126.6 9.9 129.9 7.2zM139.1 9.8c-6.4 4-8.6 12.1-11.5 19.5C133.3 26 139.7 19.4 139.1 9.8zM140.5 20.4c3.4-0.7 4 4.1 2.3 6C146.7 26.3 144.7 15.9 140.5 20.4zM124.7 20.7c-2.7 4.4-7.3 6.9-10.9 10.6 -7.8 8.1-10.7 20.2-13.2 32.7 4.9-6.8 9.9-13.3 15.8-19.8 1.8-2 4.7-4 5.7-6C124.6 33.4 123.5 27.4 124.7 20.7zM140.5 24.1c-1.2 0-2.6-0.1-3.4 0.3 -2.1 4-5.7 6.6-10 8.3 -0.2 1.1-0.6 2.1-0.9 3.2C132.1 33.1 138.4 30.8 140.5 24.1zM145.9 32.7c-0.9 1.9-1.6 4-2.6 5.7C146.1 38.4 146.3 35.1 145.9 32.7zM119.8 44.2c5.5 0.4 9.9-2.7 15.5-3.2 1.5-3 5.2-3.8 6.3-7.2C131.7 33.5 125.4 39.2 119.8 44.2zM144.2 42.8c0.6 2.8-1.6 4.8-3.7 5.7C144.8 50.7 149.8 43.7 144.2 42.8zM111.5 53.7c5.5-2.1 11.4-3.7 18.1-4.6 1.4-2.5 4.9-2.9 6.9-4.9C125.6 43.5 116.3 48.3 111.5 53.7zM108.7 57.7c4.6 0.6 10.2 0.3 14.3 1.4 2.4-1.8 4.6-3.8 7.5-5.2C122.4 52.3 113.7 54.5 108.7 57.7zM138.2 54.8c-3.6 0.5-4.2 3.8-8 4C133.9 59.7 138 58.4 138.2 54.8zM103.8 63.7c2.7-1.8 11.9 1.9 12-3.2C110.9 60 105.3 60 103.8 63.7zM119 61.7c0.7 1.4-0.4 2.9 0 3.7 2.4 0 3.7-1.1 3.4-3.7C121.8 61.3 119.6 61.3 119 61.7zM126.4 65.1c4.1-0.3 11.1 1.8 14.6-0.6C138.9 59.6 128.5 62.6 126.4 65.1zM130.7 67.7c3.4 3.1 8 5 14.6 4.9C143.7 69 137.3 66.5 130.7 67.7zM110.1 71.7c4.6 4.2 17.8 5.3 23.2 1.1 -3.3-2.2-6.9-4-12-3.2C118.1 70.3 114.1 72.8 110.1 71.7zM108.4 74.3c-0.5 0.2 0 0.5 0 0.9 9.8 7 20.8 12.9 34.7 15.8 -3.7-4.5-6.7-9.5-11.5-12.9C122.6 78.9 114.6 77.2 108.4 74.3zM135.6 76c2.6 2.5 9 2.6 13.8 2C147.2 74.3 140.9 76.5 135.6 76zM109.8 78.3c-0.4 0.1 0 0.3 0 0.6 3.9 3.2 8.4 5.5 12 8.9 3.6 3.3 7.2 6.8 8.9 12 1.5 0.5 2.8 1.2 3.7 2.3 0-6.3-5.4-10.3-9.7-13.8C120 84.6 114.9 81.2 109.8 78.3zM136.2 79.2c1.7 2.9 7.1 4.5 12.3 4.9 0.1-1-0.1-1.6-0.3-2.3C144.9 80.2 139 81.2 136.2 79.2zM152.5 81.2c-0.6 0.2-0.9 0.6-1.4 0.9 -0.1 1.2 0.4 1.9 0.9 2.6C152.5 83.8 152.3 82.3 152.5 81.2zM110.1 81.5c-0.8 0.6 0.1 1.8 0 2.6 4.4 2.6 7.6 6.4 8.9 12 0.5 0 1 0 1.4 0 0.8 2 2.3 3.5 3.4 5.2 1.7-0.2 2-1.9 4.3-1.4C125.3 90.5 116.8 86.9 110.1 81.5zM141.9 85.2c0.5 2.1 3 4.6 6 5.2 0.1-1.3 0-2.5-0.6-3.2C144.9 87.2 143.2 86.4 141.9 85.2zM149.7 86.7c0.1 1.6 0.9 2.5 1.4 3.7 0.8-0.6 1-1.8 1.4-2.9C151.4 87.4 151.1 86.4 149.7 86.7zM127.6 88.1c2.8 2.9 5.3 6.2 10 7.2C135.1 92.1 132.6 88.8 127.6 88.1zM140.5 93.2c0.5 1 0 3 2 2.6 0.3-0.3 0.3-1 0.3-1.7C142 93.9 141.6 93.2 140.5 93.2zM144.2 98.7c1.1-1.2 3.1-3 3.4-4C146 94.4 144.1 96.2 144.2 98.7zM136.8 98.1c-0.7 0.6 0.1 1.1 0 2 0.8 0.2 0.7-0.4 1.4-0.3C138.2 98.8 137.6 98.3 136.8 98.1zM140.5 101.6c-0.9-0.5-2.3 0.9-2.3 2.3C139 103.2 139.3 101.9 140.5 101.6z" />
+                    <path id="leftwing" d="M78.9 60c3.6-0.1 6 0.9 8 2.3 2.9 12.6 0.4 28-5.4 35.6 -6.9-0.3-10.4-3.9-11.8-9.7 -4.9 4-10 7.8-11.5 15.2 -1.5 0.3-2.9 0.8-3.2 2.3 -1.6-0.4-2.3-0.7-3.4 0.3 -5.8-1.3-7.5 3.5-12.3 4 -2.1-3.3-3.7-7-9.7-6.3 -0.3-1.6 0.9-1.8 0.6-3.4 -3-5.3-9-0.8-12.3 2 -2.6 2.3-4.7 5.5-7.7 7.7 -2.7 2-6.5 5.7-10 2.6 1.4-9.8 16-13 21.8-18.6 2.8-2.7 0.9-4.6-1.4-6.9 0.1-1.6 1.7-1.7 2.3-2.9 -0.9-1.8-2.1-2.2-2-4 0.1-2.4 4-3.6 4.3-6.6 0.2-1.6-0.9-1.8-0.6-4 1.3-1.1 4.1-0.6 6-1.1 -0.3-1.9-0.6-4.8 0-6.6 1.5-0.9 4.1-0.6 6-1.1 -3.9-3.2-10.2-7.1-10-14.6 0-2.3 1.4-5.2 2-8.3 1.5-7.6 1.6-16.6 1.1-25.8C29.3 6.5 30.3-0.7 37.3 0.1 63.3 3 74 35.9 78.9 60zM35 12.7c-0.6-4.3 1-6.5 4.6-6.6C36 0.5 31.5 8.9 35 12.7zM53.9 18.4c1.3 1.4 3.5 2 4.9 3.2 1.8 1.5 3 4.2 4.6 4C60 17.9 54.9 10.3 47.9 7.2 51.2 9.9 51 15.3 53.9 18.4zM50.2 29.3c-2.9-7.4-5.1-15.5-11.5-19.5C38.1 19.4 44.5 26 50.2 29.3zM35 26.4c-1.7-1.9-1.2-6.7 2.3-6C33 15.9 31.1 26.3 35 26.4zM55.6 38.2c1 2 3.9 4 5.7 6 5.9 6.4 10.9 12.9 15.8 19.8 -2.5-12.5-5.4-24.6-13.2-32.7 -3.6-3.7-8.2-6.2-10.9-10.6C54.3 27.4 53.2 33.4 55.6 38.2zM51.6 35.9c-0.3-1.1-0.6-2-0.9-3.2 -4.4-1.7-8-4.3-10-8.3 -0.9-0.4-2.2-0.3-3.4-0.3C39.3 30.8 45.7 33.1 51.6 35.9zM34.4 38.5c-1-1.8-1.7-3.9-2.6-5.7C31.4 35.1 31.7 38.4 34.4 38.5zM36.1 33.9c1.1 3.4 4.8 4.2 6.3 7.2 5.6 0.4 10 3.6 15.5 3.2C52.4 39.2 46.1 33.5 36.1 33.9zM37.3 48.5c-2.1-1-4.3-2.9-3.7-5.7C27.9 43.7 33 50.7 37.3 48.5zM41.3 44.2c2 1.9 5.4 2.4 6.9 4.9 6.7 0.9 12.6 2.5 18.1 4.6C61.5 48.3 52.2 43.5 41.3 44.2zM47.3 54c2.9 1.3 5.1 3.3 7.5 5.2 4.1-1.1 9.7-0.8 14.3-1.4C64.1 54.5 55.3 52.3 47.3 54zM47.6 58.8c-3.8-0.2-4.5-3.6-8-4C39.8 58.4 43.9 59.7 47.6 58.8zM61.9 60.6c0.2 5.1 9.3 1.3 12 3.2C72.5 60 66.9 60 61.9 60.6zM55.3 61.7c-0.2 2.6 1 3.8 3.4 3.7 0.4-0.8-0.7-2.3 0-3.7C58.1 61.3 56 61.3 55.3 61.7zM36.7 64.6c3.5 2.4 10.5 0.3 14.6 0.6C49.3 62.6 38.9 59.6 36.7 64.6zM32.4 72.6c6.6 0.1 11.2-1.8 14.6-4.9C40.5 66.5 34 69 32.4 72.6zM56.5 69.7c-5.2-0.8-8.7 0.9-12 3.2 5.5 4.1 18.7 3 23.2-1.1C63.7 72.8 59.7 70.3 56.5 69.7zM46.2 78.1c-4.7 3.4-7.8 8.4-11.5 12.9 13.9-2.9 24.9-8.8 34.7-15.8 0-0.3 0.5-0.6 0-0.9C63.2 77.2 55.2 78.9 46.2 78.1zM28.4 78.1c4.8 0.6 11.2 0.5 13.8-2C36.9 76.5 30.5 74.3 28.4 78.1zM53 88.4c-4.3 3.4-9.8 7.4-9.7 13.8 0.9-1.1 2.2-1.8 3.7-2.3 1.7-5.2 5.3-8.7 8.9-12 3.7-3.4 8.1-5.7 12-8.9 0-0.3 0.4-0.4 0-0.6C62.9 81.2 57.8 84.6 53 88.4zM29.5 81.8c-0.2 0.7-0.4 1.3-0.3 2.3 5.2-0.3 10.6-2 12.3-4.9C38.7 81.2 32.8 80.2 29.5 81.8zM25.8 84.6c0.5-0.7 0.9-1.4 0.9-2.6 -0.5-0.3-0.8-0.7-1.4-0.9C25.5 82.3 25.3 83.8 25.8 84.6zM49.6 99.8c2.3-0.4 2.6 1.3 4.3 1.4 1.2-1.7 2.6-3.1 3.4-5.2 0.5 0 1 0 1.4 0 1.3-5.7 4.5-9.5 8.9-12 -0.1-0.8 0.8-2 0-2.6C60.9 86.9 52.4 90.5 49.6 99.8zM30.4 87.2c-0.6 0.7-0.7 1.8-0.6 3.2 3-0.5 5.6-3 6-5.2C34.5 86.4 32.8 87.2 30.4 87.2zM25.2 87.5c0.4 1 0.6 2.2 1.4 2.9 0.5-1.2 1.3-2.1 1.4-3.7C26.6 86.4 26.4 87.4 25.2 87.5zM40.1 95.3c4.7-1 7.2-4.2 10-7.2C45.1 88.8 42.7 92.1 40.1 95.3zM35 94.1c0 0.7 0 1.4 0.3 1.7 2 0.4 1.5-1.6 2-2.6C36.2 93.2 35.8 93.9 35 94.1zM30.1 94.7c0.3 1 2.3 2.9 3.4 4C33.7 96.2 31.8 94.4 30.1 94.7zM39.6 99.8c0.7-0.1 0.6 0.5 1.4 0.3 -0.1-0.9 0.7-1.4 0-2C40.1 98.3 39.5 98.8 39.6 99.8zM39.6 103.9c0.1-1.4-1.4-2.8-2.3-2.3C38.5 101.9 38.7 103.2 39.6 103.9z" />
+                    <path id="tail" d="M146 229.8c1.8-3.3 1.5-7.5 4.3-10.1 -2-5.3 0.6-12.5-1.2-17.8 -5.6-7.1-8.8-15.2-18.3-20.7 -6.5-1.7-14.5-9.2-22.2-9.3 -4.7-2.4-5.9-6.3-10.4-8.7 0.8-0.8 1-1.7 0.9-2.6l-13.4-3.7c-0.9 3.9 0.5 6.9-0.2 10.8 4.4 4.3 5.6 10.4 11.7 13.6 3.1 1.6 6.9-0.4 9 3.6 8.4 4.5 18.5 0.8 23.2 10 0 0 0 0 0-0.1 5.3 3.7 6.6 9 9.4 13.7 0.2 3 0.4 6.7 0.6 8.9 0.5 4.1 0 2.9-1.8 6.8 -1 2.2-0.4 2.5-1 5 -4.8 0.9-6.5 6-10.2 8.7 -3.1 2.3-7.5 2.5-9.9 5.6 6.5 0.9 11.8-1.1 17.8-1.2 1.6-4.2 4.7-3.2 6.4-4.9 1.1-1.1 1-3.4 1.9-4.6C143.8 231.2 145.4 231 146 229.8z" />
+                    <path id="head" d="M97.5 43.8c0.5-1.7 1.8-3 2.6-4.7 0.4-0.9-0.1-2.1 0.5-3.2 0.1-0.2 0.9 0.1 1.1 0 1.1-1.1-0.1-4.1 1.1-6.3 0.5-2-2.3-0.9-1.6-3.2 1.6-4.8-0.3-12.8-3.2-13.2 1.8-0.6-1.5-0.2-0.5-1.6 -2.5-0.6-5-1.3-7.4-2.1 -1.1 0-2.1 0-3.2 0 -0.2 1.7-3 0.8-4.7 1.1 0.4 1.4-0.9 0.7-1.6 1.1 -0.6 0.4-1.3 1.3-1.6 1.6 -0.1 0.1-1 0.4-1.1 0.5 -0.5 1.2-0.8 3.1-2.1 4.2 0.9 2.7-0.9 6.1 0.5 9 0.3 1.1-0.8 1.1-1.1 1.6 -0.9 1.5-0.4 7.5 2.1 7.9 0 3.3 1.7 5 2.6 7.4 -0.1 1.4 0 3 0 4.6 5.8 0 11.6 0 17.4 0C97.4 46.8 97.5 45.3 97.5 43.8z" />
+                    <path id="lefthand" d="M48.4 162.4c0 0.7 0 1.4 0 2.1 0.3 0 0.6 0.4 0 0.5 0 1.6 0 3.2 0 4.7 1.7-0.6 0.8 1.5 1.1 2.1 0.3 0.8 1.2 1.4 1.6 2.1 1.7 3 2.5 4 5.3 5.3 0.9 0.4 1.9 1.6 3.2 1.1 1.3-2.9-0.6-3.8-2.1-5.3 -0.2-1.3 2.4 0.3 1.6-1.6 -2.1-2.3-7.7-3.9-5.3-9 4.1-0.6 1.3 5.7 5.3 5.3 0.5-3 0-7 0.5-11.1 -0.6-1.6-2.4-3.4-2.6-5.3 0 0 0-0.1 0-0.1l-7.3 0C49.4 156.6 49 159.6 48.4 162.4z" />
+                    <path id="leftleg" d="M78 266.8c-0.7-4.4-0.5-11.2 0-16.9 0.4-4.1 1.8-7.8 2.1-11.6 0.2-3.3 0.3-6.9 0-10 -0.4-3.5-2.2-6.2-2.1-9 0.1-1.9 1.4-3.7 2.1-5.8 1.1-3.3 2.2-6.8 2.6-10 0.9-6.3 0.6-13.4 1.1-20 0.4-5 1.6-8.6 2.6-12.1 0.3-0.9 0.9-1.4 1.1-2.1 0.7-3.5-0.9-6.7 1.3-8.1 -8.6 0-17.2 0-25.9 0 -0.1 9.7 1.1 19.4 1.5 28.6 0.2 3.8-0.3 7.7 0 11.1 0.3 3.5 0.7 7.9 0 11.1 0 0.2-1 1.3-1.1 1.6 -0.2 1.6-0.3 3.2-0.5 4.7 -0.7 5.4-0.9 12.8-0.5 17.9 0.3 4.6 1.5 7.4 2.6 10.5 1.1 3.2 2 6.1 2.6 9.5 0.2 1 0.9 2 1.1 3.2 0.2 1.3-0.2 2.9 0 4.2 0.2 1.5 0.9 2.4 1.1 3.7 0 0 0 0 0 0h8.5C78 267.1 78 267 78 266.8z" />
+                    <path id="leftfoot" d="M78.1 267.3h-8.5c0.5 5.9-1.2 9.3-1.1 14.2 -1.7 3-3.8 7.9-3.2 11.6 2 2.4 9.1-0.4 11.1 2.1 0.7 0 1.4 0 2.1 0 3.9-5-0.7-15.5 2.1-21.1C80 271.9 78.6 269.8 78.1 267.3z" />
+                    <path id="leftarm" d="M63.2 59.1c-0.6 0.2-0.7 0.9-1.1 1.1 -0.4 0.2-1.2-0.2-1.6 0 -0.5 0.3-0.2 0.8-0.5 1.1 -0.4 0.2-1.2-0.2-1.6 0 -0.5 0.3-0.2 0.8-0.5 1.1 -0.2 0.2-0.8-0.2-1.1 0 -0.2 0.1-0.4 1-0.5 1.1 -1.2 0.6-0.6 0.5-1.6 1.6 -0.6 0.6-1.5 1.4-2.1 3.2 -0.3 0.8-0.3 1.2-0.5 1.6 -0.8 1.8-1 7-1.6 11.1 -0.5 2.9-1.3 6-1.6 9 -0.7 8 2.4 17.9 0 24.3 0 0.1-0.5 0-0.5 0 0 4.9 0 9.8 0 14.8 0.9 7.7 1.6 16.6 1.1 24.7l7.3 0c-0.1-1.1 0.6-3.1 1.1-5.2 0.7-2.9 1.7-6.3 2.1-7.9 0.8-3.1 1.4-6.1 1.6-9 0.5-6.1-1.2-12.9-0.5-17.9 0.3-1.8 1.2-3.6 1.6-5.3 0.5-2.1 0.8-4.2 1.1-6.3 0.5-4.2 0-8.9 2.5-11.9V59.1C65.2 59 64.1 58.8 63.2 59.1z" />
+                    <path id="rightfoot" d="M96.9 274c1.3 2.8 1.2 6.6 1.1 10.1 -0.2 4.2-0.9 8.1 1.1 11.2 0.5 0 1.1 0 1.6 0 0.5-1.3 2.2-0.9 3.7-1.1 3-0.3 6.7 0.3 8.4-1.1 0.3-4.1-2.2-7.7-3.2-11.7 -0.4-1.6-0.2-3-0.5-4.8 -0.3-1.5-1-3.2-1.1-4.8 -0.1-1.3 0-2.6 0.1-4h-9C98.6 270.2 97.9 272.3 96.9 274z" />
+                    <path id="torso" d="M89.5 161.7c8.4 0 16.9 0 25.5 0 0-1.2-0.1-2.4-0.1-3.5 -0.5-7.1-1.7-14.2-2.6-21.2 -0.5-3.6-0.9-7.1-1.6-10.6 -1.1-5.7-3-12.3-2.1-19.1 0.3-2.7 1.8-5 2.1-7.4 0.4-3.2-1-6.5 0.8-9.7v-31.1c-0.8 0-1.6 0.1-2.4 0 -1.3-1.7-3.9-1.3-5.8-2.1 -0.3-0.1-1.4-1.2-2.1-1.6 -0.9-0.4-1.9-0.4-2.6-1.1 -0.8-1.5-1-3.7-1.1-6 -5.8 0-11.6 0-17.4 0 0 2 0 4-0.6 5.5 -1 0.3-1.7 1-2.6 1.6 -0.4 0.3-1 0.2-1.6 0.5 -0.5 0.3-0.5 0.8-1.1 1.1 -0.6 0.3-1.5-0.2-2.1 0 -0.4 0.2-0.4 0.9-1.1 1.1 -0.6 0.2-1.5-0.2-2.1 0 -0.2 0.1-0.9 1-1.1 1.1 -0.6 0.1-1.2 0.1-1.8 0v30.9c0.1-0.1 0.1-0.1 0.2-0.2 0.7 2.8 0.1 5.9 0.5 9 0.4 2.8 1.8 5.2 2.1 7.9 0.3 2.8 0.2 6.4 0 9.5 -0.4 4.9-2 9.2-2.6 13.2 -0.2 1.2 0.1 2.5 0 3.7 -0.1 1.2-0.9 2.1-1.1 3.2 -0.2 1.4 0.2 2.8 0 4.2 -0.2 1.1-0.9 2.2-1.1 3.2 -0.2 1.8 0.2 3.5 0 5.3 -0.2 1.5-0.9 3.2-1.1 4.8 -0.3 2.6-0.4 5.2-0.4 7.8 8.7 0 17.3 0 25.9 0H89.5z" />
+                    <path id="rightleg" d="M114.9 217.2c-0.5-4.3-2-8.4-2.1-12.7 -0.1-4.3 0.9-9.1 1.1-13.7 0.1-2.8-0.1-5.2 0-7.9 0.3-7.2 1.3-14.5 1.2-21.8 -8.6 0-17 0-25.5 0 -0.4 6.7 3.5 13.3 4.2 20.2 0.3 3.5-0.2 6.7 0 10 0.3 4.6 0.8 9.1 1.6 13.2 0.4 2.1 1 3.9 1.6 5.8 0.2 0.5-0.1 1.1 0 1.6 0.1 0.2 0.9 0.8 1.1 1.1 0.2 0.6-0.3 1.5 0 2.1 0.1 0.1 0.9-0.1 1.1 0 0.1 0.1-0.1 0.8 0 1.1 1.2 4-0.5 6.8-1.1 10.5 -0.6 4.7-0.6 10.8 0 15.8 0.1 1.2 0.8 2.5 1.1 3.7 0.3 1.5 0.4 2.9 0.5 4.2 0.6 6.4 0.5 12.6-0.5 17.6h9c0.2-2.9 0.6-5.9 1-7.6 0.7-3.3 1.3-5.8 2.1-8.4 0.6-2.2 1.5-5 2.1-6.3 0.6-1.3 1.3-3.1 1.6-4.2C116.5 233.7 115.9 225 114.9 217.2z" />
+                    <path id="rightarm" d="M128 154c-0.5-11.9 1.1-24.4 1.6-33.7 0-1.4 0-2.8 0-4.2 -3.4-6.7 0.2-18.4-1.1-29 -0.2-2-1.2-3.8-1.6-5.8 -0.9-5.7-0.5-10-2.6-14.2 -0.2-0.3-0.3-1.2-0.5-1.6 -0.1-0.2-0.9 0.2-1.1 0 -0.2-0.2-0.6-1.6-1.1-2.1 -0.6-0.7-1-1.2-2.6-2.1 -0.7-0.4-0.6-0.1-1.1-0.5 -0.7-0.7-1.4 0-3.2-0.5 -0.7-0.2-0.5-0.9-1.6-1.1 -0.6-0.1-1.2-0.1-1.8 0v31c0.1-0.1 0.1-0.3 0.2-0.4 -0.6 0.9 1 0.9 1.1 1.1 0.3 0.6-0.2 1.5 0 2.1 1.5 4.5 1.1 11.6 2.1 15.8 0.4 1.8 1.4 3.5 1.6 5.3 0.8 6.9-1.3 15.2 0 20.6 1.7 6.9 3.4 13.1 4.2 20h7.4C128.1 154.3 128.1 154.1 128 154z" />
+                    <path id="righthand" d="M120.7 154.5c0 0 0 0 0 0 -0.9 1.5-1.9 3-2.6 4.7 -0.4 1.7 0.5 3.6 0.5 5.3 0.1 1.9-1.6 4.8 0.5 5.3 2.1 0.7 1.5-5.8 5.3-5.3 0.6 2.2-0.1 3.8-1.1 5.3 -1 1.4-3.4 2.9-4.7 3.2 -0.3 2.7 1.9 0 1.6 2.1 -0.8 0.8-1.8 1.4-2.1 2.6 -1 0.7 1.2 1.1 0 2.6 2.4 0.1 4.9-1.2 5.8-2.1 0.5-0.5 0.5-1.4 1.1-2.1 0.8-1 2-2 2.6-3.2 2.9-5.2 1-10.9 0.6-18.5H120.7z" />
+                </svg>
+                <div id="lefthandweapon"></div>
+                <div id="righthandweapon"></div>
+                <div id="overall" class="health-full">Top Shape</div>
+            </div>
+            <div id="hp-status">
+                <div>
+                    <span>HP:</span>
+                    <div class="progressbar" id="hp-bar">
+                        <div class="progressbar-text">0/0</div>
+                        <div class="progressbar-value"></div>
+                    </div>
+                </div>
+                <div>
+                    <span>SP:</span>
+                    <div class="progressbar" id="sp-bar">
+                        <div class="progressbar-text">0/0</div>
+                        <div class="progressbar-value"></div>
+                    </div>
+                </div>
+                <div>
+                    <span>MP:</span>
+                    <div class="progressbar" id="mp-bar">
+                        <div class="progressbar-text">0/0</div>
+                        <div class="progressbar-value"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="experience">
+            <div>
+                <span>XP:</span>
+                <span id="xp-value">0</span>
+            </div>
+            <div>
+                <span>Needed:</span>
+                <span id="need-value">0</span>
+                <div class="progressbar" id="need-percent">
+                    <div class="progressbar-text" style="text-align:right;right: 2px;color:black;">0</div>
+                    <div class="progressbar-value"></div>
+                </div>
+            </div>
+            <div>
+                <span>Earned:</span>
+                <span id="earn-value">0</span>
+            </div>
+            <div>
+                <span>BankedXP:</span>
+                <span id="xp-banked">0</span>
+            </div>
+            <!--
+        <div>
+          <div class="progressbar" id="need-value" style="width: 100%;background: rgb(252, 238, 42);">
+            <div class="progressbar-text" style="right: 5px;">0%</div>
+            <div class="progressbar-value"></div>
+          </div>
+        </div>
+        -->
+        </div>
+        <div id="bars">
+            <div id="party"></div>
+            <div id="combat"></div>
+        </div>
+        <div class="progressbar" id="lagMeter">
+            <div class="progressbar-text">0.000 s</div>
+            <div class="progressbar-value" style="width: 100%"></div>
+        </div>
+    </div>
+    <dialog id="Progress" style="z-index:1000;text-align:center">
+        <div id="ProgressTitle"></div>
+        <div id="Progressbar">
+            <progress max="100"></progress>
+        </div>
+    </dialog>
+    <dialog id="update-progress" style="z-index:1000;text-align:center">
+        <div id="update-progress-title"></div>
+        <div>
+            <progress max="100" id="update-progressbar"></progress>
+        </div>
+    </dialog>
+    <dialog id="pasteSpecial" style="z-index:1000;height:317px;width:350px;">
+        <div class="dialog-header" style="font-weight: bold">
+            <button type="button" class="close" data-dismiss="modal" onclick="$('#pasteSpecial')[0].close();$('#commandinput').focus();">&times;</button>
+            <div style="padding-top: 2px;">Paste special...</div>
+        </div>
+        <div class="dialog-body" style="margin-top: 32px;">
+            <div class="form-group">
+                <label class="control-label" for="pasteSpecial-replace">Replace with</label>
+                <div class="input-group">
+                    <input id="pasteSpecial-replace" class="form-control">
+                    <div class="input-group-addon">
+                        <input type="checkbox" id="pasteSpecial-replace-enable" checked="checked" onclick="$('#pasteSpecial-replace').prop('disabled', !$(this).prop('checked'));" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label" for="pasteSpecial-prefix">Prefix</label>
+                <div class="input-group">
+                    <input id="pasteSpecial-prefix" class="form-control">
+                    <div class="input-group-addon">
+                        <input type="checkbox" id="pasteSpecial-prefix-enable" checked="checked" onclick="$('#pasteSpecial-prefix').prop('disabled', !$(this).prop('checked'));" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label" for="pasteSpecial-postfix">Postfix</label>
+                <div class="input-group">
+                    <input id="pasteSpecial-postfix" class="form-control">
+                    <div class="input-group-addon">
+                        <input type="checkbox" id="pasteSpecial-postfix-enable" checked="checked" onclick="$('#pasteSpecial-postfix').prop('disabled', !$(this).prop('checked'));" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button style="float: left" type="button" class="btn btn-default" onclick="$('#pasteSpecial-replace').prop('disabled', false);$('#pasteSpecial-replace-enable').prop('checked', true);$('#pasteSpecial-replace').val('');$('#pasteSpecial-prefix').prop('disabled', false);$('#pasteSpecial-postfix').prop('disabled', false);$('#pasteSpecial-prefix').val('');$('#pasteSpecial-postfix').val('');$('#pasteSpecial-prefix-enable').prop('checked', true);$('#pasteSpecial-postfix-enable').prop('checked', true);">Reset</button>
+            <button id="pasteSpecial-cancel" style="float: right" type="button" class="btn btn-default" onclick="$('#pasteSpecial')[0].close();$('#commandinput').focus();">Cancel</button>
+            <button id="pasteSpecial-ok" style="float: right" type="button" class="btn btn-primary" onclick="pasteSpecialOk()">Ok</button>
+        </div>
+    </dialog>
+    <dialog id="disconnectDialog" style="z-index:1000;height:205px;width:525px;">
+        <div class="dialog-header" style="font-weight: bold">
+            <button type="button" class="close" data-dismiss="modal" onclick="closeDisconnectDialog();">&times;</button>
+            <div style="padding-top: 2px;">Disconnected...</div>
+        </div>
+        <div class="dialog-body" style="padding-top:25px">
+
+            <div class="col-sm-7 form-group">
+                <p>You have been Disconnected.</p>
+                <p>
+                    The reason for this may vary:
+                <p style="padding-left: 20px;background-color:#F5F5F5">
+                    You quit.
+                    <br> Mud crashed.
+                    <br> Lost network connection.
+                </p>
+                </p>
+                <p style="font-weight: bold">Reconnecting in ...
+                    <span id="disconnectTimer"></span>
+                </p>
+            </div>
+            <div class="col-sm-5 form-group">
+                <button id="disconnectDialogReconnect" style="float: right" type="button" class="btn btn-primary btn-block" onclick="closeDisconnectDialog();client.connect();" accesskey="r">
+                    <i class="fa fa-refresh"></i>
+                    <u>R</u>econnect</button>
+                <!--<button style="float: right" type="button" class="btn btn-primary" onclick="" accesskey="d"><i class="fa fa-terminal"></i><u>D</u>iffernt MUD...</button>-->
+                <button style="float: right" type="button" class="btn btn-default btn-block" onclick="closeDisconnectDialog(true);showCharacters();" accesskey="d">
+                    <i class="fa fa-user"></i> Character
+                    <u>M</u>anager...</button>
+                <button style="float: right" type="button" class="btn btn-default btn-block" onclick="closeDisconnectDialog(true);" accesskey="o">
+                    <i class="fa fa-pause"></i>
+                    <u>O</u>ffline</button>
+                <!--<button style="float: right" type="button" class="btn btn-primary" onclick="" accesskey="c"><i class="fa fa-remove"></i><u>C</u>lose</button>-->
+                <button style="float: right" type="button" class="btn btn-danger btn-block" onclick="closeDisconnectDialog(true);window.close();" accesskey="q">
+                    <i class="fa fa-power-off"></i>
+                    <u>Q</u>uit</button>
+            </div>
+        </div>
+    </dialog>
+</body>
+
+</html>
