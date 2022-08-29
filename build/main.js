@@ -1196,7 +1196,7 @@ function createWindow() {
 
     // and load the index.html of the app.
     win.loadURL(url.format({
-        pathname: path.join(__dirname, 'index.html'),
+        pathname: path.join(__dirname, 'manager.html'),
         protocol: 'file:',
         slashes: true
     }));
@@ -3106,7 +3106,7 @@ ipcMain.on('new-client', (event, id, focus, offset) => {
         width: bounds.width,
         height: bounds.height - offset
     });
-    view.webContents.loadFile("build/client.html");
+    view.webContents.loadFile("build/index.html");
     require("@electron/remote/main").enable(view.webContents);
     clients[id] = { view: view };
     if (focus)
