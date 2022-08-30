@@ -627,7 +627,6 @@ function createMenu() {
                 {
                     label: '&Toggle Window Developer Tools',
                     click: (item, mWindow) => {
-
                         if (mWindow.webContents.isDevToolsOpened())
                             mWindow.webContents.closeDevTools();
                         else
@@ -638,7 +637,7 @@ function createMenu() {
                 {
                     label: 'Toggle &Client Developer Tools',
                     click: async (item, mWindow) => {
-                        var view = await getActiveClient(mWindow);
+                        var view = getActiveClient(mWindow).view;
                         if (view && view.webContents.isDevToolsOpened())
                             view.webContents.closeDevTools();
                         else if (view)
@@ -929,9 +928,8 @@ function profileToggle(menuItem, mWindow) {
     executeScriptClient('client.toggleProfile("' + menuItem.label.toLowerCase() + '")', mWindow, true);
 }
 
-function createWindow(id) {
-    if (!id) id = Date.now();
-    var s = loadWindowState(id);
+function createWindow() {
+    var s = loadWindowState();
     // Create the browser window.
     let window = new BrowserWindow({
         title: 'jiMUD',
@@ -1004,14 +1002,6 @@ function createWindow(id) {
             window.hide();
     });
 
-    window.webContents.on('devtools-reload-page', (event, details) => {
-        executeScript(`setId('${id}')`, window).catch(logError);
-    });
-
-    window.webContents.on('did-finish-load', () => {
-        executeScript(`setId('${id}')`, window).catch(logError);
-    });
-
     window.webContents.on('render-process-gone', (event, details) => {
         logError(`Client render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
@@ -1074,12 +1064,11 @@ function createWindow(id) {
     
     // Emitted when the window is closed.
     window.on('closed', () => {
-        windows[id].window = null;
-        delete windows[id];
+        windows[window.webContents.id].window = null;
+        delete windows[window.webContents.id];
     });
 
     window.once('ready-to-show', async () => {
-        executeScript(`setId('${id}')`, window).catch(logError);
         loadWindowScripts(window, 'manager');
         //await executeScript('loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');updateInterface();', window).catch(logError);
         updateJumpList();
@@ -1088,12 +1077,12 @@ function createWindow(id) {
     });
 
     window.on('close', (e) => {
-        for (client in windows[id].clients) {
-            if (!Object.prototype.hasOwnProperty.call(windows[id].clients, client) || clients[client].view)
+        for (client in windows[window.webContents.id].clients) {
+            if (!Object.prototype.hasOwnProperty.call(windows[window.webContents.id].clients, client) || clients[client].view)
                 continue;
             window.removeBrowserView(clients[client].view);
-            windows[id].clients[client] = null;
-            delete windows[id].clients[client];
+            windows[window.webContents.id].clients[client] = null;
+            delete windows[window.webContents.id].clients[client];
             clients[client].view.webContents.destroy();
             clients[client] = null;
             delete clients[client];
@@ -1112,8 +1101,8 @@ function createWindow(id) {
     window.on('resized', () => {
         window.getBrowserView().webContents.send('resized');
     });
-    windows[id] = { window: window, clients: {} };
-    return id;
+    windows[window.webContents.id] = { window: window, clients: {} };
+    return window.webContents.id;
 }
 
 if (argv['disable-gpu'])
@@ -1212,6 +1201,7 @@ app.on('ready', () => {
         focusedWindow = windowId;
         focusedClient = id;
         windows[windowId].clients[id] = clients[id].view;
+        windows[windowId].current = id;
         clients[id].parent = window;
         window.setBrowserView(clients[id].view);
         window.setMenu(clients[id].menu);
@@ -1682,8 +1672,7 @@ ipcMain.on('dock-main', (event, id) => {
     executeScript(`dockClient(${id})`, win);
 });
 
-function newClient(bounds, offset, id) {
-    if (!id) id = Date.now();
+function newClient(bounds, offset) {
     offset = offset || 0;
     const view = new BrowserView({
         webPreferences: {
@@ -1713,13 +1702,13 @@ function newClient(bounds, offset, id) {
     //@TODO change to index.html once basic window system is working
     view.webContents.loadFile("build/blank.html");
     require("@electron/remote/main").enable(view.webContents);
-    clients[id] = { view: view, menu: createMenu() };
-    executeScript(`setId('${id}');`, clients[id].view);
+    clients[view.webContents.id] = { view: view, menu: createMenu() };
+    executeScript(`setId('${view.webContents.id}');`, clients[view.webContents.id].view);
     //clients[id].view.webContents.openDevTools();
     //win.setTopBrowserView(view)    
     //addBrowserView
     //setBrowserView  
-    return id;
+    return view.webContents.id;
 }
 
 function removeClient(id, close) {
@@ -2812,27 +2801,23 @@ function buildOptions(details, window, settings) {
     return options;
 }
 
-async function getActiveClient(window) {
-    if (!window) return clients[focusedClient].view;
-    var client = await executeScript('getActiveClient()', window);
-    return clients[client].view;
+function getActiveClient(window) {
+    if (!window) return clients[focusedClient];
+    return clients[windows[window.webContents.id].current];
 }
 
-async function getWindowId(window) {
+function getWindowId(window) {
     if (!window) return focusedWindow;
-    return await executeScript('getId()', window);
+    return window.webContents.id;
 }
 
-async function getClientId(client) {
+function getClientId(client) {
     if (!client) return focusedClient;
-    return await executeScript('getId()', client);
+    return client.webContents.id;
 }
 
-async function focusClient(window, focusWindow) {
-    let id = focusedClient;
-    if (window) return;
-    id = await executeScript('getActiveClient()', window);
-    let client = clients[id];
+function focusClient(window, focusWindow) {
+    let client = getActiveClient(window);
     if (!client) return;
     if (focusWindow) {
         client.parent.focus();
@@ -2848,7 +2833,7 @@ async function executeScriptClient(script, window, focus) {
             reject();
             return;
         }
-        var id = await executeScript('getActiveClient()', window);
+        var id = windows[window.webContents.id].current;
         if (!clients[id]) return;
         clients[id].webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
             if (err)
