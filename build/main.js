@@ -10,7 +10,6 @@ const url = require('url');
 const settings = require('./js/settings');
 const { EditorSettings } = require('./js/editor/code.editor.settings');
 const { TrayClick } = require('./js/types');
-const { leftShift } = require('mathjs');
 
 require('@electron/remote/main').initialize()
 //require('electron-local-crash-reporter').start();
@@ -19,12 +18,9 @@ require('@electron/remote/main').initialize()
 // be closed automatically when the JavaScript object is garbage collected.
 let winProfiles, winCode, winProgress;
 let _winProgressTimer = 0;
-let set, codeMax = false;
+let codeMax = false;
 let edSet;
 let codeReady = 0, progressReady = 0, profilesReady = 0;
-let reload = null;
-let tray = null;
-let overlay = 0;
 let loadID;
 let argv;
 
@@ -100,24 +96,16 @@ if (!process.env.PORTABLE_EXECUTABLE_DIR) {
 Menu.setApplicationMenu(null);
 
 global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
+let set = settings.Settings.load(global.settingsFile);
+
 global.debug = false;
 global.editorOnly = false;
 global.updating = false;
 
-let windowsID = 0;
-let clientID = 0;
 let clients = {}
 let windows = {};
 let focusedClient = 0;
 let focusedWindow = 0;
-
-let states = {
-    'main': { x: 0, y: 0, width: 800, height: 600 },
-    'mapper': { x: 0, y: 0, width: 800, height: 600 },
-    'profiles': { x: 0, y: 0, width: 800, height: 600 },
-    'editor': { x: 0, y: 0, width: 300, height: 225 },
-    'chat': { x: 0, y: 0, width: 300, height: 225 },
-};
 
 process.on('uncaughtException', (err) => {
     logError(err);
@@ -942,210 +930,8 @@ function profileToggle(menuItem, mWindow) {
     executeScriptClient('client.toggleProfile("' + menuItem.label.toLowerCase() + '")', mWindow, true);
 }
 
-function createTray() {
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
-    if (!set.showTrayIcon)
-        return;
-    tray = new Tray(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
-    const contextMenu = Menu.buildFromTemplate([
-        {
-            label: '&Show focused window...', click: () => {
-                showSelectedWindow();
-            }
-        },
-        {
-            label: 'H&ide focused window...', click: () => {
-                if (set.hideOnMinimize)
-                    windows[focusedWindow].window.hide();
-                else
-                    windows[focusedWindow].window.minimize();
-            }
-        },
-        {
-            label: '&Show all windows...', click: () => {
-                for (window in windows) {
-                    if (!Object.prototype.hasOwnProperty.call(windows, window))
-                        continue;
-                    showSelectedWindow(window);
-                }
-            }
-        },
-        {
-            label: 'H&ide all windows...', click: () => {
-                for (window in windows) {
-                    if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window].window)
-                        continue;
-                    if (set.hideOnMinimize)
-                        windows[window].window.hide();
-                    else
-                        windows[window].window.minimize();
-                }
-            }
-        },
-        { type: 'separator' },
-        {
-            label: 'Ch&aracters...',
-            id: 'characters',
-            click: (item, mWindow) => {
-                restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
-                executeScript('showCharacters()', mWindow, true);
-            }
-        },
-        {
-            label: '&Manage profiles...',
-            click: showProfiles,
-        },
-        {
-            label: '&Code editor...',
-            click: showCodeEditor,
-        },
-        { type: 'separator' },
-        {
-            label: '&Preferences...',
-            click: showPrefs
-        },
-        { type: 'separator' },
-        {
-            label: '&Who is on?...',
-            click: () => {
-                executeScript('showWho()', win, true);
-            }
-        },
-        { type: 'separator' },
-        {
-            label: '&Help',
-            role: 'help',
-            submenu: [
-                {
-                    label: '&ShadowMUD...',
-                    click: () => {
-                        executeScript('showSMHelp()', win, true);
-                    }
-                },
-                {
-                    label: '&jiMUD...',
-                    click: () => {
-                        executeScript('showHelp()', win, true);
-                    }
-                },
-                {
-                    label: '&jiMUD website...',
-                    click: () => {
-                        shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
-                    }
-                },
-                { type: 'separator' },
-                {
-                    label: '&About...',
-                    click: () => {
-                        showAbout();
-                    }
-                }
-            ]
-        },
-        { type: 'separator' },
-        { label: 'E&xit', role: 'quit' }
-    ]);
-    updateTray();
-    tray.setContextMenu(contextMenu);
-
-    tray.on('click', () => {
-        switch (set.trayClick) {
-            case TrayClick.show:
-                showSelectedWindow();
-                break;
-            case TrayClick.toggle:
-                if (win.isVisible()) {
-                    if (set.hideOnMinimize)
-                        win.hide();
-                    else
-                        win.minimize();
-                }
-                else
-                    restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
-                break;
-            case TrayClick.hide:
-                if (set.hideOnMinimize)
-                    win.hide();
-                else
-                    win.minimize();
-                break;
-            case TrayClick.menu:
-                tray.popUpContextMenu();
-                break;
-        }
-    });
-
-    tray.on('double-click', () => {
-        switch (set.trayClick) {
-            case TrayClick.show:
-                showSelectedWindow();
-                break;
-            case TrayClick.toggle:
-                if (win.isVisible()) {
-                    if (set.hideOnMinimize)
-                        win.hide();
-                    else
-                        win.minimize();
-                }
-                else
-                    restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
-                break;
-            case TrayClick.hide:
-                if (set.hideOnMinimize)
-                    win.hide();
-                else
-                    win.minimize();
-                break;
-            case TrayClick.menu:
-                tray.popUpContextMenu();
-                break;
-        }
-    });
-}
-
-function updateTray() {
-    if (!tray) return;
-    let t = '';
-    let d = '';
-    let title = global.title;
-    if (!title || title.length === 0)
-        title = global.character;
-    if ((set && set.dev) || global.dev)
-        d = ' to Development';
-    switch (overlay) {
-        case 1:
-            tray.setImage(path.join(__dirname, '../assets/icons/png/connected2.png'));
-            if (title && title.length > 0)
-                t = `Connected${d} as ${title} - jiMUD`;
-            else
-                t = `Connected${d} - jiMUD`;
-            break;
-        case 2:
-            if (title && title.length > 0)
-                t = `Connected${d} as ${title} - jiMUD`;
-            else
-                t = `Connected${d} - jiMUD`;
-            tray.setImage(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
-            break;
-        default:
-            if (title && title.length > 0)
-                t = `Disconnected${d} as ${title} - jiMUD`;
-            else
-                t = `Disconnected${d} - jiMUD`;
-            tray.setImage(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
-            break;
-    }
-
-    tray.setTitle(t);
-    tray.setToolTip(t);
-}
-
 function createWindow(id) {
     if (!id) id = Date.now();
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
     var s = loadWindowState(id);
     // Create the browser window.
     let window = new BrowserWindow({
@@ -1182,23 +968,15 @@ function createWindow(id) {
     if (s.devTools)
         window.webContents.openDevTools();
     window.on('resize', () => {
-        if (!window.isMaximized() && !window.isFullScreen())
-            trackWindowState('main', window);
     });
 
     window.on('move', () => {
-        if (!window.isMaximized() && !window.isFullScreen())
-            trackWindowState('main', window);
     });
 
     window.on('maximize', () => {
-        trackWindowState('main', window);
-        states.main.maximized = true;
     });
 
     window.on('unmaximize', () => {
-        trackWindowState('main', window);
-        states.main.maximized = false;
     });
 
     window.on('unresponsive', () => {
@@ -1211,18 +989,14 @@ function createWindow(id) {
                 return;
             if (result.response === 0) {
                 window.reload();
-                logError('Client unresponsive, reload.\n', true);
+                logError('Window unresponsive, reload.\n', true);
             }
             else if (result.response === 2) {
-                set = settings.Settings.load(global.settingsFile);
-                set.windows[id] = getWindowState(id, window);
-                closeWindows(window, false, true);
-                logError('Client unresponsive, closed.\n', true);
-                set.save(global.settingsFile);
+                logError('Window unresponsive, closed.\n', true);
                 window.destroy();
             }
             else
-                logError('Client unresponsive, waiting.\n', true);
+                logError('Window unresponsive, waiting.\n', true);
         });
     });
 
@@ -1291,11 +1065,6 @@ function createWindow(id) {
 
     // Emitted when the window is closed.
     window.on('closed', () => {
-        closeWindows(true, false);
-        set.save(global.settingsFile);
-        // Dereference the window object, usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
         windows[id].window = null;
         delete windows[id];
     });
@@ -1303,14 +1072,11 @@ function createWindow(id) {
     window.once('ready-to-show', async () => {
         loadWindowScripts(window, 'manager');
         await executeScript('loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');updateInterface();', win).catch(logError);
-        restoreWindowState(window, s, true);
         updateJumpList();
         checkForUpdates();
     });
 
     window.on('close', (e) => {
-        set = settings.Settings.load(global.settingsFile);
-        set.windows[id] = getWindowState(id, window || e.sender);
         for (client in windows[id].clients) {
             if (!Object.prototype.hasOwnProperty.call(windows[id].clients, client) || clients[client].view)
                 continue;
@@ -1321,7 +1087,6 @@ function createWindow(id) {
             clients[client] = null;
             delete clients[client];
         }
-        set.save(global.settingsFile);
     });
     window.on('restore', () => {
         window.getBrowserView().webContents.send('restore');
@@ -1339,19 +1104,6 @@ function createWindow(id) {
     executeScript(`setId('${id}')`);
     windows[id] = { window: window, clients: {} };
     return id;
-}
-
-function resetProfiles() {
-    updateMenuItem({ menu: ['profiles', 'default'], checked: false });
-    var p = path.join(app.getPath('userData'), 'profiles');
-    if (isDirSync(p)) {
-        var files = fs.readdirSync(p);
-        for (var i = 0; i < files.length; i++) {
-            if (path.extname(files[i]) !== '.json')
-                continue;
-            updateMenuItem({ menu: ['profiles', path.basename(files[i], '.json')], checked: false });
-        }
-    }
 }
 
 if (argv['disable-gpu'])
@@ -1451,13 +1203,6 @@ app.on('ready', () => {
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
-    //asked to reload with a different character
-    if (reload) {
-        loadCharacter(reload);
-        createWindow();
-        reload = null;
-        return;
-    }
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
     if (process.platform !== 'darwin') {
@@ -1565,341 +1310,6 @@ ipcMain.on('load-default', () => {
         createCodeEditor();
 });
 
-ipcMain.on('change-char', (event, char, create, empty) => {
-    if (create && !characters.characters[char]) {
-        var wins = BrowserWindow.getAllWindows();
-        var current = BrowserWindow.fromWebContents(event.sender);
-        //TODO add a setting to enable this
-        /*
-        for (var w = 0, wl = wins.length; w < wl; w++) {
-            if (wins[w].getTitle().startsWith('Character manager') && wins[w].getParentWindow() === current) {
-                wins[w].webContents.send('add-char', char, empty, null, true);
-                return;
-            }
-        }
-        */
-        characters.characters[char] = { name: char.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', char + '.json'), map: path.join('{characters}', char + '.map') };
-        var sf = parseTemplate(characters.characters[char].settings);
-        var response;
-        var d;
-        if (isFileSync(sf)) {
-            //TODO add a setting to control how the setting file is handled
-            /*
-            response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
-                type: 'warning',
-                title: 'File exists',
-                message: 'Setting file for ' + char + ' exist, replace?',
-                buttons: ['Yes', 'No'],
-                defaultId: 1,
-            });
-            if (response === 0) {
-                d = Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
-                d.save(sf);
-            }
-            */
-        }
-        else {
-            if (empty)
-                d = new Settings();
-            else
-                d = Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
-            d.save(sf);
-        }
-        sf = parseTemplate(characters.characters[char].map);
-        if (isFileSync(sf)) {
-            //TODO add setting to control what to do if map exist
-            /*
-            response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
-                type: 'warning',
-                title: 'File exists',
-                message: 'Map file for ' + char + ' exist, replace?',
-                buttons: ['Yes', 'No'],
-                defaultId: 1,
-            });
-            if (response === 0) {
-                if (isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
-                    copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
-                else
-                    fs.closeSync(fs.openSync(sf, 'w'));
-            }
-            */
-        }
-        else if (!empty && isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
-            copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
-        else
-            fs.closeSync(fs.openSync(sf, 'w'));
-        for (var w = 0, wl = wins.length; w < wl; w++) {
-            wins[w].webContents.send('add-char', char, empty, characters.characters[char]);
-        }
-    }
-    if (characters.characters[char])
-        changeCharacter(char);
-});
-
-ipcMain.on('load-char', (event, char) => {
-    changeCharacter(char);
-});
-
-function changeCharacter(char) {
-    var name;
-    //already loaded so no need to switch
-    if (char === global.character) {
-        loadCharacter(char);
-        win.webContents.send('load-char', char, true);
-        if (winMap)
-            winMap.webContents.send('load-char', char, true);
-        for (name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-            windows[name].window.webContents.send('load-char', char, true);
-        }
-        return;
-    }
-    closeWindows(false, true);
-    set.windows.main = getWindowState('main', win);
-    if (winMap) {
-        set.windows.mapper = getWindowState('mapper', winMap);
-        win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
-        executeScript('closeWindow()', winMap);
-        winMap = null;
-    }
-    if (winEditor) {
-        set.windows.editor = getWindowState('editor', winEditor);
-        win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
-        winEditor.close();
-        winEditor = null;
-    }
-    if (winChat) {
-        set.windows.chat = getWindowState('chat', winChat);
-        win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
-        winChat.close();
-        winChat = null;
-    }
-    set.save(global.settingsFile);
-    loadCharacter(char);
-    resetProfiles();
-    set = settings.Settings.load(global.settingsFile);
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('load-char', char);
-    if (winMap)
-        winMap.webContents.send('load-char', char);
-    for (name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('load-char', char);
-    }
-
-    if (winMap) {
-        executeScript('closeWindow()', winMap);
-        winMap = null;
-    }
-
-    if (winEditor) {
-        winEditor.close();
-        winEditor = null;
-    }
-    if (winChat) {
-        winChat.close();
-        winChat = null;
-    }
-    if (winCode) {
-        executeScript('closeWindow()', winCode);
-        winCode = null;
-    }
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('change-options', global.settingsFile);
-
-    if (set.showMapper)
-        showMapper(true);
-    else if (set.mapper.persistent || set.mapper.enabled)
-        createMapper();
-
-    if (set.showEditor)
-        showEditor(true);
-    else if (set.editorPersistent)
-        createEditor();
-
-    if (set.showChat)
-        showChat(true);
-    else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
-        createChat();
-
-    if (!edSet)
-        edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-    if (edSet.window.show)
-        showCodeEditor(true);
-    else if (!global.editorOnly && edSet.window.persistent)
-        createCodeEditor();
-
-    for (name in set.windows) {
-        if (name === 'main') continue;
-        if (set.windows[name].options) {
-            if (set.windows[name].options.show)
-                showWindow(name, set.windows[name].options, true);
-            else if (set.windows[name].options.persistent)
-                createNewWindow(name, set.windows[name].options);
-        }
-        else {
-            if (set.windows[name].show)
-                showWindow(name, set.windows[name], true);
-            else if (set.windows[name].persistent)
-                createNewWindow(name, set.windows[name]);
-        }
-    }
-    set.save(global.settingsFile);
-}
-
-ipcMain.on('options-changed', () => {
-    set = settings.Settings.load(global.settingsFile);
-});
-
-ipcMain.on('reload-options', (event, save) => {
-    var s;
-    resetProfiles();
-    closeWindows(save, true, true);
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('reload-options');
-    set = settings.Settings.load(global.settingsFile);
-    if (win && !win.isDestroyed() && win.webContents) {
-        win.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
-        win.setSkipTaskbar(!set.showInTaskBar ? true : false);
-    }
-    if (set.showTrayIcon && !tray)
-        createTray();
-    else if (!set.showTrayIcon && tray) {
-        tray.destroy();
-        tray = null;
-    }
-
-    if (winMap) {
-        s = loadWindowState('mapper');
-        winMap.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
-        winMap.webContents.send('reload-options');
-        if (winMap.setParentWindow)
-            winMap.setParentWindow(set.mapper.alwaysOnTopClient ? win : null);
-        winMap.setAlwaysOnTop(set.mapper.alwaysOnTop);
-        winMap.setSkipTaskbar((!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false);
-        winMap.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
-    }
-    else if (set.mapper.enabled)
-        createMapper();
-    if (winChat) {
-        s = loadWindowState('chat');
-        winChat.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
-        winChat.webContents.send('reload-options');
-        if (winChat.setParentWindow)
-            winChat.setParentWindow(set.chat.alwaysOnTopClient ? win : null);
-        winChat.setAlwaysOnTop(set.chat.alwaysOnTop);
-        winChat.setSkipTaskbar((!set.chat.showInTaskBar && (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop)) ? true : false);
-        winChat.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
-    }
-
-    if (winProfiles) {
-        s = loadWindowState('profiles');
-        winProfiles.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
-        winProfiles.webContents.send('reload-options');
-        winProfiles.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
-    }
-    if (winEditor) {
-        s = loadWindowState('editor');
-        winEditor.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
-        winEditor.webContents.send('reload-options');
-        winEditor.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
-    }
-
-    for (var name in set.windows) {
-        if (name === 'main') continue;
-        if (set.windows[name].window) {
-            s = loadWindowState(name);
-            set.windows[name].window.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
-            if (set.windows[name].window.webContents)
-                set.windows[name].window.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
-        }
-        if (set.windows[name].options) {
-            if (set.windows[name].options.show)
-                showWindow(name, set.windows[name].options, true);
-            else if (set.windows[name].options.persistent)
-                createNewWindow(name, set.windows[name].options);
-        }
-        else {
-            if (set.windows[name].show)
-                showWindow(name, set.windows[name], true);
-            else if (set.windows[name].persistent)
-                createNewWindow(name, set.windows[name]);
-        }
-    }
-    set.save(global.settingsFile);
-
-});
-
-ipcMain.on('set-title', (event, title) => {
-    global.title = title;
-    if (winChat)
-        winChat.webContents.send('set-title', title);
-    if (winProfiles)
-        winProfiles.webContents.send('set-title', title);
-    if (winEditor)
-        winEditor.webContents.send('set-title', title);
-    if (winMap)
-        winMap.webContents.send('set-title', title);
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('set-title', title);
-    }
-    updateTray();
-});
-
-ipcMain.on('closed', () => {
-    global.connected = false;
-    if (winChat)
-        winChat.webContents.send('closed');
-    if (winProfiles)
-        winProfiles.webContents.send('closed');
-    if (winEditor)
-        winEditor.webContents.send('closed');
-    if (winMap)
-        winMap.webContents.send('closed');
-    if (winCode)
-        winCode.webContents.send('closed');
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('closed');
-    }
-});
-
-ipcMain.on('connected', () => {
-    global.connected = true;
-    if (winChat)
-        winChat.webContents.send('connected');
-    if (winProfiles)
-        winProfiles.webContents.send('connected');
-    if (winEditor)
-        winEditor.webContents.send('connected');
-    if (winMap)
-        winMap.webContents.send('connected');
-    if (winCode)
-        winCode.webContents.send('connected');
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('connected');
-    }
-});
-
-ipcMain.on('set-color', (event, type, color, code, window) => {
-    if (winEditor)
-        winEditor.webContents.send('set-color', type, color, code, window);
-    if (winCode)
-        winCode.webContents.send('set-color', type, color, code, window);
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('set-color', type, color, code, window);
-    }
-});
-
 ipcMain.on('open-editor', (event, file, remote, remoteEdit) => {
     showCodeEditor();
     openEditor(file, remote, remoteEdit);
@@ -1913,61 +1323,6 @@ function openEditor(file, remote, remoteEdit) {
     }
     else {
         winCode.webContents.send('open-editor', file, remote, remoteEdit);
-    }
-}
-
-ipcMain.on('send-background', (event, command, noEcho, comments) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send-background', command, noEcho, comments);
-});
-
-ipcMain.on('send-command', (event, command, noEcho, comments) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send-command', command, noEcho, comments);
-});
-
-ipcMain.on('send-gmcp', (event, data) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send-gmcp', data);
-});
-
-ipcMain.on('send-raw', (event, raw) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send-raw', raw);
-});
-
-ipcMain.on('send', (event, raw, echo) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send', raw, echo);
-});
-
-ipcMain.on('send-editor', (event, text, window, show, args) => {
-    if (show)
-        showSelectedWindow(window, args);
-    sendEditor(text, window);
-});
-
-function sendEditor(text, window) {
-    if ((codeReady !== 2 || !winCode || !winCode.isVisible()) && window === 'code-editor') {
-        setTimeout(() => {
-            sendEditor(text, window);
-        }, 1000);
-    }
-    else if ((editorReady !== 2 || !winEditor || !winEditor.isVisible()) && window === 'editor') {
-        setTimeout(() => {
-            sendEditor(text, window);
-        }, 1000);
-    }
-    else {
-        if (winEditor)
-            winEditor.webContents.send('send-editor', text, window);
-        if (winCode)
-            winCode.webContents.send('send-editor', text, window);
-        for (var name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-            windows[name].window.webContents.send('send-editor', text, window);
-        }
     }
 }
 
@@ -1989,511 +1344,8 @@ ipcMain.on('error', (event, err) => {
         win.webContents.send('error', err);
 });
 
-ipcMain.on('reload-mail', () => {
-    createMenu();
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('reload-mail');
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window || !windows[name].window.webContents)
-            continue;
-        windows[name].window.webContents.send('reload-mail');
-    }
-});
-
-ipcMain.on('reload-profiles', () => {
-    createMenu();
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('reload-profiles');
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window || !windows[name].window.webContents)
-            continue;
-        windows[name].window.webContents.send('reload-profiles');
-    }
-});
-
-ipcMain.on('chat', (event, text) => {
-    sendChat(text);
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('chat', text);
-    }
-});
-
-function sendChat(text) {
-    if (chatReady !== 2 || !winChat) {
-        setTimeout(() => { sendChat(text); }, 100);
-        return;
-    }
-    else
-        winChat.webContents.send('chat', text);
-}
-
-ipcMain.on('profile-edit-item', (event, profile, type, index) => {
-    showProfiles();
-    profileEditItem(profile, type, index);
-});
-
-function profileEditItem(profile, type, index) {
-    if (profilesReady !== 2 || !winProfiles) {
-        setTimeout(() => { profileEditItem(profile, type, index); }, 100);
-        return;
-    }
-    else
-        winProfiles.webContents.send('profile-edit-item', profile, type, index);
-}
-
-ipcMain.on('setting-changed', (event, data) => {
-    if (data.type === 'mapper' && data.name === 'alwaysOnTopClient') {
-        if (winMap.setParentWindow)
-            winMap.setParentWindow(data.value ? win : null);
-        winMap.setSkipTaskbar((!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false);
-    }
-    if (data.type === 'mapper' && data.name === 'setAlwaysOnTop') {
-        winMap.setAlwaysOnTop(data.value);
-        winMap.setSkipTaskbar((!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false);
-    }
-    if (win && event.sender != win.webContents) {
-        win.webContents.send('setting-changed', data);
-        win.setSkipTaskbar(!set.showInTaskBar ? true : false);
-    }
-    if (winMap && event.sender != winMap.webContents)
-        winMap.webContents.send('setting-changed', data);
-
-    if (data.type === 'chat' && data.name === 'alwaysOnTopClient') {
-        if (winChat.setParentWindow)
-            winChat.setParentWindow(data.value ? win : null);
-        winChat.setSkipTaskbar((!set.chat.showInTaskBar && (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop)) ? true : false);
-    }
-    if (data.type === 'chat' && data.name === 'setAlwaysOnTop') {
-        winChat.setAlwaysOnTop(data.value);
-        winChat.setSkipTaskbar((!set.chat.showInTaskBar && (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop)) ? true : false);
-    }
-    if (data.type === 'mapper' && data.name === 'enabled' && !winMap && data.value)
-        createMapper();
-    if (!winChat && data.type === 'chat' && (data.name === 'captureTells' || data.name === 'captureTalk' || data.name === 'captureLines')) {
-        if (data.value)
-            createChat();
-    }
-    var name;
-    if (data.type === 'windows')
-        for (name in windows) {
-            if (name === 'main' || !Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-
-            if (name === data.name) {
-                windows[name].alwaysOnTopClient = data.value.alwaysOnTopClient;
-                windows[name].persistent = data.value.persistent;
-                windows[name].alwaysOnTop = data.value.alwaysOnTop;
-            }
-            if (windows[name].window)
-                windows[name].window.webContents.send('setting-changed', data);
-            if (windows[name].window.setParentWindow)
-                windows[name].window.setParentWindow(windows[name].alwaysOnTopClient ? win : null);
-            windows[name].window.setSkipTaskbar((windows[name].alwaysOnTopClient || windows[name].alwaysOnTop) ? true : false);
-            if (windows[name].persistent)
-                createNewWindow(name, windows[name]);
-        }
-    if (data.type === 'extensions')
-        for (name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-            if (windows[name].window)
-                windows[name].window.webContents.send('setting-changed', data);
-        }
-});
-
-ipcMain.on('editor-setting-changed', (event, data) => {
-    if (winCode) {
-        winCode.webContents.send('editor-setting-changed');
-        if (edSet)
-            winCode.webContents.setBackgroundThrottling(edSet.enableBackgroundThrottling);
-    }
-    if (winCode.setParentWindow)
-        winCode.setParentWindow((!global.editorOnly && data.alwaysOnTopClient) ? win : null);
-    winCode.setSkipTaskbar((!global.editorOnly && (data.alwaysOnTopClient || data.alwaysOnTop)) ? true : false);
-    if (!global.editorOnly && data.persistent && !winCode)
-        createCodeEditor();
-});
-
-ipcMain.on('editor-settings-saved', () => {
-    edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-});
-
-ipcMain.on('GMCP-received', (event, data) => {
-    if (winMap)
-        winMap.webContents.send('GMCP-received', data);
-    if (winCode)
-        winCode.webContents.send('GMCP-received', data);
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('GMCP-received', data);
-    }
-});
-
-ipcMain.on('request-command-history', () => {
-    if (win)
-        win.webContents.send('request-command-history');
-});
-
-ipcMain.on('change-command-history-index', (event, index) => {
-    if (win)
-        win.webContents.send('change-command-history-index', index);
-});
-
-ipcMain.on('add-command-history', (event, cmd) => {
-    if (win)
-        win.webContents.send('add-command-history', cmd);
-});
-
-ipcMain.on('clear-command-history', () => {
-    if (win)
-        win.webContents.send('clear-command-history');
-});
-
-ipcMain.on('command-history', (event, history) => {
-    if (winMap)
-        winMap.webContents.send('command-history', history);
-    if (winCode)
-        winCode.webContents.send('command-history', history);
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('command-history', history);
-    }
-});
-
 ipcMain.on('update-menuitem', (event, args) => {
     updateMenuItem(args);
-});
-
-ipcMain.on('set-overlay', (event, args) => {
-    overlay = args;
-    if (!win) return;
-    switch (args) {
-        case 1:
-            if (process.platform === 'linux')
-                win.setIcon(path.join(__dirname, '../assets/icons/png/connected2.png'));
-            else
-                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
-            break;
-        case 2:
-            if (process.platform === 'linux')
-                win.setIcon(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
-            else
-                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received data');
-            break;
-        case 'code':
-            if (process.platform === 'linux')
-                win.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
-            else
-                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Received data');
-            break;
-        default:
-            if (process.platform === 'linux')
-                win.setIcon(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
-            else
-                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');
-            break;
-    }
-    updateTray();
-});
-
-ipcMain.on('set-progress', (event, args) => {
-    if (win)
-        win.setProgressBar(args.value, args.options);
-    else if (global.editorOnly && winCode)
-        winCode.setProgressBar(args.value, args.options);
-});
-
-ipcMain.on('set-progress-window', (event, window, args) => {
-    if (window == 'mapper') {
-        if (winMap)
-            winMap.setProgressBar(args.value, args.options);
-    }
-    else if (window === 'code-editor') {
-        if (winCode)
-            winCode.setProgressBar(args.value, args.options);
-    }
-    else if (windows[window] && windows[window].window)
-        windows[window].window.setProgressBar(args.value, args.options);
-});
-
-ipcMain.on('progress-show', (event, title) => {
-    if (winProgress != null) {
-        if (!progressReady) return;
-        winProgress.show();
-        if (typeof title === 'string')
-            setProgressTitle(title);
-        else if (title)
-            setProgress(title);
-    }
-    else {
-        progressReady = 0;
-        var sender = BrowserWindow.fromWebContents(event.sender);
-        var b = sender.getBounds();
-        winProgress = new BrowserWindow({
-            parent: sender,
-            modal: true,
-            x: Math.floor(b.x + b.width / 2 - 100),
-            y: Math.floor(b.y + b.height / 2 - 35),
-            width: 200,
-            height: 70,
-            movable: false,
-            minimizable: false,
-            maximizable: false,
-            skipTaskbar: true,
-            resizable: false,
-            frame: false,
-            title: title,
-            icon: path.join(__dirname, '../assets/icons/png/progress.png'),
-            show: false,
-            webPreferences: {
-                nodeIntegration: true,
-                webviewTag: false,
-                sandbox: false,
-                spellcheck: set ? set.spellchecking : false,
-                enableRemoteModule: true,
-                contextIsolation: false,
-                backgroundThrottling: set ? set.enableBackgroundThrottling : true
-            }
-        });
-        require("@electron/remote/main").enable(winProgress.webContents);
-        winProgress.removeMenu();
-        winProgress.on('closed', () => {
-            winProgress = null;
-            progressReady = 3;
-        });
-        winProgress.loadURL(url.format({
-            pathname: path.join(__dirname, 'progress.html'),
-            protocol: 'file:',
-            slashes: true
-        }));
-
-        if (global.debug)
-            winProgress.webContents.openDevTools();
-
-        winProgress.webContents.on('did-finish-load', () => {
-            progressReady = 2;
-        });
-
-        winProgress.once('ready-to-show', () => {
-            if (progressReady !== 2)
-                progressReady = 1;
-            winProgress.show();
-            if (typeof title === 'string')
-                setProgressTitle(title);
-            else if (title)
-                setProgress(title);
-        });
-
-        winProgress.webContents.on('render-process-gone', (event, details) => {
-            logError(`Progress render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-        });
-        winProgress.on('unresponsive', () => {
-            dialog.showMessageBox({
-                type: 'info',
-                message: 'Unresponsive',
-                buttons: ['Reopen', 'Keep waiting', 'Close']
-            }).then(result => {
-                if (!winProgress)
-                    return;
-                if (result.response === 0) {
-                    winProgress.reload();
-                    logError('Progress unresponsive, reload.\n', true);
-                }
-                else if (result.response === 2) {
-                    winProgress.destroy();
-                }
-                else
-                    logError('Progress unresponsive, waiting.\n', true);
-            });
-        });
-    }
-});
-
-ipcMain.on('progress', (event, progressObj) => {
-    setProgress(progressObj);
-});
-
-ipcMain.on('progress-close', (event, progressObj) => {
-    if (winProgress)
-        winProgress.webContents.send('progress-close', progressObj);
-    if (win)
-        win.setProgressBar(0);
-    else if (global.editorOnly && winCode)
-        winCode.setProgressBar(0);
-});
-
-ipcMain.on('get-skills', (event, window) => {
-    if (win)
-        win.webContents.send('get-skills', window);
-});
-
-ipcMain.on('skills', (event, skills, window) => {
-    if (window) {
-        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window].window)
-            return;
-        windows[window].window.webContents.send('skills', skills);
-    }
-    else
-        for (let name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-            windows[name].window.webContents.send('skills', skills);
-        }
-});
-
-ipcMain.on('skill-updated', (event, skill, data) => {
-    for (let name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('skill-updated', skill, data);
-    }
-});
-
-ipcMain.on('skills-reset', (event, window) => {
-    if (window) {
-        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window].window)
-            return;
-        windows[window].window.webContents.send('skills-reset');
-    }
-    else
-        for (let name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-            windows[name].window.webContents.send('skills-reset');
-        }
-});
-
-function setProgress(progressObj) {
-    clearTimeout(_winProgressTimer);
-    if (progressReady === 3) return;
-    if (progressReady !== 2)
-        _winProgressTimer = setTimeout(() => setProgress(progressObj), 100);
-    else {
-        winProgress.webContents.send('progress', progressObj);
-        if (win)
-            win.setProgressBar((progressObj.value || progressObj.percent) / 100, progressObj.options);
-        else if (global.editorOnly && winCode)
-            winCode.setProgressBar((progressObj.value || progressObj.percent) / 100, progressObj.options);
-    }
-}
-
-function setProgressTitle(title) {
-    if (progressReady === 3) return;
-    if (progressReady !== 2 || !winProgress)
-        setTimeout(() => setProgressTitle(title), 100);
-    else
-        winProgress.webContents.send('progress-title', title);
-}
-
-ipcMain.on('progress-title', (event, title) => {
-    setProgressTitle(title);
-});
-
-ipcMain.on('progress-closed', () => {
-    if (winProgress && winProgress.getParentWindow())
-        winProgress.getParentWindow().webContents.send('progress-closed');
-    setProgress({ percent: 0 });
-});
-
-ipcMain.on('progress-canceled', async () => {
-    if (winProgress && winProgress.getParentWindow()) {
-        winProgress.getParentWindow().webContents.send('progress-canceled');
-        await executeScript('progressCanceled()', winProgress.getParentWindow());
-    }
-    setProgress({ percent: 0 });
-});
-
-ipcMain.on('progress-loaded', () => {
-    if (winProgress && winProgress.getParentWindow())
-        winProgress.getParentWindow().webContents.send('progress-loaded');
-});
-
-ipcMain.on('progress-cancelable', (enable) => {
-    if (winProgress)
-        winProgress.webContents.send('progress-cancelable', enable);
-});
-
-ipcMain.on('show-window', (event, window, args) => {
-    showSelectedWindow(window, args);
-});
-
-function showSelectedWindow(window, args) {
-    if (!window || window === 'main') {
-        if (global.editorOnly)
-            restoreWindowState(winCode, getWindowState('code-editor') || getWindowState('code-editor', winCode), true, true);
-        else
-            restoreWindowState(win, getWindowState('main') || getWindowState('main', windows[focusedWindow].window), true, true);
-    }
-    else if (window === 'about')
-        showAbout();
-    else if (window === 'profiles')
-        showProfiles();
-    else if (window === 'code-editor')
-        showCodeEditor();
-    else if (windows[window])
-        showWindow(window, windows[window].options || {}, false);
-    else
-        createNewWindow(window, args);
-}
-
-ipcMain.on('import-map', (event, data) => {
-    if (winMap)
-        winMap.webContents.send('import', data);
-    else if (data) {
-        createMapper(false, true, () => { winMap.webContents.send('import', data); });
-    }
-});
-
-ipcMain.on('flush', (event, sender) => {
-    if (winMap)
-        winMap.webContents.send('flush', sender);
-    else if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('flush-end', sender);
-});
-
-ipcMain.on('flush-end', (event, sender) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('flush-end', sender);
-});
-
-ipcMain.on('reload-characters', () => {
-    loadCharacters(true);
-    if (global.character)
-        loadCharacter(global.character);
-});
-
-ipcMain.on('profile-item-added', (event, type, profile, item) => {
-    if (winProfiles)
-        winProfiles.webContents.send('profile-item-added', type, profile, item);
-});
-
-ipcMain.on('profile-item-updated', (event, type, profile, idx, item) => {
-    if (winProfiles)
-        winProfiles.webContents.send('profile-item-updated', type, profile, idx, item);
-});
-
-ipcMain.on('profile-item-removed', (event, type, profile, idx) => {
-    if (winProfiles)
-        winProfiles.webContents.send('profile-item-removed', type, profile, idx);
-});
-
-ipcMain.on('profile-updated', (event, profile, noChanges, type) => {
-    if (winProfiles)
-        winProfiles.webContents.send('profile-updated', profile, noChanges, type);
-});
-
-ipcMain.on('profile-toggled', (event, profile, enabled) => {
-    if (winProfiles)
-        winProfiles.webContents.send('profile-toggled', profile, enabled);
-});
-
-ipcMain.on('profile-enabled', (event, profile) => {
-    if (winProfiles)
-        winProfiles.webContents.send('profile-enabled', profile);
 });
 
 ipcMain.on('ondragstart', (event, files, icon) => {
@@ -2523,35 +1375,8 @@ ipcMain.on('get-global', (event, key) => {
         case 'settingsFile':
             event.returnValue = global.settingsFile;
             break;
-        case 'mapFile':
-            event.returnValue = global.mapFile;
-            break;
-        case 'profiles':
-            event.returnValue = global.profiles;
-            break;
-        case 'character':
-            event.returnValue = global.character;
-            break;
-        case 'characterLogin':
-            event.returnValue = global.characterLogin;
-            break;
-        case 'characterPass':
-            event.returnValue = global.characterPass;
-            break;
-        case 'dev':
-            event.returnValue = global.dev;
-            break;
-        case 'disconnect':
-            event.returnValue = global.disconnect;
-            break;
-        case 'title':
-            event.returnValue = global.title;
-            break;
         case 'debug':
             event.returnValue = global.debug;
-            break;
-        case 'connected':
-            event.returnValue = global.connected;
             break;
         case 'updating':
             event.returnValue = global.updating;
@@ -2570,35 +1395,8 @@ ipcMain.on('set-global', (event, key, value) => {
         case 'settingsFile':
             global.settingsFile = value;
             break;
-        case 'mapFile':
-            global.mapFile = value;
-            break;
-        case 'profiles':
-            global.profiles = value;
-            break;
-        case 'character':
-            global.character = value;
-            break;
-        case 'characterLogin':
-            global.characterLogin = value;
-            break;
-        case 'characterPass':
-            global.characterPass = value;
-            break;
-        case 'dev':
-            global.dev = value;
-            break;
-        case 'disconnect':
-            global.disconnect = value;
-            break;
-        case 'title':
-            global.title = value;
-            break;
         case 'debug':
             global.debug = value;
-            break;
-        case 'connected':
-            global.connected = value;
             break;
         case 'updating':
             global.updating = value;
@@ -2902,62 +1700,29 @@ ipcMain.on('inspect', (event, x, y) => {
     event.sender.inspectElement(x || 0, y || 0);
 });
 
-ipcMain.on('new-client', (event, id, focus, offset) => {
-    const view = new BrowserView({
-        webPreferences: {
-            nodeIntegration: true,
-            nodeIntegrationInWorker: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    view.webContents.on('context-menu', (e, params) => {
-        view.webContents.send('context-menu', params);
-    });
-    view.setAutoResize({
-        width: true,
-        height: true
-    })
-    var bounds = BrowserWindow.fromWebContents(event.sender).getContentBounds();
-    view.setBounds({
-        x: 0,
-        y: 0 || offset,
-        width: bounds.width,
-        height: bounds.height - offset
-    });
-    view.webContents.loadFile("build/index.html");
-    require("@electron/remote/main").enable(view.webContents);
-    clients[id] = { view: view };
-    if (focus)
-        win.setBrowserView(view);
-    executeScript(`setId('${id}');`, clients[id].view);
-    //clients[id].view.webContents.openDevTools();
-    //win.setTopBrowserView(view)    
-    //addBrowserView
-    //setBrowserView    
+ipcMain.on('new-client', (event, focus, offset) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    let id = newClient(window.getContentBounds(), offset);
+    window.webContents.send('new-client', id);
 });
 
 ipcMain.on('switch-client', (event, id, offset) => {
     if (clients[id]) {
-        if (clients[id].window) {
-            clients[id].window.focus();
-            clients[id].view.webContents.focus();
+        let window = BrowserWindow.fromWebContents(event.sender);
+        if(window != clients[id].parent)
+        {
+            //@TODO probably wanting to dock from 1 window to another
+            return;
         }
-        else {
-            var bounds = BrowserWindow.fromWebContents(event.sender).getContentBounds();
-            clients[id].view.setBounds({
-                x: 0,
-                y: 0 || offset,
-                width: bounds.width,
-                height: bounds.height - offset
-            });
-            win.setBrowserView(clients[id].view);
-            clients[id].view.webContents.focus();
-        }
+        let bounds = window.getContentBounds();
+        clients[id].view.setBounds({
+            x: 0,
+            y: 0 || offset,
+            width: bounds.width,
+            height: bounds.height - offset
+        });
+        window.setBrowserView(clients[id].view);
+        focusClient(window, true);
     }
     //win.setTopBrowserView(clients[id])
     //win.setBrowserView(clients[id].view);
@@ -2969,45 +1734,15 @@ ipcMain.on('remove-client', (event, id) => {
 });
 
 ipcMain.on('undock-client', (event, id) => {
-    if (clients[id] && !clients[id].window) {
+    if (clients[id] && !clients[id].parent) {
+        var windowId = createWindow();
         // Create the browser window.
-        clients[id].window = new BrowserWindow({
-            title: 'jiMUD',
-            x: 0,
-            y: 0,
-            width: 800,
-            height: 600,
-            backgroundColor: '#000',
-            show: false,
-            icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
-            skipTaskbar: !set.showInTaskBar ? true : false,
-            webPreferences: {
-                nodeIntegration: true,
-                nodeIntegrationInWorker: true,
-                webviewTag: false,
-                sandbox: false,
-                spellcheck: set ? set.spellchecking : false,
-                enableRemoteModule: true,
-                contextIsolation: false,
-                backgroundThrottling: set ? set.enableBackgroundThrottling : true
-            }
-        });
-        clients[id].window.on('closed', (e) => {
-            if (e.sender === clients[id].window)
-                removeClient(id);
-        });
-        clients[id].window.loadURL(url.format({
-            pathname: path.join(__dirname, 'blank.html'),
-            protocol: 'file:',
-            slashes: true
-        }));
-        require("@electron/remote/main").enable(clients[id].window.webContents);
-        clients[id].window.once('ready-to-show', () => {
-            loadWindowScripts(clients[id].window, 'user');
+        let window = windows[windowId];
+        window.once('ready-to-show', () => {
             addInputContext(clients[id].window, global.editorOnly ? (edSet && edSet.spellchecking) : (set && set.spellchecking));
-            restoreWindowState(clients[id].window, null, true, true);
-            win.removeBrowserView(clients[id].view);
-            var bounds = clients[id].window.getContentBounds();
+            clients[id].parent.removeBrowserView(clients[id].view);
+            clients[id].parent = window;
+            var bounds = window.getContentBounds();
             clients[id].view.setBounds({
                 x: 0,
                 y: 0,
@@ -3016,7 +1751,6 @@ ipcMain.on('undock-client', (event, id) => {
             });
             clients[id].window.setBrowserView(clients[id].view);
         });
-        addWindowEvents(clients[id].window);
     }
 });
 
@@ -3061,6 +1795,44 @@ ipcMain.on('dock-main', (event, id) => {
     executeScript(`dockClient(${id})`, win);
 });
 
+function newClient(bounds, offset, id) {
+    if (!id) id = Date.now();
+    const view = new BrowserView({
+        webPreferences: {
+            nodeIntegration: true,
+            nodeIntegrationInWorker: true,
+            webviewTag: false,
+            sandbox: false,
+            spellcheck: set ? set.spellchecking : false,
+            enableRemoteModule: true,
+            contextIsolation: false,
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true
+        }
+    });
+    view.webContents.on('context-menu', (e, params) => {
+        view.webContents.send('context-menu', params);
+    });
+    view.setAutoResize({
+        width: true,
+        height: true
+    })
+    view.setBounds({
+        x: 0,
+        y: 0 || offset,
+        width: bounds.width,
+        height: bounds.height - offset
+    });
+    view.webContents.loadFile("build/index.html");
+    require("@electron/remote/main").enable(view.webContents);
+    clients[id] = { view: view };
+    executeScript(`setId('${id}');`, clients[id].view);
+    //clients[id].view.webContents.openDevTools();
+    //win.setTopBrowserView(view)    
+    //addBrowserView
+    //setBrowserView  
+    return id;
+}
+
 function removeClient(id, close) {
     if (clients[id].window) {
         if (!clients[id].window.isDestroyed()) {
@@ -3078,22 +1850,6 @@ function removeClient(id, close) {
     delete clients[id];
 }
 
-function addWindowEvents(window) {
-    window.on('restore', () => {
-        window.getBrowserView().webContents.send('restore');
-    });
-    window.on('maximize', () => {
-        window.getBrowserView().webContents.send('maximize');
-    });
-    window.on('unmaximize', () => {
-        window.getBrowserView().webContents.send('unmaximize');
-    });
-
-    window.on('resized', () => {
-        window.getBrowserView().webContents.send('resized');
-    });
-
-}
 
 function updateMenuItem(args) {
     var item, i = 0, items;
@@ -3184,8 +1940,6 @@ function getWindowState(id, window) {
 }
 
 function loadWindowState(window) {
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
     if (window === 'code-editor') {
         if (!edSet)
             edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
@@ -3326,221 +2080,6 @@ function isFileSync(aPath) {
     }
 }
 
-function showPrefs(item, window) {
-    let b = window ? window.getBounds() : { x: 0, y: 0, height: 600, width: 800 };
-
-    let pref = new BrowserWindow({
-        parent: window,
-        modal: true,
-        x: Math.floor(b.x + b.width / 2 - 400),
-        y: Math.floor(b.y + b.height / 2 - 230),
-        width: 800,
-        height: 460,
-        movable: false,
-        minimizable: false,
-        maximizable: false,
-        skipTaskbar: true,
-        resizable: false,
-        title: 'Preferences',
-        icon: path.join(__dirname, '../assets/icons/png/preferences.png'),
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(pref.webContents);
-    pref.removeMenu();
-    pref.on('closed', () => {
-        pref = null;
-    });
-    pref.loadURL(url.format({
-        pathname: path.join(__dirname, 'prefs.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    if (global.debug)
-        pref.webContents.openDevTools();
-
-    pref.once('ready-to-show', () => {
-        pref.show();
-    });
-
-    pref.webContents.on('render-process-gone', (event, details) => {
-        logError(`Preferences render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-    pref.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!pref)
-                return;
-            if (result.response === 0) {
-                pref.reload();
-                logError('Preferences unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                pref.destroy();
-            }
-            else
-                logError('Preferences unresponsive, waiting.\n', true);
-        });
-    });
-    addInputContext(pref, set && set.spellchecking);
-}
-
-function createMapper(show, loading, loaded) {
-    if (winMap) return;
-    var s = loadWindowState('mapper');
-    winMap = new BrowserWindow({
-        parent: set.mapper.alwaysOnTopClient ? getParentWindow() : null,
-        alwaysOnTop: set.mapper.alwaysOnTop,
-        title: 'Mapper',
-        x: getWindowX(s.x, s.width),
-        y: getWindowY(s.y, s.height),
-        width: s.width,
-        height: s.height,
-        backgroundColor: '#eae4d6',
-        show: false,
-        skipTaskbar: (!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false,
-        icon: path.join(__dirname, '../assets/icons/png/map.png'),
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(winMap.webContents);
-
-
-    winMap.removeMenu();
-    winMap.loadURL(url.format({
-        pathname: path.join(__dirname, 'mapper.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    winMap.webContents.on('render-process-gone', (event, details) => {
-        logError(`Mapper render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    winMap.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!winMap)
-                return;
-            if (result.response === 0) {
-                winMap.reload();
-                logError('Mapper unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                winMap.destroy();
-            }
-            else
-                logError('Mapper unresponsive, waiting.\n', true);
-        });
-    });
-
-    winMap.on('closed', (e) => {
-        if (e.sender === winMap) {
-            if (!winMap.isDestroyed() && !winMap.isVisible())
-                executeScript('closeHidden()', winMap);
-            winMap = null;
-        }
-    });
-
-    winMap.on('resize', () => {
-        if (!winMap.isMaximized() && !winMap.isFullScreen())
-            trackWindowState('mapper', winMap);
-    });
-
-    winMap.on('move', () => {
-        trackWindowState('mapper', winMap);
-    });
-
-    winMap.on('maximize', () => {
-        trackWindowState('mapper', winMap);
-        states.mapper.maximized = true;
-    });
-
-    winMap.on('unmaximize', () => {
-        trackWindowState('mapper', winMap);
-        states.mapper.maximized = false;
-    });
-
-    if (global.debug)
-        winMap.webContents.openDevTools();
-
-    winMap.once('ready-to-show', () => {
-        loadWindowScripts(winMap, 'map');
-        addInputContext(winMap, set && set.spellchecking);
-        if (show) {
-            restoreWindowState(winMap, s, true);
-        }
-        else {
-            if (s.fullscreen)
-                winMap.setFullScreen(s.fullscreen);
-            mapperMax = s.maximized;
-        }
-        if (loading) {
-            clearTimeout(loadID);
-            loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-        if (loaded)
-            loaded();
-    });
-
-    winMap.on('close', (e) => {
-        set = settings.Settings.load(global.settingsFile);
-        if (win != null && winMap === e.sender) {
-            set.showMapper = false;
-            win.webContents.send('setting-changed', { type: 'normal', name: 'showMapper', value: false, noSave: true });
-        }
-        set.windows.mapper = getWindowState('mapper', e.sender);
-        if (win && !win.isDestroyed() && win.webContents)
-            win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
-        set.save(global.settingsFile);
-        if (winMap === e.sender && winMap && (set.mapper.enabled || set.mapper.persistent)) {
-            e.preventDefault();
-            executeScript('closeHidden()', winMap);
-            winMap.hide();
-        }
-    });
-}
-
-function showMapper(loading) {
-    set = settings.Settings.load(global.settingsFile);
-    set.showMapper = true;
-    win.webContents.send('setting-changed', { type: 'normal', name: 'showMapper', value: true, noSave: true });
-    set.save(global.settingsFile);
-    if (winMap != null) {
-        restoreWindowState(winMap, {
-            maximized: mapperMax,
-        }, true);
-        mapperMax = false;
-        if (loading) {
-            clearTimeout(loadID);
-            loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-    }
-    else
-        createMapper(true, loading);
-}
-
 function showProfiles() {
     if (winProfiles != null) {
         winProfiles.show();
@@ -3649,589 +2188,6 @@ function showProfiles() {
         states.profiles.maximized = false;
     });
 
-}
-
-function createEditor(show, loading) {
-    if (winEditor) return;
-    var s = loadWindowState('editor');
-    winEditor = new BrowserWindow({
-        parent: getParentWindow(),
-        title: 'Advanced Editor',
-        x: getWindowX(s.x, s.width),
-        y: getWindowY(s.y, s.height),
-        width: s.width,
-        height: s.height,
-        backgroundColor: '#000',
-        show: false,
-        skipTaskbar: !set.showEditorInTaskBar,
-        icon: path.join(__dirname, '../assets/icons/png/edit.png'),
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(winEditor.webContents);
-    winEditor.webContents.on('render-process-gone', (event, details) => {
-        logError(`Advanced editor process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    winEditor.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!winEditor)
-                return;
-            if (result.response === 0) {
-                winEditor.reload();
-                logError('Advanced editor unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                winEditor.destroy();
-            }
-            else
-                logError('Advanced editor unresponsive, waiting.\n', true);
-        });
-    });
-
-    winEditor.removeMenu();
-    winEditor.loadURL(url.format({
-        pathname: path.join(__dirname, 'editor.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    winEditor.on('closed', (e) => {
-        if (e.sender !== winEditor) return;
-        winEditor = null;
-        editorReady = 0;
-    });
-
-    winEditor.on('resize', () => {
-        if (!winEditor.isMaximized() && !winEditor.isFullScreen())
-            trackWindowState('editor', winEditor);
-    });
-
-    winEditor.on('move', () => {
-        trackWindowState('editor', winEditor);
-    });
-
-    winEditor.on('maximize', () => {
-        trackWindowState('editor', winEditor);
-        states.editor.maximized = true;
-    });
-
-    winEditor.on('unmaximize', () => {
-        trackWindowState('editor', winEditor);
-        states.editor.maximized = false;
-    });
-
-    if (global.debug)
-        winEditor.webContents.openDevTools();
-
-    winEditor.webContents.on('did-finish-load', () => {
-        editorReady = 2;
-    });
-
-    winEditor.once('ready-to-show', () => {
-        loadWindowScripts(winEditor, 'editor');
-        //addInputContext(winEditor, set && set.spellchecking);
-        if (show) {
-            restoreWindowState(winEditor, s, true);
-        }
-        else {
-            if (s.fullscreen)
-                winEditor.setFullScreen(s.fullscreen);
-            editorMax = s.maximized;
-        }
-        if (loading) {
-            clearTimeout(loadID);
-            if (editorOnly && winCode)
-                loadID = setTimeout(() => { winCode.focus(); }, 500);
-            else if (win)
-                loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-        if (editorReady !== 2)
-            editorReady = 1;
-    });
-
-    winEditor.on('close', (e) => {
-        set = settings.Settings.load(global.settingsFile);
-        set.showEditor = false;
-        set.windows.editor = getWindowState('editor', winEditor || e.sender);
-        if (win) {
-            win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
-            win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: false, noSave: true });
-            win.focus();
-        }
-        set.save(global.settingsFile);
-        executeScript('tinymce.activeEditor.setContent(\'\');', e.sender);
-        if (winEditor === e.sender && winEditor && (set.editorPersistent && !global.editorOnly)) {
-            e.preventDefault();
-            executeScript('if(closeHidden) closeHidden()', winEditor);
-            winEditor.hide();
-        }
-    });
-}
-
-function showEditor(loading) {
-    set = settings.Settings.load(global.settingsFile);
-    set.showEditor = true;
-    if (win)
-        win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: true, noSave: true });
-    set.save(global.settingsFile);
-    if (winEditor != null) {
-        if (!editorReady)
-            return;
-        restoreWindowState(winEditor, {
-            maximized: editorMax
-        }, true);
-        editorMax = false;
-        if (loading) {
-            clearTimeout(loadID);
-            loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-    }
-    else
-        createEditor(true, loading);
-}
-
-function createChat(show, loading) {
-    if (winChat) return;
-    var s = loadWindowState('chat');
-    winChat = new BrowserWindow({
-        parent: set.chat.alwaysOnTopClient ? getParentWindow() : null,
-        title: 'Chat',
-        x: getWindowX(s.x, s.width),
-        y: getWindowY(s.y, s.height),
-        width: s.width,
-        height: s.height,
-        backgroundColor: '#000',
-        show: false,
-        skipTaskbar: (!set.chat.showInTaskBar && (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop)) ? true : false,
-        icon: path.join(__dirname, '../assets/icons/png/chat.png'),
-        webPreferences: {
-            nodeIntegration: true,
-            nodeIntegrationInWorker: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(winChat.webContents);
-    winChat.webContents.on('render-process-gone', (event, details) => {
-        logError(`Chat capture render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    winChat.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!winChat)
-                return;
-            if (result.response === 0) {
-                winChat.reload();
-                logError('Chat capture unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                winChat.destroy();
-            }
-            else
-                logError('Chat capture unresponsive, waiting.\n', true);
-        });
-    });
-
-    winChat.removeMenu();
-    winChat.loadURL(url.format({
-        pathname: path.join(__dirname, 'chat.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    winChat.on('closed', (e) => {
-        if (e.sender !== winChat) return;
-        winChat = null;
-        chatReady = 0;
-    });
-
-    winChat.on('resize', () => {
-        if (!winChat.isMaximized() && !winChat.isFullScreen())
-            trackWindowState('chat', winChat);
-    });
-
-    winChat.on('move', () => {
-        trackWindowState('chat', winChat);
-    });
-
-    winChat.on('maximize', () => {
-        trackWindowState('chat', winChat);
-        states.chat.maximized = true;
-    });
-
-    winChat.on('unmaximize', () => {
-        trackWindowState('chat', winChat);
-        states.chat.maximized = false;
-    });
-
-    if (global.debug)
-        winChat.webContents.openDevTools();
-
-    winChat.webContents.on('did-finish-load', () => {
-        chatReady = 2;
-    });
-
-    winChat.once('ready-to-show', () => {
-        loadWindowScripts(winChat, 'chat');
-        addInputContext(winChat, set && set.spellchecking);
-        if (show) {
-            restoreWindowState(winChat, s, true);
-        }
-        else {
-            if (s.fullscreen)
-                winChat.setFullScreen(s.fullscreen);
-            chatMax = s.maximized;
-        }
-        if (chatReady !== 2)
-            chatReady = 1;
-        if (loading) {
-            clearTimeout(loadID);
-            loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-    });
-
-    winChat.on('close', (e) => {
-        set = settings.Settings.load(global.settingsFile);
-        if (winChat === e.sender) {
-            set.showChat = false;
-            if (win && !win.isDestroyed() && win.webContents)
-                win.webContents.send('setting-changed', { type: 'normal', name: 'showChat', value: false, noSave: true });
-        }
-        set.windows.chat = getWindowState('chat', e.sender);
-        if (win && !win.isDestroyed() && win.webContents)
-            win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
-        set.save(global.settingsFile);
-        if (winChat === e.sender && winChat && (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)) {
-            e.preventDefault();
-            executeScript('closeHidden()', winChat);
-            winChat.hide();
-        }
-    });
-}
-
-function showChat(loading) {
-    set = settings.Settings.load(global.settingsFile);
-    set.showChat = true;
-    win.webContents.send('setting-changed', { type: 'normal', name: 'showChat', value: true, noSave: true });
-    set.save(global.settingsFile);
-    if (winChat != null) {
-        if (!chatReady)
-            return;
-        restoreWindowState(winChat, {
-            maximized: chatMax
-        }, true);
-        chatMax = false;
-        if (loading) {
-            clearTimeout(loadID);
-            loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-    }
-    else
-        createChat(true, loading);
-}
-
-function createNewWindow(name, options) {
-    if (windows[name] && windows[name].window)
-        return;
-    if (!options) options = {};
-    var s = loadWindowState(name);
-    windows[name] = options;
-    windows[name].window = new BrowserWindow({
-        parent: windows[name].alwaysOnTopClient ? getParentWindow() : null,
-        title: options.title || name,
-        x: getWindowX(options.x || s.x, options.width || s.width),
-        y: getWindowY(options.y || s.y, options.height || s.height),
-        width: options.width || s.width,
-        height: options.height || s.height,
-        backgroundColor: options.background || '#000',
-        show: false,
-        skipTaskbar: (!windows[name].showInTaskBar && (windows[name].alwaysOnTopClient || windows[name].alwaysOnTop)) ? true : false,
-        icon: path.join(__dirname, '../assets/icons/png/' + (options.icon || name) + '.png'),
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(windows[name].window.webContents);
-    delete windows[name].width;
-    delete windows[name].height;
-    delete windows[name].x;
-    delete windows[name].y;
-
-    windows[name].window.webContents.on('render-process-gone', (event, details) => {
-        logError(`${name} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    windows[name].window.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!windows[name].window)
-                return;
-            if (result.response === 0) {
-                windows[name].window.reload();
-                logError(`${name} unresponsive, reload.\n`, true);
-            }
-            else if (result.response === 2) {
-                windows[name].window.destroy();
-            }
-            else
-                logError(`${name} unresponsive, waiting.\n`, true);
-        });
-    });
-
-    windows[name].window.setMenu(options.menu || null);
-
-    windows[name].window.loadURL(url.format({
-        pathname: path.join(__dirname, (windows[name].file || (name + '.html'))),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    windows[name].window.on('closed', (e) => {
-        if (!windows || !windows[name] || e.sender !== windows[name].window) return;
-        windows[name].window = null;
-        windows[name].ready = false;
-        if (windows[name].alwaysOnTopClient)
-            getParentWindow().focus();
-    });
-
-    windows[name].window.on('resize', () => {
-        if (!windows[name].window.isMaximized() && !windows[name].window.isFullScreen())
-            trackWindowState(name, windows[name].window);
-    });
-
-    windows[name].window.on('move', () => {
-        trackWindowState(name, windows[name].window);
-    });
-
-    windows[name].window.on('maximize', () => {
-        trackWindowState(name, windows[name].window);
-    });
-
-    windows[name].window.on('maximize', () => {
-        trackWindowState(name, windows[name].window);
-        states[name].maximized = true;
-    });
-
-    windows[name].window.on('unmaximize', () => {
-        trackWindowState(name, windows[name].window);
-        states[name].maximized = false;
-    });
-
-    windows[name].window.webContents.setWindowOpenHandler((details) => {
-        var u = new url.URL(details.url);
-        if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
-            shell.openExternal(details.url);
-            return { action: 'deny' };
-        }
-        return {
-            action: 'allow',
-            overrideBrowserWindowOptions: buildOptions(details, windows[name].window, set)
-        }
-    });
-
-    windows[name].window.webContents.on('did-create-window', (w, details) => {
-        let frameName = details.frameName;
-        let url = details.url;
-        if (global.debug)
-            w.webContents.openDevTools();
-        w.removeMenu();
-        w.once('ready-to-show', () => {
-            loadWindowScripts(w, frameName);
-            if (!options.noInput)
-                addInputContext(w, global.editorOnly ? (edSet && edSet.spellchecking) : (set && set.spellchecking));
-            w.show();
-            //w.reload();
-        });
-        w.webContents.on('render-process-gone', (event, details) => {
-            logError(`${url} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-        });
-
-        w.on('unresponsive', () => {
-            dialog.showMessageBox({
-                type: 'info',
-                message: 'Unresponsive',
-                buttons: ['Reopen', 'Keep waiting', 'Close']
-            }).then(result => {
-                if (!w)
-                    return;
-                if (result.response === 0) {
-                    w.reload();
-                    logError(`${url} unresponsive, reload.\n`, true);
-                }
-                else if (result.response === 2) {
-                    w.destroy();
-                }
-                else
-                    logError(`${url} unresponsive, waiting.\n`, true);
-            });
-        });
-
-        w.on('close', () => {
-            if (w && w.getParentWindow()) {
-                executeScript(`if(childClosed) childClosed('${url}', '${frameName}');`, w.getParentWindow());
-                w.focus();
-            }
-        });
-    });
-
-    if (global.debug)
-        windows[name].window.webContents.openDevTools();
-
-    windows[name].window.once('ready-to-show', () => {
-        loadWindowScripts(windows[name].window, name);
-        if (!options.noInput)
-            addInputContext(windows[name].window, global.editorOnly ? (edSet && edSet.spellchecking) : (set && set.spellchecking));
-        if (options.show) {
-            restoreWindowState(windows[name].window, s, true);
-        }
-        else {
-            if (s.fullscreen)
-                windows[name].window.setFullScreen(s.fullscreen);
-            windows[name].max = s.maximized;
-        }
-        windows[name].ready = true;
-    });
-
-    windows[name].window.on('close', (e) => {
-        //something already closed the window
-        if (!windows[name]) return;
-        set = settings.Settings.load(global.settingsFile);
-        set.windows[name] = getWindowState(name, e.sender);
-        if (windows[name] && windows[name].window === e.sender)
-            windows[name].show = false;
-        set.windows[name].options = copyWindowOptions(name);
-        set.save(global.settingsFile);
-        if (win && !win.isDestroyed() && win.webContents)
-            win.webContents.send('setting-changed', { type: 'window', name: name, value: set.windows[name], noSave: true });
-        if (windows[name].window === e.sender && windows[name].window && windows[name].persistent) {
-            e.preventDefault();
-            executeScript('if(closeHidden) closeHidden()', windows[name].window);
-        }
-    });
-}
-
-function showWindow(name, options, skipSave) {
-    if (name === 'main') return;
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
-    options.show = true;
-    if (!set.windows[name])
-        set.windows[name] = {};
-    set.windows[name].show = true;
-    win.webContents.send('setting-changed', { type: 'window', name: name, value: set.windows[name], noSave: true });
-    if (!skipSave)
-        set.save(global.settingsFile);
-    if (!options) options = { show: true };
-    if (windows[name] && windows[name].window) {
-        restoreWindowState(windows[name].window, {
-            maximized: windows[name].max
-        }, true);
-        windows[name].max = false;
-    }
-    else
-        createNewWindow(name, options);
-}
-
-function showColor(args) {
-    var w;
-    if (windows[args.window])
-        w = windows[args.window].window;
-    else
-        w = winEditor || getParentWindow();
-    let cp = new BrowserWindow({
-        parent: w,
-        modal: true,
-        width: 326,
-        height: 296,
-        movable: true,
-        minimizable: false,
-        maximizable: false,
-        skipTaskbar: true,
-        resizable: false,
-        title: 'Pick color',
-        icon: path.join(__dirname, '../assets/icons/png/color.png'),
-        show: false,
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(cp.webContents);
-    cp.webContents.on('render-process-gone', (event, details) => {
-        logError(`Colorpicker render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    cp.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!cp)
-                return;
-            if (result.response === 0) {
-                cp.reload();
-                logError('Colorpicker unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                cp.destroy();
-            }
-            else
-                logError('Colorpicker unresponsive, waiting.\n', true);
-        });
-    });
-
-    cp.removeMenu();
-    cp.on('closed', () => {
-        cp = null;
-    });
-    cp.loadURL(url.format({
-        pathname: path.join(__dirname, 'colorpicker.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    if (global.debug)
-        cp.webContents.openDevTools();
-
-    cp.once('ready-to-show', () => {
-        cp.show();
-        executeScript('setType("' + (args.type || 'forecolor') + '");setColor("' + (args.color || '') + '");setWindow("' + (args.window || '') + '");', cp);
-    });
 }
 
 function copyFile(src, dest) {
@@ -4881,8 +2837,6 @@ async function executeScriptContents(script, w) {
 }
 
 function getWindowX(x, w) {
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
     if (set.fixHiddenWindows) {
         const { width } = screen.getPrimaryDisplay().workAreaSize;
         if (x + w >= width)
