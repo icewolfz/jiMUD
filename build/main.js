@@ -1545,7 +1545,7 @@ app.on('ready', () => {
     }
 
     if (Array.isArray(argv.c)) {
-        global.character = argv.c;
+        global.character = argv.c[0];
         loadCharacter(global.character);
     }
     else if (argv.c) {
