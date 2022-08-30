@@ -119,9 +119,7 @@
 
         $(document).ready(() => {
             tabStrip = document.getElementById('client-tabs');
-            newClient();
             tabStrip.style.display = 'none';
-            ipcRenderer.send('update-client', current, 0);
         });
 
         function getActiveClient() {
@@ -135,6 +133,12 @@
         function getId() {
             return _id;
         }
+
+        ipcRenderer.on('new-client', (event, id) => {
+            clients.push(current);
+            createTab(id);
+            current = id;
+        });
     </script>
     <style>
         .tab {

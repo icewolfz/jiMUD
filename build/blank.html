@@ -2,10 +2,41 @@
 <html lang="en-US">
 
 <head>
+    <script>
+        let _id;
+        function setId(id) {
+            _id = id;
+            let body = document.getElementsByTagName('body')[0];
+            body.innerHTML = id;            
+        }
+
+        function getId() {
+            return _id;
+        }
+    </script>
+    <style>
+        html {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding:0;
+        }
+        body {
+            padding:0;
+            background-color: red;
+            font-size: 5em;
+            color: white;
+            border: 1px solid green;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            box-sizing: border-box;
+        }
+    </style>
 </head>
 
 <body>
-
+    
 </body>
 
 </html>

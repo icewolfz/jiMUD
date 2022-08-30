@@ -16,8 +16,7 @@ require('@electron/remote/main').initialize()
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let winProfiles, winCode, winProgress;
-let _winProgressTimer = 0;
+let winProfiles, winCode;
 let codeMax = false;
 let edSet;
 let codeReady = 0, progressReady = 0, profilesReady = 0;
@@ -638,8 +637,8 @@ function createMenu() {
                 },
                 {
                     label: 'Toggle &Client Developer Tools',
-                    click: (item, mWindow) => {
-                        var view = getActiveClient(mWindow);
+                    click: async (item, mWindow) => {
+                        var view = await getActiveClient(mWindow);
                         if (view && view.webContents.isDevToolsOpened())
                             view.webContents.closeDevTools();
                         else if (view)
@@ -955,7 +954,7 @@ function createWindow(id) {
             backgroundThrottling: set ? set.enableBackgroundThrottling : true
         }
     });
-    require("@electron/remote/main").enable(win.webContents);
+    require("@electron/remote/main").enable(window.webContents);
 
     // and load the index.html of the app.
     window.loadURL(url.format({
@@ -1003,6 +1002,14 @@ function createWindow(id) {
     window.on('minimize', () => {
         if (set.hideOnMinimize)
             window.hide();
+    });
+
+    window.webContents.on('devtools-reload-page', (event, details) => {
+        executeScript(`setId('${id}')`, window).catch(logError);
+    });
+
+    window.webContents.on('did-finish-load', () => {
+        executeScript(`setId('${id}')`, window).catch(logError);
     });
 
     window.webContents.on('render-process-gone', (event, details) => {
@@ -1063,6 +1070,8 @@ function createWindow(id) {
         });
     });
 
+
+    
     // Emitted when the window is closed.
     window.on('closed', () => {
         windows[id].window = null;
@@ -1070,10 +1079,12 @@ function createWindow(id) {
     });
 
     window.once('ready-to-show', async () => {
+        executeScript(`setId('${id}')`, window).catch(logError);
         loadWindowScripts(window, 'manager');
-        await executeScript('loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');updateInterface();', win).catch(logError);
+        //await executeScript('loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');updateInterface();', window).catch(logError);
         updateJumpList();
         checkForUpdates();
+        window.show();
     });
 
     window.on('close', (e) => {
@@ -1101,7 +1112,6 @@ function createWindow(id) {
     window.on('resized', () => {
         window.getBrowserView().webContents.send('resized');
     });
-    executeScript(`setId('${id}')`);
     windows[id] = { window: window, clients: {} };
     return id;
 }
@@ -1196,8 +1206,17 @@ app.on('ready', () => {
     if (global.editorOnly)
         showCodeEditor();
     else {
-        createTray();
-        createWindow();
+        let windowId = createWindow();
+        let window = windows[windowId].window;
+        let id = newClient(window.getContentBounds());
+        focusedWindow = windowId;
+        focusedClient = id;
+        windows[windowId].clients[id] = clients[id].view;
+        clients[id].parent = window;
+        window.setBrowserView(clients[id].view);
+        window.setMenu(clients[id].menu);
+        focusClient(window, true);
+        window.webContents.send('new-client', id);
     }
 });
 
@@ -1206,8 +1225,6 @@ app.on('window-all-closed', () => {
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
     if (process.platform !== 'darwin') {
-        if (tray)
-            tray.destroy();
         app.quit();
     }
 });
@@ -1215,9 +1232,9 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (win == null) {
-        createWindow();
-    }
+    //if (win == null) {
+        //createWindow();
+    //}
 });
 
 app.on('before-quit', (e) => {
@@ -1228,103 +1245,10 @@ app.on('before-quit', (e) => {
             title: 'Close profile manager',
             message: 'You must close the profile manager before you can exit.'
         });
-        set.save(global.settingsFile);
     }
 });
 
 ipcMain.on('check-for-updates', checkForUpdatesManual);
-
-ipcMain.on('reload', (event, char) => {
-    //already loaded so no need to reload
-    if (char === global.character)
-        return;
-    reload = char;
-    win.close();
-});
-
-ipcMain.on('load-default', () => {
-    var name;
-    var cWin;
-    //already loaded so no need to switch
-    var sf = parseTemplate(path.join('{data}', 'settings.json'));
-    var mf = parseTemplate(path.join('{data}', 'map.sqlite'));
-    if (sf === global.settingsFile && mf === global.mapFile) {
-        for (name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-            windows[name].webContents.send('load-default', true);
-        }
-        return;
-    }
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('load-default');
-    global.settingsFile = sf;
-    global.mapFile = mf;
-    resetProfiles();
-    set = settings.Settings.load(global.settingsFile);
-
-    if (winMap) {
-        executeScript('closeWindow()', winMap);
-        winMap = null;
-    }
-
-    if (winEditor) {
-        winEditor.close();
-        winEditor = null;
-    }
-    if (winChat) {
-        winChat.close();
-        winChat = null;
-    }
-    for (name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        executeScript('closed();', windows[name].window);
-        set.windows[name] = getWindowState(name, windows[name].window);
-        set.windows[name].options = copyWindowOptions(name);
-        cWin = windows[name].window;
-        windows[name].window = null;
-        cWin.close();
-    }
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('change-options', global.settingsFile);
-
-    if (set.showMapper)
-        showMapper(true);
-    else if (set.mapper.persistent || set.mapper.enabled)
-        createMapper();
-
-    if (set.showEditor)
-        showEditor(true);
-    else if (set.editorPersistent)
-        createEditor();
-    if (set.showChat)
-        showChat(true);
-    else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
-        createChat();
-    if (!edSet)
-        edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-    if (edSet.window.show)
-        showCodeEditor(true);
-    else if (!global.editorOnly && edSet.window.persistent)
-        createCodeEditor();
-});
-
-ipcMain.on('open-editor', (event, file, remote, remoteEdit) => {
-    showCodeEditor();
-    openEditor(file, remote, remoteEdit);
-});
-
-function openEditor(file, remote, remoteEdit) {
-    if (codeReady !== 2 || !winCode) {
-        setTimeout(() => {
-            openEditor(file, remote, remoteEdit);
-        }, 1000);
-    }
-    else {
-        winCode.webContents.send('open-editor', file, remote, remoteEdit);
-    }
-}
 
 ipcMain.on('log', (event, raw) => {
     console.log(raw);
@@ -1335,17 +1259,15 @@ ipcMain.on('log-error', (event, err, skipClient) => {
 });
 
 ipcMain.on('debug', (event, msg) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('debug', msg);
+    let client = getActiveClient();
+    if (client)
+        client.webContents.send('debug', msg);
 });
 
 ipcMain.on('error', (event, err) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('error', err);
-});
-
-ipcMain.on('update-menuitem', (event, args) => {
-    updateMenuItem(args);
+    let client = getActiveClient();
+    if (client)
+        client.webContents.send('error', err);
 });
 
 ipcMain.on('ondragstart', (event, files, icon) => {
@@ -1573,27 +1495,18 @@ ipcMain.handle('attach-context-event-prevent', event => {
     });
 });
 
-ipcMain.on('window-info', (event, info, ...args) => {
+ipcMain.on('window-info', (event, info, id, ...args) => {
     if (info === "child-count") {
-        var wins = BrowserWindow.getAllWindows();
         var current = BrowserWindow.fromWebContents(event.sender);
-        var count = 0;
-        for (var w = 0, wl = wins.length; w < wl; w++) {
-            if (wins[w] === current || !wins[w].isVisible())
-                continue;
-            if (wins[w].getParentWindow() !== current)
-                continue;
-            count++;
-        }
-        event.returnValue = count;
+        event.returnValue = current.getChildWindows().length;;
     }
     else if (info === 'child-open') {
         if (!args || args.length === 0) {
             event.returnValue = 0;
             return
         }
-        var wins = BrowserWindow.getAllWindows();
         var current = BrowserWindow.fromWebContents(event.sender);
+        var wins = current.getChildWindows();
         for (var w = 0, wl = wins.length; w < wl; w++) {
             if (wins[w] === current || !wins[w].isVisible())
                 continue;
@@ -1605,8 +1518,8 @@ ipcMain.on('window-info', (event, info, ...args) => {
         event.returnValue = 0;
     }
     else if (info === 'child-close') {
-        var wins = BrowserWindow.getAllWindows();
         var current = BrowserWindow.fromWebContents(event.sender);
+        var wins = current.getChildWindows();
         var count = 0;
         for (var w = 0, wl = wins.length; w < wl; w++) {
             if (wins[w] === current || !wins[w].isVisible())
@@ -1623,35 +1536,6 @@ ipcMain.on('window-info', (event, info, ...args) => {
                     set.windows[name].options = copyWindowOptions(name);
                     windows[name].window = null;
                     delete windows[name];
-                }
-                if (winMap == wins[w]) {
-                    set.windows.mapper = getWindowState('mapper', winMap);
-                    win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
-                    executeScript('closeWindow()', winMap);
-                    winMap = null;
-                }
-                if (winEditor == wins[w]) {
-                    set.windows.editor = getWindowState('editor', winEditor);
-                    win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
-                    winEditor = null;
-                }
-                if (winChat == wins[w]) {
-                    set.windows.chat = getWindowState('chat', winChat);
-                    win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
-                    winChat = null;
-                }
-                if (winCode == wins[w] && winCode.getParentWindow() == win) {
-                    if (!edSet)
-                        edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-                    if (global.editorOnly)
-                        edSet.stateOnly = getWindowState('code-editor', winCode);
-                    else {
-                        edSet.state = getWindowState('code-editor', winCode);
-                        edSet.window.show = true;
-                    }
-                    edSet.save(parseTemplate(path.join('{data}', 'editor.json')));
-                    executeScript('closeWindow()', winCode);
-                    winCode = null;
                 }
                 wins[w].close();
                 continue;
@@ -1703,14 +1587,16 @@ ipcMain.on('inspect', (event, x, y) => {
 ipcMain.on('new-client', (event, focus, offset) => {
     let window = BrowserWindow.fromWebContents(event.sender);
     let id = newClient(window.getContentBounds(), offset);
+    let windowId = getWindowId(window);
+    windows[windowId].clients[id] = clients[id].view;
+    clients[id].parent = window;
     window.webContents.send('new-client', id);
 });
 
 ipcMain.on('switch-client', (event, id, offset) => {
     if (clients[id]) {
         let window = BrowserWindow.fromWebContents(event.sender);
-        if(window != clients[id].parent)
-        {
+        if (window != clients[id].parent) {
             //@TODO probably wanting to dock from 1 window to another
             return;
         }
@@ -1722,6 +1608,7 @@ ipcMain.on('switch-client', (event, id, offset) => {
             height: bounds.height - offset
         });
         window.setBrowserView(clients[id].view);
+        window.setMenu(clients[id].menu);
         focusClient(window, true);
     }
     //win.setTopBrowserView(clients[id])
@@ -1797,6 +1684,7 @@ ipcMain.on('dock-main', (event, id) => {
 
 function newClient(bounds, offset, id) {
     if (!id) id = Date.now();
+    offset = offset || 0;
     const view = new BrowserView({
         webPreferences: {
             nodeIntegration: true,
@@ -1822,9 +1710,10 @@ function newClient(bounds, offset, id) {
         width: bounds.width,
         height: bounds.height - offset
     });
-    view.webContents.loadFile("build/index.html");
+    //@TODO change to index.html once basic window system is working
+    view.webContents.loadFile("build/blank.html");
     require("@electron/remote/main").enable(view.webContents);
-    clients[id] = { view: view };
+    clients[id] = { view: view, menu: createMenu() };
     executeScript(`setId('${id}');`, clients[id].view);
     //clients[id].view.webContents.openDevTools();
     //win.setTopBrowserView(view)    
@@ -2236,9 +2125,10 @@ function logError(err, skipClient) {
     else
         msg = err;
 
+    let client = getActiveClient();
 
-    if (!global.editorOnly && win && !win.isDestroyed() && win.webContents && !skipClient)
-        win.webContents.send('error', msg);
+    if (!global.editorOnly && client && client.webContents&& !skipClient)
+        client.webContents.send('error', msg);
     else if (set.logErrors) {
         if (err.stack && !set.showErrorsExtended)
             msg = err.stack;
@@ -2267,7 +2157,7 @@ function loadWindowScripts(window, name) {
     }
     if (isFileSync(path.join(app.getPath('userData'), name + '.js'))) {
         fs.readFile(path.join(app.getPath('userData'), name + '.js'), 'utf8', (err, data) => {
-            executeScript(data, window);
+            executeScript(data, window).catch(logError);
         });
     }
 }
@@ -2922,23 +2812,23 @@ function buildOptions(details, window, settings) {
     return options;
 }
 
-function getActiveClient(window) {
+async function getActiveClient(window) {
     if (!window) return clients[focusedClient].view;
     var client = await executeScript('getActiveClient()', window);
     return clients[client].view;
 }
 
-function getWindowId(window) {
+async function getWindowId(window) {
     if (!window) return focusedWindow;
     return await executeScript('getId()', window);
 }
 
-function getClientId(client) {
+async function getClientId(client) {
     if (!client) return focusedClient;
     return await executeScript('getId()', client);
 }
 
-function focusClient(window, focusWindow) {
+async function focusClient(window, focusWindow) {
     let id = focusedClient;
     if (window) return;
     id = await executeScript('getActiveClient()', window);
@@ -2953,7 +2843,7 @@ function focusClient(window, focusWindow) {
 
 // eslint-disable-next-line no-unused-vars
 async function executeScriptClient(script, window, focus) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         if (!window) {
             reject();
             return;
