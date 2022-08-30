@@ -1558,19 +1558,14 @@ app.on('ready', () => {
         global.settingsFile = parseTemplate(argv.s);
 
     if (Array.isArray(argv.mf))
-        global.settingsFile = parseTemplate(argv.mf[0]);
+        global.mapFile = parseTemplate(argv.mf[0]);
     else if (argv.mf)
-        global.settingsFile = parseTemplate(argv.mf);
+        global.mapFile = parseTemplate(argv.mf);
 
     if (Array.isArray(argv.pf))
-        global.settingsFile = parseTemplate(argv.pf[0]);
+        global.profiles = parseTemplate(argv.pf[0]);
     else if (argv.pf)
-        global.settingsFile = parseTemplate(argv.pf);
-
-    if (Array.isArray(argv.s))
-        global.settingsFile = parseTemplate(argv.s[0]);
-    else if (argv.s)
-        global.settingsFile = parseTemplate(argv.s);
+        global.profiles = parseTemplate(argv.pf);
 
     if (global.editorOnly)
         showCodeEditor();

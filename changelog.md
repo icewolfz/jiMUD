@@ -5,6 +5,9 @@
 - **Fixed:**
   - Auto update: close download dialog when error happens
   - Fixed an issue that caused window to now close correctly, causing the main window to hang and requiring a second close
+  - Command line arguments:
+    - Fixed --map/-mf not correctly setting the map file and breaking settings
+    - Fixed --profiles/-pf not correctly setting the profile list and breaking settings
 
 ## 0.19.3 2022-08-27
 
