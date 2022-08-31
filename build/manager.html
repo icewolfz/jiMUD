@@ -7,6 +7,7 @@
     <link href="css/main.css" rel="stylesheet" type="text/css" />
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
+    <link href="css/cm.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
     <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css" />
@@ -18,12 +19,14 @@
     <script type="text/javascript">
         const { ipcRenderer } = require('electron');
         const { parseTemplate, isFileSync } = require('./js/library.js');
+        const { TabStrip } = require('./js/tabstrip.js');
         const clients = [];
         var _id;
         var tabStrip;
         var clientID = 0;
         var current = '0';
 
+        /*
         function newClient() {
             ipcRenderer.send('update-client', current, tabStrip.childNodes.length === 0 ? 0 : 32);
             current = '' + clientID;
@@ -87,18 +90,6 @@
                 ipcRenderer.send('update-client', current, tabStrip.childNodes.length === 1 ? 0 : 32);
         }
 
-        function loadTheme(theme, force) {
-            theme = parseTemplate(theme) + '.css';
-            if (!isFileSync(theme))
-                theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
-            var el = document.getElementById('theme');
-            if (el.getAttribute('href') !== theme || force)
-                el.setAttribute('href', theme);
-        }
-
-        function updateInterface() {
-        }
-
         function createTab(id) {
             var tab = document.createElement('div');
             tab.id = 'client-' + id;
@@ -117,9 +108,23 @@
             tabStrip.removeChild(document.getElementById('client-' + id));
         }
 
+        */
+
+        function loadTheme(theme, force) {
+            theme = parseTemplate(theme) + '.css';
+            if (!isFileSync(theme))
+                theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
+            var el = document.getElementById('theme');
+            if (el.getAttribute('href') !== theme || force)
+                el.setAttribute('href', theme);
+        }
+
+        function updateInterface() {
+        }
+
         $(document).ready(() => {
-            tabStrip = document.getElementById('client-tabs');
-            tabStrip.style.display = 'none';
+            tabstrip = new TabStrip();
+            tabstrip.hideTabstrip = false;
         });
 
         function getActiveClient() {
@@ -135,23 +140,22 @@
         }
 
         ipcRenderer.on('new-client', (event, id) => {
-            clients.push(current);
-            createTab(id);
+            clients.push(id);
+            //createTab(id);
+            ipcRenderer.send('update-client', id, 26);
+            let tab = tabstrip.addTab(id, 'disconnected-icon');
+            tab.client = id;
             current = id;
         });
     </script>
     <style>
-        .tab {
-            background-color: white;
-            display: inline-block;
-            width: 32px;
-            height: 32px;
+        .disconnected-icon {
+            background-image: url(../assets/icons/png/disconnected.png);
         }
     </style>
 </head>
 
 <body id="client-container">
-    <div id="client-tabs" style="display: none"></div>
 </body>
 
 </html>

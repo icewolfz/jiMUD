@@ -19,7 +19,7 @@ require('@electron/remote/main').initialize()
 let winProfiles, winCode;
 let codeMax = false;
 let edSet;
-let codeReady = 0, progressReady = 0, profilesReady = 0;
+let codeReady = 0, profilesReady = 0;
 let loadID;
 let argv;
 
@@ -1206,7 +1206,9 @@ app.on('ready', () => {
         window.setBrowserView(clients[id].view);
         window.setMenu(clients[id].menu);
         focusClient(window, true);
-        window.webContents.send('new-client', id);
+        window.once('ready-to-show', async () => {
+            window.webContents.send('new-client', id);
+        });
     }
 });
 
