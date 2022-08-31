@@ -1,5 +1,6 @@
 //spellchecker:ignore dropdown dropdownmenu tabpane
 import EventEmitter = require('events');
+import { ipcRenderer, nativeImage } from 'electron';
 
 export enum UpdateType {
     none = 0,
@@ -20,6 +21,14 @@ export interface Tab {
     isTab: boolean;
 }
 
+export interface TabOptions {
+    title?: string;
+    icon?: string;
+    iconCls?: string;
+    iconSrc?: string;
+    tooltip?: string;
+}
+
 export class TabStrip extends EventEmitter {
     private $parent: HTMLElement;
     private $el: HTMLElement;
@@ -29,6 +38,7 @@ export class TabStrip extends EventEmitter {
     public dragTab;
 
     public active: Tab;
+    private _useNativeMenus: boolean = false;
     private _hideTabstrip: boolean = true;
     private $scrollLeft: HTMLAnchorElement;
     private $scrollRight: HTMLAnchorElement;
@@ -50,6 +60,28 @@ export class TabStrip extends EventEmitter {
             this.$el.classList.remove('focused');
     }
     public get focused() { return this.$el.classList.contains('focused'); }
+
+    public set useNativeMenus(value) {
+        if (value === this._useNativeMenus) return;
+        this._useNativeMenus = value;
+        if (this.$scrollDropDown) {
+            if (value) {
+                this.$scrollDropDown.classList.remove('dropdown-toggle');
+                delete this.$scrollDropDown.dataset.toggle;
+            }
+            else {
+                this.$scrollDropDown.classList.add('dropdown-toggle');
+                this.$scrollDropDown.dataset.toggle = 'dropdown';
+            }
+        }
+        if (this.$scrollMenu) {
+            if (value)
+                this.$scrollMenu.classList.remove('dropdown-menu');
+            else
+                this.$scrollMenu.classList.add('dropdown-menu');
+        }
+    }
+    public get useNativeMenus() { return this._useNativeMenus; }
 
     public get hideTabstrip(): boolean {
         return this._hideTabstrip;
@@ -198,9 +230,36 @@ export class TabStrip extends EventEmitter {
     }
 
     private buildScrollMenu() {
+        const tl = this.tabs.length;
+        if (this._useNativeMenus) {
+            var c = [];
+            for (let t = 0; t < tl; t++) {
+                let icon = null;
+                if (this.tabs[t].iconSrc) {
+                    if (this.tabs[t].iconSrc.startsWith('data:'))
+                        icon = nativeImage.createFromDataURL(this.tabs[t].iconSrc).resize({ height: 16, quality: 'good' });
+                    else
+                        icon = nativeImage.createFromPath(this.tabs[t].iconSrc).resize({ height: 16, quality: 'good' });
+                }
+                else if (this.tabs[t].iconCls) {
+                    const style = window.getComputedStyle(this.tabs[t].icon);
+                    if (process.platform === 'win32')
+                        icon = nativeImage.createFromPath(style.backgroundImage.slice(13, -2).replace(/\//g, "\\")).resize({ height: 16, quality: 'good' });
+                    else
+                        icon = nativeImage.createFromPath(style.backgroundImage.slice(13, -2)).resize({ height: 16, quality: 'good' });
+                }
+                c.push({
+                    label: this.tabs[t].title.innerHTML,
+                    click: `switchTab(${t})`,
+                    icon: icon
+                });
+            }
+            const rect = this.$scrollDropDown.getBoundingClientRect();
+            ipcRenderer.invoke('show-context', c, { x: rect.left + window.scrollX, y: rect.bottom + window.scrollY });
+            return;
+        }
         const menu = $(this.$scrollMenu);
         menu.empty();
-        const tl = this.tabs.length;
         const w = this._scroll + this.$tabstrip.clientWidth - this.$scrollLeft.offsetWidth - this.$scrollRight.offsetWidth - this.$scrollDropDown.offsetWidth;
         const l = this._scroll + this.$scrollLeft.offsetWidth;
         for (let t = 0; t < tl; t++) {
@@ -215,6 +274,8 @@ export class TabStrip extends EventEmitter {
     }
 
     private updateScrollMenu() {
+        if (this._useNativeMenus)
+            return;
         if (!this.$scrollMenu || this.$scrollMenu.children.length !== this.tabs.length || this.$scrollMenu.children.length === 0 || !this.$scrollMenu.parentElement.classList.contains('open')) return;
         const tl = this.tabs.length;
         const w = this._scroll + this.$tabstrip.clientWidth - this.$scrollLeft.offsetWidth - this.$scrollRight.offsetWidth - this.$scrollDropDown.offsetWidth;
@@ -404,13 +465,19 @@ export class TabStrip extends EventEmitter {
         this.doUpdate(UpdateType.scroll);
     }
 
-    private newTab(title?: string, icon?: string, tooltip?: string) {
+    private newTab(title?: string | TabOptions, icon?: string, tooltip?: string) {
+        var options: TabOptions = {};
+        if (typeof title === 'string' || title instanceof String)
+            options = { title: <string>title, icon: icon, tooltip: tooltip };
+        else
+            options = title || {};
         const tab: Tab = {
             tab: document.createElement('li'),
             id: this._tabID++,
             title: document.createElement('div'),
             icon: document.createElement('div'),
-            iconCls: icon || 'disconnected-icon',
+            iconCls: options.icon || options.iconCls || 'disconnected-icon',
+            iconSrc: options.iconSrc,
             isTab: true
         };
 
@@ -495,33 +562,47 @@ export class TabStrip extends EventEmitter {
         close.onclick = (e) => {
             e.stopPropagation();
             e.preventDefault();
+            this.removeTab(tab);
         };
         tab.tab.appendChild(close);
         tab.title.classList.add('title');
         tab.icon.classList.add('icon');
+        tab.title.innerHTML = options.title;
+        tab.title.title = options.tooltip;
+        tab.tab.title = options.tooltip;
         return tab;
     }
 
-    public addTab(title?: string, icon?: string, tooltip?: string) {
+    public addTab(title?: string | TabOptions, icon?: string, tooltip?: string) {
+        var options: TabOptions = {};
+        if (typeof title === 'string' || title instanceof String)
+            options = { title: <string>title, icon: icon, tooltip: tooltip };
+        else
+            options = title || {};
         $('.dropdown.open').removeClass('open');
-        const tab = this.newTab(title, icon, tooltip);
+        const tab = this.newTab(options);
         this.$addCache.push(tab);
         this.tabs.push(tab);
         this.switchToTabByIndex(this.tabs.length - 1);
-        this.setTabTitle(title || '', undefined, false);
+        //this.setTabTitle(title || '', undefined, false);
         this.setTabIconClass(tab.iconCls);
-        this.setTabTooltip(tooltip || '');        
+        //this.setTabTooltip(tooltip || '');
         this.emit('add', { index: this.tabs.length - 1, id: tab.id, tab: tab });
         this.doUpdate(UpdateType.resize | UpdateType.stripState | UpdateType.batchAdd);
         return tab;
     }
 
-    public createTab(title?: string, icon?: string, tooltip?: string) {
+    public createTab(title?: string | TabOptions, icon?: string, tooltip?: string) {
+        var options: TabOptions = {};
+        if (typeof title === 'string' || title instanceof String)
+            options = { title: <string>title, icon: icon, tooltip: tooltip };
+        else
+            options = title || {};
         $('.dropdown.open').removeClass('open');
-        const tab = this.newTab(title, icon, tooltip);
-        this.setTabTitle(title || '', tab, true);
+        const tab = this.newTab(options);
+        //this.setTabTitle(title || '', tab, true);
         this.setTabIconClass(tab.iconCls, tab, true);
-        this.setTabTooltip(tooltip || '', tab);
+        //this.setTabTooltip(tooltip || '', tab);
         return tab;
     }
 

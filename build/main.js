@@ -105,6 +105,7 @@ let clients = {}
 let windows = {};
 let focusedClient = 0;
 let focusedWindow = 0;
+const idMap = new Map();
 
 process.on('uncaughtException', (err) => {
     logError(err);
@@ -1064,6 +1065,7 @@ function createWindow() {
     
     // Emitted when the window is closed.
     window.on('closed', () => {
+        idMap.delete(window);
         windows[window.webContents.id].window = null;
         delete windows[window.webContents.id];
     });
@@ -1083,6 +1085,7 @@ function createWindow() {
             window.removeBrowserView(clients[client].view);
             windows[window.webContents.id].clients[client] = null;
             delete windows[window.webContents.id].clients[client];
+            idMap.delete(clients[client].view);
             clients[client].view.webContents.destroy();
             clients[client] = null;
             delete clients[client];
@@ -1102,6 +1105,7 @@ function createWindow() {
         window.getBrowserView().webContents.send('resized');
     });
     windows[window.webContents.id] = { window: window, clients: {} };
+    idMap.set(window, window.webContents.id);
     return window.webContents.id;
 }
 
@@ -1705,6 +1709,7 @@ function newClient(bounds, offset) {
     view.webContents.loadFile("build/blank.html");
     require("@electron/remote/main").enable(view.webContents);
     clients[view.webContents.id] = { view: view, menu: createMenu() };
+    idMap.set(view, view.webContents.id);
     executeScript(`setId('${view.webContents.id}');`, clients[view.webContents.id].view);
     //clients[id].view.webContents.openDevTools();
     //win.setTopBrowserView(view)    
@@ -1725,6 +1730,7 @@ function removeClient(id, close) {
     }
     else
         win.removeBrowserView(clients[id].view);
+    idMap.delete(clients[id].view);
     clients[id].view.webContents.destroy();
     clients[id] = null;
     delete clients[id];

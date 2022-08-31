@@ -125,6 +125,7 @@
         $(document).ready(() => {
             tabstrip = new TabStrip();
             tabstrip.hideTabstrip = false;
+            tabstrip.useNativeMenus = true;
         });
 
         function getActiveClient() {
@@ -143,10 +144,14 @@
             clients.push(id);
             //createTab(id);
             ipcRenderer.send('update-client', id, 26);
-            let tab = tabstrip.addTab(id, 'disconnected-icon');
+            let tab = tabstrip.addTab(''+id, 'disconnected-icon');
             tab.client = id;
             current = id;
         });
+
+        function switchTab(index) {
+            tabstrip.switchToTabByIndex(index);
+        }        
     </script>
     <style>
         .disconnected-icon {
