@@ -143,6 +143,64 @@
                     ipcRenderer.send('update-client', current, 0);
                 }
             });
+            tabstrip.on('tab-drag', e => {
+                console.log('tab drag');
+                console.log(e)
+            });
+            tabstrip.on('tab-drag-over', e => {
+                console.log('tab over');
+                console.log(e)
+            });
+            tabstrip.on('tab-drag-end', e => {
+                console.log('tab end');
+                console.log(e)
+            });
+            tabstrip.on('tab-drag-leave', e => {
+                console.log('tab leave');
+                console.log(e)
+            });
+            tabstrip.on('tab-drop', e => {
+                console.log('tab drop');
+                console.log(e)
+            });
+            /*
+            window.addEventListener('dragstart', (e) => {
+                e.dataTransfer.dropEffect = 'move';
+                console.log('Window start');
+                console.log(e)
+            });
+            window.addEventListener('dragleave', (e) => {
+                e.dataTransfer.dropEffect = 'move';
+                console.log('Window leave');
+                console.log(e)
+                e.preventDefault();
+                e.stopPropagation();                
+            });            
+            window.addEventListener('dragover', (e) => {
+                e.dataTransfer.dropEffect = 'move';
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Window over');
+                console.log(e)
+            });   
+            window.addEventListener('dragenter', (e) => {
+                e.dataTransfer.dropEffect = 'move';
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Window eneter');
+                console.log(e)
+            });              
+            window.addEventListener('dragend', (e) => {
+                e.dataTransfer.dropEffect = 'move';
+                console.log('Window end');
+                console.log(e)
+            });    
+            window.addEventListener('drop', (e) => {
+                e.dataTransfer.dropEffect = 'move';
+                console.log('Window drop');
+                console.log(e)
+            });  
+            */                 
             if (clients.length) {
                 for (var c = 0, cl = clients.length; c < cl; c++)
                     addClient(clients[c]);
