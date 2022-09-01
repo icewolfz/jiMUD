@@ -124,8 +124,26 @@
 
         $(document).ready(() => {
             tabstrip = new TabStrip();
-            tabstrip.hideTabstrip = false;
+            //tabstrip.hideTabstrip = false;
             tabstrip.useNativeMenus = true;
+            tabstrip.on('tab-strip-hidden', () => {
+                ipcRenderer.send('update-client', current, 0);
+            });
+            tabstrip.on('tab-strip-shown', () => {
+                ipcRenderer.send('update-client', current, tabstrip.height);
+            });
+            tabstrip.on('add', tab => {
+                if (tabstrip.tabs.length === 2) {
+                    //force a refresh as will not update while hidden
+                    tabstrip.refresh();
+                    ipcRenderer.send('update-client', current, tabstrip.height);
+                }
+            });
+            tabstrip.on('removed', tab => {
+                if (tabstrip.tabs.length === 1) {
+                    ipcRenderer.send('update-client', current, 0);
+                }
+            });
         });
 
         function getActiveClient() {
@@ -142,9 +160,8 @@
 
         ipcRenderer.on('new-client', (event, id) => {
             clients.push(id);
-            //createTab(id);
-            ipcRenderer.send('update-client', id, 26);
-            let tab = tabstrip.addTab(''+id, 'disconnected-icon');
+            ipcRenderer.send('update-client', id, tabstrip.height);
+            let tab = tabstrip.addTab('' + id, 'disconnected-icon');
             tab.client = id;
             current = id;
         });
@@ -154,6 +171,20 @@
         }        
     </script>
     <style>
+        body {
+            /*@TODO temp fix until tabs support theming to prevent black to white flicking*/
+            background-color: rgb(255, 255, 255);
+        }
+
+        /*use circle icons to see better, maybe add a setting to allow user choice*/
+        .connected-icon {
+            background-image: url(../assets/icons/png/connected.png);
+        }
+
+        .connectednonactive-icon {
+            background-image: url(../assets/icons/png/connectednonactive.png);
+        }
+
         .disconnected-icon {
             background-image: url(../assets/icons/png/disconnected.png);
         }

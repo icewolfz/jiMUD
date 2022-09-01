@@ -102,6 +102,14 @@ export class TabStrip extends EventEmitter {
         return this.$el.clientWidth;
     }
 
+    public set height(value) {
+        this.$tabstrip.style.height = `${value}px`;
+    }
+
+    public get height() {
+        return Math.max(this.$tabstrip.offsetHeight, this.$tabstrip.clientHeight);
+    }
+
     public set left(value) {
         if (!value)
             this.$el.style.left = `${value}`;
@@ -116,6 +124,10 @@ export class TabStrip extends EventEmitter {
     }
 
     public get bounds() {
+        return this.$tabstrip.getBoundingClientRect();
+    }
+
+    public get containerBounds() {
         return this.$el.getBoundingClientRect();
     }
 
@@ -947,5 +959,12 @@ export class TabStrip extends EventEmitter {
         this.$addCache = [];
         this.switchToTabByIndex(this.tabs.length - 1);
         this.doUpdate(UpdateType.resize | UpdateType.stripState);
+    }
+
+    public refresh() {
+        this.batchAdd();
+        this.updateStripState();
+        this.updateScrollButtons();
+        this.updateScrollButtons();
     }
 }

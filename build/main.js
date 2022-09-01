@@ -1210,7 +1210,7 @@ app.on('ready', () => {
         window.setBrowserView(clients[id].view);
         window.setMenu(clients[id].menu);
         focusClient(window, true);
-        window.once('ready-to-show', async () => {
+        window.webContents.once('dom-ready', () => {
             window.webContents.send('new-client', id);
         });
     }
