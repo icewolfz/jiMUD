@@ -1717,7 +1717,7 @@ function newClient(bounds, offset) {
         }
         return {
             action: 'allow',
-            overrideBrowserWindowOptions: buildOptions(details, view, set)
+            overrideBrowserWindowOptions: buildOptions(details, BrowserWindow.fromBrowserView(view), set)
         }
     });
 
@@ -1757,10 +1757,20 @@ function newClient(bounds, offset) {
         });
 
         childWindow.on('closed', () => {
-            if (view && !view.isDestroyed()) {
+            if (view && view.webContents && !view.webContents.isDestroyed()) {
                 executeScript(`childClosed('${url}', '${frameName}');`, view, true);
             }
+            //remove remove from list
+            const idx = clients[getClientId(view)].windows.indexOf(childWindow);
+            clients[getClientId(view)].windows[idx] = null;
+            clients[getClientId(view)].windows.splice(idx, 1);
+
         });
+
+        childWindow.on('close', () => {
+        });
+
+        clients[getClientId(view)].windows.push(childWindow);
     });
 
     view.setAutoResize({
@@ -1777,7 +1787,7 @@ function newClient(bounds, offset) {
     view.webContents.loadFile("build/blank.html");
     require("@electron/remote/main").enable(view.webContents);
     clientID++;
-    clients[clientID] = { view: view, menu: createMenu() };
+    clients[clientID] = { view: view, menu: createMenu(), windows: [] };
     idMap.set(view, clientID);
     executeScript(`if(setId) setId('${clientID}');`, clients[clientID].view);
     //clients[id].view.webContents.openDevTools();
