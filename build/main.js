@@ -1036,7 +1036,7 @@ function createWindow() {
         let url = details.url;
         if (global.debug)
             childWindow.webContents.openDevTools();
-        require("@electron/remote/main").enable(w.webContents);
+        require("@electron/remote/main").enable(childWindow.webContents);
         childWindow.removeMenu();
         childWindow.once('ready-to-show', () => {
             loadWindowScripts(childWindow, frameName);
@@ -1077,16 +1077,6 @@ function createWindow() {
     window.on('closed', () => {
         const windowId = getWindowId(window);
         idMap.delete(window);
-        const cl = windows[windowId].clients.length;
-        for (var idx = 0; idx < cl; idx++) {
-            const id = windows[windowId].clients[idx];
-            window.removeBrowserView(clients[id].view);
-            idMap.delete(clients[id].view);
-            clients[id].view.webContents.destroy();
-            clients[id] = null;
-            delete clients[id];
-        }
-        windows[windowId].clients = [];
         windows[windowId].window = null;
         delete windows[windowId];
     });
@@ -1100,6 +1090,17 @@ function createWindow() {
     });
 
     window.on('close', (e) => {
+        const windowId = getWindowId(window);
+        const cl = windows[windowId].clients.length;
+        for (var idx = 0; idx < cl; idx++) {
+            const id = windows[windowId].clients[idx];
+            window.removeBrowserView(clients[id].view);
+            idMap.delete(clients[id].view);
+            clients[id].view.webContents.destroy();
+            clients[id] = null;
+            delete clients[id];
+        }
+        windows[windowId].clients = [];        
     });
     window.on('restore', () => {
         window.getBrowserView().webContents.send('restore');
@@ -1725,7 +1726,7 @@ function newClient(bounds, offset) {
         let url = details.url;
         if (global.debug)
             childWindow.webContents.openDevTools();
-        require("@electron/remote/main").enable(w.webContents);
+        require("@electron/remote/main").enable(childWindow.webContents);
         childWindow.removeMenu();
         childWindow.once('ready-to-show', () => {
             loadWindowScripts(childWindow, frameName);
