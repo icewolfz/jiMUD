@@ -23,8 +23,7 @@
         const clients = [];
         var _id;
         var tabStrip;
-        var clientID = 0;
-        var current = '0';
+        var current = 0;
 
         /*
         function newClient() {
@@ -144,6 +143,12 @@
                     ipcRenderer.send('update-client', current, 0);
                 }
             });
+            if (clients.length) {
+                for (var c = 0, cl = clients.length; c < cl; c++)
+                    addClient(clients[c]);
+                if (current)
+                    switchToClient(current);
+            }
         });
 
         function getActiveClient() {
@@ -160,11 +165,31 @@
 
         ipcRenderer.on('new-client', (event, id) => {
             clients.push(id);
+            if (typeof tabstrip !== 'undefined')
+                addClient(id);
+        });
+
+        ipcRenderer.on('switch-client', (event, id) => {
+            current = id;
+            if (typeof tabstrip !== 'undefined')
+                switchToClient(id);
+        });
+
+        function addClient(id) {
             ipcRenderer.send('update-client', id, tabstrip.height);
             let tab = tabstrip.addTab('' + id, 'disconnected-icon');
             tab.client = id;
             current = id;
-        });
+        }
+
+        function switchToClient(id) {
+            for (var t = 0, tl = tabstrip.tabs.length; t < tl; t++) {
+                if (tabstrip.tabs[t].client === id) {
+                    tabstrip.switchToTabByIndex(t);
+                    break;
+                }
+            }
+        }
 
         function switchTab(index) {
             tabstrip.switchToTabByIndex(index);
