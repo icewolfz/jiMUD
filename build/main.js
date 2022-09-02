@@ -196,7 +196,9 @@ function createMenu() {
                         windows[windowId].current = id;
                         clients[id].parent = mWindow;
                         clients[id].view.webContents.once('dom-ready', () => {
-                            mWindow.setBrowserView(clients[id].view);
+                            //mWindow.setBrowserView(clients[id].view);
+                            mWindow.addBrowserView(clients[id].view);
+                            mWindow.setTopBrowserView(clients[id].view);
                             mWindow.setMenu(clients[id].menu);
                             mWindow.webContents.send('new-client', id);
                             focusClient(mWindow, true);
@@ -216,7 +218,9 @@ function createMenu() {
                         windows[windowId].clients.push(id);
                         windows[windowId].current = id;
                         clients[id].parent = window;
-                        window.setBrowserView(clients[id].view);
+                        //window.setBrowserView(clients[id].view);
+                        window.addBrowserView(clients[id].view);
+                        window.setTopBrowserView(clients[id].view);
                         window.setMenu(clients[id].menu);
                         window.webContents.once('dom-ready', () => {
                             window.webContents.send('new-client', id);
@@ -1175,17 +1179,17 @@ function createWindow() {
     window.on('close', (e) => {
     });
     window.on('restore', () => {
-        window.getBrowserView().webContents.send('restore');
+        getActiveClient(window).view.webContents.send('restore');
     });
     window.on('maximize', () => {
-        window.getBrowserView().webContents.send('maximize');
+        getActiveClient(window).view.webContents.send('maximize');
     });
     window.on('unmaximize', () => {
-        window.getBrowserView().webContents.send('unmaximize');
+        getActiveClient(window).view.webContents.send('unmaximize');
     });
 
     window.on('resized', () => {
-        window.getBrowserView().webContents.send('resized');
+        getActiveClient(window).view.webContents.send('resized');
     });
     _windowID++
     windows[_windowID] = { window: window, clients: [] };
@@ -1291,7 +1295,9 @@ app.on('ready', () => {
         windows[windowId].clients.push(id);
         windows[windowId].current = id;
         clients[id].parent = window;
-        window.setBrowserView(clients[id].view);
+        //window.setBrowserView(clients[id].view);
+        window.addBrowserView(clients[id].view);
+        window.setTopBrowserView(clients[id].view);
         window.setMenu(clients[id].menu);
         focusClient(window, true);
         window.webContents.once('dom-ready', () => {
@@ -1689,7 +1695,8 @@ ipcMain.on('switch-client', (event, id, offset) => {
         if (windowId === focusedWindow)
             focusedClient = id;
         windows[windowId].current = id;
-        window.setBrowserView(clients[id].view);
+        //window.setBrowserView(clients[id].view);
+        window.setTopBrowserView(clients[id].view);
         window.setMenu(clients[id].menu);
         focusClient(window, true);
     }
@@ -1728,7 +1735,9 @@ ipcMain.on('undock-client', (event, id) => {
                 width: bounds.width,
                 height: bounds.height
             });
-            clients[id].window.setBrowserView(clients[id].view);
+            //clients[id].window.setBrowserView(clients[id].view);
+            clients[id].window.addBrowserView(clients[id].view);
+            clients[id].window.setTopBrowserView(clients[id].view);
         });
     }
 });

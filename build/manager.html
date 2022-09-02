@@ -83,6 +83,8 @@
                 if (tabstrip.tabs.length === 2) {
                     //force a refresh as will not update while hidden
                     tabstrip.refresh();
+                    //resize previous tab just to ensure all are same size
+                    ipcRenderer.send('update-client', tabstrip.tabs[0].client, tabstrip.height);
                     ipcRenderer.send('update-client', current, tabstrip.height);
                 }
             });
