@@ -1145,6 +1145,18 @@ function createWindow() {
     window.on('closed', () => {
         const windowId = getWindowId(window);
         idMap.delete(window);
+        const cl = windows[windowId].clients.length;
+        for (var idx = 0; idx < cl; idx++) {
+            const id = windows[windowId].clients[idx];
+            //close any child windows linked to view
+            closeClientWindows(id);
+            if(!window.isDestroyed())
+                window.removeBrowserView(clients[id].view);
+            idMap.delete(clients[id].view);
+            clients[id].view.webContents.destroy();
+            clients[id] = null;
+            delete clients[id];
+        }
         windows[windowId].window = null;
         delete windows[windowId];
     });
@@ -1158,21 +1170,6 @@ function createWindow() {
     });
 
     window.on('close', (e) => {
-        /*
-        const windowId = getWindowId(window);
-        const cl = windows[windowId].clients.length;
-        for (var idx = 0; idx < cl; idx++) {
-            const id = windows[windowId].clients[idx];
-            //close any child windows linked to view
-            closeClientWindows(id);
-            window.removeBrowserView(clients[id].view);
-            idMap.delete(clients[id].view);
-            clients[id].view.webContents.destroy();
-            clients[id] = null;
-            delete clients[id];
-        }
-        windows[windowId].clients = [];
-        */
     });
     window.on('restore', () => {
         window.getBrowserView().webContents.send('restore');
@@ -1609,9 +1606,7 @@ ipcMain.on('window-info', (event, info, id, ...args) => {
                 for (let name in windows) {
                     if (!Object.prototype.hasOwnProperty.call(windows, name) || windows[name].window != wins[w])
                         continue;
-                    executeScript('if(typeof closing === "function") closing();', windows[name].window);
-                    executeScript('if(typeof closed === "function") closed();', windows[name].window);
-                    executeScript('if(typeof closeHidden === "function") closeHidden()', windows[name].window);
+                    executeCloseHooks(windows[name].window);
                     set.windows[name] = getWindowState(name, windows[name].window);
                     set.windows[name].options = copyWindowOptions(name);
                     windows[name].window = null;
@@ -1914,8 +1909,7 @@ function closeClientWindows(id) {
             continue;
         //call any code hooks in the child windows
         if (window && !window.isDestroyed()) {
-            executeScript('if(typeof closing === "function") closing();', window);
-            executeScript('if(typeof closed === "function") closed();', window);
+            executeCloseHooks(window);
             window.close();
         }
     }
@@ -1946,6 +1940,12 @@ async function canCloseAllClients(windowId) {
             return false;
     }
     return true;
+}
+
+function executeCloseHooks(window) {
+    executeScript('if(typeof closing === "function") closing();', window);
+    executeScript('if(typeof closed === "function") closed();', window);
+    executeScript('if(typeof closeHidden === "function") closeHidden();', window);
 }
 
 function updateMenuItem(args) {
@@ -2379,8 +2379,7 @@ function closeWindows(save, clear) {
         if (!Object.prototype.hasOwnProperty.call(windows, name))
             continue;
         if (windows[name].window) {
-            executeScript('if(typeof closing === "function") closing();', windows[name].window);
-            executeScript('if(typeof closed === "function") closed();', windows[name].window);
+            executeCloseHooks(windows[name].window);
             set.windows[name] = getWindowState(name, windows[name].window);
         }
         set.windows[name].options = copyWindowOptions(name);
