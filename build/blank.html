@@ -4,6 +4,7 @@
 <head>
     <script>
         let _id;
+        let _close = true;
         function setId(id) {
             _id = id;
             let body = document.getElementsByTagName('body')[0];
@@ -13,6 +14,14 @@
         function getId() {
             return _id;
         }
+
+        function close() {
+            return _close;
+        }
+
+        function closeable() {
+            return _close;
+        }       
     </script>
     <style>
         html {

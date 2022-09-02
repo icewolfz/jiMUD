@@ -709,7 +709,7 @@ function createMenu() {
                                     view.webContents.openDevTools();
                                 focusClient(mWindow);
                             }
-                        }                       
+                        }
                     ]
                 },
                 {
@@ -1136,7 +1136,7 @@ function createWindow() {
 
         childWindow.on('closed', () => {
             if (window && !window.isDestroyed()) {
-                executeScriptClient(`childClosed('${url}', '${frameName}');`, window, true);
+                executeScriptClient(`if(typeof childClosed === "function") childClosed('${url}', '${frameName}');`, window, true);
             }
         });
     });
@@ -1158,10 +1158,13 @@ function createWindow() {
     });
 
     window.on('close', (e) => {
+        /*
         const windowId = getWindowId(window);
         const cl = windows[windowId].clients.length;
         for (var idx = 0; idx < cl; idx++) {
             const id = windows[windowId].clients[idx];
+            //close any child windows linked to view
+            closeClientWindows(id);
             window.removeBrowserView(clients[id].view);
             idMap.delete(clients[id].view);
             clients[id].view.webContents.destroy();
@@ -1169,6 +1172,7 @@ function createWindow() {
             delete clients[id];
         }
         windows[windowId].clients = [];
+        */
     });
     window.on('restore', () => {
         window.getBrowserView().webContents.send('restore');
@@ -1605,9 +1609,9 @@ ipcMain.on('window-info', (event, info, id, ...args) => {
                 for (let name in windows) {
                     if (!Object.prototype.hasOwnProperty.call(windows, name) || windows[name].window != wins[w])
                         continue;
-                    executeScript('if(closing) closing();', windows[name].window);
-                    executeScript('if(closed) closed();', windows[name].window);
-                    executeScript('if(closeHidden) closeHidden()', windows[name].window);
+                    executeScript('if(typeof closing === "function") closing();', windows[name].window);
+                    executeScript('if(typeof closed === "function") closed();', windows[name].window);
+                    executeScript('if(typeof closeHidden === "function") closeHidden()', windows[name].window);
                     set.windows[name] = getWindowState(name, windows[name].window);
                     set.windows[name].options = copyWindowOptions(name);
                     windows[name].window = null;
@@ -1672,6 +1676,7 @@ ipcMain.on('new-client', (event, focus, offset) => {
 ipcMain.on('switch-client', (event, id, offset) => {
     if (clients[id]) {
         let window = BrowserWindow.fromWebContents(event.sender);
+        let windowId = getWindowId(window);
         if (window != clients[id].parent) {
             //@TODO probably wanting to dock from 1 window to another
             return;
@@ -1683,12 +1688,13 @@ ipcMain.on('switch-client', (event, id, offset) => {
             width: bounds.width,
             height: bounds.height - offset
         });
+        if (windowId === focusedWindow)
+            focusedClient = id;
+        windows[windowId].current = id;
         window.setBrowserView(clients[id].view);
         window.setMenu(clients[id].menu);
         focusClient(window, true);
     }
-    //win.setTopBrowserView(clients[id])
-    //win.setBrowserView(clients[id].view);
 });
 
 ipcMain.on('remove-client', (event, id) => {
@@ -1748,6 +1754,14 @@ ipcMain.on('update-client', (event, id, offset) => {
             height: bounds.height - offset
         });
     }
+});
+
+ipcMain.on('can-close-client', async (event, id) => {
+    event.returnValue = await canCloseClient(id);
+});
+
+ipcMain.on('can-close-all-client', async (event) => {
+    event.returnValue = await canCloseAllClients(getWindowId(BrowserWindow.fromWebContents(event.sender)));
 });
 
 ipcMain.on('execute-main', (event, code) => {
@@ -1830,7 +1844,7 @@ function createClient(bounds, offset) {
 
         childWindow.on('closed', () => {
             if (view && view.webContents && !view.webContents.isDestroyed()) {
-                executeScript(`childClosed('${url}', '${frameName}');`, view, true);
+                executeScript(`if(typeof childClosed === "function") childClosed('${url}', '${frameName}');`, view, true);
             }
             //remove remove from list
             const idx = clients[getClientId(view)].windows.indexOf(childWindow);
@@ -1861,7 +1875,7 @@ function createClient(bounds, offset) {
     clientID++;
     clients[clientID] = { view: view, menu: createMenu(), windows: [] };
     idMap.set(view, clientID);
-    executeScript(`if(setId) setId('${clientID}');`, clients[clientID].view);
+    executeScript(`if(typeof setId === "function") setId(${clientID});`, clients[clientID].view);
     //clients[id].view.webContents.openDevTools();
     //win.setTopBrowserView(view)    
     //addBrowserView
@@ -1869,24 +1883,70 @@ function createClient(bounds, offset) {
     return clientID;
 }
 
-function removeClient(id, close) {
-    if (clients[id].window) {
-        if (!clients[id].window.isDestroyed()) {
-            if (close)
-                clients[id].window.close();
-            clients[id].window.removeBrowserView(clients[id].view);
-        }
-        clients[id].window = null;
-        delete clients[id].window;
-    }
-    else
-        win.removeBrowserView(clients[id].view);
-    idMap.delete(clients[id].view);
-    clients[id].view.webContents.destroy();
+async function removeClient(id) {
+    const client = clients[id];
+    const cancel = await executeScript('if(typeof close === "function") close()', client.view);
+    //dont close
+    if (cancel !== true)
+        return;
+    //close client windows first incase they need parent window set
+    closeClientWindows(id);
+    const window = client.parent;
+    const windowId = getWindowId(window);
+    const idx = windows[windowId].clients.indexOf(id)
+    windows[windowId].clients.splice(idx, 1);
+    client.parent = null;
+    delete client.parent;
+    idMap.delete(client.view);
+    client.view.webContents.destroy();
     clients[id] = null;
     delete clients[id];
+    window.webContents.send('removed-client', id);
 }
 
+function closeClientWindows(id) {
+    //@TODO add window state saving when possible
+    //no windows so just bail
+    if (clients[id].windows.length === 0) return;
+    const client = clients[id];
+    for (window in clients[id].windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, clients[id].windows))
+            continue;
+        //call any code hooks in the child windows
+        if (window && !window.isDestroyed()) {
+            executeScript('if(typeof closing === "function") closing();', window);
+            executeScript('if(typeof closed === "function") closed();', window);
+            window.close();
+        }
+    }
+}
+
+async function canCloseClient(id) {
+    const client = clients[id];
+    let close = await executeScript('if(typeof closeable === "function") closeable()', client.view);
+    //main client can not close so no need to check children
+    if (close === false)
+        return false;
+    const wl = client.windows.length;
+    for (let w = 0; w < wl; w++) {
+        //check each child window just to be saft
+        close = await executeScript('if(typeof closeable === "function") closeable()', client.view);
+        if (close === false)
+            return false;
+    }
+    return true;;
+}
+
+async function canCloseAllClients(windowId) {
+    const window = windows[windowId];
+    const cl = windows[windowId].clients.length;
+    for (var idx = 0; idx < cl; idx++) {
+        const close = await canCloseClient(windows[windowId].clients[idx]);
+        if (!close)
+            return false;
+    }
+    return true;
+}
 
 function updateMenuItem(args) {
     var item, i = 0, items;
@@ -2319,8 +2379,8 @@ function closeWindows(save, clear) {
         if (!Object.prototype.hasOwnProperty.call(windows, name))
             continue;
         if (windows[name].window) {
-            executeScript('if(closing) closing();', windows[name].window);
-            executeScript('if(closed) closed();', windows[name].window);
+            executeScript('if(typeof closing === "function") closing();', windows[name].window);
+            executeScript('if(typeof closed === "function") closed();', windows[name].window);
             set.windows[name] = getWindowState(name, windows[name].window);
         }
         set.windows[name].options = copyWindowOptions(name);
@@ -2495,7 +2555,7 @@ function createCodeEditor(show, loading, loaded) {
         edSet.save(parseTemplate(path.join('{data}', 'editor.json')));
         if (winCode === e.sender && winCode && !global.editorOnly && edSet.window.persistent) {
             e.preventDefault();
-            executeScript('if(closeHidden) closeHidden()', winCode);
+            executeScript('if(typeof closeHidden === "function") closeHidden()', winCode);
         }
     });
 
@@ -2549,7 +2609,7 @@ function createCodeEditor(show, loading, loaded) {
 
         w.on('close', () => {
             if (w && w.getParentWindow()) {
-                executeScript(`if(childClosed) childClosed('${url}', '${frameName}');`, w.getParentWindow());
+                executeScript(`if(typeof childClosed === "function") childClosed('${url}', '${frameName}');`, w.getParentWindow());
                 w.getParentWindow().focus();
             }
         });

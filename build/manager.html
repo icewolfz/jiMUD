@@ -131,12 +131,21 @@
             tabstrip.on('tab-strip-shown', () => {
                 ipcRenderer.send('update-client', current, tabstrip.height);
             });
-            tabstrip.on('add', tab => {
+            tabstrip.on('add', e => {
                 if (tabstrip.tabs.length === 2) {
                     //force a refresh as will not update while hidden
                     tabstrip.refresh();
                     ipcRenderer.send('update-client', current, tabstrip.height);
                 }
+            });
+            tabstrip.on('tab-click', e => {
+                ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);
+                current = tab.tab.client;
+            });
+            tabstrip.on('remove', e => {
+                ipcRenderer.send('remove-client', e.tab.client);
+                //cancel the remove as we want to make sure it is called after browser view is cleaned up as it may cancel based on user input
+                e.cancel = true;
             });
             tabstrip.on('removed', tab => {
                 if (tabstrip.tabs.length === 1) {
@@ -200,7 +209,7 @@
                 console.log('Window drop');
                 console.log(e)
             });  
-            */                 
+            */
             if (clients.length) {
                 for (var c = 0, cl = clients.length; c < cl; c++)
                     addClient(clients[c]);
@@ -208,6 +217,13 @@
                     switchToClient(current);
             }
         });
+
+        window.onbeforeunload = function (evt) {
+            if (!ipcRenderer.sendSync('can-close-all-client')) {
+                evt.returnValue = false;
+                return 'no';
+            }           
+        };
 
         function getActiveClient() {
             return current;
@@ -231,6 +247,16 @@
             current = id;
             if (typeof tabstrip !== 'undefined')
                 switchToClient(id);
+        });
+
+        ipcRenderer.on('removed-client', (event, id) => {
+            for (var t = 0, tl = tabstrip.tabs.length; t < tl; t++) {
+                if (tabstrip.tabs[t].client === id) {
+                    //remove the tab with out events or you get a loop
+                    tabstrip.removeTab(t, true);
+                    break;
+                }
+            }
         });
 
         function addClient(id) {
