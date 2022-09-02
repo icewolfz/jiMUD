@@ -105,8 +105,8 @@ let clients = {}
 let windows = {};
 let focusedClient = 0;
 let focusedWindow = 0;
-let clientID = 0;
-let windowID = 0;
+let _clientID = 0;
+let _windowID = 0;
 const idMap = new Map();
 
 process.on('uncaughtException', (err) => {
@@ -195,10 +195,12 @@ function createMenu() {
                         windows[windowId].clients.push(id);
                         windows[windowId].current = id;
                         clients[id].parent = mWindow;
-                        mWindow.setBrowserView(clients[id].view);
-                        mWindow.setMenu(clients[id].menu);
-                        focusClient(mWindow, true);
-                        mWindow.webContents.send('new-client', id);
+                        clients[id].view.webContents.once('dom-ready', () => {
+                            mWindow.setBrowserView(clients[id].view);
+                            mWindow.setMenu(clients[id].menu);
+                            mWindow.webContents.send('new-client', id);
+                            focusClient(mWindow, true);
+                        });
                     }
                 },
                 {
@@ -216,9 +218,9 @@ function createMenu() {
                         clients[id].parent = window;
                         window.setBrowserView(clients[id].view);
                         window.setMenu(clients[id].menu);
-                        focusClient(window, true);
                         window.webContents.once('dom-ready', () => {
                             window.webContents.send('new-client', id);
+                            focusClient(window, true);
                         });
                     }
                 },
@@ -1150,7 +1152,7 @@ function createWindow() {
             const id = windows[windowId].clients[idx];
             //close any child windows linked to view
             closeClientWindows(id);
-            if(!window.isDestroyed())
+            if (!window.isDestroyed())
                 window.removeBrowserView(clients[id].view);
             idMap.delete(clients[id].view);
             clients[id].view.webContents.destroy();
@@ -1163,7 +1165,8 @@ function createWindow() {
 
     window.once('ready-to-show', async () => {
         loadWindowScripts(window, 'manager');
-        //await executeScript('loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');updateInterface();', window).catch(logError);
+        executeScript(`if(typeof setId === "function") setId(${_clientID});`, clients[_clientID].view);
+        executeScript('if(typeof loadTheme === "function") loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', window);
         updateJumpList();
         checkForUpdates();
         window.show();
@@ -1184,10 +1187,10 @@ function createWindow() {
     window.on('resized', () => {
         window.getBrowserView().webContents.send('resized');
     });
-    windowID++
-    windows[windowID] = { window: window, clients: [] };
-    idMap.set(window, windowID);
-    return windowID;
+    _windowID++
+    windows[_windowID] = { window: window, clients: [] };
+    idMap.set(window, _windowID);
+    return _windowID;
 }
 
 if (argv['disable-gpu'])
@@ -1697,6 +1700,18 @@ ipcMain.on('remove-client', (event, id) => {
         removeClient(id, true);
 });
 
+ipcMain.on('reorder-client', (event, id, index, oldIndex) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    let windowId = getWindowId(window);
+    const currentIdx = windows[windowId].clients.indexOf(id);
+    if (currentIdx === -1)
+        return;
+    windows[windowId].clients.splice(currentIdx, 1);
+    windows[windowId].clients.splice(index, 0, id);
+});
+
+
+
 ipcMain.on('undock-client', (event, id) => {
     if (clients[id] && !clients[id].parent) {
         var windowId = createWindow();
@@ -1867,15 +1882,15 @@ function createClient(bounds, offset) {
     //@TODO change to index.html once basic window system is working
     view.webContents.loadFile("build/blank.html");
     require("@electron/remote/main").enable(view.webContents);
-    clientID++;
-    clients[clientID] = { view: view, menu: createMenu(), windows: [] };
-    idMap.set(view, clientID);
-    executeScript(`if(typeof setId === "function") setId(${clientID});`, clients[clientID].view);
+    _clientID++;
+    clients[_clientID] = { view: view, menu: createMenu(), windows: [] };
+    idMap.set(view, _clientID);
+    executeScript(`if(typeof setId === "function") setId(${_clientID});`, clients[_clientID].view);
     //clients[id].view.webContents.openDevTools();
     //win.setTopBrowserView(view)    
     //addBrowserView
     //setBrowserView  
-    return clientID;
+    return _clientID;
 }
 
 async function removeClient(id) {
