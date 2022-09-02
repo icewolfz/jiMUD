@@ -191,13 +191,16 @@
                     switchToClient(current);
             }
         });
-
+/*
         window.onbeforeunload = function (evt) {
-            if (!ipcRenderer.sendSync('can-close-all-client')) {
+            const close = ipcRenderer.sendSync('can-close-all-client');
+            console.log(close);
+            if (!close) {
                 evt.returnValue = false;
                 return 'no';
             }
         };
+        */
 
         function getActiveClient() {
             return current;

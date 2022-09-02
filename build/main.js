@@ -330,7 +330,11 @@ function createMenu() {
                 },
                 {
                     label: 'E&xit',
-                    role: 'quit'
+                    //role: 'quit'
+                    click: async (item, mWindow) => {
+                        if (await canCloseAllWindows())
+                            app.quit();
+                    }
                 }
             ]
         },
@@ -1167,7 +1171,7 @@ function createWindow() {
         delete windows[windowId];
     });
 
-    window.once('ready-to-show', async () => {
+    window.once('ready-to-show', () => {
         loadWindowScripts(window, 'manager');
         executeScript(`if(typeof setId === "function") setId(${_clientID});`, clients[_clientID].view);
         executeScript('if(typeof loadTheme === "function") loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', window);
@@ -1176,7 +1180,16 @@ function createWindow() {
         window.show();
     });
 
-    window.on('close', (e) => {
+    //close hack due to electron's dumb ability to not allow a simple sync call to return a true/false state
+    let _close = false;
+    window.on('close', async (e) => {
+        if(_close)
+            return;
+        e.preventDefault();
+        //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting when using ipcrender
+        _close = await canCloseAllClients(getWindowId(window));
+        if(_close)
+            window.close();
     });
     window.on('restore', () => {
         getActiveClient(window).view.webContents.send('restore');
@@ -1323,7 +1336,11 @@ app.on('activate', () => {
     //}
 });
 
-app.on('before-quit', (e) => {
+app.on('before-quit', async (e) => {
+    if (!await canCloseAllWindows()) {
+        e.preventDefault();
+        return;
+    }
     if (winProfiles) {
         e.preventDefault();
         dialog.showMessageBox(winProfiles, {
@@ -1780,7 +1797,12 @@ ipcMain.on('can-close-client', async (event, id) => {
 });
 
 ipcMain.on('can-close-all-client', async (event) => {
-    event.returnValue = await canCloseAllClients(getWindowId(BrowserWindow.fromWebContents(event.sender)));
+    const close = await canCloseAllClients(getWindowId(BrowserWindow.fromWebContents(event.sender)));
+    event.returnValue = close;
+});
+
+ipcMain.on('can-close-all-windows', async (event) => {
+    event.returnValue = await canCloseAllWindows();
 });
 
 ipcMain.on('execute-main', (event, code) => {
@@ -1889,7 +1911,7 @@ function createClient(bounds, offset) {
         height: bounds.height - offset
     });
     //@TODO change to index.html once basic window system is working
-    view.webContents.loadFile("build/blank.html");
+    view.webContents.loadFile("build/test.html");
     require("@electron/remote/main").enable(view.webContents);
     _clientID++;
     clients[_clientID] = { view: view, menu: createMenu(), windows: [] };
@@ -1956,10 +1978,20 @@ async function canCloseClient(id) {
 }
 
 async function canCloseAllClients(windowId) {
-    const window = windows[windowId];
     const cl = windows[windowId].clients.length;
     for (var idx = 0; idx < cl; idx++) {
         const close = await canCloseClient(windows[windowId].clients[idx]);
+        if (!close)
+            return false;
+    }
+    return true;
+}
+
+async function canCloseAllWindows() {
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window))
+            continue;
+        const close = await canCloseAllClients(window);
         if (!close)
             return false;
     }

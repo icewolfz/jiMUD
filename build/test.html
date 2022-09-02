@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <script type="text/javascript">
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script>
+        const { ipcRenderer } = require('electron');
+        let _id;
+        let _close = true;
+
+        function updateContent(txt) {
+            let body = document.getElementById('content')
+            body.innerHTML = _id + '<br>Closable: ' + _close + (txt || '');
+        }
+
+        function setId(id) {
+            _id = id;
+            updateContent();
+        }
+
+        function getId() {
+            return _id;
+        }
+
+        function close() {
+            return _close;
+        }
+
+        function closeable() {
+            if (!_close) {
+                var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                    {
+                        type: 'warning',
+                        title: 'Unclosable',
+                        message: 'Window is unclosable, close anyways?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    });
+                if (choice === 0)
+                    return true;
+            }
+            return _close;
+        }
+
+        window.addEventListener('dragstart', (e) => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                e.dataTransfer.dropEffect = 'move';
+                console.log('Window start');
+                console.log(e)
+            }
+        });
+        window.addEventListener('dragleave', (e) => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                e.dataTransfer.dropEffect = 'move';
+                console.log('Window leave');
+                console.log(e)
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+        window.addEventListener('dragover', (e) => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                e.dataTransfer.dropEffect = 'move';
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Window over');
+                console.log(e)
+            }
+        });
+        window.addEventListener('dragenter', (e) => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                e.dataTransfer.dropEffect = 'move';
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Window eneter');
+                console.log(e)
+            }
+        });
+        window.addEventListener('dragend', (e) => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                e.dataTransfer.dropEffect = 'move';
+                console.log('Window end');
+                console.log(e)
+            }
+        });
+        window.addEventListener('drop', (e) => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                e.dataTransfer.dropEffect = 'move';
+                console.log('Window drop');
+                console.log(e)
+            }
+        });
+
+    </script>
+    <style>
+        html {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            padding: 0;
+            background-color: red;
+            font-size: 5em;
+            color: white;
+            border: 5px solid green;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="content"></div>
+    <button onclick="_close = !_close;updateContent();">Toggle closable</button>
+</body>
+
+</html>
