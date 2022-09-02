@@ -10,7 +10,6 @@ const url = require('url');
 const settings = require('./js/settings');
 const { EditorSettings } = require('./js/editor/code.editor.settings');
 const { TrayClick } = require('./js/types');
-const { get } = require('jquery');
 
 require('@electron/remote/main').initialize()
 //require('electron-local-crash-reporter').start();
@@ -1028,7 +1027,9 @@ function createWindow() {
             enableRemoteModule: true,
             contextIsolation: false,
             backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
+        },
+        //titleBarStyle: 'hidden',
+        //titleBarOverlay: true
     });
     require("@electron/remote/main").enable(window.webContents);
 
