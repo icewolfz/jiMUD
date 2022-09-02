@@ -1000,6 +1000,10 @@ function createWindow() {
         });
     });
 
+    window.on('focus', () => {
+        focusedWindow = getWindowId(window);
+    });
+
     window.on('minimize', () => {
         if (set.hideOnMinimize)
             window.hide();
@@ -1100,7 +1104,7 @@ function createWindow() {
             clients[id] = null;
             delete clients[id];
         }
-        windows[windowId].clients = [];        
+        windows[windowId].clients = [];
     });
     window.on('restore', () => {
         window.getBrowserView().webContents.send('restore');
@@ -1213,7 +1217,7 @@ app.on('ready', () => {
     else {
         let windowId = createWindow();
         let window = windows[windowId].window;
-        let id = newClient(window.getContentBounds());
+        let id = createClient(window.getContentBounds());
         focusedWindow = windowId;
         focusedClient = id;
         windows[windowId].clients.push(id);
@@ -1594,7 +1598,7 @@ ipcMain.on('inspect', (event, x, y) => {
 
 ipcMain.on('new-client', (event, focus, offset) => {
     let window = BrowserWindow.fromWebContents(event.sender);
-    let id = newClient(window.getContentBounds(), offset);
+    let id = createClient(window.getContentBounds(), offset);
     let windowId = getWindowId(window);
     windows[windowId].clients.push(id);
     clients[id].parent = window;
@@ -1690,7 +1694,7 @@ ipcMain.on('dock-main', (event, id) => {
     executeScript(`dockClient(${id})`, win);
 });
 
-function newClient(bounds, offset) {
+function createClient(bounds, offset) {
     offset = offset || 0;
     const view = new BrowserView({
         webPreferences: {
@@ -1707,6 +1711,10 @@ function newClient(bounds, offset) {
 
     view.webContents.on('context-menu', (e, params) => {
         view.webContents.send('context-menu', params);
+    });
+
+    view.webContents.on('focus', () => {
+        focusedClient = getClientId(view);
     });
 
     view.webContents.setWindowOpenHandler((details) => {
@@ -2891,6 +2899,10 @@ function buildOptions(details, window, settings) {
 function getActiveClient(window) {
     if (!window) return clients[focusedClient];
     return clients[windows[getWindowId(window)].current];
+}
+
+function getActiveWindow() {
+    return windows[focusedWindow];
 }
 
 function getWindowId(window) {
