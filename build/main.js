@@ -185,12 +185,45 @@ function createMenu() {
             submenu: [
                 {
                     label: '&New connection',
-                    id: 'connect',
+                    id: 'newConnect',
                     accelerator: 'CmdOrCtrl+Shift+N',
                     click: (item, mWindow) => {
-                        executeScript('newClient()', mWindow, true);
+                        let windowId = getWindowId(mWindow);
+                        let id = createClient(mWindow.getContentBounds());
+                        focusedWindow = windowId;
+                        focusedClient = id;
+                        windows[windowId].clients.push(id);
+                        windows[windowId].current = id;
+                        clients[id].parent = mWindow;
+                        mWindow.setBrowserView(clients[id].view);
+                        mWindow.setMenu(clients[id].menu);
                         focusClient(mWindow, true);
+                        mWindow.webContents.send('new-client', id);
                     }
+                },
+                {
+                    label: '&New window',
+                    id: '',
+                    accelerator: 'CmdOrCtrl+Alt+N',
+                    click: () => {
+                        let windowId = createWindow();
+                        let window = windows[windowId].window;
+                        let id = createClient(window.getContentBounds());
+                        focusedWindow = windowId;
+                        focusedClient = id;
+                        windows[windowId].clients.push(id);
+                        windows[windowId].current = id;
+                        clients[id].parent = window;
+                        window.setBrowserView(clients[id].view);
+                        window.setMenu(clients[id].menu);
+                        focusClient(window, true);
+                        window.webContents.once('dom-ready', () => {
+                            window.webContents.send('new-client', id);
+                        });
+                    }
+                },
+                {
+                    type: 'separator'
                 },
                 {
                     label: '&Connect',
@@ -278,6 +311,16 @@ function createMenu() {
                 },
                 {
                     type: 'separator'
+                },
+                {
+                    label: 'Clo&se Client',
+                    id: 'close',
+                    accelerator: 'CmdOrCtrl+W',
+                    enabled: false,
+                    visible: false,
+                    click: (item, mWindow) => {
+
+                    }
                 },
                 {
                     label: 'E&xit',
@@ -628,25 +671,46 @@ function createMenu() {
                     type: 'separator'
                 },
                 {
-                    label: '&Toggle Window Developer Tools',
-                    click: (item, mWindow) => {
-                        if (mWindow.webContents.isDevToolsOpened())
-                            mWindow.webContents.closeDevTools();
-                        else
-                            mWindow.webContents.openDevTools();
-                        focusClient(mWindow);
-                    }
-                },
-                {
-                    label: 'Toggle &Client Developer Tools',
-                    click: async (item, mWindow) => {
-                        var view = getActiveClient(mWindow).view;
-                        if (view && view.webContents.isDevToolsOpened())
-                            view.webContents.closeDevTools();
-                        else if (view)
-                            view.webContents.openDevTools();
-                        focusClient(mWindow);
-                    }
+                    label: '&Developer Tools',
+                    id: 'devtools',
+                    submenu: [
+                        {
+                            label: '&Toggle Window ',
+                            click: (item, mWindow) => {
+                                if (mWindow.webContents.isDevToolsOpened())
+                                    mWindow.webContents.closeDevTools();
+                                else
+                                    mWindow.webContents.openDevTools();
+                                focusClient(mWindow);
+                            }
+                        },
+                        {
+                            label: 'Toggle Active &Client',
+                            click: async (item, mWindow) => {
+                                var view = getActiveClient(mWindow).view;
+                                if (view && view.webContents.isDevToolsOpened())
+                                    view.webContents.closeDevTools();
+                                else if (view)
+                                    view.webContents.openDevTools();
+                                focusClient(mWindow);
+                            }
+                        },
+                        {
+                            label: 'Toggle &Both',
+                            click: async (item, mWindow) => {
+                                if (mWindow.webContents.isDevToolsOpened())
+                                    mWindow.webContents.closeDevTools();
+                                else
+                                    mWindow.webContents.openDevTools();
+                                var view = getActiveClient(mWindow).view;
+                                if (view && view.webContents.isDevToolsOpened())
+                                    view.webContents.closeDevTools();
+                                else if (view)
+                                    view.webContents.openDevTools();
+                                focusClient(mWindow);
+                            }
+                        }                       
+                    ]
                 },
                 {
                     type: 'separator'

@@ -234,10 +234,10 @@
         });
 
         function addClient(id) {
-            ipcRenderer.send('update-client', id, tabstrip.height);
             let tab = tabstrip.addTab('' + id, 'disconnected-icon');
             tab.client = id;
             current = id;
+            ipcRenderer.send('update-client', id, tabstrip.height);
         }
 
         function switchToClient(id) {
