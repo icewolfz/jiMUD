@@ -8,7 +8,7 @@
         function setId(id) {
             _id = id;
             let body = document.getElementsByTagName('body')[0];
-            body.innerHTML = id;            
+            body.innerHTML = id;
         }
 
         function getId() {
@@ -21,17 +21,68 @@
 
         function closeable() {
             return _close;
-        }       
+        }
+
+        window.addEventListener('dragstart', (e) => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                e.dataTransfer.dropEffect = 'move';
+                console.log('Window start');
+                console.log(e)
+            }
+        });
+        window.addEventListener('dragleave', (e) => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                e.dataTransfer.dropEffect = 'move';
+                console.log('Window leave');
+                console.log(e)
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+        window.addEventListener('dragover', (e) => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                e.dataTransfer.dropEffect = 'move';
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Window over');
+                console.log(e)
+            }
+        });
+        window.addEventListener('dragenter', (e) => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                e.dataTransfer.dropEffect = 'move';
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Window eneter');
+                console.log(e)
+            }
+        });
+        window.addEventListener('dragend', (e) => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                e.dataTransfer.dropEffect = 'move';
+                console.log('Window end');
+                console.log(e)
+            }
+        });
+        window.addEventListener('drop', (e) => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                e.dataTransfer.dropEffect = 'move';
+                console.log('Window drop');
+                console.log(e)
+            }
+        });
+
     </script>
     <style>
         html {
             height: 100%;
             width: 100%;
             margin: 0;
-            padding:0;
+            padding: 0;
         }
+
         body {
-            padding:0;
+            padding: 0;
             background-color: red;
             font-size: 5em;
             color: white;
@@ -45,7 +96,7 @@
 </head>
 
 <body>
-    
+
 </body>
 
 </html>

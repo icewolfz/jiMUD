@@ -106,7 +106,7 @@
                 ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);
                 current = e.tab.client;
             })
-            tabstrip.on('tab-moved', e=> {
+            tabstrip.on('tab-moved', e => {
                 ipcRenderer.send('reorder-client', e.tab.client, e.index, e.oldIndex);
             });
             tabstrip.on('tab-drag', e => {
@@ -128,45 +128,62 @@
             tabstrip.on('tab-drop', e => {
                 console.log('tab drop');
                 console.log(e)
+                //if not dragging its from a different window so its a undock/dock
+                if (!tabstrip.dragTab) {
+                    e.preventDefault = true;
+                    console.log(e.event.dataTransfer.getData('jimud/tab'));
+                }
             });
-            /*
+
             window.addEventListener('dragstart', (e) => {
-                e.dataTransfer.dropEffect = 'move';
-                console.log('Window start');
-                console.log(e)
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    console.log('Window start');
+                    console.log(e)
+                }
             });
             window.addEventListener('dragleave', (e) => {
-                e.dataTransfer.dropEffect = 'move';
-                console.log('Window leave');
-                console.log(e)
-                e.preventDefault();
-                e.stopPropagation();                
-            });            
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    console.log('Window leave');
+                    console.log(e)
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
             window.addEventListener('dragover', (e) => {
-                e.dataTransfer.dropEffect = 'move';
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Window over');
-                console.log(e)
-            });   
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Window over');
+                    console.log(e)
+                }
+            });
             window.addEventListener('dragenter', (e) => {
-                e.dataTransfer.dropEffect = 'move';
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Window eneter');
-                console.log(e)
-            });              
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Window eneter');
+                    console.log(e)
+                }
+            });
             window.addEventListener('dragend', (e) => {
-                e.dataTransfer.dropEffect = 'move';
-                console.log('Window end');
-                console.log(e)
-            });    
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    console.log('Window end');
+                    console.log(e)
+                }
+            });
             window.addEventListener('drop', (e) => {
-                e.dataTransfer.dropEffect = 'move';
-                console.log('Window drop');
-                console.log(e)
-            });  
-            */
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    console.log('Window drop');
+                    console.log(e)
+                }
+            });
+
             if (clients.length) {
                 for (var c = 0, cl = clients.length; c < cl; c++)
                     addClient(clients[c]);
@@ -179,7 +196,7 @@
             if (!ipcRenderer.sendSync('can-close-all-client')) {
                 evt.returnValue = false;
                 return 'no';
-            }           
+            }
         };
 
         function getActiveClient() {
