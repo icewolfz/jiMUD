@@ -2596,7 +2596,37 @@ function updateJumpList() {
                 args: '-eo', // force editor only mode
                 iconPath: process.execPath,
                 iconIndex: 0
-            }
+            },
+            /** 
+             * @TODO need to figure this out, 
+             * either need to use node-ipc or some way to communicate between instances, 
+             * also to see if an instance is even open, can use requestSingleInstanceLock
+             * but then everything has to be in 1 program even editor only and that
+             * requires changing how that works when client is also open
+             * 
+             * maybe offer an option to make all 1 instance or seperate, and add/remove
+             * New connection as needed as if not single new connection would just open up a new window
+             */
+            /*
+            {
+                type: 'task',
+                title: 'New Connection',
+                description: 'Opens a new connection in active window',
+                program: process.execPath,
+                args: '-eo', // force editor only mode
+                iconPath: process.execPath,
+                iconIndex: 0
+            },
+            {
+                type: 'task',
+                title: 'New Window',
+                description: 'Opens a new window',
+                program: process.execPath,
+                args: '-eo', // force editor only mode
+                iconPath: process.execPath,
+                iconIndex: 0
+            }          
+            */
         ]
     });
     //TODO add recent support, require instance check
