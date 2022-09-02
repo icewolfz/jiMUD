@@ -120,6 +120,9 @@
             tabstrip.on('tab-drag-end', e => {
                 console.log('tab end');
                 console.log(e)
+                //dropped outside of client area so new window!
+                if (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientHeight || e.event.clientY >= document.body.clientWidth)
+                    ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: e.event.screenX, y: e.event.screenY });
             });
             tabstrip.on('tab-drag-leave', e => {
                 console.log('tab leave');
@@ -132,6 +135,9 @@
                 if (!tabstrip.dragTab) {
                     e.preventDefault = true;
                     console.log(e.event.dataTransfer.getData('jimud/tab'));
+                    const tab = JSON.parse(e.event.dataTransfer.getData('jimud/tab'));
+                    e.tab.tab.classList.remove('drop');
+                    ipcRenderer.send('dock-client', tab.client, { index: tabstrip.getTabIndex(e.tab) });
                 }
             });
 
@@ -180,7 +186,9 @@
                 if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
                     e.dataTransfer.dropEffect = 'move';
                     console.log('Window drop');
-                    console.log(e)
+                    console.log(e);
+                    const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));
+                    ipcRenderer.send('dock-client', tab.client, { x: e.screenX, y: e.screenY });
                 }
             });
 
@@ -191,16 +199,16 @@
                     switchToClient(current);
             }
         });
-/*
-        window.onbeforeunload = function (evt) {
-            const close = ipcRenderer.sendSync('can-close-all-client');
-            console.log(close);
-            if (!close) {
-                evt.returnValue = false;
-                return 'no';
-            }
-        };
-        */
+        /*
+                window.onbeforeunload = function (evt) {
+                    const close = ipcRenderer.sendSync('can-close-all-client');
+                    console.log(close);
+                    if (!close) {
+                        evt.returnValue = false;
+                        return 'no';
+                    }
+                };
+                */
 
         function getActiveClient() {
             return current;
@@ -214,10 +222,13 @@
             return _id;
         }
 
-        ipcRenderer.on('new-client', (event, id) => {
-            clients.push(id);
+        ipcRenderer.on('new-client', (event, id, index) => {
+            if (typeof index !== 'undefined' && index !== -1 && index < clients.length)
+                clients.splice(index, 0, id);
+            else
+                clients.push(id);
             if (typeof tabstrip !== 'undefined')
-                addClient(id);
+                addClient(id, index);
         });
 
         ipcRenderer.on('switch-client', (event, id) => {
@@ -227,6 +238,9 @@
         });
 
         ipcRenderer.on('removed-client', (event, id) => {
+            const idx = clients.indexOf(id);
+            if (idx !== -1)
+                clients.splice(idx, 1);
             for (var t = 0, tl = tabstrip.tabs.length; t < tl; t++) {
                 if (tabstrip.tabs[t].client === id) {
                     //remove the tab with out events or you get a loop
@@ -236,8 +250,12 @@
             }
         });
 
-        function addClient(id) {
-            let tab = tabstrip.addTab('' + id, 'disconnected-icon');
+        function addClient(id, index) {
+            let tab;
+            if (typeof index !== 'undefined' && index !== -1 && index < clients.length)
+                tab = tabstrip.insertTab(index, '' + id, 'disconnected-icon');
+            else
+                tab = tabstrip.addTab('' + id, 'disconnected-icon');
             tab.client = id;
             current = id;
             ipcRenderer.send('update-client', id, tabstrip.height);

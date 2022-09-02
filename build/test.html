@@ -88,8 +88,10 @@
         window.addEventListener('drop', (e) => {
             if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
                 e.dataTransfer.dropEffect = 'move';
-                console.log('Window drop');
+                console.log('Test Window drop');
                 console.log(e)
+                const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));
+                ipcRenderer.send('dock-client', tab.client, { x: e.screenX, y: e.screenY });
             }
         });
 

@@ -535,7 +535,7 @@ export class TabStrip extends EventEmitter {
             if (this.dragTab === tab) {
                 e.dataTransfer.dropEffect = 'none';
                 e.dataTransfer.effectAllowed = 'none';
-                return;            
+                return;
             }
             e.dataTransfer.dropEffect = 'move';
             e.preventDefault();
@@ -545,8 +545,8 @@ export class TabStrip extends EventEmitter {
             const eDrag = { id: tab.id, tab: tab, preventDefault: false, event: e };
             this.emit('tab-drag-end', eDrag);
             if (eDrag.preventDefault) return;
-            if(this.dragTab !== tab)
-                e.dataTransfer.dropEffect = 'move';            
+            if (this.dragTab !== tab)
+                e.dataTransfer.dropEffect = 'move';
             tab.tab.classList.remove('drop');
             this.dragTab = null;
         };
@@ -557,9 +557,9 @@ export class TabStrip extends EventEmitter {
             if (this.dragTab === tab) {
                 e.dataTransfer.dropEffect = 'none';
                 e.dataTransfer.effectAllowed = 'none';
-                return;            
+                return;
             }
-            e.dataTransfer.dropEffect = 'move';            
+            e.dataTransfer.dropEffect = 'move';
             e.preventDefault();
             e.stopPropagation();
             tab.tab.classList.add('drop');
@@ -569,7 +569,7 @@ export class TabStrip extends EventEmitter {
             this.emit('tab-drag-leave', eDrag);
             if (eDrag.preventDefault) return;
             if (this.dragTab === tab) return;
-            e.dataTransfer.dropEffect = 'move';            
+            e.dataTransfer.dropEffect = 'move';
             e.preventDefault();
             e.stopPropagation();
             tab.tab.classList.remove('drop');
@@ -582,14 +582,13 @@ export class TabStrip extends EventEmitter {
             if (this.dragTab === tab) return;
             tab.tab.classList.remove('drop');
             e.dataTransfer.dropEffect = 'move';
-            let tl = -1;
             e.preventDefault();
             e.stopPropagation();
             const idx = this.tabs.indexOf(this.dragTab);
             const idxTo = this.tabs.indexOf(tab);
             this.tabs.splice(idx, 1);
             this.tabs.splice(idxTo, 0, this.dragTab);
-            if (idxTo > idx || (idxTo === tl && tl !== -1)) {
+            if (idxTo > idx) {
                 if (tab.tab.nextElementSibling)
                     tab.tab.parentNode.insertBefore(this.dragTab.tab, tab.tab.nextElementSibling);
                 else
@@ -647,6 +646,31 @@ export class TabStrip extends EventEmitter {
         //this.setTabTitle(title || '', tab, true);
         this.setTabIconClass(tab.iconCls, tab, true);
         //this.setTabTooltip(tooltip || '', tab);
+        return tab;
+    }
+
+    public insertTab(idx: number, title?: string | TabOptions, icon?: string, tooltip?: string) {
+        var options: TabOptions = {};
+        if (typeof title === 'string' || title instanceof String)
+            options = { title: <string>title, icon: icon, tooltip: tooltip };
+        else
+            options = title || {};
+        $('.dropdown.open').removeClass('open');
+        const tab = this.newTab(options);
+        if (idx >= this.tabs.length) {
+            this.$tabstrip.appendChild(tab.tab);
+            this.tabs.push(tab);
+        }
+        else {
+            this.$tabstrip.insertBefore(tab.tab, this.tabs[idx].tab);
+            this.tabs.splice(idx, 0, tab);
+        }
+        this.switchToTabByIndex(idx);
+        //this.setTabTitle(title || '', undefined, false);
+        this.setTabIconClass(tab.iconCls);
+        //this.setTabTooltip(tooltip || '');
+        this.emit('add', { index: idx, id: tab.id, tab: tab });
+        this.doUpdate(UpdateType.resize | UpdateType.stripState);
         return tab;
     }
 

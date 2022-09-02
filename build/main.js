@@ -1183,12 +1183,12 @@ function createWindow() {
     //close hack due to electron's dumb ability to not allow a simple sync call to return a true/false state
     let _close = false;
     window.on('close', async (e) => {
-        if(_close)
+        if (_close)
             return;
         e.preventDefault();
         //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting when using ipcrender
         _close = await canCloseAllClients(getWindowId(window));
-        if(_close)
+        if (_close)
             window.close();
     });
     window.on('restore', () => {
@@ -1685,7 +1685,7 @@ ipcMain.on('inspect', (event, x, y) => {
     event.sender.inspectElement(x || 0, y || 0);
 });
 
-ipcMain.on('new-client', (event, focus, offset) => {
+ipcMain.on('new-client', (event, focus) => {
     let window = BrowserWindow.fromWebContents(event.sender);
     let id = createClient(window.getContentBounds(), offset);
     let windowId = getWindowId(window);
@@ -1696,13 +1696,13 @@ ipcMain.on('new-client', (event, focus, offset) => {
 
 ipcMain.on('switch-client', (event, id, offset) => {
     if (clients[id]) {
-        let window = BrowserWindow.fromWebContents(event.sender);
-        let windowId = getWindowId(window);
+        const window = BrowserWindow.fromWebContents(event.sender);
+        const windowId = getWindowId(window);
         if (window != clients[id].parent) {
             //@TODO probably wanting to dock from 1 window to another
             return;
         }
-        let bounds = window.getContentBounds();
+        const bounds = window.getContentBounds();
         clients[id].view.setBounds({
             x: 0,
             y: 0 || offset,
@@ -1734,45 +1734,60 @@ ipcMain.on('reorder-client', (event, id, index, oldIndex) => {
     windows[windowId].clients.splice(index, 0, id);
 });
 
-
-
-ipcMain.on('undock-client', (event, id) => {
-    if (clients[id] && !clients[id].parent) {
-        var windowId = createWindow();
-        // Create the browser window.
-        let window = windows[windowId];
-        window.once('ready-to-show', () => {
-            addInputContext(clients[id].window, global.editorOnly ? (edSet && edSet.spellchecking) : (set && set.spellchecking));
-            clients[id].parent.removeBrowserView(clients[id].view);
-            clients[id].parent = window;
-            var bounds = window.getContentBounds();
-            clients[id].view.setBounds({
-                x: 0,
-                y: 0,
-                width: bounds.width,
-                height: bounds.height
-            });
-            //clients[id].window.setBrowserView(clients[id].view);
-            clients[id].window.addBrowserView(clients[id].view);
-            clients[id].window.setTopBrowserView(clients[id].view);
+ipcMain.on('dock-client', (event, id, options) => {
+    if (!clients[id]) return;
+    const window = BrowserWindow.fromWebContents(event.sender);
+    const windowId = getWindowId(window);
+    const oldWindow = clients[id].parent;
+    const oldWindowId = getWindowId(oldWindow);
+    //remove from old window
+    oldWindow.removeBrowserView(clients[id].view);
+    const oldIdx = windows[oldWindowId].clients.indexOf(id);
+    windows[oldWindowId].clients.splice(oldIdx, 1);
+    oldWindow.webContents.send('removed-client', id);
+    //all views removed so close the window
+    if (windows[oldWindowId].clients.length === 0)
+        oldWindow.close();
+    //same window so trying to drag out so create new window
+    if (window === oldWindow) {
+        let windowId = createWindow();
+        let window = windows[windowId].window;
+        if (options) {
+            //shift it a little up and left so mouse is over title bar
+            if (options.x > 40)
+                options.x -= 40;
+            if (options.y > 16)
+                options.y -= 16;
+            window.setPosition(options.x || 0, options.y || 0);
+        }
+        focusedWindow = windowId;
+        focusedClient = id;
+        windows[windowId].clients.push(id);
+        windows[windowId].current = id;
+        clients[id].parent = window;
+        //window.setBrowserView(clients[id].view);
+        window.addBrowserView(clients[id].view);
+        window.setTopBrowserView(clients[id].view);
+        window.setMenu(clients[id].menu);
+        window.webContents.once('dom-ready', () => {
+            window.webContents.send('new-client', id);
+            focusClient(window, true);
         });
+        return;
     }
-});
-
-ipcMain.on('dock-client', (event, id, offset) => {
-    if (clients[id] && clients[id].window) {
-        clients[id].window.removeBrowserView(clients[id].view);
-        clients[id].window.close();
-        clients[id].window = null;
-        delete clients[id].window;
-        var bounds = BrowserWindow.fromWebContents(event.sender).getContentBounds();
-        clients[id].view.setBounds({
-            x: 0,
-            y: offset,
-            width: bounds.width,
-            height: bounds.height - offset
-        });
-    }
+    //Add to new window
+    if (options && typeof options.index !== 'undefined' && options.index !== -1 && options.index < windows[windowId].clients.length)
+        windows[windowId].clients.splice(options.index, 0, id);
+    else
+        windows[windowId].clients.push(id);
+    clients[id].parent = window;
+    clients[id].parent.addBrowserView(clients[id].view);
+    if (windowId === focusedWindow)
+        focusedClient = id;
+    windows[windowId].current = id;
+    window.setTopBrowserView(clients[id].view);
+    setClientWindowsParent(id, window, oldWindow);
+    window.webContents.send('new-client', id, options?.index);
 });
 
 ipcMain.on('execute-client', (event, id, code) => {
@@ -1809,10 +1824,6 @@ ipcMain.on('execute-main', (event, code) => {
     executeScript(code, win);
 });
 
-ipcMain.on('dock-main', (event, id) => {
-    executeScript(`dockClient(${id})`, win);
-});
-
 function createClient(bounds, offset) {
     offset = offset || 0;
     const view = new BrowserView({
@@ -1834,6 +1845,12 @@ function createClient(bounds, offset) {
 
     view.webContents.on('focus', () => {
         focusedClient = getClientId(view);
+    });
+
+    view.webContents.on('devtools-reload-page', () => {
+        view.webContents.once('dom-ready', () => {
+            executeScript(`if(typeof setId === "function") setId(${_clientID});`, clients[_clientID].view);
+        });
     });
 
     view.webContents.setWindowOpenHandler((details) => {
@@ -1934,7 +1951,7 @@ async function removeClient(id) {
     closeClientWindows(id);
     const window = client.parent;
     const windowId = getWindowId(window);
-    const idx = windows[windowId].clients.indexOf(id)
+    const idx = windows[windowId].clients.indexOf(id);
     windows[windowId].clients.splice(idx, 1);
     client.parent = null;
     delete client.parent;
@@ -1957,6 +1974,23 @@ function closeClientWindows(id) {
         if (window && !window.isDestroyed()) {
             executeCloseHooks(window);
             window.close();
+        }
+    }
+}
+
+function setClientWindowsParent(id, parent, oldParent) {
+    //no windows so just bail
+    if (clients[id].windows.length === 0) return;
+    const client = clients[id];
+    for (window in clients[id].windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, clients[id].windows))
+            continue;
+        //call any code hooks in the child windows
+        if (window && !window.isDestroyed()) {
+            if (oldParent && window.getParentWindow() === oldParent)
+                window.setParentWindow(parent);
+            else if (!oldParent && window.getParentWindow())
+                window.setParentWindow(parent);
         }
     }
 }
