@@ -88,6 +88,8 @@
         window.addEventListener('drop', (e) => {
             if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
                 e.dataTransfer.dropEffect = 'move';
+                e.stopPropagation();
+                e.preventDefault(); 
                 console.log('Test Window drop');
                 console.log(e)
                 const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));

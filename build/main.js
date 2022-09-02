@@ -10,6 +10,7 @@ const url = require('url');
 const settings = require('./js/settings');
 const { EditorSettings } = require('./js/editor/code.editor.settings');
 const { TrayClick } = require('./js/types');
+const { get } = require('jquery');
 
 require('@electron/remote/main').initialize()
 //require('electron-local-crash-reporter').start();
@@ -1173,7 +1174,7 @@ function createWindow() {
 
     window.once('ready-to-show', () => {
         loadWindowScripts(window, 'manager');
-        executeScript(`if(typeof setId === "function") setId(${_clientID});`, clients[_clientID].view);
+        executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});`, clients[getWindowId(window)].view);
         executeScript('if(typeof loadTheme === "function") loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', window);
         updateJumpList();
         checkForUpdates();
@@ -1736,22 +1737,35 @@ ipcMain.on('reorder-client', (event, id, index, oldIndex) => {
 
 ipcMain.on('dock-client', (event, id, options) => {
     if (!clients[id]) return;
-    const window = BrowserWindow.fromWebContents(event.sender);
-    const windowId = getWindowId(window);
+    let window = BrowserWindow.fromWebContents(event.sender);
+    let windowId = getWindowId(window);
     const oldWindow = clients[id].parent;
     const oldWindowId = getWindowId(oldWindow);
-    //remove from old window
-    oldWindow.removeBrowserView(clients[id].view);
-    const oldIdx = windows[oldWindowId].clients.indexOf(id);
-    windows[oldWindowId].clients.splice(oldIdx, 1);
-    oldWindow.webContents.send('removed-client', id);
-    //all views removed so close the window
-    if (windows[oldWindowId].clients.length === 0)
-        oldWindow.close();
     //same window so trying to drag out so create new window
     if (window === oldWindow) {
-        let windowId = createWindow();
-        let window = windows[windowId].window;
+        //if only one client no need for a new window so bail
+        if (windows[oldWindowId].clients.length === 1) {
+            if (options) {
+                //shift it a little up and left so mouse is over title bar
+                if (options.x > 40)
+                    options.x -= 40;
+                if (options.y > 16)
+                    options.y -= 16;
+                window.setPosition(options.x || 0, options.y || 0);
+            }
+            return;
+        }
+        //remove from old window
+        oldWindow.removeBrowserView(clients[id].view);
+        const oldIdx = windows[oldWindowId].clients.indexOf(id);
+        windows[oldWindowId].clients.splice(oldIdx, 1);
+        oldWindow.webContents.send('removed-client', id);
+        //all views removed so close the window
+        if (windows[oldWindowId].clients.length === 0)
+            oldWindow.close();
+
+        windowId = createWindow();
+        window = windows[windowId].window;
         if (options) {
             //shift it a little up and left so mouse is over title bar
             if (options.x > 40)
@@ -1775,6 +1789,14 @@ ipcMain.on('dock-client', (event, id, options) => {
         });
         return;
     }
+    //remove from old window
+    oldWindow.removeBrowserView(clients[id].view);
+    const oldIdx = windows[oldWindowId].clients.indexOf(id);
+    windows[oldWindowId].clients.splice(oldIdx, 1);
+    oldWindow.webContents.send('removed-client', id);
+    //all views removed so close the window
+    if (windows[oldWindowId].clients.length === 0)
+        oldWindow.close();
     //Add to new window
     if (options && typeof options.index !== 'undefined' && options.index !== -1 && options.index < windows[windowId].clients.length)
         windows[windowId].clients.splice(options.index, 0, id);
@@ -1787,7 +1809,10 @@ ipcMain.on('dock-client', (event, id, options) => {
     windows[windowId].current = id;
     window.setTopBrowserView(clients[id].view);
     setClientWindowsParent(id, window, oldWindow);
-    window.webContents.send('new-client', id, options?.index);
+    if (options)
+        window.webContents.send('new-client', id, options.index);
+    else
+        window.webContents.send('new-client', id);
 });
 
 ipcMain.on('execute-client', (event, id, code) => {
@@ -1849,7 +1874,7 @@ function createClient(bounds, offset) {
 
     view.webContents.on('devtools-reload-page', () => {
         view.webContents.once('dom-ready', () => {
-            executeScript(`if(typeof setId === "function") setId(${_clientID});`, clients[_clientID].view);
+            executeScript(`if(typeof setId === "function") setId(${getClientId(view)});`, clients[getClientId(view)].view);
         });
     });
 

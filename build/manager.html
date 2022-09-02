@@ -120,9 +120,12 @@
             tabstrip.on('tab-drag-end', e => {
                 console.log('tab end');
                 console.log(e)
-                //dropped outside of client area so new window!
-                if (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientHeight || e.event.clientY >= document.body.clientWidth)
+                //dropped outside of client area so new window if more then 1 tab
+                if (e.event.dataTransfer.dropEffect !== 'move' && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientHeight || e.event.clientY >= document.body.clientWidth)) {
+                    e.event.stopPropagation();
+                    e.event.preventDefault();                    
                     ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: e.event.screenX, y: e.event.screenY });
+                }
             });
             tabstrip.on('tab-drag-leave', e => {
                 console.log('tab leave');
@@ -134,6 +137,8 @@
                 //if not dragging its from a different window so its a undock/dock
                 if (!tabstrip.dragTab) {
                     e.preventDefault = true;
+                    e.event.stopPropagation();
+                    e.event.preventDefault();
                     console.log(e.event.dataTransfer.getData('jimud/tab'));
                     const tab = JSON.parse(e.event.dataTransfer.getData('jimud/tab'));
                     e.tab.tab.classList.remove('drop');
@@ -185,6 +190,8 @@
             window.addEventListener('drop', (e) => {
                 if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
                     e.dataTransfer.dropEffect = 'move';
+                    e.stopPropagation();
+                    e.preventDefault();                    
                     console.log('Window drop');
                     console.log(e);
                     const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));
