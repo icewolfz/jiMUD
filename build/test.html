@@ -95,7 +95,7 @@
                 console.log('Test Window drop');
                 console.log(e)
                 const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));
-                ipcRenderer.send('dock-client', tab.client, { x: e.screenX , y: e.screenY, clientX: e.clientX, clientY: e.clientY });
+                ipcRenderer.send('dock-client', tab.client, { x: e.screenX, y: e.screenY, clientX: e.clientX, clientY: e.clientY });
                 //ipcRenderer.send('dock-client', tab.client, { x: e.screenX - e.clientX, y: e.screenY - e.clientY, clientX: e.clientX, clientY: e.clientY });
             }
         });
@@ -660,7 +660,7 @@
                     menuitem = menuitems[i];
                     role = menuitem.getAttribute('role');
 
-                    if (role.indexOf('menuitem') < 0 || menuitem.dataset.disabled) {
+                    if (role.indexOf('menuitem') < 0) {
                         continue;
                     }
 
@@ -716,12 +716,21 @@
 
             setFocusToPreviousMenuitem(menuId, currentMenuitem) {
                 var newMenuitem, index;
-
-                if (currentMenuitem === this.firstMenuitem[menuId]) {
-                    newMenuitem = this.lastMenuitem[menuId];
-                } else {
-                    index = this.menuitemGroups[menuId].indexOf(currentMenuitem);
-                    newMenuitem = this.menuitemGroups[menuId][index - 1];
+                const mgl = this.menuitemGroups[menuId].length;
+                var mt = 0;
+                var index = this.menuitemGroups[menuId].indexOf(currentMenuitem);
+                for (var mi = index; mt <= 1 && mi >= 0; mi--) {
+                    if (this.menuitemGroups[menuId][mi] === this.firstMenuitem[menuId]) {
+                        newMenuitem = this.lastMenuitem[menuId];
+                        if (newMenuitem.dataset.disabled) {
+                            mi = mgl;
+                            mt++;
+                        }
+                    } else {
+                        newMenuitem = this.menuitemGroups[menuId][mi - 1];
+                    }
+                    if (!newMenuitem.dataset.disabled)
+                        break;
                 }
 
                 this.setFocusToMenuitem(menuId, newMenuitem);
@@ -731,12 +740,21 @@
 
             setFocusToNextMenuitem(menuId, currentMenuitem) {
                 var newMenuitem, index;
-
-                if (currentMenuitem === this.lastMenuitem[menuId]) {
-                    newMenuitem = this.firstMenuitem[menuId];
-                } else {
-                    index = this.menuitemGroups[menuId].indexOf(currentMenuitem);
-                    newMenuitem = this.menuitemGroups[menuId][index + 1];
+                const mgl = this.menuitemGroups[menuId].length;
+                var mt = -1;
+                var index = this.menuitemGroups[menuId].indexOf(currentMenuitem);
+                for (var mi = index; mt <= 1 && mi < mgl; mi++) {
+                    if (this.menuitemGroups[menuId][mi] === this.lastMenuitem[menuId]) {
+                        newMenuitem = this.firstMenuitem[menuId];
+                        if (newMenuitem.dataset.disabled) {
+                            mi = 0;
+                            mt++;
+                        }
+                    } else {
+                        newMenuitem = this.menuitemGroups[menuId][mi + 1];
+                    }
+                    if (!newMenuitem.dataset.disabled)
+                        break;
                 }
                 this.setFocusToMenuitem(menuId, newMenuitem);
 
@@ -1129,7 +1147,8 @@
             onMenuitemClick(event) {
                 var tgt = event.currentTarget;
                 var menuId = this.getMenuId(tgt);
-
+                if (tgt.dataset.disabled)
+                    return;
                 if (this.hasPopup(tgt)) {
                     //if (this.isOpen(tgt)) {
                     //this.closePopup(tgt);
@@ -1160,7 +1179,7 @@
                     this.setFocusToMenuitem(menuId, tgt);
                 }
 
-                if (this.isAnyPopupOpen() || this.hasFocus()) {
+                if (!tgt.dataset.disabled && (this.isAnyPopupOpen() || this.hasFocus())) {
                     this.closePopupAll(tgt);
                     if (this.hasPopup(tgt)) {
                         this.openPopup(menuId, tgt);
