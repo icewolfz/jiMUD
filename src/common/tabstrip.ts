@@ -485,7 +485,7 @@ export class TabStrip extends EventEmitter {
             options = title || {};
         const tab: Tab = {
             tab: document.createElement('li'),
-            id: this._tabID++,
+            id: ++this._tabID,
             title: document.createElement('div'),
             icon: document.createElement('div'),
             iconCls: options.icon || options.iconCls || 'disconnected-icon',
@@ -505,7 +505,7 @@ export class TabStrip extends EventEmitter {
             const e = { id: tab.id, tab: tab, preventDefault: false };
             this.emit('tab-click', e);
             if (e.preventDefault || this.active === tab) return;
-            this.switchToTab(tab.id);
+            this.switchToTab(tab);
         };
         tab.tab.oncontextmenu = (e) => {
             this.emit('tab-contextmenu', { id: tab.id, tab: tab }, e);
@@ -524,7 +524,7 @@ export class TabStrip extends EventEmitter {
             this.emit('tab-drag', eDrag);
             if (eDrag.preventDefault) return;
             if (this.active !== tab)
-                this.switchToTab(tab.id);
+                this.switchToTab(tab);
             this.dragTab = tab;
             e.stopPropagation();
         };
