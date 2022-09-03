@@ -234,7 +234,7 @@
                     menuitem = menuitems[i];
                     role = menuitem.getAttribute('role');
 
-                    if (role.indexOf('menuitem') < 0) {
+                    if (role.indexOf('menuitem') < 0 || menuitem.dataset.disabled) {
                         continue;
                     }
 
@@ -451,14 +451,14 @@
                         popupMenu.parentNode.style.position = 'relative';
                         popupMenu.style.display = 'block';
                         popupMenu.style.position = 'absolute';
-                        popupMenu.style.left = rect.width + 2 + 'px';
-                        popupMenu.style.top = '2px';
+                        popupMenu.style.left = (rect.width - 4) + 'px';
+                        popupMenu.style.top = '0px';
                         popupMenu.style.zIndex = 100;
                     } else {
                         popupMenu.style.display = 'block';
                         popupMenu.style.position = 'absolute';
-                        popupMenu.style.left = '2px';
-                        popupMenu.style.top = rect.height + 2 + 'px';
+                        popupMenu.style.left = '0px';
+                        popupMenu.style.top = rect.height + 'px';
                         popupMenu.style.zIndex = 100;
                     }
 
@@ -579,7 +579,7 @@
                             this.setFocusToFirstMenuitem(popupMenuId);
                         } else {
                             //@TODO better click code
-                            if (tgt.dataset.click) {
+                            if (!tgt.dataset.disabled && tgt.dataset.click) {
                                 this.closePopupAll();
                                 eval(tgt.dataset.click);
                                 this.setMenubarDataExpanded('false');
@@ -705,20 +705,22 @@
                 var menuId = this.getMenuId(tgt);
 
                 if (this.hasPopup(tgt)) {
-                    if (this.isOpen(tgt)) {
-                        this.closePopup(tgt);
-                    } else {
-                        this.closePopupAll(tgt);
-                        this.openPopup(menuId, tgt);
-                    }
+                    //if (this.isOpen(tgt)) {
+                    //this.closePopup(tgt);
+                    //} else {
+                    this.closePopupAll(tgt);
+                    this.openPopup(menuId, tgt);
+                    //}
                 } else {
                     //@TODO better click code
-                    if (tgt.dataset.click) {
+                    if (!tgt.dataset.disabled) {
+                        if (tgt.dataset.click) {
+                            this.closePopupAll();
+                            eval(tgt.dataset.click);
+                            this.setMenubarDataExpanded('false');
+                        }
                         this.closePopupAll();
-                        eval(tgt.dataset.click);
-                        this.setMenubarDataExpanded('false');
                     }
-                    this.closePopupAll();
                 }
                 event.stopPropagation();
                 event.preventDefault();
@@ -779,16 +781,15 @@
         nav {
             margin: 0;
             padding: 0;
-            border: 2px solid #eee;
+            font: menu;
+            white-space: nowrap;
         }
 
         .menubar-navigation {
             margin: 0;
-            padding: 2px;
-            font-size: 110%;
+            padding: 0;
             list-style: none;
-            background-color: #eee;
-            border: #eee solid 1px;
+            background-color: menu;
         }
 
         .menubar-navigation li {
@@ -809,17 +810,19 @@
 
         .menubar-navigation>li>[role="menuitem"] {
             display: inline-block;
-            margin: 2px;
+            margin: 0px;
             padding: 4px;
-            background-color: #eee;
-            border: 0 solid #eee;
+            padding-left: 5px;
+            padding-right: 5px;
+            background-color: menu;
+            border: 0 solid menu;
             color: black;
             cursor: default;
         }
 
         .menubar-navigation [role="separator"] {
             padding-top: 3px;
-            background-image: url("data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cline x1='0' y1='6' x2='12' y2='6' style='stroke:black;stroke-width:1' /%3E%3C/svg%3E%0A");
+            background-image: url("data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cline x1='0' y1='6' x2='12' y2='6' style='stroke:rgb(218,220,224);stroke-width:1' /%3E%3C/svg%3E%0A");
             background-size: 10px 10px;
             background-position: center;
             background-repeat: repeat-x;
@@ -827,15 +830,26 @@
 
         .menubar-navigation [role="menu"] [role="menuitem"],
         .menubar-navigation [role="menu"] [role="separator"] {
-            display: block;
+            display: inline-block;
             width: 12em;
-            margin: 2px;
+            margin: 0px;
             padding: 4px;
-            padding-left: 8px;
-            background-color: #eee;
-            border: 0 solid #eee;
+            padding-left: 32px;
+            background-color: menu;
+            border: 0 solid menu;
             color: black;
             cursor: default;
+        }
+
+        .menubar-navigation [role="menu"][data-accelerators]>li>[role="menuitem"],
+        .menubar-navigation [role="menu"][data-accelerators]>[role="separator"] {          
+            padding-right: 100px;
+        }        
+
+        .menubar-navigation [role="menuitem"] div {
+            display: inline-block;
+            position: absolute;
+            right: 20px;
         }
 
         .menubar-navigation [role="menuitem"] svg {
@@ -853,12 +867,17 @@
             right: 0.75em;
         }
 
-        .menubar-navigation [role="menuitem"][aria-expanded="true"] svg.down {
-            transform: rotate(180deg);
+        .menubar-navigation [role="menuitem"] svg.icon {}
+
+        .menubar-navigation [role="menuitem"] .icon {
+            position: absolute;
+            left: 8px;
+            width: 16px;
+            height: 16px;
         }
 
-        .menubar-navigation [role="menuitem"][aria-expanded="true"] svg.right {
-            transform: rotate(90deg) translate(5px, -5px);
+        .menubar-navigation [role="menuitem"][data-disabled="true"] .icon {
+            opacity: 0.5;
         }
 
         .menubar-navigation [role="menu"] {
@@ -866,9 +885,9 @@
             position: absolute;
             margin: 0;
             padding: 0;
-            padding: 7px 4px;
-            border: 2px solid #034575;
-            background-color: #eee;
+            padding: 3px 0px;
+            border: 1px solid #ccc;
+            background-color: menu;
         }
 
         .menubar-navigation [role="group"] {
@@ -894,34 +913,45 @@
 
         .menubar-navigation.focus {
             padding: 0;
-            border: #034575 solid 3px;
         }
 
         .menubar-navigation>li>[aria-expanded="true"],
         .menubar-navigation>li>[role="menuitem"]:focus,
         .menubar-navigation>li>[role="menuitem"]:hover {
             outline: none;
-            background-color: #ccc;
+            background-color: #E8E8E8;
         }
 
         .menubar-navigation>li>[role="menuitem"]:focus,
-        .menubar-navigation>li>[role="menuitem"]:hover {
-            padding: 2px;
-            border: 2px solid #034575;
-        }
+        .menubar-navigation>li>[role="menuitem"]:hover {}
 
         .menubar-navigation [role="menu"] [aria-expanded="true"],
         .menubar-navigation [role="menu"] [role="menuitem"]:focus,
         .menubar-navigation [role="menu"] [role="menuitem"]:hover {
             outline: none;
-            background-color: #ccc;
+            background-color: #E8E8E8;
         }
 
         .menubar-navigation [role="menu"] [role="menuitem"]:focus,
         .menubar-navigation [role="menu"] [role="menuitem"]:hover {
-            padding: 2px;
-            padding-left: 6px;
-            border: 2px solid #034575;
+            padding: 4px;
+            padding-left: 32px;
+        }
+
+        .menubar-navigation [role="menu"][data-accelerators]>li>[role="menuitem"]:focus,
+        .menubar-navigation [role="menu"][data-accelerators]>li>[role="menuitem"]:hover {
+            padding: 4px;
+            padding-left: 32px;
+            padding-right: 100px;
+        }
+
+        .menubar-navigation [role="menu"] [role="menuitem"][data-disabled="true"] {
+            color: #777;
+        }
+
+        .menubar-navigation [role="menu"] [role="menuitem"][data-disabled="true"]:focus,
+        .menubar-navigation [role="menu"] [role="menuitem"][data-disabled="true"]:hover {
+            background: menu;
         }
 
         .menubar-navigation>li>[aria-expanded="true"].aria-current-path,
@@ -945,19 +975,93 @@
 </head>
 
 <body>
-    <nav aria-label="Mythical University">
-        <ul id="menubar" class="menubar-navigation" role="menubar" aria-label="Mythical University">
+    <nav aria-label="Main menu">
+        <ul id="menubar" class="menubar-navigation" role="menubar" aria-label="Main menu">
             <li role="none">
-                <div role="menuitem" role="menuitem" aria-haspopup="true" aria-expanded="false">
+                <div role="menuitem" aria-haspopup="true" aria-expanded="false">
                     File
                 </div>
-                <ul role="menu" aria-label="File">
+                <ul role="menu" aria-label="File" data-accelerators="true">
                     <li role="none">
-                        <div role="menuitem" data-click="updateContent('New connection clicked')">New connection</div>
+                        <div role="menuitem" data-click="updateContent('Test item clicked')">Test item</div>
+                    </li>
+                    <li role="none">
+                        <div role="menuitem" data-disabled="true">Test item disable</div>
+                    </li>
+                    <li role="none">
+                        <div role="menuitem" data-accelerator="Ctrl+T">Test accelerator<div>Ctrl+T</div>
+                        </div>
+                    </li>
+                    <li role="none">
+                        <div role="menuitem" data-accelerator="Ctrl+T" data-disabled="true">Test accelerator disable<div>Ctrl+T</div>
+                        </div>
                     </li>
                     <li role="separator"></li>
                     <li role="none">
-                        <div role="menuitem">Exit</div>
+                        <div role="menuitem" aria-haspopup="true" aria-expanded="false">Test sub menu
+                            <svg xmlns="http://www.w3.org/2000/svg" class="right" width="6" height="7" viewBox="0 0 9 12">
+                                <polygon points="0 1, 0 11, 8 6"></polygon>
+                            </svg>
+                        </div>
+                        <ul role="menu" aria-label="Test sub menu">
+                            <li role="none">
+                                <div role="menuitem">1</div>
+                            </li>
+                            <li role="none">
+                                <div role="menuitem" data-disabled="true">2</div>
+                            </li>
+                            <li role="none">
+                                <div role="menuitem">3</div>
+                            </li>
+                        </ul>
+                    </li>
+                    <li role="none">
+                        <div role="menuitem" aria-haspopup="true" aria-expanded="false" data-disabled="true">Test sub menu disabled
+                            <svg xmlns="http://www.w3.org/2000/svg" class="right" width="6" height="7" viewBox="0 0 9 12">
+                                <polygon points="0 1, 0 11, 8 6"></polygon>
+                            </svg>
+                        </div>
+                        <ul role="menu" aria-label="Test sub menu disabled">
+                            <li role="none">
+                                <div role="menuitem">1</div>
+                            </li>
+                            <li role="none">
+                                <div role="menuitem" data-disabled="true">2</div>
+                            </li>
+                            <li role="none">
+                                <div role="menuitem">3</div>
+                            </li>
+                        </ul>
+                    </li>
+                    <li role="separator"></li>
+                    <li role="none">
+                        <div role="menuitem" data-checked="true">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 16 16" width="16px" height="16px">
+                                <path style=" stroke:none;fill-rule:nonzero;fill-opacity:1;" d="M 12.855469 3.519531 L 6 10.375 L 3.144531 7.519531 L 2.1875 8.480469 L 5.519531 11.8125 L 6 12.269531 L 6.480469 11.8125 L 13.8125 4.480469 Z M 12.855469 3.519531 " />
+                            </svg>
+                            Test check
+                        </div>
+                    </li>
+                    <li role="none">
+                        <div role="menuitem" data-checked="true" data-disabled="true">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 16 16" width="16px" height="16px">
+                                <path style=" stroke:none;fill-rule:nonzero;fill-opacity:1;" d="M 12.855469 3.519531 L 6 10.375 L 3.144531 7.519531 L 2.1875 8.480469 L 5.519531 11.8125 L 6 12.269531 L 6.480469 11.8125 L 13.8125 4.480469 Z M 12.855469 3.519531 " />
+                            </svg>
+                            Test check disabled
+                        </div>
+                    </li>
+                    <li role="separator"></li>
+                    <li role="none">
+                        <div role="menuitem">
+                            <img class="icon" src="../assets/icons/png/profiles.png">
+                            Test icon
+                        </div>
+                    </li>
+                    <li role="none">
+                        <div role="menuitem" data-disabled="true">
+                            <img class="icon" src="../assets/icons/png/profiles.png">
+                            Test icon disabled
+                        </div>
                     </li>
                 </ul>
             </li>
