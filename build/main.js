@@ -1175,7 +1175,7 @@ function createWindow() {
 
     window.once('ready-to-show', () => {
         loadWindowScripts(window, 'manager');
-        executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});`, clients[getWindowId(window)].view);
+        executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});`, window);
         executeScript('if(typeof loadTheme === "function") loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', window);
         updateJumpList();
         checkForUpdates();
