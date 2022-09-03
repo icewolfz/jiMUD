@@ -2,6 +2,7 @@
 <html lang="en-US">
 
 <head>
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
@@ -109,6 +110,430 @@
                 e.stopPropagation();
             }
         });
+
+        function showMenu(el) {
+            const rect = el.getBoundingClientRect();
+            var menuTemp = [
+                //File
+                {
+                    label: '&File',
+                    id: 'file',
+                    submenu: [
+                        {
+                            label: '&New connection',
+                            id: 'newConnect',
+                            accelerator: 'CmdOrCtrl+Shift+N'
+                        },
+                        {
+                            label: '&New window',
+                            id: '',
+                            accelerator: 'CmdOrCtrl+Alt+N'
+                        },
+                        {
+                            type: 'separator'
+                        },
+                        {
+                            label: '&Connect',
+                            id: 'connect',
+                            accelerator: 'CmdOrCtrl+N'
+                        },
+                        {
+                            label: '&Disconnect',
+                            id: 'disconnect',
+                            accelerator: 'CmdOrCtrl+D',
+                            enabled: false
+                        },
+                        {
+                            type: 'separator'
+                        },
+                        {
+                            label: '&Enable parsing',
+                            id: 'enableParsing',
+                            type: 'checkbox',
+                            checked: true
+                        },
+                        {
+                            label: 'E&nable triggers',
+                            id: 'enableTriggers',
+                            type: 'checkbox',
+                            checked: true
+                        },
+                        {
+                            type: 'separator'
+                        },
+                        {
+                            label: 'Ch&aracters...',
+                            id: 'characters',
+                            accelerator: 'CmdOrCtrl+H'
+                        },
+                        { type: 'separator' },
+                        {
+                            label: '&Log',
+                            id: 'log',
+                            type: 'checkbox',
+                            checked: false
+                        },
+                        {
+                            label: '&View logs...'
+                        },
+                        {
+                            type: 'separator'
+                        },
+                        {
+                            label: 'Global &Preferences...',
+                            id: 'globalPreferences',
+                            accelerator: 'CmdOrCtrl+Comma'
+                        },
+                        {
+                            label: 'Client &Preferences...',
+                            id: 'preferences',
+                            accelerator: 'CmdOrCtrl+Comma'
+                        },
+                        {
+                            type: 'separator'
+                        },
+                        {
+                            label: 'Clo&se Client',
+                            id: 'close',
+                            accelerator: 'CmdOrCtrl+W',
+                            enabled: false,
+                            visible: false
+                        },
+                        {
+                            label: 'E&xit'
+                        }
+                    ]
+                },
+                //Edit
+                {
+                    label: '&Edit',
+                    id: 'edit',
+                    submenu: [
+                        {
+                            role: 'undo'
+                        },
+                        {
+                            role: 'redo'
+                        },
+                        {
+                            type: 'separator'
+                        },
+                        {
+                            role: 'cut'
+                        },
+                        {
+                            role: 'copy'
+                        },
+                        {
+                            label: 'Copy as HTML',
+                            accelerator: 'CmdOrCtrl+Alt+C',
+                            id: 'copyHTML',
+                            enabled: false
+                        },
+                        {
+                            label: 'Paste',
+                            accelerator: 'CmdOrCtrl+V'
+                        },
+                        {
+                            label: 'Paste special',
+                            accelerator: 'CmdOrCtrl+Shift+V'
+                        },
+                        {
+                            role: 'delete'
+                        },
+                        {
+                            label: 'Select All',
+                            accelerator: 'CmdOrCtrl+A'
+                        },
+                        {
+                            type: 'separator'
+                        },
+                        {
+                            label: 'Clear'
+                        },
+                        { type: 'separator' },
+                        {
+                            label: 'Find',
+                            accelerator: 'CmdOrCtrl+F'
+                        },
+                    ]
+                },
+                //Profiles
+                {
+                    label: '&Profiles',
+                    id: 'profiles',
+                    submenu: []
+                },
+                //View
+                {
+                    label: '&View',
+                    id: 'view',
+                    submenu: [
+                        {
+                            label: '&Lock',
+                            id: 'lock',
+                            type: 'checkbox',
+                            checked: false
+                        },
+                        {
+                            label: '&Who is on?...'
+                        },
+                        {
+                            type: 'separator'
+                        },
+                        {
+                            label: '&Status',
+                            id: 'status',
+                            submenu: [
+                                {
+                                    label: '&Visible',
+                                    id: 'statusvisible',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                {
+                                    label: '&Refresh',
+                                    id: 'refresh'
+                                },
+                                { type: 'separator' },
+                                {
+                                    label: '&Weather',
+                                    id: 'weather',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                {
+                                    label: '&Limbs',
+                                    id: 'limbsmenu',
+                                    submenu: [
+                                        {
+                                            label: '&Visible',
+                                            id: 'limbs',
+                                            type: 'checkbox',
+                                            checked: true
+                                        },
+                                        { type: 'separator' },
+                                        {
+                                            label: '&Health',
+                                            id: 'limbhealth',
+                                            type: 'checkbox',
+                                            checked: true
+                                        },
+                                        {
+                                            label: '&Armor',
+                                            id: 'limbarmor',
+                                            type: 'checkbox',
+                                            checked: true
+                                        },
+                                    ]
+                                },
+                                {
+                                    label: '&Health',
+                                    id: 'health',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                {
+                                    label: '&Experience',
+                                    id: 'experience',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                {
+                                    label: '&Party Health',
+                                    id: 'partyhealth',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                {
+                                    label: '&Combat Health',
+                                    id: 'combathealth',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                {
+                                    label: '&Lag meter',
+                                    id: 'lagmeter',
+                                    type: 'checkbox',
+                                    checked: true
+                                }
+                            ]
+                        },
+                        {
+                            label: '&Buttons',
+                            id: 'buttons',
+                            submenu: [
+                                {
+                                    label: '&Visible',
+                                    id: 'buttonsvisible',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                { type: 'separator' },
+                                {
+                                    label: '&Connect',
+                                    id: 'connectbutton',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                {
+                                    label: '&Characters',
+                                    id: 'charactersbutton',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                {
+                                    label: 'Code &editor',
+                                    id: 'codeEditorbutton',
+                                    type: 'checkbox'
+                                },
+                                {
+                                    label: '&Preferences',
+                                    id: 'preferencesbutton',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                {
+                                    label: '&Log',
+                                    id: 'logbutton',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                {
+                                    label: '&Clear',
+                                    id: 'clearbutton',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                {
+                                    label: '&Lock',
+                                    id: 'lockbutton',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                {
+                                    label: '&Map',
+                                    id: 'mapbutton',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                                {
+                                    label: '&User buttons',
+                                    id: 'userbutton',
+                                    type: 'checkbox',
+                                    checked: true
+                                },
+                            ]
+                        },
+                        {
+                            type: 'separator'
+                        },
+                        {
+                            label: '&Developer Tools',
+                            id: 'devtools',
+                            submenu: [
+                                {
+                                    label: '&Toggle Window '
+                                },
+                                {
+                                    label: 'Toggle Active &Client'
+                                },
+                                {
+                                    label: 'Toggle &Both'
+                                }
+                            ]
+                        },
+                        {
+                            type: 'separator'
+                        },
+                        {
+                            role: 'resetZoom'
+                        },
+                        {
+                            role: 'zoomIn'
+                        },
+                        {
+                            role: 'zoomOut'
+                        },
+                        {
+                            type: 'separator'
+                        },
+                        {
+                            role: 'togglefullscreen'
+                        }
+                    ]
+                },
+                //Window
+                {
+                    role: 'window',
+                    id: 'window',
+                    submenu: [
+                        {
+                            label: '&Advanced editor...',
+                            id: 'editor',
+                            accelerator: 'CmdOrCtrl+E'
+                        },
+                        {
+                            label: '&Chat...',
+                            id: 'chat',
+                            accelerator: 'CmdOrCtrl+L'
+                        },
+                        {
+                            label: '&Immortal tools...',
+                            id: 'immortal',
+                            visible: false,
+                            accelerator: 'CmdOrCtrl+I'
+                        },
+                        {
+                            label: '&Code editor...',
+                            id: 'codeeditor'
+                        },
+                        {
+                            label: '&Map...',
+                            accelerator: 'CmdOrCtrl+T'
+                        },
+                        {
+                            label: '&Skills...',
+                            id: 'skills',
+                            accelerator: 'CmdOrCtrl+S'
+                        },
+                        {
+                            label: '&Command history...',
+                            id: 'history',
+                            accelerator: 'CmdOrCtrl+Shift+H'
+                        },
+                        { type: 'separator' }
+                    ]
+                },
+                //Help
+                {
+                    label: '&Help',
+                    role: 'help',
+                    id: 'help',
+                    submenu: [
+                        {
+                            label: '&ShadowMUD...'
+                        },
+                        {
+                            label: '&jiMUD...'
+                        },
+                        {
+                            label: '&jiMUD website...'
+                        },
+                        { type: 'separator' },
+                        {
+                            label: 'Check for updates...',
+                            id: 'updater'
+                        },
+                        { type: 'separator' },
+                        {
+                            label: '&About...'
+                        }
+                    ]
+                }
+            ];
+            ipcRenderer.invoke('show-context', menuTemp, { x: Math.ceil(rect.right) + window.scrollX, y: Math.ceil(rect.top) + window.scrollY });
+        }
         /*
  *   This content is licensed according to the W3C Software License at
  *   https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document
@@ -842,9 +1267,9 @@
         }
 
         .menubar-navigation [role="menu"][data-accelerators]>li>[role="menuitem"],
-        .menubar-navigation [role="menu"][data-accelerators]>[role="separator"] {          
+        .menubar-navigation [role="menu"][data-accelerators]>[role="separator"] {
             padding-right: 100px;
-        }        
+        }
 
         .menubar-navigation [role="menuitem"] div {
             display: inline-block;
@@ -1088,6 +1513,16 @@
     <span style="color:menutext;background-color: menu">menu</span>
     <span style="color:windowtext;background-color: window">window</span>
     <span style="color:buttontext;background-color: buttonface">buttonface</span>
+    <br>
+    Menu from a button:
+    <div tile="Menu" onclick="showMenu(this)" style="
+    display:inline-block;
+    background: white;
+    color: black;
+    width: 32px;
+    height: 32px;
+    text-align: center;
+    "><i class="fa fa-bars"></i></div>
 </body>
 
 </html>
