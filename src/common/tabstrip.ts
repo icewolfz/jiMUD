@@ -519,7 +519,6 @@ export class TabStrip extends EventEmitter {
             e.dataTransfer.dropEffect = 'move';
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('jimud/tab', JSON.stringify(tab));
-            e.dataTransfer.items.add('jimud/tab', JSON.stringify(tab));
             const eDrag = { id: tab.id, tab: tab, preventDefault: false, event: e };
             this.emit('tab-drag', eDrag);
             if (eDrag.preventDefault) return;

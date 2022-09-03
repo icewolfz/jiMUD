@@ -89,7 +89,8 @@
                 if (e.event.dataTransfer.dropEffect !== 'move' && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientHeight || e.event.clientY >= document.body.clientWidth)) {
                     e.event.stopPropagation();
                     e.event.preventDefault();
-                    ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: e.event.screenX - e.event.clientX, y: e.event.screenY - e.event.clientY });
+                    ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: e.event.screenX, y: e.event.screenY });
+                    //ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: e.event.screenX - e.event.clientX, y: e.event.screenY - e.event.clientY });
                 }
             });
             tabstrip.on('tab-drag-leave', e => {
@@ -160,7 +161,8 @@
                     console.log('Window drop');
                     console.log(e);
                     const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));
-                    ipcRenderer.send('dock-client', tab.client, { x: e.screenX - e.clientX, y: e.screenY - e.clientY });
+                    ipcRenderer.send('dock-client', tab.client, { x: e.screenX, y: e.screenY });
+                    //ipcRenderer.send('dock-client', tab.client, { x: e.screenX - e.clientX, y: e.screenY - e.clientY });
                 }
             });
 
@@ -275,7 +277,7 @@
 
         .text-disconnected-icon {
             color: red;
-        }        
+        }
     </style>
 </head>
 
