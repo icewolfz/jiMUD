@@ -5,6 +5,7 @@
 - **Fixed:**
   - Auto update: close download dialog when error happens
   - Fixed an issue that caused window to now close correctly, causing the main window to hang and requiring a second close
+  - Code editor: Fixed bugs in tabstrip
   - Command line arguments:
     - Fixed --map/-mf not correctly setting the map file and breaking settings
     - Fixed --profiles/-pf not correctly setting the profile list and breaking settings
