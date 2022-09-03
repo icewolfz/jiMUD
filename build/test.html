@@ -93,7 +93,7 @@
                 console.log('Test Window drop');
                 console.log(e)
                 const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));
-                ipcRenderer.send('dock-client', tab.client, { x: e.screenX, y: e.screenY });
+                ipcRenderer.send('dock-client', tab.client, { x: e.screenX - e.ClientX, y: e.screenY - e.clientY, clientX: e.clientX, clientY: e.clientY });
             }
         });
 

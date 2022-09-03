@@ -25,41 +25,6 @@
         var tabStrip;
         var current = 0;
 
-        /*
-        function dockClient(id) {
-            if (clients.indexOf(id) !== -1) return;
-            ipcRenderer.send('dock-client', id, 32);
-            current = id;
-            ipcRenderer.send('switch-client', current, 32);
-            tabStrip.appendChild(createTab(id));
-            if (tabStrip.childNodes.length < 2)
-                tabStrip.style.display = 'none';
-            else
-                tabStrip.style.display = 'inline-block';
-            clients.push(id);
-        }
-
-        function undockClient(id) {
-            var idx = clients.indexOf(id);
-            if (clients.indexOf(id) === -1) return;
-            ipcRenderer.send('undock-client', id);
-            removeTab(id);
-            clients.splice(idx, 1);
-            if (tabStrip.childNodes.length < 2)
-                tabStrip.style.display = 'none';
-            else
-                tabStrip.style.display = 'inline-block';
-            if (id === current) {
-                if (idx >= clients.length)
-                    idx = clients.length - 1;
-                current = clients[idx];
-                ipcRenderer.send('switch-client', current, tabStrip.childNodes.length === 1 ? 0 : 32);
-            }
-            else
-                ipcRenderer.send('update-client', current, tabStrip.childNodes.length === 1 ? 0 : 32);
-        }
-        */
-
         function loadTheme(theme, force) {
             theme = parseTemplate(theme) + '.css';
             if (!isFileSync(theme))
@@ -123,8 +88,8 @@
                 //dropped outside of client area so new window if more then 1 tab
                 if (e.event.dataTransfer.dropEffect !== 'move' && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientHeight || e.event.clientY >= document.body.clientWidth)) {
                     e.event.stopPropagation();
-                    e.event.preventDefault();                    
-                    ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: e.event.screenX, y: e.event.screenY });
+                    e.event.preventDefault();
+                    ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: e.event.screenX - e.event.clientX, y: e.event.screenY - e.event.clientY });
                 }
             });
             tabstrip.on('tab-drag-leave', e => {
@@ -191,11 +156,11 @@
                 if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
                     e.dataTransfer.dropEffect = 'move';
                     e.stopPropagation();
-                    e.preventDefault();                    
+                    e.preventDefault();
                     console.log('Window drop');
                     console.log(e);
                     const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));
-                    ipcRenderer.send('dock-client', tab.client, { x: e.screenX, y: e.screenY });
+                    ipcRenderer.send('dock-client', tab.client, { x: e.screenX - e.clientX, y: e.screenY - e.clientY });
                 }
             });
 

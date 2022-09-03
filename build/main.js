@@ -1707,7 +1707,7 @@ ipcMain.on('switch-client', (event, id, offset) => {
         const bounds = window.getContentBounds();
         clients[id].view.setBounds({
             x: 0,
-            y: 0 || offset,
+            y: (offset || 0),
             width: bounds.width,
             height: bounds.height - offset
         });
@@ -1747,11 +1747,6 @@ ipcMain.on('dock-client', (event, id, options) => {
         //if only one client no need for a new window so bail
         if (windows[oldWindowId].clients.length === 1) {
             if (options) {
-                //shift it a little up and left so mouse is over title bar
-                if (options.x > 40)
-                    options.x -= 40;
-                if (options.y > 16)
-                    options.y -= 16;
                 window.setPosition(options.x || 0, options.y || 0);
             }
             return;
@@ -1768,11 +1763,6 @@ ipcMain.on('dock-client', (event, id, options) => {
         windowId = createWindow();
         window = windows[windowId].window;
         if (options) {
-            //shift it a little up and left so mouse is over title bar
-            if (options.x > 40)
-                options.x -= 40;
-            if (options.y > 16)
-                options.y -= 16;
             window.setPosition(options.x || 0, options.y || 0);
         }
         focusedWindow = windowId;
@@ -1826,7 +1816,7 @@ ipcMain.on('update-client', (event, id, offset) => {
         var bounds = BrowserWindow.fromWebContents(event.sender).getContentBounds();
         clients[id].view.setBounds({
             x: 0,
-            y: 0 || offset,
+            y: (offset || 0),
             width: bounds.width,
             height: bounds.height - offset
         });
@@ -1949,7 +1939,7 @@ function createClient(bounds, offset) {
     })
     view.setBounds({
         x: 0,
-        y: 0 || offset,
+        y: (offset || 0),
         width: bounds.width,
         height: bounds.height - offset
     });
