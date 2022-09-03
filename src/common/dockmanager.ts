@@ -1110,7 +1110,7 @@ export class DockPane extends EventEmitter {
             const e = { id: panel.id, panel: panel, preventDefault: false };
             panel.dock.emit('tab-click', e);
             if (e.preventDefault || panel.dock.active === panel) return;
-            panel.dock.switchToPanel(panel.id);
+            panel.dock.switchToPanel(panel);
         };
         panel.tab.oncontextmenu = (e) => {
             panel.dock.emit('tab-contextmenu', { id: panel.id, panel: panel }, e);
@@ -1121,40 +1121,78 @@ export class DockPane extends EventEmitter {
             panel.dock.emit('tab-dblclick', { id: panel.id, panel: panel });
         };
         panel.tab.ondragstart = (e) => {
-            const eDrag = { id: panel.id, panel: panel, preventDefault: false };
+            e.dataTransfer.dropEffect = 'move';
+            e.dataTransfer.effectAllowed = 'move';
+            const data = {};
+            for (let prop in panel) {
+                if (!Object.prototype.hasOwnProperty.call(panel, prop))
+                    continue;
+                if(typeof panel[prop] === 'object' && !Array.isArray(panel[prop])) continue;
+                data[prop] = panel[prop];
+            }
+            e.dataTransfer.setData('jimud/tab', JSON.stringify(data));            
+            const eDrag = { id: panel.id, panel: panel, preventDefault: false, event: e };
             panel.dock.emit('tab-drag', eDrag);
             if (eDrag.preventDefault) return;
             if (panel.dock.active !== panel)
-                panel.dock.switchToPanel(panel.id);
+                panel.dock.switchToPanel(panel);
             panel.dock.manager.dragPanel = panel;
             e.stopPropagation();
             panel.dock.manager.freezePanes();
         };
         panel.tab.ondragover = (e) => {
-            if (panel.dock.manager.dragPanel === panel) return;
+            const eDrag = { id: panel.id, panel: panel, preventDefault: false, event: e };
+            this.emit('tab-drag-over', eDrag);
+            if (eDrag.preventDefault) return;
+            if (panel.dock.manager.dragPanel === panel) {
+                e.dataTransfer.dropEffect = 'none';
+                e.dataTransfer.effectAllowed = 'none';
+                return;
+            }
+            e.dataTransfer.dropEffect = 'move';
             e.preventDefault();
             e.stopPropagation();
         };
         panel.tab.ondragend = (e) => {
+            const eDrag = { id: panel.id, panel: panel, preventDefault: false, event: e };
+            this.emit('tab-drag-end', eDrag);
+            if (eDrag.preventDefault) return;
+            if ( panel.dock.manager.dragPanel !== panel)
+                e.dataTransfer.dropEffect = 'move';
             panel.tab.classList.remove('drop');
             panel.dock.manager.dragPanel = null;
             panel.dock.manager.dragPanel = null;
             panel.dock.manager.freePanes();
         };
         panel.tab.ondragenter = (e) => {
-            if (panel.dock.manager.dragPanel === panel) return;
+            const eDrag = { id: panel.id, tab: panel, preventDefault: false, event: e };
+            this.emit('tab-drag-enter', eDrag);
+            if (eDrag.preventDefault) return;
+            if (panel.dock.manager.dragPanel === panel) {
+                e.dataTransfer.dropEffect = 'none';
+                e.dataTransfer.effectAllowed = 'none';
+                return;
+            }
+            e.dataTransfer.dropEffect = 'move';
             e.preventDefault();
             e.stopPropagation();
             panel.tab.classList.add('drop');
         };
         panel.tab.ondragleave = (e) => {
+            const eDrag = { id: panel.id, tab: panel, preventDefault: false, event: e };
+            this.emit('tab-drag-leave', eDrag);
+            if (eDrag.preventDefault) return;
             if (panel.dock.manager.dragPanel === panel) return;
+            e.dataTransfer.dropEffect = 'move';
             e.preventDefault();
             e.stopPropagation();
             panel.tab.classList.remove('drop');
             e.dataTransfer.dropEffect = 'move';
         };
         panel.tab.ondrop = (e) => {
+            const eDrag = { id: panel.id, panel: panel, preventDefault: false, event: e };
+            this.emit('tab-drop', eDrag);
+            if (eDrag.preventDefault) return;
             if (panel.dock.manager.dragPanel === panel) return;
             panel.tab.classList.remove('drop');
             e.dataTransfer.dropEffect = 'move';
@@ -1185,7 +1223,7 @@ export class DockPane extends EventEmitter {
         close.classList.add('close', 'fa', 'fa-times');
         close.draggable = false;
         close.onclick = (e) => {
-            panel.dock.removePanel(panel.id);
+            panel.dock.removePanel(panel);
             e.stopPropagation();
             e.preventDefault();
         };
@@ -1195,6 +1233,9 @@ export class DockPane extends EventEmitter {
         panel.pane.classList.add('cm-tabpane');
         panel.title.classList.add('title');
         panel.icon.classList.add('icon');
+        panel.title.innerHTML = title;
+        panel.title.title = tooltip;
+        panel.tab.title = tooltip;
         return panel;
     }
 
