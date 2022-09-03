@@ -485,7 +485,7 @@ export class TabStrip extends EventEmitter {
             options = title || {};
         const tab: Tab = {
             tab: document.createElement('li'),
-            id: ++this._tabID,
+            id: --this._tabID,
             title: document.createElement('div'),
             icon: document.createElement('div'),
             iconCls: options.icon || options.iconCls || 'disconnected-icon',
@@ -518,7 +518,14 @@ export class TabStrip extends EventEmitter {
         tab.tab.ondragstart = (e) => {
             e.dataTransfer.dropEffect = 'move';
             e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('jimud/tab', JSON.stringify(tab));
+            const data = {};
+            for (let prop in tab) {
+                if (!Object.prototype.hasOwnProperty.call(tab, prop))
+                    continue;
+                if (typeof tab[prop] === 'object' && !Array.isArray(tab[prop])) continue;
+                data[prop] = tab[prop];
+            }
+            e.dataTransfer.setData('jimud/tab', JSON.stringify(data));
             const eDrag = { id: tab.id, tab: tab, preventDefault: false, event: e };
             this.emit('tab-drag', eDrag);
             if (eDrag.preventDefault) return;
