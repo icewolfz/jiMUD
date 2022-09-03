@@ -50,18 +50,13 @@
                 ipcRenderer.send('update-client', current, useDockPanel ? tabstrip.activePane.tabstripHeight : tabstrip.height);
             });
             tabstrip.on('add', e => {
-                if (tabstrip.panels.length === 2) {
+                const tabs = useDockPanel ? tabstrip.panels : tabstrip.tabs;
+                if (tabs.length === 2) {
                     //force a refresh as will not update while hidden
                     tabstrip.refresh();
                     //resize previous tab just to ensure all are same size
-                    if (useDockPanel) {
-                        ipcRenderer.send('update-client', tabstrip.panels[0].client, tabstrip.activePane.tabstripHeight);
-                        ipcRenderer.send('update-client', current, tabstrip.activePane.tabstripHeight);
-                    }
-                    else {
-                        ipcRenderer.send('update-client', tabstrip.tabs[0].client, tabstrip.height);
-                        ipcRenderer.send('update-client', current, tabstrip.height);
-                    }
+                    ipcRenderer.send('update-client', tabs[0].client, tabstrip.height);
+                    ipcRenderer.send('update-client', current, tabstrip.height);
                 }
             });
             tabstrip.on('tab-click', e => {
@@ -80,7 +75,7 @@
                 e.cancel = true;
             });
             tabstrip.on('removed', panel => {
-                if (useDockPanel ? tabstrip.panels.length === 1 : tabstrip.tabs.length) {
+                if (tabstrip.hideTabstrip && (useDockPanel ? tabstrip.panels.length === 1 : tabstrip.tabs.length === 1)) {
                     ipcRenderer.send('update-client', current, 0);
                 }
             });
