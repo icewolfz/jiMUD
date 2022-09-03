@@ -20,10 +20,12 @@
         const { ipcRenderer } = require('electron');
         const { parseTemplate, isFileSync } = require('./js/library.js');
         const { TabStrip } = require('./js/tabstrip.js');
+        const { DockManager } = require('./js/dockmanager.js');
         const clients = [];
         var _id;
         var tabStrip;
         var current = 0;
+        var useDockPanel = false;
 
         function loadTheme(theme, force) {
             theme = parseTemplate(theme) + '.css';
@@ -35,44 +37,65 @@
         }
 
         $(document).ready(() => {
-            tabstrip = new TabStrip();
+            if (useDockPanel)
+                tabstrip = new DockManager();
+            else
+                tabstrip = new TabStrip();
             //tabstrip.hideTabstrip = false;
             tabstrip.useNativeMenus = true;
             tabstrip.on('tab-strip-hidden', () => {
                 ipcRenderer.send('update-client', current, 0);
             });
             tabstrip.on('tab-strip-shown', () => {
-                ipcRenderer.send('update-client', current, tabstrip.height);
+                ipcRenderer.send('update-client', current, useDockPanel ? tabstrip.activePane.tabstripHeight : tabstrip.height);
             });
             tabstrip.on('add', e => {
-                if (tabstrip.tabs.length === 2) {
+                if (tabstrip.panels.length === 2) {
                     //force a refresh as will not update while hidden
                     tabstrip.refresh();
                     //resize previous tab just to ensure all are same size
-                    ipcRenderer.send('update-client', tabstrip.tabs[0].client, tabstrip.height);
-                    ipcRenderer.send('update-client', current, tabstrip.height);
+                    if (useDockPanel) {
+                        ipcRenderer.send('update-client', tabstrip.panels[0].client, tabstrip.activePane.tabstripHeight);
+                        ipcRenderer.send('update-client', current, tabstrip.activePane.tabstripHeight);
+                    }
+                    else {
+                        ipcRenderer.send('update-client', tabstrip.tabs[0].client, tabstrip.height);
+                        ipcRenderer.send('update-client', current, tabstrip.height);
+                    }
                 }
             });
             tabstrip.on('tab-click', e => {
-                ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);
-                current = e.tab.client;
+                if (useDockPanel) {
+                    ipcRenderer.send('switch-client', e.panel.client, tabstrip.activePane.tabstripHeight);
+                    current = e.panel.client;
+                }
+                else {
+                    ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);
+                    current = e.tab.client;
+                }
             });
             tabstrip.on('remove', e => {
-                ipcRenderer.send('remove-client', e.tab.client);
+                ipcRenderer.send('remove-client', useDockPanel ? e.panel.client : e.tab.client);
                 //cancel the remove as we want to make sure it is called after browser view is cleaned up as it may cancel based on user input
                 e.cancel = true;
             });
-            tabstrip.on('removed', tab => {
-                if (tabstrip.tabs.length === 1) {
+            tabstrip.on('removed', panel => {
+                if (useDockPanel ? tabstrip.panels.length === 1 : tabstrip.tabs.length) {
                     ipcRenderer.send('update-client', current, 0);
                 }
             });
             tabstrip.on('activated', e => {
-                ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);
-                current = e.tab.client;
+                if (useDockPanel) {
+                    ipcRenderer.send('switch-client', e.panel.client, tabstrip.activePane.tabstripHeight);
+                    current = e.panel.client;
+                }
+                else {
+                    ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);
+                    current = e.tab.client;
+                }
             })
             tabstrip.on('tab-moved', e => {
-                ipcRenderer.send('reorder-client', e.tab.client, e.index, e.oldIndex);
+                ipcRenderer.send('reorder-client', useDockPanel ? e.panel.client : e.tab.client, e.index, e.oldIndex);
             });
             tabstrip.on('tab-drag', e => {
                 console.log('tab drag');
@@ -89,7 +112,7 @@
                 if (e.event.dataTransfer.dropEffect !== 'move' && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientHeight || e.event.clientY >= document.body.clientWidth)) {
                     e.event.stopPropagation();
                     e.event.preventDefault();
-                    ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: e.event.screenX, y: e.event.screenY });
+                    ipcRenderer.send('dock-client', useDockPanel ? tabstrip.dragPanel.client : tabstrip.dragTab.client, { x: e.event.screenX, y: e.event.screenY });
                     //ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: e.event.screenX - e.event.clientX, y: e.event.screenY - e.event.clientY });
                 }
             });
@@ -101,7 +124,7 @@
                 console.log('tab drop');
                 console.log(e)
                 //if not dragging its from a different window so its a undock/dock
-                if (!tabstrip.dragTab) {
+                if (!tabstrip.dragPanel && !tabstrip.dragTab) {
                     e.preventDefault = true;
                     e.event.stopPropagation();
                     e.event.preventDefault();
@@ -215,8 +238,9 @@
             const idx = clients.indexOf(id);
             if (idx !== -1)
                 clients.splice(idx, 1);
-            for (var t = 0, tl = tabstrip.tabs.length; t < tl; t++) {
-                if (tabstrip.tabs[t].client === id) {
+            const tabs = useDockPanel ? tabstrip.panels : tabstrip.tabs;
+            for (var t = 0, tl = tabs.length; t < tl; t++) {
+                if (tabs[t].client === id) {
                     //remove the tab with out events or you get a loop
                     tabstrip.removeTab(t, true);
                     break;
@@ -227,25 +251,32 @@
         function addClient(id, index) {
             let tab;
             if (typeof index !== 'undefined' && index !== -1 && index < clients.length)
-                tab = tabstrip.insertTab(index, '' + id, 'disconnected-icon');
+                tab = useDockPanel ? tabstrip.insertPanel(index, '' + id, 'disconnected-icon') : tabstrip.insertTab(index, '' + id, 'disconnected-icon');
             else
-                tab = tabstrip.addTab('' + id, 'disconnected-icon');
+                tab = useDockPanel ? tabstrip.addPanel('' + id, 'disconnected-icon') : tabstrip.addTab('' + id, 'disconnected-icon');
             tab.client = id;
             current = id;
-            ipcRenderer.send('update-client', id, tabstrip.height);
+            ipcRenderer.send('update-client', id, useDockPanel ? tabstrip.activePane.tabstripHeight : tabstrip.height);
         }
 
         function switchToClient(id) {
-            for (var t = 0, tl = tabstrip.tabs.length; t < tl; t++) {
-                if (tabstrip.tabs[t].client === id) {
-                    tabstrip.switchToTabByIndex(t);
+            const tabs = useDockPanel ? tabstrip.panels : tabstrip.tabs;
+            for (var t = 0, tl = tabs.length; t < tl; t++) {
+                if (tabs.client === id) {
+                    if (useDockPanel)
+                        tabstrip.switchToPanelByIndex(t);
+                    else
+                        tabstrip.switchToTabByIndex(t);
                     break;
                 }
             }
         }
 
         function switchTab(index) {
-            tabstrip.switchToTabByIndex(index);
+            if (useDockPanel)
+                tabstrip.switchToPanelByIndex(index);
+            else
+                tabstrip.switchToTabByIndex(index);
         }        
     </script>
     <style>
