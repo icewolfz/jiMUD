@@ -1959,7 +1959,7 @@ function createClient(bounds, offset) {
 
 async function removeClient(id) {
     const client = clients[id];
-    const cancel = await executeScript('if(typeof close === "function") close()', client.view);
+    const cancel = await executeScript('if(typeof closeable === "function") closeable()', client.view);
     //dont close
     if (cancel !== true)
         return;
@@ -1972,6 +1972,8 @@ async function removeClient(id) {
     client.parent = null;
     delete client.parent;
     idMap.delete(client.view);
+    //close the view
+    executeCloseHooks(client.view);
     client.view.webContents.destroy();
     clients[id] = null;
     delete clients[id];
