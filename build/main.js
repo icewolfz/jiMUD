@@ -105,6 +105,7 @@ let _layout = parseTemplate(path.join('{data}', 'window.layout'));;
 
 let clients = {}
 let windows = {};
+let states = {};
 let focusedClient = 0;
 let focusedWindow = 0;
 let _clientID = 0;
@@ -213,7 +214,23 @@ function createMenu() {
                     label: '&New window',
                     id: '',
                     accelerator: 'CmdOrCtrl+Alt+N',
-                    click: () => {
+                    click: (item, mWindow) => {
+                        //save the current states so it has the latest for new window
+                        states['index.html'] = saveWindowState(mWindow);
+                        //offset the state so it is not an exact overlap
+                        states['index.html'].bounds.x += 20;
+                        states['index.html'].bounds.y += 20;
+                        const { height, width } = screen.getPrimaryDisplay().workAreaSize;
+                        //make sure the window appears on the screen
+                        if (states['index.html'].bounds.x > (width - 10))
+                            states['index.html'].bounds.x = width - states['index.html'].bounds.width;
+                        if (states['index.html'].bounds.x - states['index.html'].bounds.width - 10 < 0)
+                            states['index.html'].bounds.x = 0;
+                        if (states['index.html'].bounds.y > (height - 10) < 0)
+                            states['index.html'].bounds.y = height - states['index.html'].bounds.height;
+                        if (states['index.html'].bounds.y - states['index.html'].bounds.height - 10 < 0)
+                            states['index.html'].bounds.y = 0;
+
                         let windowId = createWindow();
                         let window = windows[windowId].window;
                         let id = createClient(window.getContentBounds());
@@ -1089,6 +1106,8 @@ function createWindow(id, data) {
     var bounds;
     if (data && data.state)
         bounds = data.state.bounds;
+    else if (states['index.html'])
+        bounds = states['index.html'].bounds;
     else
         bounds = {
             x: 0,
@@ -1130,15 +1149,21 @@ function createWindow(id, data) {
     }));
 
     window.on('resize', () => {
+        if (!window.isMaximized() && !window.isFullScreen())
+            states['index.html'] = saveWindowState(window);
     });
 
     window.on('move', () => {
+        if (!window.isMaximized() && !window.isFullScreen())
+            states['index.html'] = saveWindowState(window);
     });
 
     window.on('maximize', () => {
+        states['index.html'] = saveWindowState(window);
     });
 
     window.on('unmaximize', () => {
+        states['index.html'] = saveWindowState(window);
     });
 
     window.on('unresponsive', () => {
@@ -1200,15 +1225,12 @@ function createWindow(id, data) {
     window.webContents.on('did-create-window', (childWindow, details) => {
         let frameName = details.frameName;
         let url = details.url;
-        if (global.debug)
-            childWindow.webContents.openDevTools();
         require("@electron/remote/main").enable(childWindow.webContents);
         childWindow.removeMenu();
         childWindow.once('ready-to-show', () => {
             loadWindowScripts(childWindow, frameName);
             addInputContext(childWindow, set && set.spellchecking);
             childWindow.show();
-            //restoreWindowState()
         });
         childWindow.webContents.on('render-process-gone', (event, details) => {
             logError(`${url} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
@@ -1233,11 +1255,32 @@ function createWindow(id, data) {
             });
         });
 
+        childWindow.on('resize', () => {
+            if (!childWindow.isMaximized() && !childWindow.isFullScreen())
+                states[details.url] = saveWindowState(childWindow);
+        });
+
+        childWindow.on('move', () => {
+            if (!childWindow.isMaximized() && !childWindow.isFullScreen())
+                states[details.url] = saveWindowState(childWindow);
+        });
+
+        childWindow.on('maximize', () => {
+            states[details.url] = saveWindowState(childWindow);
+        });
+
+        childWindow.on('unmaximize', () => {
+            states[details.url] = saveWindowState(childWindow);
+        });
+
         childWindow.on('closed', () => {
             if (window && !window.isDestroyed()) {
                 executeScriptClient(`if(typeof childClosed === "function") childClosed('${url}', '${frameName}');`, window, true);
             }
         });
+        childWindow.on('close', () => {
+            states[details.url] = saveWindowState(childWindow);
+        })
     });
 
     // Emitted when the window is closed.
@@ -1283,6 +1326,7 @@ function createWindow(id, data) {
         //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting when using ipcrender
         _close = await canCloseAllClients(getWindowId(window));
         if (_close) {
+            states['index.html'] = saveWindowState(window);
             //if _loaded and not saved and the last window open save as its the final state
             if (_loaded && !_saved && Object.keys(windows).length === 1) {
                 await saveWindowLayout();
@@ -2023,8 +2067,6 @@ function createClient(bounds, id, data) {
     view.webContents.on('did-create-window', (childWindow, details) => {
         let frameName = details.frameName;
         let url = details.url;
-        if (global.debug)
-            childWindow.webContents.openDevTools();
         require("@electron/remote/main").enable(childWindow.webContents);
         childWindow.removeMenu();
         childWindow.once('ready-to-show', () => {
@@ -2055,6 +2097,24 @@ function createClient(bounds, id, data) {
             });
         });
 
+        childWindow.on('resize', () => {
+            if (!childWindow.isMaximized() && !childWindow.isFullScreen())
+                states[details.url] = saveWindowState(childWindow);
+        });
+
+        childWindow.on('move', () => {
+            if (!childWindow.isMaximized() && !childWindow.isFullScreen())
+                states[details.url] = saveWindowState(childWindow);
+        });
+
+        childWindow.on('maximize', () => {
+            states[details.url] = saveWindowState(childWindow);
+        });
+
+        childWindow.on('unmaximize', () => {
+            states[details.url] = saveWindowState(childWindow);
+        });
+
         childWindow.on('closed', () => {
             if (view && view.webContents && !view.webContents.isDestroyed()) {
                 executeScript(`if(typeof childClosed === "function") childClosed('${url}', '${frameName}');`, view, true);
@@ -2070,6 +2130,7 @@ function createClient(bounds, id, data) {
         });
 
         childWindow.on('close', () => {
+            states[details.url] = saveWindowState(childWindow);
         });
 
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
@@ -2081,16 +2142,19 @@ function createClient(bounds, id, data) {
     })
     if (data && data.state) {
         view.setBounds(data.state.bounds);
-        if (data.state.devTools)
+        if (data.state.devTools || global.debug)
             view.webContents.openDevTools();
     }
-    else
+    else {
         view.setBounds({
             x: 0,
             y: 0,
             width: bounds.width,
             height: bounds.height
         });
+        if (global.debug)
+            view.webContents.openDevTools();
+    }
     //@TODO change to index.html once basic window system is working
     view.webContents.loadFile("build/test.html");
     require("@electron/remote/main").enable(view.webContents);
@@ -2106,7 +2170,6 @@ function createClient(bounds, id, data) {
     executeScript(`if(typeof setId === "function") setId(${id});`, clients[id].view);
     if (data)
         executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify({ data: data.data, windows: data.windows }) + ');', clients[id].view);
-    //clients[id].view.webContents.openDevTools();
     //win.setTopBrowserView(view)    
     //addBrowserView
     //setBrowserView  
@@ -2781,11 +2844,24 @@ function buildOptions(details, window, settings) {
         features = details.features.split(',');
         for (var f = 0, fl = features.length; f < fl; f++) {
             feature = features[f].split('=');
-            if (feature[0] == "width" || feature[0] == "height" || feature[0] == 'x' || feature[0] == 'y')
+            if (feature[0] === "width" || feature[0] === "height" || feature[0] === 'x' || feature[0] === 'y')
                 options[feature[0]] = parseInt(feature[1], 10);
             else
                 options[feature[0]] = feature[1];
         }
+        //not set so all other bounds are missing so use previous saved if found
+        if (typeof options.x === 'undefined' && states[details.url] && states[details.url].bounds) {
+            options.x = states[details.url].bounds.x;
+            options.y = states[details.url].bounds.y;
+            options.width = states[details.url].bounds.width;
+            options.height = states[details.url].bounds.height;
+        }
+    }//not passed so see if any previous openings to use them
+    else if (states[details.url] && states[details.url].bounds) {
+        options.x = states[details.url].bounds.x;
+        options.y = states[details.url].bounds.y;
+        options.width = states[details.url].bounds.width;
+        options.height = states[details.url].bounds.height;
     }
     if (details.frameName === 'modal') {
         // open window as modal
@@ -2873,7 +2949,8 @@ async function saveWindowLayout(file) {
         focusedClient: focusedClient,
         focusedWindow: focusedWindow,
         windows: [],
-        clients: []
+        clients: [],
+        states: states
     }
     //save windows
     //{ window: window, clients: [], current: 0 }
@@ -2949,10 +3026,11 @@ function loadWindowLayout(file) {
     //_clientID = data.clientID;
     focusedClient = data.focusedClient;
     focusedWindow = data.focusedWindow;
+    states = data.states || {};
     //create windows
     let i, il = data.windows.length;
     for (i = 0; i < il; i++) {
-        createWindow(data.windows[i].id, { data: data.windows[i].data, state: data.windows[i].state });
+        createWindow(data.windows[i].id, { data: data.windows[i].data, state: data.windows[i].state, states: data.states });
         windows[data.windows[i].id].current = data.windows[i].current;
         windows[data.windows[i].id].clients = data.windows[i].clients;
     }
@@ -3019,7 +3097,7 @@ function restoreWindowState(window, state) {
     window.show();
     if (state.fullscreen)
         window.setFullScreen(state.fullscreen);
-    if (state.devTools)
+    if (state.devTools || global.debug)
         window.webContents.openDevTools();
     if (!state.enabled)
         window.setEnabled(false);
