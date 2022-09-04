@@ -773,7 +773,7 @@ function createMenu() {
                     accelerator: 'CmdOrCtrl+I'
                 },
                 {
-                    label: '&Code editor...',
+                    label: 'Code &editor...',
                     id: 'codeeditor',
                     click: (item, mWindow) => {
                         executeScriptClient('showCodeEditor()', mWindow, true);
@@ -795,13 +795,28 @@ function createMenu() {
                     accelerator: 'CmdOrCtrl+S'
                 },
                 {
-                    label: '&Command history...',
+                    label: 'Command &history...',
                     id: 'history',
                     click: (item, mWindow) => {
                         executeScriptClient('showCommandHistory()', mWindow, true);
                     },
                     accelerator: 'CmdOrCtrl+Shift+H'
                 },
+                { type: 'separator' },
+                {
+                    label: 'Save &Layout',
+                    id: 'layout',
+                    click: () => {
+                        saveWindowLayout();
+                    }
+                },
+                {
+                    label: 'Clea&r Layout',
+                    id: 'layout',
+                    click: () => {
+                        //@TODO delete layout.json if exist
+                    }
+                },                
                 /*
                 {
                   label: '&Mail...',
@@ -1207,7 +1222,7 @@ function createWindow() {
         getActiveClient(window).view.webContents.send('resized');
     });
     _windowID++
-    windows[_windowID] = { window: window, clients: [] };
+    windows[_windowID] = { window: window, clients: [], current: 0 };
     idMap.set(window, _windowID);
     return _windowID;
 }
@@ -1351,6 +1366,8 @@ app.on('before-quit', async (e) => {
             message: 'You must close the profile manager before you can exit.'
         });
     }
+    //wait until save is done before continue just to be safe
+    //await saveWindowLayout();
 });
 
 ipcMain.on('check-for-updates', checkForUpdatesManual);
@@ -1921,16 +1938,19 @@ function createClient(bounds, offset) {
                 executeScript(`if(typeof childClosed === "function") childClosed('${url}', '${frameName}');`, view, true);
             }
             //remove remove from list
-            const idx = clients[getClientId(view)].windows.indexOf(childWindow);
-            clients[getClientId(view)].windows[idx] = null;
-            clients[getClientId(view)].windows.splice(idx, 1);
-
+            const id = getClientId(view);
+            for (var idx = 0, wl = clients[id].windows.length; idx < wl; idx++) {
+                if (clients[id].windows[idx].window !== childWindow) continue;
+                clients[id].windows[idx] = null;
+                clients[id].windows.splice(idx, 1);
+                break;
+            }
         });
 
         childWindow.on('close', () => {
         });
 
-        clients[getClientId(view)].windows.push(childWindow);
+        clients[getClientId(view)].windows.push({ window: childWindow, details: details });
     });
 
     view.setAutoResize({
@@ -1947,7 +1967,7 @@ function createClient(bounds, offset) {
     view.webContents.loadFile("build/test.html");
     require("@electron/remote/main").enable(view.webContents);
     _clientID++;
-    clients[_clientID] = { view: view, menu: createMenu(), windows: [] };
+    clients[_clientID] = { view: view, menu: createMenu(), windows: [], parent: null };
     idMap.set(view, _clientID);
     executeScript(`if(typeof setId === "function") setId(${_clientID});`, clients[_clientID].view);
     //clients[id].view.webContents.openDevTools();
@@ -1984,10 +2004,9 @@ function closeClientWindows(id) {
     //@TODO add window state saving when possible
     //no windows so just bail
     if (clients[id].windows.length === 0) return;
-    const client = clients[id];
-    for (window in clients[id].windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, clients[id].windows))
-            continue;
+    const wl = clients[id].windows.length;
+    for (var idx = 0; idx < wl; id++) {
+        const window = clients[id].windows[idx].window;
         //call any code hooks in the child windows
         if (window && !window.isDestroyed()) {
             executeCloseHooks(window);
@@ -1999,10 +2018,9 @@ function closeClientWindows(id) {
 function setClientWindowsParent(id, parent, oldParent) {
     //no windows so just bail
     if (clients[id].windows.length === 0) return;
-    const client = clients[id];
-    for (window in clients[id].windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, clients[id].windows))
-            continue;
+    const wl = clients[id].windows.length;
+    for (var idx = 0; idx < wl; id++) {
+        const window = clients[id].windows[idx].window;
         //call any code hooks in the child windows
         if (window && !window.isDestroyed()) {
             if (oldParent && window.getParentWindow() === oldParent)
@@ -3206,4 +3224,88 @@ async function executeScriptClient(script, window, focus) {
             clients[id].view.webContents.focus();
         }
     });
+}
+
+async function saveWindowLayout(file) {
+    if (!file)
+        file = parseTemplate(path.join('{data}', 'layout.json'));
+    let id;
+    const data = {
+        windowID: _windowID, //save last id to prevent reused ids
+        clientID: _clientID,
+        focusedClient: focusedClient,
+        focusedWindow: focusedWindow,
+        windows: [],
+        clients: []
+    }
+    //save windows
+    //{ window: window, clients: [], current: 0 }
+    for (id in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, id))
+            continue;
+        const wData = {
+            id: getWindowId(windows[id].window), //use function to ensure proper id data type
+            clients: windows[id].clients,
+            current: windows[id].current,
+            //get any custom data from window
+            data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].window),
+            state: saveWindowState(windows[id].window)
+        }
+        data.windows.push(wData);
+    }
+    //save clients
+    //{parent: window, view: view, menu: menu, windows: childWindows}
+    for (id in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, id))
+            continue;
+        const cData = {
+            id: getClientId(clients[id].view), //use function to ensure proper id data type
+            parent: clients[id].parent ? getWindowId(clients[id].parent) : -1,
+            menu: null, //@TODO need to save current menu state some how, right now just have an access to menu object
+            windows: [],
+            //get any custom data from window
+            data: await executeScript('if(typeof saveWindow === "function") saveWindow()', clients[id].view)
+        }
+        const wl = clients[id].windows.length;
+        for (var idx = 0; idx < wl; id++) {
+            const window = clients[id].windows[idx].window;
+            const wData = {
+                client: getClientId(clients[id].view), //use function to ensure proper id data type
+                state: saveWindowState(window),
+                details: clients[id].windows[idx].details,
+                //get any custom data from window
+                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window)
+            }
+        }
+        data.clients.push(cData);
+    }
+    fs.writeFileSync(file, JSON.stringify(data));
+}
+
+function loadWindowLayout(file) {
+    if (!file)
+        file = parseTemplate(path.join('{data}', 'layout.json'));
+}
+
+function saveWindowState(window) {
+    var bounds = window.getBounds();
+    if (window.isMinimized())
+        return {
+            x: bounds.x,
+            y: bounds.y,
+            width: bounds.width,
+            height: bounds.height,
+            fullscreen: window.isFullScreen(),
+            maximized: window.isMaximized(),
+            devTools: window.webContents.isDevToolsOpened()
+        };
+    return {
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+        fullscreen: window.isFullScreen(),
+        maximized: window.isMaximized(),
+        devTools: window.webContents.isDevToolsOpened()
+    };
 }
