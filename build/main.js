@@ -1148,24 +1148,6 @@ function createWindow(id, data) {
         slashes: true
     }));
 
-    window.on('resize', () => {
-        if (!window.isMaximized() && !window.isFullScreen())
-            states['index.html'] = saveWindowState(window);
-    });
-
-    window.on('move', () => {
-        if (!window.isMaximized() && !window.isFullScreen())
-            states['index.html'] = saveWindowState(window);
-    });
-
-    window.on('maximize', () => {
-        states['index.html'] = saveWindowState(window);
-    });
-
-    window.on('unmaximize', () => {
-        states['index.html'] = saveWindowState(window);
-    });
-
     window.on('unresponsive', () => {
         dialog.showMessageBox({
             type: 'info',
@@ -1256,13 +1238,11 @@ function createWindow(id, data) {
         });
 
         childWindow.on('resize', () => {
-            if (!childWindow.isMaximized() && !childWindow.isFullScreen())
-                states[details.url] = saveWindowState(childWindow);
+            states[details.url] = saveWindowState(childWindow);
         });
 
         childWindow.on('move', () => {
-            if (!childWindow.isMaximized() && !childWindow.isFullScreen())
-                states[details.url] = saveWindowState(childWindow);
+            states[details.url] = saveWindowState(childWindow);
         });
 
         childWindow.on('maximize', () => {
@@ -1271,6 +1251,10 @@ function createWindow(id, data) {
 
         childWindow.on('unmaximize', () => {
             states[details.url] = saveWindowState(childWindow);
+        });
+
+        childWindow.on('resized', () => {
+            states['index.html'] = saveWindowState(childWindow);
         });
 
         childWindow.on('closed', () => {
@@ -1313,6 +1297,8 @@ function createWindow(id, data) {
         checkForUpdates();
         if (data && data.state)
             restoreWindowState(window, data.state);
+        else if (states['index.html'])
+            restoreWindowState(window, states['index.html']);
         else
             window.show();
     });
@@ -1335,18 +1321,31 @@ function createWindow(id, data) {
             window.close();
         }
     });
+
+    window.on('resize', () => {
+        states['index.html'] = saveWindowState(window);
+    });
+
+    window.on('move', () => {
+        states['index.html'] = saveWindowState(window);
+    });
+
     window.on('restore', () => {
         getActiveClient(window).view.webContents.send('restore');
+        states['index.html'] = saveWindowState(window);
     });
     window.on('maximize', () => {
         getActiveClient(window).view.webContents.send('maximize');
+        states['index.html'] = saveWindowState(window);
     });
     window.on('unmaximize', () => {
         getActiveClient(window).view.webContents.send('unmaximize');
+        states['index.html'] = saveWindowState(window);
     });
 
     window.on('resized', () => {
         getActiveClient(window).view.webContents.send('resized');
+        states['index.html'] = saveWindowState(window);
     });
     if (!id) {
         _windowID++;
@@ -2098,13 +2097,11 @@ function createClient(bounds, id, data) {
         });
 
         childWindow.on('resize', () => {
-            if (!childWindow.isMaximized() && !childWindow.isFullScreen())
-                states[details.url] = saveWindowState(childWindow);
+            states[details.url] = saveWindowState(childWindow);
         });
 
         childWindow.on('move', () => {
-            if (!childWindow.isMaximized() && !childWindow.isFullScreen())
-                states[details.url] = saveWindowState(childWindow);
+            states[details.url] = saveWindowState(childWindow);
         });
 
         childWindow.on('maximize', () => {
@@ -2113,6 +2110,10 @@ function createClient(bounds, id, data) {
 
         childWindow.on('unmaximize', () => {
             states[details.url] = saveWindowState(childWindow);
+        });
+
+        childWindow.on('resized', () => {
+            states['index.html'] = saveWindowState(childWindow);
         });
 
         childWindow.on('closed', () => {
@@ -3038,11 +3039,7 @@ function loadWindowLayout(file) {
     il = data.clients.length;
     for (i = 0; i < il; i++) {
         const client = data.clients[i];
-        const bounds = windows[client.parent].window.getContentBounds();
-        bounds.x = client.state.bounds.x;
-        bounds.y = client.state.bounds.y;
-        client.state.bounds = bounds;
-        createClient(bounds, client.id, client);
+        createClient(client.state.bounds, client.id, client);
         clients[client.id].parent = windows[client.parent].window;
     }
     //set current clients for each window after everything is created
@@ -3051,9 +3048,9 @@ function loadWindowLayout(file) {
         const window = windows[data.windows[i].id];
         const current = data.windows[i].current;
         window.window.webContents.once('ready-to-show', () => {
+            const bounds = window.window.getContentBounds();
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
-                const clientId = window.clients[c];
-                const idx = c;
+                const clientId = window.clients[c];               
                 window.window.addBrowserView(clients[clientId].view);
             }
             window.window.webContents.send('set-clients', window.clients.map(x => {
@@ -3074,7 +3071,7 @@ function loadWindowLayout(file) {
 
 function saveWindowState(window) {
     return {
-        bounds: window.getBounds(),
+        bounds: window.getNormalBounds(),
         fullscreen: window.isFullScreen(),
         maximized: window.isMaximized(),
         minimized: window.isMinimized(),
