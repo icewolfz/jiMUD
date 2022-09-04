@@ -40,8 +40,10 @@
                         buttons: ['Yes', 'No'],
                         defaultId: 1
                     });
-                if (choice === 0)
+                if (choice === 0) {
+                    _close = true;
                     return true;
+                }
             }
             return _close;
         }

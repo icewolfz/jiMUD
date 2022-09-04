@@ -21,11 +21,13 @@
         const { parseTemplate, isFileSync } = require('./js/library.js');
         const { TabStrip } = require('./js/tabstrip.js');
         const { DockManager } = require('./js/dockmanager.js');
-        const clients = [];
+        const _clients = [];
+        var _load = [];
         var _id;
         var tabStrip;
-        var current = 0;
+        var _current = 0;
         var useDockPanel = false;
+        var _loading = 0;
 
         function loadTheme(theme, force) {
             theme = parseTemplate(theme) + '.css';
@@ -44,29 +46,30 @@
             //tabstrip.hideTabstrip = false;
             tabstrip.useNativeMenus = true;
             tabstrip.on('tab-strip-hidden', () => {
-                ipcRenderer.send('update-client', current, 0);
+                ipcRenderer.send('update-client', _current, 0);
             });
             tabstrip.on('tab-strip-shown', () => {
-                ipcRenderer.send('update-client', current, useDockPanel ? tabstrip.activePane.tabstripHeight : tabstrip.height);
+                ipcRenderer.send('update-client', _current, useDockPanel ? tabstrip.activePane.tabstripHeight : tabstrip.height);
             });
             tabstrip.on('add', e => {
+                if (_loading) return;
                 const tabs = useDockPanel ? tabstrip.panels : tabstrip.tabs;
                 if (tabs.length === 2) {
                     //force a refresh as will not update while hidden
                     tabstrip.refresh();
                     //resize previous tab just to ensure all are same size
                     ipcRenderer.send('update-client', tabs[0].client, tabstrip.height);
-                    ipcRenderer.send('update-client', current, tabstrip.height);
+                    ipcRenderer.send('update-client', _current, tabstrip.height);
                 }
             });
             tabstrip.on('tab-click', e => {
                 if (useDockPanel) {
                     ipcRenderer.send('switch-client', e.panel.client, tabstrip.activePane.tabstripHeight);
-                    current = e.panel.client;
+                    _current = e.panel.client;
                 }
                 else {
                     ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);
-                    current = e.tab.client;
+                    _current = e.tab.client;
                 }
             });
             tabstrip.on('remove', e => {
@@ -76,17 +79,19 @@
             });
             tabstrip.on('removed', panel => {
                 if (tabstrip.hideTabstrip && (useDockPanel ? tabstrip.panels.length === 1 : tabstrip.tabs.length === 1)) {
-                    ipcRenderer.send('update-client', current, 0);
+                    ipcRenderer.send('update-client', _current, 0);
                 }
             });
             tabstrip.on('activated', e => {
+                if (_loading) return;
+                console.log('tab activated');
                 if (useDockPanel) {
                     ipcRenderer.send('switch-client', e.panel.client, tabstrip.activePane.tabstripHeight);
-                    current = e.panel.client;
+                    _current = e.panel.client;
                 }
                 else {
                     ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);
-                    current = e.tab.client;
+                    _current = e.tab.client;
                 }
             })
             tabstrip.on('tab-moved', e => {
@@ -124,7 +129,7 @@
                 console.log('tab drop');
                 console.log(e)
                 //if not dragging its from a different window so its a undock/dock
-                if(e.tab === tabstrip.dragTab) {
+                if (e.tab === tabstrip.dragTab) {
                     e.event.preventDefault();
                     e.event.stopPropagation();
                 }
@@ -198,13 +203,16 @@
                     //ipcRenderer.send('dock-client', tab.client, { x: e.screenX - e.clientX, y: e.screenY - e.clientY });
                 }
             });
-
-            if (clients.length) {
-                for (var c = 0, cl = clients.length; c < cl; c++)
-                    addClient(clients[c]);
-                if (current)
-                    switchToClient(current);
+            _loading++;
+            if (_load.length) {
+                console.log('load');
+                setClients(_load);
+                //for (var c = 0, cl = _load.length; c < cl; c++)
+                //addClient(_load[c]);
+                if (_current)
+                    switchToClient(_current);
             }
+            _loading--;
         });
         /*
                 window.onbeforeunload = function (evt) {
@@ -218,7 +226,7 @@
                 */
 
         function getActiveClient() {
-            return current;
+            return _current;
         }
 
         function setId(id) {
@@ -229,25 +237,54 @@
             return _id;
         }
 
-        ipcRenderer.on('new-client', (event, id, index) => {
-            if (typeof index !== 'undefined' && index !== -1 && index < clients.length)
-                clients.splice(index, 0, id);
+        function saveWindow() {
+            return { data: 'custom data test'};
+        }
+
+        function restoreWindow(data) {
+            console.log('restoreWindow');
+            console.log(data);
+        }
+
+        ipcRenderer.on('new-client', (event, client) => {
+            console.log('new: ' + client.id);
+            console.log(client);
+            if (typeof client.index !== 'undefined' && client.index !== -1 && client.index < _clients.length)
+                _clients.splice(client.index, 0, client.id);
             else
-                clients.push(id);
+                _clients.push(client.id);
             if (typeof tabstrip !== 'undefined')
-                addClient(id, index);
+                addClient(client);
+            else
+                _load.push(client);
+        });
+
+        ipcRenderer.on('set-clients', (event, clients, current) => {
+            _loading++;
+            console.log('set-clients');
+            console.log(clients);
+            console.log('current: ' + current);
+            _clients.push(...clients.map(x => x.id));
+            if (typeof tabstrip !== 'undefined')
+                setClients(clients);
+            else
+                _load = clients;
+            _current = current;
+            _loading--;
+            console.log('end');
         });
 
         ipcRenderer.on('switch-client', (event, id) => {
-            current = id;
+            console.log('switch: ' + id);
+            _current = id;
             if (typeof tabstrip !== 'undefined')
                 switchToClient(id);
         });
 
         ipcRenderer.on('removed-client', (event, id) => {
-            const idx = clients.indexOf(id);
+            const idx = _clients.indexOf(id);
             if (idx !== -1)
-                clients.splice(idx, 1);
+                _clients.splice(idx, 1);
             const tabs = useDockPanel ? tabstrip.panels : tabstrip.tabs;
             for (var t = 0, tl = tabs.length; t < tl; t++) {
                 if (tabs[t].client === id) {
@@ -258,18 +295,44 @@
             }
         });
 
-        function addClient(id, index) {
+        function addClient(client) {
             let tab;
-            if (typeof index !== 'undefined' && index !== -1 && index < clients.length)
-                tab = useDockPanel ? tabstrip.insertPanel(index, '' + id, 'disconnected-icon') : tabstrip.insertTab(index, '' + id, 'disconnected-icon');
+            console.log('addClient: ' + client.id);
+            if (typeof client.index !== 'undefined' && client.index !== -1 && client.index < _clients.length)
+                tab = useDockPanel ? tabstrip.insertPanel(client.index, '' + client.id, 'disconnected-icon') : tabstrip.insertTab(client.index, '' + client.id, 'disconnected-icon');
             else
-                tab = useDockPanel ? tabstrip.addPanel('' + id, 'disconnected-icon') : tabstrip.addTab('' + id, 'disconnected-icon');
-            tab.client = id;
-            current = id;
-            ipcRenderer.send('update-client', id, useDockPanel ? tabstrip.activePane.tabstripHeight : tabstrip.height);
+                tab = useDockPanel ? tabstrip.addPanel('' + client.id, 'disconnected-icon') : tabstrip.addTab({ title: '' + client.id, icon: 'disconnected-icon', noActivate: true, silent: true });
+            tab.client = client.id;
+            if (client.current)
+                _current = client.id;
+            if (!client.noUpdate)
+                ipcRenderer.send('update-client', client.id, useDockPanel ? tabstrip.activePane.tabstripHeight : tabstrip.height);
+        }
+
+        function setClients(clients) {
+            console.log('setClients');
+            console.log(clients);
+            console.log('before current: ' + _current);
+            const tabs = [];
+            let current = 0;
+            let cTab = 0;
+            for (var c = 0, cl = clients.length; c < cl; c++) {
+                const client = clients[c];
+                _clients.push(client.id);
+                let tab = useDockPanel ? tabstrip.createPanel('' + client.id, 'disconnected-icon') : tabstrip.createTab({ title: '' + client.id, icon: 'disconnected-icon', noActivate: true, silent: true });
+                tab.client = client.id;
+                tabs.push(tab);
+                if (client.current) {
+                    _current = client.id;
+                    cTab = c;
+                }
+            }
+            console.log('after current: ' + _current);
+            tabstrip.addTabs(tabs, cTab);
         }
 
         function switchToClient(id) {
+            console.log('switchToClient: ' + id);
             const tabs = useDockPanel ? tabstrip.panels : tabstrip.tabs;
             for (var t = 0, tl = tabs.length; t < tl; t++) {
                 if (tabs.client === id) {

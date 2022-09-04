@@ -37,6 +37,8 @@ export interface PanelOptions {
     iconCls?: string;
     iconSrc?: string;
     tooltip?: string;
+    noActivate?: boolean;
+    silent?: boolean;
 }
 
 export interface DockManagerOptions {
@@ -1345,6 +1347,17 @@ export class DockPane extends EventEmitter {
         panel.title.innerHTML = options.title;;
         panel.title.title = options.tooltip;;
         panel.tab.title = options.tooltip;;
+        if (panel.iconCls) {
+            panel.icon.classList.add(...panel.iconCls.split(' '));
+            panel.icon.style.backgroundImage = '';
+            panel.icon.style.backgroundImage = '';
+            panel.iconSrc = 0;
+        }
+        else if (panel.iconSrc) {
+            panel.iconCls = '';
+            panel.iconSrc = options.iconSrc;
+            panel.icon.style.backgroundImage = `url(${options.iconSrc})`;
+        }
         return panel;
     }
 
@@ -1361,7 +1374,7 @@ export class DockPane extends EventEmitter {
         this.panels.push(panel);
         this.switchToPanelByIndex(this.panels.length - 1);
         //this.setPanelTitle(title || '', undefined, false);
-        this.setPanelIconClass(panel.iconCls);
+        //this.setPanelIconClass(panel.iconCls);
         //this.setPanelTooltip(tooltip || '');
         this.emit('add', { index: this.panels.length - 1, id: panel.id, panel: panel });
         this.doUpdate(UpdateType.resize | UpdateType.stripState | UpdateType.batchAdd);
@@ -1377,7 +1390,7 @@ export class DockPane extends EventEmitter {
         $('.dropdown.open').removeClass('open');
         const panel = this.newPanel(options);
         //this.setPanelTitle(title || '', tab, true);
-        this.setPanelIconClass(panel.iconCls, panel, true);
+        //this.setPanelIconClass(panel.iconCls, panel, true);
         //this.setPanelTooltip(tooltip || '', tab);
         return panel;
     }
@@ -1410,7 +1423,7 @@ export class DockPane extends EventEmitter {
         return panel;
     }
 
-    public addPanels(panels: Panel[]) {
+    public addPanels(panels: Panel[], current?: number) {
         if (!panels || panels.length === 0) return;
         let p = 0;
         const pl = panels.length;
@@ -1428,7 +1441,10 @@ export class DockPane extends EventEmitter {
         }
         this.$tabstrip.appendChild(ts);
         this.$tabPane.appendChild(tp);
-        this.switchToPanelByIndex(this.panels.length - 1);
+        if (typeof current !== 'undefined')
+            this.switchToPanelByIndex(current);
+        else
+            this.switchToPanelByIndex(this.panels.length - 1);
         this.doUpdate(UpdateType.resize | UpdateType.stripState);
     }
 

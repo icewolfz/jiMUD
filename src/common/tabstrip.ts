@@ -27,6 +27,8 @@ export interface TabOptions {
     iconCls?: string;
     iconSrc?: string;
     tooltip?: string;
+    noActivate?: boolean;
+    silent?: boolean;
 }
 
 export class TabStrip extends EventEmitter {
@@ -622,6 +624,17 @@ export class TabStrip extends EventEmitter {
         tab.title.innerHTML = options.title;
         tab.title.title = options.tooltip;
         tab.tab.title = options.tooltip;
+        if (tab.iconCls) {
+            tab.icon.classList.add(...tab.iconCls.split(' '));
+            tab.icon.style.backgroundImage = '';
+            tab.icon.style.backgroundImage = '';
+            tab.iconSrc = 0;
+        }
+        else if (tab.iconSrc) {
+            tab.iconCls = '';
+            tab.iconSrc = options.iconSrc;
+            tab.icon.style.backgroundImage = `url(${options.iconSrc})`;
+        }
         return tab;
     }
 
@@ -635,9 +648,10 @@ export class TabStrip extends EventEmitter {
         const tab = this.newTab(options);
         this.$addCache.push(tab);
         this.tabs.push(tab);
-        this.switchToTabByIndex(this.tabs.length - 1);
+        if (!options.noActivate)
+            this.switchToTabByIndex(this.tabs.length - 1);
         //this.setTabTitle(title || '', undefined, false);
-        this.setTabIconClass(tab.iconCls);
+        //this.setTabIconClass(options.icon || options.iconCls, tab, true);
         //this.setTabTooltip(tooltip || '');
         this.emit('add', { index: this.tabs.length - 1, id: tab.id, tab: tab });
         this.doUpdate(UpdateType.resize | UpdateType.stripState | UpdateType.batchAdd);
@@ -653,7 +667,7 @@ export class TabStrip extends EventEmitter {
         $('.dropdown.open').removeClass('open');
         const tab = this.newTab(options);
         //this.setTabTitle(title || '', tab, true);
-        this.setTabIconClass(tab.iconCls, tab, true);
+        //this.setTabIconClass(options.icon || options.iconCls, tab, true);
         //this.setTabTooltip(tooltip || '', tab);
         return tab;
     }
@@ -674,16 +688,18 @@ export class TabStrip extends EventEmitter {
             this.$tabstrip.insertBefore(tab.tab, this.tabs[idx].tab);
             this.tabs.splice(idx, 0, tab);
         }
-        this.switchToTabByIndex(idx);
+        if (!options.noActivate)
+            this.switchToTabByIndex(idx);
         //this.setTabTitle(title || '', undefined, false);
         this.setTabIconClass(tab.iconCls);
         //this.setTabTooltip(tooltip || '');
-        this.emit('add', { index: idx, id: tab.id, tab: tab });
+        if (!options.silent)
+            this.emit('add', { index: idx, id: tab.id, tab: tab });
         this.doUpdate(UpdateType.resize | UpdateType.stripState);
         return tab;
     }
 
-    public addTabs(tabs: Tab[]) {
+    public addTabs(tabs: Tab[], current?: number) {
         if (!tabs || tabs.length === 0) return;
         let p = 0;
         const pl = tabs.length;
@@ -697,7 +713,10 @@ export class TabStrip extends EventEmitter {
             cl++;
         }
         this.$tabstrip.appendChild(ts);
-        this.switchToTabByIndex(this.tabs.length - 1);
+        if (typeof current !== 'undefined')
+            this.switchToTabByIndex(current);
+        else
+            this.switchToTabByIndex(this.tabs.length - 1);
         this.doUpdate(UpdateType.resize | UpdateType.stripState);
     }
 
