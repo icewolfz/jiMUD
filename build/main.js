@@ -105,7 +105,7 @@ global.debug = false;
 global.editorOnly = false;
 global.updating = false;
 
-let _layout = parseTemplate(path.join('{data}', 'jimud.layout'));;
+let _layout = parseTemplate(path.join('{data}', 'window.layout'));;
 
 let clients = {}
 let windows = {};
@@ -860,8 +860,8 @@ function createMenu() {
                             buttons: ['Yes', 'No']
                         }).then(result => {
                             if (result.response === 0) {
-                                _layout = parseTemplate(path.join('{data}', 'jimud.layout'));
-                                if (isFileSync(path.join(app.getPath('userData'), 'jimud.layout'))) {
+                                _layout = parseTemplate(path.join('{data}', 'window.layout'));
+                                if (isFileSync(path.join(app.getPath('userData'), 'window.layout'))) {
                                     if (!loadWindowLayout())
                                         dialog.showMessageBox(mWindow, {
                                             type: 'error',
@@ -3327,7 +3327,7 @@ async function executeScriptClient(script, window, focus) {
 
 async function saveWindowLayout(file) {
     if (!file)
-        file = parseTemplate(path.join('{data}', 'jimud.layout'));
+        file = parseTemplate(path.join('{data}', 'window.layout'));
     let id;
     const data = {
         windowID: _windowID, //save last id to prevent reused ids
@@ -3383,7 +3383,7 @@ async function saveWindowLayout(file) {
 
 function loadWindowLayout(file) {
     if (!file)
-        file = parseTemplate(path.join('{data}', 'jimud.layout'));
+        file = parseTemplate(path.join('{data}', 'window.layout'));
     return false;
 }
 
