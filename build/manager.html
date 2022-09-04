@@ -107,7 +107,12 @@
                 if (e.event.dataTransfer.dropEffect !== 'move' && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientHeight || e.event.clientY >= document.body.clientWidth)) {
                     e.event.stopPropagation();
                     e.event.preventDefault();
-                    ipcRenderer.send('dock-client', useDockPanel ? tabstrip.dragPanel.client : tabstrip.dragTab.client, { x: e.event.screenX, y: e.event.screenY });
+                    var x = e.screenX;
+                    var y = e.screenY;
+                    var bounds = e.tab.tab.getBoundingClientRect();
+                    x -= Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth));
+                    y -= Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight));
+                    ipcRenderer.send('dock-client', useDockPanel ? tabstrip.dragPanel.client : tabstrip.dragTab.client, { x: x, y: y });
                     //ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: e.event.screenX - e.event.clientX, y: e.event.screenY - e.event.clientY });
                 }
             });
@@ -179,7 +184,13 @@
                     console.log('Window drop');
                     console.log(e);
                     const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));
-                    ipcRenderer.send('dock-client', tab.client, { x: e.screenX, y: e.screenY });
+                    var x = e.screenX;
+                    var y = e.screenY;
+                    if (tab.offset) {
+                        x -= tab.offset.x;
+                        y -= tab.offset.y;
+                    }
+                    ipcRenderer.send('dock-client', tab.client, { x: x, y: y });
                     //ipcRenderer.send('dock-client', tab.client, { x: e.screenX - e.clientX, y: e.screenY - e.clientY });
                 }
             });

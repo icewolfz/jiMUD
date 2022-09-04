@@ -1229,13 +1229,15 @@ export class DockPane extends EventEmitter {
         panel.tab.ondragstart = (e) => {
             e.dataTransfer.dropEffect = 'move';
             e.dataTransfer.effectAllowed = 'move';
-            const data = {};
+            const data: any = {};
             for (let prop in panel) {
                 if (!Object.prototype.hasOwnProperty.call(panel, prop))
                     continue;
                 if (typeof panel[prop] === 'object' && !Array.isArray(panel[prop])) continue;
                 data[prop] = panel[prop];
             }
+            var bounds = panel.tab.getBoundingClientRect();
+            data.offset = { x: Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth)), y: Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight)) };
             e.dataTransfer.setData('jimud/tab', JSON.stringify(data));
             const eDrag = { id: panel.id, panel: panel, preventDefault: false, event: e };
             panel.dock.emit('tab-drag', eDrag);

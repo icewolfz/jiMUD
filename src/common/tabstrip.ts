@@ -518,13 +518,15 @@ export class TabStrip extends EventEmitter {
         tab.tab.ondragstart = (e) => {
             e.dataTransfer.dropEffect = 'move';
             e.dataTransfer.effectAllowed = 'move';
-            const data = {};
+            const data: any = {};
             for (let prop in tab) {
                 if (!Object.prototype.hasOwnProperty.call(tab, prop))
                     continue;
                 if (typeof tab[prop] === 'object' && !Array.isArray(tab[prop])) continue;
                 data[prop] = tab[prop];
             }
+            var bounds = tab.tab.getBoundingClientRect();
+            data.offset = { x: Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth)), y: Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight)) };
             e.dataTransfer.setData('jimud/tab', JSON.stringify(data));
             const eDrag = { id: tab.id, tab: tab, preventDefault: false, event: e };
             this.emit('tab-drag', eDrag);

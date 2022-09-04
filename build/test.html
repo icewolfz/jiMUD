@@ -95,7 +95,14 @@
                 console.log('Test Window drop');
                 console.log(e)
                 const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));
-                ipcRenderer.send('dock-client', tab.client, { x: e.screenX, y: e.screenY, clientX: e.clientX, clientY: e.clientY });
+                console.log(tab);
+                var x = e.screenX;
+                var y = e.screenY;
+                if (tab.offset) {
+                    x -= tab.offset.x;
+                    y -= tab.offset.y;
+                }
+                ipcRenderer.send('dock-client', tab.client, { x: x, y: y, clientX: e.clientX, clientY: e.clientY });
                 //ipcRenderer.send('dock-client', tab.client, { x: e.screenX - e.clientX, y: e.screenY - e.clientY, clientX: e.clientX, clientY: e.clientY });
             }
         });
@@ -1542,7 +1549,48 @@
     width: 32px;
     height: 32px;
     text-align: center;
+    border: 1px black solid;
     "><i class="fa fa-bars"></i></div>
+    <br>
+    Custom drag button:
+    <div tile="Menu" draggable="true" id="customdrag" style="
+    display:inline-block;
+    background: white;
+    color: black;
+    width: 32px;
+    height: 32px;
+    text-align: center;
+    border: 1px black solid;
+    -webkit-app-region: drag;
+    "><i class="fa fa-ellipsis-h"></i></div>
+
+    <script type="text/javascript">
+        var drag = document.getElementById('customdrag');
+        var _dragStart;
+        drag.addEventListener("dragstart", (e) => {
+            _dragStart = e;
+            e.dataTransfer.dropEffect = 'move';
+            e.dataTransfer.effectAllowed = 'move';
+            var bounds = drag.getBoundingClientRect();
+            e.dataTransfer.setData('jimud/tab', JSON.stringify({ client: _id, clientX: e.clientX, clientY: e.clientY, offset: { x: Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth)), y: Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight)) } }));
+        });
+        drag.addEventListener("dragend", (e) => {
+            if (e.dataTransfer.dropEffect !== 'move' && (e.clientX < 0 || e.clientY < 0 || e.clientX >= document.body.clientHeight || e.clientY >= document.body.clientWidth)) {
+                console.log('Custom drag end');
+                console.log(e);
+                console.log(_dragStart);
+                e.stopPropagation();
+                e.preventDefault();
+                var x = e.screenX;
+                var y = e.screenY;
+                var bounds = drag.getBoundingClientRect();
+                x -= Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth));
+                y -= Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight));
+                ipcRenderer.send('dock-client', _id, { x: x, y: y });
+            }
+        });
+
+    </script>
 </body>
 
 </html>
