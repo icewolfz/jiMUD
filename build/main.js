@@ -45,8 +45,8 @@ else //not found use native
     argv = process.argv;
 
 argv = require('yargs-parser')(argv, {
-    string: ['data-dir', 's', 'setting', 'm', 'mf', 'map', 'c', 'character', 'pf', 'profiles'],
-    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?'],
+    string: ['data-dir', 's', 'setting', 'm', 'mf', 'map', 'c', 'character', 'pf', 'profiles', 'l', 'layout'],
+    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignorelayout'],
     alias: {
         'd': ['debug'],
         'eo': ['editorOnly', 'editoronly'],
@@ -56,7 +56,9 @@ argv = require('yargs-parser')(argv, {
         's': ['settings'],
         'mf': ['map', 'm'],
         'c': ['character', 'char'],
-        'pf': ['profiles']
+        'pf': ['profiles'],
+        'l': ['layout'],
+        'il': ['ignorelayout']
     },
     configuration: {
         'short-option-groups': false
@@ -81,7 +83,10 @@ if (!process.env.PORTABLE_EXECUTABLE_DIR) {
         console.log('-v, --version                       Print current version');
         console.log('-e, --e, -e=[file], --e=[file]      Open code editor');
         console.log('-eo, --eo, -eo=[file], --eo=[file]  Open only the code editor');
+        console.log('-no-pd, -no-portable-dir            Do not use portable dir');
         console.log('-data-dir=[file]                    Set a custom directory to store saved data');
+        console.log('-l=[file], --layout=[file]          Load window layout file');
+        console.log('-il, --ignorelayout                 Ignore layout and do not save window states');
         app.quit();
         return;
     }
@@ -96,10 +101,11 @@ Menu.setApplicationMenu(null);
 
 global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
 let set = settings.Settings.load(global.settingsFile);
-
 global.debug = false;
 global.editorOnly = false;
 global.updating = false;
+
+let _layout = parseTemplate(path.join('{data}', 'jimud.layout'));;
 
 let clients = {}
 let windows = {};
@@ -108,6 +114,8 @@ let focusedWindow = 0;
 let _clientID = 0;
 let _windowID = 0;
 const idMap = new Map();
+let _saved = false;
+let _loaded = false;
 
 process.on('uncaughtException', (err) => {
     logError(err);
@@ -805,18 +813,70 @@ function createMenu() {
                 { type: 'separator' },
                 {
                     label: 'Save &Layout',
-                    id: 'layout',
-                    click: () => {
-                        saveWindowLayout();
+                    id: 'saveLayout',
+                    click: (item, mWindow) => {
+                        var file = dialog.showSaveDialogSync(mWindow, {
+                            title: 'Save as...',
+                            defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-characters-data.zip'),
+                            filters: [
+                                { name: 'Layout files (*.layout)', extensions: ['layout'] },
+                                { name: 'All files (*.*)', extensions: ['*'] },
+                            ]
+                        });
+                        if (file === undefined || file.length === 0)
+                            return;
+                        saveWindowLayout(file);
                     }
                 },
                 {
-                    label: 'Clea&r Layout',
-                    id: 'layout',
-                    click: () => {
-                        //@TODO delete layout.json if exist
+                    label: 'L&oad Layout',
+                    id: 'loadLayout',
+                    click: (item, mWindow) => {
+                        dialog.showOpenDialog(mWindow, {
+                            defaultPath: app.getPath('userData'),
+                            filters: [
+                                { name: 'Layout files (*.layout)', extensions: ['layout'] },
+                                { name: 'All files (*.*)', extensions: ['*'] },
+                            ]
+                        }).then(result => {
+                            if (result.filePaths === undefined || result.filePaths.length === 0)
+                                return;
+                            _layout = result.filePaths[0];
+                            if (!loadWindowLayout(result.filePaths[0]))
+                                dialog.showMessageBox(mWindow, {
+                                    type: 'error',
+                                    message: `Error loading: '${result.filePaths[0]}'.`
+                                });
+                        });
                     }
-                },                
+                },
+                {
+                    label: 'Load default Layout',
+                    id: 'defaultLayout',
+                    click: () => {
+                        dialog.showMessageBox({
+                            type: 'info',
+                            message: 'Load default layout?',
+                            buttons: ['Yes', 'No']
+                        }).then(result => {
+                            if (result.response === 0) {
+                                _layout = parseTemplate(path.join('{data}', 'jimud.layout'));
+                                if (isFileSync(path.join(app.getPath('userData'), 'jimud.layout'))) {
+                                    if (!loadWindowLayout())
+                                        dialog.showMessageBox(mWindow, {
+                                            type: 'error',
+                                            message: `Error loading: default layout.`
+                                        });
+                                }
+                                else
+                                    dialog.showMessageBox(mWindow, {
+                                        type: 'error',
+                                        message: 'Unable to load, default layout not found.'
+                                    });
+                            }
+                        });
+                    }
+                },
                 /*
                 {
                   label: '&Mail...',
@@ -1205,8 +1265,14 @@ function createWindow() {
         e.preventDefault();
         //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting when using ipcrender
         _close = await canCloseAllClients(getWindowId(window));
-        if (_close)
+        if (_close) {
+            //if _loaded and not saved and the last window open save as its the final state
+            if (_loaded && !_saved && Object.keys(windows).length === 1) {
+                await saveWindowLayout();
+                _saved = true;
+            }
             window.close();
+        }
     });
     window.on('restore', () => {
         getActiveClient(window).view.webContents.send('restore');
@@ -1251,7 +1317,9 @@ app.on('ready', () => {
             msg += '-e, --e, -e=[file], --e=[file] - Open code editor\n';
             msg += '-eo, --eo, -eo=[file], --eo=[file] - Open only the code editor\n';
             msg += '-no-pd, -no-portable-dir - Do not use portable dir\n';
-            msg += '-data-dir=[file] - Set a custom directory to store saved data';
+            msg += '-data-dir=[file] - Set a custom directory to store saved data\n';
+            msg += '-l=[file], --layout=[file] - Load window layout file';
+            msg += '-il, --ignorelayout - Ignore layout and do not save window states';
             dialog.showMessageBox({
                 type: 'info',
                 message: msg
@@ -1265,7 +1333,10 @@ app.on('ready', () => {
             console.log('-v, --version                       Print current version');
             console.log('-e, --e, -e=[file], --e=[file]      Open code editor');
             console.log('-eo, --eo, -eo=[file], --eo=[file]  Open only the code editor');
+            console.log('-no-pd, -no-portable-dir            Do not use portable dir');
             console.log('-data-dir=[file]                    Set a custom directory to store saved data');
+            console.log('-l=[file], --layout=[file]          Load window layout file');
+            console.log('-il, --ignorelayout                 Ignore layout and do not save window states');
             app.quit();
             return;
         }
@@ -1279,6 +1350,7 @@ app.on('ready', () => {
             return;
         }
     }
+
     global.debug = argv.debug;
     if (argv.eo) {
         if (Array.isArray(argv.eo)) {
@@ -1314,25 +1386,45 @@ app.on('ready', () => {
     else if (argv.s)
         global.settingsFile = parseTemplate(argv.s);
 
+    if (Array.isArray(argv.l))
+        _layout = parseTemplate(argv.l[0]);
+    else if (argv.l)
+        _layout = argv.l;
+
     if (global.editorOnly)
         showCodeEditor();
     else {
-        let windowId = createWindow();
-        let window = windows[windowId].window;
-        let id = createClient(window.getContentBounds());
-        focusedWindow = windowId;
-        focusedClient = id;
-        windows[windowId].clients.push(id);
-        windows[windowId].current = id;
-        clients[id].parent = window;
-        //window.setBrowserView(clients[id].view);
-        window.addBrowserView(clients[id].view);
-        window.setTopBrowserView(clients[id].view);
-        window.setMenu(clients[id].menu);
-        focusClient(window, true);
-        window.webContents.once('dom-ready', () => {
-            window.webContents.send('new-client', id);
-        });
+        //use default
+        let _ignore = false;
+        //attempt to load layout, 
+        if (isFileSync(_layout)) {
+            if (!argv.il)
+                _loaded = loadWindowLayout(_layout);
+        }
+        else if (!argv.il)
+            _ignore = true;
+
+        //if it fails load default window
+        if (!_loaded) {
+            //use default unless ignoring layouts
+            _loaded = _ignore;
+            let windowId = createWindow();
+            let window = windows[windowId].window;
+            let id = createClient(window.getContentBounds());
+            focusedWindow = windowId;
+            focusedClient = id;
+            windows[windowId].clients.push(id);
+            windows[windowId].current = id;
+            clients[id].parent = window;
+            //window.setBrowserView(clients[id].view);
+            window.addBrowserView(clients[id].view);
+            window.setTopBrowserView(clients[id].view);
+            window.setMenu(clients[id].menu);
+            focusClient(window, true);
+            window.webContents.once('dom-ready', () => {
+                window.webContents.send('new-client', id);
+            });
+        }
     }
 });
 
@@ -1367,7 +1459,11 @@ app.on('before-quit', async (e) => {
         });
     }
     //wait until save is done before continue just to be safe
-    //await saveWindowLayout();
+    //only saved if not already been saved somewhere else and was loaded with no errors
+    if (_loaded && !_saved) {
+        await saveWindowLayout();
+        _saved = true;
+    }
 });
 
 ipcMain.on('check-for-updates', checkForUpdatesManual);
@@ -1424,6 +1520,9 @@ ipcMain.on('get-global', (event, key) => {
             break;
         case 'updating':
             event.returnValue = global.updating;
+            break;
+        case 'layout':
+            event.returnValue = _layout;
             break;
         default:
             event.returnValue = null;
@@ -3228,7 +3327,7 @@ async function executeScriptClient(script, window, focus) {
 
 async function saveWindowLayout(file) {
     if (!file)
-        file = parseTemplate(path.join('{data}', 'layout.json'));
+        file = parseTemplate(path.join('{data}', 'jimud.layout'));
     let id;
     const data = {
         windowID: _windowID, //save last id to prevent reused ids
@@ -3284,7 +3383,8 @@ async function saveWindowLayout(file) {
 
 function loadWindowLayout(file) {
     if (!file)
-        file = parseTemplate(path.join('{data}', 'layout.json'));
+        file = parseTemplate(path.join('{data}', 'jimud.layout'));
+    return false;
 }
 
 function saveWindowState(window) {
