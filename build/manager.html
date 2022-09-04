@@ -124,6 +124,10 @@
                 console.log('tab drop');
                 console.log(e)
                 //if not dragging its from a different window so its a undock/dock
+                if(e.tab === tabstrip.dragTab) {
+                    e.event.preventDefault();
+                    e.event.stopPropagation();
+                }
                 if (!tabstrip.dragPanel && !tabstrip.dragTab) {
                     e.preventDefault = true;
                     e.event.stopPropagation();

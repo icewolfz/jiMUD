@@ -14,7 +14,7 @@
 
         function updateContent(txt) {
             let body = document.getElementById('content')
-            body.innerHTML = `${_id}<br>Closable: ${_close}<br>Capture Keyboard: ${_capture} ${txt ? '<br>' + txt : ''}`;
+            body.innerHTML = `ClientId: ${_id}<br>Closable: ${_close}<br>Capture Keyboard: ${_capture} ${txt ? '<br>' + txt : ''}`;
         }
 
         function setId(id) {
@@ -106,7 +106,12 @@
                 //ipcRenderer.send('dock-client', tab.client, { x: e.screenX - e.clientX, y: e.screenY - e.clientY, clientX: e.clientX, clientY: e.clientY });
             }
         });
-
+        window.addEventListener('blur', e=> {
+            console.log('blur');
+        });
+        window.addEventListener('focus', e=> {
+            console.log('focus');
+        });        
         document.addEventListener('keydown', (e) => {
             console.log(e);
             if (e.key === 'Alt' && _capture) {

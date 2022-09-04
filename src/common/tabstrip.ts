@@ -527,6 +527,7 @@ export class TabStrip extends EventEmitter {
             }
             var bounds = tab.tab.getBoundingClientRect();
             data.offset = { x: Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth)), y: Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight)) };
+            //@TODO recode this to be changeable to allow multiple tab strips in 1 window if need be
             e.dataTransfer.setData('jimud/tab', JSON.stringify(data));
             const eDrag = { id: tab.id, tab: tab, preventDefault: false, event: e };
             this.emit('tab-drag', eDrag);

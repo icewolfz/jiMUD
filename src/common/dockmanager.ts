@@ -1238,7 +1238,8 @@ export class DockPane extends EventEmitter {
             }
             var bounds = panel.tab.getBoundingClientRect();
             data.offset = { x: Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth)), y: Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight)) };
-            e.dataTransfer.setData('jimud/tab', JSON.stringify(data));
+            //@TODO recode this to be changeable to allow multiple dockmangers in 1 window if need be
+            e.dataTransfer.setData('dockmanger/tab', JSON.stringify(data));
             const eDrag = { id: panel.id, panel: panel, preventDefault: false, event: e };
             panel.dock.emit('tab-drag', eDrag);
             if (eDrag.preventDefault) return;
