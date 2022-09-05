@@ -2142,65 +2142,131 @@ function createMenu() {
             id: 'file',
             submenu: [
                 {
-                    label: '&New connection',
-                    id: 'newConnect',
-                    accelerator: 'CmdOrCtrl+Shift+N',
-                    click: (item, mWindow) => {
-                        let windowId = getWindowId(mWindow);
-                        let id = createClient({ bounds: mWindow.getContentBounds() });
-                        focusedWindow = windowId;
-                        focusedClient = id;
-                        windows[windowId].clients.push(id);
-                        windows[windowId].current = id;
-                        clients[id].parent = mWindow;
-                        clients[id].view.webContents.once('dom-ready', () => {
-                            //mWindow.setBrowserView(clients[id].view);
-                            mWindow.addBrowserView(clients[id].view);
-                            mWindow.setTopBrowserView(clients[id].view);
-                            mWindow.setMenu(clients[id].menu);
-                            mWindow.webContents.send('new-client', { id: id });
-                            focusClient(mWindow, true);
-                        });
-                    }
-                },
-                {
-                    label: '&New window',
-                    id: '',
-                    accelerator: 'CmdOrCtrl+Alt+N',
-                    click: (item, mWindow) => {
-                        //save the current states so it has the latest for new window
-                        states['manager.html'] = saveWindowState(mWindow);
-                        //offset the state so it is not an exact overlap
-                        states['manager.html'].bounds.x += 20;
-                        states['manager.html'].bounds.y += 20;
-                        const { height, width } = screen.getPrimaryDisplay().workAreaSize;
-                        //make sure the window appears on the screen
-                        if (states['manager.html'].bounds.x > (width - 10))
-                            states['manager.html'].bounds.x = width - states['manager.html'].bounds.width;
-                        if (states['manager.html'].bounds.x - states['manager.html'].bounds.width - 10 < 0)
-                            states['manager.html'].bounds.x = 0;
-                        if (states['manager.html'].bounds.y > (height - 10) < 0)
-                            states['manager.html'].bounds.y = height - states['manager.html'].bounds.height;
-                        if (states['manager.html'].bounds.y - states['manager.html'].bounds.height - 10 < 0)
-                            states['manager.html'].bounds.y = 0;
+                    label: '&New',
+                    submenu: [
+                        {
+                            label: '&Connection',
+                            id: 'newConnect',
+                            accelerator: 'CmdOrCtrl+Shift+N',
+                            click: (item, mWindow) => {
+                                let windowId = getWindowId(mWindow);
+                                let id = createClient({ bounds: mWindow.getContentBounds() });
+                                focusedWindow = windowId;
+                                focusedClient = id;
+                                windows[windowId].clients.push(id);
+                                windows[windowId].current = id;
+                                clients[id].parent = mWindow;
+                                clients[id].view.webContents.once('dom-ready', () => {
+                                    //mWindow.setBrowserView(clients[id].view);
+                                    mWindow.addBrowserView(clients[id].view);
+                                    mWindow.setTopBrowserView(clients[id].view);
+                                    mWindow.setMenu(clients[id].menu);
+                                    mWindow.webContents.send('new-client', { id: id });
+                                    focusClient(mWindow, true);
+                                });
+                            }
+                        },
+                        {
+                            label: '&Connection Development',
+                            id: 'newConnect',
+                            click: (item, mWindow) => {
+                                let windowId = getWindowId(mWindow);
+                                let id = createClient({ bounds: mWindow.getContentBounds() });
+                                focusedWindow = windowId;
+                                focusedClient = id;
+                                windows[windowId].clients.push(id);
+                                windows[windowId].current = id;
+                                clients[id].parent = mWindow;
+                                clients[id].view.webContents.once('dom-ready', () => {
+                                    //mWindow.setBrowserView(clients[id].view);
+                                    mWindow.addBrowserView(clients[id].view);
+                                    mWindow.setTopBrowserView(clients[id].view);
+                                    mWindow.setMenu(clients[id].menu);
+                                    mWindow.webContents.send('new-client', { id: id });
+                                    mWindow.webContents.send('setting', 'dev', true);
+                                    focusClient(mWindow, true);
+                                });
+                            }
+                        },
+                        {
+                            label: '&Window',
+                            id: '',
+                            accelerator: 'CmdOrCtrl+Alt+N',
+                            click: (item, mWindow) => {
+                                //save the current states so it has the latest for new window
+                                states['manager.html'] = saveWindowState(mWindow);
+                                //offset the state so it is not an exact overlap
+                                states['manager.html'].bounds.x += 20;
+                                states['manager.html'].bounds.y += 20;
+                                const { height, width } = screen.getPrimaryDisplay().workAreaSize;
+                                //make sure the window appears on the screen
+                                if (states['manager.html'].bounds.x > (width - 10))
+                                    states['manager.html'].bounds.x = width - states['manager.html'].bounds.width;
+                                if (states['manager.html'].bounds.x - states['manager.html'].bounds.width - 10 < 0)
+                                    states['manager.html'].bounds.x = 0;
+                                if (states['manager.html'].bounds.y > (height - 10) < 0)
+                                    states['manager.html'].bounds.y = height - states['manager.html'].bounds.height;
+                                if (states['manager.html'].bounds.y - states['manager.html'].bounds.height - 10 < 0)
+                                    states['manager.html'].bounds.y = 0;
 
-                        let windowId = createWindow();
-                        let window = windows[windowId].window;
-                        let id = createClient({ bounds: window.getContentBounds() });
-                        focusedWindow = windowId;
-                        focusedClient = id;
-                        windows[windowId].clients.push(id);
-                        windows[windowId].current = id;
-                        clients[id].parent = window;
-                        //window.setBrowserView(clients[id].view);
-                        window.addBrowserView(clients[id].view);
-                        window.setTopBrowserView(clients[id].view);
-                        window.setMenu(clients[id].menu);
-                        window.webContents.once('dom-ready', () => {
-                            window.webContents.send('new-client', { id: id });
-                            focusClient(window, true);
-                        });
-                    }
+                                let windowId = createWindow();
+                                let window = windows[windowId].window;
+                                let id = createClient({ bounds: window.getContentBounds() });
+                                focusedWindow = windowId;
+                                focusedClient = id;
+                                windows[windowId].clients.push(id);
+                                windows[windowId].current = id;
+                                clients[id].parent = window;
+                                //window.setBrowserView(clients[id].view);
+                                window.addBrowserView(clients[id].view);
+                                window.setTopBrowserView(clients[id].view);
+                                window.setMenu(clients[id].menu);
+                                window.webContents.once('dom-ready', () => {
+                                    window.webContents.send('new-client', { id: id });
+                                    focusClient(window, true);
+                                });
+                            }
+                        },
+                        {
+                            label: '&Window Development',
+                            id: '',
+                            click: (item, mWindow) => {
+                                //save the current states so it has the latest for new window
+                                states['manager.html'] = saveWindowState(mWindow);
+                                //offset the state so it is not an exact overlap
+                                states['manager.html'].bounds.x += 20;
+                                states['manager.html'].bounds.y += 20;
+                                const { height, width } = screen.getPrimaryDisplay().workAreaSize;
+                                //make sure the window appears on the screen
+                                if (states['manager.html'].bounds.x > (width - 10))
+                                    states['manager.html'].bounds.x = width - states['manager.html'].bounds.width;
+                                if (states['manager.html'].bounds.x - states['manager.html'].bounds.width - 10 < 0)
+                                    states['manager.html'].bounds.x = 0;
+                                if (states['manager.html'].bounds.y > (height - 10) < 0)
+                                    states['manager.html'].bounds.y = height - states['manager.html'].bounds.height;
+                                if (states['manager.html'].bounds.y - states['manager.html'].bounds.height - 10 < 0)
+                                    states['manager.html'].bounds.y = 0;
+
+                                let windowId = createWindow();
+                                let window = windows[windowId].window;
+                                let id = createClient({ bounds: window.getContentBounds() });
+                                focusedWindow = windowId;
+                                focusedClient = id;
+                                windows[windowId].clients.push(id);
+                                windows[windowId].current = id;
+                                clients[id].parent = window;
+                                //window.setBrowserView(clients[id].view);
+                                window.addBrowserView(clients[id].view);
+                                window.setTopBrowserView(clients[id].view);
+                                window.setMenu(clients[id].menu);
+                                window.webContents.once('dom-ready', () => {
+                                    window.webContents.send('new-client', { id: id });
+                                    window.webContents.send('setting', 'dev', true);
+                                    focusClient(window, true);
+                                });
+                            }
+                        }
+                    ]
                 },
                 {
                     type: 'separator'
