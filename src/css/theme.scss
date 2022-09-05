@@ -41,7 +41,7 @@
     height: 100%;
     width: 100%;
     /*opacity: 0;*/
-    display:none;
+    display: none;
     /*transition: .5s ease;*/
 }
 
@@ -201,7 +201,9 @@
     cursor: default;
 }
 
-.scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
+.scroll-disabled .scroll-thumb,
+.scroll-disabled .scroll-thumb:hover,
+.scroll-disabled .scroll-thumb:active {
     background-color: ThreeDLightShadow;
     cursor: default;
 }
@@ -212,9 +214,35 @@ button.active:focus,
 button.focus,
 button:active.focus,
 button.active.focus {
-  outline: none !important;
+    outline: none !important;
 }
 
 #history-dropup {
-    width:32px
+    width: 32px
+}
+
+/** Grip button */
+.drag-grip {
+    display: inline-block;
+    background: white;
+    color: black;
+    width: 32px;
+    height: 16px;
+    text-align: center;
+    border: 1px black solid;
+    -webkit-app-region: drag;
+    font-size: 1.4em;
+    overflow: hidden;
+    position: relative;
+    text-decoration: none;
+    box-sizing: border-box;
+    vertical-align: middle;
+}
+
+.drag-grip span {
+    transform: rotate(-90deg);
+    display: inline-block;
+    position: absolute;
+    left: 8px;
+    top: -6px;
 }

@@ -704,6 +704,52 @@
                 //client.UpdateWindow();
                 doUpdate(384);
             });
+            window.addEventListener('dragstart', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                }
+            });
+            window.addEventListener('dragleave', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+            window.addEventListener('dragover', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+            window.addEventListener('dragenter', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+            window.addEventListener('dragend', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                }
+            });
+            window.addEventListener('drop', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));
+                    var x = e.screenX;
+                    var y = e.screenY;
+                    if (tab.offset) {
+                        x -= tab.offset.x;
+                        y -= tab.offset.y;
+                    }
+                    ipcRenderer.send('dock-client', tab.client, { x: x, y: y, clientX: e.clientX, clientY: e.clientY });
+                }
+            });
             document.getElementById('buttonbar').addEventListener('wheel', (e) => {
                 if (e.deltaY >= 0)
                     document.getElementById('buttonbar').scrollTop += document.getElementById('buttonbar').clientWidth;
@@ -743,6 +789,24 @@
                 clearTimeout(_buttonTimer);
             };
 
+            document.getElementById('drag-grip').addEventListener("dragstart", (e) => {
+                e.dataTransfer.dropEffect = 'move';
+                e.dataTransfer.effectAllowed = 'move';
+                var bounds = document.getElementById('drag-grip').getBoundingClientRect();
+                e.dataTransfer.setData('jimud/tab', JSON.stringify({ client: _id, clientX: e.clientX, clientY: e.clientY, offset: { x: Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth)), y: Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight)) } }));
+            });
+            document.getElementById('drag-grip').addEventListener("dragend", (e) => {
+                if (e.dataTransfer.dropEffect !== 'move' && (e.clientX < 0 || e.clientY < 0 || e.clientX >= document.body.clientHeight || e.clientY >= document.body.clientWidth)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    var x = e.screenX;
+                    var y = e.screenY;
+                    var bounds = document.getElementById('drag-grip').getBoundingClientRect();
+                    x -= Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth));
+                    y -= Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight));
+                    ipcRenderer.send('dock-client', _id, { x: x, y: y });
+                }
+            });
             _logger = new Worker('./js/logging.js');
             _logger.onmessage = (e) => {
                 switch (e.data.event) {
@@ -2715,6 +2779,18 @@
         });
 
 
+        ipcRenderer.on('connection-settings', (event, options) => {
+
+        });
+
+        ipcRenderer.on('change-connection-settings', (event, options) => {
+
+        });
+
+        ipcRenderer.on('window-reloaded', event => {
+
+        });
+
         // eslint-disable-next-line no-unused-vars
         function childClosed(url, name) {
             if (path.basename(url) === 'characters.html')
@@ -3156,13 +3232,40 @@
             return dlg;
         }
 
+        //#region Id functions
         function setId(id) {
             _id = id;
-        }         
+        }
 
         function getId() {
             return _id;
         }
+        //#endregion
+
+        //#region Close hooks
+        let _close = true;
+        function close() {
+            return _close;
+        }
+
+        function closeable() {
+            if (!_close) {
+                var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                    {
+                        type: 'warning',
+                        title: 'Unclosable',
+                        message: 'Window is unclosable, close anyways?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    });
+                if (choice === 0) {
+                    _close = true;
+                    return true;
+                }
+            }
+            return _close;
+        }
+        //#endregion
     </script>
 </head>
 
@@ -3194,6 +3297,9 @@
     <a href="javascript:void(0)" id="bb-scroll-up" class="hidden button"><i class="fa fa-chevron-up"></i></a>
     <a href="javascript:void(0)" id="bb-scroll-down" class="hidden button"><i class="fa fa-chevron-down"></i></a>
     <div id="buttonbar">
+        <a href="javascript:void(0)" title="Drag grip" draggable="true" id="drag-grip" class="drag-grip">
+            <span>⠿</span>
+        </a>
         <a href="javascript:void(0)" title="Connect" id="connect" class="button" onclick="client.connect();">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="-0.6 -0.6 17 16">
                 <path d="M16 0c0 0.5 0 1.1 0 1.6 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.1 0 0.7 0 0.8 0 0.2 0.1 0.6 0 0.8 0 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.6 0 0.8 -0.1 0.2 0.1 0.7 0 0.8 -0.1 0.1-0.7-0.1-0.8 0 -0.1 0.2 0.1 0.6 0 0.8 -0.8 0-1.6 0-2.4 0 -0.1-0.2 0.1-0.7 0-0.8s-0.7 0.1-0.8 0 0.1-0.7 0-0.8c-0.1-0.1-0.8 0.1-0.8 0 0-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.2-0.1-0.6 0-0.8 0.1-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.2-0.1 0.6 0 0.8 0 0.2 0 0.6 0.1 0.8 0 0.3-0.1 0.5 0 0.8 0 0.1-0.2-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8 0.7 0.1 0.8 0c0.1-0.1-0.1-0.7 0-0.8 0.1-0.1 0.7 0.1 0.8 0s-0.1-0.7 0-0.8 0.6 0.1 0.8 0C15.5 0 15.8 0 16 0z" />

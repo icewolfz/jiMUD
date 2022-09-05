@@ -48,7 +48,7 @@ body {
 #display-split-bar:hover,
 #display-split-bar:active,
 #display-split-bar:focus {
-    background-color: #d70000;    
+    background-color: #d70000;
     transition-delay: 1s;
 }
 
@@ -104,7 +104,7 @@ body {
 }
 
 #bb-scroll-down {
-    left:0;
+    left: 0;
     bottom: 0;
     background-size: contain;
 }
@@ -143,7 +143,7 @@ body {
     display: block !important;
     color: wheat;
     background-color: maroon !important;
-    border: 1px solid #{$borderColor} !important;    
+    border: 1px solid #{$borderColor} !important;
 }
 
 .scroll-split-button.active {
@@ -175,7 +175,10 @@ body {
     color: wheat;
 }
 
-.scroll-split-button.disabled, .scroll-split-button.disabled:hover, .scroll-split-button.disabled:active, .scroll-split-button.disabled:focus {
+.scroll-split-button.disabled,
+.scroll-split-button.disabled:hover,
+.scroll-split-button.disabled:active,
+.scroll-split-button.disabled:focus {
     background-color: maroon !important;
     color: #A88749;
 }
@@ -188,7 +191,9 @@ body {
     border-left: 1px solid #494238;
 }
 
-.scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
+.scroll-disabled .scroll-thumb,
+.scroll-disabled .scroll-thumb:hover,
+.scroll-disabled .scroll-thumb:active {
     background: rgba(51, 48, 43, 0.4);
     border: 0px;
     color: #A88749;
@@ -444,11 +449,13 @@ body {
     background-image: url("#{$images}/status/weatherhailhard.png");
 }
 
-.weather-rain #environmentweather, .weather-zombie_rain #environmentweather {
+.weather-rain #environmentweather,
+.weather-zombie_rain #environmentweather {
     background-image: url("#{$images}/status/weatherrain.png");
 }
 
-.weather-rain.intensity-hard #environmentweather,.weather-zombie_rain.intensity-hard #environmentweather {
+.weather-rain.intensity-hard #environmentweather,
+.weather-zombie_rain.intensity-hard #environmentweather {
     background-image: url("#{$images}/status/weatherrainhard.png");
 }
 
@@ -472,7 +479,7 @@ body {
     background-image: url("#{$images}/status/weatherblood_rain.png");
 }
 
-.weather-blood_rain.intensity-hard #environmentweather{
+.weather-blood_rain.intensity-hard #environmentweather {
     background-image: url("#{$images}/status/weatherblood_rainhard.png");
 }
 
@@ -778,7 +785,7 @@ body {
 
 #hp-status {
     text-align: left;
-    color: #{$color};    
+    color: #{$color};
 }
 
 #hp-status span {
@@ -824,7 +831,7 @@ body {
     text-align: center;
     border-radius: 4px;
     border: 0px;
-    background-color: transparent;  
+    background-color: transparent;
 }
 
 
@@ -853,7 +860,8 @@ body {
     right: 42px;
 }
 
-#btnTriggers, #btnParsing {
+#btnTriggers,
+#btnParsing {
     top: 5px;
     text-align: center;
     border-radius: 4px;
@@ -863,15 +871,22 @@ body {
     background-color: transparent;
 }
 
-#btnTriggers.on, #btnParsing.on {
+#btnTriggers.on,
+#btnParsing.on {
     background-color: #d70000;
 }
 
-#btnTriggers:hover, #btnParsing:hover, #btnTriggers.on:active, #btnParsing.on:active {
+#btnTriggers:hover,
+#btnParsing:hover,
+#btnTriggers.on:active,
+#btnParsing.on:active {
     background-color: #d70000;
 }
 
-#btnTriggers:active, #btnParsing:active, #btnTriggers.on:hover, #btnParsing.on:hover {
+#btnTriggers:active,
+#btnParsing:active,
+#btnTriggers.on:hover,
+#btnParsing.on:hover {
     background-color: #790000;
 }
 
@@ -933,8 +948,9 @@ body {
     color: #{$color};
 }
 
-.button:hover .overlay, .button.on:hover {
-    background-color: rgba(215,0,0, 0.40);
+.button:hover .overlay,
+.button.on:hover {
+    background-color: rgba(215, 0, 0, 0.40);
 }
 
 .button-sm {
@@ -943,6 +959,33 @@ body {
 }
 
 /** button end */
+
+/** Grip button */
+.drag-grip {
+    background-image: url(#{$images}/button.png);
+    color: #{$color};
+    background-color: maroon;
+    background-size: contain;
+}
+
+.drag-grip:hover {
+    background-color: #d70000;
+    color: #{$color};
+}
+
+.drag-grip:active {
+    background-color: #790000;
+    color: #{$color};
+}
+
+.drag-grip:focus {
+    color: #{$color};
+}
+
+.drag-grip span {
+    left: 8px;
+    top: -6px;
+}
 
 #status-drag-bar {
     left: -3px;
@@ -956,7 +999,7 @@ body {
     background-color: #d70000;
 }
 
-#status-drag-bar:hover{
-    background-color: #d70000;    
+#status-drag-bar:hover {
+    background-color: #d70000;
     transition-delay: 1s;
 }

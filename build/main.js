@@ -186,8 +186,8 @@ function createWindow(options) {
         options.file = 'manager.html';
     if (options.data && options.data.state)
         bounds = options.data.state.bounds;
-    else if (states[file])
-        bounds = states[file].bounds;
+    else if (states[options.file])
+        bounds = states[options.file].bounds;
     else
         bounds = {
             x: 0,
@@ -1158,9 +1158,8 @@ ipcMain.on('update-title', (event, options) => {
 //bounds, id, data, file
 function createClient(options) {
     options = options || {};
-    //@TODO replace test.html with index.html
     if (!options.file || options.file.length === 0)
-        options.file = 'build/test.html';
+        options.file = 'build/index.html';
     const view = new BrowserView({
         webPreferences: {
             nodeIntegration: true,
@@ -1303,11 +1302,7 @@ function createClient(options) {
             _clientID++;
         options.id = _clientID;
     }
-    //@TODO replace test.html with index.html
-    if (options.menu)
-        clients[options.id] = { view: view, menu: null, windows: [], parent: null, file: options.file !== 'build/test.html' ? options.file : 0 };
-    else
-        clients[options.id] = { view: view, menu: createMenu(), windows: [], parent: null, file: options.file !== 'build/test.html' ? options.file : 0 };
+    clients[options.id] = { view: view, menu: options.noMenu ? null : createMenu(), windows: [], parent: null, file: options.file !== 'build/index.html' ? options.file : 0 };
     idMap.set(view, options.id);
     executeScript(`if(typeof setId === "function") setId(${options.id});`, clients[options.id].view);
     if (options.data)

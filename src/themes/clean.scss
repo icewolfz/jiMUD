@@ -919,6 +919,32 @@ body {
 
 /** button end */
 
+/** Grip button */
+.drag-grip {
+    color: #{$color};
+    background-color: maroon;
+    background-size: contain;
+}
+
+.drag-grip:hover {
+    background-color: #d70000;
+    color: #{$color};
+}
+
+.drag-grip:active {
+    background-color: #790000;
+    color: #{$color};
+}
+
+.drag-grip:focus {
+    color: #{$color};
+}
+
+.drag-grip span {
+    left: 8px;
+    top: -6px;
+}
+
 #status-drag-bar {
     left: -2px;
     top: -7px;
