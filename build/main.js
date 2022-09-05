@@ -1145,14 +1145,9 @@ ipcMain.on('execute-main', (event, code) => {
 });
 
 ipcMain.on('update-title', (event, options) => {
-    for (clientId in clients) {
-        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
-            continue;
-        if (clients[clientId].view.webContents === event.sender) {
-            clients[clientId].parent.webContents.send('update-title', getClientId(clients[clientId].view), options);
-            break;
-        }
-    }
+    const client = clientFromContents(event.sender);
+    if (client)
+        client.parent.webContents.send('update-title', getClientId(clients[clientId].view), options);
 });
 
 //bounds, id, data, file
@@ -1947,6 +1942,39 @@ function focusClient(window, focusWindow) {
         client.parent.webContents.focus();
     }
     client.view.webContents.focus();
+}
+
+function browserViewFromContents(contents) {
+    if (!contents) return null
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        if (clients[clientId].view.webContents === contents)
+            return clients[clientId].view;
+    }
+    return null;
+}
+
+function clientIdFromContents(contents) {
+    if (!contents) return null
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        if (clients[clientId].view.webContents === contents)
+            return clientId;
+    }
+    return null;
+}
+
+function clientFromContents(contents) {
+    if (!contents) return null
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        if (clients[clientId].view.webContents === contents)
+            return clients[clientId];
+    }
+    return null;
 }
 
 // eslint-disable-next-line no-unused-vars
