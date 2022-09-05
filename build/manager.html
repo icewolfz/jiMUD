@@ -58,7 +58,7 @@
                     //force a refresh as will not update while hidden
                     tabstrip.refresh();
                     //resize previous tab just to ensure all are same size
-                    ipcRenderer.send('update-client', tabs[0].client, _current, useDockPanel ? tabstrip.activePane.tabstripHeight : tabstrip.height);
+                    ipcRenderer.send('update-client', tabs[0].client, useDockPanel ? tabstrip.activePane.tabstripHeight : tabstrip.height);
                     ipcRenderer.send('update-client', _current, useDockPanel ? tabstrip.activePane.tabstripHeight : tabstrip.height);
                 }
             });
@@ -238,7 +238,7 @@
         }
 
         function saveWindow() {
-            return { data: 'custom data test'};
+            return { data: 'custom data test' };
         }
 
         function restoreWindow(data) {
@@ -327,11 +327,11 @@
                     cTab = c;
                 }
             }
+            tabstrip.addTabs(tabs, cTab);
+            tabstrip.refresh();
             for (var c = 0, cl = clients.length; c < cl; c++) {
                 ipcRenderer.send('update-client', clients[c].id, useDockPanel ? tabstrip.activePane.tabstripHeight : tabstrip.height);
             }
-            console.log('after current: ' + _current);
-            tabstrip.addTabs(tabs, cTab);
         }
 
         function switchToClient(id) {

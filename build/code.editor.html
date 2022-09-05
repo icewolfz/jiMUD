@@ -24,6 +24,8 @@
         const { SetupEditor } = require('./js/editor/code.editor');
         const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
 
+        function windowType() { return 'codeEditor'; }
+
         window.onerror = function (msg, url, line, col, error) {
             ipcRenderer.send('log-error', error, true);
             if (options && options.debug) {
