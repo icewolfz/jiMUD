@@ -66,7 +66,7 @@ Basic questions answered about jiMUD
 - `-no-pd, -no-portable-dir`                  When using portable exe use default local data directory
 - `-data-dir=[file]`                          Set a custom directory to store saved data
 - `-l=[file], -layout=[file]`                 Load window layout file
-- `-il, --ignorelayout`                       Ignore layout and do not save window states
+- `-il, --ignore-layout`                      Ignore layout and do not save window states
 
 ## References
 

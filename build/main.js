@@ -8,11 +8,9 @@ const path = require('path');
 const fs = require('fs');
 const url = require('url');
 const settings = require('./js/settings');
-const { EditorSettings } = require('./js/editor/code.editor.settings');
 const { TrayClick } = require('./js/types');
 
 require('@electron/remote/main').initialize()
-//require('electron-local-crash-reporter').start();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -41,7 +39,7 @@ else //not found use native
 
 argv = require('yargs-parser')(argv, {
     string: ['data-dir', 's', 'setting', 'm', 'mf', 'map', 'c', 'character', 'pf', 'profiles', 'l', 'layout'],
-    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignorelayout'],
+    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout'],
     alias: {
         'd': ['debug'],
         'eo': ['editorOnly', 'editoronly'],
@@ -53,7 +51,7 @@ argv = require('yargs-parser')(argv, {
         'c': ['character', 'char'],
         'pf': ['profiles'],
         'l': ['layout'],
-        'il': ['ignorelayout']
+        'il': ['ignore-layout']
     },
     configuration: {
         'short-option-groups': false
@@ -81,7 +79,7 @@ if (!process.env.PORTABLE_EXECUTABLE_DIR) {
         console.log('-no-pd, -no-portable-dir            Do not use portable dir');
         console.log('-data-dir=[file]                    Set a custom directory to store saved data');
         console.log('-l=[file], --layout=[file]          Load window layout file');
-        console.log('-il, --ignorelayout                 Ignore layout and do not save window states');
+        console.log('-il, --ignore-layout                Ignore layout and do not save window states');
         app.quit();
         return;
     }
@@ -162,8 +160,7 @@ function addInputContext(window, spellcheck) {
                                 el.val(value);
                                 el[0].selectionStart = start;
                                 el[0].selectionEnd = start + ${item.label.length + item.sel};
-                                if(typeof windowType === 'undefined' || windowType() !== 'codeEditor')
-                                el.blur();
+                                if(typeof windowType === 'undefined' || windowType() !== 'codeEditor') el.blur();
                                 el.focus();
                             })();`, mWindow, true);
                         }
@@ -181,12 +178,14 @@ function addInputContext(window, spellcheck) {
     });
 }
 
-function createWindow(id, data, file) {
+//id, data, file, title, icon
+function createWindow(options) {
+    options = options || {};
     var bounds;
-    if (!file || file.length === 0)
-        file = 'manager.html';
-    if (data && data.state)
-        bounds = data.state.bounds;
+    if (!options.file || options.file.length === 0)
+        options.file = 'manager.html';
+    if (options.data && options.data.state)
+        bounds = options.data.state.bounds;
     else if (states[file])
         bounds = states[file].bounds;
     else
@@ -198,14 +197,14 @@ function createWindow(id, data, file) {
         };
     // Create the browser window.
     let window = new BrowserWindow({
-        title: 'jiMUD',
+        title: options.title || 'jiMUD',
         x: getWindowX(bounds.x, bounds.width),
         y: getWindowY(bounds.y, bounds.height),
         width: bounds.width,
         height: bounds.height,
         backgroundColor: '#000',
         show: false,
-        icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
+        icon: path.join(__dirname, options.icon || '../assets/icons/png/64x64.png'),
         skipTaskbar: !set.showInTaskBar ? true : false,
         webPreferences: {
             nodeIntegration: true,
@@ -222,9 +221,9 @@ function createWindow(id, data, file) {
     });
     require("@electron/remote/main").enable(window.webContents);
 
-    // and load the index.html of the app.
+    // and load the file of the app.
     window.loadURL(url.format({
-        pathname: path.join(__dirname, file),
+        pathname: path.join(__dirname, options.file),
         protocol: 'file:',
         slashes: true
     }));
@@ -335,7 +334,7 @@ function createWindow(id, data, file) {
         });
 
         childWindow.on('resized', () => {
-            states[file] = saveWindowState(childWindow);
+            states[details.url] = saveWindowState(childWindow);
         });
 
         childWindow.on('closed', () => {
@@ -372,14 +371,14 @@ function createWindow(id, data, file) {
         loadWindowScripts(window, 'manager');
         executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});`, window);
         executeScript('if(typeof loadTheme === "function") loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', window);
-        if (data && data.data)
-            executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify(data.data) + ');', window);
+        if (options.data && options.data.data)
+            executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify(options.data.data) + ');', window);
         updateJumpList();
         checkForUpdates();
-        if (data && data.state)
-            restoreWindowState(window, data.state);
-        else if (states[file])
-            restoreWindowState(window, states[file]);
+        if (options.data && options.data.state)
+            restoreWindowState(window, options.data.state);
+        else if (states[options.file])
+            restoreWindowState(window, states[options.file]);
         else
             window.show();
     });
@@ -393,7 +392,7 @@ function createWindow(id, data, file) {
         //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting when using ipcrender
         _close = await canCloseAllClients(getWindowId(window));
         if (_close) {
-            states[file] = saveWindowState(window);
+            states[options.file] = saveWindowState(window);
             //if _loaded and not saved and the last window open save as its the final state
             if (_loaded && !_saved && Object.keys(windows).length === 1) {
                 await saveWindowLayout();
@@ -404,40 +403,40 @@ function createWindow(id, data, file) {
     });
 
     window.on('resize', () => {
-        states[file] = saveWindowState(window);
+        states[options.file] = saveWindowState(window);
     });
 
     window.on('move', () => {
-        states[file] = saveWindowState(window);
+        states[options.file] = saveWindowState(window);
     });
 
     window.on('restore', () => {
         getActiveClient(window).view.webContents.send('restore');
-        states[file] = saveWindowState(window);
+        states[options.file] = saveWindowState(window);
     });
     window.on('maximize', () => {
         getActiveClient(window).view.webContents.send('maximize');
-        states[file] = saveWindowState(window);
+        states[options.file] = saveWindowState(window);
     });
     window.on('unmaximize', () => {
         getActiveClient(window).view.webContents.send('unmaximize');
-        states[file] = saveWindowState(window);
+        states[options.file] = saveWindowState(window);
     });
 
     window.on('resized', () => {
         getActiveClient(window).view.webContents.send('resized');
-        states[file] = saveWindowState(window);
+        states[options.file] = saveWindowState(window);
     });
-    if (!id) {
+    if (!options.id) {
         _windowID++;
         //in case the new id is used from old layout loop until find empty id
         while (windows[_windowID])
             _windowID++;
-        id = _windowID;
+        options.id = _windowID;
     }
-    windows[id] = { window: window, clients: [], current: 0 };
-    idMap.set(window, id);
-    return id;
+    windows[options.id] = { window: window, clients: [], current: 0 };
+    idMap.set(window, options.id);
+    return options.id;
 }
 
 if (argv['disable-gpu'])
@@ -466,7 +465,7 @@ app.on('ready', () => {
             msg += '-no-pd, -no-portable-dir - Do not use portable dir\n';
             msg += '-data-dir=[file] - Set a custom directory to store saved data\n';
             msg += '-l=[file], --layout=[file] - Load window layout file';
-            msg += '-il, --ignorelayout - Ignore layout and do not save window states';
+            msg += '-il, --ignore-layout - Ignore layout and do not save window states';
             dialog.showMessageBox({
                 type: 'info',
                 message: msg
@@ -483,7 +482,7 @@ app.on('ready', () => {
             console.log('-no-pd, -no-portable-dir            Do not use portable dir');
             console.log('-data-dir=[file]                    Set a custom directory to store saved data');
             console.log('-l=[file], --layout=[file]          Load window layout file');
-            console.log('-il, --ignorelayout                 Ignore layout and do not save window states');
+            console.log('-il, --ignore-layout                Ignore layout and do not save window states');
             app.quit();
             return;
         }
@@ -2060,7 +2059,7 @@ function loadWindowLayout(file) {
     //create windows
     let i, il = data.windows.length;
     for (i = 0; i < il; i++) {
-        createWindow(data.windows[i].id, { data: data.windows[i].data, state: data.windows[i].state, states: data.states });
+        createWindow({ id: data.windows[i].id, data: { data: data.windows[i].data, state: data.windows[i].state, states: data.states } });
         windows[data.windows[i].id].current = data.windows[i].current;
         windows[data.windows[i].id].clients = data.windows[i].clients;
     }
