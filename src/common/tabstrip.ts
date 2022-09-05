@@ -163,8 +163,8 @@ export class TabStrip extends EventEmitter {
         this.$scrollLeft.classList.add('hidden');
         this.$scrollRight.classList.add('hidden');
         this.$scrollDropDown.classList.add('hidden');
-        let tWidth = 100;
-        let w = 100;
+        let tWidth = 200;
+        let w = 200;
         const m = this.$measure;
         for (let t = 0; t < tl; t++) {
             m.textContent = this.tabs[t].title.textContent;
@@ -175,8 +175,8 @@ export class TabStrip extends EventEmitter {
         }
 
         for (let t = 0; t < tl; t++) {
-            this.tabs[t].tab.style.width = `${w}px`;
-            this.tabs[t].title.style.maxWidth = `${w - 22}px`;
+            this.tabs[t].tab.style.maxWidth = `${w}px`;
+            //this.tabs[t].title.style.maxWidth = `${w - 22}px`;
         }
 
         if (this.$tabstrip.scrollWidth > this.$el.clientWidth)
@@ -482,7 +482,7 @@ export class TabStrip extends EventEmitter {
     private newTab(title?: string | TabOptions, icon?: string, tooltip?: string) {
         var options: TabOptions = {};
         if (typeof title === 'string' || title instanceof String)
-            options = { title: <string>title, icon: icon, tooltip: tooltip };
+            options = { title: <string>title, icon: icon, tooltip: tooltip || <string>title || '' };
         else
             options = title || {};
         const tab: Tab = {
@@ -621,9 +621,9 @@ export class TabStrip extends EventEmitter {
         tab.tab.appendChild(close);
         tab.title.classList.add('title');
         tab.icon.classList.add('icon');
-        tab.title.innerHTML = options.title;
-        tab.title.title = options.tooltip;
-        tab.tab.title = options.tooltip;
+        tab.title.innerHTML = options.title || '&nbsp';
+        tab.title.title = options.tooltip || options.title || '';
+        tab.tab.title = options.tooltip || options.title || '';
         if (tab.iconCls) {
             tab.icon.classList.add(...tab.iconCls.split(' '));
             tab.icon.style.backgroundImage = '';
@@ -641,7 +641,7 @@ export class TabStrip extends EventEmitter {
     public addTab(title?: string | TabOptions, icon?: string, tooltip?: string) {
         var options: TabOptions = {};
         if (typeof title === 'string' || title instanceof String)
-            options = { title: <string>title, icon: icon, tooltip: tooltip };
+            options = { title: <string>title, icon: icon, tooltip: tooltip ||  <string>title || ''};
         else
             options = title || {};
         $('.dropdown.open').removeClass('open');
@@ -661,7 +661,7 @@ export class TabStrip extends EventEmitter {
     public createTab(title?: string | TabOptions, icon?: string, tooltip?: string) {
         var options: TabOptions = {};
         if (typeof title === 'string' || title instanceof String)
-            options = { title: <string>title, icon: icon, tooltip: tooltip };
+            options = { title: <string>title, icon: icon, tooltip: tooltip || <string>title || '' };
         else
             options = title || {};
         $('.dropdown.open').removeClass('open');
@@ -675,7 +675,7 @@ export class TabStrip extends EventEmitter {
     public insertTab(idx: number, title?: string | TabOptions, icon?: string, tooltip?: string) {
         var options: TabOptions = {};
         if (typeof title === 'string' || title instanceof String)
-            options = { title: <string>title, icon: icon, tooltip: tooltip };
+            options = { title: <string>title, icon: icon, tooltip: tooltip || <string>title || '' };
         else
             options = title || {};
         $('.dropdown.open').removeClass('open');
@@ -883,7 +883,7 @@ export class TabStrip extends EventEmitter {
         else
             tab = this.getTab(tab);
         if (!tab) return;
-        tab.title.innerHTML = text;
+        tab.title.innerHTML = text || '&nbsp';
         if (!noMenu) return;
         const idx = this.getTabIndex(tab);
         $(`#cm-scroll-dropdown-menu-${idx}-title`).html(text);
