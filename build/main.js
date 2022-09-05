@@ -558,7 +558,7 @@ app.on('ready', () => {
             _loaded = _ignore;
             let windowId = createWindow();
             let window = windows[windowId].window;
-            let id = createClient(window.getContentBounds());
+            let id = createClient({ bounds: window.getContentBounds() });
             focusedWindow = windowId;
             focusedClient = id;
             windows[windowId].clients.push(id);
@@ -605,7 +605,7 @@ app.on('activate', () => {
             _loaded = _ignore;
             let windowId = createWindow();
             let window = windows[windowId].window;
-            let id = createClient(window.getContentBounds());
+            let id = createClient({ bounds: window.getContentBounds() });
             focusedWindow = windowId;
             focusedClient = id;
             windows[windowId].clients.push(id);
@@ -984,7 +984,7 @@ ipcMain.on('inspect', (event, x, y) => {
 
 ipcMain.on('new-client', (event) => {
     let window = BrowserWindow.fromWebContents(event.sender);
-    let id = createClient(window.getContentBounds());
+    let id = createClient({ bounds: window.getContentBounds() });
     let windowId = getWindowId(window);
     windows[windowId].clients.push(id);
     clients[id].parent = window;
@@ -1143,10 +1143,12 @@ ipcMain.on('execute-main', (event, code) => {
     executeScript(code, win);
 });
 
-function createClient(bounds, id, data, file) {
+//bounds, id, data, file
+function createClient(options) {
+    options = options || {};
     //@TODO replace test.html with index.html
-    if (!file || file.length === 0)
-        file = 'build/test.html';
+    if (!options.file || options.file.length === 0)
+        options.file = 'build/test.html';
     const view = new BrowserView({
         webPreferences: {
             nodeIntegration: true,
@@ -1264,41 +1266,44 @@ function createClient(bounds, id, data, file) {
         width: true,
         height: true
     })
-    if (data && data.state) {
-        view.setBounds(data.state.bounds);
-        if (data.state.devTools || global.debug)
+    if (options.data && options.data.state) {
+        view.setBounds(options.data.state.bounds);
+        if (options.data.state.devTools || global.debug)
             view.webContents.openDevTools();
     }
     else {
         view.setBounds({
             x: 0,
             y: 0,
-            width: bounds.width,
-            height: bounds.height
+            width: options.bounds.width,
+            height: options.bounds.height
         });
         if (global.debug)
             view.webContents.openDevTools();
     }
     //@TODO change to index.html once basic window system is working
-    view.webContents.loadFile(file);
+    view.webContents.loadFile(options.file);
     require("@electron/remote/main").enable(view.webContents);
-    if (!id) {
+    if (!options.id) {
         _clientID++;
         //in case the new id is used from old layout loop until find empty id
         while (clients[_clientID])
             _clientID++;
-        id = _clientID;
+        options.id = _clientID;
     }
     //@TODO replace test.html with index.html
-    clients[id] = { view: view, menu: createMenu(), windows: [], parent: null, file: file !== 'build/test.html' ? file : 0 };
-    idMap.set(view, id);
-    executeScript(`if(typeof setId === "function") setId(${id});`, clients[id].view);
-    if (data)
-        executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify({ data: data.data, windows: data.windows }) + ');', clients[id].view);
+    if (options.menu)
+        clients[options.id] = { view: view, menu: null, windows: [], parent: null, file: options.file !== 'build/test.html' ? options.file : 0 };
+    else
+        clients[options.id] = { view: view, menu: createMenu(), windows: [], parent: null, file: options.file !== 'build/test.html' ? options.file : 0 };
+    idMap.set(view, options.id);
+    executeScript(`if(typeof setId === "function") setId(${options.id});`, clients[options.id].view);
+    if (options.data)
+        executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify({ data: options.data.data, windows: options.data.windows }) + ');', clients[options.id].view);
     //win.setTopBrowserView(view)    
     //addBrowserView
     //setBrowserView  
-    return id;
+    return options.id;
 }
 
 async function removeClient(id) {
@@ -2063,7 +2068,7 @@ function loadWindowLayout(file) {
     il = data.clients.length;
     for (i = 0; i < il; i++) {
         const client = data.clients[i];
-        createClient(client.state.bounds, client.id, client, client.file);
+        createClient({ bounds: client.state.bounds, id: client.id, data: client, file: client.file });
         clients[client.id].parent = windows[client.parent].window;
     }
     //set current clients for each window after everything is created
@@ -2142,7 +2147,7 @@ function createMenu() {
                     accelerator: 'CmdOrCtrl+Shift+N',
                     click: (item, mWindow) => {
                         let windowId = getWindowId(mWindow);
-                        let id = createClient(mWindow.getContentBounds());
+                        let id = createClient({ bounds: mWindow.getContentBounds() });
                         focusedWindow = windowId;
                         focusedClient = id;
                         windows[windowId].clients.push(id);
@@ -2181,7 +2186,7 @@ function createMenu() {
 
                         let windowId = createWindow();
                         let window = windows[windowId].window;
-                        let id = createClient(window.getContentBounds());
+                        let id = createClient({ bounds: window.getContentBounds() });
                         focusedWindow = windowId;
                         focusedClient = id;
                         windows[windowId].clients.push(id);
